@@ -1,0 +1,7 @@
+{
+	"extends": "@tsconfig/node18/tsconfig.json",
+	"compilerOptions": {
+		"outDir": "ts-out/",
+	},
+	"include": ["**/*.ts", "../agentQueue/src/types.d.ts","../apps/collective-policy-synth/src/types.d.ts"]
+}
