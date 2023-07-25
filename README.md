@@ -3,6 +3,9 @@
 
 ## More Information
 This project aims to combine human insights with the power of AI to address complex policy issues.
+### Resources
+- [Figma Prototype Design](https://www.figma.com/file/ekIKXfT3tL8Ab7MoLSnjnN/Collective-Policy-Synth-V10)
+- [Live: First Test Results](https://collective-policy-synth.citizens.is/projects/1/)
 
 ## Prototype Design
 The first test run is entirely automated except for the problem statement provided by humans. All other components are generated using GPT-4 & GPT-3.5. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.
