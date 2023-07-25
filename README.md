@@ -2,7 +2,8 @@
 ## Bringing together the best of collective and artificial intelligence
 
 ## More Information
-This project aims to combine human insights with the power of AI to address complex policy issues. We aim to enable policymakers and citizens to effectively engage with AI, facilitating quicker and more innovative decision-making processes.
+Our project is an ambitious endeavor to meld human insights with the power of AI to tackle complex policy issues. We're working towards creating a platform where policymakers, citizens, and AI can collectively interact to accelerate and enhance the decision-making process.
+
 ### Resources
 - [Figma Prototype Design](https://www.figma.com/file/ekIKXfT3tL8Ab7MoLSnjnN/Collective-Policy-Synth-V10)
 - [Live: First Test Results](https://collective-policy-synth.citizens.is/projects/1/)
