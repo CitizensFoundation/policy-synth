@@ -10,7 +10,9 @@ Developed in 2023 by
 Robert Bjarnason, robert@citizens.is
 Gudny Maren Valsdottir 
 Alexander Mani Gautason
-and many others...
+Gunnar Grimsson
+Joshua Lanthier-Welch
+and others...
  
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
