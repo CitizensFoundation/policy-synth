@@ -11,7 +11,7 @@ Our project embodies a unique effort to intertwine human insights and artificial
 ## Prototype Design
 The first test run is entirely automated except for the problem statement provided by humans. All other components are generated using GPT-4 & GPT-3.5. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.
 
-For the real-world application of our platform, a series of expert and mass citizen crowdsourcing stages will be integrated. These stages are designed to accompany the AI-generated and ranked options, ensuring a robust and effective policy synthesis that capitalizes on the collective wisdom of diverse stakeholders. This way, we effectively combine human insights and machine intelligence to drive inventive, efficacious policy resolutions.
+For the real-world application of our platform, a series of expert and mass citizen crowdsourcing stages will be integrated. These stages are designed to accompany the AI-generated and ranked options. This multifaceted approach combines collective human insights, expert opinions, and machine intelligence. Our model leverages technology to harness collective wisdom, effectively facilitating the development and implementation of well-informed policy decisions.
 
 ## Project Status
 - **Implemented**: Problem identification and solution modules 
