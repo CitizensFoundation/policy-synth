@@ -16,15 +16,16 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     renderRecombinationPrompt(parentA, parentB, subProblemIndex) {
         return [
             new SystemChatMessage(`
-        As an AI genetic algorithm expert, your task is to create a new solution by merging the attributes of two parent solutions (Parent A and Parent B).
+        As an AI genetic algorithm expert, your task is to create a new solution by merging the best attribute of two parent solutions (Parent A and Parent B).
 
         Please consider the following guidelines when developing your merged solution:
-        1. The merged solution should contain one best aspect from "Parent A" and one best aspect from "Parent B".
+        1. The merged solution should contain one best attribute from "Parent A" and one best attribute from "Parent B".
         2. The combination should be logical, meaningful and present a standalone solution to the problem at hand.
-        3. If the combined solution is too complex, comprehensive or complicated, you may choose to simplify it removing some attributes.
-        4. Do not refer "the merged solution" in your output, the solution should be presented as a standalone solution.
-        5. Output your merged solution in the following JSON format: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not add any new JSON properties.
-        6. Think step by step.
+        3. Aim to keep the solution simple and easily implementable. Avoid overly complex combinations that would make the solution impractical or difficult to understand.
+        4. If the combined solution is too comprehensive or complicated, simplify the merge solution by removing some attributes from it.
+        5. Do not refer to "the merged solution" in your output, the solution should be presented as a standalone solution.
+        6. Output your merged solution in the following JSON format: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not add any new JSON properties.
+        7. Think step by step.
         `),
             new HumanChatMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
@@ -57,15 +58,16 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.logger.debug(`Mutate rate: ${mutateRate}`);
         return [
             new SystemChatMessage(`
-        As an AI genetic algorithm expert, your task is to mutate the solution presented below.
+        As an AI expert specializing in genetic algorithms, your task is to mutate the following solution.
 
-        Please consider the following guidelines:
-        1. Implement mutation at a rate of ${mutateRate} changes.
-        2. The mutation process should introduce new attributes, remove not important atttributes or alter existing ones.
-        3. If the solution is complex already bias towards removing the least important attributes.
-        4. Ensure that the mutation is logical and meaningful and it should continue to offer a viable solution to the problem presented.
-        5. Output your mutated solution in the following JSON format: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not add any new JSON properties.
-        6. Think step by step.
+        Please adhere to these guidelines:
+        1. Implement mutations corresponding to a "${mutateRate}" rate. The rate determines the extent of changes to the solution.
+        2. Mutation can involve introducing new attributes, modifying existing ones, or removing less important ones.
+        3. If the solution is overly complex, consider simplifying it by removing the least crucial attributes.
+        4. Ensure the mutation is logical, meaningful, and continues to offer a viable solution to the presented problem.
+        5. Avoid referring to your output as "the merged solution" or "the mutated solution". Instead, present it as a standalone solution.
+        6. Format your mutated solution in the following JSON structure: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not introduce any new JSON properties.
+        7. Approach the mutation process step by step.
         `),
             new HumanChatMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
