@@ -1,4 +1,4 @@
-## All Our Ideas Survey App
+## Collective Policy Synth Web App
 
 ```
 npm install
