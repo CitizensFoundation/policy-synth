@@ -103,6 +103,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
                 else {
                     this.logger.error(`No ${prosOrCons} to rank`);
                 }
+                this.logger.info(`Finished ranking ${prosOrCons} for solution ${solutionIndex} for sub problem ${subProblemIndex}`);
             }
             await this.saveMemory();
         }
