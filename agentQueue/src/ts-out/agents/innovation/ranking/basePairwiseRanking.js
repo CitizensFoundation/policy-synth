@@ -57,7 +57,6 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
                 else if (["Neither", "None", "Both"].indexOf(winningItemText.trim()) > -1) {
                     wonItemIndex = -1;
                     lostItemIndex = -1;
-                    this.logger.info(`LLM returned Neither, None or Both in pairwise ranking for prompt ${JSON.stringify(messages)}`);
                 }
                 else {
                     this.logger.error(`Invalid winning item text ${winningItemText} for prompt ${JSON.stringify(messages)}`);

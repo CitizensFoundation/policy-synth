@@ -154,7 +154,7 @@ export class IEngineConstants {
     static maxWebPagesToGetByTopSearchPosition = 5;
     static maxSearchResults = 10;
     static maxTopProsConsUsedForRanking = 1;
-    static maxNumberGeneratedProsConsForSolution = 9;
+    static maxNumberGeneratedProsConsForSolution = 3;
     static minSleepBeforeBrowserRequest = 1100;
     static maxAdditionalRandomSleepBeforeBrowserRequest = 1100;
     static numberOfSearchTypes = 4;
