@@ -1,7 +1,7 @@
 # Collective Policy Synth
 ## Bringing together the best of collective and artificial intelligence
 
-## More Information
+## Information
 Our project embodies a unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas. We are in the process of building a state-of-the-art platform where policymakers, citizens, and AI can engage in a collective discourse. This collaborative interaction is expected to not only expedite decision-making processes but also augment their quality, paving the way for more inventive and efficacious policy resolutions.
 
 ### Resources
