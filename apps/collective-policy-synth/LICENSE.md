@@ -1,16 +1,12 @@
 # License
 
-All Our Ideas- Citizens participation application
+Collective Policy Synth
 
 Everything in this repo is under AGPL-3.0 license unless otherwise specified.
 
-Copyright (c) 2008-2022 Salganik, Matthew J. and Karen E.C. Levy, Citizens Foundation Iceland. All rights reserved.
+Copyright (c) 2023 Robert Bjarnason & Citizens Foundation Iceland. All rights reserved.
 
-Developed in 2008-2023 by
-Matthew Salganik
-Karen E.C. Levy
-
-Developed in 2022-2023 by
+Developed in 2023 by
 Robert Bjarnason, robert@citizens.is
 Gudny Maren Valsdottir 
 Alexander Mani Gautason

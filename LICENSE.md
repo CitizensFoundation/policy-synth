@@ -1,15 +1,17 @@
 # License
 
-Innovation Engine
+Collective Policy Synth
 
 Everything in this repo is under AGPL-3.0 license unless otherwise specified.
 
-Copyright (c) 2023 Robert Bjarnason. All rights reserved.
+Copyright (c) 2023 Robert Bjarnason & Citizens Foundation Iceland. All rights reserved.
 
 Developed in 2023 by
 Robert Bjarnason, robert@citizens.is
-
-
+Gudny Maren Valsdottir 
+Alexander Mani Gautason
+and many others...
+ 
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
@@ -641,7 +643,7 @@ to attach them to the start of each source file to most effectively
 state the exclusion of warranty; and each file should have at least
 the "copyright" line and a pointer to where the full notice is found.
 
-    <one line to give the program's name and a brief solution of what it does.>
+    <one line to give the program's name and a brief idea of what it does.>
     Copyright (C) <year>  <name of author>
 
     This program is free software: you can redistribute it and/or modify
