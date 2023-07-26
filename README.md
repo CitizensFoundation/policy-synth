@@ -1,5 +1,7 @@
 # Collective Policy Synth
-![Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave __61a9b3d8-7533-4841-a99e-ef036fed1fbf](https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6)
+<p align="center">
+  <img src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="864" height="486">
+</p>
 
 ## Bringing together the best of collective and artificial intelligence
 
