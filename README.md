@@ -19,9 +19,8 @@ For the real-world application of our platform, a series of expert and mass citi
 
 ## Project Status
 - **Implemented**: Problem identification and solution modules 
-- **Testing**: We're currently running initial tests
 - **In Progress**: Initial crowdsourcing components for pairwise voting, idea generation, and debate
-- **Planned**: First iteration of the policy ideas modules
+- **In Progress**: First iteration of the policy ideas modules
 
 ## Future Timeline
 - **Mid-August 2023**: Plan to release initial crowdsourcing components
