@@ -31,7 +31,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
   searchResultTarget!: IEngineWebPageTargets;
   currentEntity: IEngineAffectedEntity | undefined;
 
-  renderRefinePrompt(
+  unusedRenderRefinePrompt(
     currentWebPageAnalysis: IEngineWebPageAnalysisData,
     problemStatement: IEngineProblemStatement,
     text: string
@@ -84,16 +84,18 @@ export class GetWebPagesProcessor extends BaseProcessor {
   ) {
     return [
       new SystemChatMessage(
-        `As an AI designed to analyze textual data, follow these guidelines:
+        `Your are an AI expert in analyzing textual data:
 
+        Important Instructions:
         1. Examine the "Text context" and determine how it relates to the problem statement and any specified sub-problems.
-        2. Include the most relevant paragraphs from the Text Context in the 'mostRelevantParagraphs' JSON array.
-        3. Identify solutions in the Text Context and include them in the 'solutionsIdentifiedInTextContext' JSON array.
-        4. Only use solutions found within the Text Context - do not generate your own.
+        2. Identify any solutions in the "Text Context" and include them in the 'solutionsIdentifiedInTextContext' JSON array.
+        3. Include any paragraphs with potential solutions to the problem statement and sub problem from the "Text Context" in the 'mostRelevantParagraphs' JSON array.
+        4. Only use solutions found within the "Text Context" - do not create your own solutions.
         5. Never store citations or references in the 'mostRelevantParagraphs' array.
-        6. Refrain from using markdown format.
-        7. Output your results in JSON format with no additional explanation.
-        8. Perform the task step-by-step.
+        6. Add any contacts you find in the "Text Context" to the 'contacts' JSON array.
+        7. Never output in markdown format.
+        8. Always output your results in the JSON format with no additional explanation.
+        9. Think step-by-step.
 
         Examples:
 
@@ -139,6 +141,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
               "Healthcare systems can help families prevent and manage childhood obesity",
               "Communities can use strategies to support a healthy, active lifestyle for all"
             ],
+            contacts: []
           }
         ]
 
@@ -181,7 +184,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         on changes in discharge voltage curves. RLS is measurable at the end of the manufacturing line using ordinary
         battery test equipment and can be measured within seconds. Changes in RLS are attributed to differences in the
         amount of lithium consumed to the SEI during formation, where a decrease in RLS indicates that more lithium is
-        consumed.
+        consumed. For more information: Robert Bjarnason with email robert@citizens.is
 
         References
         1
@@ -200,6 +203,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
           ],
           "solutionsIdentifiedInTextContext": [
             "Adopting faster formation protocols and using the cell resistance measured at low states of charge as an early-life diagnostic feature for screening new formation protocols."
+          ],
+          "contacts": [
+            "Robert Bjarnason, robert@citizens.is"
           ]
         }
         `
@@ -250,65 +256,107 @@ export class GetWebPagesProcessor extends BaseProcessor {
     return { totalTokenCount, promptTokenCount };
   }
 
-  async splitText(fullText: string, maxChunkTokenCount: number): Promise<string[]> {
+  mergeAnalysisData(
+    data1: IEngineWebPageAnalysisData,
+    data2: IEngineWebPageAnalysisData
+  ): IEngineWebPageAnalysisData {
+    return {
+      mostRelevantParagraphs: [
+        ...(data1.mostRelevantParagraphs || []),
+        ...(data2.mostRelevantParagraphs || []),
+      ],
+      solutionsIdentifiedInTextContext: [
+        ...(data1.solutionsIdentifiedInTextContext || []),
+        ...(data2.solutionsIdentifiedInTextContext || []),
+      ],
+      relevanceToProblem: data1.relevanceToProblem,
+      tags: [...(data1.tags || []), ...(data2.tags || [])],
+      entities: [...(data1.entities || []), ...(data2.entities || [])],
+      contacts: [...(data1.contacts || []), ...(data2.contacts || [])],
+      summary: data1.summary,
+      url: data1.url,
+      searchType: data1.searchType,
+      subProblemIndex: data1.subProblemIndex,
+      groupId: data1.groupId,
+      communityId: data1.communityId,
+      domainId: data1.domainId,
+      _additional: {
+        ...data1._additional,
+        ...data2._additional,
+      },
+    };
+  }
+
+  async splitText(
+    fullText: string,
+    maxChunkTokenCount: number
+  ): Promise<string[]> {
     const chunks: string[] = [];
-    const elements = fullText.split('\n');
-    let currentChunk = '';
+    const elements = fullText.split("\n");
+    let currentChunk = "";
 
     const addElementToChunk = async (element: string) => {
-        const potentialChunk = (currentChunk !== '' ? currentChunk + '\n' : '') + element;
-        const tokenCount = await this.getTokenCount(potentialChunk);
+      const potentialChunk =
+        (currentChunk !== "" ? currentChunk + "\n" : "") + element;
+      const tokenCount = await this.getTokenCount(potentialChunk);
 
-        if (tokenCount.totalTokenCount > maxChunkTokenCount) {
-            // If currentChunk is not empty, add it to chunks and start a new chunk with the element
-            if (currentChunk !== '') {
-                chunks.push(currentChunk);
-                currentChunk = element;
-            } else {
-                // If currentChunk is empty, it means that the element is too large to fit in a chunk
-                // In this case, split the element further.
-                if (element.includes(' ')) {
-                    // If the element is a sentence, split it by words
-                    const words = element.split(' ');
-                    for (let word of words) {
-                        await addElementToChunk(word);
-                    }
-                } else {
-                    // If the element is a single word that exceeds maxChunkTokenCount, add it as is
-                    chunks.push(element);
-                }
-            }
+      if (tokenCount.totalTokenCount > maxChunkTokenCount) {
+        // If currentChunk is not empty, add it to chunks and start a new chunk with the element
+        if (currentChunk !== "") {
+          chunks.push(currentChunk);
+          currentChunk = element;
         } else {
-            currentChunk = potentialChunk;
+          // If currentChunk is empty, it means that the element is too large to fit in a chunk
+          // In this case, split the element further.
+          if (element.includes(" ")) {
+            // If the element is a sentence, split it by words
+            const words = element.split(" ");
+            for (let word of words) {
+              await addElementToChunk(word);
+            }
+          } else {
+            // If the element is a single word that exceeds maxChunkTokenCount, add it as is
+            chunks.push(element);
+          }
         }
+      } else {
+        currentChunk = potentialChunk;
+      }
     };
 
     for (let element of elements) {
-        // Before adding an element to a chunk, check its size
-        if ((await this.getTokenCount(element)).totalTokenCount > maxChunkTokenCount) {
-            // If the element is too large, split it by sentences
-            const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
-            for (let sentence of sentences) {
-                await addElementToChunk(sentence);
-            }
-        } else {
-            await addElementToChunk(element);
+      // Before adding an element to a chunk, check its size
+      if (
+        (await this.getTokenCount(element)).totalTokenCount > maxChunkTokenCount
+      ) {
+        // If the element is too large, split it by sentences
+        const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
+        for (let sentence of sentences) {
+          await addElementToChunk(sentence);
         }
+      } else {
+        await addElementToChunk(element);
+      }
     }
 
     // Push any remaining text in currentChunk to chunks
-    if (currentChunk !== '') {
-        chunks.push(currentChunk);
+    if (currentChunk !== "") {
+      chunks.push(currentChunk);
     }
 
-    this.logger.debug(`Split text into ${chunks.length} chunks ${JSON.stringify(chunks, null, 2)}`)
+    this.logger.debug(
+      `Split text into ${chunks.length} chunks ${JSON.stringify(
+        chunks,
+        null,
+        2
+      )}`
+    );
 
     return chunks;
-}
+  }
 
-
-  async getInitialAnalysis(text: string) {
-    this.logger.info("Get Initial Analysis");
+  async getAIAnalysis(text: string) {
+    this.logger.info("Get AI Analysis");
     const messages = this.renderInitialMessages(
       this.memory.problemStatement,
       text
@@ -323,71 +371,62 @@ export class GetWebPagesProcessor extends BaseProcessor {
     return analysis;
   }
 
-  async getRefinedAnalysis(
-    currentAnalysis: IEngineWebPageAnalysisData,
-    text: string
-  ) {
-    this.logger.info("Get Refined Analysis");
-    const messages = this.renderRefinePrompt(
-      currentAnalysis,
-      this.memory.problemStatement,
-      text
-    );
-
-    const analysis = (await this.callLLM(
-      "web-get-pages",
-      IEngineConstants.getPageAnalysisModel,
-      messages
-    )) as IEngineWebPageAnalysisData;
-
-    return analysis;
-  }
-
   async getTextAnalysis(text: string) {
-    const { totalTokenCount, promptTokenCount } = await this.getTokenCount(
-      text
-    );
-
-    this.logger.debug(
-      `Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`
-    );
-
-    let textAnalysis: IEngineWebPageAnalysisData;
-
-    if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-      const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit - promptTokenCount.totalCount -128;
-
-      this.logger.debug(
-        `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
+    try {
+      const { totalTokenCount, promptTokenCount } = await this.getTokenCount(
+        text
       );
 
-      const splitText = await this.splitText(text, maxTokenLengthForChunk);
+      this.logger.debug(
+        `Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(
+          promptTokenCount
+        )}`
+      );
 
-      this.logger.debug(`Got ${splitText.length} splitTexts`);
+      let textAnalysis: IEngineWebPageAnalysisData;
 
-      for (let t = 0; t < splitText.length; t++) {
-        const currentText = splitText[t];
+      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+        const maxTokenLengthForChunk =
+          IEngineConstants.getPageAnalysisModel.tokenLimit -
+          promptTokenCount.totalCount -
+          128;
 
-        if (t == 0) {
-          textAnalysis = await this.getInitialAnalysis(currentText);
+        this.logger.debug(
+          `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
+        );
+
+        const splitText = await this.splitText(text, maxTokenLengthForChunk);
+
+        this.logger.debug(`Got ${splitText.length} splitTexts`);
+
+        for (let t = 0; t < splitText.length; t++) {
+          const currentText = splitText[t];
+
+          let nextAnalysis = await this.getAIAnalysis(currentText);
+
+          if (t == 0) {
+            textAnalysis = nextAnalysis;
+          }
+          else {
+            textAnalysis = this.mergeAnalysisData(textAnalysis!, nextAnalysis);
+          }
+
           this.logger.debug(
-            `Initial text analysis ${JSON.stringify(textAnalysis, null, 2)}`
-          );
-        } else {
-          textAnalysis = await this.getRefinedAnalysis(
-            textAnalysis!,
-            currentText
-          );
-          this.logger.debug(
-            `Refined text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+            `Refined text analysis (${t}): ${JSON.stringify(textAnalysis, null, 2)}`
           );
         }
-      }
-    } else {
-      textAnalysis = await this.getInitialAnalysis(text);
+      } else {
+        textAnalysis = await this.getAIAnalysis(text);
+        this.logger.debug(
+          `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+        );
     }
 
-    return textAnalysis!;
+      return textAnalysis!;
+    } catch (error) {
+      this.logger.error(`Error in getTextAnalysis: ${error}`);
+      throw error;
+    }
   }
 
   async processPageText(
@@ -397,7 +436,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     type: IEngineWebPageTypes
   ) {
     this.logger.debug(
-      `Processing page text ${text.slice(0,150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`
+      `Processing page text ${text.slice(
+        0,
+        150
+      )} for ${url} for ${type} search results ${subProblemIndex} sub problem index`
     );
 
     const textAnalysis = await this.getTextAnalysis(text);
@@ -440,7 +482,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         const cachedHtml = await redis.get(redisKey);
 
         if (cachedHtml) {
-          this.logger.info("Got cached PDF")
+          this.logger.info("Got cached PDF");
           pdfBuffer = Buffer.from(cachedHtml, "base64");
         } else {
           const sleepingForMs =
@@ -526,7 +568,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
       const cachedHtml = await redis.get(redisKey);
 
       if (cachedHtml) {
-        this.logger.info("Got cached HTML")
+        this.logger.info("Got cached HTML");
         htmlText = cachedHtml;
       } else {
         const sleepingForMs =
@@ -600,7 +642,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
     browserPage: Page,
     type: IEngineWebPageTypes
   ) {
-
     if (url.toLowerCase().endsWith(".pdf")) {
       await this.getAndProcessPdf(subProblemIndex, url, type);
     } else {
@@ -692,7 +733,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
     outArray = outArray.concat(
       allPages.filter(
         (page) =>
-          page.originalPosition <= IEngineConstants.maxWebPagesToGetByTopSearchPosition
+          page.originalPosition <=
+          IEngineConstants.maxWebPagesToGetByTopSearchPosition
       )
     );
 

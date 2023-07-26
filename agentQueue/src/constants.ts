@@ -174,13 +174,13 @@ export class IEngineConstants {
 
   static maxTopEntitiesToRender = 3;
 
-  static maxTopQueriesToSearchPerType = 2;
+  static maxTopQueriesToSearchPerType = 4;
 
   static mainSearchRetryCount = 40;
 
-  static maxTopWebPagesToGet = 5;
+  static maxTopWebPagesToGet = 7;
 
-  static maxWebPagesToGetByTopSearchPosition = 5;
+  static maxWebPagesToGetByTopSearchPosition = 7;
 
   static maxSearchResults = 10;
 

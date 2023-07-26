@@ -17,19 +17,18 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
         const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemChatMessage(`
-        You are an expert in comparing and assessing solutions to problems.
+            new SystemChatMessage(`You are an expert in comparing and assessing solutions to problems.
 
-        Instructions:
-        1. You will be presented with a problem and two corresponding solutions. These will be labelled "Solution One" and "Solution Two".
-        2. Assess which of the two solutions is more important in relation to the problem.
-        3. Consider the pros and cons of each solution while assessing.
-        ${this.memory.customInstructions.rankSolutions ? `
-          Important Instructions: ${this.memory.customInstructions.rankSolutions}
-          ` : ''}
+         Instructions:
+         1. You will be presented with a problem and two corresponding solutions. These will be labelled "Solution One" and "Solution Two".
+         2. Assess which of the two solutions is more important in relation to the problem.
+         3. Consider the pros and cons of each solution while assessing.
+         ${this.memory.customInstructions.rankSolutions ? `
+           Important Instructions: ${this.memory.customInstructions.rankSolutions}
+           ` : ''}
 
-        Always output your decision as "One", "Two" or "Neither. No explanation is necessary.
-        Think step by step.
+         Always output your decision as "One", "Two" or "Neither. No explanation is necessary.
+         Think step by step.
         `),
             new HumanChatMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
