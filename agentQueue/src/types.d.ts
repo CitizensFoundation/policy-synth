@@ -276,8 +276,9 @@ interface IEngineWebPageAnalysisData {
   mostRelevantParagraphs: string[];
   solutionsIdentifiedInTextContext: string[];
   relevanceToProblem: string;
-  tags: string[];
-  entities: string[];
+  tags?: string[];
+  entities?: string[];
+  contacts?: string[];
   summary: string;
   url: string;
   searchType: IEngineWebPageTypes;
