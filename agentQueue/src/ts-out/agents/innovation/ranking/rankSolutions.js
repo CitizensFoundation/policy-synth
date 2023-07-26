@@ -36,33 +36,23 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         Solutions to assess:
 
         Solution One:
-        ----------------------------------------
         ${solutionOne.title}
         ${solutionOne.description}
 
-        Pros of Solution One:
-        ${solutionOne.mainBenefitOfSolution}
-
+        Best Pro:
         ${this.getProCons(solutionOne.pros).slice(0, IEngineConstants.maxTopProsConsUsedForRanking)}
 
-        Cons of Solution One:
-        ${solutionOne.mainObstacleToSolutionAdoption}
-
+        Best Con:
         ${this.getProCons(solutionOne.cons).slice(0, IEngineConstants.maxTopProsConsUsedForRanking)}
 
         Solution Two:
-        ----------------------------------------
         ${solutionTwo.title}
         ${solutionTwo.description}
 
-        Pros of Solution Two:
-        ${solutionTwo.mainBenefitOfSolution}
-
+        Best Pro:
         ${this.getProCons(solutionTwo.pros).slice(0, IEngineConstants.maxTopProsConsUsedForRanking)}
 
-        Cons of Solution Two:
-        ${solutionTwo.mainObstacleToSolutionAdoption}
-
+        Best Con:
         ${this.getProCons(solutionTwo.cons).slice(0, IEngineConstants.maxTopProsConsUsedForRanking)}
 
         The more important solution is:
