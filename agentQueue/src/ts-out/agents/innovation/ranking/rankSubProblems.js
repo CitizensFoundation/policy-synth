@@ -13,7 +13,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
             new SystemChatMessage(`
         You are an AI expert trained to analyse complex problem statements and associated sub-problems to determine their relevance.
 
-        Please follow these guidelines:
+        Instructions:
         1. You will be presented with a problem statement and two associated sub-problems. These will be marked as "Sub Problem One" and "Sub Problem Two".
         2. Analyse, compare, and rank these two sub-problems in relation to the main problem statement to determine which is more relevant and important.
         3. Output your decision as either "One", "Two" or "Neither". An explanation is not required.

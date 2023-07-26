@@ -40,7 +40,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
             new SystemChatMessage(`
         You are an AI expert trained to rank search queries based on their relevance to complex problem statements, sub-problems and affected entities.
 
-        Please follow these guidelines:
+        Instructions:
         1. You will receive a problem statement or a sub-problem, possibly along with entities and their impacts (both negative and positive).
         2. You will also see two web search queries, each marked as "Search Query One" and "Search Query Two".
         3. Your task is to analyze, compare, and rank these search queries based on their relevance to the given problem and affected entities.

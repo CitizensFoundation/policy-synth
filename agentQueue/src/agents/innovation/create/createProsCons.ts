@@ -27,7 +27,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
         `
         As an AI expert, it's your responsibility to refine the given ${prosOrCons} pertaining to solutions to problems.
 
-        Keep these guidelines in mind:
+        Instructions:
 
         1. Make the ${prosOrCons} concise, consistent, and succinct.
         2. Expand on the ${prosOrCons} by considering the problem, if needed.

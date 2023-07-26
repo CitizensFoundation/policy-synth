@@ -15,7 +15,9 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
         let itemTwoEffects = this.renderEntityPosNegReasons(itemTwo);
         const messages = [
             new SystemChatMessage(`
-        You are an AI expert specializing in analyzing complex problem statements, sub-problems, and ranking affected entities. Please adhere to the following guidelines:
+        You are an AI expert specializing in analyzing complex problem statements, sub-problems, and ranking affected entities.
+
+        Instructions:
 
         1. You will be provided with a problem statement followed by a sub-problem.
         2. Two entities affected by the sub-problem will be given, labelled as "Entity One" and "Entity Two".

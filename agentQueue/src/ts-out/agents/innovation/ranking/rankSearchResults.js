@@ -43,7 +43,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
         const messages = [
             new SystemChatMessage(`You are an expert in assessing relevance of search results.
 
-         Guidelines:
+         Instructions:
          Assess search results "One" and "Two" for problem relevance, especially regarding indicated solutions.
          Output your decision as either "One", "Two" or "Neither". No explanation is required.
          Think step by step.`),

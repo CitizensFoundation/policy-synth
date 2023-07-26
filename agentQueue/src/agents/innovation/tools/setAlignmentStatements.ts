@@ -11,16 +11,22 @@ const output = await redis.get("st_mem:1:id");
 
 const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
 
-memory.systemInstructions.createSolutions = `
-  1. Generated solutions should not be too complicated. Later the solutions will be brought together into comprehensive policy proposals.
-  2. Assume that civil society will be the main driver of getting solutions implemented.
-  3. Keep in mind that politicans and governments need to be convinced to implement solutions.
-`
+memory.customInstructions.createSolutions = `
+  1. Use the provided information to generate clear, actionable solutions or a solution. These should be designed to be later consolidated into comprehensive policy proposals.
+  2. Make sure solution titles are concise, engaging, and informative.
+  3. Ensure solutions are straightforward and easy to understand.
+  4. Keep solutions titles to maximum of 7 words and do not use abbreviations except for acronyms.
+  5. Avoid comprehensive frameworks for solutions. Opt for simpler structures that include a few key attributes.
+  6. Remember that the main facilitator for implementation will be civil society working with governments.
+  7. Frame solutions with the intention of convincing politicians and governments to put them into action.
+`;
 
-memory.systemInstructions.rankSolutions = `
-  1. Solutions should be realistic in terms of being practical to implement in todays world.
-  2. Solutions should not be too comprehensive. Later the solutions will be brought together into full policy proposals.
-`
+memory.customInstructions.rankSolutions = `
+  1. Assess the solutions based on their practicality and feasibility in the real world.
+  2. Prefer solutions that are simple and not overly comprehensive, as they will later be incorporated into broader policy proposals.
+  3. Prefer solutions which offer simple structures with a few key attributes, rather than those that present as comprehensive frameworks.
+  4. Take into account whether a solution seems compelling enough to convince politicians and governments to implement it.
+`;
 
 await redis.set("st_mem:1:id", JSON.stringify(memory));
 

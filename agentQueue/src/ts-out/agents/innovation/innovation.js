@@ -67,10 +67,7 @@ export class AgentInnovation extends BaseAgent {
             },
             timeStart: Date.now(),
             totalCost: 0,
-            systemInstructions: {
-                createSolutions: "",
-                rankSolutions: ""
-            },
+            customInstructions: {},
             problemStatement: {
                 description: jobData.initialProblemStatement,
                 searchQueries: {

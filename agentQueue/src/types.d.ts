@@ -256,7 +256,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
   currentStage: IEngineStageTypes;
   stages: Record<IEngineStageTypes, IEngineInnovationStagesData>;
   problemStatement: IEngineProblemStatement;
-  systemInstructions: {
+  customInstructions: {
     createSubProblems?: string;
     rankSubProblems?: string;
     createSolutions?: string;

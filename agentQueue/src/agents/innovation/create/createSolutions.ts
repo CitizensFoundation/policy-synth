@@ -24,7 +24,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         `
         As an expert, your task is to refine the innovative solutions proposed for complex problems and associated sub-problems.
 
-        Please follow these guidelines:
+        Instructions:
         1. Review and refine the solutions previously generated, do not create new solutions.
         2. Solutions should be feasible, considered, innovative, fair, and concise.
         3. Limit solution descriptions to a maximum of six sentences.
@@ -32,7 +32,11 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         5. Refer to the relevant entities in your solutions, if mentioned.
         6. Ensure your output is not in markdown format.
         7. Output your solutions in the following JSON format: [ { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption } ].
-        8. Apply a methodical, step-by-step approach to deliver the best solutions.
+        ${this.memory.customInstructions.createSolutions ? `
+          Important Instructions: ${this.memory.customInstructions.createSolutions}
+
+        ` : '' }
+        Think step by step.
         `
       ),
       new HumanChatMessage(
@@ -64,7 +68,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       `
       As an expert, you are tasked with crafting innovative solutions for complex problems and associated sub-problems, considering the affected entities.
 
-      Adhere to the following guidelines:
+      Instructions:
       1. Solutions should be practical, thoughtful, innovative and equitable.
       2. Generate four solutions, presented in JSON format.
       3. Each solution should include a short title, description, mainBenefitOfSolution and mainObstacleToSolutionAdoption.
@@ -74,7 +78,12 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       7. Do not refer to the Contexts in your solutions, as the contexts won't be visible to the user.
       8. Do not use markdown format in your output.
       9. Output your solutions in the following JSON format: [ { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption } ].
-      10. Employ a methodical, step-by-step approach to devise the best possible solutions.
+      ${this.memory.customInstructions.createSolutions ? `
+        Important Instructions:${this.memory.customInstructions.createSolutions}
+
+    ` : '' }
+
+      Think step by step.
       `
     );
   }
@@ -539,6 +548,8 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     type: IEngineWebPageTypes,
     alreadyCreatedSolutions: string | undefined = undefined
   ) {
+
+    //TODO: What about the system prompt?
     const tokenCountData = await this.chat!.getNumTokensFromMessages(
       this.renderCreateForTestTokens(subProblemIndex, alreadyCreatedSolutions)
     );
