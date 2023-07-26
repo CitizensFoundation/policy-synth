@@ -6,6 +6,9 @@ import { CpsStageBase } from './cps-stage-base.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
 import '@material/web/iconbutton/standard-icon-button.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
+import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
@@ -35,6 +38,11 @@ export class CpsSolutions extends CpsStageBase {
 
         md-filter-chip {
           margin-bottom: 8px;
+        }
+
+        md-filter-chip[more-than-seven-items] {
+          margin-bottom: 8px;
+          width: 134px;
         }
 
         .title {
@@ -150,20 +158,7 @@ export class CpsSolutions extends CpsStageBase {
         ${this.renderSubProblem(subProblem, false, 0, true, true)}
         <div class="title">${this.t('Solutions')}</div>
         <div class="generationContainer layout vertical center-center">
-          <md-chip-set
-            class="generations layout horizontal wrap"
-            type="filter"
-            single-select
-          >
-            ${subProblem.solutions.populations.map(
-              (population, index) =>
-                html`<md-filter-chip
-                  label="Generation ${index + 1}"
-                  .selected="${this.activePopulationIndex === index}"
-                  @click="${() => (this.activePopulationIndex = index)}"
-                ></md-filter-chip> `
-            )}
-          </md-chip-set>
+          ${this.renderChipSet(subProblem)}
           ${subProblem.solutions.populations[this.activePopulationIndex].map(
             (solution, index) =>
               html`<div
@@ -179,6 +174,84 @@ export class CpsSolutions extends CpsStageBase {
         </div>
       </div>
     `;
+  }
+
+  renderChipSet(subProblem: IEngineSubProblem) {
+    let firstItems = subProblem.solutions.populations.slice(0, 3);
+    let lastItems = subProblem.solutions.populations.slice(-3);
+    let middleItems = subProblem.solutions.populations.slice(3, -3);
+
+    if (subProblem.solutions.populations.length === 7) {
+      middleItems = subProblem.solutions.populations.slice(3, 4);
+    }
+
+    return html`
+      <md-chip-set
+        class="generations layout horizontal wrap"
+        type="filter"
+        single-select
+      >
+        ${this.renderFilterChips(firstItems, 0)}
+        ${this.renderDropdown(middleItems, firstItems.length)}
+        ${this.renderFilterChips(
+          lastItems,
+          subProblem.solutions.populations.length - 3
+        )}
+      </md-chip-set>
+    `;
+  }
+
+  renderFilterChips(items: IEngineSolution[][], startIndex: number) {
+    return items.map(
+      (population, index) =>
+        html`<md-filter-chip
+          class="layout horizontal center-center"
+          ?more-than-seven-items="${items.length > 7}"
+          label="Generation ${startIndex + index + 1}"
+          .selected="${this.activePopulationIndex === startIndex + index}"
+          @click="${() => {
+            this.activePopulationIndex = startIndex + index;
+            this.resetDropdown();
+          }}"
+        ></md-filter-chip> `
+    );
+  }
+
+  handleDropdownChange(e: Event) {
+    const selectElement = e.target as HTMLSelectElement;
+    this.activePopulationIndex = Number(selectElement.value) - 1;
+  }
+
+
+  resetDropdown() {
+    const dropdown = this.shadowRoot.querySelector('md-outlined-select') as MdOutlinedSelect;
+    if (dropdown) {
+      dropdown.selectedIndex = -1;
+    }
+  }
+
+  renderDropdown(middleItems: IEngineSolution[][], startIndex: number) {
+    if (middleItems.length > 0) {
+      return html`
+        <md-outlined-select
+          label="Generation ..."
+          .quick=${true}
+          .required=${false}
+          .disabled=${false}
+          @change=${(e: Event) => this.handleDropdownChange(e)}
+        >
+          ${middleItems.map(
+            (population, index) =>
+              html`<md-select-option
+                .value="${(startIndex + index + 1).toString()}"
+                .headline="Generation ${startIndex + index + 1}"
+              ></md-select-option>`
+          )}
+        </md-outlined-select>
+      `;
+    } else {
+      return nothing;
+    }
   }
 
   renderSolutionScreen(solutionIndex: number) {
