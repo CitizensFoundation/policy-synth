@@ -8,7 +8,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
             new SystemChatMessage(`
         As an AI expert, you're tasked with refining entities affected by complex problem statements and subproblems. Entities can include individuals, groups, systems, the planet, or even inanimate objects.
 
-        Please follow these guidelines:
+        Instructions:
 
         1. Refine entities and their positive and negative effects in relation to the problem statement and subproblem.
         2. Ensure entity names are concise and consistent.
@@ -39,7 +39,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
             new SystemChatMessage(`
         As an AI expert, your task is to identify entities affected by complex problem statements and subproblems. Entities can range from individuals, groups, systems, to the planet, or even inanimate objects.
 
-        Please adhere to the following guidelines:
+        Instructions:
 
         1. Generate and output up to ${IEngineConstants.maxNumberGeneratedOfEntities} affected entities.
         2. Identify all entities impacted by the main problem and its subproblems.

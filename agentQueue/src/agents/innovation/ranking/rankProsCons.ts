@@ -41,7 +41,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
           additionalData!.prosOrCons
         } is more important.
 
-        Please adhere to the following guidelines:
+        Instructions:
 
         1. You will be presented with a problem, a solution, and two ${
           additionalData.prosOrCons

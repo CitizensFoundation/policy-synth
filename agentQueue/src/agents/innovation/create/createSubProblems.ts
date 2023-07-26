@@ -16,7 +16,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
         `
             As an AI expert, your role involves the analysis and refinement of problem statements, along with the creation of sub-problems.
 
-            Please keep these guidelines in mind:
+            Instructions:
             1. Refine all the 21 sub-problems and output them all again as an JSON array with refined text.
             2. Output a short title, two or three sentence description and two or three sentence explanation of why the sub-problem is important.
             3. Use your extensive knowledge to enrich the details about the sub-problems but never introduce solutions.
@@ -48,8 +48,9 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
     const messages: BaseChatMessage[] = [
       new SystemChatMessage(
         `
-            As an AI expert, you are tasked with the analysis of problem statements and generation of sub-problems. Please adhere to the following guidelines:
+            As an AI expert, you are tasked with the analysis of problem statements and generation of sub-problems.
 
+            Instructions:
             1. Break the given problem statement into 21 sub problems and present the sub problems as a JSON array.
             2. Output a short title, two or three sentence description and two or three sentence explanation of why the sub-problem is important.
             3. Never provide solutions; your focus should be on outlining the problems, we'll find the solutions later.

@@ -30,6 +30,11 @@ export class CpsSolutions extends CpsStageBase {
         .generations {
           margin-top: 16px;
           margin-bottom: 16px;
+          max-width: 1024px;
+        }
+
+        md-filter-chip {
+          margin-bottom: 8px;
         }
 
         .title {
@@ -90,7 +95,7 @@ export class CpsSolutions extends CpsStageBase {
         .solutionTitle {
           font-size: 24px;
           font-weight: 700;
-          letter-spacing: 0.10em;
+          letter-spacing: 0.1em;
           line-height: 1.4;
           margin: 8px;
         }
@@ -144,30 +149,34 @@ export class CpsSolutions extends CpsStageBase {
       <div class="topContainer layout vertical center-center">
         ${this.renderSubProblem(subProblem, false, 0, true, true)}
         <div class="title">${this.t('Solutions')}</div>
-        <md-chip-set class="generations" type="filter" single-select>
-          ${subProblem.solutions.populations.map(
-            (population, index) =>
-              html`
-                <md-filter-chip
+        <div class="generationContainer layout vertical center-center">
+          <md-chip-set
+            class="generations layout horizontal wrap"
+            type="filter"
+            single-select
+          >
+            ${subProblem.solutions.populations.map(
+              (population, index) =>
+                html`<md-filter-chip
                   label="Generation ${index + 1}"
                   .selected="${this.activePopulationIndex === index}"
                   @click="${() => (this.activePopulationIndex = index)}"
-                ></md-filter-chip>
-              `
+                ></md-filter-chip> `
+            )}
+          </md-chip-set>
+          ${subProblem.solutions.populations[this.activePopulationIndex].map(
+            (solution, index) =>
+              html`<div
+                class="solutionItem"
+                @click="${(): void => {
+                  this.activeSolutionIndex = index;
+                  window.scrollTo(0, 0);
+                }}"
+              >
+                ${index + 1}. ${solution.title}
+              </div>`
           )}
-        </md-chip-set>
-        ${subProblem.solutions.populations[this.activePopulationIndex].map(
-          (solution, index) =>
-            html`<div
-              class="solutionItem"
-              @click="${(): void => {
-                this.activeSolutionIndex = index;
-                window.scrollTo(0, 0);
-              }}"
-            >
-              ${index+1}. ${solution.title}
-            </div>`
-        )}
+        </div>
       </div>
     `;
   }
@@ -209,7 +218,9 @@ export class CpsSolutions extends CpsStageBase {
           </md-standard-icon-button>
         </div>
         <div class="solution">
-          <div class="solutionTitle">${solutionIndex+1}. ${solution.title}</div>
+          <div class="solutionTitle">
+            ${solutionIndex + 1}. ${solution.title}
+          </div>
           <div class="solutionDescription">${solution.description}</div>
           <div class="solutionDescription">
             ${solution.mainBenefitOfSolution}
@@ -222,13 +233,13 @@ export class CpsSolutions extends CpsStageBase {
           <div class="solutionAttributes layout horizontal wrap">
             <div class="pros flexFactor layout vertical center-center">
               <div class="prosConsHeader">${this.t('Pros')}</div>
-              ${(solution.pros as IEngineProCon[]).map(
+              ${(solution.pros as IEngineProCon[])?.map(
                 pro => html`<div class="proCon">${pro.description}</div>`
               )}
             </div>
             <div class="cons flexFactor layout vertical center-center">
               <div class="prosConsHeader">${this.t('Cons')}</div>
-              ${(solution.cons as IEngineProCon[]).map(
+              ${(solution.cons as IEngineProCon[])?.map(
                 con => html`<div class="proCon">${con.description}</div>`
               )}
             </div>

@@ -53,7 +53,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
         `
         You are an expert trained to analyse complex problem statements for affected entities and create search queries to find solutions for the affected entity.
 
-        Adhere to the following guidelines:
+        Instructions:
         1. You generate high quality search queries based on the affected entity.
         2. Always focus your search queries on the Affected Entity not the problem statement.
         ${this.renderCommonPromptSection()}       `
