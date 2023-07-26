@@ -1,6 +1,6 @@
 # Collective Policy Synth
 <p align="center">
-  <img src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="864" height="486">
+  <img src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="360" height="203">
 </p>
 
 ## Bringing together the best of collective and artificial intelligence
