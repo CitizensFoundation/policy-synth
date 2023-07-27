@@ -33,7 +33,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
 
         Instructions:
         1. The merged solution should contain one best attribute from "Parent A" and one best attribute from "Parent B".
-        2. The combination should be logical, meaningful and present a standalone solution to the problem at hand.
+        2. The combination should be creative, meaningful and present a standalone solution to the problem at hand.
         3. Aim to keep the solution simple and easily implementable. Avoid overly complex combinations that would make the solution impractical or difficult to understand.
         4. If the combined solution is too comprehensive or complicated, simplify the merge solution by removing some attributes from it.
         5. Do not refer to "the merged solution" in your output, the solution should be presented as a standalone solution.
@@ -92,7 +92,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         1. Implement mutations corresponding to a "${mutateRate}" rate. The rate determines the extent of changes to the solution.
         2. Mutation can involve introducing new attributes, modifying existing ones, or removing less important ones.
         3. If the solution is overly complex, consider simplifying it by removing the least crucial attributes.
-        4. Ensure the mutation is logical, meaningful, and continues to offer a viable solution to the presented problem.
+        4. Ensure the mutation is creative, meaningful, and continues to offer a viable solution to the presented problem.
         5. Avoid referring to your output as "the merged solution" or "the mutated solution". Instead, present it as a standalone solution.
         ${this.memory.customInstructions.createSolutions ? `
           Important Instructions: ${this.memory.customInstructions.createSolutions}
