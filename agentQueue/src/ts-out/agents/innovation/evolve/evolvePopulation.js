@@ -16,17 +16,18 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     renderRecombinationPrompt(parentA, parentB, subProblemIndex) {
         return [
             new SystemChatMessage(`
-        As an AI genetic algorithm expert, your task is to create a new solution by merging the best attribute of two parent solutions (Parent A and Parent B).
+        As an AI genetic algorithm expert, your task is to create a new solution from two parent solutions (Parent A and Parent B).
 
         Instructions:
-        1. The merged solution should contain one best attribute from "Parent A" and one best attribute from "Parent B".
-        2. The combination should be creative, meaningful and present a standalone solution to the problem at hand.
-        3. Aim to keep the solution simple and easily implementable. Avoid overly complex combinations that would make the solution impractical or difficult to understand.
-        4. If the combined solution is too comprehensive or complicated, simplify the merge solution by removing some attributes from it.
-        5. Do not refer to "the merged solution" in your output, the solution should be presented as a standalone solution.
-        ${this.memory.customInstructions.createSolutions ? `
-          Important Instructions: ${this.memory.customInstructions.createSolutions}
-          ` : ''}
+        1. Use one best attribute from "Parent A" and one best attribute from "Parent B" to create a new solution with one core idea. Be very creative here do not just take one idea from Parent A and one idea from Parent B, make something unique and innovative.
+        2. Aim to keep the solution simple and easily implementable.
+        3. Avoid overly complex combinations that would make the solution impractical or difficult to understand.
+        4. If the combined solution is too comprehensive or complicated, simplify the merge solution by removing all but one most core idea from it.
+        5. Do not refer to "the merged solution" in your output, the solution should be presented as a standalone solution.        ${this.memory.customInstructions.createSolutions
+                ? `
+          Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
+          `
+                : ""}
 
         Always output your merged solution in the following JSON format: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not add any new JSON properties.
         Think step by step.
@@ -65,14 +66,14 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         As an AI expert specializing in genetic algorithms, your task is to mutate the following solution.
 
         Instructions:
-        1. Implement mutations corresponding to a "${mutateRate}" rate. The rate determines the extent of changes to the solution.
+        1. Implement mutations corresponding to a ${mutateRate} mutation rate.
         2. Mutation can involve introducing new attributes, modifying existing ones, or removing less important ones.
-        3. If the solution is overly complex, consider simplifying it by removing the least crucial attributes.
-        4. Ensure the mutation is creative, meaningful, and continues to offer a viable solution to the presented problem.
-        5. Avoid referring to your output as "the merged solution" or "the mutated solution". Instead, present it as a standalone solution.
-        ${this.memory.customInstructions.createSolutions ? `
-          Important Instructions: ${this.memory.customInstructions.createSolutions}
-          ` : ''}
+        3. Ensure the mutation is creative, meaningful, and continues to offer a viable solution to the presented problem.
+        4. Avoid referring to your output as "the merged solution" or "the mutated solution". Instead, present it as a standalone solution.        ${this.memory.customInstructions.createSolutions
+                ? `
+          Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
+          `
+                : ""}
 
         Always format your mutated solution in the following JSON structure: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not introduce any new JSON properties.
         Think step by step.
@@ -175,19 +176,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             throw new Error("No previous population found." + subProblemIndex);
         }
     }
-    async evolveSubProblem(subProblemIndex) {
-        this.logger.info(`Evolve population for sub problem ${subProblemIndex}`);
-        this.logger.info(`Current number of generations: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`);
-        let previousPopulation = this.getPreviousPopulation(subProblemIndex);
+    async addRandomMutation(newPopulation, previousPopulation, subProblemIndex) {
         const populationSize = IEngineConstants.evolution.populationSize;
-        const newPopulation = [];
-        const eliteCount = Math.floor(previousPopulation.length * IEngineConstants.evolution.keepElitePercent);
-        this.logger.debug(`Elite count: ${eliteCount}`);
-        for (let i = 0; i < eliteCount; i++) {
-            newPopulation.push(previousPopulation[i]);
-            this.logger.debug(`Elite: ${previousPopulation[i].title}`);
-        }
-        // Mutation
         let mutationCount = Math.floor(populationSize * IEngineConstants.evolution.mutationOffspringPercent);
         if (newPopulation.length + mutationCount > populationSize) {
             mutationCount = populationSize - newPopulation.length;
@@ -209,8 +199,11 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                 throw error;
             }
         }
+    }
+    async addCrossover(newPopulation, previousPopulation, subProblemIndex) {
         // Crossover
-        let crossoverCount = Math.floor(populationSize * IEngineConstants.evolution.crossoverPercent);
+        let crossoverCount = Math.floor(IEngineConstants.evolution.populationSize *
+            IEngineConstants.evolution.crossoverPercent);
         this.logger.debug(`Crossover count: ${crossoverCount}`);
         for (let i = 0; i < crossoverCount; i++) {
             const parentA = this.selectParent(previousPopulation);
@@ -224,7 +217,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             this.logger.debug(`Offspring: ${JSON.stringify(offspring, null, 2)}`);
             newPopulation.push(offspring);
         }
-        // Immigration
+    }
+    async addRandomImmigration(newPopulation, subProblemIndex) {
+        const populationSize = IEngineConstants.evolution.populationSize;
         let immigrationCount = Math.floor(populationSize * IEngineConstants.evolution.randomImmigrationPercent);
         this.logger.info(`Immigration count: ${immigrationCount}`);
         if (newPopulation.length + immigrationCount > populationSize) {
@@ -243,6 +238,22 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         }
         this.logger.debug("After creating new solutions: " + newSolutions.length);
         newPopulation.push(...newSolutions);
+    }
+    async evolveSubProblem(subProblemIndex) {
+        this.logger.info(`Evolve population for sub problem ${subProblemIndex}`);
+        this.logger.info(`Current number of generations: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`);
+        let previousPopulation = this.getPreviousPopulation(subProblemIndex);
+        const newPopulation = [];
+        const eliteCount = Math.floor(previousPopulation.length * IEngineConstants.evolution.keepElitePercent);
+        this.logger.debug(`Elite count: ${eliteCount}`);
+        // Add Elities
+        for (let i = 0; i < eliteCount; i++) {
+            newPopulation.push(previousPopulation[i]);
+            this.logger.debug(`Elite: ${previousPopulation[i].title}`);
+        }
+        await this.addRandomMutation(newPopulation, previousPopulation, subProblemIndex);
+        await this.addRandomImmigration(newPopulation, subProblemIndex);
+        await this.addCrossover(newPopulation, previousPopulation, subProblemIndex);
         this.logger.info(`New population size: ${newPopulation.length} for sub problem ${subProblemIndex}`);
         this.memory.subProblems[subProblemIndex].solutions.populations.push(newPopulation);
         this.logger.debug(`Current number of generations after push: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`);

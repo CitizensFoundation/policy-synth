@@ -7,7 +7,7 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
     K_FACTOR_INITIAL = 60; // Initial K-factor
     K_FACTOR_MIN = 10; // Minimum K-factor
     NUM_COMPARISONS_FOR_MIN_K = 20; // Number of comparisons for K to reach its minimum
-    maxNumberOfPrompts = 600;
+    maxNumberOfPrompts = IEngineConstants.maxNumberOfPairwiseRankingPrompts;
     numComparisons = {};
     KFactors = {};
     eloRatings = {};

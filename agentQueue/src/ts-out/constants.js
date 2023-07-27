@@ -7,7 +7,7 @@ const gpt35kOutTokenPrice = 0.002 / 1000;
 export class IEngineConstants {
     static createSubProblemsModel = {
         name: "gpt-4",
-        temperature: 0.9,
+        temperature: 0.7,
         maxOutputTokens: 2048,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -16,7 +16,7 @@ export class IEngineConstants {
     };
     static createEntitiesModel = {
         name: "gpt-4",
-        temperature: 0.9,
+        temperature: 0.7,
         maxOutputTokens: 2048,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -25,7 +25,7 @@ export class IEngineConstants {
     };
     static createSearchQueriesModel = {
         name: "gpt-4",
-        temperature: 0.9,
+        temperature: 0.7,
         maxOutputTokens: 1024,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -97,7 +97,7 @@ export class IEngineConstants {
     };
     static createSolutionsModel = {
         name: "gpt-4",
-        temperature: 0.9,
+        temperature: 0.5,
         maxOutputTokens: 1200,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -106,7 +106,7 @@ export class IEngineConstants {
     };
     static evolveSolutionsModel = {
         name: "gpt-4",
-        temperature: 0.9,
+        temperature: 0.5,
         maxOutputTokens: 1200,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -115,7 +115,7 @@ export class IEngineConstants {
     };
     static createProsConsModel = {
         name: "gpt-4",
-        temperature: 0.9,
+        temperature: 0.7,
         maxOutputTokens: 2048,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -124,7 +124,7 @@ export class IEngineConstants {
     };
     static evolutionMutateModel = {
         name: "gpt-4",
-        temperature: 1.0,
+        temperature: 0.7,
         maxOutputTokens: 1024,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -133,7 +133,7 @@ export class IEngineConstants {
     };
     static evolutionRecombineModel = {
         name: "gpt-4",
-        temperature: 1.0,
+        temperature: 0.7,
         maxOutputTokens: 1024,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -187,15 +187,18 @@ export class IEngineConstants {
         populationSize: 60,
         // Population split
         keepElitePercent: 0.1,
-        randomImmigrationPercent: 0.3,
-        mutationOffspringPercent: 0.3,
-        crossoverPercent: 0.3,
+        randomImmigrationPercent: 0.45,
+        mutationOffspringPercent: 0.35,
+        crossoverPercent: 0.1,
         // General mutation rate split
-        lowMutationRate: 0.4,
-        mediumMutationRate: 0.5,
-        highMutationRate: 0.1,
-        selectParentTournamentSize: 4,
-        crossoverMutationPercent: 0.2
+        lowMutationRate: 0.2,
+        mediumMutationRate: 0.6,
+        highMutationRate: 0.2,
+        selectParentTournamentSize: 3,
+        crossoverMutationPercent: 0.1,
     };
+    static minimumNumberOfPairwiseVotesForPopulation = 7;
+    static maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize *
+        IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
     static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
 }
