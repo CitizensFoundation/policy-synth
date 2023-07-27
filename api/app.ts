@@ -53,14 +53,14 @@ export class App {
     this.app.use(bodyParser.json());
     this.app.use(
       express.static(
-        path.join(__dirname, "../apps/collective-policy-synth/dist")
+        path.join(__dirname, "../apps/collective-policy-synth")
       )
     );
 
     this.app.use(
       "/projects*",
       express.static(
-        path.join(__dirname, "../apps/collective-policy-synth/dist")
+        path.join(__dirname, "../apps/collective-policy-synth")
       )
     );
 
