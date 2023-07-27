@@ -66,8 +66,8 @@ export class CpsSolutions extends CpsStageBase {
 
         .solutionItem {
           text-align: left;
-          background-color: var(--md-sys-color-on-primary);
-          color: var(--md-sys-color-primary);
+          background-color: var(--md-sys-color-on-secondary);
+          color: var(--md-sys-color-secondary);
           border-radius: 16px;
           padding: 20px;
           margin: 8px 0;
