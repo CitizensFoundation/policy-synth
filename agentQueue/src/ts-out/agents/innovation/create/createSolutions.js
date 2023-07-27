@@ -55,8 +55,9 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       5. Never re-create solutions listed under 'Already Created Solutions'.
       6. The General, Scientific, Open Data and News Contexts should always inform and inspire your solutions.
       7. The General, Scientific, Open Data and News Contexts sometimes include potential solutions that should inspire your solutions directly.
-      8. Do not refer to the Contexts in your solutions, as the contexts won't be visible to the user.
-      9. Do not use markdown format in your output.
+      8. Be creative in using the Contexts as inspiration for your solutions and always generate really great innovative solutions to those important problems.
+      9. Do not refer to the Contexts in your solutions, as the contexts won't be visible to the user.
+      10. Do not use markdown format in your output.
       ${this.memory.customInstructions.createSolutions ? `
         Important Instructions:${this.memory.customInstructions.createSolutions}
 
