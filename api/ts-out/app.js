@@ -70,8 +70,8 @@ class App {
     }
     initializeMiddlewares() {
         this.app.use(body_parser_1.default.json());
-        this.app.use(express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth/dist")));
-        this.app.use("/projects*", express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth/dist")));
+        this.app.use(express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth")));
+        this.app.use("/projects*", express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth")));
         app.use((0, express_session_1.default)({
             store: redisStore,
             secret: process.env.SESSION_SECRET
