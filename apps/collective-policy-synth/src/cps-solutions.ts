@@ -10,6 +10,8 @@ import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/chips/input-chip.js';
+import '@material/web/textfield/outlined-text-field.js'; // import at the beginning of your file
+import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js'; // get reference to the class
 
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 
@@ -17,6 +19,8 @@ import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 export class CpsSolutions extends CpsStageBase {
   @property({ type: Boolean }) isDropdownVisible = false;
   @property({ type: String }) searchText = '';
+  @property({ type: Number }) activeFilteredSolutionIndex: number = null;
+  @property({ type: Boolean }) isSearchVisible = false; // add a new property to control the visibility of the search field
 
   async connectedCallback() {
     super.connectedCallback();
@@ -25,6 +29,14 @@ export class CpsSolutions extends CpsStageBase {
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
+    if (changedProperties.has('searchText')) {
+      this.activeFilteredSolutionIndex = this.filteredSolutions.findIndex(
+        solution =>
+          solution ===
+          this.memory.subProblems[this.activeSubProblemIndex].solutions
+            .populations[this.activePopulationIndex][this.activeSolutionIndex]
+      );
+    }
   }
 
   disconnectedCallback(): void {
@@ -36,6 +48,16 @@ export class CpsSolutions extends CpsStageBase {
     return [
       super.styles,
       css`
+        md-outlined-text-field {
+          width: 180px;
+          margin-top: -12px;
+          margin-left: 8px;
+        }
+
+        md-outlined-text-field[middle-open] {
+          margin-top: 8px;
+        }
+
         md-outlined-icon-button {
           margin-left: 8px;
           margin-right: 8px;
@@ -49,9 +71,9 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .generations {
-          margin-top: 16px;
+          margin-top: 24px;
           margin-bottom: 16px;
-          max-width: 1024px;
+          max-width: 1100px;
         }
 
         md-filter-chip {
@@ -90,7 +112,6 @@ export class CpsSolutions extends CpsStageBase {
         .generationContainer {
           width: 100%;
         }
-
 
         .solution {
           text-align: left;
@@ -155,28 +176,42 @@ export class CpsSolutions extends CpsStageBase {
             flex-direction: column;
           }
         }
+
+        [hidden] {
+          display: none !important;
+        }
       `,
     ];
   }
 
   get filteredSolutions() {
     let subProblem = this.memory.subProblems[this.activeSubProblemIndex];
-    let solutions = subProblem.solutions.populations[this.activePopulationIndex];
+    if (subProblem && subProblem.solutions) {
+      let solutions =
+        subProblem.solutions.populations[this.activePopulationIndex];
 
-    if (this.searchText) {
-      solutions = solutions.filter(solution =>
-        solution.title.includes(this.searchText) ||
-        solution.description.includes(this.searchText)
-      );
+      if (this.searchText) {
+        solutions = solutions.filter(
+          solution =>
+            solution.title.includes(this.searchText) ||
+            solution.description.includes(this.searchText)
+        );
+      }
+
+      return solutions;
+    } else {
+      return [];
     }
-
-    return solutions;
   }
 
   render() {
     const subProblems = this.memory.subProblems || [];
     if (this.activeSolutionIndex !== null) {
-      return this.renderSolutionScreen(this.activeSolutionIndex);
+      return this.renderSolutionScreen(
+        this.activeFilteredSolutionIndex !== null
+          ? this.activeFilteredSolutionIndex
+          : this.activeSolutionIndex
+      );
     } else if (this.activeSubProblemIndex !== null) {
       return this.renderSubProblemScreen(
         subProblems[this.activeSubProblemIndex]
@@ -202,6 +237,7 @@ export class CpsSolutions extends CpsStageBase {
                 class="solutionItem"
                 @click="${(): void => {
                   this.activeSolutionIndex = index;
+                  this.activeFilteredSolutionIndex = index;
                   window.scrollTo(0, 0);
                 }}"
               >
@@ -214,33 +250,66 @@ export class CpsSolutions extends CpsStageBase {
   }
 
   renderChipSet(subProblem: IEngineSubProblem) {
-    let firstItems = subProblem.solutions.populations.slice(0, 3);
-    let lastItems = subProblem.solutions.populations.slice(-3);
-    let middleItems = subProblem.solutions.populations.slice(3, -3);
-
-    if (subProblem.solutions.populations.length === 7) {
-      middleItems = subProblem.solutions.populations.slice(3, 4);
+    if (!subProblem.solutions) {
+      return nothing;
     }
 
+    if (subProblem.solutions.populations) {
+      let firstItems = subProblem.solutions.populations.slice(0, 3);
+      let lastItems = subProblem.solutions.populations.slice(-3);
+      let middleItems = subProblem.solutions.populations.slice(3, -3);
+
+      if (subProblem.solutions.populations.length === 7) {
+        middleItems = subProblem.solutions.populations.slice(3, 4);
+      }
+
+      return html`
+        <md-chip-set
+          class="generations layout horizontal wrap"
+          type="filter"
+          single-select
+        >
+          ${this.renderFilterChips(firstItems, 0)}
+          ${this.renderDropdown(middleItems, firstItems.length)}
+          ${this.renderFilterChips(
+            lastItems,
+            subProblem.solutions.populations.length - 3
+          )}
+          <md-outlined-icon-button
+            ?hidden="${this.isSearchVisible}"
+            @click="${this.toggleSearchVisibility}"
+          >
+            <md-icon>search</md-icon>
+          </md-outlined-icon-button>
+          ${this.isSearchVisible ? this.renderSearchField() : nothing}
+        </md-chip-set>
+      `;
+    } else {
+      return nothing;
+    }
+  }
+
+  toggleSearchVisibility(): void {
+    this.isSearchVisible = !this.isSearchVisible;
+  }
+
+  renderSearchField() {
     return html`
-      <md-chip-set
-        class="generations layout horizontal wrap"
-        type="filter"
-        single-select
-      >
-        ${this.renderFilterChips(firstItems, 0)}
-        ${this.renderDropdown(middleItems, firstItems.length)}
-        ${this.renderFilterChips(
-          lastItems,
-          subProblem.solutions.populations.length - 3
-        )}
-         <md-input-chip
-          .label="${this.t('Search')}"
-          value=${this.searchText}
-          @change=${(e: Event) => this.searchText = (e.target as HTMLInputElement).value}
-        ></md-input-chip>
-      </md-chip-set>
+      <md-outlined-text-field
+        ?middle-open="${this.isDropdownVisible}"
+        .label="${this.t('Filter')}"
+        .value="${this.searchText}"
+        @keyup="${(e: Event) =>
+          (this.searchText = (e.target as HTMLInputElement).value)}"
+        @blur="${this.handleSearchBlur}"
+      ></md-outlined-text-field>
     `;
+  }
+
+  handleSearchBlur(): void {
+    if (this.searchText.trim() === '') {
+      this.isSearchVisible = false;
+    }
   }
 
   renderFilterChips(items: IEngineSolution[][], startIndex: number) {
@@ -261,19 +330,22 @@ export class CpsSolutions extends CpsStageBase {
 
   handleDropdownChange(e: Event) {
     const selectElement = e.target as HTMLSelectElement;
-    this.activePopulationIndex = Number(selectElement.value) - 1;
+    const newIndex = Number(selectElement.value) - 1;
+    if (!isNaN(newIndex) && newIndex >= 0 && newIndex < this.memory.subProblems.length) {
+      this.activePopulationIndex = newIndex;
+    }
   }
 
-  async toggleDropdownVisibility(): Promise<void> {
+  toggleDropdownVisibility(): void {
     this.isDropdownVisible = !this.isDropdownVisible;
     if (this.isDropdownVisible) {
-      await this.updateComplete;
-      const dropdown = this.shadowRoot.querySelector(
-        'md-outlined-select'
-      ) as MdOutlinedSelect;
-      if (dropdown) {
-        dropdown.selectedIndex = 0;
+      // add check to ensure activePopulationIndex is valid
+      if (this.memory.subProblems.length > 3) {
         this.activePopulationIndex = 3;
+      } else if (this.memory.subProblems.length > 0) {
+        this.activePopulationIndex = this.memory.subProblems.length - 1;
+      } else {
+        this.activePopulationIndex = 0;
       }
     }
   }
@@ -328,7 +400,7 @@ export class CpsSolutions extends CpsStageBase {
             .disabled="${solutionIndex === 0}"
             @click="${(): void => {
               if (solutionIndex > 0) {
-                this.activeSolutionIndex = solutionIndex - 1;
+                this.activeFilteredSolutionIndex = solutionIndex - 1; // change this line
               }
             }}"
           >
@@ -339,7 +411,7 @@ export class CpsSolutions extends CpsStageBase {
             .disabled="${solutionIndex === solutions.length - 1}"
             @click="${(): void => {
               if (solutionIndex < solutions.length - 1) {
-                this.activeSolutionIndex = solutionIndex + 1;
+                this.activeFilteredSolutionIndex = solutionIndex + 1; // change this line
               }
             }}"
           >
