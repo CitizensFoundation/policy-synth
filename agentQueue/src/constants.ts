@@ -186,7 +186,7 @@ export class IEngineConstants {
 
   static maxTopProsConsUsedForRanking = 1;
 
-  static maxNumberGeneratedProsConsForSolution = 3;
+  static maxNumberGeneratedProsConsForSolution = 2;
 
   static minSleepBeforeBrowserRequest = 1100;
 

@@ -42,19 +42,21 @@ export class CreateProsConsProcessor extends BaseProcessor {
         return messages;
     }
     async renderCreatePrompt(prosOrCons, subProblemIndex, solution) {
+        const prosconsSingle = prosOrCons.slice(0, -1);
         const messages = [
             new SystemChatMessage(`
-        As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solutions, their associated sub-problems, and any affected entities.
+        As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solutions, keeping the problem provided in mind.
 
-        Follow these guidelines:
+        Important Instructions:
 
-        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below.
-        2. Ensure that each ${prosOrCons} is concise, consistent, detailed, and important.
-        3. The ${prosOrCons} must be in line with the context given by the problem.
-        4. Each ${prosOrCons} should be directly applicable to the solution.
+        1. Generate and output up to 2 best ${prosOrCons} for the solution below.
+        2. Each ${prosconsSingle} should be directly applicable to the solution.
+        3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
+        4. The ${prosOrCons} must be in line with the context given by the problem.
         5. Output should be in JSON format only, not markdown format.
-        6. The ${prosOrCons} should be outputed as an JSON array: [ "${prosOrCons} 1", "${prosOrCons} 2" ].
-        7. Maintain a step-by-step approach in your reasoning.
+        6. The ${prosOrCons} should be outputted as an JSON array: [ "...", "..." ].
+        7. Never output the index number of the ${prosOrCons} in the text.
+        8. Think step by step.
         `),
             new HumanChatMessage(`
          ${this.renderSubProblem(subProblemIndex, true)}
