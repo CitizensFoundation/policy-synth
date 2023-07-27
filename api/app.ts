@@ -64,6 +64,13 @@ export class App {
       )
     );
 
+    this.app.use(
+      "/solutions*",
+      express.static(
+        path.join(__dirname, "../apps/collective-policy-synth")
+      )
+    );
+
     app.use(
       session({
         store: redisStore,
