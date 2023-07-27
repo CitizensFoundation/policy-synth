@@ -10,6 +10,7 @@ import { Checkbox } from '@material/web/checkbox/lib/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/circularprogress/circular-progress.js';
 import '@material/web/iconbutton/standard-icon-button.js';
+import { MdStandardIconButton } from '@material/web/iconbutton/standard-icon-button.js';
 
 //TDOO: Share from db config
 const maxTopSearchQueries = 2;
@@ -351,7 +352,10 @@ export abstract class CpsStageBase extends YpBaseElement {
     `;
   }
 
-  renderSubProblemList(subProblems: IEngineSubProblem[], title = this.t('Sub Problems')) {
+  renderSubProblemList(
+    subProblems: IEngineSubProblem[],
+    title = this.t('Sub Problems')
+  ) {
     return html`
       <div class="topContainer layout vertical center-center">
         ${this.renderProblemStatement()}
@@ -379,14 +383,55 @@ export abstract class CpsStageBase extends YpBaseElement {
           : 'prominentSubProblem'}"
         @click="${() => this.setSubProblem(index)}"
       >
-        <div class="subProblemTitle layout horizontal ${renderCloseButton ? '' : 'center-center'}">
-          <div>${subProblem.title}</div>
+        <div
+          class="subProblemTitle layout horizontal ${renderCloseButton
+            ? ''
+            : 'center-center'}"
+        >
+          <div>
+            ${renderCloseButton
+              ? `${this.activeSubProblemIndex + 1}. `
+              : ''}${subProblem.title}
+          </div>
           <div class="${renderCloseButton ? 'flex' : ''}"></div>
           ${renderCloseButton
             ? html`
                 <md-standard-icon-button
+                  aria-label="Previous"
+                  .disabled="${this.activeSubProblemIndex === 0}"
+                  @click="${(e: CustomEvent): void => {
+                    e.stopPropagation();
+                    if (this.activeSubProblemIndex > 0) {
+                      this.activeSubProblemIndex -= 1;
+                    }
+                  }}"
+                >
+                  <md-icon>navigate_before</md-icon>
+                </md-standard-icon-button>
+                <md-standard-icon-button
+                  id="nextButton"
+                  aria-label="Next"
+                  .disabled="${this.activeSubProblemIndex ===
+                  maxNumberOfSubProblems - 1}"
+                  @click="${(e: CustomEvent): void => {
+                    e.stopPropagation();
+                    if (
+                      !(this.$$('#nextButton') as MdStandardIconButton)
+                        .disabled &&
+                      this.activeSubProblemIndex < maxNumberOfSubProblems - 1
+                    ) {
+                      this.activeSubProblemIndex += 1;
+                    }
+                  }}"
+                >
+                  <md-icon>navigate_next</md-icon>
+                </md-standard-icon-button>
+                <md-standard-icon-button
                   aria-label="Close"
-                  @click="${this.closeSubProblem}"
+                  @click="${(e: CustomEvent): void => {
+                    e.stopPropagation();
+                    this.activeSubProblemIndex = null;
+                  }}"
                 >
                   <md-icon>close</md-icon>
                 </md-standard-icon-button>
@@ -475,40 +520,39 @@ export abstract class CpsStageBase extends YpBaseElement {
         >
       </div>
       <div class="searchResults">
-      ${this.displayStates.get(title)
-        ? Object.entries(searchResults.pages).map(([type, results]) => {
-            if (results.length === 0) {
-              return nothing;
-            }
+        ${this.displayStates.get(title)
+          ? Object.entries(searchResults.pages).map(([type, results]) => {
+              if (results.length === 0) {
+                return nothing;
+              }
 
-            return html`
-              <div class="queryType">${type}</div>
-              <div class="card">
-                ${results.map(
-                  (result: IEngineSearchResultItem, index: number) => {
-                    return html`
-                      <div
-                        class="searchItem ${this.isUsedSearch(result, index)}"
-                      >
-                        <div class="searchTitle">${result.title}</div>
-                        <div class="url">
-                          <a
-                            target="blank"
-                            href="${result.url || result.link}"
-                            target="_blank"
-                          >
-                            ${result.url || result.link}
-                          </a>
+              return html`
+                <div class="queryType">${type}</div>
+                <div class="card">
+                  ${results.map(
+                    (result: IEngineSearchResultItem, index: number) => {
+                      return html`
+                        <div
+                          class="searchItem ${this.isUsedSearch(result, index)}"
+                        >
+                          <div class="searchTitle">${result.title}</div>
+                          <div class="url">
+                            <a
+                              target="blank"
+                              href="${result.url || result.link}"
+                              target="_blank"
+                            >
+                              ${result.url || result.link}
+                            </a>
+                          </div>
                         </div>
-                      </div>
-                    `;
-                  }
-                )}
-              </div>
-            `;
-          })
-        : nothing}
-
+                      `;
+                    }
+                  )}
+                </div>
+              `;
+            })
+          : nothing}
       </div>
     `;
   }
