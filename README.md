@@ -7,7 +7,7 @@
 Our project embodies a unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas. We are in the process of building a state-of-the-art platform where policymakers, citizens, and AI can engage in a collective discourse. This collaborative interaction is expected to not only expedite decision-making processes but also augment their quality, paving the way for more inventive and efficacious policy resolutions.
 
 ### Live: First test results
-- [First test results from the first test project](https://collective-policy-synth.citizens.is/projects/1/)
+- [Live test results](https://collective-policy-synth.citizens.is/projects/1/)
 
 ### Figma Design
 - [Figma Prototype Design](https://www.figma.com/file/ekIKXfT3tL8Ab7MoLSnjnN/Collective-Policy-Synth-V10)
