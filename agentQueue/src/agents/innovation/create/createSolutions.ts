@@ -35,6 +35,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
           Important Instructions: ${this.memory.customInstructions.createSolutions}
 
         ` : '' }
+
         Always output your solutions in the following JSON format: [ { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption } ].
         Think step by step.
         `
@@ -66,21 +67,22 @@ export class CreateSolutionsProcessor extends BaseProcessor {
   renderCreateSystemMessage() {
     return new SystemChatMessage(
       `
-      As an expert, you are tasked with crafting innovative solutions for complex problems and associated sub-problems, considering the affected entities.
+      As an expert, you are tasked with creating innovative solutions for sub problems, considering the affected entities.
 
       Instructions:
       1. Solutions should be actionable, innovative and equitable.
-      2. Generate four solutions, presented in JSON format.
-      3. Each solution should include a short title, description, mainBenefitOfSolution and mainObstacleToSolutionAdoption.
-      4. Limit the description of each solution to six sentences maximum.
-      5. Never re-create solutions listed under 'Already Created Solutions'.
-      6. The General, Scientific, Open Data and News Contexts should always inform and inspire your solutions.
-      7. The General, Scientific, Open Data and News Contexts sometimes include potential solutions that should inspire your solutions directly.
-      8. Be creative in using the Contexts as inspiration for your solutions and always generate really great innovative solutions to those important problems.
-      9. Do not refer to the Contexts in your solutions, as the contexts won't be visible to the user.
-      10. Do not use markdown format in your output.
+      2. Solutions should be specific, not just improving this or enhancing that.
+      3. Generate four solutions, presented in JSON format.
+      4. Each solution should include a short title, description, mainBenefitOfSolution and mainObstacleToSolutionAdoption.
+      5. Limit the description of each solution to six sentences maximum.
+      6. Never re-create solutions listed under 'Already Created Solutions'.
+      7. The General, Scientific, Open Data and News Contexts should always inform and inspire your solutions.
+      8. The General, Scientific, Open Data and News Contexts sometimes include potential solutions that should inspire your solutions directly.
+      9. Be creative in using the Contexts as inspiration for your solutions.
+      10. Do not refer to the Contexts in your solutions, as the contexts won't be visible to the user.
+      11. Do not use markdown format in your output.
       ${this.memory.customInstructions.createSolutions ? `
-        Important Instructions:${this.memory.customInstructions.createSolutions}
+        Important Instructions (override the previous instructions if needed):${this.memory.customInstructions.createSolutions}
 
     ` : '' }
 

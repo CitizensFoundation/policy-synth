@@ -44,7 +44,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
     async renderCreatePrompt(prosOrCons, subProblemIndex, solution) {
         const messages = [
             new SystemChatMessage(`
-        As an AI expert, your task is to creatively generate practical ${prosOrCons} for the provided solutions, their associated sub-problems, and any affected entities.
+        As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solutions, their associated sub-problems, and any affected entities.
 
         Follow these guidelines:
 
