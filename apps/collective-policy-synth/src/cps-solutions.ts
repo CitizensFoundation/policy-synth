@@ -8,10 +8,13 @@ import '@material/web/chips/filter-chip.js';
 import '@material/web/iconbutton/standard-icon-button.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
+import '@material/web/iconbutton/outlined-icon-button.js';
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
+  @property({ type: Boolean }) isDropdownVisible = false;
+
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Solutions - open`);
@@ -30,6 +33,18 @@ export class CpsSolutions extends CpsStageBase {
     return [
       super.styles,
       css`
+        md-outlined-icon-button {
+          margin-left: 8px;
+          margin-right: 8px;
+          margin-top: -4px;
+        }
+
+        md-outlined-select {
+          margin-top: -12px;
+          margin-left: 8px;
+          margin-right: 8px;
+        }
+
         .generations {
           margin-top: 16px;
           margin-bottom: 16px;
@@ -51,8 +66,8 @@ export class CpsSolutions extends CpsStageBase {
 
         .solutionItem {
           text-align: left;
-          background-color: var(--md-sys-color-primary);
-          color: var(--md-sys-color-on-primary);
+          background-color: var(--md-sys-color-on-primary);
+          color: var(--md-sys-color-primary);
           border-radius: 16px;
           padding: 20px;
           margin: 8px 0;
@@ -68,6 +83,11 @@ export class CpsSolutions extends CpsStageBase {
           line-height: 1.4;
           vertical-align: middle;
         }
+
+        .generationContainer {
+          width: 100%;
+        }
+
 
         .solution {
           text-align: left;
@@ -156,7 +176,7 @@ export class CpsSolutions extends CpsStageBase {
     return html`
       <div class="topContainer layout vertical center-center">
         ${this.renderSubProblem(subProblem, false, 0, true, true)}
-        <div class="title">${this.t('Solutions')}</div>
+        <div class="title">${this.t('Evolving Solutions')}</div>
         <div class="generationContainer layout vertical center-center">
           ${this.renderChipSet(subProblem)}
           ${subProblem.solutions.populations[this.activePopulationIndex].map(
@@ -222,16 +242,37 @@ export class CpsSolutions extends CpsStageBase {
     this.activePopulationIndex = Number(selectElement.value) - 1;
   }
 
+  async toggleDropdownVisibility(): Promise<void> {
+    this.isDropdownVisible = !this.isDropdownVisible;
+    if (this.isDropdownVisible) {
+      await this.updateComplete;
+      const dropdown = this.shadowRoot.querySelector(
+        'md-outlined-select'
+      ) as MdOutlinedSelect;
+      if (dropdown) {
+        dropdown.selectedIndex = 0;
+        this.activePopulationIndex = 3;
+      }
+    }
+  }
 
   resetDropdown() {
-    const dropdown = this.shadowRoot.querySelector('md-outlined-select') as MdOutlinedSelect;
+    const dropdown = this.shadowRoot.querySelector(
+      'md-outlined-select'
+    ) as MdOutlinedSelect;
     if (dropdown) {
-      dropdown.selectedIndex = -1;
+      this.isDropdownVisible = false;
     }
   }
 
   renderDropdown(middleItems: IEngineSolution[][], startIndex: number) {
-    if (middleItems.length > 0) {
+    if (middleItems.length > 0 && !this.isDropdownVisible) {
+      return html`
+        <md-outlined-icon-button @click="${this.toggleDropdownVisibility}">
+          <md-icon>expand_more</md-icon>
+        </md-outlined-icon-button>
+      `;
+    } else if (middleItems.length > 0 && this.isDropdownVisible) {
       return html`
         <md-outlined-select
           label="Generation ..."
