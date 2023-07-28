@@ -14,6 +14,7 @@ import '@material/web/textfield/outlined-text-field.js'; // import at the beginn
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js'; // get reference to the class
 
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
+import { IEngineConstants } from './constants.js';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
@@ -24,7 +25,7 @@ export class CpsSolutions extends CpsStageBase {
   @property({ type: Boolean })
   hideExtraSolutionInformation = true;
   reset() {
-    this.searchText = "";
+    this.searchText = '';
     this.isSearchVisible = false;
     this.isDropdownVisible = false;
     this.activeSolutionIndex = null;
@@ -35,6 +36,41 @@ export class CpsSolutions extends CpsStageBase {
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Solutions - open`);
+
+    document.addEventListener('keydown', this.handleKeyDown.bind(this));
+  }
+
+  handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'ArrowRight') {
+      if (this.activeSolutionIndex !== null) {
+        if (
+          this.activeFilteredSolutionIndex <
+          this.filteredSolutions.length - 1
+        ) {
+          this.activeFilteredSolutionIndex += 1;
+        }
+      } else if (this.activeSubProblemIndex !== null) {
+        if (this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1) {
+          this.activeSubProblemIndex += 1;
+        }
+      }
+    } else if (e.key === 'ArrowLeft') {
+      if (this.activeSolutionIndex !== null) {
+        if (this.activeFilteredSolutionIndex > 0) {
+          this.activeFilteredSolutionIndex -= 1;
+        }
+      } else if (this.activeSubProblemIndex !== null) {
+        if (this.activeSubProblemIndex > 0) {
+          this.activeSubProblemIndex -= 1;
+        }
+      }
+    } else if (e.key === 'Escape') {
+      if (this.activeSolutionIndex !== null) {
+        this.activeSolutionIndex = null;
+      } else if (this.activeSubProblemIndex !== null) {
+        this.activeSubProblemIndex = null;
+      }
+    }
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -52,6 +88,7 @@ export class CpsSolutions extends CpsStageBase {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     window.appGlobals.activity(`Solutions - close`);
+    document.removeEventListener('keydown', this.handleKeyDown);
   }
 
   static get styles() {
@@ -224,14 +261,16 @@ export class CpsSolutions extends CpsStageBase {
   get filteredSolutions() {
     let subProblem = this.memory.subProblems[this.activeSubProblemIndex];
     if (subProblem && subProblem.solutions) {
-      let solutions = subProblem.solutions.populations[this.activePopulationIndex];
+      let solutions =
+        subProblem.solutions.populations[this.activePopulationIndex];
 
       if (this.searchText) {
         const searchTerms = this.searchText.toLowerCase().split(' ');
         solutions = solutions.filter(solution =>
-          searchTerms.every(term =>
-            solution.title.toLowerCase().includes(term) ||
-            solution.description.toLowerCase().includes(term)
+          searchTerms.every(
+            term =>
+              solution.title.toLowerCase().includes(term) ||
+              solution.description.toLowerCase().includes(term)
           )
         );
       }
@@ -241,7 +280,6 @@ export class CpsSolutions extends CpsStageBase {
       return [];
     }
   }
-
 
   render() {
     const subProblems = this.memory.subProblems || [];
@@ -511,14 +549,18 @@ export class CpsSolutions extends CpsStageBase {
                 />
               </div> `
             : nothing}
-          <div class="solutionTitle">
-            ${solution.title}
-          </div>
+          <div class="solutionTitle">${solution.title}</div>
           <div class="solutionDescription">${solution.description}</div>
-          <div class="solutionDescription" ?hidden="${this.hideExtraSolutionInformation}">
+          <div
+            class="solutionDescription"
+            ?hidden="${this.hideExtraSolutionInformation}"
+          >
             ${solution.mainBenefitOfSolution}
           </div>
-          <div class="solutionDescription" ?hidden="${this.hideExtraSolutionInformation}">
+          <div
+            class="solutionDescription"
+            ?hidden="${this.hideExtraSolutionInformation}"
+          >
             ${solution.mainObstacleToSolutionAdoption}
           </div>
         </div>
