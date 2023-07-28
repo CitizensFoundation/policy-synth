@@ -91,6 +91,12 @@ export class CpsSolutions extends CpsStageBase {
 
         .solutionImage {
           padding: 8px;
+          margin-right: 8px;
+        }
+
+        .solutionTopImage {
+          margin-bottom: 16px;
+          margin-top: 16px;
         }
 
         .solutionItem {
@@ -103,7 +109,7 @@ export class CpsSolutions extends CpsStageBase {
           max-width: 960px;
           width: 100%;
           font-size: 22px;
-          height: 52px;
+          height: 55px;
           display: flex;
           flex-direction: column;
           justify-content: left;
@@ -111,6 +117,10 @@ export class CpsSolutions extends CpsStageBase {
           cursor: pointer;
           line-height: 1.4;
           vertical-align: middle;
+        }
+
+        .solutionItem[has-image] {
+          height: 85px;
         }
 
         .generationContainer {
@@ -126,6 +136,14 @@ export class CpsSolutions extends CpsStageBase {
           margin: 8px 0;
           max-width: 960px;
           width: 100%;
+        }
+
+        .solutionItemTitle[has-image] {
+          margin-top: 6px;
+        }
+
+        .solutionIndex {
+          margin-right: 8px;
         }
 
         .proCon {
@@ -231,14 +249,19 @@ export class CpsSolutions extends CpsStageBase {
   renderSubProblemScreen(subProblem: IEngineSubProblem) {
     return html`
       <div class="topContainer layout vertical self-start">
-        ${this.renderSubProblem(subProblem, false, 0, true, true)}
-        <div class="title">${this.t('Evolving Solutions')}</div>
+        <div class="layout horizontal center-center">
+          ${this.renderSubProblem(subProblem, false, 0, true, true)}
+        </div>
+        <div class="layout horizontal center-center">
+          <div class="title">${this.t('Evolving Solutions')}</div>
+        </div>
         <div class="generationContainer layout vertical center-center">
           ${this.renderChipSet(subProblem)}
           ${this.filteredSolutions.map(
             (solution, index) =>
               html`<div
                 class="solutionItem layout horizontal self-start"
+                ?has-image="${solution.imageUrl}"
                 @click="${(): void => {
                   this.activeSolutionIndex = index;
                   this.activeFilteredSolutionIndex = index;
@@ -252,12 +275,18 @@ export class CpsSolutions extends CpsStageBase {
                           class="solutionImage"
                           height="72"
                           width="72"
-                          src="${solution.imageUrl}"
+                          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
                           alt="${solution.title}"
                         />
                       </div>
                     `
-                  : html`${index + 1}.`}${solution.title}
+                  : html`<div class="solutionIndex">${index + 1}.</div>`}
+                <div
+                  class="solutionItemTitle"
+                  ?has-image="${solution.imageUrl}"
+                >
+                  ${solution.title}
+                </div>
               </div>`
           )}
         </div>
@@ -409,42 +438,62 @@ export class CpsSolutions extends CpsStageBase {
     }
   }
 
+  renderSolutionNavigationButtons(
+    solutionIndex: number,
+    solutions: IEngineSolution[]
+  ) {
+    return html`
+      <div class="layout horizontal center-center">
+        <md-standard-icon-button
+          aria-label="Previous"
+          .disabled="${solutionIndex === 0}"
+          @click="${(): void => {
+            if (solutionIndex > 0) {
+              this.activeFilteredSolutionIndex = solutionIndex - 1; // change this line
+            }
+          }}"
+        >
+          <md-icon>navigate_before</md-icon>
+        </md-standard-icon-button>
+        <md-standard-icon-button
+          aria-label="Next"
+          .disabled="${solutionIndex === solutions.length - 1}"
+          @click="${(): void => {
+            if (solutionIndex < solutions.length - 1) {
+              this.activeFilteredSolutionIndex = solutionIndex + 1; // change this line
+            }
+          }}"
+        >
+          <md-icon>navigate_next</md-icon>
+        </md-standard-icon-button>
+        <md-standard-icon-button
+          aria-label="Close"
+          @click="${(): void => (this.activeSolutionIndex = null)}"
+        >
+          <md-icon>close</md-icon>
+        </md-standard-icon-button>
+      </div>
+    `;
+  }
+
   renderSolutionScreen(solutionIndex: number) {
     const solutions = this.filteredSolutions;
     const solution = solutions[solutionIndex];
     return html`
       <div class="topContainer layout vertical center-center">
-        <div class="layout horizontal center-center">
-          <md-standard-icon-button
-            aria-label="Previous"
-            .disabled="${solutionIndex === 0}"
-            @click="${(): void => {
-              if (solutionIndex > 0) {
-                this.activeFilteredSolutionIndex = solutionIndex - 1; // change this line
-              }
-            }}"
-          >
-            <md-icon>navigate_before</md-icon>
-          </md-standard-icon-button>
-          <md-standard-icon-button
-            aria-label="Next"
-            .disabled="${solutionIndex === solutions.length - 1}"
-            @click="${(): void => {
-              if (solutionIndex < solutions.length - 1) {
-                this.activeFilteredSolutionIndex = solutionIndex + 1; // change this line
-              }
-            }}"
-          >
-            <md-icon>navigate_next</md-icon>
-          </md-standard-icon-button>
-          <md-standard-icon-button
-            aria-label="Close"
-            @click="${(): void => (this.activeSolutionIndex = null)}"
-          >
-            <md-icon>close</md-icon>
-          </md-standard-icon-button>
-        </div>
+        ${this.renderSolutionNavigationButtons(solutionIndex, solutions)}
         <div class="solution">
+          ${solution.imageUrl
+            ? html`<div class="layout horizontal center-center">
+                <img
+                  class="solutionTopImage"
+                  height="250"
+                  width="250"
+                  src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
+                  alt="${solution.title}"
+                />
+              </div> `
+            : nothing}
           <div class="solutionTitle">
             ${solutionIndex + 1}. ${solution.title}
           </div>
@@ -472,6 +521,7 @@ export class CpsSolutions extends CpsStageBase {
             </div>
           </div>
         </div>
+        ${this.renderSolutionNavigationButtons(solutionIndex, solutions)}
       </div>
     `;
   }

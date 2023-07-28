@@ -15,6 +15,7 @@ import { GetWebPagesProcessor } from "./web/getWebPages.js";
 import { SearchWebProcessor } from "./web/searchWeb.js";
 import { EvolvePopulationProcessor } from "./evolve/evolvePopulation.js";
 import { CreateSolutionImagesProcessor } from "./create/createImages.js";
+import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
 
 export class AgentInnovation extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -43,6 +44,8 @@ export class AgentInnovation extends BaseAgent {
 
         // Formulate search queries to gather relevant data or information
         "create-search-queries": {},
+
+        "create-sub-problem-images": {},
 
         // Prioritize the search queries based on their expected relevance or importance
         "rank-search-queries": {},
@@ -159,6 +162,13 @@ export class AgentInnovation extends BaseAgent {
           this.memory
         );
         await createSolutionImagesProcessor.process();
+        break;
+      case "create-sub-problem-images":
+        const createSubProblemImagesProcessor = new CreateSubProblemImagesProcessor(
+          this.job,
+          this.memory
+        );
+        await createSubProblemImagesProcessor.process();
         break;
       case "create-search-queries":
         const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(

@@ -67,7 +67,7 @@ const currentMemoryId = 1;
 @customElement('cps-app')
 export class CpsApp extends YpBaseElement {
   @property({ type: Number })
-  pageIndex = 1;
+  pageIndex = PagesTypes.Solutions;
 
   @property({ type: Object })
   currentMemory: IEngineInnovationMemoryData | undefined;
@@ -497,13 +497,11 @@ export class CpsApp extends YpBaseElement {
         }
 
         .selectedContainer {
-          --md-list-list-item-container-color: var(
-            --md-sys-color-secondary-container
-          );
-          color: var(--md-sys-color-on-background);
-          --md-list-list-item-label-text-color: var(
-            --md-sys-color-on-background
-          );
+          /*--md-list-item-list-item-container-color: var(--md-sys-color-surface-variant);*/
+          color: var(--md-sys-color-primary);
+          --md-list-item-list-item-label-text-color: var(--md-sys-color-primary);
+          --md-list-item-list-item-focus-label-text-color: var(--md-sys-color-primary);
+          --md-list-item-label-text-color: var(--md-sys-color-primary);
         }
 
         md-navigation-drawer {
@@ -658,11 +656,11 @@ export class CpsApp extends YpBaseElement {
   }
 
   openAnalytics() {
-    window.location.href = `/analytics`;
+    //window.location.href = `/analytics`;
   }
 
   goToAdmin() {
-    window.location.href = `/admin`;
+    //window.location.href = `/admin`;
   }
 
   stageModelMap = {
@@ -670,6 +668,7 @@ export class CpsApp extends YpBaseElement {
     createEntities: IEngineConstants.createEntitiesModel,
     createSearchQueries: IEngineConstants.createSearchQueriesModel,
     createSolutionImages: IEngineConstants.createSolutionImagesModel,
+    createSubProblemImages: IEngineConstants.createSolutionImagesModel,
     rankSearchResults: IEngineConstants.searchResultsRankingsModel,
     rankSearchQueries: IEngineConstants.searchQueryRankingsModel,
     rankSubProblems: IEngineConstants.subProblemsRankingsModel,

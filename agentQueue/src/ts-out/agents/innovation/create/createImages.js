@@ -7,19 +7,8 @@ import axios from 'axios';
 import AWS from 'aws-sdk';
 import fs from 'fs';
 import path from 'path';
-const cloudflareProxy = 'cps-images.citizens.is';
 export class CreateSolutionImagesProcessor extends BaseProcessor {
-    renderCurrentSolution(solution) {
-        return `
-      Solution:
-
-      Title: ${solution.title}
-      Description: ${solution.description}
-
-      How Solution Can Help: ${solution.mainBenefitOfSolution}
-      Main Obstacles to Solution Adoption: ${solution.mainObstacleToSolutionAdoption}
-    `;
-    }
+    cloudflareProxy = 'https://cps-images.citizens.is';
     async downloadImage(imageUrl, imageFilePath) {
         const response = await axios({
             method: 'GET',
@@ -101,7 +90,6 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                     size: '512x512'
                 });
                 if (result) {
-                    this.logger.debug(`Result: ${result}`);
                     retrying = false; // Only change retrying to false if there is a result.
                 }
                 else {
@@ -137,8 +125,8 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.currentPopulationIndex(subProblemIndex)})`);
                 const solution = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)][solutionIndex];
                 this.logger.debug(solution.title);
-                if (true || !solution.imageUrl) {
-                    let imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createProsConsModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                if (!solution.imageUrl || solution.imageUrl.includes("windows.net/private")) {
+                    let imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
                     this.logger.debug(`subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} currentPopulationIndex ${this.currentPopulationIndex(subProblemIndex)}}`);
                     this.logger.debug(`Image Prompt: ${imagePrompt}`);
                     const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
@@ -149,10 +137,9 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                     // Upload image to S3
                     const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(subProblemIndex)}/${solutionIndex}.png`;
                     await this.uploadImageToS3(process.env.S3_BUCKET_NAME, imageFilePath, s3ImagePath);
-                    const newImageUrl = `${cloudflareProxy}/${s3ImagePath}`;
+                    const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
                     solution.imageUrl = newImageUrl;
-                    console.log(`New Image URL: ${newImageUrl}`);
-                    this.logger.debug(`Image URL: ${imageUrl}`);
+                    this.logger.debug(`Image URL: ${newImageUrl}`);
                 }
                 else {
                     this.logger.debug(`Solution already has image URL ${solution.imageUrl}`);

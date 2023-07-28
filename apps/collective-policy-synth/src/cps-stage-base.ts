@@ -52,12 +52,26 @@ export abstract class CpsStageBase extends YpBaseElement {
     );
   }
 
+  fixImageUrlIfNeeded(url: string) {
+    if (url.startsWith('https')) {
+      return url;
+    } else {
+      return `https://${url}`;
+    }
+  }
+
   static get styles() {
     return [
       super.styles,
       css`
         .topContainer {
           margin-right: 32px;
+          margin-top: 24px;
+        }
+
+        .subProblemImage {
+          margin-bottom: 24px;
+          margin-top: 4px
         }
 
         .prominentSubProblem {
@@ -399,60 +413,76 @@ export abstract class CpsStageBase extends YpBaseElement {
         @click="${() => this.setSubProblem(index)}"
       >
         <div
-          class="subProblemTitle layout horizontal ${renderCloseButton
-            ? ''
-            : 'center-center'}"
+          class="subProblemTitle layout ${renderCloseButton
+            ? 'vertical'
+            : 'vertical center-center'}"
         >
-          <div>
-            ${renderCloseButton
-              ? `${this.activeSubProblemIndex + 1}. `
-              : ''}${subProblem.title}
-          </div>
-          <div class="${renderCloseButton ? 'flex' : ''}"></div>
-          ${renderCloseButton
+          ${subProblem.imageUrl
             ? html`
-                <md-standard-icon-button
-                  aria-label="Previous"
-                  .disabled="${this.activeSubProblemIndex === 0}"
-                  @click="${(e: CustomEvent): void => {
-                    e.stopPropagation();
-                    if (this.activeSubProblemIndex > 0) {
-                      this.activeSubProblemIndex -= 1;
-                    }
-                  }}"
-                >
-                  <md-icon>navigate_before</md-icon>
-                </md-standard-icon-button>
-                <md-standard-icon-button
-                  id="nextButton"
-                  aria-label="Next"
-                  .disabled="${this.activeSubProblemIndex ===
-                  maxNumberOfSubProblems - 1}"
-                  @click="${(e: CustomEvent): void => {
-                    e.stopPropagation();
-                    if (
-                      !(this.$$('#nextButton') as MdStandardIconButton)
-                        .disabled &&
-                      this.activeSubProblemIndex < maxNumberOfSubProblems - 1
-                    ) {
-                      this.activeSubProblemIndex += 1;
-                    }
-                  }}"
-                >
-                  <md-icon>navigate_next</md-icon>
-                </md-standard-icon-button>
-                <md-standard-icon-button
-                  aria-label="Close"
-                  @click="${(e: CustomEvent): void => {
-                    e.stopPropagation();
-                    this.activeSubProblemIndex = null;
-                  }}"
-                >
-                  <md-icon>close</md-icon>
-                </md-standard-icon-button>
+                <div class="layout horizontal center-center">
+                  <img
+                    class="subProblemImage"
+                    height="200"
+                    width="200"
+                    src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
+                    alt="${subProblem.title}"
+                  />
+                </div>
               `
             : nothing}
+          <div class="layout horizontal">
+            <div>
+              ${renderCloseButton
+                ? `${this.activeSubProblemIndex + 1}. `
+                : ''}${subProblem.title}
+            </div>
+            <div class="${renderCloseButton ? 'flex' : ''}"></div>
+            ${renderCloseButton
+              ? html`
+                  <md-standard-icon-button
+                    aria-label="Previous"
+                    .disabled="${this.activeSubProblemIndex === 0}"
+                    @click="${(e: CustomEvent): void => {
+                      e.stopPropagation();
+                      if (this.activeSubProblemIndex > 0) {
+                        this.activeSubProblemIndex -= 1;
+                      }
+                    }}"
+                  >
+                    <md-icon>navigate_before</md-icon>
+                  </md-standard-icon-button>
+                  <md-standard-icon-button
+                    id="nextButton"
+                    aria-label="Next"
+                    .disabled="${this.activeSubProblemIndex ===
+                    maxNumberOfSubProblems - 1}"
+                    @click="${(e: CustomEvent): void => {
+                      e.stopPropagation();
+                      if (
+                        !(this.$$('#nextButton') as MdStandardIconButton)
+                          .disabled &&
+                        this.activeSubProblemIndex < maxNumberOfSubProblems - 1
+                      ) {
+                        this.activeSubProblemIndex += 1;
+                      }
+                    }}"
+                  >
+                    <md-icon>navigate_next</md-icon>
+                  </md-standard-icon-button>
+                  <md-standard-icon-button
+                    aria-label="Close"
+                    @click="${(e: CustomEvent): void => {
+                      e.stopPropagation();
+                      this.activeSubProblemIndex = null;
+                    }}"
+                  >
+                    <md-icon>close</md-icon>
+                  </md-standard-icon-button>
+                `
+              : nothing}
+          </div>
         </div>
+
         <div class="subProblemStatement">${subProblem.description}</div>
         ${renderMoreInfo
           ? html`
