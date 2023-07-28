@@ -223,8 +223,8 @@ export class CpsSolutions extends CpsStageBase {
           padding: 24px;
           max-width: 410px;
           width: 100%;
-          background-color: var(--md-sys-color-tertiary);
-          color: var(--md-sys-color-on-tertiary);
+          background-color: var(--md-sys-color-on-tertiary);
+          color: var(--md-sys-color-tertiary);
           border-radius: 16px;
           font-size: 20px;
           align-items: self-start;
