@@ -173,7 +173,7 @@ export class IEngineConstants {
 
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
 
-  static maxSubProblems = 1;
+  static maxSubProblems = 7;
 
   static maxNumberGeneratedOfEntities = 7;
 

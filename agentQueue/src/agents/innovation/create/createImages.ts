@@ -60,7 +60,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
           reject(err);
         }
         fs.unlinkSync(filePath); // Deleting file from local storage
-        console.log(`Upload response: ${JSON.stringify(data)}`);
+        //console.log(`Upload response: ${JSON.stringify(data)}`);
         resolve(data);
       });
     });
