@@ -3,6 +3,11 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { Configuration, OpenAIApi } from "openai";
+import axios from 'axios';
+import AWS from 'aws-sdk';
+import fs from 'fs';
+import path from 'path';
+const cloudflareProxy = 'cps-images.citizens.is';
 export class CreateSolutionImagesProcessor extends BaseProcessor {
     renderCurrentSolution(solution) {
         return `
@@ -14,6 +19,41 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
       How Solution Can Help: ${solution.mainBenefitOfSolution}
       Main Obstacles to Solution Adoption: ${solution.mainObstacleToSolutionAdoption}
     `;
+    }
+    async downloadImage(imageUrl, imageFilePath) {
+        const response = await axios({
+            method: 'GET',
+            url: imageUrl,
+            responseType: 'stream',
+        });
+        const writer = fs.createWriteStream(imageFilePath);
+        response.data.pipe(writer);
+        return new Promise((resolve, reject) => {
+            writer.on('finish', resolve);
+            writer.on('error', reject);
+        });
+    }
+    async uploadImageToS3(bucket, filePath, key) {
+        const s3 = new AWS.S3();
+        const fileContent = fs.readFileSync(filePath);
+        const params = {
+            Bucket: bucket,
+            Key: key,
+            Body: fileContent,
+            ACL: 'public-read',
+            ContentType: 'image/png',
+            ContentDisposition: 'inline'
+        };
+        return new Promise((resolve, reject) => {
+            s3.upload(params, (err, data) => {
+                if (err) {
+                    reject(err);
+                }
+                fs.unlinkSync(filePath); // Deleting file from local storage
+                console.log(`Upload response: ${JSON.stringify(data)}`);
+                resolve(data);
+            });
+        });
     }
     async renderCreatePrompt(subProblemIndex, solution) {
         const messages = [
@@ -49,30 +89,74 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         const configuration = new Configuration({
             apiKey: process.env.OPENAI_API_KEY,
         });
+        4;
         const client = new OpenAIApi(configuration);
-        const result = await client.createImage({
-            prompt,
-        });
-        const imageURL = result.data.data[0].url;
-        if (!imageURL)
-            throw new Error("Error generating image");
-        return imageURL;
+        let retryCount = 0;
+        let retrying = true; // Initialize as true
+        let result;
+        while (retrying && retryCount < IEngineConstants.maxDalleRetryCount) {
+            try {
+                result = await client.createImage({
+                    prompt,
+                    size: '512x512'
+                });
+                if (result) {
+                    this.logger.debug(`Result: ${result}`);
+                    retrying = false; // Only change retrying to false if there is a result.
+                }
+                else {
+                    this.logger.debug(`Result: NONE`);
+                }
+            }
+            catch (error) {
+                this.logger.warn("Error generating image, retrying...");
+                this.logger.warn(error.stack);
+                retryCount++;
+                this.logger.warn(error);
+                const sleepingFor = 5000 + (retryCount * 10000);
+                this.logger.debug(`Sleeping for ${sleepingFor} milliseconds`);
+                await new Promise((resolve) => setTimeout(resolve, sleepingFor));
+            }
+        }
+        if (result) {
+            const imageURL = result.data.data[0].url;
+            if (!imageURL)
+                throw new Error("Error getting generated image");
+            return imageURL;
+        }
+        else {
+            this.logger.error(`Error generating image after ${retryCount} retries`);
+            return undefined;
+        }
     }
     async createImages() {
         const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const solutions = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)];
             for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
-                this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} currentPopulationIndex ${this.currentPopulationIndex(subProblemIndex)}`);
+                this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.currentPopulationIndex(subProblemIndex)})`);
                 const solution = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)][solutionIndex];
                 this.logger.debug(solution.title);
-                let imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createProsConsModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
-                this.logger.debug(`subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} currentPopulationIndex ${this.currentPopulationIndex}`);
-                this.logger.debug(`Image Prompt: ${imagePrompt}`);
-                const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
-                solution.imageUrl = imageUrl;
-                this.logger.debug(`Image URL: ${imageUrl}`);
-                await new Promise((resolve) => setTimeout(resolve, 1000 * 90));
+                if (true || !solution.imageUrl) {
+                    let imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createProsConsModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                    this.logger.debug(`subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} currentPopulationIndex ${this.currentPopulationIndex(subProblemIndex)}}`);
+                    this.logger.debug(`Image Prompt: ${imagePrompt}`);
+                    const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
+                    // Download image and save it to /tmp folder
+                    const imageFilePath = path.join('/tmp', `${subProblemIndex}_${this.currentPopulationIndex(subProblemIndex)}_${solutionIndex}.png`);
+                    await this.downloadImage(imageUrl, imageFilePath);
+                    this.logger.debug(fs.existsSync(imageFilePath) ? 'File downloaded successfully.' : 'File download failed.');
+                    // Upload image to S3
+                    const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(subProblemIndex)}/${solutionIndex}.png`;
+                    await this.uploadImageToS3(process.env.S3_BUCKET_NAME, imageFilePath, s3ImagePath);
+                    const newImageUrl = `${cloudflareProxy}/${s3ImagePath}`;
+                    solution.imageUrl = newImageUrl;
+                    console.log(`New Image URL: ${newImageUrl}`);
+                    this.logger.debug(`Image URL: ${imageUrl}`);
+                }
+                else {
+                    this.logger.debug(`Solution already has image URL ${solution.imageUrl}`);
+                }
                 await this.saveMemory();
             }
         });

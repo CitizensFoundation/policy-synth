@@ -1,5 +1,6 @@
 .env
 currentMemory.json
 memoryBackups/
+projectImages/
 node_modules/
 

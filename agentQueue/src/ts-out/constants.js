@@ -30,7 +30,7 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
-        verbose: true,
+        verbose: false,
     };
     static createSearchQueriesModel = {
         name: "gpt-4",
@@ -159,6 +159,7 @@ export class IEngineConstants {
     static maxTopEntitiesToRender = 3;
     static maxTopQueriesToSearchPerType = 4;
     static mainSearchRetryCount = 40;
+    static maxDalleRetryCount = 7;
     static maxTopWebPagesToGet = 7;
     static maxWebPagesToGetByTopSearchPosition = 7;
     static maxSearchResults = 10;

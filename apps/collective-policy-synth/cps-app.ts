@@ -669,6 +669,7 @@ export class CpsApp extends YpBaseElement {
     createSubProblems: IEngineConstants.createSubProblemsModel,
     createEntities: IEngineConstants.createEntitiesModel,
     createSearchQueries: IEngineConstants.createSearchQueriesModel,
+    createSolutionImages: IEngineConstants.createSolutionImagesModel,
     rankSearchResults: IEngineConstants.searchResultsRankingsModel,
     rankSearchQueries: IEngineConstants.searchQueryRankingsModel,
     rankSubProblems: IEngineConstants.subProblemsRankingsModel,
@@ -1048,7 +1049,8 @@ export class CpsApp extends YpBaseElement {
   }
 
   render() {
-    return html`<div class="layout horizontal">
+    return html`
+    <div class="layout horizontal">
       ${this.currentMemory ? this.renderNavigationBar() : nothing}
       <div class="rightPanel">
         <main>

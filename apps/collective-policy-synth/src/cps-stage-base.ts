@@ -33,6 +33,9 @@ export abstract class CpsStageBase extends YpBaseElement {
   @property({ type: Number })
   activePopulationIndex = 0;
 
+  @property({ type: Boolean })
+  firstTimeSubProblemClick = true;
+
   @state()
   displayStates = new Map();
   toggleDisplayState(title: string) {
@@ -339,6 +342,18 @@ export abstract class CpsStageBase extends YpBaseElement {
   setSubProblem(index: number) {
     this.activeSubProblemIndex = index;
     window.scrollTo(0, 0);
+
+    if (this.firstTimeSubProblemClick) {
+      this.firstTimeSubProblemClick = false;
+      if (
+        this.memory.subProblems.length > 0 &&
+        this.memory.subProblems[this.activeSubProblemIndex].solutions
+      ) {
+        this.activePopulationIndex =
+          this.memory.subProblems[this.activeSubProblemIndex].solutions
+            .populations.length - 1;
+      }
+    }
   }
 
   renderProblemStatement() {
