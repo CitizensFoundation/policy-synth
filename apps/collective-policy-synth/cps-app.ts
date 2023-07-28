@@ -1072,6 +1072,7 @@ export class CpsApp extends YpBaseElement {
         <div class="navContainer">
           <md-navigation-bar
             id="navBar"
+            activeIndex="1"
             @navigation-bar-activated="${this.mobileTabChanged}"
           >
             <md-navigation-tab .label="${this.t('Problem')}"

@@ -83,7 +83,7 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
           : "File download failed."
       );
 
-      const s3ImagePath = `projects/1/subProblems/images/${s}_.png`;
+      const s3ImagePath = `projects/1/subProblems/images/${s}_v2.png`;
       await this.uploadImageToS3(
         process.env.S3_BUCKET_NAME!,
         imageFilePath,

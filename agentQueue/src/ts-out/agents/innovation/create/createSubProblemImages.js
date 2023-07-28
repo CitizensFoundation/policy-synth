@@ -54,7 +54,7 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
             this.logger.debug(fs.existsSync(imageFilePath)
                 ? "File downloaded successfully."
                 : "File download failed.");
-            const s3ImagePath = `projects/1/subProblems/images/${s}_.png`;
+            const s3ImagePath = `projects/1/subProblems/images/${s}_v2.png`;
             await this.uploadImageToS3(process.env.S3_BUCKET_NAME, imageFilePath, s3ImagePath);
             const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
             this.memory.subProblems[s].imageUrl = newImageUrl;

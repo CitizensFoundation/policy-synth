@@ -71,8 +71,8 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                         },
                     ],
                     cfg_scale: 11,
-                    height: 1024,
-                    width: 1024,
+                    height: 768,
+                    width: 1344,
                     steps: 30,
                     samples: 1,
                     style_preset: "digital-art",
@@ -235,10 +235,11 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.currentPopulationIndex(subProblemIndex)})`);
                 const solution = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)][solutionIndex];
                 this.logger.debug(solution.title);
-                if (!solution.imageUrl ||
+                if (true ||
+                    !solution.imageUrl ||
                     solution.imageUrl.includes("windows.net/private")) {
                     let imagePrompt;
-                    if (false && solution.imagePrompt) {
+                    if (solution.imagePrompt) {
                         imagePrompt = solution.imagePrompt;
                         this.logger.debug(`Using existing image prompt: ${imagePrompt}`);
                     }
@@ -250,7 +251,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                     this.logger.debug(`Image Prompt: ${imagePrompt}`);
                     let newImageUrl;
                     const imageFilePath = path.join("/tmp", `${subProblemIndex}_${this.currentPopulationIndex(subProblemIndex)}_${solutionIndex}.png`);
-                    const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(subProblemIndex)}/${solutionIndex}.png`;
+                    const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(subProblemIndex)}/${solutionIndex}_v2.png`;
                     let gotImage;
                     if (process.env.STABILITY_API_KEY) {
                         gotImage = await this.downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution);

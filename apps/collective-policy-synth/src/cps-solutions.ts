@@ -134,10 +134,6 @@ export class CpsSolutions extends CpsStageBase {
           width: 134px;
         }
 
-        .title {
-          margin-top: 4px;
-        }
-
         .solutionImage {
           padding: 8px;
           margin-right: 8px;
@@ -247,7 +243,25 @@ export class CpsSolutions extends CpsStageBase {
           margin: 10px 0;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 960px) {
+          .solutionItem {
+            border-radius: 8px;
+            padding: 16px;
+            margin: 8px;
+            max-width: 100;
+            width: 100%;
+            font-size: 16px;
+            height: 55px;
+          }
+
+          .solutionDescription {
+            font-size: 18px;
+          }
+
+          .solutionTitle {
+            font-size: 20px;
+          }
+
           .solutionAttributes {
             flex-direction: column;
           }
