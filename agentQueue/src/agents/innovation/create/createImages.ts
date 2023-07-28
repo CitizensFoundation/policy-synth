@@ -97,10 +97,10 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 text: imagePrompt,
               },
             ],
-            cfg_scale: 11,
+            cfg_scale: 7,
             height: 768,
             width: 1344,
-            steps: 30,
+            steps: 50,
             samples: 1,
             style_preset: "digital-art",
           },
@@ -357,7 +357,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             );
             const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(
               subProblemIndex
-            )}/${solutionIndex}_v2.png`;
+            )}/${solutionIndex}_v3.png`;
 
             let gotImage;
 

@@ -33,45 +33,74 @@ export class CpsSolutions extends CpsStageBase {
     this.fire('yp-theme-color', this.subProblemColors[7]);
   }
 
+  private touchStartX = 0;
+  private minSwipeDistance = 100;
+
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Solutions - open`);
 
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    this.addEventListener('touchstart', this.handleTouchStart.bind(this));
+    this.addEventListener('touchend', this.handleTouchEnd.bind(this));
+  }
+
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.appGlobals.activity(`Solutions - close`);
+    document.removeEventListener('keydown', this.handleKeyDown);
+    this.removeEventListener('touchstart', this.handleTouchStart.bind(this));
+    this.removeEventListener('touchend', this.handleTouchEnd.bind(this));
+  }
+
+
+  updateSwipeIndex(direction: string) {
+    if (direction === 'right') {
+      if (this.activeSolutionIndex !== null && this.activeFilteredSolutionIndex < this.filteredSolutions.length - 1) {
+        this.activeFilteredSolutionIndex += 1;
+      } else if (this.activeSubProblemIndex !== null && this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1) {
+        this.activeSubProblemIndex += 1;
+      }
+    } else if (direction === 'left') {
+      if (this.activeSolutionIndex !== null && this.activeFilteredSolutionIndex > 0) {
+        this.activeFilteredSolutionIndex -= 1;
+      } else if (this.activeSubProblemIndex !== null && this.activeSubProblemIndex > 0) {
+        this.activeSubProblemIndex -= 1;
+      }
+    }
+    this.setSubProblemColor(this.activeSubProblemIndex);
   }
 
   handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'ArrowRight') {
-      if (this.activeSolutionIndex !== null) {
-        if (
-          this.activeFilteredSolutionIndex <
-          this.filteredSolutions.length - 1
-        ) {
-          this.activeFilteredSolutionIndex += 1;
-        }
-      } else if (this.activeSubProblemIndex !== null) {
-        if (this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1) {
-          this.activeSubProblemIndex += 1;
-        }
-        this.setSubProblemColor(this.activeSubProblemIndex);
-      }
+      this.updateSwipeIndex('right');
     } else if (e.key === 'ArrowLeft') {
-      if (this.activeSolutionIndex !== null) {
-        if (this.activeFilteredSolutionIndex > 0) {
-          this.activeFilteredSolutionIndex -= 1;
-        }
-      } else if (this.activeSubProblemIndex !== null) {
-        if (this.activeSubProblemIndex > 0) {
-          this.activeSubProblemIndex -= 1;
-        }
-        this.setSubProblemColor(this.activeSubProblemIndex);
-      }
-    } else if (e.key === 'Escape') {
+      this.updateSwipeIndex('left');
+    } else if (e.key === 'Escape' && e.target! instanceof MdOutlinedTextField) {
       if (this.activeSolutionIndex !== null) {
         this.activeSolutionIndex = null;
       } else if (this.activeSubProblemIndex !== null) {
         this.activeSubProblemIndex = null;
       }
+    }
+  }
+
+  handleTouchStart(e: TouchEvent) {
+    this.touchStartX = e.touches[0].clientX;
+  }
+
+  handleTouchEnd(e: TouchEvent) {
+    const diffX = this.touchStartX - e.changedTouches[0].clientX;
+
+    if (Math.abs(diffX) < this.minSwipeDistance) {
+      return;
+    }
+
+    if (diffX > 0) {
+      this.updateSwipeIndex('right');
+    } else if (diffX < 0) {
+      this.updateSwipeIndex('left');
     }
   }
 
@@ -85,12 +114,6 @@ export class CpsSolutions extends CpsStageBase {
             .populations[this.activePopulationIndex][this.activeSolutionIndex]
       );
     }
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    window.appGlobals.activity(`Solutions - close`);
-    document.removeEventListener('keydown', this.handleKeyDown);
   }
 
   static get styles() {
@@ -136,7 +159,6 @@ export class CpsSolutions extends CpsStageBase {
 
         .solutionImage {
           padding: 8px;
-          margin-right: 8px;
         }
 
         .solutionTopImage {
@@ -146,15 +168,15 @@ export class CpsSolutions extends CpsStageBase {
 
         .solutionItem {
           text-align: left;
-          background-color: var(--md-sys-color-on-secondary);
-          color: var(--md-sys-color-secondary);
+          background-color: var(--md-sys-color-secondary-container);
+          color: var(--md-sys-color-on-secondary-container);
           border-radius: 16px;
           padding: 20px;
           margin: 8px 0;
-          max-width: 960px;
-          width: 100%;
+          max-width: 600px;
+          width: 600px;
           font-size: 22px;
-          height: 55px;
+          height: 100px;
           display: flex;
           flex-direction: column;
           justify-content: left;
@@ -165,7 +187,8 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .solutionItem[has-image] {
-          height: 85px;
+          height: 375px;
+          margin-bottom: 16px;
         }
 
         .generationContainer {
@@ -174,13 +197,17 @@ export class CpsSolutions extends CpsStageBase {
 
         .solution {
           text-align: left;
-          background-color: var(--md-sys-color-on-primary);
-          color: var(--md-sys-color-primary);
+          background-color: var(--md-sys-color-surface-variant);
+          color: var(--md-sys-color-on-surface-variant);
           border-radius: 16px;
           padding: 16px;
           margin: 8px 0;
           max-width: 960px;
           width: 100%;
+        }
+
+        .solutionItemTitle {
+          padding: 8px;
         }
 
         .solutionItemTitle[has-image] {
@@ -196,8 +223,8 @@ export class CpsSolutions extends CpsStageBase {
           padding: 24px;
           max-width: 410px;
           width: 100%;
-          background-color: var(--md-sys-color-on-tertiary);
-          color: var(--md-sys-color-tertiary);
+          background-color: var(--md-sys-color-tertiary);
+          color: var(--md-sys-color-on-tertiary);
           border-radius: 16px;
           font-size: 20px;
           align-items: self-start;
@@ -212,9 +239,7 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .solutionTitle {
-          font-size: 24px;
-          font-weight: 700;
-          letter-spacing: 0.1em;
+          font-size: 26px;
           line-height: 1.4;
           margin: 8px;
           margin-left: 32px;
@@ -244,22 +269,60 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         @media (max-width: 960px) {
+
+          .solutionItemTitle {
+            margin-top: 0;
+            padding-top: 0;
+          }
+
+          .solutionTopImage {
+            margin-top: 8px;
+          }
+
+          .solution {
+            max-width: 100%;
+            margin-top: 6px;
+          }
+          .pros,
+          .cons {
+            width: 100%;
+            padding: 16px;
+            margin: 8px;
+            font-size: 18px;
+            max-width: 100% ;
+          }
+
+          .proCon {
+            font-size: 16px;
+            padding: 16px;
+            margin: 8px;
+          }
+
           .solutionItem {
-            border-radius: 8px;
+            border-radius: 24px;
             padding: 16px;
             margin: 8px;
             max-width: 100;
             width: 100%;
             font-size: 16px;
-            height: 55px;
+          }
+
+          .solutionItem[has-image] {
+            height: 290px;
+            margin-top: 0;
+            margin-bottom: 24px;
           }
 
           .solutionDescription {
-            font-size: 18px;
+            font-size: 16px;
+            margin-left: 0px;
+            margin-right: 0px;
           }
 
           .solutionTitle {
             font-size: 20px;
+            margin-left: 0px;
+            margin-right: 0px;
           }
 
           .solutionAttributes {
@@ -331,7 +394,7 @@ export class CpsSolutions extends CpsStageBase {
           ${this.filteredSolutions.map(
             (solution, index) =>
               html`<div
-                class="solutionItem layout horizontal self-start"
+                class="solutionItem layout vertical center-center"
                 ?has-image="${solution.imageUrl}"
                 @click="${(): void => {
                   this.activeSolutionIndex = index;
@@ -344,14 +407,13 @@ export class CpsSolutions extends CpsStageBase {
                       <div>
                         <img
                           class="solutionImage"
-                          height="72"
-                          width="72"
+                          height="${this.wide ? `250` : `200`}"
                           src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
                           alt="${solution.title}"
                         />
                       </div>
                     `
-                  : html`<div class="solutionIndex">${index + 1}.</div>`}
+                  : html``}
                 <div
                   class="solutionItemTitle"
                   ?has-image="${solution.imageUrl}"
@@ -371,12 +433,20 @@ export class CpsSolutions extends CpsStageBase {
     }
 
     if (subProblem.solutions.populations) {
-      let firstItems = subProblem.solutions.populations.slice(0, 3);
-      let lastItems = subProblem.solutions.populations.slice(-3);
-      let middleItems = subProblem.solutions.populations.slice(3, -3);
+      let firstItems, lastItems, middleItems;
 
-      if (subProblem.solutions.populations.length === 7) {
-        middleItems = subProblem.solutions.populations.slice(3, 4);
+      if (!this.wide) {
+        firstItems = subProblem.solutions.populations.slice(0, 1);
+        lastItems = subProblem.solutions.populations.slice(-1);
+        middleItems = subProblem.solutions.populations.slice(1, -1);
+      } else {
+        firstItems = subProblem.solutions.populations.slice(0, 3);
+        lastItems = subProblem.solutions.populations.slice(-3);
+        middleItems = subProblem.solutions.populations.slice(3, -3);
+
+        if (subProblem.solutions.populations.length === 7) {
+          middleItems = subProblem.solutions.populations.slice(3, 4);
+        }
       }
 
       return html`
@@ -389,7 +459,7 @@ export class CpsSolutions extends CpsStageBase {
           ${this.renderDropdown(middleItems, firstItems.length)}
           ${this.renderFilterChips(
             lastItems,
-            subProblem.solutions.populations.length - 3
+            subProblem.solutions.populations.length - lastItems.length
           )}
           <md-outlined-icon-button
             ?hidden="${this.isSearchVisible}"
@@ -404,6 +474,7 @@ export class CpsSolutions extends CpsStageBase {
       return nothing;
     }
   }
+
 
   toggleSearchVisibility(): void {
     this.isSearchVisible = !this.isSearchVisible;
@@ -558,8 +629,7 @@ export class CpsSolutions extends CpsStageBase {
             ? html`<div class="layout horizontal center-center">
                 <img
                   class="solutionTopImage"
-                  height="275"
-                  width="275"
+                  height="${this.getImgHeight(true)}"
                   src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
                   alt="${solution.title}"
                 />
