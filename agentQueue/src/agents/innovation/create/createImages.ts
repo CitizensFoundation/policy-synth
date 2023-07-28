@@ -9,20 +9,8 @@ import AWS from 'aws-sdk';
 import fs from 'fs';
 import path from 'path';
 
-const cloudflareProxy = 'cps-images.citizens.is';
-
 export class CreateSolutionImagesProcessor extends BaseProcessor {
-  renderCurrentSolution(solution: IEngineSolution) {
-    return `
-      Solution:
-
-      Title: ${solution.title}
-      Description: ${solution.description}
-
-      How Solution Can Help: ${solution.mainBenefitOfSolution}
-      Main Obstacles to Solution Adoption: ${solution.mainObstacleToSolutionAdoption}
-    `;
-  }
+  cloudflareProxy = 'https://cps-images.citizens.is';
 
   async downloadImage(imageUrl: string, imageFilePath: string) {
     const response = await axios({
@@ -120,7 +108,6 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
           size: '512x512'
         });
         if (result) {
-          this.logger.debug(`Result: ${result}`)
           retrying = false; // Only change retrying to false if there is a result.
         } else {
           this.logger.debug(`Result: NONE`)
@@ -178,10 +165,10 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
 
           this.logger.debug(solution.title);
 
-          if (true || !solution.imageUrl) {
+          if (!solution.imageUrl || solution.imageUrl.includes("windows.net/private")) {
             let imagePrompt = (await this.callLLM(
               "create-solution-images",
-              IEngineConstants.createProsConsModel,
+              IEngineConstants.createSolutionImagesModel,
               await this.renderCreatePrompt(subProblemIndex, solution),
               false
             )) as string;
@@ -202,13 +189,11 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(subProblemIndex)}/${solutionIndex}.png`;
             await this.uploadImageToS3(process.env.S3_BUCKET_NAME!, imageFilePath, s3ImagePath);
 
-            const newImageUrl = `${cloudflareProxy}/${s3ImagePath}`;
+            const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
 
             solution.imageUrl = newImageUrl;
 
-            console.log(`New Image URL: ${newImageUrl}`);
-
-            this.logger.debug(`Image URL: ${imageUrl}`);
+            this.logger.debug(`Image URL: ${newImageUrl}`);
           } else {
             this.logger.debug(`Solution already has image URL ${solution.imageUrl}`);
           }

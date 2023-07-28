@@ -93,6 +93,7 @@ interface IEngineProblemStatement {
 interface IEngineSubProblem {
   title: string;
   description: string;
+  imageUrl?: string;
   whyIsSubProblemImportant: string;
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
@@ -164,6 +165,7 @@ type IEngineStageTypes =
   | "create-search-queries"
   | "create-pros-cons"
   | "create-solution-images"
+  | "create-sub-problem-images"
   | "rank-search-results"
   | "rank-search-queries"
   | "rank-sub-problems"

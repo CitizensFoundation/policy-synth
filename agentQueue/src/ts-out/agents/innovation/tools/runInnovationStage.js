@@ -19,6 +19,7 @@ if (setNewStage) {
     const output = await redis.get("st_mem:1:id");
     const memory = JSON.parse(output);
     //memory.currentStage = "create-sub-problems";
+    //memory.currentStage = "create-sub-problem-images";
     //memory.currentStage = "rank-sub-problems";
     //memory.currentStage = "create-entities";
     //memory.currentStage = "rank-entities";
@@ -35,8 +36,8 @@ if (setNewStage) {
     //memory.currentStage = "evolve-create-population";
     //memory.currentStage = "create-pros-cons";
     //memory.currentStage = "rank-pros-cons";
-    memory.currentStage = "create-solution-images";
-    //memory.currentStage = "rank-solutions";
+    //memory.currentStage = "create-solution-images";
+    memory.currentStage = "rank-solutions";
     await redis.set("st_mem:1:id", JSON.stringify(memory));
 }
 if (addJob || setNewStage) {
