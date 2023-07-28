@@ -38,6 +38,17 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   @state()
   displayStates = new Map();
+
+  subProblemListScrollPositionX: number = 0;
+  subProblemListScrollPositionY: number = 0;
+
+  exitSubProblemScreen() {
+    window.scrollTo(
+      this.subProblemListScrollPositionX,
+      this.subProblemListScrollPositionY
+    );
+  }
+
   toggleDisplayState(title: string) {
     const currentState = this.displayStates.get(title);
     this.displayStates.set(title, !currentState);
@@ -308,25 +319,23 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         @media (max-width: 960px) {
-
           .subProblemStatement,
-        .subProblemTitle {
-          font-size: 18px;
-          max-width: 100%;
-        }
+          .subProblemTitle {
+            font-size: 18px;
+            max-width: 100%;
+          }
 
-        .subProblemStatement {
-          padding-left: 8px;
-          padding-right: 8px;
-        }
+          .subProblemStatement {
+            padding-left: 8px;
+            padding-right: 8px;
+          }
 
+          .subProblem {
+            max-width: 100%;
+          }
 
-        .subProblem {
-          max-width: 100%;
-        }
-
-        .subProblemTitle {
-        }
+          .subProblemTitle {
+          }
 
           .title {
             margin-top: 16px;
@@ -395,7 +404,6 @@ export abstract class CpsStageBase extends YpBaseElement {
   closeSubProblem(event: CustomEvent) {
     this.activeSubProblemIndex = null;
     event.stopPropagation();
-    window.scrollTo(0, 0);
     this.fire('yp-theme-color', this.subProblemColors[7]);
   }
 
@@ -418,6 +426,9 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   setSubProblem(index: number) {
     this.activeSubProblemIndex = index;
+    this.subProblemListScrollPositionX = window.scrollX;
+    this.subProblemListScrollPositionY = window.scrollY;
+
     window.scrollTo(0, 0);
 
     this.setSubProblemColor(index);
@@ -572,6 +583,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       e.stopPropagation();
                       this.activeSubProblemIndex = null;
                       this.fire('yp-theme-color', this.subProblemColors[7]);
+                      this.exitSubProblemScreen();
                     }}"
                   >
                     <md-icon>close</md-icon>

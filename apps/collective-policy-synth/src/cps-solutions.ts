@@ -35,6 +35,8 @@ export class CpsSolutions extends CpsStageBase {
 
   private touchStartX = 0;
   private minSwipeDistance = 100;
+  solutionListScrollPositionX: number = 0;
+  solutionListScrollPositionY: number = 0;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -45,7 +47,6 @@ export class CpsSolutions extends CpsStageBase {
     this.addEventListener('touchend', this.handleTouchEnd.bind(this));
   }
 
-
   disconnectedCallback(): void {
     super.disconnectedCallback();
     window.appGlobals.activity(`Solutions - close`);
@@ -54,18 +55,29 @@ export class CpsSolutions extends CpsStageBase {
     this.removeEventListener('touchend', this.handleTouchEnd.bind(this));
   }
 
-
   updateSwipeIndex(direction: string) {
     if (direction === 'right') {
-      if (this.activeSolutionIndex !== null && this.activeFilteredSolutionIndex < this.filteredSolutions.length - 1) {
+      if (
+        this.activeSolutionIndex !== null &&
+        this.activeFilteredSolutionIndex < this.filteredSolutions.length - 1
+      ) {
         this.activeFilteredSolutionIndex += 1;
-      } else if (this.activeSubProblemIndex !== null && this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1) {
+      } else if (
+        this.activeSubProblemIndex !== null &&
+        this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
+      ) {
         this.activeSubProblemIndex += 1;
       }
     } else if (direction === 'left') {
-      if (this.activeSolutionIndex !== null && this.activeFilteredSolutionIndex > 0) {
+      if (
+        this.activeSolutionIndex !== null &&
+        this.activeFilteredSolutionIndex > 0
+      ) {
         this.activeFilteredSolutionIndex -= 1;
-      } else if (this.activeSubProblemIndex !== null && this.activeSubProblemIndex > 0) {
+      } else if (
+        this.activeSubProblemIndex !== null &&
+        this.activeSubProblemIndex > 0
+      ) {
         this.activeSubProblemIndex -= 1;
       }
     }
@@ -80,10 +92,21 @@ export class CpsSolutions extends CpsStageBase {
     } else if (e.key === 'Escape' && e.target! instanceof MdOutlinedTextField) {
       if (this.activeSolutionIndex !== null) {
         this.activeSolutionIndex = null;
+        this.exitSolutionScreen();
       } else if (this.activeSubProblemIndex !== null) {
         this.activeSubProblemIndex = null;
+        this.exitSubProblemScreen();
       }
     }
+  }
+
+  exitSolutionScreen() {
+    setTimeout(() => {
+      window.scrollTo(
+        this.solutionListScrollPositionX,
+        this.solutionListScrollPositionY
+      );
+    }, 10);
   }
 
   handleTouchStart(e: TouchEvent) {
@@ -269,7 +292,6 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         @media (max-width: 960px) {
-
           .solutionItemTitle {
             margin-top: 0;
             padding-top: 0;
@@ -289,7 +311,7 @@ export class CpsSolutions extends CpsStageBase {
             padding: 16px;
             margin: 8px;
             font-size: 18px;
-            max-width: 100% ;
+            max-width: 100%;
           }
 
           .proCon {
@@ -399,6 +421,8 @@ export class CpsSolutions extends CpsStageBase {
                 @click="${(): void => {
                   this.activeSolutionIndex = index;
                   this.activeFilteredSolutionIndex = index;
+                  this.solutionListScrollPositionX = window.scrollX;
+                  this.solutionListScrollPositionY = window.scrollY;
                   window.scrollTo(0, 0);
                 }}"
               >
@@ -474,7 +498,6 @@ export class CpsSolutions extends CpsStageBase {
       return nothing;
     }
   }
-
 
   toggleSearchVisibility(): void {
     this.isSearchVisible = !this.isSearchVisible;
@@ -610,7 +633,10 @@ export class CpsSolutions extends CpsStageBase {
         </md-standard-icon-button>
         <md-standard-icon-button
           aria-label="Close"
-          @click="${(): void => (this.activeSolutionIndex = null)}"
+          @click="${(): void => {
+            this.activeSolutionIndex = null;
+            this.exitSolutionScreen();
+          }}"
         >
           <md-icon>close</md-icon>
         </md-standard-icon-button>
