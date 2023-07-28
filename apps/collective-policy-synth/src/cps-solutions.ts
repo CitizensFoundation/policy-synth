@@ -218,13 +218,12 @@ export class CpsSolutions extends CpsStageBase {
   get filteredSolutions() {
     let subProblem = this.memory.subProblems[this.activeSubProblemIndex];
     if (subProblem && subProblem.solutions) {
-      let solutions =
-        subProblem.solutions.populations[this.activePopulationIndex];
+      let solutions = subProblem.solutions.populations[this.activePopulationIndex];
 
       if (this.searchText) {
         const searchTerms = this.searchText.toLowerCase().split(' ');
         solutions = solutions.filter(solution =>
-          searchTerms.some(term =>
+          searchTerms.every(term =>
             solution.title.toLowerCase().includes(term) ||
             solution.description.toLowerCase().includes(term)
           )
