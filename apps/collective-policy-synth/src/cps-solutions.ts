@@ -29,6 +29,7 @@ export class CpsSolutions extends CpsStageBase {
     this.isDropdownVisible = false;
     this.activeSolutionIndex = null;
     this.activeSubProblemIndex = null;
+    this.fire('yp-theme-color', this.subProblemColors[7]);
   }
 
   async connectedCallback() {
