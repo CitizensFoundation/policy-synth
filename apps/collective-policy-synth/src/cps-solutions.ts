@@ -21,8 +21,8 @@ export class CpsSolutions extends CpsStageBase {
   @property({ type: String }) searchText = '';
   @property({ type: Number }) activeFilteredSolutionIndex: number = null;
   @property({ type: Boolean }) isSearchVisible = false; // add a new property to control the visibility of the search field
-
-
+  @property({ type: Boolean })
+  hideExtraSolutionInformation = true;
   reset() {
     this.searchText = "";
     this.isSearchVisible = false;
@@ -510,10 +510,10 @@ export class CpsSolutions extends CpsStageBase {
             ${solutionIndex + 1}. ${solution.title}
           </div>
           <div class="solutionDescription">${solution.description}</div>
-          <div class="solutionDescription">
+          <div class="solutionDescription" ?hidden="${this.hideExtraSolutionInformation}">
             ${solution.mainBenefitOfSolution}
           </div>
-          <div class="solutionDescription">
+          <div class="solutionDescription" ?hidden="${this.hideExtraSolutionInformation}">
             ${solution.mainObstacleToSolutionAdoption}
           </div>
         </div>
