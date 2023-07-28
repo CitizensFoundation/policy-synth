@@ -94,6 +94,7 @@ interface IEngineSubProblem {
   title: string;
   description: string;
   imageUrl?: string;
+  imagePrompt?: string;
   whyIsSubProblemImportant: string;
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
@@ -139,6 +140,7 @@ interface IEngineSolution {
   pros?: string[] | IEngineProCon[];
   cons?: string[] | IEngineProCon[];
   imageUrl?: string;
+  imagePrompt?: string;
 }
 
 interface IEngineProCon {

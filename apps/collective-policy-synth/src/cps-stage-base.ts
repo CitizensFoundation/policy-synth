@@ -355,11 +355,31 @@ export abstract class CpsStageBase extends YpBaseElement {
     this.activeSubProblemIndex = null;
     event.stopPropagation();
     window.scrollTo(0, 0);
+    this.fire('yp-theme-color', this.subProblemColors[7]);
+  }
+
+  subProblemColors = [
+    "#0b60b9",
+    "#ee782d",
+    "#face2d",
+    "#50c363",
+    "#cf1103",
+    "#344373",
+    "#87559b",
+    "#02b5fc"
+  ]
+
+  setSubProblemColor(index: number) {
+    if (index<7) {
+      this.fire('yp-theme-color', this.subProblemColors[index]);
+    }
   }
 
   setSubProblem(index: number) {
     this.activeSubProblemIndex = index;
     window.scrollTo(0, 0);
+
+    this.setSubProblemColor(index);
 
     if (this.firstTimeSubProblemClick) {
       this.firstTimeSubProblemClick = false;
@@ -451,6 +471,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       e.stopPropagation();
                       if (this.activeSubProblemIndex > 0) {
                         this.activeSubProblemIndex -= 1;
+                        this.setSubProblemColor(this.activeSubProblemIndex)
                       }
                     }}"
                   >
@@ -469,6 +490,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                         this.activeSubProblemIndex < maxNumberOfSubProblems - 1
                       ) {
                         this.activeSubProblemIndex += 1;
+                        this.setSubProblemColor(this.activeSubProblemIndex)
                       }
                     }}"
                   >
@@ -479,6 +501,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                     @click="${(e: CustomEvent): void => {
                       e.stopPropagation();
                       this.activeSubProblemIndex = null;
+                      this.fire('yp-theme-color', this.subProblemColors[7]);
                     }}"
                   >
                     <md-icon>close</md-icon>

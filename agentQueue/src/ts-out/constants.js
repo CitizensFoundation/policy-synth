@@ -153,6 +153,7 @@ export class IEngineConstants {
     static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
     static maxSubProblems = 7;
     static maxNumberGeneratedOfEntities = 7;
+    static maxStabilityRetryCount = 7;
     static mainLLMmaxRetryCount = 40;
     static rankingLLMmaxRetryCount = 40;
     static maxTopEntitiesToSearch = 3;
