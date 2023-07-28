@@ -22,7 +22,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
          Instructions:
          1. You will be presented with a problem and two corresponding solutions. These will be labelled "Solution One" and "Solution Two".
          2. Assess which of the two solutions is more important in relation to the problem.
-         3. Consider the pros and cons of each solution while assessing.
+         3. Consider the best pro and con of each solution while assessing.
          ${this.memory.customInstructions.rankSolutions ? `
            Important Instructions: ${this.memory.customInstructions.rankSolutions}
            ` : ''}

@@ -21,9 +21,11 @@ memory.customInstructions.createSolutions = `
 `;
 
 memory.customInstructions.rankSolutions = `
-  1. Assess the solutions based on their practicality and feasibility in the real world.
-  2. Prefer solutions that are simple and focused and contains one easy to understand core idea.
-  3. Take into account whether a solution seems compelling enough to convince politicians and governments to implement.
+  1. Assess the solutions based on:
+  - Importance to the problem
+  - How innovation they are
+  - How practical they are
+  2. Favor simple, easy to understand ideas
 `;
 
 await redis.set("st_mem:1:id", JSON.stringify(memory));

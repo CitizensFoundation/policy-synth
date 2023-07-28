@@ -36,8 +36,8 @@ if (setNewStage) {
     //memory.currentStage = "evolve-create-population";
     //memory.currentStage = "create-solution-images";
     //memory.currentStage = "create-pros-cons";
-    memory.currentStage = "rank-pros-cons";
-    //memory.currentStage = "rank-solutions";
+    //memory.currentStage = "rank-pros-cons";
+    memory.currentStage = "rank-solutions";
     await redis.set("st_mem:1:id", JSON.stringify(memory));
 }
 if (addJob || setNewStage) {
@@ -49,20 +49,20 @@ if (addJob || setNewStage) {
         initialProblemStatement: "Liberal democracies are grappling with an overarching issue of declining effectiveness and stability, which is leading to widespread citizen dissatisfaction and threatening the fundamental principles of democratic governance.",
         customInstructions: {
             rankSolutions: `
-          1. Assess the solutions based on their practicality and feasibility in the real world.
-          2. Prefer solutions that are simple and focused, avoiding overly comprehensive frameworks.
-          3. Take into account whether a solution seems compelling enough to convince politicians and governments to implement it
+          1. Assess the solutions based on:
+          - Importance to the problem
+          - How innovation they are
+          - How practical they are
+          2. Favor simple, easy to understand ideas
         `,
             createSolutions: `
-          1. Make sure solution titles are descriptive, engaging, and informative.
-          2. Keep solutions titles to a maximum of 9 words. Do not use abbreviations except for acronyms. Be specific in your word choice to better represent the solution.
-          3. Ensure solutions are straightforward, easy to understand, and their titles reflect the main components or methods of the solution.
-          4. Avoid comprehensive frameworks for solutions. Opt for simpler structures that include a few key attributes.
-          5. Do not generate bland general titles for solutions. Make sure the titles are specific and unique.
-          6. Remember that the main facilitator for implementation will be civil society working with governments.
-          7. Frame solutions with the intention of convincing politicians and governments to put them into action. The titles should indicate the benefits or results of implementing the solution, making it more appealing for the target audience.
-          8. If the solution involves a unique or innovative approach, make sure to highlight that in the title. This will make the solution stand out and grab attention.
-          `,
+          1. Never create solutions in the form of frameworks or holistic approaches
+          2. Solutions should include only one core idea.
+          3. The solution title should indicate the benefits or results of implementing the solution.
+          4. Remember that the main facilitator for implementation will be civil society working with governments.
+          5. Frame solutions with the intention of convincing politicians and governments to put them into action.
+          6. Avoid blockchain solutions
+        `,
         },
     }, { removeOnComplete: true, removeOnFail: true });
     console.log("After adding job to queue");
