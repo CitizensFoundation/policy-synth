@@ -512,7 +512,7 @@ export class CpsSolutions extends CpsStageBase {
               </div> `
             : nothing}
           <div class="solutionTitle">
-            ${solutionIndex + 1}. ${solution.title}
+            ${solution.title}
           </div>
           <div class="solutionDescription">${solution.description}</div>
           <div class="solutionDescription" ?hidden="${this.hideExtraSolutionInformation}">
