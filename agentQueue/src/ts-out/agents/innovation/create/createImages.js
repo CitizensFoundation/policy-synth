@@ -34,9 +34,9 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         "forest Green",
         "tan",
         "gray",
-        "transparent"
+        "transparent",
     ];
-    metalColors = [
+    secondaryColors = [
         "gold",
         "silver",
         "bronze",
@@ -58,7 +58,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             writer.on("error", reject);
         });
     }
-    async downloadStabilityImage(imagePrompt, imageFilePath) {
+    async downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution = undefined) {
         let response;
         let retryCount = 0;
         let retrying = true; // Initialize as true
@@ -75,7 +75,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                     width: 1024,
                     steps: 30,
                     samples: 1,
-                    style_preset: 'digital-art'
+                    style_preset: "digital-art",
                 }, {
                     headers: {
                         "Content-Type": "application/json",
@@ -99,6 +99,9 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 const sleepingFor = 5000 + retryCount * 10000;
                 this.logger.debug(`Sleeping for ${sleepingFor} milliseconds`);
                 await new Promise((resolve) => setTimeout(resolve, sleepingFor));
+                if (retryCount == 2 && solution) {
+                    imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                }
             }
         }
         if (!response) {
@@ -131,17 +134,32 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             });
         });
     }
+    get randomSecondaryColor() {
+        let secondaryColors;
+        if (this.memory.customInstructions.secondaryColors) {
+            secondaryColors = this.memory.customInstructions.secondaryColors;
+        }
+        else {
+            secondaryColors = this.secondaryColors;
+        }
+        const randomSecondaryColorIndex = Math.floor(Math.random() * secondaryColors.length);
+        return secondaryColors[randomSecondaryColorIndex];
+    }
+    getSubProblemColor(subProblemIndex) {
+        if (this.memory.customInstructions.subProblemColors) {
+            return this.memory.customInstructions.subProblemColors[subProblemIndex];
+        }
+        else {
+            return this.subProblemColors[subProblemIndex];
+        }
+    }
     async renderCreatePrompt(subProblemIndex, solution) {
-        const selectedSubProblemColor = this.subProblemColors[subProblemIndex];
-        let randomMetalColor;
-        const randomMetalColorIndex = Math.floor(Math.random() * this.metalColors.length);
-        randomMetalColor = this.metalColors[randomMetalColorIndex];
         const messages = [
             new SystemChatMessage(`
         You are an expert in generating Dall-E 2 prompts from titles and descriptions of solutions.
 
         Important Instructions:
-        1. Always end all prompts with "Simple professional geometric illustration using hues of ${selectedSubProblemColor} and ${randomMetalColor}. No text."
+        1. Always end all prompts with "Simple professional geometric illustration using hues of ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one to two sentences, never more.
         4. Do not include quotes in your prompt.
@@ -217,8 +235,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.currentPopulationIndex(subProblemIndex)})`);
                 const solution = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)][solutionIndex];
                 this.logger.debug(solution.title);
-                if (true ||
-                    !solution.imageUrl ||
+                if (!solution.imageUrl ||
                     solution.imageUrl.includes("windows.net/private")) {
                     let imagePrompt;
                     if (false && solution.imagePrompt) {
@@ -236,7 +253,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                     const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(subProblemIndex)}/${solutionIndex}.png`;
                     let gotImage;
                     if (process.env.STABILITY_API_KEY) {
-                        gotImage = await this.downloadStabilityImage(imagePrompt, imageFilePath);
+                        gotImage = await this.downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution);
                     }
                     else {
                         const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);

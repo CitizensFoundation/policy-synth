@@ -46,10 +46,10 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     "forest Green",
     "tan",
     "gray",
-    "transparent"
+    "transparent",
   ];
 
-  metalColors = [
+  secondaryColors = [
     "gold",
     "silver",
     "bronze",
@@ -76,7 +76,12 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     });
   }
 
-  async downloadStabilityImage(imagePrompt: string, imageFilePath: string) {
+  async downloadStabilityImage(
+    subProblemIndex: number,
+    imagePrompt: string,
+    imageFilePath: string,
+    solution: IEngineSolution | undefined = undefined
+  ) {
     let response;
 
     let retryCount = 0;
@@ -97,7 +102,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             width: 1024,
             steps: 30,
             samples: 1,
-            style_preset: 'digital-art'
+            style_preset: "digital-art",
           },
           {
             headers: {
@@ -127,6 +132,14 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         const sleepingFor = 5000 + retryCount * 10000;
         this.logger.debug(`Sleeping for ${sleepingFor} milliseconds`);
         await new Promise((resolve) => setTimeout(resolve, sleepingFor));
+        if (retryCount == 2 && solution) {
+          imagePrompt = (await this.callLLM(
+            "create-solution-images",
+            IEngineConstants.createSolutionImagesModel,
+            await this.renderCreatePrompt(subProblemIndex, solution),
+            false
+          )) as string;
+        }
       }
     }
 
@@ -163,15 +176,32 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     });
   }
 
-  async renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution) {
-    const selectedSubProblemColor = this.subProblemColors[subProblemIndex];
-    let randomMetalColor;
+  get randomSecondaryColor() {
+    let secondaryColors;
 
-    const randomMetalColorIndex = Math.floor(
-      Math.random() * this.metalColors.length
+    if (this.memory.customInstructions.secondaryColors) {
+      secondaryColors = this.memory.customInstructions.secondaryColors;
+    } else {
+      secondaryColors = this.secondaryColors;
+    }
+
+    const randomSecondaryColorIndex = Math.floor(
+      Math.random() * secondaryColors.length
     );
 
-    randomMetalColor = this.metalColors[randomMetalColorIndex];
+    return secondaryColors[randomSecondaryColorIndex];
+  }
+
+  getSubProblemColor(subProblemIndex: number) {
+    if (this.memory.customInstructions.subProblemColors) {
+      return this.memory.customInstructions.subProblemColors[subProblemIndex];
+    } else {
+      return this.subProblemColors[subProblemIndex];
+    }
+  }
+
+  async renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution) {
+
 
     const messages = [
       new SystemChatMessage(
@@ -179,7 +209,9 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         You are an expert in generating Dall-E 2 prompts from titles and descriptions of solutions.
 
         Important Instructions:
-        1. Always end all prompts with "Simple professional geometric illustration using hues of ${selectedSubProblemColor} and ${randomMetalColor}. No text."
+        1. Always end all prompts with "Simple professional geometric illustration using hues of ${this.getSubProblemColor(
+          subProblemIndex
+        )} and ${this.randomSecondaryColor}. No text."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one to two sentences, never more.
         4. Do not include quotes in your prompt.
@@ -287,9 +319,8 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
           this.logger.debug(solution.title);
 
           if (
-            true ||
             !solution.imageUrl ||
-            solution.imageUrl!.includes("windows.net/private")
+            solution.imageUrl.includes("windows.net/private")
           ) {
             let imagePrompt;
 
@@ -330,7 +361,12 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             let gotImage;
 
             if (process.env.STABILITY_API_KEY) {
-              gotImage = await this.downloadStabilityImage(imagePrompt, imageFilePath);
+              gotImage = await this.downloadStabilityImage(
+                subProblemIndex,
+                imagePrompt,
+                imageFilePath,
+                solution
+              );
             } else {
               const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
               await this.downloadImage(imageUrl, imageFilePath);

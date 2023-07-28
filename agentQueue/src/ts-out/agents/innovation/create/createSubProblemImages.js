@@ -1,21 +1,17 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 import { CreateSolutionImagesProcessor } from "./createImages.js";
 export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
     async renderCreatePrompt(subProblemIndex) {
-        const selectedSubProblemColor = this.subProblemColors[subProblemIndex];
-        let randomMetalColor;
-        const randomMetalColorIndex = Math.floor(Math.random() * this.metalColors.length);
-        randomMetalColor = this.metalColors[randomMetalColorIndex];
         const messages = [
             new SystemChatMessage(`
         You are an expert in generating visual Dalle-2 prompts from a problem statement.
 
         Important Instructions:
-        1. Always end all prompts with "Simple professional geometric illustration using hues of ${selectedSubProblemColor} and ${randomMetalColor}. No text."
+        1. Always end all prompts with "Simple professional geometric illustration using hues of ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one or two sentences.
         4. Do not include quotes in your prompt.
@@ -40,23 +36,24 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
     }
     async createSubProblemImages() {
         this.currentSubProblemIndex = 0;
-        for (let s = 0; s <
-            this.memory.subProblems.length; s++) {
+        for (let s = 0; s < this.memory.subProblems.length; s++) {
             this.currentSubProblemIndex = s;
             let imagePrompt = (await this.callLLM("create-sub-problem-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(s), false));
             this.memory.subProblems[s].imagePrompt = imagePrompt;
             this.logger.debug(`subProblemIndex ${s}`);
             this.logger.debug(`Image Prompt: ${imagePrompt}`);
             // Download image and save it to /tmp folder
-            const imageFilePath = path.join('/tmp', `subProblem_${s}_.png`);
+            const imageFilePath = path.join("/tmp", `subProblem_${s}_.png`);
             if (process.env.STABILITY_API_KEY) {
-                await this.downloadStabilityImage(imagePrompt, imageFilePath);
+                await this.downloadStabilityImage(s, imagePrompt, imageFilePath);
             }
             else {
                 const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
                 await this.downloadImage(imageUrl, imageFilePath);
             }
-            this.logger.debug(fs.existsSync(imageFilePath) ? 'File downloaded successfully.' : 'File download failed.');
+            this.logger.debug(fs.existsSync(imageFilePath)
+                ? "File downloaded successfully."
+                : "File download failed.");
             const s3ImagePath = `projects/1/subProblems/images/${s}_.png`;
             await this.uploadImageToS3(process.env.S3_BUCKET_NAME, imageFilePath, s3ImagePath);
             const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
