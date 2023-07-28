@@ -1001,7 +1001,7 @@ export class CpsApp extends YpBaseElement {
             >
             <md-list-divider></md-list-divider>
             <md-list-item
-              ?hidden="${!this.isAdmin}"
+              ?hidden="${true /*!this.isAdmin*/}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
                   this.openAnalytics();
@@ -1016,7 +1016,7 @@ export class CpsApp extends YpBaseElement {
               ></md-list-item
             >
             <md-list-item
-              ?hidden="${!this.isAdmin}"
+              ?hidden="${true /*!this.isAdmin*/}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
                   this.goToAdmin();
@@ -1038,7 +1038,7 @@ export class CpsApp extends YpBaseElement {
                 }
               }}"
               @click="${this.openGitHub}"
-              headline="${this.t('Open Source on Github')}"
+              headline="${this.t('Open Source Collab')}"
               supportingText="${this.t('Open Source on Github')}"
             >
               <md-list-item-icon slot="start"
