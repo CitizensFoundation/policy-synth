@@ -106,7 +106,7 @@ export class CpsSolutions extends CpsStageBase {
 
         .solutionTopImage {
           margin-bottom: 16px;
-          margin-top: 16px;
+          margin-top: 24px;
         }
 
         .solutionItem {
@@ -182,12 +182,17 @@ export class CpsSolutions extends CpsStageBase {
           letter-spacing: 0.1em;
           line-height: 1.4;
           margin: 8px;
+          margin-left: 32px;
+          margin-right: 32px;
+          margin-top: 16px;
         }
 
         .solutionDescription {
           padding: 8px;
           font-size: 22px;
           line-height: 1.4;
+          margin-left: 24px;
+          margin-right: 24px;
         }
 
         .solutionAttributes {
