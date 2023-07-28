@@ -74,6 +74,10 @@ export abstract class CpsStageBase extends YpBaseElement {
           margin-top: 4px
         }
 
+        .subProblemImage[is-header] {
+          margin-bottom: 32px;
+        }
+
         .prominentSubProblem {
           cursor: pointer;
         }
@@ -421,9 +425,10 @@ export abstract class CpsStageBase extends YpBaseElement {
             ? html`
                 <div class="layout horizontal center-center">
                   <img
+                    ?is-header="${renderCloseButton}"
                     class="subProblemImage"
-                    height="200"
-                    width="200"
+                    height="${renderCloseButton ? 250 : 200}"
+                    width="${renderCloseButton ? 250 : 200}"
                     src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
                     alt="${subProblem.title}"
                   />
