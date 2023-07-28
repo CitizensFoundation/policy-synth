@@ -27,6 +27,7 @@
   "type": "module",
   "dependencies": {
     "@types/winston": "^2.4.4",
+    "aws-sdk": "^2.1424.0",
     "axios": "^1.4.0",
     "bullmq": "^4.1.0",
     "html-to-text": "^9.0.5",

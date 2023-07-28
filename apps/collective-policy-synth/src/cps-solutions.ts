@@ -89,6 +89,10 @@ export class CpsSolutions extends CpsStageBase {
           margin-top: 4px;
         }
 
+        .solutionImage {
+          padding: 8px;
+        }
+
         .solutionItem {
           text-align: left;
           background-color: var(--md-sys-color-on-secondary);
@@ -102,7 +106,7 @@ export class CpsSolutions extends CpsStageBase {
           height: 52px;
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: left;
           align-items: left;
           cursor: pointer;
           line-height: 1.4;
@@ -226,7 +230,7 @@ export class CpsSolutions extends CpsStageBase {
 
   renderSubProblemScreen(subProblem: IEngineSubProblem) {
     return html`
-      <div class="topContainer layout vertical center-center">
+      <div class="topContainer layout vertical self-start">
         ${this.renderSubProblem(subProblem, false, 0, true, true)}
         <div class="title">${this.t('Evolving Solutions')}</div>
         <div class="generationContainer layout vertical center-center">
@@ -234,14 +238,26 @@ export class CpsSolutions extends CpsStageBase {
           ${this.filteredSolutions.map(
             (solution, index) =>
               html`<div
-                class="solutionItem"
+                class="solutionItem layout horizontal self-start"
                 @click="${(): void => {
                   this.activeSolutionIndex = index;
                   this.activeFilteredSolutionIndex = index;
                   window.scrollTo(0, 0);
                 }}"
               >
-                ${index + 1}. ${solution.title}
+                ${solution.imageUrl
+                  ? html`
+                      <div>
+                        <img
+                          class="solutionImage"
+                          height="72"
+                          width="72"
+                          src="${solution.imageUrl}"
+                          alt="${solution.title}"
+                        />
+                      </div>
+                    `
+                  : html`${index + 1}.`}${solution.title}
               </div>`
           )}
         </div>
@@ -331,7 +347,11 @@ export class CpsSolutions extends CpsStageBase {
   handleDropdownChange(e: Event) {
     const selectElement = e.target as HTMLSelectElement;
     const newIndex = Number(selectElement.value) - 1;
-    if (!isNaN(newIndex) && newIndex >= 0 && newIndex < this.memory.subProblems.length) {
+    if (
+      !isNaN(newIndex) &&
+      newIndex >= 0 &&
+      newIndex < this.memory.subProblems.length
+    ) {
       this.activePopulationIndex = newIndex;
     }
   }

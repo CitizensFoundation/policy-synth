@@ -10,7 +10,7 @@ const gpt35kOutTokenPrice = 0.002 / 1000;
 export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 0.9,
+    temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -20,7 +20,7 @@ export class IEngineConstants {
 
   static createEntitiesModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 0.9,
+    temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -28,9 +28,20 @@ export class IEngineConstants {
     verbose: true,
   };
 
+
+  static createSolutionImagesModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.7,
+    maxOutputTokens: 256,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    verbose: false,
+  };
+
   static createSearchQueriesModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 0.9,
+    temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -110,7 +121,7 @@ export class IEngineConstants {
 
   static createSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 0.9,
+    temperature: 0.5,
     maxOutputTokens: 1200,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -120,7 +131,7 @@ export class IEngineConstants {
 
   static evolveSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 0.9,
+    temperature: 0.5,
     maxOutputTokens: 1200,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -130,7 +141,7 @@ export class IEngineConstants {
 
   static createProsConsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 0.9,
+    temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -140,7 +151,7 @@ export class IEngineConstants {
 
   static evolutionMutateModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 1.0,
+    temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -150,7 +161,7 @@ export class IEngineConstants {
 
   static evolutionRecombineModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 1.0,
+    temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -174,19 +185,21 @@ export class IEngineConstants {
 
   static maxTopEntitiesToRender = 3;
 
-  static maxTopQueriesToSearchPerType = 2;
+  static maxTopQueriesToSearchPerType = 4;
 
   static mainSearchRetryCount = 40;
 
-  static maxTopWebPagesToGet = 5;
+  static maxDalleRetryCount = 7;
 
-  static maxWebPagesToGetByTopSearchPosition = 5;
+  static maxTopWebPagesToGet = 7;
+
+  static maxWebPagesToGetByTopSearchPosition = 7;
 
   static maxSearchResults = 10;
 
-  static maxTopProsConsUsedForRanking = 3;
+  static maxTopProsConsUsedForRanking = 1;
 
-  static maxNumberGeneratedProsConsForSolution = 9;
+  static maxNumberGeneratedProsConsForSolution = 3;
 
   static minSleepBeforeBrowserRequest = 1100;
 
@@ -202,8 +215,8 @@ export class IEngineConstants {
         useSubProblemSearchQueries: 0.5,
         useRandomEntitySearchQueries: 0.4,
       },
-      notUsingFirstSearchQuery: 0.7,
-      vectorSearchAcrossAllProblems: 0.1,
+      notUsingFirstSearchQuery: 0.8,
+      vectorSearchAcrossAllProblems: 0.2,
     },
   };
 
@@ -211,7 +224,7 @@ export class IEngineConstants {
 
   static limits = {
     webPageVectorResultsForNewSolutions: 10,
-    useRandomTopFromVectorSearchResults: 3,
+    useRandomTopFromVectorSearchResults: 7,
   };
 
   static enable = {
@@ -228,20 +241,25 @@ export class IEngineConstants {
 
     // Population split
     keepElitePercent: 0.1,
-    randomImmigrationPercent: 0.3,
-    mutationOffspringPercent: 0.3,
-    crossoverPercent: 0.3,
+    randomImmigrationPercent: 0.45,
+    mutationOffspringPercent: 0.35,
+    crossoverPercent: 0.1,
 
     // General mutation rate split
-    lowMutationRate: 0.3,
-    mediumMutationRate: 0.5,
+    lowMutationRate: 0.2,
+    mediumMutationRate: 0.6,
     highMutationRate: 0.2,
 
-    selectParentTournamentSize: 7,
-    crossoverMutationPercent: 0.4
- };
+    selectParentTournamentSize: 3,
+    crossoverMutationPercent: 0.1,
+  };
+
+  static minimumNumberOfPairwiseVotesForPopulation = 7;
+
+  static maxNumberOfPairwiseRankingPrompts =
+    IEngineConstants.evolution.populationSize *
+    IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
 
   static currentUserAgent =
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
 }
-

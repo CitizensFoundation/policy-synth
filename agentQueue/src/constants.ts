@@ -36,7 +36,7 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
-    verbose: true,
+    verbose: false,
   };
 
   static createSearchQueriesModel: IEngineBaseAIModelConstants = {
@@ -173,7 +173,7 @@ export class IEngineConstants {
 
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
 
-  static maxSubProblems = 7;
+  static maxSubProblems = 1;
 
   static maxNumberGeneratedOfEntities = 7;
 
@@ -188,6 +188,8 @@ export class IEngineConstants {
   static maxTopQueriesToSearchPerType = 4;
 
   static mainSearchRetryCount = 40;
+
+  static maxDalleRetryCount = 7;
 
   static maxTopWebPagesToGet = 7;
 
