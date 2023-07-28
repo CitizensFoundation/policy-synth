@@ -22,6 +22,15 @@ export class CpsSolutions extends CpsStageBase {
   @property({ type: Number }) activeFilteredSolutionIndex: number = null;
   @property({ type: Boolean }) isSearchVisible = false; // add a new property to control the visibility of the search field
 
+
+  reset() {
+    this.searchText = "";
+    this.isSearchVisible = false;
+    this.isDropdownVisible = false;
+    this.activeSolutionIndex = null;
+    this.activeSubProblemIndex = null;
+  }
+
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Solutions - open`);
