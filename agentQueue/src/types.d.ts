@@ -267,6 +267,8 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     rankSubProblems?: string;
     createSolutions?: string;
     rankSolutions?: string;
+    subProblemColors?: string[];
+    secondaryColors?: string[];
   }
   subProblems: IEngineSubProblem[];
   currentStageData?:
