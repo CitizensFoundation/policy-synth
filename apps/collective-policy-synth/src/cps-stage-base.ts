@@ -297,20 +297,40 @@ export abstract class CpsStageBase extends YpBaseElement {
           margin-top: 4px;
         }
 
-        @media (min-width: 960px) {
-          .queryType {
-            font-size: 20px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-          }
+        @media (max-width: 960px) {
 
-          .query {
-            font-size: 18px;
-            margin-bottom: 6px;
-          }
+          .subProblemStatement,
+        .subProblemTitle {
+          font-size: 18px;
+          max-width: 100%;
         }
 
-        @media (max-width: 960px) {
+        .subProblemTitle {
+        }
+
+          .title {
+            margin-top: 16px;
+            max-width: 100%;
+            margin-right: 8px;
+            margin-left: 8px;
+            font-size: 22px;
+            border-radius: 16px;
+            max-width: 100%;
+          }
+
+          .smallerTitle {
+            font-size: 16px;
+          }
+
+          .topContainer {
+            margin-left: 16px;
+            margin-right: 16px;
+          }
+          .problemStatement {
+            font-size: 18px;
+            max-width: 100%;
+            margin-bottom: 16px;
+          }
           .queryType {
             font-size: 16px;
             margin-top: 12px;
@@ -395,8 +415,33 @@ export abstract class CpsStageBase extends YpBaseElement {
     }
   }
 
+  toggleDarkMode() {
+    this.fire('yp-theme-dark-mode', !this.themeDarkMode);
+  }
+
+  renderThemeToggle() {
+    return html`<div class="layout vertical center-center">
+      ${!this.themeDarkMode
+        ? html`
+            <md-outlined-icon-button
+              class="darkModeButton"
+              @click="${this.toggleDarkMode}"
+              ><md-icon>dark_mode</md-icon></md-outlined-icon-button
+            >
+          `
+        : html`
+            <md-outlined-icon-button
+              class="darkModeButton"
+              @click="${this.toggleDarkMode}"
+              ><md-icon>light_mode</md-icon></md-outlined-icon-button
+            >
+          `}
+    </div> `;
+  }
+
   renderProblemStatement() {
     return html`
+      ${!this.wide ? html` ${this.renderThemeToggle()} ` : nothing}
       <div class="title">${this.t('Problem Statement')}</div>
       <div class="problemStatement">
         <div class="problemStatementText">
@@ -433,9 +478,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     return html`
       <div
         ?not-header="${!renderCloseButton}"
-        class="subProblem ${isLessProminent
-          ? 'lessProminent'
-          : ''}"
+        class="subProblem ${isLessProminent ? 'lessProminent' : ''}"
         @click="${() => {
           if (!renderCloseButton) this.setSubProblem(index);
         }}"
@@ -460,9 +503,7 @@ export abstract class CpsStageBase extends YpBaseElement {
               `
             : nothing}
           <div class="layout horizontal">
-            <div>
-              ${subProblem.title}
-            </div>
+            <div>${subProblem.title}</div>
             <div class="${renderCloseButton ? 'flex' : ''}"></div>
             ${renderCloseButton
               ? html`
