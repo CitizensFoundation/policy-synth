@@ -252,7 +252,7 @@ export class IEngineConstants {
     mediumMutationRate: 0.6,
     highMutationRate: 0.2,
 
-    selectParentTournamentSize: 3,
+    selectParentTournamentSize: 5,
     crossoverMutationPercent: 0.1,
   };
 
