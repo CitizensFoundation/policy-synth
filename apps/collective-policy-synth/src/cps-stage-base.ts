@@ -461,9 +461,7 @@ export abstract class CpsStageBase extends YpBaseElement {
             : nothing}
           <div class="layout horizontal">
             <div>
-              ${renderCloseButton
-                ? `${this.activeSubProblemIndex + 1}. `
-                : ''}${subProblem.title}
+              ${subProblem.title}
             </div>
             <div class="${renderCloseButton ? 'flex' : ''}"></div>
             ${renderCloseButton

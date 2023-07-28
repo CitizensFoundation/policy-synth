@@ -53,6 +53,7 @@ export class CpsSolutions extends CpsStageBase {
         if (this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1) {
           this.activeSubProblemIndex += 1;
         }
+        this.setSubProblemColor(this.activeSubProblemIndex);
       }
     } else if (e.key === 'ArrowLeft') {
       if (this.activeSolutionIndex !== null) {
@@ -63,6 +64,7 @@ export class CpsSolutions extends CpsStageBase {
         if (this.activeSubProblemIndex > 0) {
           this.activeSubProblemIndex -= 1;
         }
+        this.setSubProblemColor(this.activeSubProblemIndex);
       }
     } else if (e.key === 'Escape') {
       if (this.activeSolutionIndex !== null) {
