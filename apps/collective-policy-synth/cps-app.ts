@@ -664,6 +664,12 @@ export class CpsApp extends YpBaseElement {
     //window.location.href = `/admin`;
   }
 
+  openGitHub() {
+    // Open up in a new tab
+    window.open("https://github.com/CitizensFoundation/collective-policy-synth",
+      "_blank");
+  }
+
   stageModelMap = {
     createSubProblems: IEngineConstants.createSubProblemsModel,
     createEntities: IEngineConstants.createEntitiesModel,
@@ -1022,6 +1028,21 @@ export class CpsApp extends YpBaseElement {
             >
               <md-list-item-icon slot="start"
                 ><md-icon>settings</md-icon></md-list-item-icon
+              ></md-list-item
+            >
+            <md-list-divider></md-list-divider>
+            <md-list-item
+              @keydown="${(e: KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  this.openGitHub();
+                }
+              }}"
+              @click="${this.openGitHub}"
+              headline="${this.t('Open Source on Github')}"
+              supportingText="${this.t('Open Source on Github')}"
+            >
+              <md-list-item-icon slot="start"
+                ><md-icon>crowdsource</md-icon></md-list-item-icon
               ></md-list-item
             >
 
