@@ -332,6 +332,18 @@ export class CpsApp extends YpBaseElement {
     }
   }
 
+  mobileTabChanged(event: CustomEvent) {
+    if (event.detail.activeIndex == 0) {
+      this.pageIndex = PagesTypes.ProblemStatement;
+    } else if (event.detail.activeIndex == 1) {
+      this.pageIndex = PagesTypes.Solutions;
+    } else if (event.detail.activeIndex == 2) {
+      this.pageIndex = PagesTypes.PolicyCategories;
+    } else if (event.detail.activeIndex == 3) {
+      this.pageIndex = PagesTypes.PolicyIdeas;
+    }
+  }
+
   exitToMainApp() {
     window.location.href = `/`;
   }
@@ -827,7 +839,7 @@ export class CpsApp extends YpBaseElement {
           ></cps-solutions>`;
         default:
           return html`
-            <p>Page not found try going to <a href="#main">Main</a></p>
+
           `;
       }
     } else {
@@ -1060,11 +1072,23 @@ export class CpsApp extends YpBaseElement {
         <div class="navContainer">
           <md-navigation-bar
             id="navBar"
-            @navigation-bar-activated="${this.tabChanged}"
+            @navigation-bar-activated="${this.mobileTabChanged}"
           >
-            <md-navigation-tab .label="${this.t('View Memory')}"
-              ><md-icon slot="activeIcon">info</md-icon>
-              <md-icon slot="inactiveIcon">info</md-icon></md-navigation-tab
+            <md-navigation-tab .label="${this.t('Problem')}"
+              ><md-icon slot="activeIcon">problem</md-icon>
+              <md-icon slot="inactiveIcon">problem</md-icon></md-navigation-tab
+            >
+            <md-navigation-tab .label="${this.t('Solutions')}"
+              ><md-icon slot="activeIcon">online_prediction</md-icon>
+              <md-icon slot="inactiveIcon">online_prediction</md-icon></md-navigation-tab
+            >
+            <md-navigation-tab .label="${this.t('Categories')}"
+              ><md-icon slot="activeIcon">category</md-icon>
+              <md-icon slot="inactiveIcon">category</md-icon></md-navigation-tab
+            >
+            <md-navigation-tab .label="${this.t('Policies')}"
+              ><md-icon slot="activeIcon">policy</md-icon>
+              <md-icon slot="inactiveIcon">policy</md-icon></md-navigation-tab
             >
           </md-navigation-bar>
         </div>
