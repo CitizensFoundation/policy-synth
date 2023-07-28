@@ -70,7 +70,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblemImage {
-          margin-bottom: 24px;
+          margin-bottom: 16px;
           margin-top: 4px;
         }
 
@@ -105,10 +105,12 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblemTitle {
-          color: var(--md-sys-color-primary);
-          font-weight: bold;
-          letter-spacing: 0.12em;
+          font-size: 24px;
           padding-bottom: 0;
+        }
+
+        .subProblemMainTitle {
+          font-size: 26px;
         }
 
         .subProblem {
@@ -116,13 +118,16 @@ export abstract class CpsStageBase extends YpBaseElement {
           border-radius: 12px;
           padding: 16px;
           margin: 16px 0;
-          background-color: var(--md-sys-color-on-primary);
-          color: var(--md-sys-color-primary);
+          background-color: var(--md-sys-color-primary-container);
+          color: var(--md-sys-color-on-primary-container);
           max-width: 960px;
+          margin-bottom: 8px;
         }
 
         .subProblem[not-header] {
           cursor: pointer;
+          background-color: var(--md-sys-color-secondary-container);
+          color: var(--md-sys-color-on-secondary-container);
         }
 
         .title {
@@ -305,6 +310,10 @@ export abstract class CpsStageBase extends YpBaseElement {
           max-width: 100%;
         }
 
+        .subProblem {
+          max-width: 100%;
+        }
+
         .subProblemTitle {
         }
 
@@ -468,6 +477,14 @@ export abstract class CpsStageBase extends YpBaseElement {
     `;
   }
 
+  getImgHeight(renderCloseButton: boolean) {
+    if (this.wide) {
+      return renderCloseButton ? 275 : 200;
+    } else {
+      return renderCloseButton ? 200 : 200;
+    }
+  }
+
   renderSubProblem(
     subProblem: IEngineSubProblem,
     isLessProminent: boolean,
@@ -490,12 +507,11 @@ export abstract class CpsStageBase extends YpBaseElement {
         >
           ${subProblem.imageUrl
             ? html`
-                <div class="layout horizontal center-center">
+                <div class="layout horizontal center-center subProblemImage">
                   <img
                     ?is-header="${renderCloseButton}"
                     class="subProblemImage"
-                    height="${renderCloseButton ? 275 : 200}"
-                    width="${renderCloseButton ? 275 : 200}"
+                    height="${this.getImgHeight(renderCloseButton)}"
                     src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
                     alt="${subProblem.title}"
                   />
@@ -503,7 +519,7 @@ export abstract class CpsStageBase extends YpBaseElement {
               `
             : nothing}
           <div class="layout horizontal">
-            <div>${subProblem.title}</div>
+            <div class="subProblemMainTitle">${subProblem.title}</div>
             <div class="${renderCloseButton ? 'flex' : ''}"></div>
             ${renderCloseButton
               ? html`
