@@ -499,8 +499,8 @@ export class CpsSolutions extends CpsStageBase {
             ? html`<div class="layout horizontal center-center">
                 <img
                   class="solutionTopImage"
-                  height="250"
-                  width="250"
+                  height="275"
+                  width="275"
                   src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
                   alt="${solution.title}"
                 />

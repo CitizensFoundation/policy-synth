@@ -71,15 +71,11 @@ export abstract class CpsStageBase extends YpBaseElement {
 
         .subProblemImage {
           margin-bottom: 24px;
-          margin-top: 4px
+          margin-top: 4px;
         }
 
         .subProblemImage[is-header] {
           margin-bottom: 32px;
-        }
-
-        .prominentSubProblem {
-          cursor: pointer;
         }
 
         .problemStatement {
@@ -122,6 +118,10 @@ export abstract class CpsStageBase extends YpBaseElement {
           background-color: var(--md-sys-color-on-primary);
           color: var(--md-sys-color-primary);
           max-width: 960px;
+        }
+
+        .subProblem[not-header] {
+          cursor: pointer;
         }
 
         .title {
@@ -359,18 +359,18 @@ export abstract class CpsStageBase extends YpBaseElement {
   }
 
   subProblemColors = [
-    "#0b60b9",
-    "#ee782d",
-    "#face2d",
-    "#50c363",
-    "#cf1103",
-    "#344373",
-    "#87559b",
-    "#02b5fc"
-  ]
+    '#0b60b9',
+    '#ee782d',
+    '#face2d',
+    '#50c363',
+    '#cf1103',
+    '#344373',
+    '#87559b',
+    '#02b5fc',
+  ];
 
   setSubProblemColor(index: number) {
-    if (index<7) {
+    if (index < 7) {
       this.fire('yp-theme-color', this.subProblemColors[index]);
     }
   }
@@ -431,10 +431,13 @@ export abstract class CpsStageBase extends YpBaseElement {
   ) {
     return html`
       <div
+        ?not-header="${!renderCloseButton}"
         class="subProblem ${isLessProminent
           ? 'lessProminent'
-          : 'prominentSubProblem'}"
-        @click="${() => this.setSubProblem(index)}"
+          : ''}"
+        @click="${() => {
+          if (!renderCloseButton) this.setSubProblem(index);
+        }}"
       >
         <div
           class="subProblemTitle layout ${renderCloseButton
@@ -447,8 +450,8 @@ export abstract class CpsStageBase extends YpBaseElement {
                   <img
                     ?is-header="${renderCloseButton}"
                     class="subProblemImage"
-                    height="${renderCloseButton ? 250 : 200}"
-                    width="${renderCloseButton ? 250 : 200}"
+                    height="${renderCloseButton ? 275 : 200}"
+                    width="${renderCloseButton ? 275 : 200}"
                     src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
                     alt="${subProblem.title}"
                   />
@@ -471,7 +474,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       e.stopPropagation();
                       if (this.activeSubProblemIndex > 0) {
                         this.activeSubProblemIndex -= 1;
-                        this.setSubProblemColor(this.activeSubProblemIndex)
+                        this.setSubProblemColor(this.activeSubProblemIndex);
                       }
                     }}"
                   >
@@ -490,7 +493,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                         this.activeSubProblemIndex < maxNumberOfSubProblems - 1
                       ) {
                         this.activeSubProblemIndex += 1;
-                        this.setSubProblemColor(this.activeSubProblemIndex)
+                        this.setSubProblemColor(this.activeSubProblemIndex);
                       }
                     }}"
                   >
