@@ -177,6 +177,8 @@ export class IEngineConstants {
 
   static maxNumberGeneratedOfEntities = 7;
 
+  static maxStabilityRetryCount = 7;
+
   static mainLLMmaxRetryCount = 40;
 
   static rankingLLMmaxRetryCount = 40;
