@@ -213,10 +213,12 @@ export class CpsSolutions extends CpsStageBase {
         subProblem.solutions.populations[this.activePopulationIndex];
 
       if (this.searchText) {
-        solutions = solutions.filter(
-          solution =>
-            solution.title.includes(this.searchText) ||
-            solution.description.includes(this.searchText)
+        const searchTerms = this.searchText.toLowerCase().split(' ');
+        solutions = solutions.filter(solution =>
+          searchTerms.some(term =>
+            solution.title.toLowerCase().includes(term) ||
+            solution.description.toLowerCase().includes(term)
+          )
         );
       }
 
@@ -225,6 +227,7 @@ export class CpsSolutions extends CpsStageBase {
       return [];
     }
   }
+
 
   render() {
     const subProblems = this.memory.subProblems || [];
