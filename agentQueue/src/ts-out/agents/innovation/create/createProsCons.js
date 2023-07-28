@@ -49,7 +49,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
 
         Important Instructions:
 
-        1. Generate and output up to 2 best ${prosOrCons} for the solution below.
+        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below.
         2. Each ${prosconsSingle} should be directly applicable to the solution.
         3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
         4. The ${prosOrCons} must be in line with the context given by the problem.

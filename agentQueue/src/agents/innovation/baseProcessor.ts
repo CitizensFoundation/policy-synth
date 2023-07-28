@@ -137,10 +137,20 @@ export abstract class BaseProcessor extends Base {
           response = await this.chat.call(messages);
 
           if (response) {
+            this.logger.debug("Got response from LLM");
             const tokensIn = await this.chat!.getNumTokensFromMessages(messages);
             const tokensOut = await this.chat!.getNumTokensFromMessages([
               response,
             ]);
+
+            if (!this.memory.stages[stage]) {
+              this.memory.stages[stage] = {
+                tokensIn: 0,
+                tokensOut: 0,
+                tokensInCost: 0,
+                tokensOutCost: 0,
+              };
+            }
 
             if (this.memory.stages[stage].tokensIn === undefined) {
               this.memory.stages[stage].tokensIn = 0;
@@ -163,6 +173,7 @@ export abstract class BaseProcessor extends Base {
             }
 
             if (parseJson) {
+              this.logger.debug("Parsing JSON")
               let parsedJson;
               try {
                 parsedJson = JSON.parse(response.text.trim());
@@ -205,9 +216,11 @@ export abstract class BaseProcessor extends Base {
               retryCount++;
             }
           }
-        } catch (error) {
+        } catch (error: any) {
           this.logger.warn("Error from LLM, retrying");
           this.logger.warn(error);
+          // Output the stack strace
+          this.logger.warn(error.stack);
           if (retryCount >= maxRetries) {
             throw error;
           } else {

@@ -28,6 +28,17 @@ export class IEngineConstants {
     verbose: true,
   };
 
+
+  static createSolutionImagesModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.7,
+    maxOutputTokens: 256,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    verbose: true,
+  };
+
   static createSearchQueriesModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.7,
@@ -186,7 +197,7 @@ export class IEngineConstants {
 
   static maxTopProsConsUsedForRanking = 1;
 
-  static maxNumberGeneratedProsConsForSolution = 2;
+  static maxNumberGeneratedProsConsForSolution = 3;
 
   static minSleepBeforeBrowserRequest = 1100;
 

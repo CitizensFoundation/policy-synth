@@ -23,6 +23,15 @@ export class IEngineConstants {
         outTokenCostUSD: gpt4OutTokenPrice,
         verbose: true,
     };
+    static createSolutionImagesModel = {
+        name: "gpt-4",
+        temperature: 0.7,
+        maxOutputTokens: 256,
+        tokenLimit: 8192,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        verbose: true,
+    };
     static createSearchQueriesModel = {
         name: "gpt-4",
         temperature: 0.7,
@@ -142,7 +151,7 @@ export class IEngineConstants {
     };
     static getPageTimeout = 1000 * 10;
     static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
-    static maxSubProblems = 7;
+    static maxSubProblems = 1;
     static maxNumberGeneratedOfEntities = 7;
     static mainLLMmaxRetryCount = 40;
     static rankingLLMmaxRetryCount = 40;
@@ -154,7 +163,7 @@ export class IEngineConstants {
     static maxWebPagesToGetByTopSearchPosition = 7;
     static maxSearchResults = 10;
     static maxTopProsConsUsedForRanking = 1;
-    static maxNumberGeneratedProsConsForSolution = 2;
+    static maxNumberGeneratedProsConsForSolution = 3;
     static minSleepBeforeBrowserRequest = 1100;
     static maxAdditionalRandomSleepBeforeBrowserRequest = 1100;
     static numberOfSearchTypes = 4;

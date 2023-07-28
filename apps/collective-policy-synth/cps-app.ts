@@ -91,7 +91,7 @@ export class CpsApp extends YpBaseElement {
   currentError: string | undefined;
 
   @property({ type: String })
-  themeColor = '#3858ca';
+  themeColor = '#02b5fc';
 
   @property({ type: String })
   themePrimaryColor = '#000000';
@@ -213,7 +213,7 @@ export class CpsApp extends YpBaseElement {
 
     this.themeColor = bootResponse.configuration.theme_color
       ? bootResponse.configuration.theme_color
-      : '#3858ca';
+      : '#02b5fc';
     this.themePrimaryColor = bootResponse.configuration.theme_primary_color;
     this.themeSecondaryColor = bootResponse.configuration.theme_secondary_color;
     this.themeTertiaryColor = bootResponse.configuration.theme_tertiary_color;
