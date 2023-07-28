@@ -98,7 +98,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           background-color: var(--md-sys-color-tertiary);
           color: var(--md-sys-color-on-tertiary);
           max-width: 960px;
-          margin-bottom: 42px;
+          margin-bottom: 0px;
         }
 
         .problemStatementText {
