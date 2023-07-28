@@ -45,6 +45,7 @@ import './src/cps-entities.js';
 import './src/cps-solutions.js';
 import { IEngineConstants } from './src/constants.js';
 import { YpFormattingHelpers } from './src/@yrpri/common/YpFormattingHelpers.js';
+import { CpsSolutions } from './src/cps-solutions.js';
 
 const PagesTypes = {
   ProblemStatement: 1,
@@ -944,7 +945,10 @@ export class CpsApp extends YpBaseElement {
               'selectedContainer'}"
               headline="${this.t('Solutions')} (${this
                 .numberOfSolutionsGenerations} gen)"
-              @click="${() => this.changeTabTo(3)}"
+              @click="${() => {
+                this.changeTabTo(3);
+                (this.$$("cps-solutions") as CpsSolutions)?.reset()
+                }}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
                   this.changeTabTo(3);
