@@ -14,6 +14,7 @@ import { RankSubProblemsProcessor } from "./ranking/rankSubProblems.js";
 import { GetWebPagesProcessor } from "./web/getWebPages.js";
 import { SearchWebProcessor } from "./web/searchWeb.js";
 import { EvolvePopulationProcessor } from "./evolve/evolvePopulation.js";
+import { CreateSolutionImagesProcessor } from "./create/createImages.js";
 export class AgentInnovation extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -46,6 +47,7 @@ export class AgentInnovation extends BaseAgent {
                 "create-seed-solutions": {},
                 // Analyze the advantages and disadvantages of each solution
                 "create-pros-cons": {},
+                "create-solution-images": {},
                 // Rank the pros and cons based on their impact on the solution
                 "rank-pros-cons": {},
                 // Rank the potential solutions based on their efficacy
@@ -111,6 +113,10 @@ export class AgentInnovation extends BaseAgent {
             case "create-pros-cons":
                 const createProsConsProcessor = new CreateProsConsProcessor(this.job, this.memory);
                 await createProsConsProcessor.process();
+                break;
+            case "create-solution-images":
+                const createSolutionImagesProcessor = new CreateSolutionImagesProcessor(this.job, this.memory);
+                await createSolutionImagesProcessor.process();
                 break;
             case "create-search-queries":
                 const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(this.job, this.memory);

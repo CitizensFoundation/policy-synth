@@ -137,6 +137,7 @@ interface IEngineSolution {
   affectedEntities?: IEngineSolutionAffectedEntity[];
   pros?: string[] | IEngineProCon[];
   cons?: string[] | IEngineProCon[];
+  imageUrl?: string;
 }
 
 interface IEngineProCon {
@@ -162,6 +163,7 @@ type IEngineStageTypes =
   | "create-entities"
   | "create-search-queries"
   | "create-pros-cons"
+  | "create-solution-images"
   | "rank-search-results"
   | "rank-search-queries"
   | "rank-sub-problems"

@@ -58,7 +58,6 @@ export class CreateProsConsProcessor extends BaseProcessor {
     subProblemIndex: number,
     solution: IEngineSolution
   ) {
-
     const prosconsSingle = prosOrCons.slice(0, -1);
 
     const messages = [
@@ -68,7 +67,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
 
         Important Instructions:
 
-        1. Generate and output up to 2 best ${prosOrCons} for the solution below.
+        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below.
         2. Each ${prosconsSingle} should be directly applicable to the solution.
         3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
         4. The ${prosOrCons} must be in line with the context given by the problem.
@@ -172,7 +171,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
 
     // Wait for all subproblems to finish
     await Promise.all(subProblemsPromises);
-    this.logger.info("Finished creating pros cons for all")
+    this.logger.info("Finished creating pros cons for all");
   }
 
   async process() {
