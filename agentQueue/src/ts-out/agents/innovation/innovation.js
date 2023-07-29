@@ -16,6 +16,7 @@ import { SearchWebProcessor } from "./web/searchWeb.js";
 import { EvolvePopulationProcessor } from "./evolve/evolvePopulation.js";
 import { CreateSolutionImagesProcessor } from "./create/createImages.js";
 import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
+import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 export class AgentInnovation extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -60,6 +61,7 @@ export class AgentInnovation extends BaseAgent {
                 "evolve-mutate-population": {},
                 // Apply recombination operator in the population to create new solutions
                 "evolve-recombine-population": {},
+                "evolve-reap-population": {},
                 // Evaluate and rank the population after mutation and recombination
                 "evolve-rank-population": {},
                 // Parse the solution into a human-readable format
@@ -167,6 +169,10 @@ export class AgentInnovation extends BaseAgent {
             case "evolve-create-population":
                 const createPopulationProcessor = new EvolvePopulationProcessor(this.job, this.memory);
                 await createPopulationProcessor.process();
+                break;
+            case "evolve-reap-population":
+                const reapSolutionsProcessor = new ReapSolutionsProcessor(this.job, this.memory);
+                await reapSolutionsProcessor.process();
                 break;
             default:
                 console.log("No stage matched");

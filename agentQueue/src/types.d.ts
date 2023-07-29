@@ -141,6 +141,7 @@ interface IEngineSolution {
   cons?: string[] | IEngineProCon[];
   imageUrl?: string;
   imagePrompt?: string;
+  reaped?: boolean;
 }
 
 interface IEngineProCon {
@@ -177,6 +178,7 @@ type IEngineStageTypes =
   | "evolve-create-population"
   | "evolve-mutate-population"
   | "evolve-recombine-population"
+  | "evolve-reap-population"
   | "evolve-rank-population"
   | "web-search"
   | "web-get-pages"
@@ -267,6 +269,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     rankSubProblems?: string;
     createSolutions?: string;
     rankSolutions?: string;
+    reapSolutions?: string;
     subProblemColors?: string[];
     secondaryColors?: string[];
   }
@@ -305,6 +308,11 @@ interface IEngineWebPageGraphQlResults {
       WebPage: IEngineWebPageAnalysisData[];
     }
   }
+}
+
+interface IEngineSolutionForReapCheck {
+  index: number;
+  title: string;
 }
 
 type IEngineMutationRates = "low" | "medium" | "high";
