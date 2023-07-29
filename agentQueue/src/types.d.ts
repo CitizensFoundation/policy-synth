@@ -270,6 +270,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     createSolutions?: string;
     rankSolutions?: string;
     reapSolutions?: string;
+    rateSolutions?: string;
     subProblemColors?: string[];
     secondaryColors?: string[];
   }
