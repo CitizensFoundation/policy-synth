@@ -113,6 +113,15 @@ export class IEngineConstants {
         outTokenCostUSD: gpt4OutTokenPrice,
         verbose: false
     };
+    static rateSolutionsModel = {
+        name: "gpt-4",
+        temperature: 0.0,
+        maxOutputTokens: 1024,
+        tokenLimit: 8192,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        verbose: false
+    };
     static createSolutionsModel = {
         name: "gpt-4",
         temperature: 0.5,
