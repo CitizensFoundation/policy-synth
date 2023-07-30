@@ -13,7 +13,9 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
     eloRatings = {};
     setupRankingPrompts(subProblemIndex, allItems, maxPrompts = undefined) {
         this.allItems[subProblemIndex] = allItems;
-        this.maxNumberOfPrompts = maxPrompts || this.maxNumberOfPrompts;
+        this.maxNumberOfPrompts =
+            maxPrompts ||
+                (allItems.length * IEngineConstants.maxPercentOfEloMatched);
         this.prompts[subProblemIndex] = [];
         this.numComparisons[subProblemIndex] = {};
         this.KFactors[subProblemIndex] = {};

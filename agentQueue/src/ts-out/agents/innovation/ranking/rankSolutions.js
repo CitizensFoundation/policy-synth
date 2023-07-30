@@ -15,9 +15,11 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
          1. You will be presented with a problem and two corresponding solutions. These will be labelled "Solution One" and "Solution Two".
          2. Assess which of the two solutions is more important in relation to the problem.
          3. Consider the provided ratings for each solution also.
-         ${this.memory.customInstructions.rankSolutions ? `
+         ${this.memory.customInstructions.rankSolutions
+                ? `
            Important Instructions: ${this.memory.customInstructions.rankSolutions}
-           ` : ''}
+           `
+                : ""}
 
          Always output your decision as "One", "Two" or "Neither. No explanation is necessary.
          Think step by step.
@@ -31,19 +33,23 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         ${solutionOne.title}
         ${solutionOne.description}
 
-        ${solutionOne.ratings ? `
+        ${solutionOne.ratings
+                ? `
         Solution One Ratings:
         ${JSON.stringify(solutionOne.ratings, null, 2)}
-        ` : ""}
+        `
+                : ""}
 
         Solution Two:
         ${solutionTwo.title}
         ${solutionTwo.description}
 
-        ${solutionTwo.ratings ? `
+        ${solutionTwo.ratings
+                ? `
         Solution Two Ratings:
         ${JSON.stringify(solutionTwo.ratings, null, 2)}
-        ` : ""}
+        `
+                : ""}
 
         The more important solution is:
         `),
@@ -53,7 +59,8 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
     async processSubProblem(subProblemIndex) {
         const lastPopulationIndex = this.lastPopulationIndex(subProblemIndex);
         this.logger.info(`Ranking solutions for sub problem ${subProblemIndex} population ${lastPopulationIndex}`);
-        this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex));
+        this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex), IEngineConstants.minimumNumberOfPairwiseVotesForPopulation *
+            this.getActiveSolutionsLastPopulation(subProblemIndex).length);
         await this.performPairwiseRanking(subProblemIndex);
         this.memory.subProblems[subProblemIndex].solutions.populations[lastPopulationIndex] = this.getOrderedListOfItems(subProblemIndex, true);
         await this.saveMemory();
