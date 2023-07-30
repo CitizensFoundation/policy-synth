@@ -1,4 +1,4 @@
-# Collective Policy Synth
+# Policy Synth
 <img src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="360" height="203">
 
 ## Bringing together the best of collective and artificial intelligence
@@ -7,7 +7,7 @@
 Our project embodies a unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas. We are in the process of building a state-of-the-art platform where policymakers, citizens, and AI can engage in a collective discourse. This collaborative interaction is expected to not only expedite decision-making processes but also augment their quality, paving the way for more inventive and efficacious policy resolutions.
 
 ### Live: First test results
-- [Live test results](https://collective-policy-synth.citizens.is/projects/1/)
+# [Live test results](https://collective-policy-synth.citizens.is/projects/1/)
 
 ### Figma Design
 - [Figma Prototype Design](https://www.figma.com/file/ekIKXfT3tL8Ab7MoLSnjnN/Collective-Policy-Synth-V10)
@@ -30,4 +30,5 @@ For the real-world application of our platform, a series of expert and mass citi
 - **Mid-August 2023**: Plan to release initial crowdsourcing components
 - **End of August 2023**: First iteration of the policy ideas modules
 
-![Collective Policy Synth V12](https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/ed7ee83b-fffb-4195-a4b8-ba70fc52e954)
+![Policy Synth V16](https://github.com/CitizensFoundation/policy-synth/assets/43699/99d8c312-fc24-4e9a-a87f-da59fd74a0a4)
+
