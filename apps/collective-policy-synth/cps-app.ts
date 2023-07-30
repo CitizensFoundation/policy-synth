@@ -467,7 +467,7 @@ export class CpsApp extends YpBaseElement {
         }
 
         .appTitle {
-          margin-top: 8px;
+          margin-top: 16px;
           color: var(--md-sys-color-primary);
           font-weight: 500;
         }
@@ -566,6 +566,11 @@ export class CpsApp extends YpBaseElement {
 
         .mainPageContainer {
           margin-top: 16px;
+        }
+
+        .version {
+          margin: 8px;
+          font-size: 14px;
         }
 
         .navContainer {
@@ -905,7 +910,8 @@ export class CpsApp extends YpBaseElement {
                 sizing="contain"
                 src="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png"
               ></yp-image>
-              <div class="appTitle">${this.t('Collective Policy Synth')}</div>
+              <div class="appTitle">${this.t('Policy Synth')}</div>
+              <div class="version">v. 18 19/07/2023 15:14</div>
             </div>
           </div>
 

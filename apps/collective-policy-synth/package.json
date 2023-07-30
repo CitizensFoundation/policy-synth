@@ -27,6 +27,7 @@
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-replace": "^5.0.2",
     "@types/fetch-mock": "^7.3.5",
     "@types/google.analytics": "0.0.42",
     "@types/i18next": "^13.0.0",
@@ -119,7 +120,7 @@
     "arrowParens": "avoid"
   },
   "name": "aoi-survey-app",
-  "version": "1.0.0",
+  "version": "18",
   "description": "aoi-survey-app",
   "author": "Citizens Foundation",
   "license": "AGPL",

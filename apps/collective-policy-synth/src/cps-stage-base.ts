@@ -78,6 +78,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         .topContainer {
           margin-right: 32px;
           margin-top: 24px;
+          margin-bottom: 64px;
         }
 
         .subProblemImage {

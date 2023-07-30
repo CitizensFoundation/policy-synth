@@ -257,22 +257,29 @@ export class CpsSolutions extends CpsStageBase {
 
         .ratingsHeader {
           font-size: 24px;
-          margin-bottom: 8px;
-          color: var(--md-sys-color-primary);
+          margin-bottom: 4px;
+          margin-top: 16px;
+          color: var(--md-sys-color-secondary);
         }
 
         .ratings {
           background-color: var(--md-sys-color-on-secondary);
           color: var(--md-sys-color-secondary);
-          padding: 16px;
-          max-width: 480px;
-          width: 480px;
+          padding: 24px;
+          max-width: 380px;
+          width: 380px;
           border-radius: 16px;
           margin: 32px;
         }
 
         .rating {
           padding: 8px;
+          padding-bottom: 0;
+        }
+
+        .eloRatings {
+          color: var(--md-sys-color-primary);
+          margin-bottom: 16px;
         }
 
         .prosConsHeader {
@@ -639,8 +646,8 @@ export class CpsSolutions extends CpsStageBase {
   renderRatings(solution: IEngineSolution) {
     return html`
       <div class="ratings">
-        <div class="ratingsHeader eloRatings">
-          ${this.t('Elo Rating')}: ${YpFormattingHelpers.number(solution.eloRating)}
+        <div class="ratingsHeader eloRatings layout horizontal center-center">
+          <div>${this.t('Elo Rating')}: ${YpFormattingHelpers.number(solution.eloRating)}</div>
         </div>
 
         ${solution.ratings

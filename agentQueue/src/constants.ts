@@ -259,7 +259,7 @@ export class IEngineConstants {
   };
 
   static evolution = {
-    populationSize: 65,
+    populationSize: 68,
 
     // Population split
     keepElitePercent: 0.1,
