@@ -21,10 +21,8 @@ memory.customInstructions.createSolutions = `
 `;
 
 memory.customInstructions.rankSolutions = `
-  1. Assess the solutions based on:
-  - Importance to the problem
-  - How innovation they are
-  - How practical they are
+  1. Assess the solutions based on it's title and description.
+  2. And use provided ratings also in a toughtful and balanced way for your decision.
 `;
 
 memory.customInstructions.rateSolutionsJsonFormat = `

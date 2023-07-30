@@ -37,9 +37,9 @@ if (setNewStage) {
     //memory.currentStage = "evolve-reap-population";
     //memory.currentStage = "create-solution-images";
     //memory.currentStage = "create-pros-cons";
-    memory.currentStage = "rank-pros-cons";
+    //memory.currentStage = "rank-pros-cons";
     //memory.currentStage = "rate-solutions";
-    //memory.currentStage = "rank-solutions";
+    memory.currentStage = "rank-solutions";
     await redis.set("st_mem:1:id", JSON.stringify(memory));
 }
 if (addJob || setNewStage) {

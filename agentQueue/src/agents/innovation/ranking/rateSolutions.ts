@@ -90,7 +90,7 @@ export class RateSolutionsProcessor extends BaseProcessor {
 
           this.logger.debug(solution.title);
 
-          if (!solution.ratings) {
+          if (true || !solution.ratings) {
             const rating = (await this.callLLM(
               "rate-solutions",
               IEngineConstants.rateSolutionsModel,
