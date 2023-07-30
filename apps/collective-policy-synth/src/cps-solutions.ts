@@ -433,7 +433,7 @@ export class CpsSolutions extends CpsStageBase {
     } else {
       return this.renderSubProblemList(
         subProblems,
-        this.t('Sub problems and Solutions')
+        this.t('Sub Problems and Solutions')
       );
     }
   }
@@ -649,7 +649,10 @@ export class CpsSolutions extends CpsStageBase {
     return html`
       <div class="ratings">
         <div class="ratingsHeader eloRatings layout horizontal center-center">
-          <div>${this.t('Elo Rating')}: ${YpFormattingHelpers.number(solution.eloRating)}</div>
+          <div>
+            ${this.t('Elo Rating')}:
+            ${YpFormattingHelpers.number(solution.eloRating)}
+          </div>
         </div>
 
         ${solution.ratings
@@ -718,56 +721,74 @@ export class CpsSolutions extends CpsStageBase {
   renderSolutionScreen(solutionIndex: number) {
     const solutions = this.filteredSolutions;
     const solution = solutions[solutionIndex];
-    return html`
-      <div class="topContainer layout vertical center-center">
-        ${this.renderSolutionNavigationButtons(solutionIndex, solutions)}
-        <div class="solution">
-          ${solution.imageUrl
-            ? html`<div class="layout horizontal center-center">
-                <img
-                  loading="lazy"
-                  class="solutionTopImage"
-                  height="${this.getImgHeight(true)}"
-                  src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
-                  alt="${solution.title}"
-                  .key="${solution.imageUrl}"
-                />
-              </div> `
-            : nothing}
-          <div class="solutionTitle">${solution.title}</div>
-          <div class="solutionDescription">${solution.description}</div>
-          <div
-            class="solutionDescription"
-            ?hidden="${this.hideExtraSolutionInformation}"
-          >
-            ${solution.mainBenefitOfSolution}
-          </div>
-          <div
-            class="solutionDescription"
-            ?hidden="${this.hideExtraSolutionInformation}"
-          >
-            ${solution.mainObstacleToSolutionAdoption}
-          </div>
-        </div>
-        <div class="prosCons">
-          <div class="solutionAttributes layout horizontal wrap">
-            <div class="pros flexFactor layout vertical center-center">
-              <div class="prosConsHeader">${this.t('Pros')}</div>
-              ${(solution.pros as IEngineProCon[])?.map(
-                pro => html`<div class="proCon">${pro.description}</div>`
-              )}
-            </div>
-            <div class="cons flexFactor layout vertical center-center">
-              <div class="prosConsHeader">${this.t('Cons')}</div>
-              ${(solution.cons as IEngineProCon[])?.map(
-                con => html`<div class="proCon">${con.description}</div>`
-              )}
-            </div>
-          </div>
-        </div>
-        ${this.renderRatings(solution)}
-        ${this.renderSolutionNavigationButtons(solutionIndex, solutions)}
-      </div>
-    `;
+    if (solution) {
+      return html`
+        ${!solution.reaped
+          ? html`
+              <div class="topContainer layout vertical center-center">
+                ${this.renderSolutionNavigationButtons(
+                  solutionIndex,
+                  solutions
+                )}
+                <div class="solution">
+                  ${solution.imageUrl
+                    ? html`<div class="layout horizontal center-center">
+                        <img
+                          loading="lazy"
+                          class="solutionTopImage"
+                          height="${this.getImgHeight(true)}"
+                          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
+                          alt="${solution.title}"
+                          .key="${solution.imageUrl}"
+                        />
+                      </div> `
+                    : nothing}
+                  <div class="solutionTitle">${solution.title}</div>
+                  <div class="solutionDescription">${solution.description}</div>
+                  <div
+                    class="solutionDescription"
+                    ?hidden="${this.hideExtraSolutionInformation}"
+                  >
+                    ${solution.mainBenefitOfSolution}
+                  </div>
+                  <div
+                    class="solutionDescription"
+                    ?hidden="${this.hideExtraSolutionInformation}"
+                  >
+                    ${solution.mainObstacleToSolutionAdoption}
+                  </div>
+                </div>
+                <div class="prosCons">
+                  <div class="solutionAttributes layout horizontal wrap">
+                    <div class="pros flexFactor layout vertical center-center">
+                      <div class="prosConsHeader">${this.t('Pros')}</div>
+                      ${(solution.pros as IEngineProCon[])?.map(
+                        pro =>
+                          html`<div class="proCon">${pro.description}</div>`
+                      )}
+                    </div>
+                    <div class="cons flexFactor layout vertical center-center">
+                      <div class="prosConsHeader">${this.t('Cons')}</div>
+                      ${(solution.cons as IEngineProCon[])?.map(
+                        con =>
+                          html`<div class="proCon">${con.description}</div>`
+                      )}
+                    </div>
+                  </div>
+                </div>
+                ${this.renderRatings(solution)}
+                ${this.renderSolutionNavigationButtons(
+                  solutionIndex,
+                  solutions
+                )}
+              </div>
+            `
+          : html`<div class="reapedInfo layout horizontal center-center">
+              <div>REAPED</div>
+            </div>`}
+      `;
+    } else {
+      return nothing;
+    }
   }
 }

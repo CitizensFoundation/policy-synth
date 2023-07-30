@@ -111,7 +111,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         .subProblemTitle {
           font-size: 22px;
           padding: 8px;
-          margin: 8px 0;
+          margin: 8px;
           border-radius: 12px;
           line-height: 1.4;
           max-width: 960px;
@@ -130,6 +130,7 @@ export abstract class CpsStageBase extends YpBaseElement {
 
         .subProblemMainTitle {
           font-size: 32px;
+          margin-left: 8px;
         }
 
         .subProblem {
@@ -140,6 +141,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           background-color: var(--md-sys-color-primary-container);
           color: var(--md-sys-color-on-primary-container);
           margin-bottom: 8px;
+          padding-bottom: 16px;
         }
 
         .subProblem[not-header] {
@@ -425,7 +427,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     '#face2d',
     '#50c363',
     '#cf1103',
-    '#344373',
+    '#e9a633',
     '#87559b',
     '#3f5fce',
   ];

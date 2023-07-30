@@ -33,6 +33,20 @@ class ProjectsController {
     }
     getProject = async (req, res) => {
         let memoryData;
+        const filteredRedisCacheKey = `st_mem_filtered_v3:${req.params.id}:id`;
+        if (process.env.NODE_ENV === "production" &&
+            !process.env.FORCE_BACKUP_MEMORY_URL) {
+            try {
+                const cachedData = await redisClient.get(filteredRedisCacheKey);
+                if (cachedData) {
+                    console.log("Using cached memory data");
+                    return res.send(JSON.parse(cachedData));
+                }
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
         if (!process.env.FORCE_BACKUP_MEMORY_URL) {
             try {
                 const data = await redisClient.get(`st_mem:${req.params.id}:id`);
@@ -56,11 +70,56 @@ class ProjectsController {
         if (!memoryData) {
             return res.sendStatus(404);
         }
+        if (memoryData.subProblems) {
+            memoryData.subProblems.forEach((subProblem) => {
+                if (subProblem.solutions) {
+                    subProblem.solutions.populations =
+                        subProblem.solutions.populations.map((population) => population.filter((solution) => !solution.reaped));
+                }
+            });
+        }
+        const filterSearchResults = (searchResults) => {
+            if (searchResults && searchResults.pages) {
+                for (const key in searchResults.pages) {
+                    searchResults.pages[key] = searchResults.pages[key].map((result) => ({
+                        url: result.url || result.link,
+                        title: result.title,
+                        //@ts-ignore
+                        description: result.description || result.snippet,
+                    }));
+                }
+            }
+            return searchResults;
+        };
+        if (memoryData.problemStatement) {
+            memoryData.problemStatement.searchResults = filterSearchResults(memoryData.problemStatement.searchResults);
+        }
+        if (memoryData.subProblems) {
+            memoryData.subProblems.forEach((subProblem) => {
+                subProblem.searchResults = filterSearchResults(subProblem.searchResults);
+            });
+        }
+        if (process.env.NODE_ENV === "production") {
+            try {
+                await redisClient.set(filteredRedisCacheKey, JSON.stringify({
+                    isAdmin: true,
+                    name: "Policy Synth - Democracy",
+                    currentMemory: memoryData,
+                    configuration: {},
+                }), {
+                    EX: 60,
+                });
+                console.log("Caching memory data");
+            }
+            catch (err) {
+                console.error(err);
+            }
+        }
         return res.send({
             isAdmin: true,
-            name: "Collective Policy Synth - Democracy",
+            name: "Policy Synth - Democracy",
             currentMemory: memoryData,
-            configuration: {}
+            configuration: {},
         });
     };
 }

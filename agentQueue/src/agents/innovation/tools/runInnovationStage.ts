@@ -45,10 +45,10 @@ if (setNewStage) {
   //Repeat for each GA generation
   //memory.currentStage = "evolve-create-population";
   //memory.currentStage = "evolve-reap-population";
-  memory.currentStage = "create-pros-cons";
+  //memory.currentStage = "create-pros-cons";
   //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rate-solutions";
-  //memory.currentStage = "rank-solutions";
+  memory.currentStage = "rank-solutions";
   //memory.currentStage = "create-solution-images";
 
   await redis.set("st_mem:1:id", JSON.stringify(memory));
