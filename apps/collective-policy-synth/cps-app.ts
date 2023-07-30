@@ -467,7 +467,8 @@ export class CpsApp extends YpBaseElement {
         }
 
         .appTitleContainer {
-          margin-top: 0px;
+          margin-bottom: 0px;
+          margin-top: 16px;
           font-family: 'Cabin', sans-serif;
           font-size: 22px;
           width: 185px;
@@ -519,8 +520,12 @@ export class CpsApp extends YpBaseElement {
         .selectedContainer {
           /*--md-list-item-list-item-container-color: var(--md-sys-color-surface-variant);*/
           color: var(--md-sys-color-primary);
-          --md-list-item-list-item-label-text-color: var(--md-sys-color-primary);
-          --md-list-item-list-item-focus-label-text-color: var(--md-sys-color-primary);
+          --md-list-item-list-item-label-text-color: var(
+            --md-sys-color-primary
+          );
+          --md-list-item-list-item-focus-label-text-color: var(
+            --md-sys-color-primary
+          );
           --md-list-item-label-text-color: var(--md-sys-color-primary);
         }
 
@@ -579,6 +584,7 @@ export class CpsApp extends YpBaseElement {
           margin: 8px;
           margin-top: 32px;
           font-size: 12px;
+          margin-bottom: 32px;
         }
 
         .navContainer {
@@ -606,6 +612,9 @@ export class CpsApp extends YpBaseElement {
         }
 
         @media (max-width: 960px) {
+          .appTitleContainer {
+            margin-top: 32px;
+          }
           .mainPageContainer {
             max-width: 100%;
             width: 100%;
@@ -691,8 +700,7 @@ export class CpsApp extends YpBaseElement {
 
   openGitHub() {
     // Open up in a new tab
-    window.open("https://github.com/CitizensFoundation/policy-synth",
-      "_blank");
+    window.open('https://github.com/CitizensFoundation/policy-synth', '_blank');
   }
 
   stageModelMap = {
@@ -785,7 +793,9 @@ export class CpsApp extends YpBaseElement {
 
     // Render total and model costs
     let costTemplates = [
-      html`<div class="costItem">Total cost: $${YpFormattingHelpers.number(totalCost)}</div>`,
+      html`<div class="costItem">
+        Total cost: $${YpFormattingHelpers.number(totalCost)}
+      </div>`,
     ];
 
     // Render costs for each stage
@@ -796,7 +806,9 @@ export class CpsApp extends YpBaseElement {
         </div>`
       );
       costTemplates.push(
-        html`<div class="costItem">GPT-3.5 cost: $${YpFormattingHelpers.number(gpt35Cost)}</div>`
+        html`<div class="costItem">
+          GPT-3.5 cost: $${YpFormattingHelpers.number(gpt35Cost)}
+        </div>`
       );
       costTemplates.push(
         html`<div class="costItem" style="margin-bottom: 16px">
@@ -810,7 +822,8 @@ export class CpsApp extends YpBaseElement {
         if (!isNaN(stageCost)) {
           costTemplates.push(
             html`<div class="costItem">
-              ${this.toCamelCase(stage)}: $${YpFormattingHelpers.number(stageCost)}
+              ${this.toCamelCase(stage)}:
+              $${YpFormattingHelpers.number(stageCost)}
             </div>`
           );
         }
@@ -836,7 +849,11 @@ export class CpsApp extends YpBaseElement {
   getCustomVersion(version: string) {
     const date = new Date();
 
-    const formattedDate = date.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+    const formattedDate = date.toLocaleString('en-US', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
 
     return `Built on ${formattedDate} CET`;
   }
@@ -845,9 +862,23 @@ export class CpsApp extends YpBaseElement {
     if (this.currentMemory) {
       switch (this.pageIndex) {
         case PagesTypes.ProblemStatement:
-          return html`<cps-problem-statement
-            .memory="${this.currentMemory}"
-          ></cps-problem-statement>`;
+          return html`${!this.wide
+              ? html`
+                  <div class="layout horizontal center-center">
+                    <div class="layout vertical">${this.renderLogo()}</div>
+                  </div>
+                `
+              : nothing}
+            <cps-problem-statement
+              .memory="${this.currentMemory}"
+            ></cps-problem-statement>
+            ${!this.wide
+              ? html`
+                  <div class="layout horizontal center-center">
+                    <div class="version">__VERSION__</div>
+                  </div>
+                `
+              : nothing} `;
         case PagesTypes.SubProblems:
           return html`<cps-sub-problems
             .memory="${this.currentMemory}"
@@ -861,9 +892,7 @@ export class CpsApp extends YpBaseElement {
             .memory="${this.currentMemory}"
           ></cps-solutions>`;
         default:
-          return html`
-
-          `;
+          return html``;
       }
     } else {
       return html` <div class="loading">
@@ -915,27 +944,35 @@ export class CpsApp extends YpBaseElement {
       </div>`;
   }
 
+  renderLogo() {
+    return html`
+      <div class="appTitleContainer">
+        <div class="appTitle">${this.t('POLICY SYNTH')}</div>
+      </div>
+      <yp-image
+        class="collectionLogoImage"
+        sizing="contain"
+        src="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png"
+      ></yp-image>
+    `;
+  }
+
   renderNavigationBar() {
     if (this.wide) {
       return html`
         <div class="drawer">
           <div class="layout horizontal headerContainer center-center">
             <div class="analyticsHeaderText layout vertical center-center">
-              <yp-image
-                class="collectionLogoImage"
-                sizing="contain"
-                src="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png"
-              ></yp-image>
-              <div class="appTitleContainer">
-                <div class="appTitle">${this.t('POLICY SYNTH')}</div>
-              </div>
+              ${this.renderLogo()}
             </div>
           </div>
 
           <md-list>
             <md-list-item
-              class="${this.pageIndex == PagesTypes.ProblemStatement &&
-              'selectedContainer'}"
+              class="${
+                this.pageIndex == PagesTypes.ProblemStatement &&
+                'selectedContainer'
+              }"
               headline="${this.t('Problem Statement')}"
               @click="${() => this.changeTabTo(0)}"
               @keydown="${(e: KeyboardEvent) => {
@@ -952,8 +989,9 @@ export class CpsApp extends YpBaseElement {
               </md-list-item-icon></md-list-item
             >
             <md-list-item
-              class="${this.pageIndex == PagesTypes.SubProblems &&
-              'selectedContainer'}"
+              class="${
+                this.pageIndex == PagesTypes.SubProblems && 'selectedContainer'
+              }"
               headline="${this.t('Sub Problems')}"
               @click="${() => this.changeTabTo(1)}"
               @keydown="${(e: KeyboardEvent) => {
@@ -968,8 +1006,9 @@ export class CpsApp extends YpBaseElement {
               </md-list-item-icon></md-list-item
             >
             <md-list-item
-              class="${this.pageIndex == PagesTypes.Entities &&
-              'selectedContainer'}"
+              class="${
+                this.pageIndex == PagesTypes.Entities && 'selectedContainer'
+              }"
               headline="${this.t('Entities / Stakholders')}"
               @click="${() => this.changeTabTo(2)}"
               @keydown="${(e: KeyboardEvent) => {
@@ -984,14 +1023,16 @@ export class CpsApp extends YpBaseElement {
               </md-list-item-icon></md-list-item
             >
             <md-list-item
-              class="${this.pageIndex == PagesTypes.Solutions &&
-              'selectedContainer'}"
-              headline="${this.t('Solutions')} (${this
-                .numberOfSolutionsGenerations} gen)"
+              class="${
+                this.pageIndex == PagesTypes.Solutions && 'selectedContainer'
+              }"
+              headline="${this.t('Solutions')} (${
+        this.numberOfSolutionsGenerations
+      } gen)"
               @click="${() => {
                 this.changeTabTo(3);
-                (this.$$("cps-solutions") as CpsSolutions)?.reset()
-                }}"
+                (this.$$('cps-solutions') as CpsSolutions)?.reset();
+              }}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
                   this.changeTabTo(3);
@@ -1004,8 +1045,10 @@ export class CpsApp extends YpBaseElement {
               </md-list-item-icon></md-list-item
             >
             <md-list-item
-              class="${this.pageIndex == PagesTypes.PolicyCategories &&
-              'selectedContainer'}"
+              class="${
+                this.pageIndex == PagesTypes.PolicyCategories &&
+                'selectedContainer'
+              }"
               headline="${this.t('Policy categories')}"
               @click="${() => this.changeTabTo(4)}"
               @keydown="${(e: KeyboardEvent) => {
@@ -1020,10 +1063,13 @@ export class CpsApp extends YpBaseElement {
               </md-list-item-icon></md-list-item
             >
             <md-list-item
-              class="${this.pageIndex == PagesTypes.PolicyCategories &&
-              'selectedContainer'}"
-              headline="${this.t('Policy ideas')} (${this
-                .currentPolicyIdeasGeneration} gen)"
+              class="${
+                this.pageIndex == PagesTypes.PolicyCategories &&
+                'selectedContainer'
+              }"
+              headline="${this.t('Policy ideas')} (${
+        this.currentPolicyIdeasGeneration
+      } gen)"
               @click="${() => this.changeTabTo(5)}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
@@ -1108,7 +1154,9 @@ export class CpsApp extends YpBaseElement {
             >
             <md-navigation-tab .label="${this.t('Solutions')}"
               ><md-icon slot="activeIcon">online_prediction</md-icon>
-              <md-icon slot="inactiveIcon">online_prediction</md-icon></md-navigation-tab
+              <md-icon slot="inactiveIcon"
+                >online_prediction</md-icon
+              ></md-navigation-tab
             >
             <md-navigation-tab .label="${this.t('Categories')}"
               ><md-icon slot="activeIcon">category</md-icon>
