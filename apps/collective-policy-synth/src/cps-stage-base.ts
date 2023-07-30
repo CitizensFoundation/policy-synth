@@ -136,7 +136,6 @@ export abstract class CpsStageBase extends YpBaseElement {
           margin: 16px 0;
           background-color: var(--md-sys-color-primary-container);
           color: var(--md-sys-color-on-primary-container);
-          max-width: 960px;
           margin-bottom: 8px;
         }
 
@@ -144,6 +143,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           cursor: pointer;
           background-color: var(--md-sys-color-secondary-container);
           color: var(--md-sys-color-on-secondary-container);
+          max-width: 600px;
         }
 
         .title {
@@ -164,7 +164,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblem.lessProminent {
-          opacity: 0.75;
+          opacity: 0.65;
         }
 
         .subTitle {
@@ -415,7 +415,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     '#cf1103',
     '#344373',
     '#87559b',
-    '#02b5fc',
+    '#3f5fce',
   ];
 
   setSubProblemColor(index: number) {
@@ -501,7 +501,7 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   getImgHeight(renderCloseButton: boolean) {
     if (this.wide) {
-      return renderCloseButton ? 275 : 200;
+      return renderCloseButton ? 275 : 275;
     } else {
       return renderCloseButton ? 200 : 200;
     }

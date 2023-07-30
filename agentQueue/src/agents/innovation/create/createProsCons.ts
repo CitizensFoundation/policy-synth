@@ -101,10 +101,9 @@ export class CreateProsConsProcessor extends BaseProcessor {
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
-        const solutions =
-          this.memory.subProblems[subProblemIndex].solutions.populations[
-            this.currentPopulationIndex(subProblemIndex)
-          ];
+        const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
+
+        this.logger.debug(`Sub Problem ${subProblemIndex} Solutions length: ${solutions.length}`);
 
         // Sequentially process each solution for this subproblem
         for (
@@ -115,20 +114,17 @@ export class CreateProsConsProcessor extends BaseProcessor {
           this.logger.info(
             `Creating pros cons solution ${solutionIndex}/${
               solutions.length
-            } of sub problem ${subProblemIndex} currentPopulationIndex ${this.currentPopulationIndex(
+            } of sub problem ${subProblemIndex} lastPopulationIndex ${this.lastPopulationIndex(
               subProblemIndex
             )}`
           );
 
-          const solution =
-            this.memory.subProblems[subProblemIndex].solutions.populations[
-              this.currentPopulationIndex(subProblemIndex)
-            ][solutionIndex];
+          const solution = solutions[solutionIndex];
 
           this.logger.debug(solution.title);
 
           for (const prosOrCons of ["pros", "cons"] as const) {
-            if (solution[prosOrCons] && solution[prosOrCons]!.length > 0) {
+            if (false && solution[prosOrCons] && solution[prosOrCons]!.length > 0) {
               this.logger.info(
                 `Skipping ${prosOrCons} for solution ${solutionIndex} of sub problem ${subProblemIndex} as it already exists`
               );

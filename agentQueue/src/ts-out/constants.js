@@ -182,7 +182,7 @@ export class IEngineConstants {
     static maxTopWebPagesToGet = 7;
     static maxWebPagesToGetByTopSearchPosition = 7;
     static maxSearchResults = 10;
-    static maxTopProsConsUsedForRanking = 1;
+    static maxTopProsConsUsedForRating = 2;
     static maxNumberGeneratedProsConsForSolution = 3;
     static minSleepBeforeBrowserRequest = 1100;
     static maxAdditionalRandomSleepBeforeBrowserRequest = 1100;
@@ -190,16 +190,16 @@ export class IEngineConstants {
     static chances = {
         createSolutions: {
             searchQueries: {
-                useMainProblemSearchQueries: 0.05,
-                useOtherSubProblemSearchQueries: 0.05,
-                useSubProblemSearchQueries: 0.5,
+                useMainProblemSearchQueries: 0.1,
+                useOtherSubProblemSearchQueries: 0.1,
+                useSubProblemSearchQueries: 0.4,
                 useRandomEntitySearchQueries: 0.4,
             },
             notUsingFirstSearchQuery: 0.8,
-            vectorSearchAcrossAllProblems: 0.2,
+            vectorSearchAcrossAllProblems: 0.25,
         },
     };
-    static maxTopSearchQueriesForSolutionCreation = 4;
+    static maxTopSearchQueriesForSolutionCreation = 7;
     static limits = {
         webPageVectorResultsForNewSolutions: 10,
         useRandomTopFromVectorSearchResults: 7,
@@ -213,7 +213,7 @@ export class IEngineConstants {
         },
     };
     static evolution = {
-        populationSize: 60,
+        populationSize: 65,
         // Population split
         keepElitePercent: 0.1,
         randomImmigrationPercent: 0.45,
@@ -223,8 +223,8 @@ export class IEngineConstants {
         lowMutationRate: 0.2,
         mediumMutationRate: 0.6,
         highMutationRate: 0.2,
-        selectParentTournamentSize: 5,
-        crossoverMutationPercent: 0.1,
+        selectParentTournamentSize: 7,
+        crossoverMutationPercent: 0.2,
     };
     static minimumNumberOfPairwiseVotesForPopulation = 7;
     static maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize *

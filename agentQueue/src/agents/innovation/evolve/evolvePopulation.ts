@@ -273,10 +273,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     if (
       this.memory.subProblems[subProblemIndex].solutions.populations.length > 0
     ) {
-      return this.memory.subProblems[subProblemIndex].solutions.populations[
-        this.memory.subProblems[subProblemIndex].solutions.populations.length -
-          1
-      ];
+      return this.getActiveSolutionsLastPopulation(subProblemIndex);
     } else {
       this.logger.error("No previous population found." + subProblemIndex);
       throw new Error("No previous population found." + subProblemIndex);
@@ -398,6 +395,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     );
 
     let previousPopulation = this.getPreviousPopulation(subProblemIndex);
+
+    this.logger.debug(`Previous populations size: ${previousPopulation.length}`)
 
     const newPopulation = [];
 

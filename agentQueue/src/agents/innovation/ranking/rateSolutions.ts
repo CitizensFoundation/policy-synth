@@ -4,38 +4,62 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class RateSolutionsProcessor extends BaseProcessor {
-  async renderReapPrompt(solutionsToFilter: IEngineSolutionForReapCheck[]) {
+  getProCons(prosCons: IEngineProCon[] | undefined) {
+    if (prosCons && prosCons.length > 0) {
+      return prosCons.map((proCon) => proCon.description);
+    } else {
+      return [];
+    }
+  }
+
+  async renderRatePrompt(subProblemIndex: number, solution: IEngineSolution) {
     const messages = [
       new SystemChatMessage(
         `
-        You are an expert in filtering out non-viable solutions to problems.
+         You are an expert in rating solutions to problems on multiple attributes.
 
-        Instructions:
-        1. You will be provided an array of solutions with an index and title in a JSON format: [ { index, title } ]
-        2. You will output a list of indexes of all the solutions you wish to filter out as a JSON Array with index numbers: []
-        2. Review the "Important Instructions" below for further instructions.
+         Instructions:
+         1. Rate how well the solution does, on a scale from 1-100, on the attributes provided in the JSON format below
+         2. Consider the best pro and con while rating.
 
-        ${
-          this.memory.customInstructions.rateSolutions
-            ? `
-        Important Instructions: ${this.memory.customInstructions.rateSolutions}
-        `
-            : ""
-        }
+         Always output your ratings in the following JSON format:
+         ${this.memory.customInstructions.rateSolutionsJsonFormat}
 
         Think step by step.
-                `
+        `
       ),
       new HumanChatMessage(
-        `${JSON.stringify(solutionsToFilter, null, 2)}
+        `
+        ${this.renderSubProblem(subProblemIndex, true)}
 
-        Your solutions to filter out in a JSON Array:
+        Solution to rate:
+
+        Title: ${solution.title}
+
+        Description: ${solution.mainBenefitOfSolution}
+
+        Main benefit: ${solution.mainBenefitOfSolution}
+
+        Main obstacle: ${solution.mainObstacleToSolutionAdoption}
+
+        Best pros:
+        ${this.getProCons(solution.pros as IEngineProCon[]).slice(
+          0,
+          IEngineConstants.maxTopProsConsUsedForRating
+        )}
+
+        Best cons:
+        ${this.getProCons(solution.cons as IEngineProCon[]).slice(
+          0,
+          IEngineConstants.maxTopProsConsUsedForRating
+        )}
+
+        Your ratings in JSON format:
         `
       ),
     ];
     return messages;
   }
-
 
   async rateSolutions() {
     const subProblemsLimit = Math.min(
@@ -47,19 +71,47 @@ export class RateSolutionsProcessor extends BaseProcessor {
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
         const solutions =
-          this.memory.subProblems[subProblemIndex].solutions.populations[
-            this.currentPopulationIndex(subProblemIndex)
-          ];
+          this.getActiveSolutionsLastPopulation(subProblemIndex);
 
-        //await this.reapSolutionsForSubProblem(subProblemIndex, solutions);
+        for (
+          let solutionIndex = 0;
+          solutionIndex < solutions.length;
+          solutionIndex++
+        ) {
+          this.logger.info(
+            `Ratings for solution ${solutionIndex}/${
+              solutions.length
+            } of sub problem ${subProblemIndex} (${this.lastPopulationIndex(
+              subProblemIndex
+            )})`
+          );
 
-        await this.saveMemory();
+          const solution = solutions[solutionIndex];
+
+          this.logger.debug(solution.title);
+
+          if (!solution.ratings) {
+            const rating = (await this.callLLM(
+              "rate-solutions",
+              IEngineConstants.rateSolutionsModel,
+              await this.renderRatePrompt(subProblemIndex, solution)
+            )) as object;
+
+            this.logger.debug(
+              `Rating for: ${solution.title} ${JSON.stringify(rating, null, 2)}`
+            );
+
+            solution.ratings = rating;
+          }
+
+          await this.saveMemory();
+        }
       }
     );
 
-    // Wait for all subproblems to finish
     await Promise.all(subProblemsPromises);
-    this.logger.info("Finished Reaping for all");
+
+    this.logger.info("Finished Ratings for all");
   }
 
   async process() {

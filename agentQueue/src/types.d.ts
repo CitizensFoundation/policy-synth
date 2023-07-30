@@ -142,6 +142,7 @@ interface IEngineSolution {
   imageUrl?: string;
   imagePrompt?: string;
   reaped?: boolean;
+  ratings?: object;
 }
 
 interface IEngineProCon {
@@ -175,6 +176,7 @@ type IEngineStageTypes =
   | "rank-entities"
   | "rank-solutions"
   | "rank-pros-cons"
+  | "rate-solutions"
   | "evolve-create-population"
   | "evolve-mutate-population"
   | "evolve-recombine-population"
@@ -270,7 +272,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     createSolutions?: string;
     rankSolutions?: string;
     reapSolutions?: string;
-    rateSolutions?: string;
+    rateSolutionsJsonFormat?: string;
     subProblemColors?: string[];
     secondaryColors?: string[];
   }

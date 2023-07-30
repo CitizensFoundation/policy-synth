@@ -62,7 +62,7 @@ export class ReapSolutionsProcessor extends BaseProcessor {
     async reapSolutions() {
         const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
-            const solutions = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)];
+            const solutions = this.memory.subProblems[subProblemIndex].solutions.populations[this.lastPopulationIndex(subProblemIndex)];
             await this.reapSolutionsForSubProblem(subProblemIndex, solutions);
             await this.saveMemory();
         });

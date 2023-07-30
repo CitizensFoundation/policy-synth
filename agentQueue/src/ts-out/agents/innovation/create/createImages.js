@@ -230,10 +230,10 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     async createImages() {
         const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
-            const solutions = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)];
+            const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
             for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
-                this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.currentPopulationIndex(subProblemIndex)})`);
-                const solution = this.memory.subProblems[subProblemIndex].solutions.populations[this.currentPopulationIndex(subProblemIndex)][solutionIndex];
+                this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(subProblemIndex)})`);
+                const solution = solutions[solutionIndex];
                 this.logger.debug(solution.title);
                 if (true ||
                     !solution.imageUrl ||
@@ -247,11 +247,11 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                         imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
                     }
                     solution.imagePrompt = imagePrompt;
-                    this.logger.debug(`subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} currentPopulationIndex ${this.currentPopulationIndex(subProblemIndex)}}`);
+                    this.logger.debug(`subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}}`);
                     this.logger.debug(`Image Prompt: ${imagePrompt}`);
                     let newImageUrl;
-                    const imageFilePath = path.join("/tmp", `${subProblemIndex}_${this.currentPopulationIndex(subProblemIndex)}_${solutionIndex}.png`);
-                    const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(subProblemIndex)}/${solutionIndex}_v3.png`;
+                    const imageFilePath = path.join("/tmp", `${subProblemIndex}_${this.lastPopulationIndex(subProblemIndex)}_${solutionIndex}.png`);
+                    const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(subProblemIndex)}/${solutionIndex}_v3.png`;
                     let gotImage;
                     if (process.env.STABILITY_API_KEY) {
                         gotImage = await this.downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution);

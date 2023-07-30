@@ -19,6 +19,24 @@ memory.customInstructions.rankSolutions = `
   - How innovation they are
   - How practical they are
 `;
+memory.customInstructions.rateSolutionsJsonFormat = `
+  {
+    highPriorityRatings: {
+      howImportantToProblem,
+      howInnovative,
+      howPractical,
+      howEthical,
+      howComplex,
+    },
+    otherRatings: {
+      benefitsForCitizens,
+      benefitsForGovernments,
+      benefitsForCivilSociety,
+      benefitsForPrivateSector,
+      benefitsForTheClimate
+    }
+  }
+`;
 memory.customInstructions.reapSolutions = `
   1. Non-viable solutions include more than two core ideas.
   2. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.

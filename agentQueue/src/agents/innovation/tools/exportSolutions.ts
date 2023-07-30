@@ -112,7 +112,7 @@ for (
               ? `<h4>Pros:</h4>
                 <ul>
                 ${(pros as IEngineProCon[])
-                  .slice(0, IEngineConstants.maxTopProsConsUsedForRanking)
+                  .slice(0, IEngineConstants.maxTopProsConsUsedForRating)
                   .map(
                     (pro) =>
                       `<li>${pro.description} (${formatElo(pro.eloRating)})</li>`
@@ -127,7 +127,7 @@ for (
               ? `<h4>Cons:</h4>
                 <ul>
                 ${(cons as IEngineProCon[])
-                  .slice(0, IEngineConstants.maxTopProsConsUsedForRanking)
+                  .slice(0, IEngineConstants.maxTopProsConsUsedForRating)
                   .map(
                     (con) =>
                       `<li>${con.description} (${formatElo(con.eloRating)})</li>`

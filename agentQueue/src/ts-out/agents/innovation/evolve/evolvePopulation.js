@@ -168,8 +168,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             this.memory.subProblems[subProblemIndex].solutions.populations = [];
         }
         if (this.memory.subProblems[subProblemIndex].solutions.populations.length > 0) {
-            return this.memory.subProblems[subProblemIndex].solutions.populations[this.memory.subProblems[subProblemIndex].solutions.populations.length -
-                1];
+            return this.getActiveSolutionsLastPopulation(subProblemIndex);
         }
         else {
             this.logger.error("No previous population found." + subProblemIndex);
@@ -243,6 +242,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.logger.info(`Evolve population for sub problem ${subProblemIndex}`);
         this.logger.info(`Current number of generations: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`);
         let previousPopulation = this.getPreviousPopulation(subProblemIndex);
+        this.logger.debug(`Previous populations size: ${previousPopulation.length}`);
         const newPopulation = [];
         const eliteCount = Math.floor(previousPopulation.length * IEngineConstants.evolution.keepElitePercent);
         this.logger.debug(`Elite count: ${eliteCount}`);

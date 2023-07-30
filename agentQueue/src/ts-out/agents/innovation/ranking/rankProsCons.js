@@ -74,7 +74,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     }
     async processSubProblem(subProblem, subProblemIndex) {
         this.logger.info(`Ranking pros/cons for sub problem ${subProblemIndex}`);
-        let solutions = subProblem.solutions.populations[this.currentPopulationIndex(subProblemIndex)];
+        const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
         for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
             const solution = solutions[solutionIndex];
             const solutionDescription = this.renderSolution(solution);
@@ -93,15 +93,15 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
                             prosOrCons,
                             subProblemIndex,
                         });
-                        subProblem.solutions.populations[this.currentPopulationIndex(subProblemIndex)][solutionIndex][prosOrCons] = this.getOrderedListOfItems(subProblemIndex, true);
-                        this.logger.debug(`${prosOrCons} after ranking: ${JSON.stringify(subProblem.solutions.populations[this.currentPopulationIndex(subProblemIndex)][solutionIndex][prosOrCons], null, 2)}`);
+                        subProblem.solutions.populations[this.lastPopulationIndex(subProblemIndex)][solutionIndex][prosOrCons] = this.getOrderedListOfItems(subProblemIndex, true);
+                        this.logger.debug(`${prosOrCons} after ranking: ${JSON.stringify(subProblem.solutions.populations[this.lastPopulationIndex(subProblemIndex)][solutionIndex][prosOrCons], null, 2)}`);
                     }
                     else {
                         this.logger.debug(`${prosOrCons} already ranked: ${JSON.stringify(solution[prosOrCons], null, 2)}`);
                     }
                 }
                 else {
-                    this.logger.error(`No ${prosOrCons} to rank`);
+                    this.logger.error(`No ${prosOrCons} to rank ${solution.title} ${solutionIndex} for sub problem ${subProblemIndex}`);
                 }
                 this.logger.info(`Finished ranking ${prosOrCons} for solution ${solutionIndex} for sub problem ${subProblemIndex}`);
             }
