@@ -6,12 +6,12 @@ Everything in this repo is under AGPL-3.0 license unless otherwise specified.
 
 Copyright (c) 2023 Robert Bjarnason & Citizens Foundation Iceland. All rights reserved.
 
-Developed in 2023 by
-Robert Bjarnason, robert@citizens.is
-Gudny Maren Valsdottir 
-Alexander Mani Gautason
-Gunnar Grimsson
-Joshua Lanthier-Welch
+= Developed in 2023 by
+- Robert Bjarnason, robert@citizens.is
+- Gudny Maren Valsdottir 
+- Alexander Mani Gautason
+- Gunnar Grimsson
+- Joshua Lanthier-Welch
 and others...
  
                     GNU AFFERO GENERAL PUBLIC LICENSE
