@@ -1,4 +1,4 @@
-## Collective Policy Synth Web App
+## Policy Synth Web App
 
 ```
 npm install

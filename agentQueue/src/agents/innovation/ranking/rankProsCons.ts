@@ -158,18 +158,14 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
               subProblemIndex,
             } as any);
 
-            subProblem.solutions.populations[
-              this.lastPopulationIndex(subProblemIndex)
-            ][solutionIndex][prosOrCons] = this.getOrderedListOfItems(
+            solution[prosOrCons] = this.getOrderedListOfItems(
               subProblemIndex,
               true
             ) as IEngineProCon[];
 
             this.logger.debug(
               `${prosOrCons} after ranking: ${JSON.stringify(
-                subProblem.solutions.populations[
-                  this.lastPopulationIndex(subProblemIndex)
-                ][solutionIndex][prosOrCons],
+                solution[prosOrCons],
                 null,
                 2
               )}`

@@ -6,8 +6,20 @@ import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 import { terser } from 'rollup-plugin-terser';
 //import { generateSW } from 'rollup-plugin-workbox';
 //import analyze from 'rollup-plugin-analyzer';
-
+import replace from '@rollup/plugin-replace';
+import pkg from './package.json';
 const commonjs = require("rollup-plugin-commonjs");
+
+function getCustomVersion(version) {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = ('0' + (date.getMonth() + 1)).slice(-2); // zero-padded month
+  const day = ('0' + date.getDate()).slice(-2); // zero-padded day
+  const hours = ('0' + date.getHours()).slice(-2); // zero-padded hours
+  const minutes = ('0' + date.getMinutes()).slice(-2); // zero-padded minutes
+
+  return `v.${version} ${day}.${month} ${hours}:${minutes}`;
+}
 
 export default {
   input: 'index.html',
@@ -74,6 +86,10 @@ export default {
               minifyCSS: true,
             },
           },
+          replace({
+            preventAssignment: true,
+            __VERSION__: getCustomVersion(pkg.version),
+          }),
         ],
       ],
     }),

@@ -57,7 +57,7 @@ export class RateSolutionsProcessor extends BaseProcessor {
                 this.logger.info(`Ratings for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(subProblemIndex)})`);
                 const solution = solutions[solutionIndex];
                 this.logger.debug(solution.title);
-                if (true || !solution.ratings) {
+                if (!solution.ratings) {
                     const rating = (await this.callLLM("rate-solutions", IEngineConstants.rateSolutionsModel, await this.renderRatePrompt(subProblemIndex, solution)));
                     this.logger.debug(`Rating for: ${solution.title} ${JSON.stringify(rating, null, 2)}`);
                     solution.ratings = rating;

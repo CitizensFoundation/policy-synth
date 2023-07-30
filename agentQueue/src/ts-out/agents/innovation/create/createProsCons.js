@@ -80,7 +80,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
                 const solution = solutions[solutionIndex];
                 this.logger.debug(solution.title);
                 for (const prosOrCons of ["pros", "cons"]) {
-                    if (false && solution[prosOrCons] && solution[prosOrCons].length > 0) {
+                    if (solution[prosOrCons] && solution[prosOrCons].length > 0) {
                         this.logger.info(`Skipping ${prosOrCons} for solution ${solutionIndex} of sub problem ${subProblemIndex} as it already exists`);
                     }
                     else {

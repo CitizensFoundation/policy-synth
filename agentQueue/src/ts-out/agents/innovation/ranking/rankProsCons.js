@@ -93,8 +93,8 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
                             prosOrCons,
                             subProblemIndex,
                         });
-                        subProblem.solutions.populations[this.lastPopulationIndex(subProblemIndex)][solutionIndex][prosOrCons] = this.getOrderedListOfItems(subProblemIndex, true);
-                        this.logger.debug(`${prosOrCons} after ranking: ${JSON.stringify(subProblem.solutions.populations[this.lastPopulationIndex(subProblemIndex)][solutionIndex][prosOrCons], null, 2)}`);
+                        solution[prosOrCons] = this.getOrderedListOfItems(subProblemIndex, true);
+                        this.logger.debug(`${prosOrCons} after ranking: ${JSON.stringify(solution[prosOrCons], null, 2)}`);
                     }
                     else {
                         this.logger.debug(`${prosOrCons} already ranked: ${JSON.stringify(solution[prosOrCons], null, 2)}`);
