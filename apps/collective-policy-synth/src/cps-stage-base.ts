@@ -104,6 +104,7 @@ export abstract class CpsStageBase extends YpBaseElement {
 
         .problemStatementText {
           padding: 16px;
+          font-size: 24px;
         }
 
         .subProblemStatement,
@@ -322,6 +323,10 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         @media (max-width: 960px) {
+          .problemStatementText {
+            font-size: 22px;
+          }
+
           .subProblemMainTitle {
             font-size: 28px;
             line-height: 1.3;
