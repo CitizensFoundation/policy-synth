@@ -678,7 +678,7 @@ export class CpsApp extends YpBaseElement {
 
   openGitHub() {
     // Open up in a new tab
-    window.open("https://github.com/CitizensFoundation/collective-policy-synth",
+    window.open("https://github.com/CitizensFoundation/policy-synth",
       "_blank");
   }
 

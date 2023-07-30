@@ -531,6 +531,7 @@ export abstract class CpsStageBase extends YpBaseElement {
             ? html`
                 <div class="layout horizontal center-center subProblemImage">
                   <img
+                    loading="lazy"
                     ?is-header="${renderCloseButton}"
                     class="subProblemImage"
                     height="${this.getImgHeight(renderCloseButton)}"
