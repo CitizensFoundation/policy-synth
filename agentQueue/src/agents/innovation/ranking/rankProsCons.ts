@@ -120,10 +120,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
   ) {
     this.logger.info(`Ranking pros/cons for sub problem ${subProblemIndex}`);
 
-    let solutions =
-      subProblem.solutions.populations[
-        this.currentPopulationIndex(subProblemIndex)
-      ];
+    const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
 
     for (
       let solutionIndex = 0;
@@ -162,7 +159,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
             } as any);
 
             subProblem.solutions.populations[
-              this.currentPopulationIndex(subProblemIndex)
+              this.lastPopulationIndex(subProblemIndex)
             ][solutionIndex][prosOrCons] = this.getOrderedListOfItems(
               subProblemIndex,
               true
@@ -171,7 +168,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
             this.logger.debug(
               `${prosOrCons} after ranking: ${JSON.stringify(
                 subProblem.solutions.populations[
-                  this.currentPopulationIndex(subProblemIndex)
+                  this.lastPopulationIndex(subProblemIndex)
                 ][solutionIndex][prosOrCons],
                 null,
                 2
@@ -187,7 +184,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
             );
           }
         } else {
-          this.logger.error(`No ${prosOrCons} to rank`);
+          this.logger.error(`No ${prosOrCons} to rank ${solution.title} ${solutionIndex} for sub problem ${subProblemIndex}`);
         }
         this.logger.info(`Finished ranking ${prosOrCons} for solution ${solutionIndex} for sub problem ${subProblemIndex}`)
       }

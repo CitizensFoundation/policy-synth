@@ -293,10 +293,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
-        const solutions =
-          this.memory.subProblems[subProblemIndex].solutions.populations[
-            this.currentPopulationIndex(subProblemIndex)
-          ];
+        const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
 
         for (
           let solutionIndex = 0;
@@ -306,15 +303,12 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
           this.logger.info(
             `Creating images for solution ${solutionIndex}/${
               solutions.length
-            } of sub problem ${subProblemIndex} (${this.currentPopulationIndex(
+            } of sub problem ${subProblemIndex} (${this.lastPopulationIndex(
               subProblemIndex
             )})`
           );
 
-          const solution =
-            this.memory.subProblems[subProblemIndex].solutions.populations[
-              this.currentPopulationIndex(subProblemIndex)
-            ][solutionIndex];
+          const solution = solutions[solutionIndex];
 
           this.logger.debug(solution.title);
 
@@ -340,7 +334,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             solution.imagePrompt = imagePrompt;
 
             this.logger.debug(
-              `subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} currentPopulationIndex ${this.currentPopulationIndex(
+              `subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} lastPopulationIndex ${this.lastPopulationIndex(
                 subProblemIndex
               )}}`
             );
@@ -351,11 +345,11 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
 
             const imageFilePath = path.join(
               "/tmp",
-              `${subProblemIndex}_${this.currentPopulationIndex(
+              `${subProblemIndex}_${this.lastPopulationIndex(
                 subProblemIndex
               )}_${solutionIndex}.png`
             );
-            const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.currentPopulationIndex(
+            const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(
               subProblemIndex
             )}/${solutionIndex}_v3.png`;
 

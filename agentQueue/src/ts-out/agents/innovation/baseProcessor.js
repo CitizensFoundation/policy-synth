@@ -22,7 +22,7 @@ export class BaseProcessor extends Base {
     async saveMemory() {
         await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
     }
-    currentPopulationIndex(subProblemIndex) {
+    lastPopulationIndex(subProblemIndex) {
         return this.memory.subProblems[subProblemIndex].solutions.populations.length - 1;
     }
     renderSubProblem(subProblemIndex, useProblemAsHeader = false) {
@@ -30,9 +30,16 @@ export class BaseProcessor extends Base {
         return `
       ${useProblemAsHeader ? 'Problem' : 'Sub Problem'}:
       ${subProblem.title}
+
       ${subProblem.description}
+
       ${subProblem.whyIsSubProblemImportant}
       `;
+    }
+    getActiveSolutionsLastPopulation(subProblemIndex) {
+        const populations = this.memory.subProblems[subProblemIndex].solutions.populations;
+        const lastPopulation = populations[populations.length - 1];
+        return lastPopulation.filter(solution => !solution.reaped);
     }
     renderSubProblems() {
         return `
@@ -40,7 +47,9 @@ export class BaseProcessor extends Base {
       ${this.memory.subProblems.map((subProblem, index) => {
             return `
         ${index + 1}. ${subProblem.title}\n
+
         ${subProblem.description}\n
+
         ${subProblem.whyIsSubProblemImportant}\n
         `;
         })}

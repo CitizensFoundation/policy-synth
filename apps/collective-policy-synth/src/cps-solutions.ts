@@ -15,6 +15,7 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 import { IEngineConstants } from './constants.js';
+import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
@@ -254,6 +255,26 @@ export class CpsSolutions extends CpsStageBase {
           line-height: 1.4;
         }
 
+        .ratingsHeader {
+          font-size: 24px;
+          margin-bottom: 8px;
+          color: var(--md-sys-color-primary);
+        }
+
+        .ratings {
+          background-color: var(--md-sys-color-on-secondary);
+          color: var(--md-sys-color-secondary);
+          padding: 16px;
+          max-width: 480px;
+          width: 480px;
+          border-radius: 16px;
+          margin: 32px;
+        }
+
+        .rating {
+          padding: 8px;
+        }
+
         .prosConsHeader {
           font-size: 24px;
           color: var(--md-sys-color-tertiary);
@@ -318,6 +339,12 @@ export class CpsSolutions extends CpsStageBase {
             font-size: 16px;
             padding: 16px;
             margin: 8px;
+          }
+
+          .ratings {
+            max-width: 100%;
+            width: 100%;
+            margin: 16px;
           }
 
           .solutionItem {
@@ -603,6 +630,40 @@ export class CpsSolutions extends CpsStageBase {
     }
   }
 
+  camelCaseToRegular(text: string) {
+    let result = text.replace(/([A-Z])/g, ' $1');
+    return result.charAt(0).toUpperCase() + result.slice(1);
+  }
+
+  renderRatings(solution: IEngineSolution) {
+    return html`
+      <div class="ratings">
+        <div class="ratingsHeader eloRatings">
+          ${this.t('Elo Rating')}: ${YpFormattingHelpers.number(solution.eloRating)}
+        </div>
+
+        ${solution.ratings
+          ? html`
+              ${Object.entries(solution.ratings).map(
+                ([category, ratings]) => html`
+                  <div class="ratingsHeader">
+                    ${this.camelCaseToRegular(category)}
+                  </div>
+                  ${Object.entries(ratings).map(
+                    ([key, value]) => html`
+                      <div class="rating">
+                        ${this.camelCaseToRegular(key)}: ${value}
+                      </div>
+                    `
+                  )}
+                `
+              )}
+            `
+          : nothing}
+      </div>
+    `;
+  }
+
   renderSolutionNavigationButtons(
     solutionIndex: number,
     solutions: IEngineSolution[]
@@ -625,7 +686,7 @@ export class CpsSolutions extends CpsStageBase {
           .disabled="${solutionIndex === solutions.length - 1}"
           @click="${(): void => {
             if (solutionIndex < solutions.length - 1) {
-              this.activeFilteredSolutionIndex = solutionIndex + 1; // change this line
+              this.activeFilteredSolutionIndex = solutionIndex + 1;
             }
           }}"
         >
@@ -692,6 +753,7 @@ export class CpsSolutions extends CpsStageBase {
             </div>
           </div>
         </div>
+        ${this.renderRatings(solution)}
         ${this.renderSolutionNavigationButtons(solutionIndex, solutions)}
       </div>
     `;

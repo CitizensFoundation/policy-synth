@@ -5,13 +5,6 @@ import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "./basePairwiseRanking.js";
 
 export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
-  getProCons(prosCons: IEngineProCon[] | undefined) {
-    if (prosCons && prosCons.length > 0) {
-      return prosCons.map((proCon) => proCon.description);
-    } else {
-      return [];
-    }
-  }
 
   async voteOnPromptPair(
     subProblemIndex: number,
@@ -34,7 +27,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
          Instructions:
          1. You will be presented with a problem and two corresponding solutions. These will be labelled "Solution One" and "Solution Two".
          2. Assess which of the two solutions is more important in relation to the problem.
-         3. Consider the best pro and con of each solution while assessing.
+         3. Consider the provided ratings for each solution also.
          ${this.memory.customInstructions.rankSolutions ? `
            Important Instructions: ${this.memory.customInstructions.rankSolutions}
            ` : '' }
@@ -53,33 +46,19 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         ${solutionOne.title}
         ${solutionOne.description}
 
-        Best Pro:
-        ${this.getProCons(solutionOne.pros as IEngineProCon[]).slice(
-          0,
-          IEngineConstants.maxTopProsConsUsedForRanking
-        )}
-
-        Best Con:
-        ${this.getProCons(solutionOne.cons as IEngineProCon[]).slice(
-          0,
-          IEngineConstants.maxTopProsConsUsedForRanking
-        )}
+        ${solutionOne.ratings ? `
+        Solution One Ratings:
+        ${JSON.stringify(solutionOne.ratings, null, 2)}
+        ` : ""}
 
         Solution Two:
         ${solutionTwo.title}
         ${solutionTwo.description}
 
-        Best Pro:
-        ${this.getProCons(solutionTwo.pros as IEngineProCon[]).slice(
-          0,
-          IEngineConstants.maxTopProsConsUsedForRanking
-        )}
-
-        Best Con:
-        ${this.getProCons(solutionTwo.cons as IEngineProCon[]).slice(
-          0,
-          IEngineConstants.maxTopProsConsUsedForRanking
-        )}
+        ${solutionTwo.ratings ? `
+        Solution Two Ratings:
+        ${JSON.stringify(solutionTwo.ratings, null, 2)}
+        ` : ""}
 
         The more important solution is:
         `
@@ -97,39 +76,20 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
   }
 
   async processSubProblem(subProblemIndex: number) {
-    const currentPopulationIndex = this.currentPopulationIndex(subProblemIndex);
+    const lastPopulationIndex = this.lastPopulationIndex(subProblemIndex);
     this.logger.info(
-      `Ranking solutions for sub problem ${subProblemIndex} population ${currentPopulationIndex}`
+      `Ranking solutions for sub problem ${subProblemIndex} population ${lastPopulationIndex}`
     );
 
     this.setupRankingPrompts(
       subProblemIndex,
-      this.memory.subProblems[subProblemIndex].solutions.populations[
-        currentPopulationIndex
-      ]
-    );
+      this.getActiveSolutionsLastPopulation(subProblemIndex));
 
     await this.performPairwiseRanking(subProblemIndex);
 
-    this.logger.debug(
-      `Population Solutions before ranking: ${JSON.stringify(
-        this.memory.subProblems[subProblemIndex].solutions.populations[
-          currentPopulationIndex
-        ]
-      )}`
-    );
-
     this.memory.subProblems[subProblemIndex].solutions.populations[
-      currentPopulationIndex
+      lastPopulationIndex
     ] = this.getOrderedListOfItems(subProblemIndex, true) as IEngineSolution[];
-
-    this.logger.debug(
-      `Popuplation Solutions after ranking: ${JSON.stringify(
-        this.memory.subProblems[subProblemIndex].solutions.populations[
-          currentPopulationIndex
-        ]
-      )}`
-    );
 
     await this.saveMemory();
   }

@@ -92,7 +92,7 @@ export class CpsApp extends YpBaseElement {
   currentError: string | undefined;
 
   @property({ type: String })
-  themeColor = '#02b5fc';
+  themeColor = '#3f5fce';
 
   @property({ type: String })
   themePrimaryColor = '#000000';
@@ -214,7 +214,7 @@ export class CpsApp extends YpBaseElement {
 
     this.themeColor = bootResponse.configuration.theme_color
       ? bootResponse.configuration.theme_color
-      : '#02b5fc';
+      : '#3f5fce';
     this.themePrimaryColor = bootResponse.configuration.theme_primary_color;
     this.themeSecondaryColor = bootResponse.configuration.theme_secondary_color;
     this.themeTertiaryColor = bootResponse.configuration.theme_tertiary_color;
@@ -694,6 +694,8 @@ export class CpsApp extends YpBaseElement {
     rankEntities: IEngineConstants.entitiesRankingsModel,
     rankSolutions: IEngineConstants.solutionsRankingsModel,
     rankProsCons: IEngineConstants.prosConsRankingsModel,
+    evolveReapPopulation: IEngineConstants.reapSolutionsModel,
+    rateSolutions: IEngineConstants.rateSolutionsModel,
     evolveCreatePopulation: IEngineConstants.evolveSolutionsModel,
     evolveMutatePopulation: IEngineConstants.evolutionMutateModel,
     evolveRecombinePopulation: IEngineConstants.evolutionRecombineModel,

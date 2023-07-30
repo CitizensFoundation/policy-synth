@@ -17,6 +17,7 @@ import { EvolvePopulationProcessor } from "./evolve/evolvePopulation.js";
 import { CreateSolutionImagesProcessor } from "./create/createImages.js";
 import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
 import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
+import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 export class AgentInnovation extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -42,6 +43,7 @@ export class AgentInnovation extends BaseAgent {
                 "rank-search-queries": {},
                 // Perform web search based on the prioritized queries
                 "web-search": {},
+                "rate-solutions": {},
                 // Rank the search results based on their relevance or usefulness
                 "rank-search-results": {},
                 // Retrieve web pages obtained from the search
@@ -153,6 +155,10 @@ export class AgentInnovation extends BaseAgent {
             case "rank-solutions":
                 const rankSolutionsProcessor = new RankSolutionsProcessor(this.job, this.memory);
                 await rankSolutionsProcessor.process();
+                break;
+            case "rate-solutions":
+                const rateSolutionsProcessor = new RateSolutionsProcessor(this.job, this.memory);
+                await rateSolutionsProcessor.process();
                 break;
             case "rank-sub-problems":
                 const rankSubProblemsProcessor = new RankSubProblemsProcessor(this.job, this.memory);

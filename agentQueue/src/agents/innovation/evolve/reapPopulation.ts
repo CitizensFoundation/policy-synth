@@ -100,7 +100,7 @@ export class ReapSolutionsProcessor extends BaseProcessor {
       async (_, subProblemIndex) => {
         const solutions =
           this.memory.subProblems[subProblemIndex].solutions.populations[
-            this.currentPopulationIndex(subProblemIndex)
+            this.lastPopulationIndex(subProblemIndex)
           ];
 
         await this.reapSolutionsForSubProblem(subProblemIndex, solutions);

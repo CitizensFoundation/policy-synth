@@ -119,6 +119,26 @@ export class IEngineConstants {
     verbose: false,
   };
 
+  static reapSolutionsModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 1024,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    verbose: false
+  };
+
+  static rateSolutionsModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 1024,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    verbose: false
+  };
+
   static createSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.5,
@@ -177,6 +197,8 @@ export class IEngineConstants {
 
   static maxNumberGeneratedOfEntities = 7;
 
+  static maxStabilityRetryCount = 7;
+
   static mainLLMmaxRetryCount = 40;
 
   static rankingLLMmaxRetryCount = 40;
@@ -197,7 +219,7 @@ export class IEngineConstants {
 
   static maxSearchResults = 10;
 
-  static maxTopProsConsUsedForRanking = 1;
+  static maxTopProsConsUsedForRating = 2;
 
   static maxNumberGeneratedProsConsForSolution = 3;
 
@@ -210,17 +232,17 @@ export class IEngineConstants {
   static chances = {
     createSolutions: {
       searchQueries: {
-        useMainProblemSearchQueries: 0.05,
-        useOtherSubProblemSearchQueries: 0.05,
-        useSubProblemSearchQueries: 0.5,
+        useMainProblemSearchQueries: 0.1,
+        useOtherSubProblemSearchQueries: 0.1,
+        useSubProblemSearchQueries: 0.4,
         useRandomEntitySearchQueries: 0.4,
       },
       notUsingFirstSearchQuery: 0.8,
-      vectorSearchAcrossAllProblems: 0.2,
+      vectorSearchAcrossAllProblems: 0.25,
     },
   };
 
-  static maxTopSearchQueriesForSolutionCreation = 4;
+  static maxTopSearchQueriesForSolutionCreation = 7;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 10,
@@ -237,7 +259,7 @@ export class IEngineConstants {
   };
 
   static evolution = {
-    populationSize: 60,
+    populationSize: 65,
 
     // Population split
     keepElitePercent: 0.1,
@@ -250,8 +272,8 @@ export class IEngineConstants {
     mediumMutationRate: 0.6,
     highMutationRate: 0.2,
 
-    selectParentTournamentSize: 3,
-    crossoverMutationPercent: 0.1,
+    selectParentTournamentSize: 7,
+    crossoverMutationPercent: 0.2,
   };
 
   static minimumNumberOfPairwiseVotesForPopulation = 7;
