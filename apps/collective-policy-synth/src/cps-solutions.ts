@@ -64,6 +64,7 @@ export class CpsSolutions extends CpsStageBase {
       ) {
         this.activeFilteredSolutionIndex += 1;
       } else if (
+        this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
       ) {
@@ -76,6 +77,7 @@ export class CpsSolutions extends CpsStageBase {
       ) {
         this.activeFilteredSolutionIndex -= 1;
       } else if (
+        this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex > 0
       ) {
