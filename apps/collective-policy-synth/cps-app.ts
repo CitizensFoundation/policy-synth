@@ -466,10 +466,17 @@ export class CpsApp extends YpBaseElement {
           margin-bottom: 16px;
         }
 
+        .appTitleContainer {
+          margin-top: 0px;
+          font-family: 'Cabin', sans-serif;
+          font-size: 22px;
+          width: 185px;
+          background-color: var(--md-sys-color-primary);
+          color: var(--md-sys-color-on-primary);
+        }
+
         .appTitle {
-          margin-top: 16px;
-          color: var(--md-sys-color-primary);
-          font-weight: 500;
+          padding: 16px;
         }
 
         .ypLogo {
@@ -570,7 +577,8 @@ export class CpsApp extends YpBaseElement {
 
         .version {
           margin: 8px;
-          font-size: 14px;
+          margin-top: 32px;
+          font-size: 12px;
         }
 
         .navContainer {
@@ -825,6 +833,14 @@ export class CpsApp extends YpBaseElement {
     this.showAllCosts = true;
   }
 
+  getCustomVersion(version: string) {
+    const date = new Date();
+
+    const formattedDate = date.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    return `Built on ${formattedDate} CET`;
+  }
+
   _renderPage() {
     if (this.currentMemory) {
       switch (this.pageIndex) {
@@ -910,8 +926,9 @@ export class CpsApp extends YpBaseElement {
                 sizing="contain"
                 src="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png"
               ></yp-image>
-              <div class="appTitle">${this.t('Policy Synth')}</div>
-              <div class="version">v. 18 19/07/2023 15:14</div>
+              <div class="appTitleContainer">
+                <div class="appTitle">${this.t('POLICY SYNTH')}</div>
+              </div>
             </div>
           </div>
 
@@ -1072,6 +1089,8 @@ export class CpsApp extends YpBaseElement {
           </md-list>
           <div class="layout vertical costsContainer">
             ${this.renderStats()} ${this.renderCosts()}
+          </div>
+          <div class="version">__VERSION__</div>
           </div>
         </div>
       `;
