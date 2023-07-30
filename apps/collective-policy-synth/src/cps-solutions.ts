@@ -290,12 +290,13 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .solutionTitle {
-          font-size: 26px;
+          font-size: 28px;
           line-height: 1.4;
           margin: 8px;
           margin-left: 32px;
           margin-right: 32px;
           margin-top: 16px;
+          font-family: 'Roboto Condensed', sans-serif;
         }
 
         .solutionDescription {
@@ -352,6 +353,7 @@ export class CpsSolutions extends CpsStageBase {
             max-width: 100%;
             width: 100%;
             margin: 16px;
+            font-size: 16px;
           }
 
           .solutionItem {
@@ -360,7 +362,7 @@ export class CpsSolutions extends CpsStageBase {
             margin: 8px;
             max-width: 100;
             width: 100%;
-            font-size: 16px;
+            font-size: 18px;
           }
 
           .solutionItem[has-image] {

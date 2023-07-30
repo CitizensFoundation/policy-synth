@@ -16,6 +16,7 @@ memory.customInstructions.createSolutions = `
 memory.customInstructions.rankSolutions = `
   1. Assess the solutions based on it's title and description.
   2. And use provided ratings also in a toughtful and balanced way for your decision.
+  3. Reward simple focused solutions.
 `;
 memory.customInstructions.rateSolutionsJsonFormat = `
   {

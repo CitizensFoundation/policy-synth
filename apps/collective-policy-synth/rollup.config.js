@@ -12,14 +12,12 @@ const commonjs = require("rollup-plugin-commonjs");
 
 function getCustomVersion(version) {
   const date = new Date();
-  const year = date.getFullYear();
-  const month = ('0' + (date.getMonth() + 1)).slice(-2); // zero-padded month
-  const day = ('0' + date.getDate()).slice(-2); // zero-padded day
-  const hours = ('0' + date.getHours()).slice(-2); // zero-padded hours
-  const minutes = ('0' + date.getMinutes()).slice(-2); // zero-padded minutes
 
-  return `v.${version} ${day}.${month} ${hours}:${minutes}`;
+  const formattedDate = date.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  return `Built on ${formattedDate} CET`;
 }
+
 
 export default {
   input: 'index.html',
