@@ -226,6 +226,7 @@ export class IEngineConstants {
         selectParentTournamentSize: 7,
         crossoverMutationPercent: 0.2,
     };
+    static maxPercentOfEloMatched = 0.75;
     static minimumNumberOfPairwiseVotesForPopulation = 7;
     static maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize *
         IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;

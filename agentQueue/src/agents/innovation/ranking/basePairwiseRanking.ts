@@ -41,8 +41,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
     this.allItems[subProblemIndex] = allItems;
     this.maxNumberOfPrompts =
       maxPrompts ||
-      IEngineConstants.minimumNumberOfPairwiseVotesForPopulation *
-        allItems.length;
+      (allItems.length * IEngineConstants.maxPercentOfEloMatched);
     this.prompts[subProblemIndex] = [];
     this.numComparisons[subProblemIndex] = {};
     this.KFactors[subProblemIndex] = {};

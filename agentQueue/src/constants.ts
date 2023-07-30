@@ -276,6 +276,8 @@ export class IEngineConstants {
     crossoverMutationPercent: 0.2,
   };
 
+  static maxPercentOfEloMatched = 0.75;
+
   static minimumNumberOfPairwiseVotesForPopulation = 7;
 
   static maxNumberOfPairwiseRankingPrompts =
