@@ -313,9 +313,8 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
           this.logger.debug(solution.title);
 
           if (
-            true ||
             !solution.imageUrl ||
-            solution.imageUrl!.includes("windows.net/private")
+            solution.imageUrl.includes("windows.net/private")
           ) {
             let imagePrompt;
 
