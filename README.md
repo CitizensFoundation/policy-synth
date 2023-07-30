@@ -1,4 +1,4 @@
-# Collective Policy Synth
+# Policy Synth
 <img src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="360" height="203">
 
 ## Bringing together the best of collective and artificial intelligence
