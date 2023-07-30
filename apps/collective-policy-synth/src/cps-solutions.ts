@@ -457,6 +457,7 @@ export class CpsSolutions extends CpsStageBase {
                   ? html`
                       <div>
                         <img
+                          loading="lazy"
                           class="solutionImage"
                           height="${this.wide ? `250` : `200`}"
                           src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
@@ -675,7 +676,7 @@ export class CpsSolutions extends CpsStageBase {
           .disabled="${solutionIndex === 0}"
           @click="${(): void => {
             if (solutionIndex > 0) {
-              this.activeFilteredSolutionIndex = solutionIndex - 1; // change this line
+              this.activeFilteredSolutionIndex = solutionIndex - 1;
             }
           }}"
         >
@@ -715,10 +716,12 @@ export class CpsSolutions extends CpsStageBase {
           ${solution.imageUrl
             ? html`<div class="layout horizontal center-center">
                 <img
+                  loading="lazy"
                   class="solutionTopImage"
                   height="${this.getImgHeight(true)}"
                   src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
                   alt="${solution.title}"
+                  .key="${solution.imageUrl}"
                 />
               </div> `
             : nothing}

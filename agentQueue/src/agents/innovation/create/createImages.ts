@@ -85,7 +85,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     let response;
 
     let retryCount = 0;
-    let retrying = true; // Initialize as true
+    let retrying = true;
 
     while (retrying && retryCount < IEngineConstants.maxStabilityRetryCount) {
       try {

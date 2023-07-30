@@ -61,7 +61,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     async downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution = undefined) {
         let response;
         let retryCount = 0;
-        let retrying = true; // Initialize as true
+        let retrying = true;
         while (retrying && retryCount < IEngineConstants.maxStabilityRetryCount) {
             try {
                 response = await axios.post(`${apiHost}/v1/generation/${engineId}/text-to-image`, {
