@@ -235,8 +235,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 this.logger.info(`Creating images for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(subProblemIndex)})`);
                 const solution = solutions[solutionIndex];
                 this.logger.debug(solution.title);
-                if (true ||
-                    !solution.imageUrl ||
+                if (!solution.imageUrl ||
                     solution.imageUrl.includes("windows.net/private")) {
                     let imagePrompt;
                     if (solution.imagePrompt) {
