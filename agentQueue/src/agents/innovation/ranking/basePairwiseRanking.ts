@@ -20,7 +20,8 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
   K_FACTOR_INITIAL: number = 60; // Initial K-factor
   K_FACTOR_MIN: number = 10; // Minimum K-factor
   NUM_COMPARISONS_FOR_MIN_K: number = 20; // Number of comparisons for K to reach its minimum
-  maxNumberOfPrompts: number = IEngineConstants.maxNumberOfPairwiseRankingPrompts;
+  maxNumberOfPrompts: number =
+    IEngineConstants.maxNumberOfPairwiseRankingPrompts;
 
   numComparisons: Record<number, Record<number, number>> = {};
   KFactors: Record<number, Record<number, number>> = {};
@@ -38,7 +39,10 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
     maxPrompts: number | undefined = undefined
   ) {
     this.allItems[subProblemIndex] = allItems;
-    this.maxNumberOfPrompts = maxPrompts || this.maxNumberOfPrompts;
+    this.maxNumberOfPrompts =
+      maxPrompts ||
+      IEngineConstants.minimumNumberOfPairwiseVotesForPopulation *
+        allItems.length;
     this.prompts[subProblemIndex] = [];
     this.numComparisons[subProblemIndex] = {};
     this.KFactors[subProblemIndex] = {};
@@ -158,7 +162,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
 
   async performPairwiseRanking(subProblemIndex: number, additionalData?: any) {
     this.logger.info("Performing pairwise ranking");
-    this.logger.debug(`Sub-problem index: ${subProblemIndex}`)
+    this.logger.debug(`Sub-problem index: ${subProblemIndex}`);
     try {
       for (let p = 0; p < this.prompts[subProblemIndex].length; p++) {
         this.logger.info(
@@ -173,7 +177,9 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
         );
         //this.logger.debug(`Won item index: ${wonItemIndex} Lost item index: ${lostItemIndex}`)
         if (wonItemIndex === -1 && lostItemIndex === -1) {
-          this.logger.info(`Neither won not updating elo score for prompt ${p}`);
+          this.logger.info(
+            `Neither won not updating elo score for prompt ${p}`
+          );
         } else if (wonItemIndex !== undefined && lostItemIndex !== undefined) {
           // Update Elo ratings
           const winnerRating = this.eloRatings[subProblemIndex][wonItemIndex];
