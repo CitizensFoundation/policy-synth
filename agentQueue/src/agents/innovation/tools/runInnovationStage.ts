@@ -5,8 +5,8 @@ const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-const deleteALl = true;
-const setNewStage = false;
+const deleteALl = false;
+const setNewStage = true;
 const addJob = false;
 
 const myQueue = new Queue("agent-innovation");
@@ -51,6 +51,7 @@ if (setNewStage) {
   //memory.currentStage = "rank-solutions";
   //memory.currentStage = "group-solutions";
   //memory.currentStage = "create-solution-images";
+  memory.currentStage = "topic-map-solutions";
 
   await redis.set("st_mem:1:id", JSON.stringify(memory));
 }

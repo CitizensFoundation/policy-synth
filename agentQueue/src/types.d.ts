@@ -1,5 +1,6 @@
 declare module "pdfjs-dist/build/pdf.js";
 declare module "pdfreader";
+declare module "ml-pca";
 
 declare module "puppeteer-extra" {
   import puppeteer from "puppeteer";
@@ -183,6 +184,7 @@ type IEngineStageTypes =
   | "rank-pros-cons"
   | "rate-solutions"
   | "group-solutions"
+  | "topic-map-solutions"
   | "evolve-create-population"
   | "evolve-mutate-population"
   | "evolve-recombine-population"

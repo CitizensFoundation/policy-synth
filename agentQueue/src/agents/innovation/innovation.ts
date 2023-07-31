@@ -19,6 +19,7 @@ import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages
 import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./ranking/groupSolutions.js";
+import { TopicMapSolutionsProcessor } from "./ranking/topicMapSolutions.js";
 
 export class AgentInnovation extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -89,6 +90,8 @@ export class AgentInnovation extends BaseAgent {
         "evolve-recombine-population": {},
 
         "evolve-reap-population": {},
+
+        "topic-map-solutions": {},
 
         // Evaluate and rank the population after mutation and recombination
         "evolve-rank-population": {},
@@ -234,6 +237,13 @@ export class AgentInnovation extends BaseAgent {
         );
         await rateSolutionsProcessor.process();
         break;
+      case "topic-map-solutions":
+        const topicMapSolutionsProcessor = new TopicMapSolutionsProcessor(
+          this.job,
+          this.memory
+        );
+        await topicMapSolutionsProcessor.process();
+          break;
       case "group-solutions":
         const groupSolutionsProcessor = new GroupSolutionsProcessor(
           this.job,
