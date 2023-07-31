@@ -65,7 +65,6 @@ export class ProjectsController {
         console.error(err);
       }
     }
-    320.751
 
     if (!process.env.FORCE_BACKUP_MEMORY_URL) {
       try {
