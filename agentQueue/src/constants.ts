@@ -5,6 +5,9 @@ const gpt35_16kInTokenPrice = 0.003 / 1000;
 const gpt35_16kOutTokenPrice = 0.004 / 1000;
 
 const gpt35InTokenPrice = 0.0015 / 1000;
+
+const adaInTokenPrice = 0.0001;
+
 const gpt35kOutTokenPrice = 0.002 / 1000;
 
 export class IEngineConstants {
@@ -27,6 +30,10 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     verbose: true,
   };
+
+  static topicMapSolutionsModel = {
+    inTokenCostsUSD: adaInTokenPrice
+  }
 
 
   static createSolutionImagesModel: IEngineBaseAIModelConstants = {

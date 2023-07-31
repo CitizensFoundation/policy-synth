@@ -42,7 +42,6 @@ export class GroupSolutionsProcessor extends BaseProcessor {
                         if (k === 0) {
                             solutions[solutionIndex].similarityGroup = {
                                 index: groupIndex,
-                                isFirst: k === 0,
                                 totalCount: group.length,
                             };
                         }

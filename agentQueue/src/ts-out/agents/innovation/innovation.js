@@ -19,6 +19,7 @@ import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages
 import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./ranking/groupSolutions.js";
+import { TopicMapSolutionsProcessor } from "./ranking/topicMapSolutions.js";
 export class AgentInnovation extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -66,6 +67,7 @@ export class AgentInnovation extends BaseAgent {
                 // Apply recombination operator in the population to create new solutions
                 "evolve-recombine-population": {},
                 "evolve-reap-population": {},
+                "topic-map-solutions": {},
                 // Evaluate and rank the population after mutation and recombination
                 "evolve-rank-population": {},
                 // Parse the solution into a human-readable format
@@ -161,6 +163,10 @@ export class AgentInnovation extends BaseAgent {
             case "rate-solutions":
                 const rateSolutionsProcessor = new RateSolutionsProcessor(this.job, this.memory);
                 await rateSolutionsProcessor.process();
+                break;
+            case "topic-map-solutions":
+                const topicMapSolutionsProcessor = new TopicMapSolutionsProcessor(this.job, this.memory);
+                await topicMapSolutionsProcessor.process();
                 break;
             case "group-solutions":
                 const groupSolutionsProcessor = new GroupSolutionsProcessor(this.job, this.memory);
