@@ -585,6 +585,7 @@ export class CpsApp extends YpBaseElement {
           margin-top: 32px;
           font-size: 12px;
           margin-bottom: 32px;
+          color: var(--md-sys-color-on-surface);
         }
 
         .navContainer {
