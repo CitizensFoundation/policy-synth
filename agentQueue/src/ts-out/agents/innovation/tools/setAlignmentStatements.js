@@ -40,6 +40,7 @@ memory.customInstructions.reapSolutions = `
   1. Non-viable solutions include more than two core ideas.
   2. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
   3. Core ideas are distinct concepts or strategies that are central to the solution.
+  4. It's ok if the solution talks about being comphrensive or holistic, as long as it has only one or two core ideas presented in the title.
 
   2. Examples of solutions that are not viable and have more than two core ideas:
   title: Strengthening Democratic Governance: Active Citizen Engagement, Institutional Accountability, and Digital Transformation
@@ -54,6 +55,8 @@ memory.customInstructions.reapSolutions = `
   title: Revitalizing Democratic Governance: Fostering Active Participation and Promoting Institutional Integrity through Digital Innovation
 
   title: Rebuilding Confidence in Democracy with Enhanced Civic Engagement and Institutional Accountability
+
+  title: Empower Local Communities through Decentralization of Political Power
 
   title: Boosting Democracy: Empower Citizens with Enhanced Democratic Education and Digitalized Transparent Governance
 `;

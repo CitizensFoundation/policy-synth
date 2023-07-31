@@ -10,60 +10,15 @@ export class GroupSolutionsProcessor extends BaseProcessor {
 
         Instructions:
         1. You will receive an array of solutions, each having an index and title, formatted in JSON: [ { index, title } ]
-        2. You are to output a list of lists. Each sub-list should contain indexes of solutions containing exactly the same core ideas: [ [] ]
+        2. You are to output a list of lists. Each sub-list should contain indexes and titles of solutions containing exactly the same core ideas: [ [ { index, title } ] ]
         3. Solutions should only be grouped if they share exactly the same core ideas.
-        4. Never group more than 5 solutions together.
-        5. Pay close attention to the examples below that provide pairs of solutions as 1. and 2..
-
-        Two examples of solutions that should be grouped together, the solutions share the same core ideas:
-        1. Digitized Democracy: Boosting Citizen Engagement and Addressing Socio-economic Disparities
-        2. Strengthening Democracy: Digital Democracy and Balanced Socio-Economic Landscape
-
-        and
-
-        1. Inclusive Economic Reforms and Digital Democracy Upliftment
-        2. Digitally Empowered Citizen Participation & Socio-Economic Stability
-
-        Six examples of solution that should never grouped together, they do not share the same core ideas:
-
-        1. Fostering Economic Growth through Targeted Redistributive Policies
-        2. Enhancing Economic Equity through Targeted Skills Training
-
-        and
-
-        1. Revitalizing Democracy: Reworking Institutions and Boosting Citizen Engagement
-        2. Democracy Reimagined: Enhancing Citizen Participation and Electoral Accountability
-
-        and
-
-        1. Harmonizing Technology with Democratic Standards
-        2. Enhancement of Citizen Engagement through Co-Governance Models
-
-        and
-
-        1. Harmonizing Technology with Democratic Standards
-        2. Enhancement of Citizen Engagement through Co-Governance Models
-
-        and
-
-        1. Fostering Trust in Institutions through Open Government Data
-        2. Implementation of State-wide Political Science Experiments
-
-        and
-
-        1. Promote Media Transparency through Regulatory Measures
-        2. Boost Public Involvement in Local Governance
-
-        and
-
-        1. Enhancing Citizen Education on Democratic Processes
-        2. Enhance Open Government Data Strategies for Transparency
+        4. Never group the same solution in more than one group.
 
         Think step by step.
                 `),
             new HumanChatMessage(`${JSON.stringify(solutionsToGroup, null, 2)}
 
-        Please return your groups of solutions that share same core ideas as a JSON Array:
+        Output JSON Array:
         `),
         ];
         return messages;
@@ -82,7 +37,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
             if (group.length > 1) {
                 // Ignore groups with only one solution
                 for (let k = 0; k < group.length; k++) {
-                    const solutionIndex = group[k];
+                    const solutionIndex = group[k].index;
                     if (solutionIndex < solutions.length) {
                         if (k === 0) {
                             solutions[solutionIndex].similarityGroup = {
