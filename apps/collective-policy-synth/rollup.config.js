@@ -1,4 +1,4 @@
-import copy from 'rollup-plugin-copy'
+import copy from 'rollup-plugin-copy';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import babel from '@rollup/plugin-babel';
 import html from '@web/rollup-plugin-html';
@@ -8,17 +8,22 @@ import { terser } from 'rollup-plugin-terser';
 //import analyze from 'rollup-plugin-analyzer';
 import replace from '@rollup/plugin-replace';
 import pkg from './package.json';
-const commonjs = require("rollup-plugin-commonjs");
+const commonjs = require('rollup-plugin-commonjs');
 
 function getCustomVersion(version) {
   const date = new Date();
 
-  const formattedDate = date.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' });
+  const formattedDate = date.toLocaleString('en-US', {
+    hour12: false,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  });
 
   return `Built on ${formattedDate}`;
 }
-
-
 
 export default {
   input: 'index.html',
@@ -37,14 +42,12 @@ export default {
     /** Enable using HTML as rollup entrypoint */
     html({
       minify: true,
-//        publicPath: '/'
-//      injectServiceWorker: true,
-//      serviceWorkerPath: 'dist/sw.js',
+      //        publicPath: '/'
+      //      injectServiceWorker: true,
+      //      serviceWorkerPath: 'dist/sw.js',
     }),
     copy({
-      targets: [
-        { src: 'locales', dest: 'dist/' }
-      ]
+      targets: [{ src: 'locales', dest: 'dist/' }],
     }),
     /** Resolve bare module imports */
     nodeResolve(),
@@ -85,7 +88,6 @@ export default {
               minifyCSS: true,
             },
           },
-
         ],
       ],
     }),
@@ -98,14 +100,14 @@ export default {
     //generateSW({
     //  globIgnores: ['polyfills/*.js', 'nomodule-*.js'],
     //  navigateFallback: '/index.html',
-      // where to output the generated sw
+    // where to output the generated sw
     //  swDest: path.join('dist', 'sw.js'),
-      // directory to match patterns against to be precached
+    // directory to match patterns against to be precached
     //  globDirectory: path.join('dist'),
-      // cache any html js and css by default
-   //   globPatterns: ['**/*.{html,js,css,webmanifest}'],
-   //   skipWaiting: true,
-   //   clientsClaim: true,
+    // cache any html js and css by default
+    //   globPatterns: ['**/*.{html,js,css,webmanifest}'],
+    //   skipWaiting: true,
+    //   clientsClaim: true,
     //  runtimeCaching: [{ urlPattern: 'polyfills/*.js', handler: 'CacheFirst' }],
     //}),
   ],
