@@ -474,10 +474,14 @@ export class CpsApp extends YpBaseElement {
           width: 185px;
           background-color: var(--md-sys-color-primary);
           color: var(--md-sys-color-on-primary);
+          border-top-left-radius: 24px;
+          border-top-right-radius: 24px;
         }
 
         .appTitle {
           padding: 16px;
+          margin-left: 4px;
+          padding-top: 20px;
         }
 
         .ypLogo {
@@ -574,6 +578,7 @@ export class CpsApp extends YpBaseElement {
         .collectionLogoImage {
           width: 185px;
           height: 104px;
+          margin-top: -1px;
         }
 
         .mainPageContainer {

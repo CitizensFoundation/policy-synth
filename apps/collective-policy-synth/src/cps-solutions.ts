@@ -35,8 +35,6 @@ export class CpsSolutions extends CpsStageBase {
   @property({ type: Boolean })
   hideExtraSolutionInformation = true;
 
-  @property({ type: Number }) activeGroupIndex: number = null;
-
   @property({ type: Number }) groupListScrollPositionY: number = null;
 
   async handleGroupButtonClick(groupIndex: number): Promise<void> {
@@ -255,18 +253,18 @@ export class CpsSolutions extends CpsStageBase {
 
         .groupInfo {
           position: absolute;
-          bottom: 12px;
-          right: 8px;
+          top: 18px;
+          right: 4px;
         }
 
         .groupInfoText {
           font-size: 18px;
-          margin-top: 4px;
+          margin-top: 6px;
           font-family: 'Roboto Condensed', sans-serif;
+          opacity: 0.55;
         }
 
         .solutionItem[has-image] {
-          height: 375px;
           margin-bottom: 16px;
         }
 
@@ -384,7 +382,7 @@ export class CpsSolutions extends CpsStageBase {
           .solutionItemTitle {
             margin-top: 0;
             padding-top: 0;
-            padding-bottom: 24px;
+            padding-bottom: 16px;
           }
 
           .solutionTopImage {
@@ -426,9 +424,10 @@ export class CpsSolutions extends CpsStageBase {
           }
 
           .solutionItem[has-image] {
-            height: 290px;
+            height: unset;
             margin-top: 0;
-            margin-bottom: 24px;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
           }
 
           .solutionDescription {
@@ -446,6 +445,20 @@ export class CpsSolutions extends CpsStageBase {
           .solutionAttributes {
             flex-direction: column;
           }
+
+          .groupInfo {
+            position: unset;
+            top: unset;
+            margin-bottom: 4px;
+            margin-right: 4px;
+          }
+
+          .groupInfoText {
+            font-size: 18px;
+            margin-top: 6px;
+            font-family: 'Roboto Condensed', sans-serif;
+            opacity: 0.55;
+          }
         }
 
         [hidden] {
@@ -460,6 +473,19 @@ export class CpsSolutions extends CpsStageBase {
     if (subProblem && subProblem.solutions) {
       let solutions =
         subProblem.solutions.populations[this.activePopulationIndex];
+
+      let firstInGroup: Record<number, IEngineSolution> = {};
+      solutions.forEach(solution => {
+        if (solution.similarityGroup !== undefined) {
+          let groupIndex = solution.similarityGroup.index;
+          if (!firstInGroup[groupIndex]) {
+            firstInGroup[groupIndex] = solution;
+            solution.similarityGroup.isFirst = true;
+          } else {
+            solution.similarityGroup.isFirst = undefined;
+          }
+        }
+      });
 
       if (this.activeGroupIndex !== null) {
         // If a group is active, only return solutions from this group
@@ -546,12 +572,11 @@ export class CpsSolutions extends CpsStageBase {
         ${solution.similarityGroup?.isFirst !== undefined &&
         solution.similarityGroup.isFirst
           ? html`
-              <div class="groupInfo layout horizontal">
-                <div class="groupInfoText">
-                  ${this.activeGroupIndex === null
-                    ? html`+ ${solution.similarityGroup.totalCount}`
-                    : nothing}
-                </div>
+              <div
+                class="groupInfo layout ${this.wide
+                  ? 'vertical center-center'
+                  : 'horizontal'}"
+              >
                 <md-outlined-icon-button
                   toggle
                   ?selected="${this.activeGroupIndex ===
@@ -565,6 +590,11 @@ export class CpsSolutions extends CpsStageBase {
                   <md-icon>unfold_more_double</md-icon>
                   <md-icon slot="selectedIcon">close</md-icon>
                 </md-outlined-icon-button>
+                <div class="groupInfoText">
+                  ${this.activeGroupIndex === null
+                    ? html`+${solution.similarityGroup.totalCount}`
+                    : nothing}
+                </div>
               </div>
             `
           : html``}
@@ -643,7 +673,7 @@ export class CpsSolutions extends CpsStageBase {
 
   toggleSearchVisibility(): void {
     this.isSearchVisible = !this.isSearchVisible;
-    window.appGlobals.activity("Solutions - toggle search");
+    window.appGlobals.activity('Solutions - toggle search');
   }
 
   renderSearchField() {
@@ -676,7 +706,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${() => {
             this.activePopulationIndex = startIndex + index;
             this.resetDropdown();
-            window.appGlobals.activity("Solutions - chose generation");
+            window.appGlobals.activity('Solutions - chose generation');
           }}"
         ></md-filter-chip> `
     );
@@ -695,7 +725,7 @@ export class CpsSolutions extends CpsStageBase {
   }
 
   toggleDropdownVisibility(): void {
-    window.appGlobals.activity("Solutions - toggle dropdown");
+    window.appGlobals.activity('Solutions - toggle dropdown');
     this.isDropdownVisible = !this.isDropdownVisible;
     if (this.isDropdownVisible) {
       // add check to ensure activePopulationIndex is valid
@@ -721,9 +751,7 @@ export class CpsSolutions extends CpsStageBase {
   renderDropdown(middleItems: IEngineSolution[][], startIndex: number) {
     if (middleItems.length > 0 && !this.isDropdownVisible) {
       return html`
-        <md-outlined-icon-button @click="${
-          this.toggleDropdownVisibility
-          }">
+        <md-outlined-icon-button @click="${this.toggleDropdownVisibility}">
           <md-icon>expand_more</md-icon>
         </md-outlined-icon-button>
       `;
