@@ -21,6 +21,7 @@ else {
         url: "redis://localhost:6379",
     });
 }
+const memoryCache = {};
 class ProjectsController {
     path = "/api/projects";
     router = express_1.default.Router();
@@ -37,9 +38,14 @@ class ProjectsController {
         if (process.env.NODE_ENV === "production" &&
             !process.env.FORCE_BACKUP_MEMORY_URL) {
             try {
+                // Try to get from memory cache first
+                if (memoryCache[filteredRedisCacheKey]) {
+                    console.log("Using memory cache data");
+                    return res.send(memoryCache[filteredRedisCacheKey].data);
+                }
                 const cachedData = await redisClient.get(filteredRedisCacheKey);
                 if (cachedData) {
-                    console.log("Using cached memory data");
+                    console.log("Using cached Redis data");
                     return res.send(JSON.parse(cachedData));
                 }
             }
@@ -103,7 +109,7 @@ class ProjectsController {
                 }
             });
         }
-        if (process.env.NODE_ENV === "production") {
+        if (false && process.env.NODE_ENV === "production") {
             try {
                 await redisClient.set(filteredRedisCacheKey, JSON.stringify({
                     isAdmin: true,
@@ -113,18 +119,28 @@ class ProjectsController {
                 }), {
                     EX: 60,
                 });
-                console.log("Caching memory data");
+                console.log("Caching memory data to redis");
             }
             catch (err) {
                 console.error(err);
             }
         }
-        return res.send({
+        const response = {
             isAdmin: true,
-            name: "Policy Synth - Democracy",
+            name: "Policy Synth - Save Democracy!",
             currentMemory: memoryData,
             configuration: {},
-        });
+        };
+        // Add to memory cache
+        memoryCache[filteredRedisCacheKey] = {
+            data: response,
+            timer: setTimeout(() => {
+                console.log("Deleting memory cache data");
+                delete memoryCache[filteredRedisCacheKey];
+            }, 60 * 60 * 1000),
+        };
+        console.log("Caching data to memory");
+        return res.send(response);
     };
 }
 exports.ProjectsController = ProjectsController;
