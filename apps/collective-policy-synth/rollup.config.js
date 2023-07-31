@@ -15,7 +15,7 @@ function getCustomVersion(version) {
 
   const formattedDate = date.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' });
 
-  return `Built on ${formattedDate} CET`;
+  return `Built on ${formattedDate}`;
 }
 
 
