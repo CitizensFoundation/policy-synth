@@ -1,6 +1,6 @@
 # License
 
-Collective Policy Synth
+Policy Synth
 
 Everything in this repo is under AGPL-3.0 license unless otherwise specified.
 
