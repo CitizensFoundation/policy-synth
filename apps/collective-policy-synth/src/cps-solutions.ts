@@ -46,6 +46,7 @@ export class CpsSolutions extends CpsStageBase {
       await this.updateComplete;
       window.scrollTo(0, this.groupListScrollPositionY);
       this.groupListScrollPositionY = null;
+      window.appGlobals.activity('Solutions - deactive group filter');
     } else {
       // Activating group filter
       this.groupListScrollPositionY = window.scrollY;
@@ -56,6 +57,7 @@ export class CpsSolutions extends CpsStageBase {
       const rect = solutionListElement.getBoundingClientRect();
       const docTop = window.pageYOffset;
       window.scrollTo(0, rect.top + docTop);
+      window.appGlobals.activity('Solutions - activate group filter');
     }
   }
 
@@ -97,12 +99,14 @@ export class CpsSolutions extends CpsStageBase {
         this.activeFilteredSolutionIndex < this.filteredSolutions.length - 1
       ) {
         this.activeFilteredSolutionIndex += 1;
+        window.appGlobals.activity('Solutions - swipe right');
       } else if (
         this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
       ) {
         this.activeSubProblemIndex += 1;
+        window.appGlobals.activity('Sub problem - swipe right');
       }
     } else if (direction === 'left') {
       if (
@@ -110,12 +114,14 @@ export class CpsSolutions extends CpsStageBase {
         this.activeFilteredSolutionIndex > 0
       ) {
         this.activeFilteredSolutionIndex -= 1;
+        window.appGlobals.activity('Solutions - swipe left');
       } else if (
         this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex > 0
       ) {
         this.activeSubProblemIndex -= 1;
+        window.appGlobals.activity('Sub problem - swipe left');
       }
     }
     this.setSubProblemColor(this.activeSubProblemIndex);
@@ -518,6 +524,7 @@ export class CpsSolutions extends CpsStageBase {
           this.solutionListScrollPositionX = window.scrollX;
           this.solutionListScrollPositionY = window.scrollY;
           window.scrollTo(0, 0);
+          window.appGlobals.activity('Solutions - open detail');
         }}"
       >
         ${solution.imageUrl
@@ -541,7 +548,7 @@ export class CpsSolutions extends CpsStageBase {
           ? html`
               <div class="groupInfo layout horizontal">
                 <div class="groupInfoText">
-                  ${this.activeGroupIndex===null
+                  ${this.activeGroupIndex === null
                     ? html`+ ${solution.similarityGroup.totalCount}`
                     : nothing}
                 </div>
@@ -636,6 +643,7 @@ export class CpsSolutions extends CpsStageBase {
 
   toggleSearchVisibility(): void {
     this.isSearchVisible = !this.isSearchVisible;
+    window.appGlobals.activity("Solutions - toggle search");
   }
 
   renderSearchField() {
@@ -668,6 +676,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${() => {
             this.activePopulationIndex = startIndex + index;
             this.resetDropdown();
+            window.appGlobals.activity("Solutions - chose generation");
           }}"
         ></md-filter-chip> `
     );
@@ -686,6 +695,7 @@ export class CpsSolutions extends CpsStageBase {
   }
 
   toggleDropdownVisibility(): void {
+    window.appGlobals.activity("Solutions - toggle dropdown");
     this.isDropdownVisible = !this.isDropdownVisible;
     if (this.isDropdownVisible) {
       // add check to ensure activePopulationIndex is valid
@@ -711,7 +721,9 @@ export class CpsSolutions extends CpsStageBase {
   renderDropdown(middleItems: IEngineSolution[][], startIndex: number) {
     if (middleItems.length > 0 && !this.isDropdownVisible) {
       return html`
-        <md-outlined-icon-button @click="${this.toggleDropdownVisibility}">
+        <md-outlined-icon-button @click="${
+          this.toggleDropdownVisibility
+          }">
           <md-icon>expand_more</md-icon>
         </md-outlined-icon-button>
       `;
@@ -787,6 +799,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${(): void => {
             if (solutionIndex > 0) {
               this.activeFilteredSolutionIndex = solutionIndex - 1;
+              window.appGlobals.activity('Solutions - click previous solution');
             }
           }}"
         >
@@ -798,6 +811,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${(): void => {
             if (solutionIndex < solutions.length - 1) {
               this.activeFilteredSolutionIndex = solutionIndex + 1;
+              window.appGlobals.activity('Solutions - click next solution');
             }
           }}"
         >
@@ -808,6 +822,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${(): void => {
             this.activeSolutionIndex = null;
             this.exitSolutionScreen();
+            window.appGlobals.activity('Solutions - exit solution detail');
           }}"
         >
           <md-icon>close</md-icon>
