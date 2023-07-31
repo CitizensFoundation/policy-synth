@@ -458,10 +458,13 @@ export abstract class CpsStageBase extends YpBaseElement {
             .populations.length - 1;
       }
     }
+
+    window.appGlobals.activity("Sub Problem - click");
   }
 
   toggleDarkMode() {
     this.fire('yp-theme-dark-mode', !this.themeDarkMode);
+    window.appGlobals.activity("Solutions - toggle darkmode");
   }
 
   renderThemeToggle() {
@@ -568,6 +571,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       if (this.activeSubProblemIndex > 0) {
                         this.activeSubProblemIndex -= 1;
                         this.setSubProblemColor(this.activeSubProblemIndex);
+                        window.appGlobals.activity("Sub Problem - click previous");
                       }
                     }}"
                   >
@@ -587,6 +591,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       ) {
                         this.activeSubProblemIndex += 1;
                         this.setSubProblemColor(this.activeSubProblemIndex);
+                        window.appGlobals.activity("Sub Problem - click next");
                       }
                     }}"
                   >
@@ -599,6 +604,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       this.activeSubProblemIndex = null;
                       this.fire('yp-theme-color', this.subProblemColors[7]);
                       this.exitSubProblemScreen();
+                      window.appGlobals.activity("Sub Problem - exit");
                     }}"
                   >
                     <md-icon>close</md-icon>

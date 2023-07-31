@@ -111,6 +111,12 @@ export class CpsAppGlobals extends YpAppGlobals {
       screen_width: window.innerWidth,
     };
 
+    //@ts-ignore
+    if (typeof gtag == 'function') {
+      //@ts-ignore
+      gtag('event', type)
+    }
+
     try {
       fetch('/api/analytics/createActivityFromApp', {
         method: 'POST',
