@@ -717,6 +717,7 @@ export class CpsApp extends YpBaseElement {
     rankProsCons: IEngineConstants.prosConsRankingsModel,
     evolveReapPopulation: IEngineConstants.reapSolutionsModel,
     rateSolutions: IEngineConstants.rateSolutionsModel,
+    groupSolutions: IEngineConstants.groupSolutionsModel,
     evolveCreatePopulation: IEngineConstants.evolveSolutionsModel,
     evolveMutatePopulation: IEngineConstants.evolutionMutateModel,
     evolveRecombinePopulation: IEngineConstants.evolutionRecombineModel,
@@ -1009,14 +1010,14 @@ export class CpsApp extends YpBaseElement {
               class="${
                 this.pageIndex == PagesTypes.Entities && 'selectedContainer'
               }"
-              headline="${this.t('Entities / Stakholders')}"
+              headline="${this.t('Entities / Stakeholders')}"
               @click="${() => this.changeTabTo(2)}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
                   this.changeTabTo(2);
                 }
               }}"
-              supportingText="${this.t('The affected entities / stakholders')}"
+              supportingText="${this.t('The affected entities / stakeholders')}"
             >
               <md-list-item-icon slot="start">
                 <md-icon>group</md-icon>

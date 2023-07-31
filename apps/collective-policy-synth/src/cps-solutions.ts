@@ -9,6 +9,7 @@ import '@material/web/iconbutton/standard-icon-button.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
+import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/chips/input-chip.js';
 import '@material/web/textfield/outlined-text-field.js'; // import at the beginning of your file
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js'; // get reference to the class
@@ -19,12 +20,45 @@ import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
-  @property({ type: Boolean }) isDropdownVisible = false;
-  @property({ type: String }) searchText = '';
-  @property({ type: Number }) activeFilteredSolutionIndex: number = null;
-  @property({ type: Boolean }) isSearchVisible = false; // add a new property to control the visibility of the search field
+  @property({ type: Boolean })
+  isDropdownVisible = false;
+
+  @property({ type: String })
+  searchText = '';
+
+  @property({ type: Number })
+  activeFilteredSolutionIndex: number = null;
+
+  @property({ type: Boolean })
+  isSearchVisible = false;
+
   @property({ type: Boolean })
   hideExtraSolutionInformation = true;
+
+  @property({ type: Number }) activeGroupIndex: number = null;
+
+  @property({ type: Number }) groupListScrollPositionY: number = null;
+
+  async handleGroupButtonClick(groupIndex: number): Promise<void> {
+    if (this.activeGroupIndex === groupIndex) {
+      // Deactivating group filter
+      this.activeGroupIndex = null;
+      await this.updateComplete;
+      window.scrollTo(0, this.groupListScrollPositionY);
+      this.groupListScrollPositionY = null;
+    } else {
+      // Activating group filter
+      this.groupListScrollPositionY = window.scrollY;
+      this.activeGroupIndex = groupIndex;
+      await this.updateComplete;
+      const solutionListElement =
+        this.shadowRoot.getElementById('solutionList');
+      const rect = solutionListElement.getBoundingClientRect();
+      const docTop = window.pageYOffset;
+      window.scrollTo(0, rect.top + docTop);
+    }
+  }
+
   reset() {
     this.searchText = '';
     this.isSearchVisible = false;
@@ -202,7 +236,7 @@ export class CpsSolutions extends CpsStageBase {
           max-width: 600px;
           width: 600px;
           font-size: 22px;
-          height: 100px;
+          min-height: 100px;
           display: flex;
           flex-direction: column;
           justify-content: left;
@@ -210,11 +244,29 @@ export class CpsSolutions extends CpsStageBase {
           cursor: pointer;
           line-height: 1.4;
           vertical-align: middle;
+          position: relative;
+        }
+
+        .groupInfo {
+          position: absolute;
+          bottom: 12px;
+          right: 8px;
+        }
+
+        .groupInfoText {
+          font-size: 18px;
+          margin-top: 4px;
+          font-family: 'Roboto Condensed', sans-serif;
         }
 
         .solutionItem[has-image] {
           height: 375px;
           margin-bottom: 16px;
+        }
+
+        .solutionItem[group-solo] {
+          background-color: var(--md-sys-color-tertiary-container);
+          color: var(--md-sys-color-on-tertiary-container);
         }
 
         .generationContainer {
@@ -403,6 +455,20 @@ export class CpsSolutions extends CpsStageBase {
       let solutions =
         subProblem.solutions.populations[this.activePopulationIndex];
 
+      if (this.activeGroupIndex !== null) {
+        // If a group is active, only return solutions from this group
+        solutions = solutions.filter(
+          solution => solution.similarityGroup?.index === this.activeGroupIndex
+        );
+      } else {
+        // Otherwise, return only the first solution of each group
+        solutions = solutions.filter(
+          solution =>
+            solution.similarityGroup?.isFirst ||
+            solution.similarityGroup === undefined
+        );
+      }
+
       if (this.searchText) {
         const searchTerms = this.searchText.toLowerCase().split(' ');
         solutions = solutions.filter(solution =>
@@ -440,6 +506,65 @@ export class CpsSolutions extends CpsStageBase {
     }
   }
 
+  renderSolutionItem(solution: IEngineSolution, index: number) {
+    return html`
+      <div
+        class="solutionItem layout vertical center-center"
+        ?has-image="${solution.imageUrl}"
+        ?group-solo="${this.activeGroupIndex !== null}"
+        @click="${(): void => {
+          this.activeSolutionIndex = index;
+          this.activeFilteredSolutionIndex = index;
+          this.solutionListScrollPositionX = window.scrollX;
+          this.solutionListScrollPositionY = window.scrollY;
+          window.scrollTo(0, 0);
+        }}"
+      >
+        ${solution.imageUrl
+          ? html`
+              <div>
+                <img
+                  loading="lazy"
+                  class="solutionImage"
+                  height="${this.wide ? `250` : `200`}"
+                  src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
+                  alt="${solution.title}"
+                />
+              </div>
+            `
+          : html``}
+        <div class="solutionItemTitle" ?has-image="${solution.imageUrl}">
+          ${solution.title}
+        </div>
+        ${solution.similarityGroup?.isFirst !== undefined &&
+        solution.similarityGroup.isFirst
+          ? html`
+              <div class="groupInfo layout horizontal">
+                <div class="groupInfoText">
+                  ${!this.activeGroupIndex
+                    ? html`${solution.similarityGroup.totalCount}`
+                    : nothing}
+                </div>
+                <md-outlined-icon-button
+                  toggle
+                  ?selected="${this.activeGroupIndex ===
+                  solution.similarityGroup.index}"
+                  class="groupButton"
+                  @click="${(e: CustomEvent): void => {
+                    e.stopPropagation();
+                    this.handleGroupButtonClick(solution.similarityGroup.index);
+                  }}"
+                >
+                  <md-icon>unfold_more_double</md-icon>
+                  <md-icon slot="selectedIcon">close</md-icon>
+                </md-outlined-icon-button>
+              </div>
+            `
+          : html``}
+      </div>
+    `;
+  }
+
   renderSubProblemScreen(subProblem: IEngineSubProblem) {
     return html`
       <div class="topContainer layout vertical self-start">
@@ -451,40 +576,11 @@ export class CpsSolutions extends CpsStageBase {
         </div>
         <div class="generationContainer layout vertical center-center">
           ${this.renderChipSet(subProblem)}
-          ${this.filteredSolutions.map(
-            (solution, index) =>
-              html`<div
-                class="solutionItem layout vertical center-center"
-                ?has-image="${solution.imageUrl}"
-                @click="${(): void => {
-                  this.activeSolutionIndex = index;
-                  this.activeFilteredSolutionIndex = index;
-                  this.solutionListScrollPositionX = window.scrollX;
-                  this.solutionListScrollPositionY = window.scrollY;
-                  window.scrollTo(0, 0);
-                }}"
-              >
-                ${solution.imageUrl
-                  ? html`
-                      <div>
-                        <img
-                          loading="lazy"
-                          class="solutionImage"
-                          height="${this.wide ? `250` : `200`}"
-                          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
-                          alt="${solution.title}"
-                        />
-                      </div>
-                    `
-                  : html``}
-                <div
-                  class="solutionItemTitle"
-                  ?has-image="${solution.imageUrl}"
-                >
-                  ${solution.title}
-                </div>
-              </div>`
-          )}
+          <div id="solutionList">
+            ${this.filteredSolutions.map((solution, index) =>
+              this.renderSolutionItem(solution, index)
+            )}
+          </div>
         </div>
       </div>
     `;

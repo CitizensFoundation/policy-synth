@@ -1,8 +1,8 @@
-declare module 'pdfjs-dist/build/pdf.js'
-declare module 'pdfreader'
+declare module "pdfjs-dist/build/pdf.js";
+declare module "pdfreader";
 
-declare module 'puppeteer-extra' {
-  import puppeteer from 'puppeteer';
+declare module "puppeteer-extra" {
+  import puppeteer from "puppeteer";
   const puppeteerExtra: typeof puppeteer & {
     use: (plugin: any) => void;
     launch: typeof puppeteer.launch;
@@ -20,7 +20,6 @@ type Link = {
   link: string;
 };
 
-
 type SiteLink = {
   title: string;
   link: string;
@@ -32,8 +31,8 @@ type DetectedExtensions = {
 
 type RichSnippet = {
   bottom: {
-      extensions: string[];
-      detected_extensions: DetectedExtensions;
+    extensions: string[];
+    detected_extensions: DetectedExtensions;
   };
 };
 
@@ -60,7 +59,7 @@ type SerpOrganicResult = {
   displayed_link: string;
   snippet: string;
   sitelinks: {
-      inline: SiteLink[];
+    inline: SiteLink[];
   };
   rich_snippet: RichSnippet;
   about_this_result: AboutThisResult;
@@ -74,7 +73,7 @@ type SerpOrganicResults = SerpOrganicResult[];
 
 interface IEnginePairWiseVoteResults {
   wonItemIndex: number | undefined;
-  lostItemIndex: number | undefined
+  lostItemIndex: number | undefined;
 }
 
 interface IEngineWorkerData {
@@ -102,7 +101,7 @@ interface IEngineSubProblem {
   eloRating?: number;
   solutions: {
     populations: IEngineSolution[][];
-  }
+  };
 }
 
 interface IEngineAffectedEntityBase {
@@ -134,6 +133,12 @@ interface IEngineSolution {
   title: string;
   description: string;
   eloRating?: number;
+  similarityGroup?: {
+    index: number;
+    isFirst?: boolean;
+    totalCount?: number;
+  };
+  isFirstInGroup?: boolean;
   mainBenefitOfSolution: string;
   mainObstacleToSolutionAdoption: string;
   affectedEntities?: IEngineSolutionAffectedEntity[];
@@ -177,6 +182,7 @@ type IEngineStageTypes =
   | "rank-solutions"
   | "rank-pros-cons"
   | "rate-solutions"
+  | "group-solutions"
   | "evolve-create-population"
   | "evolve-mutate-population"
   | "evolve-recombine-population"
@@ -275,7 +281,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     rateSolutionsJsonFormat?: string;
     subProblemColors?: string[];
     secondaryColors?: string[];
-  }
+  };
   subProblems: IEngineSubProblem[];
   currentStageData?:
     | IEEngineSearchResultData
@@ -309,13 +315,15 @@ interface IEngineWebPageGraphQlResults {
   data: {
     Get: {
       WebPage: IEngineWebPageAnalysisData[];
-    }
-  }
+    };
+  };
 }
 
 interface IEngineSolutionForReapCheck {
   index: number;
   title: string;
 }
+
+interface IEngineSolutionForGroupCheck extends IEngineSolutionForReapCheck {}
 
 type IEngineMutationRates = "low" | "medium" | "high";
