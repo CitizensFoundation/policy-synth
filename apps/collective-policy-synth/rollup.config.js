@@ -13,10 +13,11 @@ const commonjs = require("rollup-plugin-commonjs");
 function getCustomVersion(version) {
   const date = new Date();
 
-  const formattedDate = date.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  const formattedDate = date.toLocaleString('en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' });
 
   return `Built on ${formattedDate} CET`;
 }
+
 
 
 export default {
