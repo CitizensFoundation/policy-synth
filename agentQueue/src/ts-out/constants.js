@@ -107,7 +107,7 @@ export class IEngineConstants {
     static reapSolutionsModel = {
         name: "gpt-4",
         temperature: 0.0,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
@@ -116,7 +116,7 @@ export class IEngineConstants {
     static groupSolutionsModel = {
         name: "gpt-4",
         temperature: 0.0,
-        maxOutputTokens: 512,
+        maxOutputTokens: 2048,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
