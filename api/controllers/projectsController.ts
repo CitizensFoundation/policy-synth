@@ -24,6 +24,9 @@ if (process.env.REDIS_URL) {
   });
 }
 
+const memoryCache: { [key: string]: { data: any; timer: NodeJS.Timeout } } = {};
+
+
 export class ProjectsController {
   public path = "/api/projects";
   public router = express.Router();
@@ -47,9 +50,15 @@ export class ProjectsController {
       !process.env.FORCE_BACKUP_MEMORY_URL
     ) {
       try {
+        // Try to get from memory cache first
+        if (memoryCache[filteredRedisCacheKey]) {
+          console.log("Using memory cache data");
+          return res.send(memoryCache[filteredRedisCacheKey].data);
+        }
+
         const cachedData = await redisClient.get(filteredRedisCacheKey);
         if (cachedData) {
-          console.log("Using cached memory data");
+          console.log("Using cached Redis data");
           return res.send(JSON.parse(cachedData));
         }
       } catch (err) {
@@ -135,7 +144,7 @@ export class ProjectsController {
       });
     }
 
-    if (process.env.NODE_ENV === "production") {
+    if (false && process.env.NODE_ENV === "production") {
       try {
         await redisClient.set(
           filteredRedisCacheKey,
@@ -150,17 +159,30 @@ export class ProjectsController {
           }
         );
 
-        console.log("Caching memory data");
+        console.log("Caching memory data to redis");
       } catch (err) {
         console.error(err);
       }
     }
 
-    return res.send({
+    const response = {
       isAdmin: true,
-      name: "Policy Synth - Democracy",
+      name: "Policy Synth - Save Democracy!",
       currentMemory: memoryData,
       configuration: {},
-    });
+    };
+
+    // Add to memory cache
+    memoryCache[filteredRedisCacheKey] = {
+      data: response,
+      timer: setTimeout(() => {
+        console.log("Deleting memory cache data");
+        delete memoryCache[filteredRedisCacheKey];
+      }, 60*60*1000),
+    };
+
+    console.log("Caching data to memory")
+
+    return res.send(response);
   };
 }
