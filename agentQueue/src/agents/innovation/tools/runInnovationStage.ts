@@ -5,8 +5,8 @@ const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-const deleteALl = false;
-const setNewStage = true;
+const deleteALl = true;
+const setNewStage = false;
 const addJob = false;
 
 const myQueue = new Queue("agent-innovation");
@@ -44,7 +44,7 @@ if (setNewStage) {
 
   //Repeat for each GA generation
   //memory.currentStage = "evolve-create-population";
-  memory.currentStage = "evolve-reap-population";
+  //memory.currentStage = "evolve-reap-population";
   //memory.currentStage = "create-pros-cons";
   //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rate-solutions";

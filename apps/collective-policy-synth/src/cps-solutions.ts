@@ -541,7 +541,7 @@ export class CpsSolutions extends CpsStageBase {
           ? html`
               <div class="groupInfo layout horizontal">
                 <div class="groupInfoText">
-                  ${!this.activeGroupIndex
+                  ${this.activeGroupIndex===null
                     ? html`+ ${solution.similarityGroup.totalCount}`
                     : nothing}
                 </div>
