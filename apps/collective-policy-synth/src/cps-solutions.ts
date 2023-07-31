@@ -378,6 +378,7 @@ export class CpsSolutions extends CpsStageBase {
           .solutionItemTitle {
             margin-top: 0;
             padding-top: 0;
+            padding-bottom: 24px;
           }
 
           .solutionTopImage {
@@ -412,9 +413,8 @@ export class CpsSolutions extends CpsStageBase {
 
           .solutionItem {
             border-radius: 24px;
-            padding: 16px;
-            margin: 8px;
-            max-width: 100;
+            padding: 32px;
+            max-width: 300px;
             width: 100%;
             font-size: 18px;
           }
@@ -542,7 +542,7 @@ export class CpsSolutions extends CpsStageBase {
               <div class="groupInfo layout horizontal">
                 <div class="groupInfoText">
                   ${!this.activeGroupIndex
-                    ? html`${solution.similarityGroup.totalCount}`
+                    ? html`+ ${solution.similarityGroup.totalCount}`
                     : nothing}
                 </div>
                 <md-outlined-icon-button
