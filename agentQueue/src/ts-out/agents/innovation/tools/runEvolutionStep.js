@@ -9,11 +9,11 @@ const getInnovationData = async () => {
     return memory;
 };
 const stages = [
-    //  "evolve-create-population",
-    //  "evolve-reap-population",
-    //  "create-pros-cons",
-    //  "rank-pros-cons",
-    //  "rate-solutions",
+    "evolve-create-population",
+    "evolve-reap-population",
+    "create-pros-cons",
+    "rank-pros-cons",
+    "rate-solutions",
     "rank-solutions",
     "group-solutions",
     "create-solution-images",
