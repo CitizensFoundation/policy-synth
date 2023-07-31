@@ -97,6 +97,10 @@ class ProjectsController {
         if (memoryData.subProblems) {
             memoryData.subProblems.forEach((subProblem) => {
                 subProblem.searchResults = filterSearchResults(subProblem.searchResults);
+                if (subProblem.searchResults) {
+                    //@ts-ignore
+                    delete subProblem.searchResults.knowledgeGraph;
+                }
             });
         }
         if (process.env.NODE_ENV === "production") {

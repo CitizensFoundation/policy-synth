@@ -18,6 +18,7 @@ import { CreateSolutionImagesProcessor } from "./create/createImages.js";
 import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
 import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
+import { GroupSolutionsProcessor } from "./ranking/groupSolutions.js";
 export class AgentInnovation extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -57,6 +58,7 @@ export class AgentInnovation extends BaseAgent {
                 "rank-pros-cons": {},
                 // Rank the potential solutions based on their efficacy
                 "rank-solutions": {},
+                "group-solutions": {},
                 // Initiate a population of solutions for evolutionary computation
                 "evolve-create-population": {},
                 // Apply mutation operator in the population to introduce variation
@@ -159,6 +161,10 @@ export class AgentInnovation extends BaseAgent {
             case "rate-solutions":
                 const rateSolutionsProcessor = new RateSolutionsProcessor(this.job, this.memory);
                 await rateSolutionsProcessor.process();
+                break;
+            case "group-solutions":
+                const groupSolutionsProcessor = new GroupSolutionsProcessor(this.job, this.memory);
+                await groupSolutionsProcessor.process();
                 break;
             case "rank-sub-problems":
                 const rankSubProblemsProcessor = new RankSubProblemsProcessor(this.job, this.memory);

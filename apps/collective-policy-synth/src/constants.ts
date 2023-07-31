@@ -129,6 +129,16 @@ export class IEngineConstants {
     verbose: false
   };
 
+  static groupSolutionsModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 512,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    verbose: true
+  };
+
   static rateSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.0,
@@ -259,7 +269,7 @@ export class IEngineConstants {
   };
 
   static evolution = {
-    populationSize: 65,
+    populationSize: 68,
 
     // Population split
     keepElitePercent: 0.1,
@@ -275,6 +285,8 @@ export class IEngineConstants {
     selectParentTournamentSize: 7,
     crossoverMutationPercent: 0.2,
   };
+
+  static maxPercentOfEloMatched = 0.75;
 
   static minimumNumberOfPairwiseVotesForPopulation = 7;
 
