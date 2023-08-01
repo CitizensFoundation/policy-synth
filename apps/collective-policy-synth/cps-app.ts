@@ -799,15 +799,14 @@ export class CpsApp extends YpBaseElement {
     }
 
     // Render total and model costs
-    let costTemplates = [
-      html`<div class="costItem">
-        Total cost: $${YpFormattingHelpers.number(totalCost)}
-      </div>`,
-    ];
+    let costTemplates = [];
 
     // Render costs for each stage
     if (this.showAllCosts) {
       costTemplates.push(
+        html`<div class="costItem">
+          Total cost: $${YpFormattingHelpers.number(totalCost)}
+        </div>`,
         html`<div class="costItem" style="margin-top: 16px">
           GPT-4 cost: $${YpFormattingHelpers.number(gpt4Cost)}
         </div>`
@@ -839,8 +838,8 @@ export class CpsApp extends YpBaseElement {
 
     if (!this.showAllCosts) {
       costTemplates.push(
-        html`<div class="layout horizontal center-center">
-          <a href="#" @click=${this.handleShowMore}>Show more...</a>
+        html`<div class="layout horizontal">
+          <a href="#" @click=${this.handleShowMore}>Show API cost...</a>
         </div>`
       );
     }

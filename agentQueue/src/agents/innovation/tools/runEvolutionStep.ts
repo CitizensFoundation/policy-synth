@@ -21,7 +21,7 @@ const stages = [
   "rank-pros-cons",
   "rate-solutions",
   "rank-solutions",
-  "group-solutions",
+  "topic-map-solutions",
   "create-solution-images",
 ] as unknown as IEngineStageTypes;
 
