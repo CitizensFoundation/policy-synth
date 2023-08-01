@@ -15,7 +15,7 @@ const stages = [
     "rank-pros-cons",
     "rate-solutions",
     "rank-solutions",
-    "group-solutions",
+    "topic-map-solutions",
     "create-solution-images",
 ];
 const runStages = async (startStage = stages[0]) => {
