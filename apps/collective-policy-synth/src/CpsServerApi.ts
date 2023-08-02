@@ -6,14 +6,20 @@ export class CpsServerApi extends YpServerApi {
     this.baseUrlPath = urlPath;
   }
 
-  public async getProject(id: number, tempPassword?: string): Promise<CpsBootResponse> {
-    return await this.fetchWrapper(
-      this.baseUrlPath + `/projects/${id}${tempPassword ? `?trm=${tempPassword}` : ''}`
-    ) as unknown as CpsBootResponse;
+  public async getProject(
+    id: number,
+    tempPassword?: string,
+    forceGetBackupForProject?: string
+  ): Promise<CpsBootResponse> {
+    return (await this.fetchWrapper(
+      this.baseUrlPath +
+        `/projects/${id}${forceGetBackupForProject ? `/true` : ``}${
+          tempPassword ? `?trm=${tempPassword}` : ''
+        }`
+    )) as unknown as CpsBootResponse;
   }
 
-
-/*
+  /*
   public getEarl(earlName: string): AoiEarlResponse {
     return this.fetchWrapper(
       this.baseUrlPath + `/earls/${earlName}.json`

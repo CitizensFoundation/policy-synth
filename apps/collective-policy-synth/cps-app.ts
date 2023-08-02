@@ -97,7 +97,11 @@ export class CpsApp extends YpBaseElement {
   earlName!: string;
 
   @property({ type: String })
+
   currentError: string | undefined;
+
+  @property({ type: String })
+  forceGetBackupForProject: string | undefined;
 
   @property({ type: String })
   tempPassword: string | undefined;
@@ -209,9 +213,15 @@ export class CpsApp extends YpBaseElement {
       if (!isNaN(projectId)) {
         this.currentProjectId = projectId;
       }
+
+      // If forceGetBackupForProject is specified in the URL, save it
+      if (urlParts[projectIndex + 2]) {
+        this.forceGetBackupForProject = urlParts[projectIndex + 2];
+      }
     }
     this.boot();
   }
+
 
   openTempPassword() {
     this.tempPassword = undefined;
@@ -222,8 +232,8 @@ export class CpsApp extends YpBaseElement {
   async boot() {
     window.appGlobals.activity('Boot - fetch start');
     const firstBootResponse = (await window.serverApi.getProject(
-      currentProjectId, this.tempPassword
-    )) as CpsBootResponse | { needsTrm: boolean};
+      this.currentProjectId, this.tempPassword, this.forceGetBackupForProject
+    )) as CpsBootResponse | { needsTrm: boolean };
 
     if ('needsTrm' in firstBootResponse) {
       if (this.tempPassword) {
