@@ -29,16 +29,13 @@ class ProjectsController {
         this.intializeRoutes();
     }
     async intializeRoutes() {
-        this.router.get(this.path + "/:id", this.getProject);
+        this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
         await redisClient.connect();
     }
     getProject = async (req, res) => {
         let projectData;
         const temporaryPasswordKey = `TEMP_PROJECT_${req.params.id}_PASSWORD`;
         const backupMemoryUrlKey = `BACKUP_PROJECT_URL_${req.params.id}`;
-        const forceBackupQueryParam = `forceGetBackupForProject${req.params.id}`;
-        console.log(`Received request with query parameters: ${JSON.stringify(req.query)}`);
-        console.log(`Received request with forceBackupQueryParam = ${req.query[forceBackupQueryParam]}`);
         if (process.env[temporaryPasswordKey] && !req.query.trm) {
             return res.send({
                 needsTrm: true
@@ -53,7 +50,7 @@ class ProjectsController {
         }
         const filteredRedisCacheKey = `st_mem_filtered_v4:${req.params.id}:id`;
         if (process.env.NODE_ENV === "production" &&
-            !req.query[forceBackupQueryParam]) {
+            !req.params.forceBackupReloadId) {
             try {
                 // Try to get from memory cache first
                 if (memoryCache[filteredRedisCacheKey]) {
@@ -70,7 +67,7 @@ class ProjectsController {
                 console.error(err);
             }
         }
-        if (!req.query[forceBackupQueryParam]) {
+        if (!req.params.forceBackupReloadId) {
             try {
                 const data = await redisClient.get(`st_mem:${req.params.id}:id`);
                 projectData = data ? JSON.parse(data) : null;
