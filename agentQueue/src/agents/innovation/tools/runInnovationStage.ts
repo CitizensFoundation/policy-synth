@@ -5,8 +5,8 @@ const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-const deleteALl = false;
-const setNewStage = true;
+const deleteALl = true;
+const setNewStage = false;
 const addJob = false;
 
 const myQueue = new Queue("agent-innovation");
