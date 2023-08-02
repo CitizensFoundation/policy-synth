@@ -124,7 +124,7 @@ export class TopicMapSolutionsProcessor extends BaseProcessor {
 
         // Cluster the reduced data using DBSCAN
         const dbscan = new DBSCAN();
-        clusters = dbscan.run(reducedData.data, 0.04, 4);
+        clusters = dbscan.run(reducedData.data, 0.04, 3);
         break;
       case "AGNES":
         const treeA = agnes(data, { method: 'ward' });
