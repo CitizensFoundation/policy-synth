@@ -12,7 +12,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
 
         1. Refine entities and their positive and negative effects in relation to the problem statement and subproblem.
         2. Ensure entity names are concise and consistent.
-        3. Limit the description of positive and negative effects to how the subproblem affects the entity, without suggesting solutions. This should be a brief three to four sentence analysis.
+        3. Limit the description of positive and negative effects to how the subproblem affects the entity, without suggesting solution components. This should be a brief three to four sentence analysis.
         4. Use JSON output only. Avoid markdown formatting.
         5. Elaborate on the reasons behind the negative and positive effects to enhance clarity.
         6. If important and related negative and positive effects are missing from the entities, please add them if needed.
@@ -43,10 +43,10 @@ export class CreateEntitiesProcessor extends BaseProcessor {
 
         1. Generate and output up to ${IEngineConstants.maxNumberGeneratedOfEntities} affected entities.
         2. Identify all entities impacted by the main problem and its subproblems.
-        3. Highlight all direct negative effects, and any positive effects, without suggesting solutions. Multiple effects may be listed in the array.
+        3. Highlight all direct negative effects, and any positive effects, without suggesting solution components. Multiple effects may be listed in the array.
         4. Use short, concise, and consistent names for entities.
         5. Avoid combining two entities with 'and'.
-        6. Limit positive and negative effects to a brief three to four sentence analysis of how the subproblem affects the entity, excluding solution suggestions.
+        6. Limit positive and negative effects to a brief three to four sentence analysis of how the subproblem affects the entity.
         7. Include Earth's climate and ecology as separate entities, unless irrelevant.
         8. Use JSON output only. Avoid markdown formatting.
         9. Only add positive effects if the sub problem really has a positive effect on the entity, that rarely happens in this analysis.

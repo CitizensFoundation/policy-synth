@@ -129,7 +129,7 @@ export class IEngineConstants {
   static reapSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.0,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 1024,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
@@ -276,20 +276,20 @@ export class IEngineConstants {
   };
 
   static evolution = {
-    populationSize: 72,
+    populationSize: 64,
 
     // Population split
     keepElitePercent: 0.1,
-    randomImmigrationPercent: 0.4,
-    mutationOffspringPercent: 0.4,
+    randomImmigrationPercent: 0.45,
+    mutationOffspringPercent: 0.35,
     crossoverPercent: 0.1,
 
     // General mutation rate split
-    lowMutationRate: 0.4,
-    mediumMutationRate: 0.4,
-    highMutationRate: 0.2,
+    lowMutationRate: 0.25,
+    mediumMutationRate: 0.5,
+    highMutationRate: 0.25,
 
-    selectParentTournamentSize: 7,
+    selectParentTournamentSize: 5,
     crossoverMutationPercent: 0.1,
   };
 

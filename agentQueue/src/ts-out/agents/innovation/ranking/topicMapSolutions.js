@@ -150,7 +150,7 @@ export class TopicMapSolutionsProcessor extends BaseProcessor {
         this.logger.info("Finished Topic Map for all");
     }
     async process() {
-        this.logger.info("Topic Map Solutions Processor");
+        this.logger.info("Topic Map Solution Components Processor");
         super.process();
         try {
             await this.topicMapSolutions();

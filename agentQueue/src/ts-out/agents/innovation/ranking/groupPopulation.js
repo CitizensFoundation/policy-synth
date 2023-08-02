@@ -48,7 +48,7 @@ export class ReapSolutionsProcessor extends BaseProcessor {
                 index: index + i * chunkSize,
                 title: solution.title,
             }));
-            this.logger.debug(`Solutions going into LLM ${solutionsToFilter.length}`);
+            this.logger.debug(`Solution Components going into LLM ${solutionsToFilter.length}`);
             const reapedIndexes = await this.callLLM("evolve-reap-population", IEngineConstants.reapSolutionsModel, await this.renderReapPrompt(solutionsToFilter));
             for (let j = 0; j < chunk.length; j++) {
                 // If the LLM call returned the index of the solution, set the solution.reaped to true

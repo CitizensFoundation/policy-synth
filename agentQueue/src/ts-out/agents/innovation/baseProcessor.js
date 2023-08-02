@@ -143,7 +143,6 @@ export class BaseProcessor extends Base {
                             this.logger.error("Error saving memory");
                         }
                         if (parseJson) {
-                            this.logger.debug("Parsing JSON");
                             let parsedJson;
                             try {
                                 parsedJson = JSON.parse(response.text.trim());
@@ -192,9 +191,14 @@ export class BaseProcessor extends Base {
                 }
                 catch (error) {
                     this.logger.warn("Error from LLM, retrying");
-                    this.logger.warn(error);
-                    // Output the stack strace
-                    this.logger.warn(error.stack);
+                    if (error.includes("429")) {
+                        this.logger.warn("429 error, retrying");
+                    }
+                    else {
+                        this.logger.warn(error);
+                        // Output the stack strace
+                        this.logger.warn(error.stack);
+                    }
                     if (retryCount >= maxRetries) {
                         throw error;
                     }

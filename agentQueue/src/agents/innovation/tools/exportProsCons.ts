@@ -18,7 +18,7 @@ let html = `
   <!DOCTYPE html>
   <html>
   <head>
-      <title>Problem and Solutions</title>
+      <title>Problem and Solution Components</title>
       <style>
         .card {
           border: 1px solid #eee;

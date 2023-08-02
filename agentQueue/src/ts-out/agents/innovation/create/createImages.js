@@ -156,7 +156,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     async renderCreatePrompt(subProblemIndex, solution) {
         const messages = [
             new SystemChatMessage(`
-        You are an expert in generating Dall-E 2 prompts from titles and descriptions of solutions.
+        You are an expert in generating Dall-E 2 prompts from titles and descriptions of solution components.
 
         Important Instructions:
         1. Always end all prompts with "Simple professional geometric illustration using hues of ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text."
@@ -175,7 +175,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         While detail and creativity are crucial, keep your prompts concise. Limit your prompts to one or two essential details for the model to generate images quickly and accurately.
         `),
             new HumanChatMessage(`
-         Solution:
+         Solution component:
          ${solution.title}
          ${solution.description}
 

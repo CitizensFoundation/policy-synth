@@ -9,12 +9,12 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
         const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemChatMessage(`You are an expert in comparing and assessing solutions to problems.
+            new SystemChatMessage(`You are an expert in comparing and assessing solution components to problems.
 
          Instructions:
-         1. You will be presented with a problem and two corresponding solutions. These will be labelled "Solution One" and "Solution Two".
-         2. Assess which of the two solutions is more important in relation to the problem.
-         3. Consider the provided ratings for each solution also.
+         1. You will be presented with a problem and two corresponding solution components. These will be labelled "Solution Component One" and "Solution Component Two".
+         2. Assess which of the two solution component is more important and practical in relation to the problem.
+         3. Consider the provided ratings for each solution component also.
          ${this.memory.customInstructions.rankSolutions
                 ? `
            Important Instructions: ${this.memory.customInstructions.rankSolutions}
@@ -27,38 +27,38 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
             new HumanChatMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
-        Solutions to assess:
+        Solution Components to assess:
 
-        Solution One:
+        Solution Component One:
         ${solutionOne.title}
         ${solutionOne.description}
 
         ${solutionOne.ratings
                 ? `
-        Solution One Ratings:
+        Solution Component One Ratings:
         ${JSON.stringify(solutionOne.ratings, null, 2)}
         `
                 : ""}
 
-        Solution Two:
+        Solution Component Two:
         ${solutionTwo.title}
         ${solutionTwo.description}
 
         ${solutionTwo.ratings
                 ? `
-        Solution Two Ratings:
+        Solution Component Two Ratings:
         ${JSON.stringify(solutionTwo.ratings, null, 2)}
         `
                 : ""}
 
-        The more important solution is:
+        The more important and practial solution component is:
         `),
         ];
         return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", IEngineConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblem(subProblemIndex) {
         const lastPopulationIndex = this.lastPopulationIndex(subProblemIndex);
-        this.logger.info(`Ranking solutions for sub problem ${subProblemIndex} population ${lastPopulationIndex}`);
+        this.logger.info(`Ranking solution components for sub problem ${subProblemIndex} population ${lastPopulationIndex}`);
         this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex), IEngineConstants.minimumNumberOfPairwiseVotesForPopulation *
             this.getActiveSolutionsLastPopulation(subProblemIndex).length);
         await this.performPairwiseRanking(subProblemIndex);
@@ -66,7 +66,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         await this.saveMemory();
     }
     async process() {
-        this.logger.info("Rank Solutions Processor");
+        this.logger.info("Rank Solution Components Processor");
         super.process();
         try {
             this.chat = new ChatOpenAI({
@@ -79,10 +79,10 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
                 length: Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems),
             }, async (_, subProblemIndex) => this.processSubProblem(subProblemIndex));
             await Promise.all(subProblemsPromises);
-            this.logger.info("Rank Solutions Processor Completed");
+            this.logger.info("Rank Solution Components Processor Completed");
         }
         catch (error) {
-            this.logger.error("Error in Rank Solutions Processor");
+            this.logger.error("Error in Rank Solution Components Processor");
             this.logger.error(error);
             throw error;
         }

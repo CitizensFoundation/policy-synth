@@ -6,13 +6,13 @@ import { IEngineConstants } from "../../../constants.js";
 export class CreateProsConsProcessor extends BaseProcessor {
   renderCurrentSolution(solution: IEngineSolution) {
     return `
-      Solution:
+      Solution Component:
 
       Title: ${solution.title}
       Description: ${solution.description}
 
-      How Solution Can Help: ${solution.mainBenefitOfSolution}
-      Main Obstacles to Solution Adoption: ${solution.mainObstacleToSolutionAdoption}
+      How Solution Component Can Help: ${solution.mainBenefitOfSolutionComponent}
+      Main Obstacles to Solution Component Adoption: ${solution.mainObstacleToSolutionComponentAdoption}
     `;
   }
 
@@ -25,7 +25,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
     const messages = [
       new SystemChatMessage(
         `
-        As an AI expert, it's your responsibility to refine the given ${prosOrCons} pertaining to solutions to problems.
+        As an AI expert, it's your responsibility to refine the given ${prosOrCons} pertaining to solution components to problems.
 
         Instructions:
 
@@ -63,7 +63,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
     const messages = [
       new SystemChatMessage(
         `
-        As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solutions, keeping the problem provided in mind.
+        As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solution components, keeping the problem provided in mind.
 
         Important Instructions:
 
@@ -103,7 +103,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
       async (_, subProblemIndex) => {
         const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
 
-        this.logger.debug(`Sub Problem ${subProblemIndex} Solutions length: ${solutions.length}`);
+        this.logger.debug(`Sub Problem ${subProblemIndex} Solution Components length: ${solutions.length}`);
 
         // Sequentially process each solution for this subproblem
         for (
