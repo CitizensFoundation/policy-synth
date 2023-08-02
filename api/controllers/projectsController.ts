@@ -41,13 +41,29 @@ export class ProjectsController {
   }
 
   getProject = async (req: express.Request, res: express.Response) => {
-    let memoryData;
+    let projectData;
 
-    const filteredRedisCacheKey = `st_mem_filtered_v3:${req.params.id}:id`;
+    const temporaryPasswordKey  = `TEMP_PROJECT_${req.params.id}_PASSWORD`;
+    const backupMemoryUrlKey  = `BACKUP_PROJECT_URL_${req.params.id}`;
+    const forceBackupQueryParam  = `forceGetBackupForProject${req.params.id}`;
+
+    if (process.env[temporaryPasswordKey] && !req.query.trm) {
+      return res.send({
+        needsTrm: true
+      });
+    } else if (process.env[temporaryPasswordKey] && req.query.trm) {
+      if (req.query.trm !== process.env[temporaryPasswordKey]) {
+        return res.send({
+          needsTrm: true
+        })
+      }
+    }
+
+    const filteredRedisCacheKey = `st_mem_filtered_v4:${req.params.id}:id`;
 
     if (
       process.env.NODE_ENV === "production" &&
-      !process.env.FORCE_BACKUP_MEMORY_URL
+      !req.query[forceBackupQueryParam]
     ) {
       try {
         // Try to get from memory cache first
@@ -66,22 +82,22 @@ export class ProjectsController {
       }
     }
 
-    if (!process.env.FORCE_BACKUP_MEMORY_URL) {
+    if (!req.query[forceBackupQueryParam]) {
       try {
         const data = await redisClient.get(`st_mem:${req.params.id}:id`);
-        memoryData = data ? JSON.parse(data) : null;
+        projectData = data ? JSON.parse(data) : null;
       } catch (err) {
         console.error(err);
       }
     }
 
-    if (!memoryData && process.env.BACKUP_MEMORY_URL) {
+    if (!projectData && process.env[backupMemoryUrlKey]) {
       try {
-        const response = await axios.get(process.env.BACKUP_MEMORY_URL);
-        memoryData = response.data;
+        const response = await axios.get(process.env[backupMemoryUrlKey]!);
+        projectData = response.data;
         await redisClient.set(
           `st_mem:${req.params.id}:id`,
-          JSON.stringify(memoryData)
+          JSON.stringify(projectData)
         );
       } catch (err) {
         console.error(err);
@@ -89,12 +105,12 @@ export class ProjectsController {
       }
     }
 
-    if (!memoryData) {
+    if (!projectData) {
       return res.sendStatus(404);
     }
 
-    if (memoryData.subProblems) {
-      memoryData.subProblems.forEach((subProblem: IEngineSubProblem) => {
+    if (projectData.subProblems) {
+      projectData.subProblems.forEach((subProblem: IEngineSubProblem) => {
         if (subProblem.solutions) {
           subProblem.solutions.populations =
             subProblem.solutions.populations.map(
@@ -126,14 +142,14 @@ export class ProjectsController {
       return searchResults;
     };
 
-    if (memoryData.problemStatement) {
-      memoryData.problemStatement.searchResults = filterSearchResults(
-        memoryData.problemStatement.searchResults
+    if (projectData.problemStatement) {
+      projectData.problemStatement.searchResults = filterSearchResults(
+        projectData.problemStatement.searchResults
       );
     }
 
-    if (memoryData.subProblems) {
-      memoryData.subProblems.forEach((subProblem: IEngineSubProblem) => {
+    if (projectData.subProblems) {
+      projectData.subProblems.forEach((subProblem: IEngineSubProblem) => {
         subProblem.searchResults = filterSearchResults(
           subProblem.searchResults
         );
@@ -151,7 +167,7 @@ export class ProjectsController {
           JSON.stringify({
             isAdmin: true,
             name: "Policy Synth - Democracy",
-            currentMemory: memoryData,
+            currentMemory: projectData,
             configuration: {},
           }),
           {
@@ -168,7 +184,7 @@ export class ProjectsController {
     const response = {
       isAdmin: true,
       name: "Policy Synth - Save Democracy!",
-      currentMemory: memoryData,
+      currentMemory: projectData,
       configuration: {},
     };
 

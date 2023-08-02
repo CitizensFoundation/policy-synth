@@ -132,7 +132,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         const sleepingFor = 5000 + retryCount * 10000;
         this.logger.debug(`Sleeping for ${sleepingFor} milliseconds`);
         await new Promise((resolve) => setTimeout(resolve, sleepingFor));
-        if (retryCount == 2 && solution) {
+        if (retryCount > 2 && solution) {
           imagePrompt = (await this.callLLM(
             "create-solution-images",
             IEngineConstants.createSolutionImagesModel,

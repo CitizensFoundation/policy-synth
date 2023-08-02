@@ -46,6 +46,11 @@ import './src/cps-solutions.js';
 import { IEngineConstants } from './src/constants.js';
 import { YpFormattingHelpers } from './src/@yrpri/common/YpFormattingHelpers.js';
 import { CpsSolutions } from './src/cps-solutions.js';
+import { TextField } from '@material/web/textfield/lib/text-field.js';
+import { Dialog } from '@material/web/dialog/lib/dialog.js';
+import '@material/web/dialog/dialog.js';
+import '@material/web/button/elevated-button.js';
+import '@material/web/textfield/outlined-text-field.js';
 
 const PagesTypes = {
   ProblemStatement: 1,
@@ -63,10 +68,13 @@ declare global {
   }
 }
 
-const currentMemoryId = 1;
+const currentProjectId = 1;
 
 @customElement('cps-app')
 export class CpsApp extends YpBaseElement {
+  @property({ type: Number })
+  currentProjectId = 1;
+
   @property({ type: Number })
   pageIndex = PagesTypes.Solutions;
 
@@ -90,6 +98,9 @@ export class CpsApp extends YpBaseElement {
 
   @property({ type: String })
   currentError: string | undefined;
+
+  @property({ type: String })
+  tempPassword: string | undefined;
 
   @property({ type: String })
   themeColor = '#3f5fce';
@@ -190,59 +201,84 @@ export class CpsApp extends YpBaseElement {
       this.fireGlobal('yp-theme-color', savedColor);
     }
 
+    const urlPath = window.location.pathname;
+    const urlParts = urlPath.split('/');
+    const projectIndex = urlParts.indexOf('projects');
+    if (projectIndex !== -1 && urlParts[projectIndex + 1]) {
+      const projectId = parseInt(urlParts[projectIndex + 1], 10);
+      if (!isNaN(projectId)) {
+        this.currentProjectId = projectId;
+      }
+    }
     this.boot();
+  }
+
+  openTempPassword() {
+    this.tempPassword = undefined;
+    (this.$$('#tempPassword') as TextField).value = "";
+    (this.$$("#tempPasswordDialog") as Dialog).open = true;
   }
 
   async boot() {
     window.appGlobals.activity('Boot - fetch start');
-    const bootResponse = (await window.serverApi.getMemory(
-      currentMemoryId
-    )) as CpsBootResponse;
+    const firstBootResponse = (await window.serverApi.getProject(
+      currentProjectId, this.tempPassword
+    )) as CpsBootResponse | { needsTrm: boolean};
 
-    this.currentMemory = bootResponse.currentMemory;
-
-    this.numberOfSolutionsGenerations =
-      this.currentMemory.subProblems[0].solutions.populations.length;
-
-    document.title = bootResponse.name;
-
-    if (bootResponse.isAdmin === true) {
-      this.isAdmin = true;
+    if ('needsTrm' in firstBootResponse) {
+      if (this.tempPassword) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+      window.appGlobals.activity('Boot - needs trm');
+      this.openTempPassword();
     } else {
-      this.isAdmin = false;
-    }
+      const bootResponse = firstBootResponse as CpsBootResponse;
 
-    this.themeColor = bootResponse.configuration.theme_color
-      ? bootResponse.configuration.theme_color
-      : '#3f5fce';
-    this.themePrimaryColor = bootResponse.configuration.theme_primary_color;
-    this.themeSecondaryColor = bootResponse.configuration.theme_secondary_color;
-    this.themeTertiaryColor = bootResponse.configuration.theme_tertiary_color;
-    this.themeNeutralColor = bootResponse.configuration.theme_neutral_color;
-    this.themeScheme = bootResponse.configuration.theme_scheme
-      ? bootResponse.configuration.theme_scheme.toLowerCase()
-      : 'tonal';
+      this.currentMemory = bootResponse.currentMemory;
 
-    this.themeChanged();
+      this.numberOfSolutionsGenerations =
+        this.currentMemory.subProblems[0].solutions.populations.length;
 
-    for (let subProblem of this.currentMemory.subProblems) {
-      if (subProblem.solutions && subProblem.solutions.populations) {
-        for (let population of subProblem.solutions.populations) {
-          this.totalSolutions += population.length;
+      document.title = bootResponse.name;
 
-          for (let solution of population) {
-            if (Array.isArray(solution.pros)) {
-              this.totalPros += solution.pros.length;
-            }
-            if (Array.isArray(solution.cons)) {
-              this.totalCons += solution.cons.length;
+      if (bootResponse.isAdmin === true) {
+        this.isAdmin = true;
+      } else {
+        this.isAdmin = false;
+      }
+
+      this.themeColor = bootResponse.configuration.theme_color
+        ? bootResponse.configuration.theme_color
+        : '#3f5fce';
+      this.themePrimaryColor = bootResponse.configuration.theme_primary_color;
+      this.themeSecondaryColor = bootResponse.configuration.theme_secondary_color;
+      this.themeTertiaryColor = bootResponse.configuration.theme_tertiary_color;
+      this.themeNeutralColor = bootResponse.configuration.theme_neutral_color;
+      this.themeScheme = bootResponse.configuration.theme_scheme
+        ? bootResponse.configuration.theme_scheme.toLowerCase()
+        : 'tonal';
+
+      this.themeChanged();
+
+      for (let subProblem of this.currentMemory.subProblems) {
+        if (subProblem.solutions && subProblem.solutions.populations) {
+          for (let population of subProblem.solutions.populations) {
+            this.totalSolutions += population.length;
+
+            for (let solution of population) {
+              if (Array.isArray(solution.pros)) {
+                this.totalPros += solution.pros.length;
+              }
+              if (Array.isArray(solution.cons)) {
+                this.totalCons += solution.cons.length;
+              }
             }
           }
         }
       }
-    }
 
-    window.appGlobals.activity('Boot - fetch end');
+      window.appGlobals.activity('Boot - fetch end');
+    }
   }
 
   disconnectedCallback() {
@@ -482,6 +518,14 @@ export class CpsApp extends YpBaseElement {
           padding: 16px;
           margin-left: 4px;
           padding-top: 20px;
+        }
+
+        md-outlined-text-field  {
+          margin: 32px;
+        }
+
+        md-elevated-button {
+          margin-bottom: 16px;
         }
 
         .ypLogo {
@@ -1178,8 +1222,27 @@ export class CpsApp extends YpBaseElement {
     }
   }
 
+  submitTempPassword() {
+    this.tempPassword = (this.$$('#tempPassword') as TextField).value;
+    (this.$$('#tempPasswordDialog') as Dialog).open = false;
+    this.boot();
+  }
+
+
+  renderTempLoginDialog() {
+    return html`<md-dialog id="tempPasswordDialog" scrimClickAction="" escapeKeyAction="">
+      <div slot="header" class="postHeader">${this.t("Please Enter Password")}</div>
+      <div id="content" class="layout vertical center-center">
+        <md-outlined-text-field id="tempPassword" type="password"></md-outlined-text-field>
+        <md-elevated-button @click="${this.submitTempPassword}">${this.t("Submit")}</md-elevated-button>
+      </div>
+      <div slot="footer"></div>
+    </md-dialog> `;
+  }
+
   render() {
     return html`
+    ${this.renderTempLoginDialog()}
     <div class="layout horizontal">
       ${this.currentMemory ? this.renderNavigationBar() : nothing}
       <div class="rightPanel">
