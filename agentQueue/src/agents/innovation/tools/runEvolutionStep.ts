@@ -7,69 +7,78 @@ const redis = new ioredis.default(
 );
 
 const queueEvents = new QueueEvents("agent-innovation");
+const projectId = process.argv[2];
 
-const getInnovationData = async () => {
-  const output = await redis.get("st_mem:1:id");
-  const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
-  return memory;
-};
+if (projectId) {
+  const redisKey = `st_mem:${projectId}:id`
+  const getInnovationData = async () => {
+    const output = await redis.get(redisKey);
+    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+    return memory;
+  };
 
-const stages = [
-  //"evolve-create-population",
-  "evolve-reap-population",
-  "evolve-reap-population",
-  "create-pros-cons",
-  "rank-pros-cons",
-  "rate-solutions",
-  "rank-solutions",
-  "topic-map-solutions",
-  "create-solution-images",
-] as unknown as IEngineStageTypes;
+  const stages = [
+    //"evolve-create-population",
+    "evolve-reap-population",
+    "evolve-reap-population",
+    "create-pros-cons",
+    "rank-pros-cons",
+    "rate-solutions",
+    "rank-solutions",
+    "topic-map-solutions",
+    "create-solution-images",
+  ] as unknown as IEngineStageTypes;
 
-const runStages = async (startStage = stages[0]) => {
-  const startIndex = stages.indexOf(startStage);
-  if (startIndex === -1) {
-    throw new Error(`Invalid start stage: ${startStage}`);
-  }
-
-  for (let i = startIndex; i < stages.length; i++) {
-    const stage = stages[i];
-    console.log(`Running stage: ${stage}`);
-
-    // Get the current memory
-    const memory = await getInnovationData();
-
-    // Update the current stage
-    memory.currentStage = stage as any;
-    await redis.set("st_mem:1:id", JSON.stringify(memory));
-
-    // Add the job to the queue
-    console.log("Adding job to queue");
-    const job = await myQueue.add(
-      "agent-innovation",
-      { groupId: 1, communityId: 1, domainId: 1 },
-      { removeOnComplete: true, removeOnFail: true }
-    );
-
-    try {
-      // Wait until the job is finished
-      console.log(`Waiting for job ${job.id} to finish...`);
-      const result = await job.waitUntilFinished(queueEvents);
-      console.log(`Job ${job.id} finished with result: ${result}`);
-    } catch (error) {
-      console.log(`Job ${job.id} failed with error: ${error}`);
-      process.exit(1);
+  const runStages = async (startStage = stages[0]) => {
+    const startIndex = stages.indexOf(startStage);
+    if (startIndex === -1) {
+      throw new Error(`Invalid start stage: ${startStage}`);
     }
-  }
-};
 
-const startStage = process.argv[2] || stages[0];
-runStages(startStage)
-  .then(() => {
-    console.log("All stages completed successfully.");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error(`Error running stages: ${error}`);
-    process.exit(1);
-  });
+    for (let i = startIndex; i < stages.length; i++) {
+      const stage = stages[i];
+      console.log(`Running stage: ${stage}`);
+
+      // Get the current memory
+      const memory = await getInnovationData();
+
+      // Update the current stage
+      memory.currentStage = stage as any;
+      await redis.set(redisKey, JSON.stringify(memory));
+
+      // Add the job to the queue
+      console.log("Adding job to queue");
+      const job = await myQueue.add(
+        "agent-innovation",
+        { groupId: 1, communityId: 1, domainId: 1 },
+        { removeOnComplete: true, removeOnFail: true }
+      );
+
+      try {
+        // Wait until the job is finished
+        console.log(`Waiting for job ${job.id} to finish...`);
+        const result = await job.waitUntilFinished(queueEvents);
+        console.log(`Job ${job.id} finished with result: ${result}`);
+      } catch (error) {
+        console.log(`Job ${job.id} failed with error: ${error}`);
+        process.exit(1);
+      }
+    }
+  };
+
+  const startStage = process.argv[3] || stages[0];
+  runStages(startStage)
+    .then(() => {
+      console.log("All stages completed successfully.");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error(`Error running stages: ${error}`);
+      process.exit(1);
+    });
+
+} else {
+  console.log("Usage: yarn runEvolutionStep <projectId>");
+  process.exit(0);
+}
+

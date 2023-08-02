@@ -3,6 +3,7 @@ import { IEngineConstants } from "../../../constants.js";
 import { PCA } from "ml-pca";
 import { Configuration, OpenAIApi } from "openai";
 import { DBSCAN } from "density-clustering";
+import { agnes } from "ml-hclust";
 const includeDescriptionInVector = true;
 export class TopicMapSolutionsProcessor extends BaseProcessor {
     async getAllSolutionVectors(solutions) {
@@ -79,6 +80,36 @@ export class TopicMapSolutionsProcessor extends BaseProcessor {
         //this.logger.debug(`Got vector for: ${prompt}`);
         return vector;
     }
+    applyClustering(data, method) {
+        let clusters = [];
+        let filteredData = data.filter(x => x !== undefined);
+        switch (method) {
+            case "PCA_DBSCAN":
+                // Apply PCA to reduce the dimensions of the data
+                const pca = new PCA(data);
+                const reducedData = pca.predict(data, { nComponents: 2 });
+                // Cluster the reduced data using DBSCAN
+                const dbscan = new DBSCAN();
+                clusters = dbscan.run(reducedData.data, 0.04, 4);
+                break;
+            case "AGNES":
+                const treeA = agnes(data, { method: 'ward' });
+                clusters = treeA.cut(0.0005); // Adjust this according to your needs
+                break;
+            case "DIANA":
+                //        const treeD = diana(data);
+                //        clusters = treeD.cut(1.5); // Adjust this according to your needs
+                break;
+            case "OPTICS":
+                //        const optics = new OPTICS();
+                //        clusters = optics.run(filteredData, 2, 2); // The parameters are: dataset, epsilon, minimum points
+                break;
+            // Add cases for BIRCH, CURE, CHAMELEON when you find or develop appropriate implementations
+            default:
+                throw new Error("Invalid method: " + method);
+        }
+        return clusters;
+    }
     async topicMapSolutionsForSubProblem(subProblemIndex, solutions) {
         this.logger.info(`Topic mapping solutions for subproblem ${subProblemIndex}`);
         // Fetch all solutions and their vector embeddings
@@ -86,29 +117,17 @@ export class TopicMapSolutionsProcessor extends BaseProcessor {
         this.logger.debug(`Got ${solutionVectors.length} solution vectors`);
         // Extract the vector embeddings
         const vectors = solutionVectors.map((solution) => solution.vector);
-        // Apply PCA to reduce the dimensions of the vectors
-        const pca = new PCA(vectors);
-        const reducedVectors = pca.predict(vectors, { nComponents: 2 });
-        // Cluster the reduced vectors using DBSCAN
-        const dbscan = new DBSCAN();
-        const clusters = dbscan.run(reducedVectors.data, 0.02, 1);
+        const clusters = this.applyClustering(vectors, "PCA_DBSCAN");
         let groupIndex = 0;
         for (const cluster of clusters) {
             if (cluster.length > 1) {
                 // Ignore groups with only one solution
                 for (const solutionIndex of cluster) {
                     if (solutionIndex < solutions.length) {
-                        if (cluster.indexOf(solutionIndex) === 0) {
-                            solutions[solutionIndex].similarityGroup = {
-                                index: groupIndex,
-                                totalCount: cluster.length,
-                            };
-                        }
-                        else {
-                            solutions[solutionIndex].similarityGroup = {
-                                index: groupIndex,
-                            };
-                        }
+                        solutions[solutionIndex].similarityGroup = {
+                            index: groupIndex,
+                            totalCount: cluster.length,
+                        };
                         this.logger.info(`Clusterd solution: ${solutions[solutionIndex].title}`);
                     }
                 }

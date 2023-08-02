@@ -7,53 +7,60 @@ const redis = new ioredis.default(
 
 const myQueue = new Queue("agent-innovation");
 
-const output = await redis.get("st_mem:1:id");
+const projectId = process.argv[2];
+if (projectId) {
+  const redisKey = `st_mem:${projectId}:id`
+  const output = await redis.get(redisKey);
 
-const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
-memory.customInstructions = {} as any;
-memory.customInstructions.createSolutions = `
-  1. Never create solution components in the form of frameworks or holistic approaches
-  2. Solution Components should include only one core idea.
-  3. The solution component title should indicate the benefits or results of implementing the solution component.
-  4. Remember that the main facilitator for implementation will be civil society working with governments.
-  5. Frame solution components with the intention of convincing politicians and governments to put them into action.
-  6. Avoid blockchain solution components.
-`;
+  const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+  memory.customInstructions = {} as any;
+  memory.customInstructions.createSolutions = `
+    1. Never create solution components in the form of frameworks or holistic approaches
+    2. Solution Components should include only one core idea.
+    3. The solution component title should indicate the benefits or results of implementing the solution component.
+    4. Remember that the main facilitator for implementation will be civil society working with governments.
+    5. Frame solution components with the intention of convincing politicians and governments to put them into action.
+    6. Avoid blockchain solution components.
+  `;
 
-memory.customInstructions.rankSolutions = `
-  1. Assess the solution components based on it's title and description.
-  2. Later those solution components will be brought into comprehensive policy proposals.
-  3. Use provided ratings also in a toughtful and balanced way for your decision.
-`;
+  memory.customInstructions.rankSolutions = `
+    1. Assess the solution components based on it's title and description.
+    2. Later those solution components will be brought into comprehensive policy proposals.
+    3. Use provided ratings also in a toughtful and balanced way for your decision.
+  `;
 
-memory.customInstructions.rateSolutionsJsonFormat = `
-  {
-    highPriorityRatings: {
-      howImportantToProblem,
-      howInnovative,
-      howPractical,
-      howEthical,
-      howComplex,
-    },
-    otherRatings: {
-      benefitsForCitizens,
-      benefitsForGovernments,
-      benefitsForCivilSociety,
-      benefitsForPrivateSector,
-      benefitsForTheClimate
+  memory.customInstructions.rateSolutionsJsonFormat = `
+    {
+      highPriorityRatings: {
+        howImportantToProblem,
+        howInnovative,
+        howPractical,
+        howEthical,
+        howComplex,
+      },
+      otherRatings: {
+        benefitsForCitizens,
+        benefitsForGovernments,
+        benefitsForCivilSociety,
+        benefitsForPrivateSector,
+        benefitsForTheClimate
+      }
     }
-  }
-`;
+  `;
 
-memory.customInstructions.reapSolutions = `
-  1. Filter out solution components that include more than two unique core ideas, if the ideas are closely related then do not filter them out.
-  2. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
-  3. Core ideas are distinct concepts or strategies that are central to the solution component.
-  4. If a solution component includes multiple strategies or methods that serve to implement or facilitate a single core idea, do not consider these as separate core ideas. Instead, view them as parts of a comprehensive approach to implementing the core idea.
-`;
+  memory.customInstructions.reapSolutions = `
+    1. Filter out solution components that include more than two unique core ideas, if the ideas are closely related then do not filter them out.
+    2. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
+    3. Core ideas are distinct concepts or strategies that are central to the solution component.
+    4. If a solution component includes multiple strategies or methods that serve to implement or facilitate a single core idea, do not consider these as separate core ideas. Instead, view them as parts of a comprehensive approach to implementing the core idea.
+  `;
 
-await redis.set("st_mem:1:id", JSON.stringify(memory));
+  await redis.set(redisKey, JSON.stringify(memory));
 
-console.log("After saving");
+  console.log("After saving");
 
-process.exit(0);
+  process.exit(0);
+} else {
+  console.log("No project id provided");
+  process.exit(1);
+}

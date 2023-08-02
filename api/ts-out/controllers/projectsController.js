@@ -33,10 +33,25 @@ class ProjectsController {
         await redisClient.connect();
     }
     getProject = async (req, res) => {
-        let memoryData;
-        const filteredRedisCacheKey = `st_mem_filtered_v3:${req.params.id}:id`;
+        let projectData;
+        const temporaryPasswordKey = `TEMP_PROJECT_${req.params.id}_PASSWORD`;
+        const backupMemoryUrlKey = `BACKUP_PROJECT_URL_${req.params.id}`;
+        const forceBackupQueryParam = `forceGetBackupForProject${req.params.id}`;
+        if (process.env[temporaryPasswordKey] && !req.query.trm) {
+            return res.send({
+                needsTrm: true
+            });
+        }
+        else if (process.env[temporaryPasswordKey] && req.query.trm) {
+            if (req.query.trm !== process.env[temporaryPasswordKey]) {
+                return res.send({
+                    needsTrm: true
+                });
+            }
+        }
+        const filteredRedisCacheKey = `st_mem_filtered_v4:${req.params.id}:id`;
         if (process.env.NODE_ENV === "production" &&
-            !process.env.FORCE_BACKUP_MEMORY_URL) {
+            !req.query[forceBackupQueryParam]) {
             try {
                 // Try to get from memory cache first
                 if (memoryCache[filteredRedisCacheKey]) {
@@ -53,31 +68,31 @@ class ProjectsController {
                 console.error(err);
             }
         }
-        if (!process.env.FORCE_BACKUP_MEMORY_URL) {
+        if (!req.query[forceBackupQueryParam]) {
             try {
                 const data = await redisClient.get(`st_mem:${req.params.id}:id`);
-                memoryData = data ? JSON.parse(data) : null;
+                projectData = data ? JSON.parse(data) : null;
             }
             catch (err) {
                 console.error(err);
             }
         }
-        if (!memoryData && process.env.BACKUP_MEMORY_URL) {
+        if (!projectData && process.env[backupMemoryUrlKey]) {
             try {
-                const response = await axios_1.default.get(process.env.BACKUP_MEMORY_URL);
-                memoryData = response.data;
-                await redisClient.set(`st_mem:${req.params.id}:id`, JSON.stringify(memoryData));
+                const response = await axios_1.default.get(process.env[backupMemoryUrlKey]);
+                projectData = response.data;
+                await redisClient.set(`st_mem:${req.params.id}:id`, JSON.stringify(projectData));
             }
             catch (err) {
                 console.error(err);
                 return res.sendStatus(500);
             }
         }
-        if (!memoryData) {
+        if (!projectData) {
             return res.sendStatus(404);
         }
-        if (memoryData.subProblems) {
-            memoryData.subProblems.forEach((subProblem) => {
+        if (projectData.subProblems) {
+            projectData.subProblems.forEach((subProblem) => {
                 if (subProblem.solutions) {
                     subProblem.solutions.populations =
                         subProblem.solutions.populations.map((population) => population.filter((solution) => !solution.reaped));
@@ -97,11 +112,11 @@ class ProjectsController {
             }
             return searchResults;
         };
-        if (memoryData.problemStatement) {
-            memoryData.problemStatement.searchResults = filterSearchResults(memoryData.problemStatement.searchResults);
+        if (projectData.problemStatement) {
+            projectData.problemStatement.searchResults = filterSearchResults(projectData.problemStatement.searchResults);
         }
-        if (memoryData.subProblems) {
-            memoryData.subProblems.forEach((subProblem) => {
+        if (projectData.subProblems) {
+            projectData.subProblems.forEach((subProblem) => {
                 subProblem.searchResults = filterSearchResults(subProblem.searchResults);
                 if (subProblem.searchResults) {
                     //@ts-ignore
@@ -114,7 +129,7 @@ class ProjectsController {
                 await redisClient.set(filteredRedisCacheKey, JSON.stringify({
                     isAdmin: true,
                     name: "Policy Synth - Democracy",
-                    currentMemory: memoryData,
+                    currentMemory: projectData,
                     configuration: {},
                 }), {
                     EX: 60,
@@ -128,7 +143,7 @@ class ProjectsController {
         const response = {
             isAdmin: true,
             name: "Policy Synth - Save Democracy!",
-            currentMemory: memoryData,
+            currentMemory: projectData,
             configuration: {},
         };
         // Add to memory cache
