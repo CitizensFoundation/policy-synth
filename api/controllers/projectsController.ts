@@ -47,6 +47,8 @@ export class ProjectsController {
     const backupMemoryUrlKey  = `BACKUP_PROJECT_URL_${req.params.id}`;
     const forceBackupQueryParam  = `forceGetBackupForProject${req.params.id}`;
 
+    console.log(`Received request with query parameters: ${JSON.stringify(req.query)}`);
+
     console.log(`Received request with forceBackupQueryParam = ${req.query[forceBackupQueryParam]}`);
 
     if (process.env[temporaryPasswordKey] && !req.query.trm) {
