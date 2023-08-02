@@ -227,7 +227,7 @@ export abstract class BaseProcessor extends Base {
           }
         } catch (error: any) {
           this.logger.warn("Error from LLM, retrying");
-          if (error.includes("429")) {
+          if (error.message && error.message.indexOf("429") > -1) {
             this.logger.warn("429 error, retrying");
           } else {
             this.logger.warn(error);
