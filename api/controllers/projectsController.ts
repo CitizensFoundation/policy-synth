@@ -47,6 +47,8 @@ export class ProjectsController {
     const backupMemoryUrlKey  = `BACKUP_PROJECT_URL_${req.params.id}`;
     const forceBackupQueryParam  = `forceGetBackupForProject${req.params.id}`;
 
+    console.log(`Received request with forceBackupQueryParam = ${req.query[forceBackupQueryParam]}`);
+
     if (process.env[temporaryPasswordKey] && !req.query.trm) {
       return res.send({
         needsTrm: true
@@ -93,6 +95,7 @@ export class ProjectsController {
 
     if (!projectData && process.env[backupMemoryUrlKey]) {
       try {
+        console.log(`Attempting to fetch data from backup URL: ${process.env[backupMemoryUrlKey]}`); // Log statement added
         const response = await axios.get(process.env[backupMemoryUrlKey]!);
         projectData = response.data;
         await redisClient.set(
