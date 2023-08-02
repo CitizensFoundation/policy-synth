@@ -12,18 +12,18 @@ const output = await redis.get("st_mem:1:id");
 const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
 memory.customInstructions = {} as any;
 memory.customInstructions.createSolutions = `
-  1. Never create solutions in the form of frameworks or holistic approaches
-  2. Solutions should include only one core idea.
-  3. The solution title should indicate the benefits or results of implementing the solution.
+  1. Never create solution components in the form of frameworks or holistic approaches
+  2. Solution Components should include only one core idea.
+  3. The solution component title should indicate the benefits or results of implementing the solution component.
   4. Remember that the main facilitator for implementation will be civil society working with governments.
-  5. Frame solutions with the intention of convincing politicians and governments to put them into action.
-  6. Avoid blockchain solutions.
+  5. Frame solution components with the intention of convincing politicians and governments to put them into action.
+  6. Avoid blockchain solution components.
 `;
 
 memory.customInstructions.rankSolutions = `
-  1. Assess the solutions based on it's title and description.
-  2. And use provided ratings also in a toughtful and balanced way for your decision.
-  3. Reward simple focused solutions.
+  1. Assess the solution components based on it's title and description.
+  2. Later those solution components will be brought into comprehensive policy proposals.
+  3. Use provided ratings also in a toughtful and balanced way for your decision.
 `;
 
 memory.customInstructions.rateSolutionsJsonFormat = `
@@ -46,28 +46,10 @@ memory.customInstructions.rateSolutionsJsonFormat = `
 `;
 
 memory.customInstructions.reapSolutions = `
-  1. Non-viable solutions include more than two core ideas.
+  1. Filter out solution components that include more than two unique core ideas, if the ideas are closely related then do not filter them out.
   2. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
-  3. Core ideas are distinct concepts or strategies that are central to the solution.
-  4. It's ok if the solution talks about being comphrensive or holistic, as long as it has only one or two core ideas presented in the title.
-
-  2. Examples of solutions that are not viable and have more than two core ideas:
-  title: Strengthening Democratic Governance: Active Citizen Engagement, Institutional Accountability, and Digital Transformation
-
-  title: Revitalizing Democracies through Informed Citizenry, Integrity Enhancement, and Digital Engagement
-
-  title: Revitalizing Democracy: Emphasizing Civic Education, Streamlining Policy Frameworks, and Advancing Digital Governance
-
-  3. Examples of solutions that are viable and have two or less ideas.
-  title: Reinventing Democracy: Enhancing Citizen Participation & Institutional Transparency
-
-  title: Revitalizing Democratic Governance: Fostering Active Participation and Promoting Institutional Integrity through Digital Innovation
-
-  title: Rebuilding Confidence in Democracy with Enhanced Civic Engagement and Institutional Accountability
-
-  title: Empower Local Communities through Decentralization of Political Power
-
-  title: Boosting Democracy: Empower Citizens with Enhanced Democratic Education and Digitalized Transparent Governance
+  3. Core ideas are distinct concepts or strategies that are central to the solution component.
+  4. If a solution component includes multiple strategies or methods that serve to implement or facilitate a single core idea, do not consider these as separate core ideas. Instead, view them as parts of a comprehensive approach to implementing the core idea.
 `;
 
 await redis.set("st_mem:1:id", JSON.stringify(memory));

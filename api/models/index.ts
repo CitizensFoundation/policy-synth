@@ -1,35 +1,36 @@
-//import { InitUser } from "./user";
+import { Sequelize } from 'sequelize';
+import pg from 'pg';
+import safe from 'colors';
 
-const Sequelize = require("sequelize");
+const pgvector = require('pgvector/sequelize');
+pgvector.registerType(Sequelize);
 
-const env = process.env.NODE_ENV || "development";
-
-let sequelize;
-
-if (process.env.DATABASE_URL) {
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    },
-  });
-} else {
-  const config = require(`${__dirname}/../../config/config.json`)[env];
-  sequelize = new Sequelize(
-    config.database,
-    config.username,
-    config.password,
-    config
-  );
+const logQuery = (query: string, options: any) => {
+    console.log(safe.bgGreen(new Date().toLocaleString()));
+    console.log(safe.bgYellow(options.bind));
+    console.log(safe.bgBlue(query));
+    return options;
 }
 
-export const models = {
-  sequelize,
-  Sequelize,
-  //User: InitUser(sequelize),
-};
+const sequelize = new Sequelize(
+    process.env.DB_NAME!, // DB name
+    process.env.DB_USER!, // username
+    process.env.DB_PASS!, // password
+    {
+        host: process.env.DB_HOST,
+        port: parseInt(process.env.DB_PORT!, 5432),
+        dialect: 'postgres',
+        dialectModule: pg,
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        },
+        logging: process.env.NODE_ENV !== 'production' ? logQuery : false,
+    }
+);
 
-// Associations
-//...
+export const models = {
+  sequelize
+}

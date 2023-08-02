@@ -23,7 +23,7 @@ let html = `
   <!DOCTYPE html>
   <html>
   <head>
-      <title>Problem and Solutions</title>
+      <title>Problem and Solution Component</title>
       <style>
         .card {
           border: 1px solid #eee;
@@ -76,7 +76,7 @@ for (
     <div class="card">
       <h2>Sub Problem: ${subProblem.title} (${formatElo(subProblem.eloRating)})</h2>
       <p>${subProblem.description}</p>
-      <h3>Solutions:</h3>
+      <h3>Solution Components:</h3>
   `;
 
   for (let i = 0; i < solutions.length; i++) {

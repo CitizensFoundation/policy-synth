@@ -4,17 +4,18 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class ReapSolutionsProcessor extends BaseProcessor {
-  async renderReapPrompt(solutionsToFilter: IEngineSolutionForReapCheck[]) {
+  async renderReapPrompt(solutionsToFilter: IEngineSolutionForReapInputData[]) {
     const messages = [
       new SystemChatMessage(
         `
-        You are an expert in filtering out non-viable solutions to problems.
+        You are an expert in filtering out non-viable solution components to problems, if needed.
 
         Instructions:
-        1. You will be provided an array of solutions with an index and title in a JSON format: [ { index, title } ]
-        2. You will output a list of indexes of all the solutions you wish to filter out as a JSON Array with index numbers: []
-        2. Review the "Important Instructions" below for further instructions.
-
+        1. You will be provided an array of solution components in JSON format.
+        2. You will output a list of titles, exactly like the original, of the solutions you wish to filter out, as a JSON Array: [ { title } ]
+        3. Sometimes no solution components need to be filtered out.
+        4. If you do not need to filter out any solution components, return an empty JSON Array: []
+        5. Review the "Important Instructions" below for further instructions.
         ${
           this.memory.customInstructions.reapSolutions
             ? `
@@ -29,7 +30,7 @@ export class ReapSolutionsProcessor extends BaseProcessor {
       new HumanChatMessage(
         `${JSON.stringify(solutionsToFilter, null, 2)}
 
-        Your solutions to filter out in a JSON Array:
+        The solution components to filter out in a JSON Array:
         `
       ),
     ];
@@ -40,9 +41,11 @@ export class ReapSolutionsProcessor extends BaseProcessor {
     subProblemIndex: number,
     solutions: Array<IEngineSolution>
   ): Promise<void> {
-    this.logger.info(`Reaping solutions for subproblem ${subProblemIndex}`);
-    // Chunk solutions into arrays of 10
-    const chunkSize = 10;
+    this.logger.info(`Reaping solution components for subproblem ${subProblemIndex}`);
+
+    this.logger.info(`Initial population size: ${solutions.length}`);
+
+    const chunkSize = 4;
     const chunks = solutions.reduce(
       (
         resultArray: Array<Array<IEngineSolution>>,
@@ -59,34 +62,38 @@ export class ReapSolutionsProcessor extends BaseProcessor {
       []
     );
 
+
+
     this.logger.debug(`Chunks: ${chunks.length}`);
 
-    // Loop over each chunk
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      const solutionsToFilter: Array<IEngineSolutionForReapCheck> = chunk.map(
-        (solution, index) => ({
-          index: index + i * chunkSize,
+
+      const solutionsToFilter: IEngineSolutionForReapInputData[] = chunk.map(solution => {
+        return {
           title: solution.title,
-        })
-      );
+          description: solution.description
+        }
+      });
 
-      this.logger.debug(`Solutions going into LLM ${solutionsToFilter.length}`);
+      this.logger.debug(`Solution Components (${i+1}/${chunks.length}) going into LLM ${solutionsToFilter.length}`);
 
-      const reapedIndexes: Array<number> = await this.callLLM(
+      const reapedData: Array<IEngineSolutionForReapReturnData> = await this.callLLM(
         "evolve-reap-population",
         IEngineConstants.reapSolutionsModel,
         await this.renderReapPrompt(solutionsToFilter)
       );
 
-      for (let j = 0; j < chunk.length; j++) {
-        // If the LLM call returned the index of the solution, set the solution.reaped to true
-        if (reapedIndexes.includes(j + i * chunkSize)) {
+      for (let j = 0; j < solutionsToFilter.length; j++) {
+        if (reapedData.some(reapedItem => reapedItem.title === solutionsToFilter[j].title)) {
           chunk[j].reaped = true;
-          this.logger.info(`Reaped solution: ${chunk[j].title}`);
+          this.logger.info(`Reaped solution: ${solutionsToFilter[j].title}`);
         }
       }
     }
+
+    const afterSize = solutions.filter(solution => !solution.reaped).length;
+    this.logger.info(`Population size after reaping: ${afterSize}`);
   }
 
   async reapSolutions() {
@@ -105,17 +112,25 @@ export class ReapSolutionsProcessor extends BaseProcessor {
 
         await this.reapSolutionsForSubProblem(subProblemIndex, solutions);
 
+        // Delete reaped solutions after reaping
+        const viableSolutions = solutions.filter(solution => !solution.reaped);
+        this.memory.subProblems[subProblemIndex].solutions.populations[
+          this.lastPopulationIndex(subProblemIndex)
+        ] = viableSolutions;
+
+        this.logger.info(`Population size after deletion of reaped solutions: ${viableSolutions.length}`);
+
         await this.saveMemory();
       }
     );
 
-    // Wait for all subproblems to finish
     await Promise.all(subProblemsPromises);
+
     this.logger.info("Finished Reaping for all");
   }
 
   async process() {
-    this.logger.info("Reap Solutions Processor");
+    this.logger.info("Reap Solution Components Processor");
     super.process();
 
     this.chat = new ChatOpenAI({

@@ -8,13 +8,13 @@ export class GroupSolutionsProcessor extends BaseProcessor {
     const messages = [
       new SystemChatMessage(
         `
-        You are an expert in in grouping solutions containing exactly the same core ideas together.
+        You are an expert in in grouping solution components containing exactly the same core ideas together.
 
         Instructions:
-        1. You will receive an array of solutions, each having an index and title, formatted in JSON: [ { index, title } ]
-        2. You are to output a list of lists. Each sub-list should contain indexes and titles of solutions containing exactly the same core ideas: [ [ { index, title } ] ]
-        3. Solutions should only be grouped if they share exactly the same core ideas.
-        4. Never group the same solution in more than one group.
+        1. You will receive an array of solution components, each having an index and title, formatted in JSON: [ { index, title } ]
+        2. You are to output a list of lists. Each sub-list should contain indexes and titles of solution components containing exactly the same core ideas: [ [ { index, title } ] ]
+        3. Solution Components should only be grouped if they share exactly the same core ideas.
+        4. Never group the same solution component in more than one group.
 
         Think step by step.
                 `
@@ -41,7 +41,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
       })
     );
 
-    this.logger.debug(`Solutions going into LLM ${solutionsToGroup.length}`);
+    this.logger.debug(`Solution Components going into LLM ${solutionsToGroup.length}`);
 
     const groupedIndexes: Array<Array<IEngineSolutionForGroupCheck>> = await this.callLLM(
       "group-solutions",
@@ -50,7 +50,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
     );
 
     this.logger.debug(
-      `Solutions coming out of LLM ${JSON.stringify(groupedIndexes, null, 2)}`
+      `Solution Components coming out of LLM ${JSON.stringify(groupedIndexes, null, 2)}`
     );
 
     let groupIndex = 0;
@@ -141,7 +141,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
   }
 
   async process() {
-    this.logger.info("Group Solutions Processor");
+    this.logger.info("Group Solution Components Processor");
     super.process();
 
     this.chat = new ChatOpenAI({

@@ -9,39 +9,41 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         return JSON.stringify({
             title: solution.title,
             description: solution.description,
-            mainBenefitOfSolution: solution.mainBenefitOfSolution,
-            mainObstacleToSolutionAdoption: solution.mainObstacleToSolutionAdoption,
+            mainBenefitOfSolutionComponent: solution.mainBenefitOfSolutionComponent || solution.mainBenefitOfSolution,
+            mainObstacleToSolutionComponentAdoption: solution.mainObstacleToSolutionComponentAdoption || solution.mainObstacleToSolutionAdoption,
         }, null, 2);
     }
     renderRecombinationPrompt(parentA, parentB, subProblemIndex) {
         return [
             new SystemChatMessage(`
-        As an AI genetic algorithm expert, your task is to create a new solution from two parent solutions (Parent A and Parent B).
+        As an AI genetic algorithm expert, your task is to create a new solution component from two parent solution components: "Solution Component Parent A" and "Solution Component Parent B".
 
         Instructions:
-        1. Use one best attribute from "Parent A" and one best attribute from "Parent B" to create a new solution with one core idea. Be very creative here do not just take one idea from Parent A and one idea from Parent B, make something unique and innovative.
-        2. Aim to keep the solution simple and easily implementable.
-        3. Avoid overly complex combinations that would make the solution impractical or difficult to understand.
-        4. If the combined solution is too comprehensive or complicated, simplify the merge solution by removing all but one most core idea from it.
-        5. Do not refer to "the merged solution" in your output, the solution should be presented as a standalone solution.        ${this.memory.customInstructions.createSolutions
+        1. Use one best attribute from "Parent A" and one best attribute from "Parent B" to create a new solution component with one core idea. Be very creative here do not just take one idea from Parent A and one idea from Parent B, make something unique and innovative.
+        2. Aim to keep the solution component simple and easily turned into parts of larger policy proposals later.
+        3. Avoid overly complex combinations that would make the solution component impractical or difficult to understand.
+        4. If the combined solution has more than two unique core ideas remove all but two of the core ideas in the solution component, if the ideas are closely related then do not filter them out.
+        5. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
+        6. Core ideas are distinct concepts or strategies that are central to the solution component.
+        7. Do not refer to "the merged solution component" in your output, the solution component should be presented as a standalone solution component.        ${this.memory.customInstructions.createSolutions
                 ? `
           Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
           `
                 : ""}
 
-        Always output your merged solution in the following JSON format: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not add any new JSON properties.
+        Always output your merged solution component in the following JSON format: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not add any new JSON properties.
         Think step by step.
         `),
             new HumanChatMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
-        Parent A:
+        Solution Component Parent A:
         ${this.renderSolution(parentA)}
 
-        Parent B:
+        Solution Component Parent B:
         ${this.renderSolution(parentB)}
 
-        Generate and output JSON for the merged solution below:
+        Generate and output JSON for the merged solution component below:
         `),
         ];
     }
@@ -63,28 +65,29 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.logger.debug(`Mutate rate: ${mutateRate}`);
         return [
             new SystemChatMessage(`
-        As an AI expert specializing in genetic algorithms, your task is to mutate the following solution.
+        As an AI expert specializing in genetic algorithms, your task is to mutate the following solution component.
 
         Instructions:
         1. Implement mutations corresponding to a ${mutateRate} mutation rate.
         2. Mutation can involve introducing new attributes, modifying existing ones, or removing less important ones.
-        3. Ensure the mutation is creative, meaningful, and continues to offer a viable solution to the presented problem.
-        4. Avoid referring to your output as "the merged solution" or "the mutated solution". Instead, present it as a standalone solution.        ${this.memory.customInstructions.createSolutions
+        3. Ensure the mutation is creative, meaningful, and continues to offer a viable solution component to part of the presented problem.
+        4. Avoid referring to your output as "the merged solution component" or "the mutated solution component". Instead, present it as a standalone solution component.
+        ${this.memory.customInstructions.createSolutions
                 ? `
           Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
           `
                 : ""}
 
-        Always format your mutated solution in the following JSON structure: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not introduce any new JSON properties.
+        Always format your mutated solution component in the following JSON structure: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not introduce any new JSON properties.
         Think step by step.
         `),
             new HumanChatMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
-        Solution to mutate:
+        Solution component to mutate:
         ${this.renderSolution(individual)}
 
-        Generate and output JSON for the mutated solution below:
+        Generate and output JSON for the mutated solution component below:
         `),
         ];
     }
@@ -248,6 +251,12 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.logger.debug(`Elite count: ${eliteCount}`);
         // Add Elities
         for (let i = 0; i < eliteCount; i++) {
+            if (previousPopulation[i].mainBenefitOfSolution) {
+                previousPopulation[i].mainBenefitOfSolutionComponent = previousPopulation[i].mainBenefitOfSolution;
+            }
+            if (previousPopulation[i].mainObstacleToSolutionAdoption) {
+                previousPopulation[i].mainObstacleToSolutionComponentAdoption = previousPopulation[i].mainObstacleToSolutionAdoption;
+            }
             newPopulation.push(previousPopulation[i]);
             this.logger.debug(`Elite: ${previousPopulation[i].title}`);
         }

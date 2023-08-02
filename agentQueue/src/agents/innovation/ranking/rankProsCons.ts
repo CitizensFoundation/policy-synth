@@ -37,18 +37,18 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
         `
         As an AI expert, your role involves analyzing ${
           additionalData.prosOrCons
-        } associated with solutions to problems to decide on which ${
+        } associated with solution components to problems and decide on which ${
           additionalData!.prosOrCons
         } is more important.
 
         Instructions:
 
-        1. You will be presented with a problem, a solution, and two ${
+        1. You will be presented with a problem, a solution component, and two ${
           additionalData.prosOrCons
         }. These will be labeled as "${proConSingle} One" and "${proConSingle} Two".
         2. Analyze and compare the ${
           additionalData.prosOrCons
-        } based on their relevance and importance to the solution and choose which is more important and output your decision as either "One", "Two" or "Neither".
+        } based on their relevance and importance to the solution component and choose which is more important and output your decision as either "One", "Two" or "Neither".
         3. Never explain your reasoning.
         `
       ),
@@ -58,7 +58,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
 
         ${additionalData.solution}
 
-        Which ${proConSingle} is more important regarding the solution above? Output your decision as either "One", "Two" or "Neither".
+        Which ${proConSingle} is more important regarding the solution component above? Output your decision as either "One", "Two" or "Neither".
 
         ${proConSingle} One: ${prosOrConsOne}
 
@@ -191,7 +191,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
 
   renderSolution(solution: IEngineSolution) {
     return `
-      Solution:
+      Solution Component:
       ${solution.title}
       ${solution.description}
     `;

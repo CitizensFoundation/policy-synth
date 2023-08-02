@@ -16,10 +16,10 @@ export class RateSolutionsProcessor extends BaseProcessor {
     const messages = [
       new SystemChatMessage(
         `
-         You are an expert in rating solutions to problems on multiple attributes.
+         You are an expert in rating solution components to problems on multiple attributes.
 
          Instructions:
-         1. Rate how well the solution does, on a scale from 1-100, on the attributes provided in the JSON format below
+         1. Rate how well the solution component does, on a scale from 1-100, on the attributes provided in the JSON format below
          2. Consider the best pro and con while rating.
 
          Always output your ratings in the following JSON format:
@@ -32,15 +32,15 @@ export class RateSolutionsProcessor extends BaseProcessor {
         `
         ${this.renderSubProblem(subProblemIndex, true)}
 
-        Solution to rate:
+        Solution Component to rate:
 
         Title: ${solution.title}
 
-        Description: ${solution.mainBenefitOfSolution}
+        Description: ${solution.description}
 
-        Main benefit: ${solution.mainBenefitOfSolution}
+        Main benefit: ${solution.mainBenefitOfSolutionComponent}
 
-        Main obstacle: ${solution.mainObstacleToSolutionAdoption}
+        Main obstacle: ${solution.mainObstacleToSolutionComponentAdoption}
 
         Best pros:
         ${this.getProCons(solution.pros as IEngineProCon[]).slice(
@@ -115,7 +115,7 @@ export class RateSolutionsProcessor extends BaseProcessor {
   }
 
   async process() {
-    this.logger.info("Rate Solutions Processor");
+    this.logger.info("Rate Solution Components Processor");
     super.process();
 
     this.chat = new ChatOpenAI({

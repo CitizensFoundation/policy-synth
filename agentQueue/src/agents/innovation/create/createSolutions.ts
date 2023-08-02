@@ -22,21 +22,21 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     const messages = [
       new SystemChatMessage(
         `
-        As an expert, your task is to refine the innovative solutions proposed for complex problems and associated sub-problems.
+        As an expert, your task is to refine innovative solution components proposed for problems and associated sub-problems.
 
         Instructions:
-        1. Review and refine the solutions previously generated, do not create new solutions.
-        2. Solutions should be actionable, innovative and equitable.
-        3. Limit solution descriptions to a maximum of six sentences.
-        4. Do not replicate solutions listed under 'Already Created Solutions'.
-        5. Refer to the relevant entities in your solutions, if mentioned.
+        1. Review and refine the solution components previously generated, do not create new solution components.
+        2. Solution Components should be actionable, innovative and equitable.
+        3. Limit solution component descriptions to a maximum of six sentences.
+        4. Do not replicate solution components listed under 'Already Created Solution Components'.
+        5. Refer to the relevant entities in your solution components, if mentioned.
         6. Ensure your output is not in markdown format.
         ${this.memory.customInstructions.createSolutions ? `
           Important Instructions: ${this.memory.customInstructions.createSolutions}
 
         ` : '' }
 
-        Always output your solutions in the following JSON format: [ { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption } ].
+        Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
         Think step by step.
         `
       ),
@@ -47,16 +47,16 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         ${
           alreadyCreatedSolutions
             ? `
-          Already Created Solutions:
+          Already Created Solution Components:
           ${alreadyCreatedSolutions}
         `
             : ``
         }
 
-        Previous Solutions JSON Output to Review and Refine:
+        Previous Solution Components JSON Output to Review and Refine:
         ${JSON.stringify(results, null, 2)}
 
-        Refined Solutions JSON Output:
+        Refined Solution Components JSON Output:
        `
       ),
     ];
@@ -67,26 +67,26 @@ export class CreateSolutionsProcessor extends BaseProcessor {
   renderCreateSystemMessage() {
     return new SystemChatMessage(
       `
-      As an expert, you are tasked with creating innovative solutions for sub problems, considering the affected entities.
+      As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities.
 
       Instructions:
-      1. Solutions should be actionable, innovative and equitable.
-      2. Solutions should be specific, not just improving this or enhancing that.
-      3. Generate four solutions, presented in JSON format.
-      4. Each solution should include a short title, description, mainBenefitOfSolution and mainObstacleToSolutionAdoption.
-      5. Limit the description of each solution to six sentences maximum.
-      6. Never re-create solutions listed under 'Already Created Solutions'.
-      7. The General, Scientific, Open Data and News Contexts should always inform and inspire your solutions.
-      8. The General, Scientific, Open Data and News Contexts sometimes include potential solutions that should inspire your solutions directly.
-      9. Be creative in using the Contexts as inspiration for your solutions.
-      10. Do not refer to the Contexts in your solutions, as the contexts won't be visible to the user.
+      1. Solution Components should be actionable, innovative and equitable.
+      2. Solution Components should be specific, not just improving this or enhancing that.
+      3. Generate four solution components, presented in JSON format.
+      4. Each solution component should include a short title, description, mainBenefitOfSolutionComponent and mainObstacleToSolutionComponentAdoption.
+      5. Limit the description of each solution component to six sentences maximum.
+      6. Never re-create solution components listed under 'Already Created Solution Components'.
+      7. The General, Scientific, Open Data and News Contexts should always inform and inspire your solution components.
+      8. The General, Scientific, Open Data and News Contexts sometimes include potential solution components alreay that should inspire your solution components directly.
+      9. Be creative in using the Contexts as inspiration for your solution components.
+      10. Do not refer to the Contexts in your solution components, as the contexts won't be visible to the user.
       11. Do not use markdown format in your output.
       ${this.memory.customInstructions.createSolutions ? `
         Important Instructions (override the previous instructions if needed):${this.memory.customInstructions.createSolutions}
 
     ` : '' }
 
-      Always output your solutions in the following JSON format: [ { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption } ].
+      Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
       Think step by step.
       `
     );
@@ -115,13 +115,13 @@ export class CreateSolutionsProcessor extends BaseProcessor {
             ${
               alreadyCreatedSolutions
                 ? `
-              Already created solutions:
+              Already created solution components:
               ${alreadyCreatedSolutions}
             `
                 : ``
             }
 
-            Solutions JSON Output:
+            Solution Components JSON Output:
            `
       ),
     ];
@@ -147,7 +147,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         `
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
-        Contexts for potential solutions:
+        Contexts for new solution components:
         General Context from search:
         ${generalTextContext}
 
@@ -163,7 +163,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         ${
           alreadyCreatedSolutions
             ? `
-          Previously Created Solutions:
+          Previously Created Solution Components:
           ${alreadyCreatedSolutions}
         `
             : ``
@@ -490,7 +490,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     let searchResults = `
         ${
           solutionIdentifiedInTextContext
-            ? `Potential solution: ${solutionIdentifiedInTextContext}
+            ? `Potential solution component: ${solutionIdentifiedInTextContext}
 
         `
             : ""
@@ -621,7 +621,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         );
 
         this.logger.debug(
-          `New Solutions: ${JSON.stringify(newSolutions, null, 2)}`
+          `New Solution Components: ${JSON.stringify(newSolutions, null, 2)}`
         );
 
         solutions = solutions.concat(newSolutions);
@@ -643,7 +643,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
   }
 
   async process() {
-    this.logger.info("Create Seed Solutions Processor");
+    this.logger.info("Create Seed Solution Components Processor");
     super.process();
 
     this.chat = new ChatOpenAI({

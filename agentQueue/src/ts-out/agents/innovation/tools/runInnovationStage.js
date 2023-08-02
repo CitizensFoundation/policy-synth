@@ -34,14 +34,14 @@ if (setNewStage) {
     //memory.currentStage = "rank-solutions";
     //Repeat for each GA generation
     //memory.currentStage = "evolve-create-population";
-    //memory.currentStage = "evolve-reap-population";
+    memory.currentStage = "evolve-reap-population";
     //memory.currentStage = "create-pros-cons";
     //memory.currentStage = "rank-pros-cons";
     //memory.currentStage = "rate-solutions";
     //memory.currentStage = "rank-solutions";
     //memory.currentStage = "group-solutions";
     //memory.currentStage = "create-solution-images";
-    memory.currentStage = "topic-map-solutions";
+    //memory.currentStage = "topic-map-solutions";
     await redis.set("st_mem:1:id", JSON.stringify(memory));
 }
 if (addJob || setNewStage) {
@@ -61,7 +61,7 @@ if (addJob || setNewStage) {
         `,
             createSolutions: `
           1. Never create solutions in the form of frameworks or holistic approaches
-          2. Solutions should include only one core idea.
+          2. Solution Components should include only one core idea.
           3. The solution title should indicate the benefits or results of implementing the solution.
           4. Remember that the main facilitator for implementation will be civil society working with governments.
           5. Frame solutions with the intention of convincing politicians and governments to put them into action.

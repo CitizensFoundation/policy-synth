@@ -140,8 +140,10 @@ interface IEngineSolution {
     totalCount?: number;
   };
   isFirstInGroup?: boolean;
-  mainBenefitOfSolution: string;
-  mainObstacleToSolutionAdoption: string;
+  mainBenefitOfSolutionComponent: string;
+  mainObstacleToSolutionComponentAdoption: string;
+  mainBenefitOfSolution?: string;
+  mainObstacleToSolutionAdoption?: string;
   affectedEntities?: IEngineSolutionAffectedEntity[];
   pros?: string[] | IEngineProCon[];
   cons?: string[] | IEngineProCon[];
@@ -321,11 +323,17 @@ interface IEngineWebPageGraphQlResults {
   };
 }
 
-interface IEngineSolutionForReapCheck {
-  index: number;
+interface IEngineSolutionForReapInputData {
+  title: string;
+  description: string;
+}
+
+interface IEngineSolutionForReapReturnData {
   title: string;
 }
 
-interface IEngineSolutionForGroupCheck extends IEngineSolutionForReapCheck {}
+interface IEngineSolutionForGroupCheck extends IEngineSolutionForReapCheck {
+  index: number;
+}
 
 type IEngineMutationRates = "low" | "medium" | "high";

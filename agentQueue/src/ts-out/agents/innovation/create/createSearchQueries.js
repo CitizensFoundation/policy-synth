@@ -14,7 +14,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
       5.3. OpenData
       5.4. News
       6. Create 10 search queries for each type.
-      7. All search queries should be solution focused, let's find the solutions for those entities.
+      7. All search queries should be solution focused, let's find the solution components for those entities.
       8. Never output in markdown format.
       9. Provide an output in the following JSON format:
         { general: [ queries ], scientific: [ queries ], openData: [ queries ], news: [ queries ] }.
@@ -24,7 +24,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
     async renderProblemPrompt(problem) {
         return [
             new SystemChatMessage(`
-        You are an expert trained to analyse complex problem statements and create search queries to find solutions to those problems.
+        You are an expert trained to analyse complex problem statements and create search queries to find solution components to those problems.
 
         Adhere to the following guidelines:
         1. You generate high quality search queries based on the problem statement.
@@ -41,7 +41,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
     async renderEntityPrompt(problem, entity) {
         return [
             new SystemChatMessage(`
-        You are an expert trained to analyse complex problem statements for affected entities and create search queries to find solutions for the affected entity.
+        You are an expert trained to analyse complex problem statements for affected entities and create search queries to find solution components for the affected entity.
 
         Instructions:
         1. You generate high quality search queries based on the affected entity.
