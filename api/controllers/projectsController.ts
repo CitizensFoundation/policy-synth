@@ -37,6 +37,7 @@ export class ProjectsController {
 
   public async intializeRoutes() {
     this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
+    this.router.get(this.path + "/:id", this.getProject);
     await redisClient.connect();
   }
 
