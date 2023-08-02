@@ -50,12 +50,6 @@ class ProjectsController {
             }
         }
         const filteredRedisCacheKey = `st_mem_filtered_v4:${req.params.id}:id`;
-        console.log(`filteredRedisCacheKey: ${filteredRedisCacheKey}`);
-        console.log(`req.params.id: ${req.params.id}`);
-        console.log(`req.params.forceBackupReloadId: ${req.params.forceBackupReloadId}`);
-        console.log(`process.env.NODE_ENV: ${process.env.NODE_ENV}`);
-        console.log(`process.env[backupMemoryUrlKey]: ${process.env[backupMemoryUrlKey]}`);
-        console.log(`req.params.forceBackupReloadId: ${req.params.forceBackupReloadId}`);
         if (process.env.NODE_ENV === "production" &&
             !req.params.forceBackupReloadId) {
             try {
