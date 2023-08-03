@@ -1,7 +1,7 @@
 import fs from "fs";
 import process from "process";
 import path from "path";
-import { IEngineConstants } from "../../../constants.js";
+import { IEngineConstants } from "../../../../constants.js";
 
 let filePath = process.argv[2] || "currentMemory.json";
 

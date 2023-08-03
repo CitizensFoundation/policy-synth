@@ -14,10 +14,10 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             3. Use your extensive knowledge to enrich the details about the sub-problems but never introduce solutions.
             4. Elaborate on the impact of these sub-problems, if necessary, to provide better context.
             5. Never provide solutions; your focus should be on outlining the problems, we'll find the solutions later.
-            6. Avoid suggesting tasks or actions; your task is to explain the problems.
-            7. Do not provide output in markdown format.
-            8. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            9. Adopt a systematic and detailed approach for this task and thinking step-by-step manner.`),
+            6. Do not suggest tasks or actions; your task is to explain the problems.
+            8. Do not provide output in markdown format.
+            9. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
+            10. Think step by step.`),
             new HumanChatMessage(`
            Problem Statement:
            "${this.memory.problemStatement.description}"
@@ -40,12 +40,11 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             1. Break the given problem statement into 21 sub problems and present the sub problems as a JSON array.
             2. Output a short title, two or three sentence description and two or three sentence explanation of why the sub-problem is important.
             3. Never provide solutions; your focus should be on outlining the problems, we'll find the solutions later.
-            4. Output a short title, two or three sentence description and two or three sentence explanation of why the sub-problem is important.
-            5. Avoid suggesting tasks or actions; your task is to explain the problems.
-            6. Never output in markdown format.
-            7. Always output 21 sub problems.
-            8. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            9. Approach this task in a systematic and detailed manner, thinking step-by-step.
+            4. Do not suggest tasks or actions; your task is to explain the problems.
+            5. Never output in markdown format.
+            6. Always output 21 sub problems.
+            7. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
+            8. Think step by step.
             `),
             new HumanChatMessage(`
            Problem Statement:
@@ -63,6 +62,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
         }
         this.memory.subProblems = results;
         await this.saveMemory();
+        this.logger.info("Sub Problems Created");
     }
     async process() {
         this.logger.info("Sub Problems Processor");

@@ -26,7 +26,16 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
         1. You will be presented with a problem statement and two associated sub-problems. These will be marked as "Sub Problem One" and "Sub Problem Two".
         2. Analyse, compare, and rank these two sub-problems in relation to the main problem statement to determine which is more relevant and important.
         3. Output your decision as either "One", "Two" or "Neither". An explanation is not required.
-        4. Ensure you take a methodical and step-by-step approach.
+
+        ${
+          this.memory.customInstructions.rankSubProblems
+            ? `
+          Important Instructions: ${this.memory.customInstructions.rankSubProblems}
+          `
+            : ""
+        }
+
+        Think step by step.
         `
       ),
       new HumanChatMessage(

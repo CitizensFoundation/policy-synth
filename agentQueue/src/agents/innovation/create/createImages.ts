@@ -366,7 +366,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 subProblemIndex
               )}_${solutionIndex}.png`
             );
-            const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(
+            const s3ImagePath = `projects/${this.memory.groupId}/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(
               subProblemIndex
             )}/${solutionIndex}_v3.png`;
 

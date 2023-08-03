@@ -263,7 +263,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                     this.logger.debug(`Image Prompt: ${imagePrompt}`);
                     let newImageUrl;
                     const imageFilePath = path.join("/tmp", `${subProblemIndex}_${this.lastPopulationIndex(subProblemIndex)}_${solutionIndex}.png`);
-                    const s3ImagePath = `projects/1/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(subProblemIndex)}/${solutionIndex}_v3.png`;
+                    const s3ImagePath = `projects/${this.memory.groupId}/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(subProblemIndex)}/${solutionIndex}_v3.png`;
                     let gotImage;
                     if (process.env.STABILITY_API_KEY) {
                         gotImage = await this.downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution);

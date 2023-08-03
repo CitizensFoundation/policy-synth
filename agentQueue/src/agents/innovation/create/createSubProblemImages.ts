@@ -24,9 +24,10 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one or two sentences.
         4. Do not include quotes in your prompt.
-        5. Follow the Dalle-2 Prompt Guide in your work.
-        5. Output only your Dalle-2 prompt, nothing else.
-        6. Think step by step.
+        5. Never output prompts involving chess or chess pieces.
+        6. Follow the Dalle-2 Prompt Guide in your work.
+        7. Output only your Dalle-2 prompt, nothing else.
+        8. Think step by step.
 
         Dalle-2 Prompt Guide:
         For successful Dall-E 2 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
@@ -54,47 +55,49 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
     for (let s = 0; s < this.memory.subProblems.length; s++) {
       this.currentSubProblemIndex = s;
 
-      let imagePrompt = (await this.callLLM(
-        "create-sub-problem-images",
-        IEngineConstants.createSolutionImagesModel,
-        await this.renderCreatePrompt(s),
-        false
-      )) as string;
+      if (!this.memory.subProblems[s].imageUrl) {
+        let imagePrompt = (await this.callLLM(
+          "create-sub-problem-images",
+          IEngineConstants.createSolutionImagesModel,
+          await this.renderCreatePrompt(s),
+          false
+        )) as string;
 
-      this.memory.subProblems[s].imagePrompt = imagePrompt;
+        this.memory.subProblems[s].imagePrompt = imagePrompt;
 
-      this.logger.debug(`subProblemIndex ${s}`);
+        this.logger.debug(`subProblemIndex ${s}`);
 
-      this.logger.debug(`Image Prompt: ${imagePrompt}`);
+        this.logger.debug(`Image Prompt: ${imagePrompt}`);
 
-      // Download image and save it to /tmp folder
-      const imageFilePath = path.join("/tmp", `subProblem_${s}_.png`);
+        // Download image and save it to /tmp folder
+        const imageFilePath = path.join("/tmp", `subProblem_${s}_.png`);
 
-      if (process.env.STABILITY_API_KEY) {
-        await this.downloadStabilityImage(s, imagePrompt, imageFilePath);
-      } else {
-        const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
-        await this.downloadImage(imageUrl, imageFilePath);
+        if (process.env.STABILITY_API_KEY) {
+          await this.downloadStabilityImage(s, imagePrompt, imageFilePath);
+        } else {
+          const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
+          await this.downloadImage(imageUrl, imageFilePath);
+        }
+
+        this.logger.debug(
+          fs.existsSync(imageFilePath)
+            ? "File downloaded successfully."
+            : "File download failed."
+        );
+
+        const s3ImagePath = `projects/${this.memory.groupId}/subProblems/images/${s}_v22.png`;
+        await this.uploadImageToS3(
+          process.env.S3_BUCKET_NAME!,
+          imageFilePath,
+          s3ImagePath
+        );
+
+        const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
+
+        this.memory.subProblems[s].imageUrl = newImageUrl;
+
+        this.logger.debug(`New Image URL: ${newImageUrl}`);
       }
-
-      this.logger.debug(
-        fs.existsSync(imageFilePath)
-          ? "File downloaded successfully."
-          : "File download failed."
-      );
-
-      const s3ImagePath = `projects/1/subProblems/images/${s}_v4.png`;
-      await this.uploadImageToS3(
-        process.env.S3_BUCKET_NAME!,
-        imageFilePath,
-        s3ImagePath
-      );
-
-      const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
-
-      this.memory.subProblems[s].imageUrl = newImageUrl;
-
-      this.logger.debug(`New Image URL: ${newImageUrl}`);
 
       await this.saveMemory();
     }

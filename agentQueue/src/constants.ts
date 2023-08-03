@@ -13,7 +13,7 @@ const gpt35kOutTokenPrice = 0.002 / 1000;
 export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
-    temperature: 0.8,
+    temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
