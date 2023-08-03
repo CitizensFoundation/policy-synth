@@ -16,8 +16,9 @@ export class BaseAgent extends BaseWorker {
                 this.memory = JSON.parse(memoryData);
             }
             else {
-                await this.initializeMemory(job);
-                this.logger.debug(`Initialized memory for ${JSON.stringify(jobData)}`);
+                console.error("No project data found, user createNewCustomProject script in tools");
+                //await this.initializeMemory(job);
+                //this.logger.debug(`Initialized memory for ${JSON.stringify(jobData)}`);
             }
         }
         catch (error) {

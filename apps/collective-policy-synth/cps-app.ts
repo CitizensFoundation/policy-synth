@@ -219,6 +219,7 @@ export class CpsApp extends YpBaseElement {
         this.forceGetBackupForProject = urlParts[projectIndex + 2];
       }
     }
+
     this.boot();
   }
 

@@ -1,4 +1,4 @@
-import { IEngineConstants } from "../../../constants.js";
+import { IEngineConstants } from "../../../../constants.js";
 import fs from "fs";
 import process from "process";
 import path from "path";

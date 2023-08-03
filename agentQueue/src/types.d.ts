@@ -287,6 +287,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     secondaryColors?: string[];
   };
   subProblems: IEngineSubProblem[];
+  subProblemClientColors?: string[];
   currentStageData?:
     | IEEngineSearchResultData
     | IEEngineSearchResultPage

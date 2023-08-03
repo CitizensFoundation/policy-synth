@@ -12,10 +12,13 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
     KFactors = {};
     eloRatings = {};
     setupRankingPrompts(subProblemIndex, allItems, maxPrompts = undefined) {
+        this.logger.info(`Item count for sub-problem ${subProblemIndex}: ${allItems.length}`);
         this.allItems[subProblemIndex] = allItems;
         this.maxNumberOfPrompts =
             maxPrompts ||
-                Math.max(25, (allItems.length * IEngineConstants.maxPercentOfEloMatched));
+                Math.max(250, Math.floor(((allItems.length * (allItems.length - 1)) / 2) *
+                    IEngineConstants.maxPercentOfEloMatched));
+        this.logger.debug(`Max number of prompts: ${this.maxNumberOfPrompts}`);
         this.prompts[subProblemIndex] = [];
         this.numComparisons[subProblemIndex] = {};
         this.KFactors[subProblemIndex] = {};
