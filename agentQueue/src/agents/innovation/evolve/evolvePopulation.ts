@@ -5,7 +5,6 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
 
-
 //TODO: Pentalty for similar ideas in the ranking somehow
 //TODO: Track the evolution of the population with a log of parents and mutations, family tree
 export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
@@ -14,8 +13,12 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       {
         title: solution.title,
         description: solution.description,
-        mainBenefitOfSolutionComponent: solution.mainBenefitOfSolutionComponent || solution.mainBenefitOfSolution,
-        mainObstacleToSolutionComponentAdoption: solution.mainObstacleToSolutionComponentAdoption || solution.mainObstacleToSolutionAdoption,
+        mainBenefitOfSolutionComponent:
+          solution.mainBenefitOfSolutionComponent ||
+          solution.mainBenefitOfSolution,
+        mainObstacleToSolutionComponentAdoption:
+          solution.mainObstacleToSolutionComponentAdoption ||
+          solution.mainObstacleToSolutionAdoption,
       },
       null,
       2
@@ -27,7 +30,6 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     parentB: IEngineSolution,
     subProblemIndex: number
   ) {
-
     return [
       new SystemChatMessage(
         `
@@ -41,7 +43,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         5. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
         6. Core ideas are distinct concepts or strategies that are central to the solution component.
         7. Do not refer to "the merged solution component" in your output, the solution component should be presented as a standalone solution component.        ${
-        this.memory.customInstructions.createSolutions
+          this.memory.customInstructions.createSolutions
             ? `
           Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
           `
@@ -101,7 +103,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         3. Ensure the mutation is creative, meaningful, and continues to offer a viable solution component to part of the presented problem.
         4. Avoid referring to your output as "the merged solution component" or "the mutated solution component". Instead, present it as a standalone solution component.
         ${
-        this.memory.customInstructions.createSolutions
+          this.memory.customInstructions.createSolutions
             ? `
           Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
           `
@@ -393,6 +395,95 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     newPopulation.push(...newSolutions);
   }
 
+  addUniqueSolutionAsElite(
+    previousPopulation: IEngineSolution[],
+    newPopulation: IEngineSolution[],
+    usedSolutionTitles: Set<string>
+  ): void {
+    this.logger.debug(`Adding unique solution as elite`);
+
+    const groups = new Map<number, Array<IEngineSolution>>();
+    for (let solution of previousPopulation) {
+      if (solution.similarityGroup) {
+        const groupId = solution.similarityGroup.index;
+        if (!groups.has(groupId)) {
+          groups.set(groupId, []);
+        }
+        groups.get(groupId)!.push(solution);
+      }
+    }
+
+    for (let [groupId, groupSolutions] of groups) {
+      const bestSolutionInGroup = groupSolutions[0];
+      if (!usedSolutionTitles.has(bestSolutionInGroup.title)) {
+        usedSolutionTitles.add(bestSolutionInGroup.title);
+        newPopulation.push(bestSolutionInGroup);
+        this.logger.debug(`Added solution with unique group ID: ${bestSolutionInGroup.similarityGroup?.index}`);
+      }
+    }
+  }
+
+
+
+  addElites(
+    previousPopulation: IEngineSolution[],
+    newPopulation: IEngineSolution[],
+    usedSolutionTitles: Set<string>
+  ): void {
+    this.logger.debug(`Adding elites`);
+    const eliteCount = Math.floor(
+      previousPopulation.length * IEngineConstants.evolution.keepElitePercent
+    );
+
+    this.logger.debug(`Elite count: ${eliteCount}`);
+
+    for (let i = 0; i < eliteCount; i++) {
+      if (!usedSolutionTitles.has(previousPopulation[i].title)) {
+        usedSolutionTitles.add(previousPopulation[i].title);
+        newPopulation.push(previousPopulation[i]);
+        this.logger.debug(`Added elite: ${previousPopulation[i].title}`);
+      }
+    }
+  }
+
+  pruneTopicClusters(
+    solutions: Array<IEngineSolution>
+  ): Array<IEngineSolution> {
+    this.logger.info(`Pruning topic clusters ${solutions.length} solutions}`);
+
+    // Group solutions by similarity group
+    const groups = new Map<number, Array<IEngineSolution>>();
+    for (const solution of solutions) {
+      if (solution.similarityGroup) {
+        const groupIndex = solution.similarityGroup.index;
+        if (!groups.has(groupIndex)) {
+          groups.set(groupIndex, []);
+        }
+        groups.get(groupIndex)!.push(solution);
+      }
+    }
+
+    // Prune each group and store in a set for faster lookup
+    const prunedSolutionSet = new Set<IEngineSolution>();
+    for (const group of groups.values()) {
+      const prunedGroup = group.slice(
+        0,
+        IEngineConstants.topItemsToKeepForTopicClusterPruning
+      );
+      for (const solution of prunedGroup) {
+        prunedSolutionSet.add(solution);
+      }
+    }
+
+    // Build final list of solutions in original order
+    const outSolutions = solutions.filter(
+      (solution) => !solution.similarityGroup || prunedSolutionSet.has(solution)
+    );
+
+    this.logger.info(`Population size after pruning: ${outSolutions.length}`);
+    return outSolutions;
+  }
+
   async evolveSubProblem(subProblemIndex: number) {
     this.logger.info(`Evolve population for sub problem ${subProblemIndex}`);
     this.logger.info(
@@ -401,30 +492,30 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
 
     let previousPopulation = this.getPreviousPopulation(subProblemIndex);
 
-    this.logger.debug(`Previous populations size: ${previousPopulation.length}`)
-
-    const newPopulation = [];
-
-    const eliteCount = Math.floor(
-      previousPopulation.length * IEngineConstants.evolution.keepElitePercent
+    this.logger.debug(
+      `Previous populations size: ${previousPopulation.length}`
     );
 
-    this.logger.debug(`Elite count: ${eliteCount}`);
+    const newPopulation: IEngineSolution[] = [];
 
-    // Add Elities
-    for (let i = 0; i < eliteCount; i++) {
-      if (previousPopulation[i].mainBenefitOfSolution) {
-        previousPopulation[i].mainBenefitOfSolutionComponent = previousPopulation[i].mainBenefitOfSolution!;
-      }
+    const usedGroupIds = new Set<number>();
+    const usedSolutionTitles = new Set<string>();
 
-      if (previousPopulation[i].mainObstacleToSolutionAdoption) {
-        previousPopulation[i].mainObstacleToSolutionComponentAdoption = previousPopulation[i].mainObstacleToSolutionAdoption!;
-      }
-      newPopulation.push(previousPopulation[i]);
-      this.logger.debug(`Elite: ${previousPopulation[i].title}`);
-    }
+    this.addUniqueSolutionAsElite(
+      previousPopulation,
+      newPopulation,
+      usedSolutionTitles
+    );
 
-    await this.addRandomMutation(newPopulation, previousPopulation, subProblemIndex);
+    this.addElites(previousPopulation, newPopulation, usedSolutionTitles);
+
+    previousPopulation = this.pruneTopicClusters(previousPopulation);
+
+    await this.addRandomMutation(
+      newPopulation,
+      previousPopulation,
+      subProblemIndex
+    );
 
     await this.addRandomImmigration(newPopulation, subProblemIndex);
 

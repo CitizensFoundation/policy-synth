@@ -18,7 +18,7 @@ if (projectId) {
   };
 
   const stages = [
-    //"evolve-create-population",
+    "evolve-create-population",
     "evolve-reap-population",
     "evolve-reap-population",
     "create-pros-cons",
@@ -81,4 +81,3 @@ if (projectId) {
   console.log("Usage: yarn runEvolutionStep <projectId>");
   process.exit(0);
 }
-

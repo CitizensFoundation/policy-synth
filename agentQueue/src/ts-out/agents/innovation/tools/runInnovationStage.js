@@ -43,8 +43,8 @@ if (projectId) {
         //memory.currentStage = "rate-solutions";
         //memory.currentStage = "rank-solutions";
         //memory.currentStage = "group-solutions";
-        //memory.currentStage = "create-solution-images";
-        memory.currentStage = "topic-map-solutions";
+        memory.currentStage = "create-solution-images";
+        //memory.currentStage = "topic-map-solutions";
         await redis.set(redisKey, JSON.stringify(memory));
     }
     if (addJob || setNewStage) {
