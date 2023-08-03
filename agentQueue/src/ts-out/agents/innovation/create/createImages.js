@@ -96,12 +96,24 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 this.logger.warn(error.stack);
                 retryCount++;
                 //this.logger.warn(error);
-                const sleepingFor = 5000 + retryCount * 10000;
+                let sleepingFor;
+                if (error.message && error.message.indexOf("400") > -1) {
+                    if (retryCount > 3) {
+                        imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution, "8. Make it very simple and colorful with no complicated ideas or details."), false));
+                        this.logger.debug(`New (altered) Image Prompt: ${imagePrompt}`);
+                        sleepingFor = 2500 + retryCount * 1500;
+                    }
+                    else {
+                        imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                        this.logger.debug(`New Image Prompt: ${imagePrompt}`);
+                    }
+                    sleepingFor = 2500 + retryCount * 1000;
+                }
+                else {
+                    sleepingFor = 5000 + retryCount * 10000;
+                }
                 this.logger.debug(`Sleeping for ${sleepingFor} milliseconds`);
                 await new Promise((resolve) => setTimeout(resolve, sleepingFor));
-                if (retryCount > 2 && solution) {
-                    imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
-                }
             }
         }
         if (!response) {
@@ -153,7 +165,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             return this.subProblemColors[subProblemIndex];
         }
     }
-    async renderCreatePrompt(subProblemIndex, solution) {
+    async renderCreatePrompt(subProblemIndex, solution, injectText) {
         const messages = [
             new SystemChatMessage(`
         You are an expert in generating Dall-E 2 prompts from titles and descriptions of solution components.
@@ -164,8 +176,9 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         3. Keep the prompt length to maximum of one to two sentences, never more.
         4. Do not include quotes in your prompt.
         5. Follow the Dall-E 2 Prompt Guide in your work.
-        5. Output only your Dall-E 2 prompt, nothing else.
-        6. Think step by step.
+        6. Output only your Dall-E 2 prompt, nothing else.
+        7. Think step by step.
+        ${injectText ? injectText : ""}
 
         Dall-E 2 Prompt Guide:
         For successful Dall-E 2 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
