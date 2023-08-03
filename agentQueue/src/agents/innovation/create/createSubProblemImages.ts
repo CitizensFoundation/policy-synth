@@ -25,9 +25,10 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
         3. Keep the prompt length to maximum of one or two sentences.
         4. Do not include quotes in your prompt.
         5. Never output prompts involving chess or chess pieces.
-        6. Follow the Dalle-2 Prompt Guide in your work.
-        7. Output only your Dalle-2 prompt, nothing else.
-        8. Think step by step.
+        6. Never output prompts involving asking for text to be written out, like on a document.
+        7. Follow the Dalle-2 Prompt Guide in your work.
+        8. Output only your Dalle-2 prompt, nothing else.
+        9. Think step by step.
 
         Dalle-2 Prompt Guide:
         For successful Dall-E 2 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
@@ -85,7 +86,8 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
             : "File download failed."
         );
 
-        const s3ImagePath = `projects/${this.memory.groupId}/subProblems/images/${s}_v22.png`;
+        const randomNum = Math.floor(Math.random() * 1e10);
+        const s3ImagePath = `projects/${this.memory.groupId}/subProblems/images/${s}_${randomNum}.png`;
         await this.uploadImageToS3(
           process.env.S3_BUCKET_NAME!,
           imageFilePath,

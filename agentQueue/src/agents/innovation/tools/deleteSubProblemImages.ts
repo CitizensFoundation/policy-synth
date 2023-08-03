@@ -8,7 +8,6 @@ const redis = new ioredis.default(
 // Get project id from params
 const projectId = process.argv[2];
 
-
 const loadProject = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);

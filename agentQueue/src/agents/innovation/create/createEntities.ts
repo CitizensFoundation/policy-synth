@@ -5,7 +5,7 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class CreateEntitiesProcessor extends BaseProcessor {
-  async renderRefinePrompt(results: IEngineAffectedEntity[]) {
+  async renderRefinePrompt(subProblemIndex: number, results: IEngineAffectedEntity[]) {
     const messages = [
       new SystemChatMessage(
         `
@@ -22,14 +22,14 @@ export class CreateEntitiesProcessor extends BaseProcessor {
         7. Only add positive effects if the sub problem really has a positive effect on the entity, that rarely happens in this analysis as we are analysis problems.
         8. If no positive effects are identified leave the positiveEffects array empty.
         9. Always output in exactly this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
-        10. Maintain a methodical, step-by-step approach.
+        10. Think step by step.
         `
       ),
       new HumanChatMessage(
         `
          ${this.renderProblemStatement()}
 
-         ${this.renderSubProblem(this.currentSubProblemIndex!)}
+         ${this.renderSubProblem(subProblemIndex)}
 
          Previous Entities JSON Output for Review and Refinement:
          ${JSON.stringify(results, null, 2)}
@@ -41,7 +41,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
     return messages;
   }
 
-  async renderCreatePrompt() {
+  async renderCreatePrompt(subProblemIndex: number) {
     const messages = [
       new SystemChatMessage(
         `
@@ -60,7 +60,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
         9. Only add positive effects if the sub problem really has a positive effect on the entity, that rarely happens in this analysis.
         9. If no positive effects are identified leave the positiveEffects array empty.
         11. After reviewing the problem statement and subproblem, output in this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
-        12. Follow a methodical, step-by-step approach to identify all affected entities.
+        12. Think step by step.
 
         Example:
 
@@ -105,7 +105,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
         `
          ${this.renderProblemStatement()}
 
-         ${this.renderSubProblem(this.currentSubProblemIndex!)}
+         ${this.renderSubProblem(subProblemIndex)}
 
          Entities JSON Output:
        `
@@ -117,37 +117,34 @@ export class CreateEntitiesProcessor extends BaseProcessor {
 
 
   async createEntities() {
-    //TODO: Human review and improvements of this partly GPT-4 generated prompt
+    const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
 
-    this.currentSubProblemIndex = 0;
-
-    for (
-      let s = 0;
-      s <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
-      s++
-    ) {
-      this.currentSubProblemIndex = s;
-
-      let results = (await this.callLLM(
-        "create-entities",
-        IEngineConstants.createEntitiesModel,
-        await this.renderCreatePrompt()
-      )) as IEngineAffectedEntity[];
-
-      if (IEngineConstants.enable.refine.createEntities) {
-        results = (await this.callLLM(
+    const subProblemsPromises = Array.from(
+      { length: subProblemsLimit },
+      async (_, subProblemIndex) => {
+        let results = (await this.callLLM(
           "create-entities",
           IEngineConstants.createEntitiesModel,
-          await this.renderRefinePrompt(results)
+          await this.renderCreatePrompt(subProblemIndex)
         )) as IEngineAffectedEntity[];
+
+        if (IEngineConstants.enable.refine.createEntities) {
+          results = (await this.callLLM(
+            "create-entities",
+            IEngineConstants.createEntitiesModel,
+            await this.renderRefinePrompt(subProblemIndex, results)
+          )) as IEngineAffectedEntity[];
+        }
+
+        this.memory.subProblems[subProblemIndex].entities = results;
+        await this.saveMemory();
       }
+    );
 
-      this.memory.subProblems[s].entities = results;
-
-      await this.saveMemory();
-    }
+    await Promise.all(subProblemsPromises);
+    this.logger.info("Finished creating entities for all subproblems");
   }
+
 
   async process() {
     this.logger.info("Create Entities Processor");

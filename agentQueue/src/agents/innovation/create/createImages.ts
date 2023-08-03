@@ -232,9 +232,11 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one to two sentences, never more.
         4. Do not include quotes in your prompt.
-        5. Follow the Dall-E 2 Prompt Guide in your work.
-        6. Output only your Dall-E 2 prompt, nothing else.
-        7. Think step by step.
+        5. Never output prompts involving chess or chess pieces.
+        6. Never output prompts involving asking for text to be written out, like on a document.
+        7. Follow the Dall-E 2 Prompt Guide in your work.
+        8. Output only your Dall-E 2 prompt, nothing else.
+        9. Think step by step.
         ${injectText ? injectText : ""}
 
         Dall-E 2 Prompt Guide:
@@ -366,9 +368,10 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                 subProblemIndex
               )}_${solutionIndex}.png`
             );
+            const randomNum = Math.floor(Math.random() * 1e10);
             const s3ImagePath = `projects/${this.memory.groupId}/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(
               subProblemIndex
-            )}/${solutionIndex}_v3.png`;
+            )}/${solutionIndex}_${randomNum}.png`;
 
             let gotImage;
 

@@ -3,7 +3,6 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "./basePairwiseRanking.js";
 export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
-    subProblemIndex = 0;
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
@@ -28,7 +27,7 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
             new HumanChatMessage(`
          ${this.renderProblemStatement()}
 
-         ${this.renderSubProblem(this.currentSubProblemIndex)}
+         ${this.renderSubProblem(subProblemIndex)}
 
          Entities for Ranking:
 
@@ -54,19 +53,19 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
             modelName: IEngineConstants.entitiesRankingsModel.name,
             verbose: IEngineConstants.entitiesRankingsModel.verbose,
         });
-        this.currentSubProblemIndex = 0;
-        for (let s = 0; s <
-            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
-            const filteredEntities = this.memory.subProblems[s].entities.filter((entity) => {
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
+            const filteredEntities = this.memory.subProblems[subProblemIndex].entities.filter((entity) => {
                 return ((entity.positiveEffects && entity.positiveEffects.length > 0) ||
                     (entity.negativeEffects && entity.negativeEffects.length > 0));
             });
-            this.setupRankingPrompts(s, filteredEntities);
-            await this.performPairwiseRanking(s);
-            this.memory.subProblems[s].entities =
-                this.getOrderedListOfItems(s, true);
+            this.setupRankingPrompts(subProblemIndex, filteredEntities);
+            await this.performPairwiseRanking(subProblemIndex);
+            this.memory.subProblems[subProblemIndex].entities =
+                this.getOrderedListOfItems(subProblemIndex, true);
             await this.saveMemory();
-            this.currentSubProblemIndex++;
-        }
+        });
+        await Promise.all(subProblemsPromises);
+        this.logger.info("Finished ranking entities for all subproblems");
     }
 }

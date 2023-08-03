@@ -17,7 +17,7 @@ const loadProject = async (): Promise<void> => {
 
   // Set data back to Redis
   await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memoryData));
-  console.log('Project data has been loaded from currentMemory.json');
+  console.log(`Project data has been loaded from ${fileName}`);
   process.exit(0);
   } else {
     console.log('No project id provided');

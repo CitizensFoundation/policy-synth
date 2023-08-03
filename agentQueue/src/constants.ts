@@ -220,7 +220,7 @@ export class IEngineConstants {
 
   static rankingLLMmaxRetryCount = 40;
 
-  static maxTopEntitiesToSearch = 3;
+  static maxTopEntitiesToSearch = 4;
 
   static maxTopEntitiesToRender = 3;
 
