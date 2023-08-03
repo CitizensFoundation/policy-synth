@@ -9,8 +9,10 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         return JSON.stringify({
             title: solution.title,
             description: solution.description,
-            mainBenefitOfSolutionComponent: solution.mainBenefitOfSolutionComponent || solution.mainBenefitOfSolution,
-            mainObstacleToSolutionComponentAdoption: solution.mainObstacleToSolutionComponentAdoption || solution.mainObstacleToSolutionAdoption,
+            mainBenefitOfSolutionComponent: solution.mainBenefitOfSolutionComponent ||
+                solution.mainBenefitOfSolution,
+            mainObstacleToSolutionComponentAdoption: solution.mainObstacleToSolutionComponentAdoption ||
+                solution.mainObstacleToSolutionAdoption,
         }, null, 2);
     }
     renderRecombinationPrompt(parentA, parentB, subProblemIndex) {
@@ -241,25 +243,76 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.logger.debug("After creating new solutions: " + newSolutions.length);
         newPopulation.push(...newSolutions);
     }
+    addUniqueSolutionAsElite(previousPopulation, newPopulation, usedSolutionTitles) {
+        this.logger.debug(`Adding unique solution as elite`);
+        const groups = new Map();
+        for (let solution of previousPopulation) {
+            if (solution.similarityGroup) {
+                const groupId = solution.similarityGroup.index;
+                if (!groups.has(groupId)) {
+                    groups.set(groupId, []);
+                }
+                groups.get(groupId).push(solution);
+            }
+        }
+        for (let [groupId, groupSolutions] of groups) {
+            const bestSolutionInGroup = groupSolutions[0];
+            if (!usedSolutionTitles.has(bestSolutionInGroup.title)) {
+                usedSolutionTitles.add(bestSolutionInGroup.title);
+                newPopulation.push(bestSolutionInGroup);
+                this.logger.debug(`Added solution with unique group ID: ${bestSolutionInGroup.similarityGroup?.index}`);
+            }
+        }
+    }
+    addElites(previousPopulation, newPopulation, usedSolutionTitles) {
+        this.logger.debug(`Adding elites`);
+        const eliteCount = Math.floor(previousPopulation.length * IEngineConstants.evolution.keepElitePercent);
+        this.logger.debug(`Elite count: ${eliteCount}`);
+        for (let i = 0; i < eliteCount; i++) {
+            if (!usedSolutionTitles.has(previousPopulation[i].title)) {
+                usedSolutionTitles.add(previousPopulation[i].title);
+                newPopulation.push(previousPopulation[i]);
+                this.logger.debug(`Added elite: ${previousPopulation[i].title}`);
+            }
+        }
+    }
+    pruneTopicClusters(solutions) {
+        this.logger.info(`Pruning topic clusters ${solutions.length} solutions}`);
+        // Group solutions by similarity group
+        const groups = new Map();
+        for (const solution of solutions) {
+            if (solution.similarityGroup) {
+                const groupIndex = solution.similarityGroup.index;
+                if (!groups.has(groupIndex)) {
+                    groups.set(groupIndex, []);
+                }
+                groups.get(groupIndex).push(solution);
+            }
+        }
+        // Prune each group and store in a set for faster lookup
+        const prunedSolutionSet = new Set();
+        for (const group of groups.values()) {
+            const prunedGroup = group.slice(0, IEngineConstants.topItemsToKeepForTopicClusterPruning);
+            for (const solution of prunedGroup) {
+                prunedSolutionSet.add(solution);
+            }
+        }
+        // Build final list of solutions in original order
+        const outSolutions = solutions.filter((solution) => !solution.similarityGroup || prunedSolutionSet.has(solution));
+        this.logger.info(`Population size after pruning: ${outSolutions.length}`);
+        return outSolutions;
+    }
     async evolveSubProblem(subProblemIndex) {
         this.logger.info(`Evolve population for sub problem ${subProblemIndex}`);
         this.logger.info(`Current number of generations: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`);
         let previousPopulation = this.getPreviousPopulation(subProblemIndex);
         this.logger.debug(`Previous populations size: ${previousPopulation.length}`);
         const newPopulation = [];
-        const eliteCount = Math.floor(previousPopulation.length * IEngineConstants.evolution.keepElitePercent);
-        this.logger.debug(`Elite count: ${eliteCount}`);
-        // Add Elities
-        for (let i = 0; i < eliteCount; i++) {
-            if (previousPopulation[i].mainBenefitOfSolution) {
-                previousPopulation[i].mainBenefitOfSolutionComponent = previousPopulation[i].mainBenefitOfSolution;
-            }
-            if (previousPopulation[i].mainObstacleToSolutionAdoption) {
-                previousPopulation[i].mainObstacleToSolutionComponentAdoption = previousPopulation[i].mainObstacleToSolutionAdoption;
-            }
-            newPopulation.push(previousPopulation[i]);
-            this.logger.debug(`Elite: ${previousPopulation[i].title}`);
-        }
+        const usedGroupIds = new Set();
+        const usedSolutionTitles = new Set();
+        this.addUniqueSolutionAsElite(previousPopulation, newPopulation, usedSolutionTitles);
+        this.addElites(previousPopulation, newPopulation, usedSolutionTitles);
+        previousPopulation = this.pruneTopicClusters(previousPopulation);
         await this.addRandomMutation(newPopulation, previousPopulation, subProblemIndex);
         await this.addRandomImmigration(newPopulation, subProblemIndex);
         await this.addCrossover(newPopulation, previousPopulation, subProblemIndex);

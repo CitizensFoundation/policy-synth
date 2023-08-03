@@ -8,7 +8,7 @@ const gpt35kOutTokenPrice = 0.002 / 1000;
 export class IEngineConstants {
     static createSubProblemsModel = {
         name: "gpt-4",
-        temperature: 0.7,
+        temperature: 0.8,
         maxOutputTokens: 2048,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -200,6 +200,7 @@ export class IEngineConstants {
     static minSleepBeforeBrowserRequest = 1100;
     static maxAdditionalRandomSleepBeforeBrowserRequest = 1100;
     static numberOfSearchTypes = 4;
+    static topItemsToKeepForTopicClusterPruning = 7;
     static chances = {
         createSolutions: {
             searchQueries: {
