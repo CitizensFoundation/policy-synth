@@ -5,9 +5,9 @@ import { IEngineConstants } from "../../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 
-import { createGzip, gunzipSync, gzipSync } from 'zlib';
-import { promisify } from 'util';
-import { writeFile, readFile, existsSync } from 'fs';
+import { createGzip, gunzipSync, gzipSync } from "zlib";
+import { promisify } from "util";
+import { writeFile, readFile, existsSync } from "fs";
 
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
@@ -39,52 +39,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
   searchResultTarget!: IEngineWebPageTargets;
   currentEntity: IEngineAffectedEntity | undefined;
 
-  unusedRenderRefinePrompt(
-    currentWebPageAnalysis: IEngineWebPageAnalysisData,
-    problemStatement: IEngineProblemStatement,
-    text: string
-  ) {
-    return [
-      new SystemChatMessage(
-        `
-        As an AI trained to analyze complex texts, follow these instructions:
-
-        1. You are analysing a large document consisting of multiple pages
-        2. The analysis from the previous pages is stored in the "Current Analysis JSON" section.
-        3. Ensuring no information from "Current Analysis JSON" is lost.
-        4. Always output everything that is in the "Current Analysis JSON" section in again in the "Refined Analysis JSON" section plus what you add.
-        5. Evaluate the text from the current page under "New Text Context" and
-           - Add paragraphs to the 'mostRelevantParagraphs' array if they are highly relevant to the problem statement.
-           - Add solutions you find in the text, to the 'solutionsIdentifiedInTextContext' array if they are highly relevant and directly derived from the New Text Context.
-           - Ignore information that isn't closely related to the problem statement.
-           - Don't create your own solutions - rely exclusively on the New Text Context.
-        5. Always return your results in JSON format with no additional comments.
-        6. Think step-by-step.`
-      ),
-      new HumanChatMessage(
-        `
-        Problem Statement:
-        ${problemStatement.description}
-        ${
-          this.searchResultTarget == "subProblem"
-            ? `
-
-        Sub Problem:
-        ${this.renderSubProblem(this.currentSubProblemIndex!)}
-        `
-            : ``
-        }
-
-        Current Analysis JSON:
-        ${JSON.stringify(currentWebPageAnalysis, null, 2)}
-
-        New Text Context:
-        ${text}
-
-        Refined Analysis JSON:`
-      ),
-    ];
-  }
 
   renderInitialMessages(
     problemStatement: IEngineProblemStatement,
@@ -223,13 +177,12 @@ export class GetWebPagesProcessor extends BaseProcessor {
         `
         Problem Statement:
         ${problemStatement.description}
+
         ${
           this.searchResultTarget == "subProblem"
             ? `
-
-        Sub Problem:
-        ${this.renderSubProblem(this.currentSubProblemIndex!)}
-        `
+                ${this.renderSubProblem(this.currentSubProblemIndex!)}
+              `
             : ``
         }
 
@@ -350,9 +303,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
       chunks.push(currentChunk);
     }
 
-    this.logger.debug(
-      `Split text into ${chunks.length} chunks`
-    );
+    this.logger.debug(`Split text into ${chunks.length} chunks`);
 
     return chunks;
   }
@@ -465,7 +416,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     } catch (e: any) {
       this.logger.error(`Error posting web page`);
       this.logger.error(e);
-      this.logger.error(e.stack)
+      this.logger.error(e.stack);
     }
   }
 
@@ -484,7 +435,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
         let finalText = "";
         let pdfBuffer;
 
-        const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
+        const filePath = `webPagesCache/${
+          this.memory.groupId
+        }/${encodeURIComponent(url)}.gz`;
 
         if (existsSync(filePath)) {
           this.logger.info("Got cached PDF");
@@ -508,13 +461,14 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
           if (pdfBuffer) {
             this.logger.debug(`Caching PDF response`);
-            const gzipData = await gzip(pdfBuffer);
-            await writeFileAsync(filePath, gzipData as any);
+            const gzipData = gzipSync(pdfBuffer);
+            await writeFileAsync(filePath, gzipData);
+            this.logger.debug("Have cached PDF response");
           }
         }
 
         if (pdfBuffer) {
-          console.log(pdfBuffer);
+          console.log(pdfBuffer.toString().slice(0, 100));
           try {
             new PdfReader({}).parseBuffer(
               pdfBuffer,
@@ -564,9 +518,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
     try {
       let finalText, htmlText;
 
-      this.logger.debug(`Getting HTML for ${url}`)
+      this.logger.debug(`Getting HTML for ${url}`);
 
-      const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
+      const filePath = `webPagesCache/${
+        this.memory.groupId
+      }/${encodeURIComponent(url)}.gz`;
 
       if (existsSync(filePath)) {
         this.logger.info("Got cached HTML");
@@ -589,8 +545,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
           htmlText = await response.text();
           if (htmlText) {
             this.logger.debug(`Caching response`);
-          const gzipData = gzipSync(Buffer.from(htmlText));
-          await writeFileAsync(filePath, gzipData);
+            const gzipData = gzipSync(Buffer.from(htmlText));
+            await writeFileAsync(filePath, gzipData);
           }
         }
       }
@@ -791,11 +747,40 @@ export class GetWebPagesProcessor extends BaseProcessor {
     this.memory.problemStatement.haveScannedWeb = true;
   }
 
+  async getAllCustomSearchUrls(browserPage: Page) {
+    for (
+      let subProblemIndex = 0;
+      subProblemIndex <
+      Math.max(
+        this.memory.subProblems.length,
+        IEngineConstants.maxSubProblems
+      );
+      subProblemIndex++
+    ) {
+      const customUrls = this.memory.subProblems[subProblemIndex].customSearchUrls;
+      if (customUrls) {
+        for (let i = 0; i < customUrls.length; i++) {
+          this.logger.debug(`Getting custom URL ${customUrls[i]}`)
+          await this.getAndProcessPage(
+            subProblemIndex,
+            customUrls[i],
+            browserPage,
+            "general"
+          );
+        }
+      } else {
+        this.logger.info(`No custom URLs for sub problem ${subProblemIndex}`);
+      }
+    }
+  }
+
   async getAllPages() {
     puppeteer.launch({ headless: "new" }).then(async (browser) => {
       this.logger.debug("Launching browser");
       const browserPage = await browser.newPage();
       await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+
+      await this.getAllCustomSearchUrls(browserPage);
 
       for (const searchQueryType of [
         "general",

@@ -100,6 +100,7 @@ interface IEngineSubProblem {
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
+  customSearchUrls?: string[];
   haveScannedWeb?: boolean;
   eloRating?: number;
   solutions: {
