@@ -234,7 +234,7 @@ export class IEngineConstants {
 
   static maxWebPagesToGetByTopSearchPosition = 10;
 
-  static maxSearchResults = 10;
+  static maxBingSearchResults = 10;
 
   static maxTopProsConsUsedForRating = 2;
 

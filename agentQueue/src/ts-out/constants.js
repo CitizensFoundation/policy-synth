@@ -194,7 +194,7 @@ export class IEngineConstants {
     static maxDalleRetryCount = 7;
     static maxTopWebPagesToGet = 10;
     static maxWebPagesToGetByTopSearchPosition = 10;
-    static maxSearchResults = 10;
+    static maxBingSearchResults = 10;
     static maxTopProsConsUsedForRating = 2;
     static maxNumberGeneratedProsConsForSolution = 3;
     static minSleepBeforeBrowserRequest = 50;

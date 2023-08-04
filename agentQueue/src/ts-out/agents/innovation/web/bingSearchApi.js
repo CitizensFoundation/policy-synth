@@ -15,7 +15,7 @@ export class BingSearchApi extends Base {
     async search(query) {
         const requestParams = {
             method: "GET",
-            url: `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${IEngineConstants.maxSearchResults}&q=` +
+            url: `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${IEngineConstants.maxBingSearchResults}&q=` +
                 encodeURIComponent(query),
             headers: {
                 "Ocp-Apim-Subscription-Key": this.SUBSCRIPTION_KEY,
