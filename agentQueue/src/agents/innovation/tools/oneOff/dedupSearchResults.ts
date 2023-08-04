@@ -1,32 +1,41 @@
-import ioredis from 'ioredis';
-import fs from 'fs/promises';
-import { IEngineConstants } from '../../../../constants.js';
+import ioredis from "ioredis";
+import fs from "fs/promises";
+import { IEngineConstants } from "../../../../constants.js";
 
 const redis = new ioredis.default(
-  process.env.REDIS_MEMORY_URL || 'redis://localhost:6379'
+  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
 class DeduplicateSearchProcessor {
   memory: IEngineInnovationMemoryData;
   deduplicatedCount: number;
   totalCount: number;
+  seenUrls: Map<string, Set<string>>;
 
   constructor(memory: IEngineInnovationMemoryData) {
     this.memory = memory;
     this.deduplicatedCount = 0;
     this.totalCount = 0;
+    this.seenUrls = new Map();
   }
 
-  deduplicateArrayByProperty(arr: Array<IEngineSearchResultItem>, prop: string): Array<IEngineSearchResultItem> {
+  deduplicateArrayByProperty(
+    arr: Array<IEngineSearchResultItem>,
+    prop: string,
+    id: string
+  ): Array<IEngineSearchResultItem> {
     this.totalCount += arr.length;
-    const seen = new Set();
-    const deduplicatedArray = arr.filter(item => {
+    if (!this.seenUrls.has(id)) {
+      this.seenUrls.set(id, new Set());
+    }
+    const seen = this.seenUrls.get(id);
+    const deduplicatedArray = arr.filter((item) => {
       //@ts-ignore
       const value = item[prop];
-      if (seen.has(value)) {
+      if (seen!.has(value)) {
         return false;
       }
-      seen.add(value);
+      seen!.add(value);
       return true;
     });
     this.deduplicatedCount += deduplicatedArray.length;
@@ -34,50 +43,91 @@ class DeduplicateSearchProcessor {
   }
 
   deduplicateSubProblems(searchQueryType: IEngineWebPageTypes) {
-    const subProblemsCount = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+    const subProblemsCount = Math.min(
+      this.memory.subProblems.length,
+      IEngineConstants.maxSubProblems
+    );
     for (let s = 0; s < subProblemsCount; s++) {
-        if (this.memory.subProblems[s].searchResults) {
-            const previousCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
-            this.memory.subProblems[s].searchResults.pages[searchQueryType] =
-                this.deduplicateArrayByProperty(this.memory.subProblems[s].searchResults.pages[searchQueryType], 'title');
-            const newCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
-            if (previousCount !== newCount) {
-                console.log(`SubProblem ${s} ${searchQueryType} deduplicated count: ${newCount}`);
-            }
+      if (this.memory.subProblems[s].searchResults) {
+        const previousCount =
+          this.memory.subProblems[s].searchResults.pages[searchQueryType]
+            .length;
+        this.memory.subProblems[s].searchResults.pages[searchQueryType] =
+          this.deduplicateArrayByProperty(
+            this.memory.subProblems[s].searchResults.pages[searchQueryType],
+            "title",
+            `subProblem_${s}`
+          );
+        const newCount =
+          this.memory.subProblems[s].searchResults.pages[searchQueryType]
+            .length;
+        if (previousCount !== newCount) {
+          console.log(
+            `SubProblem ${s} ${searchQueryType} deduplicated count: ${newCount}`
+          );
         }
-        this.deduplicateEntities(s, searchQueryType);
+      }
+      this.deduplicateEntities(s, searchQueryType);
     }
-}
+  }
 
-deduplicateEntities(subProblemIndex: number, searchQueryType: IEngineWebPageTypes) {
-    const subProblem: IEngineSubProblem = this.memory.subProblems[subProblemIndex];
-    const entitiesCount = Math.min(subProblem.entities.length, IEngineConstants.maxTopEntitiesToSearch);
+  deduplicateEntities(
+    subProblemIndex: number,
+    searchQueryType: IEngineWebPageTypes
+  ) {
+    const subProblem: IEngineSubProblem =
+      this.memory.subProblems[subProblemIndex];
+    const entitiesCount = Math.min(
+      subProblem.entities.length,
+      IEngineConstants.maxTopEntitiesToSearch
+    );
     for (let e = 0; e < entitiesCount; e++) {
-        if (subProblem.entities[e].searchResults) {
-            const previousCount = subProblem.entities[e].searchResults!.pages[searchQueryType].length;
-            subProblem.entities[e].searchResults!.pages[searchQueryType] =
-                this.deduplicateArrayByProperty(subProblem.entities[e].searchResults!.pages[searchQueryType], 'title');
-            const newCount = subProblem.entities[e].searchResults!.pages[searchQueryType].length;
-            if (previousCount !== newCount) {
-                console.log(`SubProblem ${subProblemIndex} Entity ${e} ${searchQueryType} deduplicated count: ${newCount}`);
-            }
+      if (subProblem.entities[e].searchResults) {
+        const previousCount =
+          subProblem.entities[e].searchResults!.pages[searchQueryType].length;
+        subProblem.entities[e].searchResults!.pages[searchQueryType] =
+          this.deduplicateArrayByProperty(
+            subProblem.entities[e].searchResults!.pages[searchQueryType],
+            "title",
+            `entity_${subProblemIndex}_${e}`
+          );
+        const newCount =
+          subProblem.entities[e].searchResults!.pages[searchQueryType].length;
+        if (previousCount !== newCount) {
+          console.log(
+            `SubProblem ${subProblemIndex} Entity ${e} ${searchQueryType} deduplicated count: ${newCount}`
+          );
         }
+      }
     }
-}
+  }
 
   deduplicateProblemStatement(searchQueryType: IEngineWebPageTypes) {
-    const previousCount = this.memory.problemStatement.searchResults.pages[searchQueryType].length;
+    const previousCount =
+      this.memory.problemStatement.searchResults.pages[searchQueryType].length;
     this.memory.problemStatement.searchResults.pages[searchQueryType] =
-      this.deduplicateArrayByProperty(this.memory.problemStatement.searchResults.pages[searchQueryType], 'title');
-    const newCount = this.memory.problemStatement.searchResults.pages[searchQueryType].length;
+      this.deduplicateArrayByProperty(
+        this.memory.problemStatement.searchResults.pages[searchQueryType],
+        "title",
+        "problemStatement"
+      );
+    const newCount =
+      this.memory.problemStatement.searchResults.pages[searchQueryType].length;
     if (previousCount !== newCount) {
-      console.log(`ProblemStatement ${searchQueryType} deduplicated count: ${newCount}`);
+      console.log(
+        `ProblemStatement ${searchQueryType} deduplicated count: ${newCount}`
+      );
     }
   }
 
   process() {
     try {
-      const searchQueryTypes: IEngineWebPageTypes[] = ["general", "scientific", "openData", "news"];
+      const searchQueryTypes: IEngineWebPageTypes[] = [
+        "general",
+        "scientific",
+        "openData",
+        "news",
+      ];
       for (const searchQueryType of searchQueryTypes) {
         this.deduplicateProblemStatement(searchQueryType);
         this.deduplicateSubProblems(searchQueryType);
@@ -105,12 +155,12 @@ const dedup = async (): Promise<void> => {
     await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memory));
     process.exit(0);
   } else {
-    console.log('No project id provided');
+    console.log("No project id provided");
     process.exit(1);
   }
-}
+};
 
-dedup().catch(error => {
+dedup().catch((error) => {
   console.error(error);
   process.exit(1);
-})
+});
