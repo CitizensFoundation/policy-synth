@@ -137,6 +137,7 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
         }
         catch (error) {
             this.logger.error("Error performing pairwise ranking");
+            this.logger.error(error.stack);
             if (typeof error === "object") {
                 this.logger.error(JSON.stringify(error));
             }

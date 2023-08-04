@@ -83,7 +83,7 @@ export class SearchWebProcessor extends BaseProcessor {
         let searchResults = [];
         for (let q = 0; q < queriesToSearch.length; q++) {
             const generalSearchData = await this.callSearchApi(queriesToSearch[q]);
-            this.logger.debug(`Got Search Data 1: ${JSON.stringify(generalSearchData)}`);
+            this.logger.debug(`Got Search Data 1: ${JSON.stringify(generalSearchData, null, 2)}`);
             if (generalSearchData) {
                 searchResults = [...searchResults, ...generalSearchData];
             }
@@ -91,9 +91,11 @@ export class SearchWebProcessor extends BaseProcessor {
                 this.logger.error("No search results");
             }
             this.logger.debug("Got Search Results 2");
-            this.logger.debug(`Search Results: ${JSON.stringify(searchResults)}`);
+            this.logger.debug(`Search Results Batch: ${JSON.stringify(searchResults, null, 2)}`);
             await new Promise((resolve) => setTimeout(resolve, 500));
         }
+        // dedupe search results based on url
+        searchResults = searchResults.filter((v, i, a) => a.findIndex((t) => t.url === v.url) === i);
         return { searchResults };
     }
     async processSubProblems(searchQueryType) {
@@ -163,6 +165,7 @@ export class SearchWebProcessor extends BaseProcessor {
             this.logger.error(error);
             throw error;
         }
+        this.logger.info("Finished processing web search");
         await this.saveMemory();
     }
 }

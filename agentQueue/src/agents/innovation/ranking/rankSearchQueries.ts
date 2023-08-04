@@ -5,30 +5,31 @@ import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "./basePairwiseRanking.js";
 
 export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
-  subProblemIndex = 0;
-  entitiesIndex = 0;
-  currentEntity!: IEngineAffectedEntity;
-  searchQueryType!: IEngineWebPageTypes;
-  searchQueryTarget!: IEngineWebPageTargets;
-
-  renderProblemDetail() {
+  renderProblemDetail(
+    additionalData: {
+      subProblemIndex: number,
+      currentEntity?: IEngineAffectedEntity;
+      searchQueryType?: IEngineWebPageTypes;
+      searchQueryTarget: "problemStatement" | "subProblem" | "entity";
+    }
+  ) {
     let detail = ``;
 
-    if (this.searchQueryTarget === "problemStatement") {
+    if (additionalData.searchQueryTarget === "problemStatement") {
       detail = `
         ${this.renderProblemStatement()}
       `;
-    } else if (this.searchQueryTarget === "subProblem") {
+    } else if (additionalData.searchQueryTarget === "subProblem") {
       detail = `
-        ${this.renderSubProblem(this.subProblemIndex!)}
+        ${this.renderSubProblem(additionalData.subProblemIndex)}
       `;
-    } else if (this.searchQueryTarget === "entity") {
+    } else if (additionalData.searchQueryTarget === "entity") {
       detail = `
-        ${this.renderSubProblem(this.subProblemIndex!)}
+        ${this.renderSubProblem(additionalData.subProblemIndex)}
 
         Entity:
-        ${this.currentEntity!.name}
-        ${this.renderEntityPosNegReasons(this.currentEntity!)}
+        ${additionalData!.currentEntity!.name}
+        ${this.renderEntityPosNegReasons(additionalData!.currentEntity!)}
       `;
     }
 
@@ -36,14 +37,20 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
   }
 
   async voteOnPromptPair(
-    subProblemIndex: number,
-    promptPair: number[]
+    index: number,
+    promptPair: number[],
+    additionalData: {
+      currentEntity?: IEngineAffectedEntity;
+      searchQueryType?: IEngineWebPageTypes;
+      subProblemIndex: number;
+      searchQueryTarget: "problemStatement" | "subProblem" | "entity";
+    }
   ): Promise<IEnginePairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![subProblemIndex]![itemOneIndex] as string;
-    const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as string;
+    const itemOne = this.allItems![index]![itemOneIndex] as string;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as string;
 
     const messages = [
       new SystemChatMessage(
@@ -55,13 +62,12 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         2. You will also see two web search queries, each marked as "Search Query One" and "Search Query Two".
         3. Your task is to analyze, compare, and rank these search queries based on their relevance to the given problem and affected entities.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
-        5. Ensure a systematic and methodical approach to this task. Think step by step.`
+        5. Think step by step.
+        `
       ),
       new HumanChatMessage(
         `
-        Search query type: ${this.searchQueryType}
-
-        ${this.renderProblemDetail()}
+        ${this.renderProblemDetail(additionalData)}
 
         Search Queries to Rank:
 
@@ -77,7 +83,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     ];
 
     return await this.getResultsFromLLM(
-      subProblemIndex,
+      index,
       "rank-search-queries",
       IEngineConstants.searchQueryRankingsModel,
       messages,
@@ -87,47 +93,65 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
   }
 
   async processSubProblems() {
-    for (
-      let s = 0;
-      s <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
-      s++
-    ) {
-      this.subProblemIndex = s;
+    const subProblemsLimit = Math.min(
+      this.memory.subProblems.length,
+      IEngineConstants.maxSubProblems
+    );
 
-      await this.processEntities(s);
+    const subProblemsPromises = Array.from(
+      { length: subProblemsLimit },
+      async (_, subProblemIndex) => {
+        await this.processEntities(subProblemIndex);
 
-      for (const searchQueryType of [
-        "general",
-        "scientific",
-        "openData",
-        "news",
-      ] as const) {
-        this.searchQueryType = searchQueryType;
+        for (const searchQueryType of [
+          "general",
+          "scientific",
+          "openData",
+          "news",
+        ] as const) {
+          this.logger.info(
+            `Ranking search queries for sub-problem ${subProblemIndex} ${searchQueryType}`
+          );
+          let queriesToRank =
+            this.memory.subProblems[subProblemIndex].searchQueries[
+              searchQueryType
+            ];
+          const index = this.getQueryIndex(searchQueryType) * (subProblemIndex+30);
+          this.setupRankingPrompts(index, queriesToRank);
+          await this.performPairwiseRanking(index, {
+            subProblemIndex,
+            searchQueryType,
+            searchQueryTarget: "subProblem",
+          });
 
-        this.logger.info(
-          `Ranking search queries for sub-problem ${s} ${searchQueryType}`
-        );
-        let queriesToRank =
-          this.memory.subProblems[s].searchQueries[searchQueryType];
+          this.memory.subProblems[subProblemIndex].searchQueries[
+            searchQueryType
+          ] = this.getOrderedListOfItems(index) as string[];
+        }
 
-        this.searchQueryTarget = "subProblem";
-
-        this.setupRankingPrompts(s,queriesToRank);
-        await this.performPairwiseRanking(s);
-
-        this.memory.subProblems[s].searchQueries[searchQueryType] =
-          this.getOrderedListOfItems(s) as string[];
+        await this.saveMemory();
       }
+    );
 
-      await this.saveMemory();
+    await Promise.all(subProblemsPromises);
+    this.logger.debug("Sub Problems Ranked");
+  }
 
+  getQueryIndex(searchQueryType: IEngineWebPageTypes) {
+    if (searchQueryType === "general") {
+      return 2;
+    } else if (searchQueryType === "scientific") {
+      return 3;
+    } else if (searchQueryType === "openData") {
+      return 4;
+    } else if (searchQueryType === "news") {
+      return 5;
+    } else {
+      return 6;
     }
   }
 
   async processEntities(subProblemIndex: number) {
-    this.searchQueryTarget = "entity";
-
     for (
       let e = 0;
       e <
@@ -143,24 +167,27 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         "openData",
         "news",
       ] as const) {
-        this.searchQueryType = searchQueryType;
-
         this.logger.info(
           `Ranking search queries for sub problem ${subProblemIndex} entity ${e} ${searchQueryType}`
         );
 
-        this.currentEntity =
+        const currentEntity =
           this.memory.subProblems[subProblemIndex].entities[e];
 
-        let queriesToRank = this.currentEntity.searchQueries![searchQueryType];
-
-        this.setupRankingPrompts(subProblemIndex*e,queriesToRank);
-        await this.performPairwiseRanking(subProblemIndex*e);
-        this.logger.debug("Entity Queries ranked")
+        let queriesToRank = currentEntity.searchQueries![searchQueryType];
+        const index = this.getQueryIndex(searchQueryType) * (subProblemIndex+30) * (e+1);
+        this.setupRankingPrompts(index, queriesToRank);
+        await this.performPairwiseRanking(index, {
+          subProblemIndex,
+          currentEntity,
+          searchQueryType,
+          searchQueryTarget: "entity",
+        });
+        this.logger.debug("Entity Queries ranked");
 
         this.memory.subProblems[subProblemIndex].entities[e].searchQueries![
           searchQueryType
-        ] = this.getOrderedListOfItems(subProblemIndex*e) as string[];
+        ] = this.getOrderedListOfItems(index) as string[];
       }
     }
   }
@@ -176,10 +203,11 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
       verbose: IEngineConstants.searchQueryRankingsModel.verbose,
     });
 
-    this.logger.info("Rank Search Queries Processor: Problem Statement");
     this.logger.info("Rank Search Queries Processor: Sub Problems");
 
     await this.processSubProblems();
+
+    this.logger.info("Rank Search Queries Processor: Problem Statement");
 
     for (const searchQueryType of [
       "general",
@@ -187,25 +215,28 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
       "openData",
       "news",
     ] as const) {
-      this.searchQueryType = searchQueryType;
-
       let queriesToRank =
         this.memory.problemStatement.searchQueries![searchQueryType];
 
-      this.searchQueryTarget = "problemStatement";
-
       this.setupRankingPrompts(-1, queriesToRank);
-      await this.performPairwiseRanking(-1);
+      await this.performPairwiseRanking(-1, {
+        searchQueryType,
+        searchQueryTarget: "problemStatement",
+      });
 
       this.memory.problemStatement.searchQueries[searchQueryType] =
         this.getOrderedListOfItems(-1) as string[];
 
-      this.logger.debug("Search Queries Ranked")
-      this.logger.debug(this.memory.problemStatement.searchQueries[searchQueryType])
+      this.logger.debug("Search Queries Ranked");
+      this.logger.debug(
+        this.memory.problemStatement.searchQueries[searchQueryType]
+      );
 
       await this.saveMemory();
     }
 
     await this.saveMemory();
+
+    this.logger.info("Rank Search Queries Processor: Done");
   }
 }

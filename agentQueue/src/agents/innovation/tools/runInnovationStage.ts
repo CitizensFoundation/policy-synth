@@ -19,10 +19,10 @@ if (projectId) {
   //memory.currentStage = "create-sub-problem-images";
   //memory.currentStage = "rank-sub-problems";
   //memory.currentStage = "create-entities";
-  memory.currentStage = "rank-entities";
+  //memory.currentStage = "rank-entities";
   //memory.currentStage = "create-search-queries";
   //memory.currentStage = "rank-search-queries";
-  //memory.currentStage = "web-search";
+  memory.currentStage = "web-search";
   //memory.currentStage = "rank-search-results";
   //memory.currentStage = "web-get-pages";
   //memory.currentStage = "create-seed-solutions";
