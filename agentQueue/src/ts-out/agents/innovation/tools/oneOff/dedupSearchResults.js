@@ -1,19 +1,24 @@
-import ioredis from 'ioredis';
-import { IEngineConstants } from '../../../../constants.js';
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || 'redis://localhost:6379');
+import ioredis from "ioredis";
+import { IEngineConstants } from "../../../../constants.js";
+const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 class DeduplicateSearchProcessor {
     memory;
     deduplicatedCount;
     totalCount;
+    seenUrls;
     constructor(memory) {
         this.memory = memory;
         this.deduplicatedCount = 0;
         this.totalCount = 0;
+        this.seenUrls = new Map();
     }
-    deduplicateArrayByProperty(arr, prop) {
+    deduplicateArrayByProperty(arr, prop, id) {
         this.totalCount += arr.length;
-        const seen = new Set();
-        const deduplicatedArray = arr.filter(item => {
+        if (!this.seenUrls.has(id)) {
+            this.seenUrls.set(id, new Set());
+        }
+        const seen = this.seenUrls.get(id);
+        const deduplicatedArray = arr.filter((item) => {
             //@ts-ignore
             const value = item[prop];
             if (seen.has(value)) {
@@ -29,10 +34,12 @@ class DeduplicateSearchProcessor {
         const subProblemsCount = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
         for (let s = 0; s < subProblemsCount; s++) {
             if (this.memory.subProblems[s].searchResults) {
-                const previousCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
+                const previousCount = this.memory.subProblems[s].searchResults.pages[searchQueryType]
+                    .length;
                 this.memory.subProblems[s].searchResults.pages[searchQueryType] =
-                    this.deduplicateArrayByProperty(this.memory.subProblems[s].searchResults.pages[searchQueryType], 'title');
-                const newCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
+                    this.deduplicateArrayByProperty(this.memory.subProblems[s].searchResults.pages[searchQueryType], "title", `subProblem_${s}`);
+                const newCount = this.memory.subProblems[s].searchResults.pages[searchQueryType]
+                    .length;
                 if (previousCount !== newCount) {
                     console.log(`SubProblem ${s} ${searchQueryType} deduplicated count: ${newCount}`);
                 }
@@ -47,7 +54,7 @@ class DeduplicateSearchProcessor {
             if (subProblem.entities[e].searchResults) {
                 const previousCount = subProblem.entities[e].searchResults.pages[searchQueryType].length;
                 subProblem.entities[e].searchResults.pages[searchQueryType] =
-                    this.deduplicateArrayByProperty(subProblem.entities[e].searchResults.pages[searchQueryType], 'title');
+                    this.deduplicateArrayByProperty(subProblem.entities[e].searchResults.pages[searchQueryType], "title", `entity_${subProblemIndex}_${e}`);
                 const newCount = subProblem.entities[e].searchResults.pages[searchQueryType].length;
                 if (previousCount !== newCount) {
                     console.log(`SubProblem ${subProblemIndex} Entity ${e} ${searchQueryType} deduplicated count: ${newCount}`);
@@ -58,7 +65,7 @@ class DeduplicateSearchProcessor {
     deduplicateProblemStatement(searchQueryType) {
         const previousCount = this.memory.problemStatement.searchResults.pages[searchQueryType].length;
         this.memory.problemStatement.searchResults.pages[searchQueryType] =
-            this.deduplicateArrayByProperty(this.memory.problemStatement.searchResults.pages[searchQueryType], 'title');
+            this.deduplicateArrayByProperty(this.memory.problemStatement.searchResults.pages[searchQueryType], "title", "problemStatement");
         const newCount = this.memory.problemStatement.searchResults.pages[searchQueryType].length;
         if (previousCount !== newCount) {
             console.log(`ProblemStatement ${searchQueryType} deduplicated count: ${newCount}`);
@@ -66,7 +73,12 @@ class DeduplicateSearchProcessor {
     }
     process() {
         try {
-            const searchQueryTypes = ["general", "scientific", "openData", "news"];
+            const searchQueryTypes = [
+                "general",
+                "scientific",
+                "openData",
+                "news",
+            ];
             for (const searchQueryType of searchQueryTypes) {
                 this.deduplicateProblemStatement(searchQueryType);
                 this.deduplicateSubProblems(searchQueryType);
@@ -93,11 +105,11 @@ const dedup = async () => {
         process.exit(0);
     }
     else {
-        console.log('No project id provided');
+        console.log("No project id provided");
         process.exit(1);
     }
 };
-dedup().catch(error => {
+dedup().catch((error) => {
     console.error(error);
     process.exit(1);
 });

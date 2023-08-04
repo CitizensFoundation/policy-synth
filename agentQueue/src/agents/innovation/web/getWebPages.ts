@@ -407,6 +407,12 @@ export class GetWebPagesProcessor extends BaseProcessor {
     textAnalysis.communityId = this.memory.communityId;
     textAnalysis.domainId = this.memory.domainId;
 
+    if (Array.isArray(textAnalysis.contacts) && textAnalysis.contacts.length > 0) {
+      if (typeof textAnalysis.contacts[0] === 'object' && textAnalysis.contacts[0] !== null) {
+        textAnalysis.contacts = textAnalysis.contacts.map(contact => JSON.stringify(contact));
+      }
+    }
+
     this.logger.debug(
       `Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`
     );
@@ -751,7 +757,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.max(
+      Math.min(
         this.memory.subProblems.length,
         IEngineConstants.maxSubProblems
       );

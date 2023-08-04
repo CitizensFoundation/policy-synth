@@ -305,6 +305,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
         textAnalysis.groupId = this.memory.groupId;
         textAnalysis.communityId = this.memory.communityId;
         textAnalysis.domainId = this.memory.domainId;
+        if (Array.isArray(textAnalysis.contacts) && textAnalysis.contacts.length > 0) {
+            if (typeof textAnalysis.contacts[0] === 'object' && textAnalysis.contacts[0] !== null) {
+                textAnalysis.contacts = textAnalysis.contacts.map(contact => JSON.stringify(contact));
+            }
+        }
         this.logger.debug(`Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
         try {
             await this.webPageVectorStore.postWebPage(textAnalysis);
@@ -515,7 +520,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
     async getAllCustomSearchUrls(browserPage) {
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.max(this.memory.subProblems.length, IEngineConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); subProblemIndex++) {
             const customUrls = this.memory.subProblems[subProblemIndex].customSearchUrls;
             if (customUrls) {
                 for (let i = 0; i < customUrls.length; i++) {

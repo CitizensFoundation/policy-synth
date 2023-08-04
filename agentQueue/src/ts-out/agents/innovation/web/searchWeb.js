@@ -5,6 +5,7 @@ import ioredis from "ioredis";
 import { BingSearchApi } from "./bingSearchApi.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class SearchWebProcessor extends BaseProcessor {
+    seenUrls;
     async callSearchApi(query) {
         if (process.env.AZURE_BING_SEARCH_KEY) {
             const bingSearchApi = new BingSearchApi();
@@ -79,7 +80,7 @@ export class SearchWebProcessor extends BaseProcessor {
             }
         }
     }
-    async getQueryResults(queriesToSearch) {
+    async getQueryResults(queriesToSearch, id) {
         let searchResults = [];
         for (let q = 0; q < queriesToSearch.length; q++) {
             const generalSearchData = await this.callSearchApi(queriesToSearch[q]);
@@ -94,15 +95,24 @@ export class SearchWebProcessor extends BaseProcessor {
             this.logger.debug(`Search Results Batch: ${JSON.stringify(searchResults, null, 2)}`);
             await new Promise((resolve) => setTimeout(resolve, 500));
         }
-        // dedupe search results based on url
-        searchResults = searchResults.filter((v, i, a) => a.findIndex((t) => t.url === v.url) === i);
+        if (!this.seenUrls.has(id)) {
+            this.seenUrls.set(id, new Set());
+        }
+        const seen = this.seenUrls.get(id);
+        searchResults = searchResults.filter((v, i, a) => {
+            const urlSeen = seen.has(v.url);
+            if (!urlSeen) {
+                seen.add(v.url);
+            }
+            return !urlSeen;
+        });
         return { searchResults };
     }
     async processSubProblems(searchQueryType) {
         for (let s = 0; s <
             Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
             let queriesToSearch = this.memory.subProblems[s].searchQueries[searchQueryType].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
-            const results = await this.getQueryResults(queriesToSearch);
+            const results = await this.getQueryResults(queriesToSearch, `subProblem_${s}`);
             if (!this.memory.subProblems[s].searchResults) {
                 this.memory.subProblems[s].searchResults = {
                     pages: {
@@ -123,7 +133,7 @@ export class SearchWebProcessor extends BaseProcessor {
         for (let e = 0; e <
             Math.min(this.memory.subProblems[subProblemIndex].entities.length, IEngineConstants.maxTopEntitiesToSearch); e++) {
             let queriesToSearch = this.memory.subProblems[subProblemIndex].entities[e].searchQueries[searchQueryType].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
-            const results = await this.getQueryResults(queriesToSearch);
+            const results = await this.getQueryResults(queriesToSearch, `entity_${subProblemIndex}_${e}`);
             if (!this.memory.subProblems[subProblemIndex].entities[e].searchResults) {
                 this.memory.subProblems[subProblemIndex].entities[e].searchResults = {
                     pages: {
@@ -141,13 +151,14 @@ export class SearchWebProcessor extends BaseProcessor {
     async processProblemStatement(searchQueryType) {
         let queriesToSearch = this.memory.problemStatement.searchQueries[searchQueryType].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
         this.logger.info("Getting search data for problem statement");
-        const results = await this.getQueryResults(queriesToSearch);
+        const results = await this.getQueryResults(queriesToSearch, 'problemStatement');
         this.memory.problemStatement.searchResults.pages[searchQueryType] =
             results.searchResults;
         await this.saveMemory();
     }
     async process() {
         this.logger.info("Search Web Processor");
+        this.seenUrls = new Map();
         super.process();
         try {
             for (const searchQueryType of [

@@ -10,6 +10,8 @@ const redis = new ioredis.default(
 );
 
 export class SearchWebProcessor extends BaseProcessor {
+  seenUrls!: Map<string, Set<string>>;
+
   async callSearchApi(query: string): Promise<IEngineSearchResultItem[]> {
     if (process.env.AZURE_BING_SEARCH_KEY) {
       const bingSearchApi = new BingSearchApi();
@@ -91,7 +93,7 @@ export class SearchWebProcessor extends BaseProcessor {
     }
   }
 
-  async getQueryResults(queriesToSearch: string[]) {
+  async getQueryResults(queriesToSearch: string[], id: string) {
     let searchResults: IEngineSearchResultItem[] = [];
 
     for (let q = 0; q < queriesToSearch.length; q++) {
@@ -114,9 +116,19 @@ export class SearchWebProcessor extends BaseProcessor {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    // dedupe search results based on url
+    if (!this.seenUrls.has(id)) {
+      this.seenUrls.set(id, new Set());
+    }
+
+    const seen = this.seenUrls.get(id);
     searchResults = searchResults.filter(
-      (v, i, a) => a.findIndex((t) => t.url === v.url) === i
+      (v, i, a) => {
+        const urlSeen = seen!.has(v.url);
+        if (!urlSeen) {
+          seen!.add(v.url);
+        }
+        return !urlSeen;
+      }
     );
 
     return { searchResults };
@@ -133,7 +145,7 @@ export class SearchWebProcessor extends BaseProcessor {
         searchQueryType
       ].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
 
-      const results = await this.getQueryResults(queriesToSearch);
+      const results = await this.getQueryResults(queriesToSearch, `subProblem_${s}`);
 
       if (!this.memory.subProblems[s].searchResults) {
         this.memory.subProblems[s].searchResults = {
@@ -175,7 +187,7 @@ export class SearchWebProcessor extends BaseProcessor {
         IEngineConstants.maxTopQueriesToSearchPerType
       );
 
-      const results = await this.getQueryResults(queriesToSearch);
+      const results = await this.getQueryResults(queriesToSearch, `entity_${subProblemIndex}_${e}`);
 
       if (!this.memory.subProblems[subProblemIndex].entities[e].searchResults) {
         this.memory.subProblems[subProblemIndex].entities[e].searchResults = {
@@ -203,7 +215,7 @@ export class SearchWebProcessor extends BaseProcessor {
 
     this.logger.info("Getting search data for problem statement");
 
-    const results = await this.getQueryResults(queriesToSearch);
+    const results = await this.getQueryResults(queriesToSearch, 'problemStatement');
 
     this.memory.problemStatement.searchResults!.pages[searchQueryType] =
       results.searchResults;
@@ -213,6 +225,8 @@ export class SearchWebProcessor extends BaseProcessor {
 
   async process() {
     this.logger.info("Search Web Processor");
+    this.seenUrls = new Map();
+
     super.process();
 
     try {
