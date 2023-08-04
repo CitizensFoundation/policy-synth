@@ -88,6 +88,7 @@ interface IEngineProblemStatement {
   description: string;
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
+  haveScannedWeb?: boolean;
 }
 
 interface IEngineSubProblem {
@@ -99,6 +100,7 @@ interface IEngineSubProblem {
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
+  haveScannedWeb?: boolean;
   eloRating?: number;
   solutions: {
     populations: IEngineSolution[][];
@@ -120,6 +122,7 @@ interface IEngineAffectedEntity {
   eloRating?: number;
   searchQueries?: IEngineSearchQueries;
   searchResults?: IEngineSearchResults;
+  haveScannedWeb?: boolean;
 }
 
 interface IEngineSolutionAffectedEntity extends IEngineAffectedEntityBase {

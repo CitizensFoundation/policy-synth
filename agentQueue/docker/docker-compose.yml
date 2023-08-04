@@ -9,18 +9,20 @@ services:
     - '8080'
     - --scheme
     - http
-    image: semitechnologies/weaviate:1.20.0
+    image: semitechnologies/weaviate:1.20.4
     ports:
     - 8080:8080
     restart: on-failure:0
     volumes:
-      - /var/weaviate:/var/lib/weaviate_innvation
+      - /var/weaviate_policy_synth:/var/lib/weaviate_ps
     environment:
       LOG_LEVEL: 'debug'
       QUERY_DEFAULTS_LIMIT: 20
-      BACKUP_FILESYSTEM_PATH: "/var/weaviate_innovation_backups"
+      DISK_USE_READONLY_PERCENTAGE: 99
+      DISK_USE_WARNING_PERCENTAGE: 95
+      BACKUP_FILESYSTEM_PATH: "/var/weaviate_policy_synth_backups"
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: "/var/lib/weaviate_innovation"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate_ps"
       DEFAULT_VECTORIZER_MODULE: text2vec-openai
       ENABLE_MODULES: backup-filesystem,text2vec-openai
       OPENAI_APIKEY: ${OPENAI_API_KEY}
