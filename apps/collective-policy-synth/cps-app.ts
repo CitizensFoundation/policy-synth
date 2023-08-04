@@ -1244,7 +1244,11 @@ export class CpsApp extends YpBaseElement {
     return html`<md-dialog id="tempPasswordDialog" scrimClickAction="" escapeKeyAction="">
       <div slot="header" class="postHeader">${this.t("Please Enter Password")}</div>
       <div id="content" class="layout vertical center-center">
-        <md-outlined-text-field id="tempPassword" type="password"></md-outlined-text-field>
+        <md-outlined-text-field id="tempPassword" type="password" @keyup="${(e:KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            this.submitTempPassword();
+          }
+        }}"></md-outlined-text-field>
         <md-elevated-button @click="${this.submitTempPassword}">${this.t("Submit")}</md-elevated-button>
       </div>
       <div slot="footer"></div>
