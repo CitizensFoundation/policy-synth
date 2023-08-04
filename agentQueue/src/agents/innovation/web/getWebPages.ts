@@ -5,6 +5,14 @@ import { IEngineConstants } from "../../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 
+import { createGzip, gunzipSync, gzipSync } from 'zlib';
+import { promisify } from 'util';
+import { writeFile, readFile, existsSync } from 'fs';
+
+const gzip = promisify(createGzip);
+const writeFileAsync = promisify(writeFile);
+const readFileAsync = promisify(readFile);
+
 import { htmlToText } from "html-to-text";
 import { BaseProcessor } from "../baseProcessor.js";
 
@@ -407,13 +415,16 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
           if (t == 0) {
             textAnalysis = nextAnalysis;
-          }
-          else {
+          } else {
             textAnalysis = this.mergeAnalysisData(textAnalysis!, nextAnalysis);
           }
 
           this.logger.debug(
-            `Refined text analysis (${t}): ${JSON.stringify(textAnalysis, null, 2)}`
+            `Refined text analysis (${t}): ${JSON.stringify(
+              textAnalysis,
+              null,
+              2
+            )}`
           );
         }
       } else {
@@ -421,7 +432,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         this.logger.debug(
           `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
         );
-    }
+      }
 
       return textAnalysis!;
     } catch (error) {
@@ -479,12 +490,12 @@ export class GetWebPagesProcessor extends BaseProcessor {
         let finalText = "";
         let pdfBuffer;
 
-        const redisKey = `pg_ca_v5p:${url}`;
-        const cachedHtml = await redis.get(redisKey);
+        const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
 
-        if (cachedHtml) {
+        if (existsSync(filePath)) {
           this.logger.info("Got cached PDF");
-          pdfBuffer = Buffer.from(cachedHtml, "base64");
+          const cachedPdf = await readFileAsync(filePath);
+          pdfBuffer = gunzipSync(cachedPdf);
         } else {
           const sleepingForMs =
             IEngineConstants.minSleepBeforeBrowserRequest +
@@ -503,14 +514,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
           if (pdfBuffer) {
             this.logger.debug(`Caching PDF response`);
-            const base64Pdf = Buffer.from(pdfBuffer).toString("base64");
-
-            await redis.set(
-              redisKey,
-              base64Pdf,
-              "EX",
-              IEngineConstants.getPageCacheExpiration
-            );
+            const gzipData = await gzip(pdfBuffer);
+            await writeFileAsync(filePath, gzipData as any);
           }
         }
 
@@ -565,12 +570,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
     try {
       let finalText, htmlText;
 
-      const redisKey = `pg_ca_v4t:${url}`;
-      const cachedHtml = await redis.get(redisKey);
 
-      if (cachedHtml) {
+      const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
+
+      if (existsSync(filePath)) {
         this.logger.info("Got cached HTML");
-        htmlText = cachedHtml;
+        const cachedData = await readFileAsync(filePath);
+        htmlText = gunzipSync(cachedData).toString();
       } else {
         const sleepingForMs =
           IEngineConstants.minSleepBeforeBrowserRequest +
@@ -588,12 +594,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
           htmlText = await response.text();
           if (htmlText) {
             this.logger.debug(`Caching response`);
-            await redis.set(
-              redisKey,
-              htmlText.toString(),
-              "EX",
-              IEngineConstants.getPageCacheExpiration
-            );
+          const gzipData = gzipSync(Buffer.from(htmlText));
+          await writeFileAsync(filePath, gzipData);
           }
         }
       }
@@ -683,6 +685,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
         );
       }
 
+      this.memory.subProblems[s].haveScannedWeb = true;
+
       await this.processEntities(s, searchQueryType, browserPage);
 
       await this.saveMemory();
@@ -723,6 +727,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
           searchQueryType
         );
       }
+
+      this.memory.subProblems[subProblemIndex].entities[e].haveScannedWeb =
+        true;
 
       this.currentEntity = undefined;
     }
@@ -783,6 +790,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
         searchQueryType
       );
     }
+
+    this.memory.problemStatement.haveScannedWeb = true;
   }
 
   async getAllPages() {
@@ -824,5 +833,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     await this.getAllPages();
 
     await this.saveMemory();
+
+    this.logger.info("Get Web Pages Processor Complete");
   }
 }

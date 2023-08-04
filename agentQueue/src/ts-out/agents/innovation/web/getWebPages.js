@@ -3,6 +3,12 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
+import { createGzip, gunzipSync, gzipSync } from 'zlib';
+import { promisify } from 'util';
+import { writeFile, readFile, existsSync } from 'fs';
+const gzip = promisify(createGzip);
+const writeFileAsync = promisify(writeFile);
+const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
 import { BaseProcessor } from "../baseProcessor.js";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
@@ -357,11 +363,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
             try {
                 let finalText = "";
                 let pdfBuffer;
-                const redisKey = `pg_ca_v5p:${url}`;
-                const cachedHtml = await redis.get(redisKey);
-                if (cachedHtml) {
+                const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
+                if (existsSync(filePath)) {
                     this.logger.info("Got cached PDF");
-                    pdfBuffer = Buffer.from(cachedHtml, "base64");
+                    const cachedPdf = await readFileAsync(filePath);
+                    pdfBuffer = gunzipSync(cachedPdf);
                 }
                 else {
                     const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
@@ -375,8 +381,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
                     pdfBuffer = axiosResponse.data;
                     if (pdfBuffer) {
                         this.logger.debug(`Caching PDF response`);
-                        const base64Pdf = Buffer.from(pdfBuffer).toString("base64");
-                        await redis.set(redisKey, base64Pdf, "EX", IEngineConstants.getPageCacheExpiration);
+                        const gzipData = await gzip(pdfBuffer);
+                        await writeFileAsync(filePath, gzipData);
                     }
                 }
                 if (pdfBuffer) {
@@ -420,11 +426,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
     async getAndProcessHtml(subProblemIndex, url, browserPage, type) {
         try {
             let finalText, htmlText;
-            const redisKey = `pg_ca_v4t:${url}`;
-            const cachedHtml = await redis.get(redisKey);
-            if (cachedHtml) {
+            const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
+            if (existsSync(filePath)) {
                 this.logger.info("Got cached HTML");
-                htmlText = cachedHtml;
+                const cachedData = await readFileAsync(filePath);
+                htmlText = gunzipSync(cachedData).toString();
             }
             else {
                 const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
@@ -439,7 +445,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
                     htmlText = await response.text();
                     if (htmlText) {
                         this.logger.debug(`Caching response`);
-                        await redis.set(redisKey, htmlText.toString(), "EX", IEngineConstants.getPageCacheExpiration);
+                        const gzipData = gzipSync(Buffer.from(htmlText));
+                        await writeFileAsync(filePath, gzipData);
                     }
                 }
             }
@@ -500,6 +507,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             for (let i = 0; i < urlsToGet.length; i++) {
                 await this.getAndProcessPage(s, urlsToGet[i], browserPage, searchQueryType);
             }
+            this.memory.subProblems[s].haveScannedWeb = true;
             await this.processEntities(s, searchQueryType, browserPage);
             await this.saveMemory();
         }
@@ -515,6 +523,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
             for (let i = 0; i < urlsToGet.length; i++) {
                 await this.getAndProcessPage(subProblemIndex, urlsToGet[i], browserPage, searchQueryType);
             }
+            this.memory.subProblems[subProblemIndex].entities[e].haveScannedWeb =
+                true;
             this.currentEntity = undefined;
         }
     }
@@ -537,6 +547,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         for (let i = 0; i < urlsToGet.length; i++) {
             await this.getAndProcessPage(undefined, urlsToGet[i], browserPage, searchQueryType);
         }
+        this.memory.problemStatement.haveScannedWeb = true;
     }
     async getAllPages() {
         puppeteer.launch({ headless: "new" }).then(async (browser) => {
@@ -567,5 +578,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
         });
         await this.getAllPages();
         await this.saveMemory();
+        this.logger.info("Get Web Pages Processor Complete");
     }
 }

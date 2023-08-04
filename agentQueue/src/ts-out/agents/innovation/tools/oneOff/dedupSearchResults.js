@@ -1,4 +1,5 @@
 import ioredis from 'ioredis';
+import { IEngineConstants } from '../../../../constants.js';
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || 'redis://localhost:6379');
 class DeduplicateSearchProcessor {
     memory;
@@ -25,26 +26,32 @@ class DeduplicateSearchProcessor {
         return deduplicatedArray;
     }
     deduplicateSubProblems(searchQueryType) {
-        for (let s = 0; s < this.memory.subProblems.length; s++) {
-            const previousCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
-            this.memory.subProblems[s].searchResults.pages[searchQueryType] =
-                this.deduplicateArrayByProperty(this.memory.subProblems[s].searchResults.pages[searchQueryType], 'title');
-            const newCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
-            if (previousCount !== newCount) {
-                console.log(`SubProblem ${s} ${searchQueryType} deduplicated count: ${newCount}`);
+        const subProblemsCount = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        for (let s = 0; s < subProblemsCount; s++) {
+            if (this.memory.subProblems[s].searchResults) {
+                const previousCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
+                this.memory.subProblems[s].searchResults.pages[searchQueryType] =
+                    this.deduplicateArrayByProperty(this.memory.subProblems[s].searchResults.pages[searchQueryType], 'title');
+                const newCount = this.memory.subProblems[s].searchResults.pages[searchQueryType].length;
+                if (previousCount !== newCount) {
+                    console.log(`SubProblem ${s} ${searchQueryType} deduplicated count: ${newCount}`);
+                }
             }
             this.deduplicateEntities(s, searchQueryType);
         }
     }
     deduplicateEntities(subProblemIndex, searchQueryType) {
         const subProblem = this.memory.subProblems[subProblemIndex];
-        for (let e = 0; e < subProblem.entities.length; e++) {
-            const previousCount = subProblem.entities[e].searchResults.pages[searchQueryType].length;
-            subProblem.entities[e].searchResults.pages[searchQueryType] =
-                this.deduplicateArrayByProperty(subProblem.entities[e].searchResults.pages[searchQueryType], 'title');
-            const newCount = subProblem.entities[e].searchResults.pages[searchQueryType].length;
-            if (previousCount !== newCount) {
-                console.log(`SubProblem ${subProblemIndex} Entity ${e} ${searchQueryType} deduplicated count: ${newCount}`);
+        const entitiesCount = Math.min(subProblem.entities.length, IEngineConstants.maxTopEntitiesToSearch);
+        for (let e = 0; e < entitiesCount; e++) {
+            if (subProblem.entities[e].searchResults) {
+                const previousCount = subProblem.entities[e].searchResults.pages[searchQueryType].length;
+                subProblem.entities[e].searchResults.pages[searchQueryType] =
+                    this.deduplicateArrayByProperty(subProblem.entities[e].searchResults.pages[searchQueryType], 'title');
+                const newCount = subProblem.entities[e].searchResults.pages[searchQueryType].length;
+                if (previousCount !== newCount) {
+                    console.log(`SubProblem ${subProblemIndex} Entity ${e} ${searchQueryType} deduplicated count: ${newCount}`);
+                }
             }
         }
     }
@@ -83,10 +90,14 @@ const dedup = async () => {
         const dedupper = new DeduplicateSearchProcessor(memory);
         dedupper.process();
         await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memory));
+        process.exit(0);
     }
     else {
         console.log('No project id provided');
         process.exit(1);
     }
 };
-dedup().catch(console.error);
+dedup().catch(error => {
+    console.error(error);
+    process.exit(1);
+});
