@@ -314,7 +314,7 @@ interface IEngineWebPageAnalysisData {
   groupId: number;
   communityId: number;
   domainId: number;
-  _additional: {
+  _additional?: {
     distance: number;
   };
 }

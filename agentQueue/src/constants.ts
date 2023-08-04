@@ -230,9 +230,9 @@ export class IEngineConstants {
 
   static maxDalleRetryCount = 7;
 
-  static maxTopWebPagesToGet = 7;
+  static maxTopWebPagesToGet = 10;
 
-  static maxWebPagesToGetByTopSearchPosition = 7;
+  static maxWebPagesToGetByTopSearchPosition = 10;
 
   static maxSearchResults = 10;
 
@@ -240,9 +240,9 @@ export class IEngineConstants {
 
   static maxNumberGeneratedProsConsForSolution = 3;
 
-  static minSleepBeforeBrowserRequest = 1100;
+  static minSleepBeforeBrowserRequest = 50;
 
-  static maxAdditionalRandomSleepBeforeBrowserRequest = 1100;
+  static maxAdditionalRandomSleepBeforeBrowserRequest = 100;
 
   static numberOfSearchTypes = 4;
 

@@ -119,6 +119,18 @@
     },
     {
       "dataType": [
+        "string[]"
+      ],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "name": "contacts"
+    },
+    {
+      "dataType": [
         "int"
       ],
       "moduleConfig": {
