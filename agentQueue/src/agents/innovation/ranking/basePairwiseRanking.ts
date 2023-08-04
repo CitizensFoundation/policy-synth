@@ -222,8 +222,9 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
           throw new Error("Invalid won or lost item index");
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error("Error performing pairwise ranking");
+      this.logger.error(error.stack);
       if (typeof error === "object") {
         this.logger.error(JSON.stringify(error));
       } else {

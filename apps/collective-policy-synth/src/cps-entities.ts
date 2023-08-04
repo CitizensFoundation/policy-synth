@@ -7,15 +7,19 @@ import { CpsStageBase } from './cps-stage-base.js';
 
 //TDOO: Share from db config
 const maxNumberOfSubProblems = 7;
-const maxNumberOfTopEntities = 3;
 
 @customElement('cps-entities')
 export class CpsEntities extends CpsStageBase {
   @property({ type: Number })
   activeEntityIndex: number | null = null;
 
+  maxNumberOfTopEntities = 3;
+
   async connectedCallback() {
     super.connectedCallback();
+    if (this.memory.groupId==2) {
+      this.maxNumberOfTopEntities = 4;
+    }
     window.appGlobals.activity(`Sub Problems - open`);
   }
 
@@ -77,7 +81,7 @@ export class CpsEntities extends CpsStageBase {
       <div class="topContainer layout vertical center-center">
         ${this.renderSubProblem(subProblem, false, 0, true, true)}
         ${subProblem.entities.map((entity, entityIndex) => {
-          const isEntityLessProminent = entityIndex >= maxNumberOfTopEntities;
+          const isEntityLessProminent = entityIndex >= this.maxNumberOfTopEntities;
           return html`
             <div class="entity ${isEntityLessProminent ? 'lessProminent' : ''}">
               <div class="entityName">${entity.name}</div>

@@ -209,7 +209,7 @@ export class IEngineConstants {
                 useSubProblemSearchQueries: 0.4,
                 useRandomEntitySearchQueries: 0.5,
             },
-            notUsingFirstSearchQuery: 0.50,
+            notUsingTopSearchQueries: 0.33,
             vectorSearchAcrossAllProblems: 0.25,
         },
     };

@@ -150,13 +150,15 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         const randomIndex = Math.min(Math.floor(Math.random() *
             (IEngineConstants.maxTopSearchQueriesForSolutionCreation + 1)), searchQueries[type].length - 1);
         if (Math.random() <
-            IEngineConstants.chances.createSolutions.notUsingFirstSearchQuery) {
+            IEngineConstants.chances.createSolutions.notUsingTopSearchQueries) {
             this.logger.debug(`Using random search query index ${randomIndex}`);
             return randomIndex;
         }
         else {
-            this.logger.debug(`Using first search query index 0`);
-            return 0;
+            const randomTop = Math.min(Math.floor(Math.random() *
+                (IEngineConstants.maxTopQueriesToSearchPerType + 1)), searchQueries[type].length - 1);
+            this.logger.debug(`Using top search query index ${randomIndex}`);
+            return randomTop;
         }
     }
     getAllTypeQueries(searchQueries, subProblemIndex) {

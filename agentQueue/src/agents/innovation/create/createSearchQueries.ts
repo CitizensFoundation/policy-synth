@@ -89,45 +89,52 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
       IEngineConstants.createSearchQueriesModel,
       await this.renderProblemPrompt(this.memory.problemStatement.description)
     );
-    await this.saveMemory();
 
-    for (
-      let s = 0;
-      s <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
-      s++
-    ) {
-      const promblemText = `
-        ${this.memory.subProblems[s].title}
-        ${this.memory.subProblems[s].description}
-      `;
+    const subProblemsLimit = Math.min(
+      this.memory.subProblems.length,
+      IEngineConstants.maxSubProblems
+    );
 
-      this.memory.subProblems[s].searchQueries = await this.callLLM(
-        "create-search-queries",
-        IEngineConstants.createSearchQueriesModel,
-        await this.renderProblemPrompt(promblemText)
-      );
-      await this.saveMemory();
+    const subProblemsPromises = Array.from(
+      { length: subProblemsLimit },
+      async (_, subProblemIndex) => {
+        const problemText = `
+          ${this.memory.subProblems[subProblemIndex].title}
+          ${this.memory.subProblems[subProblemIndex].description}
+        `;
 
-      for (
-        let e = 0;
-        e <
-        Math.min(
-          this.memory.subProblems[s].entities.length,
-          IEngineConstants.maxTopEntitiesToSearch
-        );
-        e++
-      ) {
-        this.memory.subProblems[s].entities[e].searchQueries = await this.callLLM(
-          "create-search-queries",
-          IEngineConstants.createSearchQueriesModel,
-          await this.renderEntityPrompt(
-            promblemText,
-            this.memory.subProblems[s].entities[e]
-          )
-        );
+        this.memory.subProblems[subProblemIndex].searchQueries =
+          await this.callLLM(
+            "create-search-queries",
+            IEngineConstants.createSearchQueriesModel,
+            await this.renderProblemPrompt(problemText)
+          );
         await this.saveMemory();
+
+        for (
+          let e = 0;
+          e <
+          Math.min(
+            this.memory.subProblems[subProblemIndex].entities.length,
+            IEngineConstants.maxTopEntitiesToSearch
+          );
+          e++
+        ) {
+          this.memory.subProblems[subProblemIndex].entities[e].searchQueries =
+            await this.callLLM(
+              "create-search-queries",
+              IEngineConstants.createSearchQueriesModel,
+              await this.renderEntityPrompt(
+                problemText,
+                this.memory.subProblems[subProblemIndex].entities[e]
+              )
+            );
+          await this.saveMemory();
+        }
       }
-    }
+    );
+
+    await Promise.all(subProblemsPromises);
+    this.logger.info("Finished creating search queries for all subproblems");
   }
 }

@@ -13,8 +13,6 @@ import '@material/web/iconbutton/standard-icon-button.js';
 import { MdStandardIconButton } from '@material/web/iconbutton/standard-icon-button.js';
 
 //TDOO: Share from db config
-const maxTopSearchQueries = 2;
-const maxUsedSearchResults = 4;
 const maxNumberOfSubProblems = 7;
 
 export abstract class CpsStageBase extends YpBaseElement {
@@ -47,8 +45,15 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   subProblemColors: string[] = [];
 
+  maxTopSearchQueries = 2;
+  maxUsedSearchResults = 4;
+
   connectedCallback(): void {
     super.connectedCallback();
+    if (this.memory.groupId==2) {
+      this.maxTopSearchQueries = 3;
+      this.maxUsedSearchResults = 7;
+    }
     if (this.memory.subProblemClientColors) {
       this.subProblemColors = this.memory.subProblemClientColors;
     } else {
@@ -427,10 +432,10 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   isUsedSearch(result: IEngineSearchResultItem, index: number) {
     if (
-      index < maxUsedSearchResults ||
-      (result.position && result.position <= maxUsedSearchResults) ||
+      index < this.maxUsedSearchResults ||
+      (result.position && result.position <= this.maxUsedSearchResults) ||
       (result.originalPosition &&
-        result.originalPosition <= maxUsedSearchResults)
+        result.originalPosition <= this.maxUsedSearchResults)
     ) {
       return 'selectedSearchItem';
     } else {
@@ -674,7 +679,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                   return html`
                     <div class="column">
                       <div
-                        class="query ${index < maxTopSearchQueries
+                        class="query ${index < this.maxTopSearchQueries
                           ? `queryUsed`
                           : ``}"
                       >
