@@ -35,6 +35,7 @@ class ProjectsController {
     }
     getProject = async (req, res) => {
         let projectData;
+        console.log(`Getting project data for ${req.params.id}`);
         const temporaryPasswordKey = `TEMP_PROJECT_${req.params.id}_PASSWORD`;
         const backupMemoryUrlKey = `BACKUP_PROJECT_URL_${req.params.id}`;
         if (process.env[temporaryPasswordKey] && !req.query.trm) {

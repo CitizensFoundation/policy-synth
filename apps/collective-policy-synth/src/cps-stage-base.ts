@@ -52,7 +52,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     super.connectedCallback();
     if (this.memory.groupId==2) {
       this.maxTopSearchQueries = 3;
-      this.maxUsedSearchResults = 7;
+      this.maxUsedSearchResults = 1000;
     }
     if (this.memory.subProblemClientColors) {
       this.subProblemColors = this.memory.subProblemClientColors;

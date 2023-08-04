@@ -44,6 +44,8 @@ export class ProjectsController {
   getProject = async (req: express.Request, res: express.Response) => {
     let projectData;
 
+    console.log(`Getting project data for ${req.params.id}`)
+
     const temporaryPasswordKey  = `TEMP_PROJECT_${req.params.id}_PASSWORD`;
     const backupMemoryUrlKey  = `BACKUP_PROJECT_URL_${req.params.id}`;
 
