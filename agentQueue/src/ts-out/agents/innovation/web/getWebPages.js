@@ -70,8 +70,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
         5. Never store citations or references in the 'mostRelevantParagraphs' array.
         6. Add any contacts you find in the "Text Context" to the 'contacts' JSON array.
         7. Never output in markdown format.
-        8. Always output your results in the JSON format with no additional explanation.
-        9. Think step-by-step.
+        8. Never include references as part of the 'mostRelevantParagraphs' array.
+        9. Always output your results in the JSON format with no additional explanation.
+        10. Think step-by-step.
 
         Examples:
 
@@ -236,10 +237,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
             groupId: data1.groupId,
             communityId: data1.communityId,
             domainId: data1.domainId,
-            _additional: {
-                ...data1._additional,
-                ...data2._additional,
-            },
         };
     }
     async splitText(fullText, maxChunkTokenCount) {
@@ -292,7 +289,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         if (currentChunk !== "") {
             chunks.push(currentChunk);
         }
-        this.logger.debug(`Split text into ${chunks.length} chunks ${JSON.stringify(chunks, null, 2)}`);
+        this.logger.debug(`Split text into ${chunks.length} chunks`);
         return chunks;
     }
     async getAIAnalysis(text) {
@@ -352,6 +349,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         catch (e) {
             this.logger.error(`Error posting web page`);
             this.logger.error(e);
+            this.logger.error(e.stack);
         }
     }
     //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
@@ -426,6 +424,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     async getAndProcessHtml(subProblemIndex, url, browserPage, type) {
         try {
             let finalText, htmlText;
+            this.logger.debug(`Getting HTML for ${url}`);
             const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
             if (existsSync(filePath)) {
                 this.logger.info("Got cached HTML");
@@ -544,6 +543,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         this.logger.info(`Ranking Problem Statement for ${searchQueryType} search results`);
         this.searchResultTarget = "problemStatement";
         const urlsToGet = this.getUrlsToFetch(this.memory.problemStatement.searchResults.pages[searchQueryType]);
+        this.logger.debug(`Got ${urlsToGet.length} URLs`);
         for (let i = 0; i < urlsToGet.length; i++) {
             await this.getAndProcessPage(undefined, urlsToGet[i], browserPage, searchQueryType);
         }
