@@ -106,7 +106,7 @@ export class IEngineConstants {
         tokenLimit: 16385,
         inTokenCostUSD: gpt35_16kInTokenPrice,
         outTokenCostUSD: gpt35_16kOutTokenPrice,
-        verbose: true,
+        verbose: false,
     };
     static reapSolutionsModel = {
         name: "gpt-4",
