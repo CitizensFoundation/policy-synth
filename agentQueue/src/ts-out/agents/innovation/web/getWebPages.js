@@ -20,9 +20,7 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 puppeteer.use(StealthPlugin());
 export class GetWebPagesProcessor extends BaseProcessor {
     webPageVectorStore = new WebPageVectorStore();
-    searchResultTarget;
-    currentEntity;
-    renderInitialMessages(problemStatement, text) {
+    renderScanningPrompt(problemStatement, text, subProblemIndex) {
         return [
             new SystemChatMessage(`Your are an AI expert in analyzing textual data:
 
@@ -154,9 +152,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
         Problem Statement:
         ${problemStatement.description}
 
-        ${this.searchResultTarget == "subProblem"
+        ${subProblemIndex !== undefined
                 ? `
-                ${this.renderSubProblem(this.currentSubProblemIndex)}
+                ${this.renderSubProblem(subProblemIndex)}
               `
                 : ``}
 
@@ -167,8 +165,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
         `),
         ];
     }
-    async getTokenCount(text) {
-        const emptyMessages = this.renderInitialMessages(this.memory.problemStatement, "");
+    async getTokenCount(text, subProblemIndex) {
+        const emptyMessages = this.renderScanningPrompt(this.memory.problemStatement, "", subProblemIndex);
         const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
         const textForTokenCount = new HumanChatMessage(text);
         const textTokenCount = await this.chat.getNumTokensFromMessages([
@@ -202,13 +200,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
             domainId: data1.domainId,
         };
     }
-    async splitText(fullText, maxChunkTokenCount) {
+    async splitText(fullText, maxChunkTokenCount, subProblemIndex) {
         const chunks = [];
         const elements = fullText.split("\n");
         let currentChunk = "";
         const addElementToChunk = async (element) => {
             const potentialChunk = (currentChunk !== "" ? currentChunk + "\n" : "") + element;
-            const tokenCount = await this.getTokenCount(potentialChunk);
+            const tokenCount = await this.getTokenCount(potentialChunk, subProblemIndex);
             if (tokenCount.totalTokenCount > maxChunkTokenCount) {
                 // If currentChunk is not empty, add it to chunks and start a new chunk with the element
                 if (currentChunk !== "") {
@@ -237,7 +235,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
         };
         for (let element of elements) {
             // Before adding an element to a chunk, check its size
-            if ((await this.getTokenCount(element)).totalTokenCount > maxChunkTokenCount) {
+            if ((await this.getTokenCount(element, subProblemIndex)).totalTokenCount >
+                maxChunkTokenCount) {
                 // If the element is too large, split it by sentences
                 const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
                 for (let sentence of sentences) {
@@ -255,15 +254,15 @@ export class GetWebPagesProcessor extends BaseProcessor {
         this.logger.debug(`Split text into ${chunks.length} chunks`);
         return chunks;
     }
-    async getAIAnalysis(text) {
+    async getAIAnalysis(text, subProblemIndex) {
         this.logger.info("Get AI Analysis");
-        const messages = this.renderInitialMessages(this.memory.problemStatement, text);
+        const messages = this.renderScanningPrompt(this.memory.problemStatement, text, subProblemIndex);
         const analysis = (await this.callLLM("web-get-pages", IEngineConstants.getPageAnalysisModel, messages));
         return analysis;
     }
-    async getTextAnalysis(text) {
+    async getTextAnalysis(text, subProblemIndex) {
         try {
-            const { totalTokenCount, promptTokenCount } = await this.getTokenCount(text);
+            const { totalTokenCount, promptTokenCount } = await this.getTokenCount(text, subProblemIndex);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
             if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
@@ -271,11 +270,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
                     promptTokenCount.totalCount -
                     128;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
-                const splitText = await this.splitText(text, maxTokenLengthForChunk);
+                const splitText = await this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];
-                    let nextAnalysis = await this.getAIAnalysis(currentText);
+                    let nextAnalysis = await this.getAIAnalysis(currentText, subProblemIndex);
                     if (t == 0) {
                         textAnalysis = nextAnalysis;
                     }
@@ -286,7 +285,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                 }
             }
             else {
-                textAnalysis = await this.getAIAnalysis(text);
+                textAnalysis = await this.getAIAnalysis(text, subProblemIndex);
                 this.logger.debug(`Text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
             }
             return textAnalysis;
@@ -298,16 +297,18 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
     async processPageText(text, subProblemIndex, url, type) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
-        const textAnalysis = await this.getTextAnalysis(text);
+        const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
         textAnalysis.url = url;
         textAnalysis.subProblemIndex = subProblemIndex;
         textAnalysis.searchType = type;
         textAnalysis.groupId = this.memory.groupId;
         textAnalysis.communityId = this.memory.communityId;
         textAnalysis.domainId = this.memory.domainId;
-        if (Array.isArray(textAnalysis.contacts) && textAnalysis.contacts.length > 0) {
-            if (typeof textAnalysis.contacts[0] === 'object' && textAnalysis.contacts[0] !== null) {
-                textAnalysis.contacts = textAnalysis.contacts.map(contact => JSON.stringify(contact));
+        if (Array.isArray(textAnalysis.contacts) &&
+            textAnalysis.contacts.length > 0) {
+            if (typeof textAnalysis.contacts[0] === "object" &&
+                textAnalysis.contacts[0] !== null) {
+                textAnalysis.contacts = textAnalysis.contacts.map((contact) => JSON.stringify(contact));
             }
         }
         this.logger.debug(`Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
@@ -363,7 +364,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                             }
                             else if (!item) {
                                 finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-                                this.logger.debug(`Got final PDF text: ${finalText ? finalText.slice(0, 100) : ''}`);
+                                this.logger.debug(`Got final PDF text: ${finalText ? finalText.slice(0, 100) : ""}`);
                                 await this.processPageText(finalText, subProblemIndex, url, type);
                                 resolve();
                             }
@@ -468,9 +469,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     async processSubProblems(searchQueryType, browserPage) {
         for (let s = 0; s <
             Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
-            this.currentSubProblemIndex = s;
-            this.logger.info(`Fetching pages for Sub Problem ${s} for ${searchQueryType} search results`);
-            this.searchResultTarget = "subProblem";
+            this.logger.info(`Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`);
             const urlsToGet = this.getUrlsToFetch(this.memory.subProblems[s].searchResults.pages[searchQueryType]);
             for (let i = 0; i < urlsToGet.length; i++) {
                 await this.getAndProcessPage(s, urlsToGet[i], browserPage, searchQueryType);
@@ -483,9 +482,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
     async processEntities(subProblemIndex, searchQueryType, browserPage) {
         for (let e = 0; e <
             Math.min(this.memory.subProblems[subProblemIndex].entities.length, IEngineConstants.maxTopEntitiesToSearch); e++) {
-            this.logger.info(`Fetching pages for Entity ${subProblemIndex}-${e} for ${searchQueryType} search results`);
-            this.searchResultTarget = "entity";
-            this.currentEntity = this.memory.subProblems[subProblemIndex].entities[e];
+            const currentEntity = this.memory.subProblems[subProblemIndex].entities[e];
+            this.logger.info(`Fetching pages for Entity ${currentEntity.name} for ${this.memory.subProblems[subProblemIndex].title} for ${searchQueryType} search results`);
             const urlsToGet = this.getUrlsToFetch(this.memory.subProblems[subProblemIndex].entities[e].searchResults
                 .pages[searchQueryType]);
             for (let i = 0; i < urlsToGet.length; i++) {
@@ -493,7 +491,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
             }
             this.memory.subProblems[subProblemIndex].entities[e].haveScannedWeb =
                 true;
-            this.currentEntity = undefined;
         }
     }
     getUrlsToFetch(allPages) {
@@ -510,7 +507,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
     async processProblemStatement(searchQueryType, browserPage) {
         this.logger.info(`Ranking Problem Statement for ${searchQueryType} search results`);
-        this.searchResultTarget = "problemStatement";
         const urlsToGet = this.getUrlsToFetch(this.memory.problemStatement.searchResults.pages[searchQueryType]);
         this.logger.debug(`Got ${urlsToGet.length} URLs`);
         for (let i = 0; i < urlsToGet.length; i++) {
@@ -545,8 +541,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
                 "openData",
                 "news",
             ]) {
-                await this.processProblemStatement(searchQueryType, browserPage);
                 await this.processSubProblems(searchQueryType, browserPage);
+                await this.processProblemStatement(searchQueryType, browserPage);
             }
             await this.saveMemory();
             await browser.close();
