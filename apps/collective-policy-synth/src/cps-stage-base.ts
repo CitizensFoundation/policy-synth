@@ -373,7 +373,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           }
 
           .subProblem {
-            max-width: 100%;
+            max-width: 100% !important;
           }
 
           .subProblemTitle {

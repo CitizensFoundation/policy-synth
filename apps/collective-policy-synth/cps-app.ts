@@ -385,9 +385,11 @@ export class CpsApp extends YpBaseElement {
     } else if (event.detail.activeIndex == 1) {
       this.pageIndex = PagesTypes.Solutions;
     } else if (event.detail.activeIndex == 2) {
-      this.pageIndex = PagesTypes.PolicyCategories;
-    } else if (event.detail.activeIndex == 3) {
       this.pageIndex = PagesTypes.PolicyIdeas;
+    } else if (event.detail.activeIndex == 3) {
+      this.openGitHub();
+      (event.target as NavigationBar).activeIndex = 1;
+      this.pageIndex = PagesTypes.Solutions;
     }
   }
 
@@ -1219,13 +1221,13 @@ export class CpsApp extends YpBaseElement {
                 >online_prediction</md-icon
               ></md-navigation-tab
             >
-            <md-navigation-tab .label="${this.t('Categories')}"
-              ><md-icon slot="activeIcon">category</md-icon>
-              <md-icon slot="inactiveIcon">category</md-icon></md-navigation-tab
-            >
             <md-navigation-tab .label="${this.t('Policies')}"
               ><md-icon slot="activeIcon">policy</md-icon>
               <md-icon slot="inactiveIcon">policy</md-icon></md-navigation-tab
+            >
+            <md-navigation-tab .label="${this.t('Open Source')}"
+              ><md-icon slot="activeIcon">crowdsource</md-icon>
+              <md-icon slot="inactiveIcon">crowdsource</md-icon></md-navigation-tab
             >
           </md-navigation-bar>
         </div>
