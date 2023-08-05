@@ -325,7 +325,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     // https://info.arxiv.org/help/api/basics.html
     async getAndProcessPdf(subProblemIndex, url, type) {
         return new Promise(async (resolve, reject) => {
-            console.log("getAndProcessPdf");
+            this.logger.info("getAndProcessPdf");
             try {
                 let finalText = "";
                 let pdfBuffer;
@@ -353,7 +353,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                     }
                 }
                 if (pdfBuffer) {
-                    console.log(pdfBuffer.toString().slice(0, 100));
+                    this.logger.debug(pdfBuffer.toString().slice(0, 100));
                     try {
                         new PdfReader({}).parseBuffer(pdfBuffer, async (err, item) => {
                             if (err) {
@@ -363,7 +363,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                             }
                             else if (!item) {
                                 finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-                                console.log(`Got final text: ${finalText}`);
+                                this.logger.debug(`Got final PDF text: ${finalText ? finalText.slice(0, 100) : ''}`);
                                 await this.processPageText(finalText, subProblemIndex, url, type);
                                 resolve();
                             }
