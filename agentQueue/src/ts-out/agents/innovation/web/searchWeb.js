@@ -99,6 +99,7 @@ export class SearchWebProcessor extends BaseProcessor {
             this.seenUrls.set(id, new Set());
         }
         const seen = this.seenUrls.get(id);
+        this.logger.debug(`Before dedup length ${searchResults.length}`);
         searchResults = searchResults.filter((v, i, a) => {
             const urlSeen = seen.has(v.url);
             if (!urlSeen) {
@@ -106,6 +107,7 @@ export class SearchWebProcessor extends BaseProcessor {
             }
             return !urlSeen;
         });
+        this.logger.debug(`After dedup length ${searchResults.length}`);
         return { searchResults };
     }
     async processSubProblems(searchQueryType) {

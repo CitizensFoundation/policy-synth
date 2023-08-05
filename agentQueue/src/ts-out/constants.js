@@ -106,7 +106,7 @@ export class IEngineConstants {
         tokenLimit: 16385,
         inTokenCostUSD: gpt35_16kInTokenPrice,
         outTokenCostUSD: gpt35_16kOutTokenPrice,
-        verbose: false,
+        verbose: true,
     };
     static reapSolutionsModel = {
         name: "gpt-4",
@@ -187,7 +187,7 @@ export class IEngineConstants {
     static maxStabilityRetryCount = 14;
     static mainLLMmaxRetryCount = 40;
     static rankingLLMmaxRetryCount = 40;
-    static maxTopEntitiesToSearch = 4;
+    static maxTopEntitiesToSearch = 3;
     static maxTopEntitiesToRender = 3;
     static maxTopQueriesToSearchPerType = 4;
     static mainSearchRetryCount = 40;
