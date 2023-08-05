@@ -1,5 +1,5 @@
 import { HTTPResponse, Page } from "puppeteer";
-import puppeteer from "puppeteer-extra";
+import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 import { PdfReader } from "pdfreader";
@@ -21,7 +21,8 @@ import weaviate, { WeaviateClient } from "weaviate-ts-client";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+
+import { isWithinTokenLimit } from "gpt-tokenizer";
 
 import { WebPageVectorStore } from "../vectorstore/webPage.js";
 
@@ -37,7 +38,7 @@ puppeteer.use(StealthPlugin());
 export class GetWebPagesProcessor extends BaseProcessor {
   webPageVectorStore = new WebPageVectorStore();
 
-  totalPagesSave = 0
+  totalPagesSave = 0;
 
   renderScanningPrompt(
     problemStatement: IEngineProblemStatement,
@@ -179,7 +180,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         ${problemStatement.description}
 
         ${
-          subProblemIndex!==undefined
+          subProblemIndex !== undefined
             ? `
                 ${this.renderSubProblem(subProblemIndex)}
               `
@@ -195,7 +196,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     ];
   }
 
-  async getTokenCount(text: string, subProblemIndex?: number) {
+  async getTokenCount(text: string, subProblemIndex: number | undefined) {
     const emptyMessages = this.renderScanningPrompt(
       this.memory.problemStatement,
       "",
@@ -218,6 +219,18 @@ export class GetWebPagesProcessor extends BaseProcessor {
       IEngineConstants.getPageAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
+  }
+
+  getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined) {
+    const promptMessages = this.renderScanningPrompt(
+      this.memory.problemStatement,
+      "",
+      subProblemIndex
+    );
+
+    const promptMessagesText = promptMessages.map((m) => m.text).join("\n");
+
+    return `${promptMessagesText} ${text}`;
   }
 
   mergeAnalysisData(
@@ -251,7 +264,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
   async splitText(
     fullText: string,
     maxChunkTokenCount: number,
-    subProblemIndex?: number
+    subProblemIndex: number | undefined
   ): Promise<string[]> {
     const chunks: string[] = [];
     const elements = fullText.split("\n");
@@ -260,12 +273,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
     const addElementToChunk = async (element: string) => {
       const potentialChunk =
         (currentChunk !== "" ? currentChunk + "\n" : "") + element;
-      const tokenCount = await this.getTokenCount(
-        potentialChunk,
-        subProblemIndex
-      );
 
-      if (tokenCount.totalTokenCount > maxChunkTokenCount) {
+      if (
+        isWithinTokenLimit(
+          this.getAllTextForTokenCheck(potentialChunk, subProblemIndex),
+          maxChunkTokenCount
+        )
+      ) {
         // If currentChunk is not empty, add it to chunks and start a new chunk with the element
         if (currentChunk !== "") {
           chunks.push(currentChunk);
@@ -292,8 +306,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     for (let element of elements) {
       // Before adding an element to a chunk, check its size
       if (
-        (await this.getTokenCount(element, subProblemIndex)).totalTokenCount >
-        maxChunkTokenCount
+        isWithinTokenLimit(
+          this.getAllTextForTokenCheck(element, subProblemIndex),
+          maxChunkTokenCount
+        )
       ) {
         // If the element is too large, split it by sentences
         const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
@@ -368,7 +384,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
         for (let t = 0; t < splitText.length; t++) {
           const currentText = splitText[t];
 
-          let nextAnalysis = await this.getAIAnalysis(currentText, subProblemIndex);
+          let nextAnalysis = await this.getAIAnalysis(
+            currentText,
+            subProblemIndex
+          );
 
           if (t == 0) {
             textAnalysis = nextAnalysis;
@@ -403,7 +422,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     type: IEngineWebPageTypes,
-    entityIndex: number | undefined,
+    entityIndex: number | undefined
   ) {
     this.logger.debug(
       `Processing page text ${text.slice(
@@ -442,8 +461,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
     try {
       await this.webPageVectorStore.postWebPage(textAnalysis);
-      this.totalPagesSave += 1
-      this.logger.info(`Total ${this.totalPagesSave} saved pages`)
+      this.totalPagesSave += 1;
+      this.logger.info(`Total ${this.totalPagesSave} saved pages`);
     } catch (e: any) {
       this.logger.error(`Error posting web page for url ${url}`);
       this.logger.error(e);
@@ -458,7 +477,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     type: IEngineWebPageTypes,
-    entityIndex: number | undefined,
+    entityIndex: number | undefined
   ) {
     return new Promise<void>(async (resolve, reject) => {
       this.logger.info("getAndProcessPdf");
@@ -618,7 +637,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
         finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
 
         //this.logger.debug(`Got HTML text: ${finalText}`);
-        await this.processPageText(finalText, subProblemIndex, url, type, entityIndex);
+        await this.processPageText(
+          finalText,
+          subProblemIndex,
+          url,
+          type,
+          entityIndex
+        );
       } else {
         this.logger.error(`No HTML text found for ${url}`);
       }
@@ -638,46 +663,76 @@ export class GetWebPagesProcessor extends BaseProcessor {
     if (url.toLowerCase().endsWith(".pdf")) {
       await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
     } else {
-      await this.getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex);
+      await this.getAndProcessHtml(
+        subProblemIndex,
+        url,
+        browserPage,
+        type,
+        entityIndex
+      );
     }
 
     return true;
   }
 
-  async processSubProblems(
-    searchQueryType: IEngineWebPageTypes,
-    browserPage: Page
-  ) {
+  async processSubProblems(browser: Browser) {
+    const searchQueryTypes = [
+      "general",
+      "scientific",
+      "openData",
+      "news",
+    ] as const;
+    const promises = [];
+
     for (
       let s = 0;
       s <
       Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
       s++
     ) {
-      this.logger.info(
-        `Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`
+      promises.push(
+        (async () => {
+          const newPage = await browser.newPage();
+          newPage.setDefaultTimeout(45 * 1000);
+
+          await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+
+          for (const searchQueryType of searchQueryTypes) {
+            this.logger.info(
+              `Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`
+            );
+
+            const urlsToGet = this.getUrlsToFetch(
+              this.memory.subProblems[s].searchResults!.pages[searchQueryType]
+            );
+
+            for (let i = 0; i < urlsToGet.length; i++) {
+              await this.getAndProcessPage(
+                s,
+                urlsToGet[i],
+                newPage,
+                searchQueryType,
+                undefined
+              );
+            }
+
+            this.memory.subProblems[s].haveScannedWeb = true;
+
+            await this.processEntities(s, searchQueryType, newPage);
+
+            await this.saveMemory();
+          }
+
+          await newPage.close();
+
+          this.logger.info(
+            `Finished and closed page for ${this.memory.subProblems[s].title}`
+          );
+        })()
       );
-
-      const urlsToGet = this.getUrlsToFetch(
-        this.memory.subProblems[s].searchResults!.pages[searchQueryType]
-      );
-
-      for (let i = 0; i < urlsToGet.length; i++) {
-        await this.getAndProcessPage(
-          s,
-          urlsToGet[i],
-          browserPage,
-          searchQueryType,
-          undefined
-        );
-      }
-
-      this.memory.subProblems[s].haveScannedWeb = true;
-
-      await this.processEntities(s, searchQueryType, browserPage);
-
-      await this.saveMemory();
     }
+
+    await Promise.all(promises);
   }
 
   async processEntities(
@@ -779,6 +834,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
 
     this.memory.problemStatement.haveScannedWeb = true;
+
+    this.logger.info(
+      `Ranking Problem Statement for ${searchQueryType} search results complete`
+    );
   }
 
   async getAllCustomSearchUrls(browserPage: Page) {
@@ -810,22 +869,39 @@ export class GetWebPagesProcessor extends BaseProcessor {
   async getAllPages() {
     const browser = await puppeteer.launch({ headless: "new" });
     this.logger.debug("Launching browser");
+
     const browserPage = await browser.newPage();
+    browserPage.setDefaultTimeout(45 * 1000);
+
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+
+    await this.processSubProblems(browser);
+
+    await this.saveMemory();
 
     await this.getAllCustomSearchUrls(browserPage);
 
-    const searchQueryTypes = ["general", "scientific", "openData", "news"] as const;
+    await this.saveMemory();
+
+    const searchQueryTypes = [
+      "general",
+      "scientific",
+      "openData",
+      "news",
+    ] as const;
 
     const processPromises = searchQueryTypes.map(async (searchQueryType) => {
       const newPage = await browser.newPage();
+      newPage.setDefaultTimeout(45 * 1000);
       await newPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-      await this.processSubProblems(searchQueryType as IEngineWebPageTypes, newPage);
-      await this.processProblemStatement(searchQueryType, newPage);
+      await this.processProblemStatement(
+        searchQueryType as IEngineWebPageTypes,
+        newPage
+      );
 
       await newPage.close();
-      this.logger.info(`Closed page for ${searchQueryType} search results`)
+      this.logger.info(`Closed page for ${searchQueryType} search results`);
     });
 
     await Promise.all(processPromises);
@@ -850,8 +926,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
     await this.getAllPages();
 
-    this.logger.info(`Saved ${this.totalPagesSave} pages`)
+    this.logger.info(`Saved ${this.totalPagesSave} pages`);
     this.logger.info("Get Web Pages Processor Complete");
   }
-
 }

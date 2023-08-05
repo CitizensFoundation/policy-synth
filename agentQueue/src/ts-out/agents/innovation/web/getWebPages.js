@@ -13,6 +13,7 @@ import { htmlToText } from "html-to-text";
 import { BaseProcessor } from "../baseProcessor.js";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
+import { isWithinTokenLimit } from "gpt-tokenizer";
 import { WebPageVectorStore } from "../vectorstore/webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -178,6 +179,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
             IEngineConstants.getPageAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
+    getAllTextForTokenCheck(text, subProblemIndex) {
+        const promptMessages = this.renderScanningPrompt(this.memory.problemStatement, "", subProblemIndex);
+        const promptMessagesText = promptMessages.map((m) => m.text).join("\n");
+        return `${promptMessagesText} ${text}`;
+    }
     mergeAnalysisData(data1, data2) {
         return {
             mostRelevantParagraphs: [
@@ -208,8 +214,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         let currentChunk = "";
         const addElementToChunk = async (element) => {
             const potentialChunk = (currentChunk !== "" ? currentChunk + "\n" : "") + element;
-            const tokenCount = await this.getTokenCount(potentialChunk, subProblemIndex);
-            if (tokenCount.totalTokenCount > maxChunkTokenCount) {
+            if (isWithinTokenLimit(this.getAllTextForTokenCheck(potentialChunk, subProblemIndex), maxChunkTokenCount)) {
                 // If currentChunk is not empty, add it to chunks and start a new chunk with the element
                 if (currentChunk !== "") {
                     chunks.push(currentChunk);
@@ -237,8 +242,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         };
         for (let element of elements) {
             // Before adding an element to a chunk, check its size
-            if ((await this.getTokenCount(element, subProblemIndex)).totalTokenCount >
-                maxChunkTokenCount) {
+            if (isWithinTokenLimit(this.getAllTextForTokenCheck(element, subProblemIndex), maxChunkTokenCount)) {
                 // If the element is too large, split it by sentences
                 const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
                 for (let sentence of sentences) {
@@ -471,18 +475,35 @@ export class GetWebPagesProcessor extends BaseProcessor {
         }
         return true;
     }
-    async processSubProblems(searchQueryType, browserPage) {
+    async processSubProblems(browser) {
+        const searchQueryTypes = [
+            "general",
+            "scientific",
+            "openData",
+            "news",
+        ];
+        const promises = [];
         for (let s = 0; s <
             Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
-            this.logger.info(`Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`);
-            const urlsToGet = this.getUrlsToFetch(this.memory.subProblems[s].searchResults.pages[searchQueryType]);
-            for (let i = 0; i < urlsToGet.length; i++) {
-                await this.getAndProcessPage(s, urlsToGet[i], browserPage, searchQueryType, undefined);
-            }
-            this.memory.subProblems[s].haveScannedWeb = true;
-            await this.processEntities(s, searchQueryType, browserPage);
-            await this.saveMemory();
+            promises.push((async () => {
+                const newPage = await browser.newPage();
+                newPage.setDefaultTimeout(45 * 1000);
+                await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+                for (const searchQueryType of searchQueryTypes) {
+                    this.logger.info(`Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`);
+                    const urlsToGet = this.getUrlsToFetch(this.memory.subProblems[s].searchResults.pages[searchQueryType]);
+                    for (let i = 0; i < urlsToGet.length; i++) {
+                        await this.getAndProcessPage(s, urlsToGet[i], newPage, searchQueryType, undefined);
+                    }
+                    this.memory.subProblems[s].haveScannedWeb = true;
+                    await this.processEntities(s, searchQueryType, newPage);
+                    await this.saveMemory();
+                }
+                await newPage.close();
+                this.logger.info(`Finished and closed page for ${this.memory.subProblems[s].title}`);
+            })());
         }
+        await Promise.all(promises);
     }
     async processEntities(subProblemIndex, searchQueryType, browserPage) {
         for (let e = 0; e <
@@ -518,6 +539,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             await this.getAndProcessPage(undefined, urlsToGet[i], browserPage, searchQueryType, undefined);
         }
         this.memory.problemStatement.haveScannedWeb = true;
+        this.logger.info(`Ranking Problem Statement for ${searchQueryType} search results complete`);
     }
     async getAllCustomSearchUrls(browserPage) {
         for (let subProblemIndex = 0; subProblemIndex <
@@ -538,13 +560,22 @@ export class GetWebPagesProcessor extends BaseProcessor {
         const browser = await puppeteer.launch({ headless: "new" });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
+        browserPage.setDefaultTimeout(45 * 1000);
         await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        await this.processSubProblems(browser);
+        await this.saveMemory();
         await this.getAllCustomSearchUrls(browserPage);
-        const searchQueryTypes = ["general", "scientific", "openData", "news"];
+        await this.saveMemory();
+        const searchQueryTypes = [
+            "general",
+            "scientific",
+            "openData",
+            "news",
+        ];
         const processPromises = searchQueryTypes.map(async (searchQueryType) => {
             const newPage = await browser.newPage();
+            newPage.setDefaultTimeout(45 * 1000);
             await newPage.setUserAgent(IEngineConstants.currentUserAgent);
-            await this.processSubProblems(searchQueryType, newPage);
             await this.processProblemStatement(searchQueryType, newPage);
             await newPage.close();
             this.logger.info(`Closed page for ${searchQueryType} search results`);
