@@ -156,8 +156,18 @@ export class BaseProcessor extends Base {
                                 }
                                 catch (error) {
                                     this.logger.warn(`Error parsing fixed JSON`);
-                                    this.logger.error(error);
-                                    retryCount++;
+                                    try {
+                                        this.logger.info(`Trying to fix JSON AGAIN`);
+                                        // Edge case hack that jsonrepair can't fix
+                                        const preprocessed = response.text.trim().replace(/"(\d+)(-[A-Za-z]+)"/g, '$1$2');
+                                        const repaired = jsonrepair(preprocessed);
+                                        parsedJson = JSON.parse(repaired);
+                                    }
+                                    catch (error) {
+                                        this.logger.warn(`Error parsing fixed JSON AGAIN`);
+                                        this.logger.error(error);
+                                        retryCount++;
+                                    }
                                 }
                             }
                             if (parsedJson) {
