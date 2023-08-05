@@ -409,10 +409,12 @@ export class CpsSolutions extends CpsStageBase {
           }
 
           .ratings {
-            max-width: 100%;
+            max-width: 320px;
             width: 100%;
             margin: 16px;
             font-size: 16px;
+            margin-right: 0;
+            margin-left: 0;
           }
 
           .solutionItem {
@@ -459,6 +461,8 @@ export class CpsSolutions extends CpsStageBase {
             font-family: 'Roboto Condensed', sans-serif;
             opacity: 0.55;
           }
+
+          .topContainer {}
         }
 
         [hidden] {
