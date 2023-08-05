@@ -275,7 +275,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         (currentChunk !== "" ? currentChunk + "\n" : "") + element;
 
       if (
-        isWithinTokenLimit(
+        !isWithinTokenLimit(
           this.getAllTextForTokenCheck(potentialChunk, subProblemIndex),
           maxChunkTokenCount
         )
@@ -306,7 +306,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     for (let element of elements) {
       // Before adding an element to a chunk, check its size
       if (
-        isWithinTokenLimit(
+        !isWithinTokenLimit(
           this.getAllTextForTokenCheck(element, subProblemIndex),
           maxChunkTokenCount
         )

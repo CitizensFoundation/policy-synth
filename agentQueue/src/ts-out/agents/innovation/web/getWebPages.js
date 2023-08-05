@@ -214,7 +214,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         let currentChunk = "";
         const addElementToChunk = async (element) => {
             const potentialChunk = (currentChunk !== "" ? currentChunk + "\n" : "") + element;
-            if (isWithinTokenLimit(this.getAllTextForTokenCheck(potentialChunk, subProblemIndex), maxChunkTokenCount)) {
+            if (!isWithinTokenLimit(this.getAllTextForTokenCheck(potentialChunk, subProblemIndex), maxChunkTokenCount)) {
                 // If currentChunk is not empty, add it to chunks and start a new chunk with the element
                 if (currentChunk !== "") {
                     chunks.push(currentChunk);
@@ -242,7 +242,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         };
         for (let element of elements) {
             // Before adding an element to a chunk, check its size
-            if (isWithinTokenLimit(this.getAllTextForTokenCheck(element, subProblemIndex), maxChunkTokenCount)) {
+            if (!isWithinTokenLimit(this.getAllTextForTokenCheck(element, subProblemIndex), maxChunkTokenCount)) {
                 // If the element is too large, split it by sentences
                 const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
                 for (let sentence of sentences) {
