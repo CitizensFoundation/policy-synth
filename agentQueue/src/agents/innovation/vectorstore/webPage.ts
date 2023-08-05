@@ -52,9 +52,20 @@ export class WebPageVectorStore extends Base {
 
 
   async testQuery() {
+    const where: any[] = [];
+    where.push({
+      path: ["len(solutionsIdentifiedInTextContext)"],
+      operator: "GreaterThan",
+      valueInt: 0,
+    });
+
     const res = await WebPageVectorStore.client.graphql
       .get()
       .withClassName('WebPage')
+      .withWhere({
+        operator: "And",
+        operands: where,
+      })
       .withFields('summary relevanceToProblem \
         solutionsIdentifiedInTextContext mostRelevantParagraphs tags entities \
         _additional { distance }')
@@ -87,8 +98,10 @@ export class WebPageVectorStore extends Base {
     query: string,
     groupId: number | undefined,
     subProblemIndex: number | undefined,
-    searchType: IEngineWebPageTypes | undefined
+    searchType: IEngineWebPageTypes | undefined,
+    filterOutEmptySolutions = true
   ): Promise<IEngineWebPageGraphQlResults> {
+
     //TODO: Fix any here
     const where: any[] = [];
 
@@ -113,6 +126,14 @@ export class WebPageVectorStore extends Base {
         path: ["searchType"],
         operator: "Equal",
         valueString: searchType,
+      });
+    }
+
+    if (filterOutEmptySolutions) {
+      where.push({
+        path: ["len(solutionsIdentifiedInTextContext)"],
+        operator: "GreaterThan",
+        valueInt: 0,
       });
     }
 

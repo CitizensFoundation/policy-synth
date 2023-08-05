@@ -312,6 +312,7 @@ interface IEngineWebPageAnalysisData {
   url: string;
   searchType: IEngineWebPageTypes;
   subProblemIndex?: number;
+  entityIndex?: number;
   groupId: number;
   communityId: number;
   domainId: number;

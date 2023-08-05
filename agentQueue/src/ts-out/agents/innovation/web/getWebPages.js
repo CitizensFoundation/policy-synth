@@ -20,6 +20,7 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 puppeteer.use(StealthPlugin());
 export class GetWebPagesProcessor extends BaseProcessor {
     webPageVectorStore = new WebPageVectorStore();
+    totalPagesSave = 0;
     renderScanningPrompt(problemStatement, text, subProblemIndex) {
         return [
             new SystemChatMessage(`Your are an AI expert in analyzing textual data:
@@ -195,6 +196,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             url: data1.url,
             searchType: data1.searchType,
             subProblemIndex: data1.subProblemIndex,
+            entityIndex: data1.entityIndex,
             groupId: data1.groupId,
             communityId: data1.communityId,
             domainId: data1.domainId,
@@ -295,11 +297,12 @@ export class GetWebPagesProcessor extends BaseProcessor {
             throw error;
         }
     }
-    async processPageText(text, subProblemIndex, url, type) {
+    async processPageText(text, subProblemIndex, url, type, entityIndex) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
         const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
         textAnalysis.url = url;
         textAnalysis.subProblemIndex = subProblemIndex;
+        textAnalysis.entityIndex = entityIndex;
         textAnalysis.searchType = type;
         textAnalysis.groupId = this.memory.groupId;
         textAnalysis.communityId = this.memory.communityId;
@@ -314,9 +317,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
         this.logger.debug(`Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
         try {
             await this.webPageVectorStore.postWebPage(textAnalysis);
+            this.totalPagesSave += 1;
+            this.logger.info(`Total ${this.totalPagesSave} saved pages`);
         }
         catch (e) {
-            this.logger.error(`Error posting web page`);
+            this.logger.error(`Error posting web page for url ${url}`);
             this.logger.error(e);
             this.logger.error(e.stack);
         }
@@ -324,7 +329,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
     // https://github.com/hwchase17/langchain/blob/master/langchain/document_loaders/arxiv.py
     // https://info.arxiv.org/help/api/basics.html
-    async getAndProcessPdf(subProblemIndex, url, type) {
+    async getAndProcessPdf(subProblemIndex, url, type, entityIndex) {
         return new Promise(async (resolve, reject) => {
             this.logger.info("getAndProcessPdf");
             try {
@@ -365,7 +370,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                             else if (!item) {
                                 finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
                                 this.logger.debug(`Got final PDF text: ${finalText ? finalText.slice(0, 100) : ""}`);
-                                await this.processPageText(finalText, subProblemIndex, url, type);
+                                await this.processPageText(finalText, subProblemIndex, url, type, entityIndex);
                                 resolve();
                             }
                             else if (item.text) {
@@ -391,7 +396,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             }
         });
     }
-    async getAndProcessHtml(subProblemIndex, url, browserPage, type) {
+    async getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex) {
         try {
             let finalText, htmlText;
             this.logger.debug(`Getting HTML for ${url}`);
@@ -446,7 +451,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                 });
                 finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
                 //this.logger.debug(`Got HTML text: ${finalText}`);
-                await this.processPageText(finalText, subProblemIndex, url, type);
+                await this.processPageText(finalText, subProblemIndex, url, type, entityIndex);
             }
             else {
                 this.logger.error(`No HTML text found for ${url}`);
@@ -457,12 +462,12 @@ export class GetWebPagesProcessor extends BaseProcessor {
             this.logger.error(e);
         }
     }
-    async getAndProcessPage(subProblemIndex, url, browserPage, type) {
+    async getAndProcessPage(subProblemIndex, url, browserPage, type, entityIndex) {
         if (url.toLowerCase().endsWith(".pdf")) {
-            await this.getAndProcessPdf(subProblemIndex, url, type);
+            await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
         }
         else {
-            await this.getAndProcessHtml(subProblemIndex, url, browserPage, type);
+            await this.getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex);
         }
         return true;
     }
@@ -472,7 +477,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             this.logger.info(`Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`);
             const urlsToGet = this.getUrlsToFetch(this.memory.subProblems[s].searchResults.pages[searchQueryType]);
             for (let i = 0; i < urlsToGet.length; i++) {
-                await this.getAndProcessPage(s, urlsToGet[i], browserPage, searchQueryType);
+                await this.getAndProcessPage(s, urlsToGet[i], browserPage, searchQueryType, undefined);
             }
             this.memory.subProblems[s].haveScannedWeb = true;
             await this.processEntities(s, searchQueryType, browserPage);
@@ -487,7 +492,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             const urlsToGet = this.getUrlsToFetch(this.memory.subProblems[subProblemIndex].entities[e].searchResults
                 .pages[searchQueryType]);
             for (let i = 0; i < urlsToGet.length; i++) {
-                await this.getAndProcessPage(subProblemIndex, urlsToGet[i], browserPage, searchQueryType);
+                await this.getAndProcessPage(subProblemIndex, urlsToGet[i], browserPage, searchQueryType, e);
             }
             this.memory.subProblems[subProblemIndex].entities[e].haveScannedWeb =
                 true;
@@ -510,7 +515,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         const urlsToGet = this.getUrlsToFetch(this.memory.problemStatement.searchResults.pages[searchQueryType]);
         this.logger.debug(`Got ${urlsToGet.length} URLs`);
         for (let i = 0; i < urlsToGet.length; i++) {
-            await this.getAndProcessPage(undefined, urlsToGet[i], browserPage, searchQueryType);
+            await this.getAndProcessPage(undefined, urlsToGet[i], browserPage, searchQueryType, undefined);
         }
         this.memory.problemStatement.haveScannedWeb = true;
     }
@@ -521,7 +526,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             if (customUrls) {
                 for (let i = 0; i < customUrls.length; i++) {
                     this.logger.debug(`Getting custom URL ${customUrls[i]}`);
-                    await this.getAndProcessPage(subProblemIndex, customUrls[i], browserPage, "general");
+                    await this.getAndProcessPage(subProblemIndex, customUrls[i], browserPage, "general", undefined);
                 }
             }
             else {
@@ -530,23 +535,24 @@ export class GetWebPagesProcessor extends BaseProcessor {
         }
     }
     async getAllPages() {
-        puppeteer.launch({ headless: "new" }).then(async (browser) => {
-            this.logger.debug("Launching browser");
-            const browserPage = await browser.newPage();
-            await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
-            await this.getAllCustomSearchUrls(browserPage);
-            for (const searchQueryType of [
-                "general",
-                "scientific",
-                "openData",
-                "news",
-            ]) {
-                await this.processSubProblems(searchQueryType, browserPage);
-                await this.processProblemStatement(searchQueryType, browserPage);
-            }
-            await this.saveMemory();
-            await browser.close();
+        const browser = await puppeteer.launch({ headless: "new" });
+        this.logger.debug("Launching browser");
+        const browserPage = await browser.newPage();
+        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        await this.getAllCustomSearchUrls(browserPage);
+        const searchQueryTypes = ["general", "scientific", "openData", "news"];
+        const processPromises = searchQueryTypes.map(async (searchQueryType) => {
+            const newPage = await browser.newPage();
+            await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+            await this.processSubProblems(searchQueryType, newPage);
+            await this.processProblemStatement(searchQueryType, newPage);
+            await newPage.close();
+            this.logger.info(`Closed page for ${searchQueryType} search results`);
         });
+        await Promise.all(processPromises);
+        await this.saveMemory();
+        await browser.close();
+        this.logger.info("Browser closed");
     }
     async process() {
         this.logger.info("Get Web Pages Processor");
@@ -558,7 +564,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             verbose: IEngineConstants.getPageAnalysisModel.verbose,
         });
         await this.getAllPages();
-        await this.saveMemory();
+        this.logger.info(`Saved ${this.totalPagesSave} pages`);
         this.logger.info("Get Web Pages Processor Complete");
     }
 }

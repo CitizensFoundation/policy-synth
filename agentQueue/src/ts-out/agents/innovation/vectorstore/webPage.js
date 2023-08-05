@@ -47,9 +47,19 @@ export class WebPageVectorStore extends Base {
         }
     }
     async testQuery() {
+        const where = [];
+        where.push({
+            path: ["len(solutionsIdentifiedInTextContext)"],
+            operator: "GreaterThan",
+            valueInt: 0,
+        });
         const res = await WebPageVectorStore.client.graphql
             .get()
             .withClassName('WebPage')
+            .withWhere({
+            operator: "And",
+            operands: where,
+        })
             .withFields('summary relevanceToProblem \
         solutionsIdentifiedInTextContext mostRelevantParagraphs tags entities \
         _additional { distance }')
@@ -75,7 +85,7 @@ export class WebPageVectorStore extends Base {
             });
         });
     }
-    async searchWebPages(query, groupId, subProblemIndex, searchType) {
+    async searchWebPages(query, groupId, subProblemIndex, searchType, filterOutEmptySolutions = true) {
         //TODO: Fix any here
         const where = [];
         if (groupId) {
@@ -97,6 +107,13 @@ export class WebPageVectorStore extends Base {
                 path: ["searchType"],
                 operator: "Equal",
                 valueString: searchType,
+            });
+        }
+        if (filterOutEmptySolutions) {
+            where.push({
+                path: ["len(solutionsIdentifiedInTextContext)"],
+                operator: "GreaterThan",
+                valueInt: 0,
             });
         }
         let results;

@@ -8,6 +8,9 @@
       "type": "text"
     }
   },
+  "invertedIndexConfig": {
+    "indexPropertyLength": true
+  },
   "properties": [
     {
       "dataType": [
@@ -46,6 +49,7 @@
       "name": "relevanceToProblem"
     },
     {
+      "name": "solutionsIdentifiedInTextContext",
       "dataType": [
         "text[]"
       ],
@@ -55,7 +59,11 @@
           "vectorizePropertyName": true
         }
       },
-      "name": "solutionsIdentifiedInTextContext"
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
     },
     {
       "dataType": [
@@ -68,6 +76,18 @@
         }
       },
       "name": "subProblemIndex"
+    },
+    {
+      "dataType": [
+        "int"
+      ],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "name": "entityIndex"
     },
     {
       "dataType": [
