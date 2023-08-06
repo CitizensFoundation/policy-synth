@@ -61,6 +61,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
         this.memory.groupId,
         subProblemIndex,
         entityIndex,
+        undefined,
         cursor
       );
 

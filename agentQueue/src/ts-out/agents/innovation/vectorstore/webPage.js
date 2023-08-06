@@ -64,7 +64,7 @@ export class WebPageVectorStore extends Base {
             operator: "And",
             operands: where,
         })
-            .withFields("summary groupId entityId subProblemIndex relevanceToProblem \
+            .withFields("summary groupId entityIndex subProblemIndex relevanceToProblem \
         solutionsIdentifiedInTextContext mostRelevantParagraphs contacts tags entities \
         _additional { distance }")
             .withNearText({ concepts: ["democracy"] })
@@ -143,62 +143,88 @@ export class WebPageVectorStore extends Base {
             });
         });
     }
-    async getWebPagesForProcessing(groupId, subProblemIndex, entityIndex, cursor, batchSize = 10, solutionCountLimit = 7) {
-        const where = [
-            {
-                path: ["groupId"],
-                operator: "Equal",
-                valueInt: groupId,
-            },
-        ];
-        if (subProblemIndex) {
+    async getWebPagesForProcessing(groupId, subProblemIndex, entityIndex, searchType, cursor, batchSize = 10, solutionCountLimit = 7) {
+        let where = undefined;
+        if (!cursor) {
+            where = [
+                {
+                    path: ["groupId"],
+                    operator: "Equal",
+                    valueInt: groupId,
+                },
+            ];
+            if (subProblemIndex) {
+                where.push({
+                    path: ["subProblemIndex"],
+                    operator: "Equal",
+                    valueInt: subProblemIndex,
+                });
+            }
+            else {
+                //TODO: Enable when null index has been merged into schema
+                /*where.push({
+                  path: ["subProblemIndex"],
+                  operator: "IsNull",
+                  valueBoolean: true,
+                });*/
+            }
+            if (searchType) {
+                where.push({
+                    path: ["searchType"],
+                    operator: "Equal",
+                    valueString: searchType,
+                });
+            }
+            if (entityIndex) {
+                where.push({
+                    path: ["entityIndex"],
+                    operator: "Equal",
+                    valueInt: entityIndex,
+                });
+            }
+            else {
+                /*where.push({
+                  path: ["entityIndex"],
+                  operator: "IsNull",
+                  valueBoolean: true,
+                });*/
+            }
             where.push({
-                path: ["subProblemIndex"],
-                operator: "Equal",
-                valueInt: subProblemIndex,
+                path: ["len(solutionsIdentifiedInTextContext)"],
+                operator: "GreaterThan",
+                valueInt: solutionCountLimit,
             });
         }
-        else {
-            //TODO: Enable when null index has been merged into schema
-            /*where.push({
-              path: ["subProblemIndex"],
-              operator: "IsNull",
-              valueBoolean: true,
-            });*/
-        }
-        if (entityIndex) {
-            where.push({
-                path: ["entityIndex"],
-                operator: "Equal",
-                valueInt: entityIndex,
-            });
-        }
-        else {
-            /*where.push({
-              path: ["entityIndex"],
-              operator: "IsNull",
-              valueBoolean: true,
-            });*/
-        }
-        where.push({
-            path: ["len(solutionsIdentifiedInTextContext)"],
-            operator: "GreaterThan",
-            valueInt: solutionCountLimit,
-        });
         let query;
         try {
-            query = WebPageVectorStore.client.graphql
-                .get()
-                .withClassName("WebPage")
-                .withLimit(batchSize)
-                .withWhere({
-                operator: "And",
-                operands: where,
-            })
-                .withFields("searchType groupId entityId subProblemIndex summary relevanceToProblem \
+            if (where !== undefined) {
+                query = WebPageVectorStore.client.graphql
+                    .get()
+                    .withClassName("WebPage")
+                    .withLimit(batchSize)
+                    .withWhere({
+                    operator: "And",
+                    operands: where,
+                })
+                    .withFields("searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
           solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
-          _additional { distance }");
-            return await query.withAfter(cursor).do();
+          _additional { distance, id }");
+            }
+            else {
+                query = WebPageVectorStore.client.graphql
+                    .get()
+                    .withClassName("WebPage")
+                    .withLimit(batchSize)
+                    .withFields("searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
+          solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
+          _additional { distance, id }");
+            }
+            if (cursor) {
+                return await query.withAfter(cursor).do();
+            }
+            else {
+                return await query.do();
+            }
         }
         catch (err) {
             throw err;

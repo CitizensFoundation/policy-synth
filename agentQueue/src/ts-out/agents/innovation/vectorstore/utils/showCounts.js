@@ -6,22 +6,26 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 class ShowCounts extends BaseProcessor {
     webPageVectorStore = new WebPageVectorStore();
     async countWebPages(subProblemIndex) {
-        let cursor = "";
+        let cursor;
         let webPageCount = 0;
         let solutionsCount = 0;
         while (true) {
-            const results = await this.webPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, undefined, cursor);
+            const results = await this.webPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, undefined, undefined, cursor);
             if (results.data.Get["WebPage"].length === 0)
                 break;
             for (const retrievedObject of results.data.Get["WebPage"]) {
                 const webPage = retrievedObject;
                 const id = webPage._additional.id;
                 if (!subProblemIndex && webPage.subProblemIndex) {
-                    this.logger.debug(`Skipping web page ${id} as it is an entity page or sub problem page`);
+                    /*this.logger.debug(
+                      `Skipping web page ${id} as it is an entity page or sub problem page`
+                    );*/
                 }
                 else {
                     webPageCount++;
-                    solutionsCount += webPage.solutionsIdentifiedInTextContext.length;
+                    if (webPage.solutionsIdentifiedInTextContext) {
+                        solutionsCount += webPage.solutionsIdentifiedInTextContext.length;
+                    }
                 }
             }
             cursor = results.data.Get["WebPage"].at(-1)["_additional"]["id"];
