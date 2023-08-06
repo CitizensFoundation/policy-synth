@@ -199,7 +199,9 @@ export class CpsSolutions extends CpsStageBase {
       changedProperties.has('activeFilteredSolutionIndex') &&
       this.activeFilteredSolutionIndex !== null &&
       this.activePopulationIndex !== null &&
-      this.activeFilteredSolutionIndex !== undefined
+      this.activeFilteredSolutionIndex !== undefined &&
+      this.memory.subProblems[this.activeSubProblemIndex] &&
+      this.memory.subProblems[this.activeSubProblemIndex].solutions
     ) {
       const subProblem = this.memory.subProblems[this.activeSubProblemIndex];
       const solutions =
