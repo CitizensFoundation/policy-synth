@@ -13,7 +13,7 @@ export class CpsWebResearch extends CpsStageBase {
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Web research - open`);
-    if (this.memory.groupId===1) {
+    if (this.memory.groupId === 1) {
       this.maxNumberOfTopEntities = 3;
     }
   }
@@ -40,10 +40,16 @@ export class CpsWebResearch extends CpsStageBase {
           max-width: 100%;
         }
 
+        .entity[not-scanned] {
+          opacity: 0.50;
+        }
+
+
         .entityName {
           margin-top: 24px;
           margin-bottom: 8px;
           width: 100%;
+          font-size: 20px;
           font-weight: bold;
         }
 
@@ -53,11 +59,16 @@ export class CpsWebResearch extends CpsStageBase {
 
         .negPos {
           width: 100%;
+          margin-top: 16px;
         }
 
         @media (max-width: 960px) {
           .entity {
             width: 100%;
+          }
+
+          .entityName {
+            font-size: 18px;
           }
       `,
     ];
@@ -87,8 +98,13 @@ export class CpsWebResearch extends CpsStageBase {
           entityIndex >= this.maxNumberOfTopEntities;
         return html`
           <div class="layout vertical center-center">
-            <div class="entity ${isEntityLessProminent ? 'lessProminent' : ''}">
-              <div class="entityName" ?not-scanned="${isEntityLessProminent}">${entity.name}</div>
+            <div
+              class="entity ${isEntityLessProminent ? 'lessProminent' : ''}"
+              ?not-scanned="${isEntityLessProminent}"
+            >
+              <div class="entityName" ?not-scanned="${isEntityLessProminent}">
+                ${entity.name}
+              </div>
               <div class="negPos">
                 ${entity.negativeEffects?.length > 0
                   ? html`
