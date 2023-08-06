@@ -62,7 +62,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
     this.logger.debug(`Image Prompt: ${imagePrompt}`);
 
     // Download image and save it to /tmp folder
-    const imageFilePath = path.join("/tmp", `subProblem_${s}_.png`);
+    const imageFilePath = path.join("/tmp", `problemStatement_.png`);
 
     if (process.env.STABILITY_API_KEY) {
       await this.downloadStabilityImage(-1, imagePrompt, imageFilePath);

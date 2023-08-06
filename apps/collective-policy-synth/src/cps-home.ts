@@ -10,7 +10,7 @@ const projects = [
     id: 1,
     title: 'Save Democracy',
     imageUrl:
-      'https://cps-images.citizens.is/projects/2/subProblems/images/1_v10.png',
+      'https://cps-images.citizens.is/projects/1/problemStatement/images/916898992.png',
     description:
       'The first test run is entirely automated except for the problem statement provided by us. All sub problems, entities and solutions with pros & cons are generated using GPT-4 & GPT-3.5. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.',
   },

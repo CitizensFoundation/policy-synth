@@ -986,8 +986,10 @@ export class CpsApp extends YpBaseElement {
   stageModelMap = {
     createSubProblems: IEngineConstants.createSubProblemsModel,
     createEntities: IEngineConstants.createEntitiesModel,
+    rankWebSolutions: IEngineConstants.rankWebSolutionsModel,
     createSearchQueries: IEngineConstants.createSearchQueriesModel,
     createSolutionImages: IEngineConstants.createSolutionImagesModel,
+    createProblemStatementImage: IEngineConstants.createSolutionImagesModel,
     createSubProblemImages: IEngineConstants.createSolutionImagesModel,
     rankSearchResults: IEngineConstants.searchResultsRankingsModel,
     rankSearchQueries: IEngineConstants.searchQueryRankingsModel,
@@ -1049,26 +1051,31 @@ export class CpsApp extends YpBaseElement {
       Object.keys(this.currentMemory.stages).forEach(stage => {
         //@ts-ignore
         const stageData = this.currentMemory.stages[stage];
-        if (stageData.tokensInCost && stageData.tokensOutCost) {
-          const stageCost = stageData.tokensInCost + stageData.tokensOutCost;
-          totalCost += stageCost;
-          // Calculate costs for each model
-          const camelCaseStage = this.toCamelCase(stage);
-          //@ts-ignore
-          const modelConstants = this.stageModelMap[camelCaseStage];
-          if (modelConstants.name === 'gpt-4') {
-            gpt4Cost += stageCost;
-          } else if (modelConstants.name === 'gpt-3.5-turbo') {
-            gpt35Cost += stageCost;
-          } else if (modelConstants.name === 'gpt-3.5-turbo-16k') {
-            gpt35_16kCost += stageCost;
-          } else {
-            console.error(`Unknown model name: ${modelConstants.name}`);
+        if (stageData) {
+          if (stageData.tokensInCost && stageData.tokensOutCost) {
+            const stageCost = stageData.tokensInCost + stageData.tokensOutCost;
+            totalCost += stageCost;
+            // Calculate costs for each model
+            const camelCaseStage = this.toCamelCase(stage);
+            console.error(`stage: ${stage} camelCaseStage: ${camelCaseStage}`)
+            //@ts-ignore
+            const modelConstants = this.stageModelMap[camelCaseStage];
+            if (modelConstants.name === 'gpt-4') {
+              gpt4Cost += stageCost;
+            } else if (modelConstants.name === 'gpt-3.5-turbo') {
+              gpt35Cost += stageCost;
+            } else if (modelConstants.name === 'gpt-3.5-turbo-16k') {
+              gpt35_16kCost += stageCost;
+            } else {
+              console.error(`Unknown model name: ${modelConstants.name}`);
+            }
           }
+        } else {
+          console.warn(`No stage data for ${stage}`)
         }
       });
     } catch (error: any) {
-      console.error(error);
+      console.error(error.stack || error);
       debugger;
     }
 
