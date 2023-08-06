@@ -69,7 +69,7 @@ export class WebPageVectorStore extends Base {
         operands: where,
       })
       .withFields(
-        "summary groupId entityId subProblemIndex relevanceToProblem \
+        "summary groupId entityIndex subProblemIndex relevanceToProblem \
         solutionsIdentifiedInTextContext mostRelevantParagraphs contacts tags entities \
         _additional { distance }"
       )
@@ -163,57 +163,72 @@ export class WebPageVectorStore extends Base {
     groupId: number,
     subProblemIndex: number | undefined,
     entityIndex: number | undefined,
-    cursor: string,
+    searchType: IEngineSearchQueries | undefined,
+    cursor: string | undefined,
     batchSize = 10,
     solutionCountLimit = 7
   ): Promise<IEngineWebPageGraphQlResults> {
-    const where: any[] = [
-      {
-        path: ["groupId"],
-        operator: "Equal",
-        valueInt: groupId,
-      },
-    ];
+    let where: any[] | undefined = undefined
+    if(!cursor) {
+      where = [
+        {
+          path: ["groupId"],
+          operator: "Equal",
+          valueInt: groupId,
+        },
+      ];
 
-    if (subProblemIndex) {
+      if (subProblemIndex) {
+        where.push({
+          path: ["subProblemIndex"],
+          operator: "Equal",
+          valueInt: subProblemIndex,
+        });
+      } else {
+        //TODO: Enable when null index has been merged into schema
+        /*where.push({
+          path: ["subProblemIndex"],
+          operator: "IsNull",
+          valueBoolean: true,
+        });*/
+      }
+
+      if (searchType) {
+        where.push({
+          path: ["searchType"],
+          operator: "Equal",
+          valueString: searchType,
+        });
+      }
+
+
+      if (entityIndex) {
+        where.push({
+          path: ["entityIndex"],
+          operator: "Equal",
+          valueInt: entityIndex,
+        });
+      } else {
+        /*where.push({
+          path: ["entityIndex"],
+          operator: "IsNull",
+          valueBoolean: true,
+        });*/
+      }
+
       where.push({
-        path: ["subProblemIndex"],
-        operator: "Equal",
-        valueInt: subProblemIndex,
+        path: ["len(solutionsIdentifiedInTextContext)"],
+        operator: "GreaterThan",
+        valueInt: solutionCountLimit,
       });
-    } else {
-      //TODO: Enable when null index has been merged into schema
-      /*where.push({
-        path: ["subProblemIndex"],
-        operator: "IsNull",
-        valueBoolean: true,
-      });*/
+
+
     }
-
-    if (entityIndex) {
-      where.push({
-        path: ["entityIndex"],
-        operator: "Equal",
-        valueInt: entityIndex,
-      });
-    } else {
-      /*where.push({
-        path: ["entityIndex"],
-        operator: "IsNull",
-        valueBoolean: true,
-      });*/
-    }
-
-    where.push({
-      path: ["len(solutionsIdentifiedInTextContext)"],
-      operator: "GreaterThan",
-      valueInt: solutionCountLimit,
-    });
-
     let query;
 
     try {
-      query = WebPageVectorStore.client.graphql
+      if (where!==undefined) {
+        query = WebPageVectorStore.client.graphql
         .get()
         .withClassName("WebPage")
         .withLimit(batchSize)
@@ -222,12 +237,27 @@ export class WebPageVectorStore extends Base {
           operands: where,
         })
         .withFields(
-          "searchType groupId entityId subProblemIndex summary relevanceToProblem \
+          "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
           solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
-          _additional { distance }"
+          _additional { distance, id }"
         );
+      } else {
+        query = WebPageVectorStore.client.graphql
+        .get()
+        .withClassName("WebPage")
+        .withLimit(batchSize)
+        .withFields(
+          "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
+          solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
+          _additional { distance, id }"
+        );
+      }
 
-      return await query.withAfter(cursor).do();
+      if (cursor) {
+        return await query.withAfter(cursor).do();
+      } else {
+        return await query.do();
+      }
     } catch (err) {
       throw err;
     }

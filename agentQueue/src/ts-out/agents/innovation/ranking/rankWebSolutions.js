@@ -37,7 +37,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
     async rankWebSolutions(subProblemIndex, entityIndex) {
         let cursor = "";
         while (true) {
-            const results = await this.webPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, entityIndex, cursor);
+            const results = await this.webPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, entityIndex, undefined, cursor);
             if (results.data.Get["WebPage"].length === 0)
                 break;
             for (const retrievedObject of results.data.Get["WebPage"]) {
