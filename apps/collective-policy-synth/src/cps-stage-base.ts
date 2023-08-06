@@ -540,6 +540,14 @@ export abstract class CpsStageBase extends YpBaseElement {
           .searchTitle {
             max-width: 320px;
           }
+
+          .problemStatementText {
+            margin-top: 0;
+            padding-top: 0;
+            margin-bottom: 0;
+            padding-bottom: 0;
+            font-size: 16px;
+          }
         }
       `,
     ];
