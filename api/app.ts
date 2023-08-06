@@ -65,6 +65,13 @@ export class App {
     );
 
     this.app.use(
+      "/webResearch*",
+      express.static(
+        path.join(__dirname, "../apps/collective-policy-synth/dist")
+      )
+    );
+
+    this.app.use(
       "/solutions*",
       express.static(
         path.join(__dirname, "../apps/collective-policy-synth/dist")
