@@ -29,6 +29,8 @@ import { YpBaseElement } from './src/@yrpri/common/yp-base-element.js';
 //import './chat/yp-chat-assistant.js';
 import { Layouts } from './src/flexbox-literals/classes.js';
 
+import './src/cps-web-research.js';
+
 import { CpsServerApi } from './src/CpsServerApi.js';
 import { CpsAppGlobals } from './src/CpsAppGlobals.js';
 import { MdNavigationDrawer } from '@material/web/labs/navigationdrawer/navigation-drawer.js';
@@ -201,37 +203,34 @@ export class CpsApp extends YpBaseElement {
 
   renderSolutionPage() {
     return this.renderContentOrLoader(html`
-    <div class="layout horizontal">
-      ${this.currentMemory
-        ? html`
-            ${this.renderNavigationBar()}
-            <div class="rightPanel">
-              <main>
-                <div class="mainPageContainer">
-                  <cps-solutions
-                    .memory="${this.currentMemory}"
-                    .activeSubProblemIndex="${this
-                      .activeSubProblemIndex}"
-                    .activePopulationIndex="${this
-                      .activePopulationIndex}"
-                    .activeSolutionIndex="${this.activeSolutionIndex}"
-                    @update-route="${this.updateActiveSolutionIndexes}"
-                    .router="${this.router}"
-                  ></cps-solutions>
-                </div>
-              </main>
-            </div>
-          `
-        : nothing}
-    </div>
-  `);
+      <div class="layout horizontal">
+        ${this.currentMemory
+          ? html`
+              ${this.renderNavigationBar()}
+              <div class="rightPanel">
+                <main>
+                  <div class="mainPageContainer">
+                    <cps-solutions
+                      .memory="${this.currentMemory}"
+                      .activeSubProblemIndex="${this.activeSubProblemIndex}"
+                      .activePopulationIndex="${this.activePopulationIndex}"
+                      .activeSolutionIndex="${this.activeSolutionIndex}"
+                      @update-route="${this.updateActiveSolutionIndexes}"
+                      .router="${this.router}"
+                    ></cps-solutions>
+                  </div>
+                </main>
+              </div>
+            `
+          : nothing}
+      </div>
+    `);
   }
 
   setupCurrentProjectFromRoute(newProjectId: number, clearAll = false) {
     if (newProjectId !== this.currentProjectId) {
       this.currentProjectId = newProjectId;
       this.boot();
-
     }
 
     if (clearAll) {
@@ -240,18 +239,31 @@ export class CpsApp extends YpBaseElement {
       this.activeSolutionIndex = null;
     }
 
+    if (!this.wide) {
+      setTimeout(() => {
+        if (window.location.pathname.includes('webResearch')) {
+          if (this.$$('#navBar') as NavigationBar) {
+            (this.$$('#navBar') as NavigationBar).activeIndex = 1;
+          } else if (window.location.pathname.includes('projects')) {
+            if (this.$$('#navBar') as NavigationBar) {
+              (this.$$('#navBar') as NavigationBar).activeIndex = 0;
+            }
+          }
+        }
+      }, 100);
+    }
   }
 
   parseAllActiveIndexes(params: any) {
     this.activeSubProblemIndex = params.subProblemIndex
-    ? parseInt(params.subProblemIndex, 10)
-    : null;
-  this.activePopulationIndex = params.populationIndex
-    ? parseInt(params.populationIndex, 10)
-    : null;
-  this.activeSolutionIndex = params.solutionIndex
-    ? parseInt(params.solutionIndex, 10)
-    : null;
+      ? parseInt(params.subProblemIndex, 10)
+      : null;
+    this.activePopulationIndex = params.populationIndex
+      ? parseInt(params.populationIndex, 10)
+      : null;
+    this.activeSolutionIndex = params.solutionIndex
+      ? parseInt(params.solutionIndex, 10)
+      : null;
   }
 
   private router: Router = new Router(
@@ -260,28 +272,38 @@ export class CpsApp extends YpBaseElement {
       {
         path: '/',
         render: () => {
-          return this.renderContentOrLoader(html`<cps-home .memory="${this.currentMemory}"></cps-home>`);
+          return this.renderContentOrLoader(
+            html`<cps-home .memory="${this.currentMemory}"></cps-home>`
+          );
         },
       },
       {
         path: '/projects/:projectId',
-        render: (params) => {
-          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1, true);
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1,
+            true
+          );
           return this.renderSolutionPage();
-        }
+        },
       },
       {
         path: '/projects/:projectId/',
-        render: (params) => {
-          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1, true);
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1,
+            true
+          );
 
           return this.renderSolutionPage();
-        }
+        },
       },
       {
         path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?',
         render: params => {
-          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1);
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
           this.parseAllActiveIndexes(params);
           return this.renderSolutionPage();
         },
@@ -289,35 +311,31 @@ export class CpsApp extends YpBaseElement {
       {
         path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?/',
         render: params => {
-          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1);
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
           this.parseAllActiveIndexes(params);
           return this.renderSolutionPage();
         },
       },
       {
-        path: '/webSearches/:projectId',
+        path: '/webResearch/:projectId',
         render: params => {
-          debugger;
-          // Update properties based on the route parameters
-          const newProjectId = parseInt(params.projectId, 10) || 1;
-          if (newProjectId !== this.currentProjectId) {
-            this.currentProjectId = newProjectId;
-            this.boot();
-          }
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
 
-          return html`
-            ${this.renderNavigationBar()}
-            <div class="rightPanel">
-              <main>
-                <div class="mainPageContainer">
-                  <cps-web-research
-                    .memory="${this.currentMemory}"
-                    .router="${this.router}"
-                  ></cps-web-research>
-                </div>
-              </main>
-            </div>
-          `;
+          return this.renderWebResearchPage();
+        },
+      },
+      {
+        path: '/webResearch/:projectId/',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
+
+          return this.renderWebResearchPage();
         },
       },
     ],
@@ -327,6 +345,28 @@ export class CpsApp extends YpBaseElement {
       },
     }
   );
+
+  renderWebResearchPage() {
+    return this.renderContentOrLoader(html`
+      <div class="layout horizontal">
+        ${this.currentMemory
+          ? html`
+              ${this.renderNavigationBar()}
+              <div class="rightPanel">
+                <main>
+                  <div class="mainPageContainer">
+                    <cps-web-research
+                      .memory="${this.currentMemory}"
+                      .router="${this.router}"
+                    ></cps-web-research>
+                  </div>
+                </main>
+              </div>
+            `
+          : nothing}
+      </div>
+    `);
+  }
 
   getServerUrlFromClusterId(clusterId: number) {
     if (clusterId == 1) {
@@ -508,17 +548,18 @@ export class CpsApp extends YpBaseElement {
   }
 
   mobileTabChanged(event: CustomEvent) {
+    /*
     if (event.detail.activeIndex == 0) {
       this.openSolutions();
     } else if (event.detail.activeIndex == 1) {
       //this.openPolicies();
     } else if (event.detail.activeIndex == 2) {
-      this.openWebSearches();
+      this.openWebResearch();
     } else if (event.detail.activeIndex == 3) {
       this.openGitHub();
       (event.target as NavigationBar).activeIndex = 1;
       this.pageIndex = PagesTypes.Solutions;
-    }
+    }*/
   }
 
   exitToMainApp() {
@@ -627,12 +668,12 @@ export class CpsApp extends YpBaseElement {
     await this.router.goto(path);
 
     setTimeout(() => {
-      if (window.location.pathname!=path) {
+      if (window.location.pathname != path) {
         history.pushState({}, '', path);
         //console.error(`push state ${path}`)
       }
+      this.requestUpdate();
     });
-
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -1209,13 +1250,24 @@ export class CpsApp extends YpBaseElement {
   }
 
   async openSolutions() {
+    this.activeSolutionIndex = null;
+    this.activeSubProblemIndex = null;
+    this.activePopulationIndex = null;
     this.updateSolutionRouter();
     await this.updateComplete;
     (this.$$('cps-solutions') as CpsSolutions)?.reset();
   }
 
-  async openWebSearches() {
-    this.router.goto(`/projects/${this.currentProjectId}`);
+  async openWebResearch() {
+    const path = `/webResearch/${this.currentProjectId}`;
+    this.router.goto(path);
+    setTimeout(() => {
+      if (window.location.pathname != path) {
+        history.pushState({}, '', path);
+        //console.error(`push state ${path}`)
+      }
+      this.requestUpdate();
+    });
   }
 
   renderNavigationBar() {
@@ -1238,6 +1290,9 @@ export class CpsApp extends YpBaseElement {
       } gen)"
               @click="${async () => {
                 this.openSolutions();
+                setTimeout(() => {
+                  this.requestUpdate();
+                });
               }}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
@@ -1252,14 +1307,14 @@ export class CpsApp extends YpBaseElement {
             >
             <md-list-item
               class="${
-                location.href.indexOf('/webSearches') > -1 &&
+                location.href.indexOf('/webResearch') > -1 &&
                 'selectedContainer'
               }"
               headline="${this.t('Web Research')}"
-              @click="${() => this.openWebSearches()}"
+              @click="${() => this.openWebResearch()}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
-                  this.openWebSearches();
+                  this.openWebResearch();
                 }
               }}"
               .supportingText="${this.t('Automated research')}"
@@ -1373,13 +1428,17 @@ export class CpsApp extends YpBaseElement {
             activeIndex="1"
             @navigation-bar-activated="${this.mobileTabChanged}"
           >
-            <md-navigation-tab .label="${this.t('Solutions')}"
+            <md-navigation-tab
+              @click="${this.openSolutions}"
+              .label="${this.t('Solutions')}"
               ><md-icon slot="activeIcon">online_prediction</md-icon>
               <md-icon slot="inactiveIcon"
                 >online_prediction</md-icon
               ></md-navigation-tab
             >
-            <md-navigation-tab .label="${this.t('Web Searches')}"
+            <md-navigation-tab
+              @click="${this.openWebResearch}"
+              .label="${this.t('Web Searches')}"
               ><md-icon slot="activeIcon">manage_search</md-icon>
               <md-icon slot="inactiveIcon"
                 >manage_search</md-icon
@@ -1389,7 +1448,9 @@ export class CpsApp extends YpBaseElement {
               ><md-icon slot="activeIcon">policy</md-icon>
               <md-icon slot="inactiveIcon">policy</md-icon></md-navigation-tab
             >
-            <md-navigation-tab .label="${this.t('Open Source')}"
+            <md-navigation-tab
+              @click="${this.openGitHub}"
+              .label="${this.t('Open Source')}"
               ><md-icon slot="activeIcon">crowdsource</md-icon>
               <md-icon slot="inactiveIcon"
                 >crowdsource</md-icon

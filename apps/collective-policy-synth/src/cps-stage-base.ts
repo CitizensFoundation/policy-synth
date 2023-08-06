@@ -100,10 +100,13 @@ export abstract class CpsStageBase extends YpBaseElement {
     );
   }
 
-  toggleDisplayState(title: string) {
+  async toggleDisplayState(title: string) {
+    const scrollPosition = window.scrollY;
     const currentState = this.displayStates.get(title);
     this.displayStates.set(title, !currentState);
     this.requestUpdate();
+    await this.updateComplete;
+    window.scrollTo(0, scrollPosition);
   }
 
   toggleScores() {
@@ -498,6 +501,7 @@ export abstract class CpsStageBase extends YpBaseElement {
 
           .smallerTitle {
             font-size: 16px;
+            max-width: 320px;
           }
 
           .topContainer {
@@ -531,6 +535,10 @@ export abstract class CpsStageBase extends YpBaseElement {
           .loading {
             width: 100vw;
             height: 100vh;
+          }
+
+          .searchTitle {
+            max-width: 320px;
           }
         }
       `,
@@ -613,10 +621,10 @@ export abstract class CpsStageBase extends YpBaseElement {
     </div> `;
   }
 
-  renderProblemStatement() {
+  renderProblemStatement(title: string | undefined = undefined) {
     return html`
       ${!this.wide ? html` ${this.renderThemeToggle()} ` : nothing}
-      <div class="title">${this.t('Problem Statement')}</div>
+      <div class="title">${title? title : this.t('Problem Statement')}</div>
       <div class="problemStatement">
         <div class="problemStatementText">
           ${this.memory.problemStatement.description}
@@ -864,6 +872,14 @@ export abstract class CpsStageBase extends YpBaseElement {
     `;
   }
 
+  getUrlInRightSize(url: string) {
+    if (!this.wide && url.length > 30) {
+      return `${url.substring(0, 30)}...`;
+    } else {
+      return url;
+    }
+  }
+
   renderSearchResults(title: string, searchResults: IEngineSearchResults) {
     if (!searchResults || !searchResults.pages) {
       return nothing;
@@ -907,7 +923,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                               href="${result.url || result.link}"
                               target="_blank"
                             >
-                              ${result.url || result.link}
+                              ${this.getUrlInRightSize(result.url || result.link)}
                             </a>
                           </div>
                         </div>

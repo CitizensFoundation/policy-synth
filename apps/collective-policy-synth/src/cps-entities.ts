@@ -13,7 +13,7 @@ export class CpsEntities extends CpsStageBase {
   @property({ type: Number })
   activeEntityIndex: number | null = null;
 
-  maxNumberOfTopEntities = 3;
+  maxNumberOfTopEntities = 4;
 
   async connectedCallback() {
     super.connectedCallback();
