@@ -14,14 +14,14 @@ const projects = [
     description:
       'Our first test project. Our first test project. Our first test project. Our first test project. Our first test project. Our first test project. Our first test project. ',
   },
-  {
+  /*{
     id: 2,
     title: 'Democracy Undermined',
     imageUrl:
       'https://cps-images.citizens.is/projects/2/subProblems/images/17_v10.png',
     description:
       'Authoritarians who prioritize political outcomes over independent processes are using unfair and often illegal tactics, including political violence and changes to policies, procedures, and election administration',
-  },
+  },*/
 ] as PsProjectData[];
 
 @customElement('cps-home')
