@@ -13,7 +13,7 @@ export class CpsServerApi extends YpServerApi {
   ): Promise<CpsBootResponse> {
     return (await this.fetchWrapper(
       this.baseUrlPath +
-        `/projects/${id}${forceGetBackupForProject ? `/true` : ``}${
+        `/projects/${id}${forceGetBackupForProject ? `?forceBackupReloadId=true` : ``}${
           tempPassword ? `?trm=${tempPassword}` : ''
         }`
     )) as unknown as CpsBootResponse;
