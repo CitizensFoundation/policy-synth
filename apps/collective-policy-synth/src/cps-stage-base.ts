@@ -446,6 +446,36 @@ export abstract class CpsStageBase extends YpBaseElement {
 
           .subProblem {
             max-width: 100% !important;
+            height: 100%;
+            max-height: 100%;
+            padding: 8px;
+            padding-bottom: 0px;
+          }
+
+          .subProblemStatement {
+            padding: 0px;
+            padding-bottom: 32px;
+          }
+
+          .subProblem[is-header] {
+            max-width: 100% !important;
+            height: 100%;
+            max-height: 100%;
+          }
+
+          .subProblemMainTitle[is-header] {
+            margin: 8px;
+            font-size: 24px;
+          }
+
+          .navButton[is-header] {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+          }
+
+          .subProblemImage[is-header] {
+            margin-bottom: 8px;
           }
 
           .subProblemTitle {
@@ -614,7 +644,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     if (this.wide) {
       return renderCloseButton ? 170 : 275;
     } else {
-      return renderCloseButton ? 150 : 200;
+      return renderCloseButton ? 177 : 193;
     }
   }
 
@@ -622,7 +652,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     if (this.wide) {
       return renderCloseButton ? 298 : 481;
     } else {
-      return renderCloseButton ? 263 : 350;
+      return renderCloseButton ? 310 : 350;
     }
   }
 
@@ -644,7 +674,7 @@ export abstract class CpsStageBase extends YpBaseElement {
       >
         <div
           class="subProblemTitle layout ${renderCloseButton
-            ? 'horizontal'
+            ? this.wide ? 'horizontal' : 'vertical'
             : 'vertical center-center'}"
         >
           ${subProblem.imageUrl
