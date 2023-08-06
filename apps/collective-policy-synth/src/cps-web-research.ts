@@ -13,6 +13,9 @@ export class CpsWebResearch extends CpsStageBase {
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Web research - open`);
+    if (this.memory.groupId===1) {
+      this.maxNumberOfTopEntities = 3;
+    }
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -25,17 +28,45 @@ export class CpsWebResearch extends CpsStageBase {
   }
 
   static get styles() {
-    return [super.styles, css`
-    .subProblemContainer {
-      margin-top: 64px;
-    }
-    `];
+    return [
+      super.styles,
+      css`
+        .subProblemContainer {
+          margin-top: 64px;
+        }
+
+        .entity {
+          width: 940px;
+          max-width: 100%;
+        }
+
+        .entityName {
+          margin-top: 24px;
+          margin-bottom: 8px;
+          width: 100%;
+          font-weight: bold;
+        }
+
+        .entityName[not-scanned] {
+          font-weight: 300;
+        }
+
+        .negPos {
+          width: 100%;
+        }
+
+        @media (max-width: 960px) {
+          .entity {
+            width: 100%;
+          }
+      `,
+    ];
   }
 
   render() {
     return html`
       <div class="topContainer layout vertical center-center">
-        ${this.renderProblemStatement(this.t("Automated Web Research"))}
+        ${this.renderProblemStatement(this.t('Automated Web Research'))}
         ${this.renderSearchQueries(
           this.t('Search queries for problem statement'),
           this.memory.problemStatement.searchQueries
@@ -55,46 +86,50 @@ export class CpsWebResearch extends CpsStageBase {
         const isEntityLessProminent =
           entityIndex >= this.maxNumberOfTopEntities;
         return html`
-          <div class="entity ${isEntityLessProminent ? 'lessProminent' : ''}">
-            <div class="entityName">${entity.name}</div>
-            ${entity.negativeEffects?.length > 0
-              ? html`
-                  <div>
-                    Negative Effects:
-                    <ul>
-                      ${entity.negativeEffects?.map(
-                        effect => html` <li>${effect}</li> `
+          <div class="layout vertical center-center">
+            <div class="entity ${isEntityLessProminent ? 'lessProminent' : ''}">
+              <div class="entityName" ?not-scanned="${isEntityLessProminent}">${entity.name}</div>
+              <div class="negPos">
+                ${entity.negativeEffects?.length > 0
+                  ? html`
+                      <div>
+                        Negative Effects:
+                        <ul>
+                          ${entity.negativeEffects?.map(
+                            effect => html` <li>${effect}</li> `
+                          )}
+                        </ul>
+                      </div>
+                    `
+                  : nothing}
+                ${entity.positiveEffects?.length > 0
+                  ? html`
+                      <div>
+                        Positive Effects:
+                        <ul>
+                          ${entity.positiveEffects?.map(
+                            effect => html` <li>${effect}</li> `
+                          )}
+                        </ul>
+                      </div>
+                    `
+                  : nothing}
+                ${!isEntityLessProminent
+                  ? html`
+                      ${this.renderSearchQueries(
+                        this.t('Search queries for entity'),
+                        entity.searchQueries
                       )}
-                    </ul>
-                  </div>
-                `
-              : nothing}
-            ${entity.positiveEffects?.length > 0
-              ? html`
-                  <div>
-                    Positive Effects:
-                    <ul>
-                      ${entity.positiveEffects?.map(
-                        effect => html` <li>${effect}</li> `
+                      ${this.renderSearchResults(
+                        this.t(
+                          'Webpages scanned for solutions to entites problems'
+                        ),
+                        entity.searchResults
                       )}
-                    </ul>
-                  </div>
-                `
-              : nothing}
-            ${!isEntityLessProminent
-              ? html`
-                  ${this.renderSearchQueries(
-                    this.t('Search queries for entity'),
-                    entity.searchQueries
-                  )}
-                  ${this.renderSearchResults(
-                    this.t(
-                      'Webpages scanned for solutions to entites problems'
-                    ),
-                    entity.searchResults
-                  )}
-                `
-              : nothing}
+                    `
+                  : nothing}
+              </div>
+            </div>
           </div>
         `;
       })}
@@ -112,7 +147,7 @@ export class CpsWebResearch extends CpsStageBase {
         subProblem =>
           html`
             <div class="subProblemContainer layout vertical center-center">
-              ${this.renderSubProblem(subProblem, false, 0, true, true)}
+              ${this.renderSubProblem(subProblem, false, 0, true, true, true)}
               ${this.renderSearchQueries(
                 this.t('Search queries for sub problem'),
                 subProblem.searchQueries

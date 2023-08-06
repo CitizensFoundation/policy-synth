@@ -724,7 +724,8 @@ export abstract class CpsStageBase extends YpBaseElement {
     isLessProminent: boolean,
     index: number,
     renderCloseButton: boolean = false,
-    renderMoreInfo = false
+    renderMoreInfo = false,
+    hideAllButtons = false
   ) {
     return html`
       <div
@@ -772,7 +773,7 @@ export abstract class CpsStageBase extends YpBaseElement {
               ?is-header="${renderCloseButton}"
               class="navButton ${renderCloseButton ? 'horizontal flex' : ''}"
             >
-              ${renderCloseButton
+              ${(renderCloseButton && !hideAllButtons)
                 ? html`
                     <md-standard-icon-button
                       aria-label="Previous"
