@@ -181,8 +181,13 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblemStatement {
-          padding-left: 16px;
+          padding-left: 0px;
           padding-right: 16px;
+        }
+
+        .subProblemStatement[not-header] {
+          background-color: var(--md-sys-color-surface);
+          color: var(--md-sys-color-on-surface);
         }
 
         .subProblemStatement[is-header] {
@@ -201,7 +206,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblemMainTitle[is-header] {
-          margin-left: 24px;
+          margin-left: 8px;
         }
 
         .headerContainer[is-header] {
@@ -231,8 +236,8 @@ export abstract class CpsStageBase extends YpBaseElement {
 
         .subProblem[not-header] {
           cursor: pointer;
-          background-color: var(--md-sys-color-secondary-container);
-          color: var(--md-sys-color-on-secondary-container);
+          background-color: var(--md-sys-color-surface);
+          color: var(--md-sys-color-on-surface);
           max-width: 450px;
           margin-top: 16px;
           margin-bottom: 16px;
@@ -325,7 +330,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblemContainer {
-          width:100%;
+          width: 100%;
         }
 
         .scores {
@@ -620,7 +625,6 @@ export abstract class CpsStageBase extends YpBaseElement {
     `;
   }
 
-
   renderSubProblemList(
     subProblems: IEngineSubProblem[],
     title = this.t('Sub Problems')
@@ -630,12 +634,14 @@ export abstract class CpsStageBase extends YpBaseElement {
         ${this.renderProblemStatement()}
 
         <div class="title">${title}</div>
-        <div class="subProblemContainer layout horizontal center-justified wrap">
+        <div
+          class="subProblemContainer layout horizontal center-justified wrap"
+        >
           ${subProblems.map((subProblem, index) => {
             const isLessProminent = index >= maxNumberOfSubProblems;
             return this.renderSubProblem(subProblem, isLessProminent, index);
           })}
-                </div>
+        </div>
       </div>
     `;
   }
@@ -656,6 +662,30 @@ export abstract class CpsStageBase extends YpBaseElement {
     }
   }
 
+  renderSubProblemImageUrl(
+    renderCloseButton: boolean,
+    subProblem: IEngineSubProblem
+  ) {
+    return html`
+      <div
+        class="layout horizontal ${renderCloseButton
+          ? ''
+          : 'center-center'} subProblemImage"
+      >
+        <img
+          loading="lazy"
+          ?is-header="${renderCloseButton}"
+          ?not-header="${!renderCloseButton}"
+          class="subProblemImage"
+          height="${this.getImgHeight(renderCloseButton)}"
+          width="${this.getImgWidth(renderCloseButton)}"
+          src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
+          alt="${subProblem.title}"
+        />
+      </div>
+    `;
+  }
+
   renderSubProblem(
     subProblem: IEngineSubProblem,
     isLessProminent: boolean,
@@ -674,41 +704,37 @@ export abstract class CpsStageBase extends YpBaseElement {
       >
         <div
           class="subProblemTitle layout ${renderCloseButton
-            ? this.wide ? 'horizontal' : 'vertical'
+            ? this.wide
+              ? 'horizontal'
+              : 'vertical'
             : 'vertical center-center'}"
         >
-          ${subProblem.imageUrl
-            ? html`
-                <div
-                  class="layout horizontal ${renderCloseButton
-                    ? ''
-                    : 'center-center'} subProblemImage"
-                >
-                  <img
-                    loading="lazy"
-                    ?is-header="${renderCloseButton}"
-                    ?not-header="${!renderCloseButton}"
-                    class="subProblemImage"
-                    height="${this.getImgHeight(renderCloseButton)}"
-                    width="${this.getImgWidth(renderCloseButton)}"
-                    src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
-                    alt="${subProblem.title}"
-                  />
-                </div>
-              `
+          ${subProblem.imageUrl && !renderCloseButton
+            ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
             : nothing}
           <div
             ?is-header="${renderCloseButton}"
             ?not-header="${!renderCloseButton}"
             class="layout headerContainer ${renderCloseButton
-              ? 'vertical'
+              ? 'horizontal'
               : 'horizontal'}"
           >
-            <div class="subProblemMainTitle" ?is-header="${renderCloseButton}">${subProblem.title}</div>
-            <div ?hidden="${!renderCloseButton}"
-                ?is_header="${renderCloseButton}" class="subProblemStatement">
-              ${subProblem.description}
-            </div>
+            <div class="layout vertical">
+              <div class="subProblemMainTitle" ?is-header="${renderCloseButton}">
+                ${subProblem.title}
+              </div>
+              <div
+                ?hidden="${!renderCloseButton}"
+                ?is_header="${renderCloseButton}"
+                class="subProblemStatement"
+              >
+                ${subProblem.description}
+              </div>
+              </div>
+            ${subProblem.imageUrl && renderCloseButton
+              ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
+              : nothing}
+
             <div
               ?is-header="${renderCloseButton}"
               class="navButton ${renderCloseButton ? 'horizontal flex' : ''}"
