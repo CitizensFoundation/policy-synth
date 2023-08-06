@@ -89,6 +89,7 @@ export class CpsSubProblems extends CpsStageBase {
 
         .moreInfo {
           margin: 16px;
+          margin-top: 0;
           font-size: 18px;
           padding: 24px;
           line-height: 1.5;
@@ -111,6 +112,8 @@ export class CpsSubProblems extends CpsStageBase {
         }
 
         .title {
+          padding: 24px;
+          margin-bottom: 0;
           color: var(--md-sys-color-primary);
           background-color: var(--md-sys-color-on-primary);
         }
