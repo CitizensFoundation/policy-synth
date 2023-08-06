@@ -953,6 +953,23 @@ export class CpsSolutions extends CpsStageBase {
     }
   }
 
+  renderSolutionImage(solution: IEngineSolution) {
+    return html`
+    <div class="solutionImageContainer">
+                        <img
+                          loading="lazy"
+                          class="solutionTopImage"
+                          height="${this.getSolutionImgHeight()}"
+                          width="${this.getSolutionImgWidth()}"
+                          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
+                          alt="${solution.title}"
+                          .key="${solution.imageUrl}"
+                        />
+                      </div>
+    `;
+
+  }
+
   renderSolutionScreen(solutionIndex: number) {
     const solutions = this.filteredSolutions;
     const solution = solutions[solutionIndex];
@@ -965,27 +982,20 @@ export class CpsSolutions extends CpsStageBase {
                   solutionIndex,
                   solutions
                 )}
-                <div class="solution layout horizontal center-cener">
+                <div class="solution layout ${this.wide ? 'horizontal' : 'vertical'} center-cener">
+                  ${(solution.imageUrl && !this.wide)
+                    ? this.renderSolutionImage(solution)
+                    : nothing}
+
                   <div class="solutionTitleDesc">
                     <div class="solutionTitle">${solution.title}</div>
                     <div class="solutionDescription">
                       ${solution.description}
                     </div>
                   </div>
-                  ${solution.imageUrl
-                    ? html`<div class="solutionImageContainer">
-                        <img
-                          loading="lazy"
-                          class="solutionTopImage"
-                          height="${this.getSolutionImgHeight()}"
-                          width="${this.getSolutionImgWidth()}"
-                          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
-                          alt="${solution.title}"
-                          .key="${solution.imageUrl}"
-                        />
-                      </div> `
+                  ${(solution.imageUrl && this.wide)
+                    ? this.renderSolutionImage(solution)
                     : nothing}
-
                   <div
                     class="solutionDescription"
                     ?hidden="${this.hideExtraSolutionInformation}"
