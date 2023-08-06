@@ -4,3 +4,10 @@ interface CpsBootResponse {
   isAdmin: boolean;
   name: string;
 }
+
+interface PsRoutingParams {
+  projectId: number;
+  subProblemIndex?: number;
+  populationIndex?: number;
+  solutionIndex?: number;
+}

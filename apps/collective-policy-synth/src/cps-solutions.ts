@@ -17,6 +17,7 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 import { IEngineConstants } from './constants.js';
 import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
+import { Router } from '@lit-labs/router';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
@@ -91,6 +92,9 @@ export class CpsSolutions extends CpsStageBase {
   }
 
   updateSwipeIndex(direction: string) {
+    console.error(
+      `updateSwipeIndex ${this.activeFilteredSolutionIndex} ${this.activeSolutionIndex}`
+    );
     if (direction === 'right') {
       if (
         this.activeSolutionIndex !== null &&
@@ -130,7 +134,7 @@ export class CpsSolutions extends CpsStageBase {
       this.updateSwipeIndex('right');
     } else if (e.key === 'ArrowLeft') {
       this.updateSwipeIndex('left');
-    } else if (e.key === 'Escape' && e.target! instanceof MdOutlinedTextField) {
+    } else if (e.key === 'Escape') {
       if (this.activeSolutionIndex !== null) {
         this.activeSolutionIndex = null;
         this.exitSolutionScreen();
@@ -177,6 +181,38 @@ export class CpsSolutions extends CpsStageBase {
           this.memory.subProblems[this.activeSubProblemIndex].solutions
             .populations[this.activePopulationIndex][this.activeSolutionIndex]
       );
+    }
+
+    if (
+      changedProperties.has('activeSolutionIndex') ||
+      changedProperties.has('activeSubProblemIndex') ||
+      changedProperties.has('activePopulationIndex')
+    ) {
+      this.updateRoutes();
+    }
+
+    if (
+      changedProperties.has('activeFilteredSolutionIndex') &&
+      this.activeFilteredSolutionIndex !== null &&
+      this.activePopulationIndex !== null &&
+      this.activeFilteredSolutionIndex !== undefined
+    ) {
+      const subProblem = this.memory.subProblems[this.activeSubProblemIndex];
+      const solutions =
+        subProblem.solutions.populations[this.activePopulationIndex];
+      const filteredSolution =
+        this.filteredSolutions[this.activeFilteredSolutionIndex];
+
+      const solutionIndex = solutions.findIndex(
+        solution => solution === filteredSolution
+      );
+
+      if (solutionIndex!==undefined && solutionIndex !== -1) {
+        this.activeSolutionIndex = solutionIndex;
+      }
+
+      console.error(`activeFilteredSolutionIndex`, this.activeFilteredSolutionIndex);
+      console.error(`activeSolutionIndex`, this.activeSolutionIndex);
     }
   }
 
@@ -462,7 +498,8 @@ export class CpsSolutions extends CpsStageBase {
             opacity: 0.55;
           }
 
-          .topContainer {}
+          .topContainer {
+          }
         }
 
         [hidden] {
@@ -479,43 +516,48 @@ export class CpsSolutions extends CpsStageBase {
         subProblem.solutions.populations[this.activePopulationIndex];
 
       let firstInGroup: Record<number, IEngineSolution> = {};
-      solutions.forEach(solution => {
-        if (solution.similarityGroup !== undefined) {
-          let groupIndex = solution.similarityGroup.index;
-          if (!firstInGroup[groupIndex]) {
-            firstInGroup[groupIndex] = solution;
-            solution.similarityGroup.isFirst = true;
-          } else {
-            solution.similarityGroup.isFirst = undefined;
+
+      if (solutions) {
+        solutions.forEach(solution => {
+          if (solution.similarityGroup !== undefined) {
+            let groupIndex = solution.similarityGroup.index;
+            if (!firstInGroup[groupIndex]) {
+              firstInGroup[groupIndex] = solution;
+              solution.similarityGroup.isFirst = true;
+            } else {
+              solution.similarityGroup.isFirst = undefined;
+            }
           }
+        });
+
+        if (this.activeGroupIndex !== null) {
+          // If a group is active, only return solutions from this group
+          solutions = solutions.filter(
+            solution =>
+              solution.similarityGroup?.index === this.activeGroupIndex
+          );
+        } else {
+          // Otherwise, return only the first solution of each group
+          solutions = solutions.filter(
+            solution =>
+              solution.similarityGroup?.isFirst ||
+              solution.similarityGroup === undefined
+          );
         }
-      });
 
-      if (this.activeGroupIndex !== null) {
-        // If a group is active, only return solutions from this group
-        solutions = solutions.filter(
-          solution => solution.similarityGroup?.index === this.activeGroupIndex
-        );
+        if (this.searchText) {
+          const searchTerms = this.searchText.toLowerCase().split(' ');
+          solutions = solutions.filter(solution =>
+            searchTerms.every(
+              term =>
+                solution.title.toLowerCase().includes(term) ||
+                solution.description.toLowerCase().includes(term)
+            )
+          );
+        }
       } else {
-        // Otherwise, return only the first solution of each group
-        solutions = solutions.filter(
-          solution =>
-            solution.similarityGroup?.isFirst ||
-            solution.similarityGroup === undefined
-        );
+        return [];
       }
-
-      if (this.searchText) {
-        const searchTerms = this.searchText.toLowerCase().split(' ');
-        solutions = solutions.filter(solution =>
-          searchTerms.every(
-            term =>
-              solution.title.toLowerCase().includes(term) ||
-              solution.description.toLowerCase().includes(term)
-          )
-        );
-      }
-
       return solutions;
     } else {
       return [];
@@ -549,11 +591,13 @@ export class CpsSolutions extends CpsStageBase {
         ?has-image="${solution.imageUrl}"
         ?group-solo="${this.activeGroupIndex !== null}"
         @click="${(): void => {
-          this.activeSolutionIndex = index;
+          //this.activeSolutionIndex = index;
           this.activeFilteredSolutionIndex = index;
           this.solutionListScrollPositionX = window.scrollX;
           this.solutionListScrollPositionY = window.scrollY;
           window.scrollTo(0, 0);
+          console.error(`click`, this.activeFilteredSolutionIndex);
+          console.error(`click`, this.activeSolutionIndex);
           window.appGlobals.activity('Solutions - open detail');
         }}"
       >
@@ -853,6 +897,8 @@ export class CpsSolutions extends CpsStageBase {
           aria-label="Close"
           @click="${(): void => {
             this.activeSolutionIndex = null;
+            this.activeFilteredSolutionIndex = null;
+
             this.exitSolutionScreen();
             window.appGlobals.activity('Solutions - exit solution detail');
           }}"

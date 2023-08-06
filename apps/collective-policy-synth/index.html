@@ -32,6 +32,7 @@
     gtag('js', new Date());
 
     gtag('config', 'G-SJQ488C70M');
+
   </script>
   <style>
     html,
@@ -53,6 +54,10 @@
     if (!window.ElementInternals) {
       import('./node_modules/element-internals-polyfill/dist/index.js');
     }
+      // @ts-ignore: Property 'UrlPattern' does not exist
+      if (!globalThis.URLPattern) {
+        import("urlpattern-polyfill");
+      }
   </script>
 </head>
 

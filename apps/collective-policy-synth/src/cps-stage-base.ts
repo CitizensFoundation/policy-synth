@@ -11,6 +11,7 @@ import '@material/web/button/outlined-button.js';
 import '@material/web/circularprogress/circular-progress.js';
 import '@material/web/iconbutton/standard-icon-button.js';
 import { MdStandardIconButton } from '@material/web/iconbutton/standard-icon-button.js';
+import { Router } from '@lit-labs/router';
 
 //TDOO: Share from db config
 const maxNumberOfSubProblems = 7;
@@ -37,6 +38,9 @@ export abstract class CpsStageBase extends YpBaseElement {
   @property({ type: Number })
   activeGroupIndex: number = null;
 
+  @property({ type: Object })
+  router!: Router;
+
   @state()
   displayStates = new Map();
 
@@ -45,12 +49,12 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   subProblemColors: string[] = [];
 
-  maxTopSearchQueries = 2;
-  maxUsedSearchResults = 4;
+  maxTopSearchQueries = 4;
+  maxUsedSearchResults = 10;
 
   connectedCallback(): void {
     super.connectedCallback();
-    if (this.memory.groupId==2) {
+    if (this.memory.groupId == 2) {
       this.maxTopSearchQueries = 3;
       this.maxUsedSearchResults = 1000;
     }
@@ -67,6 +71,25 @@ export abstract class CpsStageBase extends YpBaseElement {
         '#87559b',
         '#3f5fce',
       ];
+    }
+  }
+
+  updateRoutes() {
+    this.fire('update-route', {
+      activeSolutionIndex: this.activeSolutionIndex,
+      activeSubProblemIndex: this.activeSubProblemIndex,
+      activePopulationIndex: this.activePopulationIndex,
+    });
+  }
+
+  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+    super.updated(changedProperties);
+    if (
+      changedProperties.has('activeSolutionIndex') ||
+      changedProperties.has('activeSubProblemIndex') ||
+      changedProperties.has('activePopulationIndex')
+    ) {
+      this.updateRoutes();
     }
   }
 
@@ -123,11 +146,12 @@ export abstract class CpsStageBase extends YpBaseElement {
           padding: 16px;
           margin: 16px 0;
           border-radius: 16px;
-          line-height: 1.4;
-          background-color: var(--md-sys-color-tertiary);
-          color: var(--md-sys-color-on-tertiary);
+          line-height: 1.5;
+          background-color: var(--md-sys-color-surface);
+          color: var(--md-sys-color-on-surface);
           max-width: 960px;
           margin-bottom: 0px;
+          padding-top: 8px;
         }
 
         .problemStatementText {
@@ -150,6 +174,10 @@ export abstract class CpsStageBase extends YpBaseElement {
           padding-right: 16px;
         }
 
+        .subProblemStatement[is-header] {
+          font-size: 18px;
+        }
+
         .subProblemTitle {
           font-size: 26px;
           padding-bottom: 0;
@@ -159,6 +187,15 @@ export abstract class CpsStageBase extends YpBaseElement {
         .subProblemMainTitle {
           font-size: 32px;
           margin-left: 8px;
+        }
+
+        .subProblemMainTitle[is-header] {
+          margin-left: 24px;
+        }
+
+        .headerContainer[is-header] {
+          position: relative;
+          width: 100%;
         }
 
         .subProblem {
@@ -172,11 +209,25 @@ export abstract class CpsStageBase extends YpBaseElement {
           padding-bottom: 16px;
         }
 
+        .subProblem[is-header] {
+          cursor: pointer;
+          background-color: var(--md-sys-color-secondary-container);
+          color: var(--md-sys-color-on-secondary-container);
+          max-height: 220px;
+          margin: 0;
+        }
+
         .subProblem[not-header] {
           cursor: pointer;
           background-color: var(--md-sys-color-secondary-container);
           color: var(--md-sys-color-on-secondary-container);
           max-width: 600px;
+        }
+
+        .navButton[is-header] {
+          position: absolute;
+          bottom: 16px;
+          right: 16px;
         }
 
         .title {
@@ -464,7 +515,7 @@ export abstract class CpsStageBase extends YpBaseElement {
 
     this.setSubProblemColor(index);
 
-    if (this.firstTimeSubProblemClick) {
+    if (this.firstTimeSubProblemClick || this.activePopulationIndex === null) {
       this.firstTimeSubProblemClick = false;
       if (
         this.memory.subProblems.length > 0 &&
@@ -476,12 +527,14 @@ export abstract class CpsStageBase extends YpBaseElement {
       }
     }
 
-    window.appGlobals.activity("Sub Problem - click");
+    this.updateRoutes();
+
+    window.appGlobals.activity('Sub Problem - click');
   }
 
   toggleDarkMode() {
     this.fire('yp-theme-dark-mode', !this.themeDarkMode);
-    window.appGlobals.activity("Solutions - toggle darkmode");
+    window.appGlobals.activity('Solutions - toggle darkmode');
   }
 
   renderThemeToggle() {
@@ -535,9 +588,17 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   getImgHeight(renderCloseButton: boolean) {
     if (this.wide) {
-      return renderCloseButton ? 275 : 275;
+      return renderCloseButton ? 170 : 275;
     } else {
-      return renderCloseButton ? 200 : 200;
+      return renderCloseButton ? 150 : 200;
+    }
+  }
+
+  getImgWidth(renderCloseButton: boolean) {
+    if (this.wide) {
+      return renderCloseButton ? 298 : 481;
+    } else {
+      return renderCloseButton ? 263 : 350;
     }
   }
 
@@ -551,6 +612,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     return html`
       <div
         ?not-header="${!renderCloseButton}"
+        ?is-header="${renderCloseButton}"
         class="subProblem ${isLessProminent ? 'lessProminent' : ''}"
         @click="${() => {
           if (!renderCloseButton) this.setSubProblem(index);
@@ -558,84 +620,109 @@ export abstract class CpsStageBase extends YpBaseElement {
       >
         <div
           class="subProblemTitle layout ${renderCloseButton
-            ? 'vertical'
+            ? 'horizontal'
             : 'vertical center-center'}"
         >
           ${subProblem.imageUrl
             ? html`
-                <div class="layout horizontal center-center subProblemImage">
+                <div
+                  class="layout horizontal ${renderCloseButton
+                    ? ''
+                    : 'center-center'} subProblemImage"
+                >
                   <img
                     loading="lazy"
                     ?is-header="${renderCloseButton}"
                     class="subProblemImage"
                     height="${this.getImgHeight(renderCloseButton)}"
+                    width="${this.getImgWidth(renderCloseButton)}"
                     src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
                     alt="${subProblem.title}"
                   />
                 </div>
               `
             : nothing}
-          <div class="layout horizontal">
-            <div class="subProblemMainTitle">${subProblem.title}</div>
-            <div class="${renderCloseButton ? 'flex' : ''}"></div>
-            ${renderCloseButton
-              ? html`
-                  <md-standard-icon-button
-                    aria-label="Previous"
-                    .disabled="${this.activeSubProblemIndex === 0}"
-                    @click="${(e: CustomEvent): void => {
-                      e.stopPropagation();
-                      if (this.activeSubProblemIndex > 0) {
-                        this.activeSubProblemIndex -= 1;
-                        this.setSubProblemColor(this.activeSubProblemIndex);
+          <div
+            ?is-header="${renderCloseButton}"
+            class="layout headerContainer ${renderCloseButton
+              ? 'vertical'
+              : 'horizontal'}"
+          >
+            <div class="subProblemMainTitle" ?is-header="${renderCloseButton}">${subProblem.title}</div>
+            <div ?hidden="${!renderCloseButton}"
+                ?is_header="${renderCloseButton}" class="subProblemStatement">
+              ${subProblem.description}
+            </div>
+            <div
+              ?is-header="${renderCloseButton}"
+              class="navButton ${renderCloseButton ? 'horizontal flex' : ''}"
+            >
+              ${renderCloseButton
+                ? html`
+                    <md-standard-icon-button
+                      aria-label="Previous"
+                      .disabled="${this.activeSubProblemIndex === 0}"
+                      @click="${(e: CustomEvent): void => {
+                        e.stopPropagation();
+                        if (this.activeSubProblemIndex > 0) {
+                          this.activeSubProblemIndex -= 1;
+                          this.setSubProblemColor(this.activeSubProblemIndex);
+                          this.activeGroupIndex = null;
+                          window.appGlobals.activity(
+                            'Sub Problem - click previous'
+                          );
+                        }
+                      }}"
+                    >
+                      <md-icon>navigate_before</md-icon>
+                    </md-standard-icon-button>
+                    <md-standard-icon-button
+                      id="nextButton"
+                      aria-label="Next"
+                      .disabled="${this.activeSubProblemIndex ===
+                      maxNumberOfSubProblems - 1}"
+                      @click="${(e: CustomEvent): void => {
+                        e.stopPropagation();
+                        if (
+                          !(this.$$('#nextButton') as MdStandardIconButton)
+                            .disabled &&
+                          this.activeSubProblemIndex <
+                            maxNumberOfSubProblems - 1
+                        ) {
+                          this.activeSubProblemIndex += 1;
+                          this.setSubProblemColor(this.activeSubProblemIndex);
+                          this.activeGroupIndex = null;
+                          window.appGlobals.activity(
+                            'Sub Problem - click next'
+                          );
+                        }
+                      }}"
+                    >
+                      <md-icon>navigate_next</md-icon>
+                    </md-standard-icon-button>
+                    <md-standard-icon-button
+                      aria-label="Close"
+                      @click="${(e: CustomEvent): void => {
+                        e.stopPropagation();
+                        this.activeSubProblemIndex = null;
+                        this.fire('yp-theme-color', this.subProblemColors[7]);
+                        this.exitSubProblemScreen();
                         this.activeGroupIndex = null;
-                        window.appGlobals.activity("Sub Problem - click previous");
-                      }
-                    }}"
-                  >
-                    <md-icon>navigate_before</md-icon>
-                  </md-standard-icon-button>
-                  <md-standard-icon-button
-                    id="nextButton"
-                    aria-label="Next"
-                    .disabled="${this.activeSubProblemIndex ===
-                    maxNumberOfSubProblems - 1}"
-                    @click="${(e: CustomEvent): void => {
-                      e.stopPropagation();
-                      if (
-                        !(this.$$('#nextButton') as MdStandardIconButton)
-                          .disabled &&
-                        this.activeSubProblemIndex < maxNumberOfSubProblems - 1
-                      ) {
-                        this.activeSubProblemIndex += 1;
-                        this.setSubProblemColor(this.activeSubProblemIndex);
-                        this.activeGroupIndex = null;
-                        window.appGlobals.activity("Sub Problem - click next");
-                      }
-                    }}"
-                  >
-                    <md-icon>navigate_next</md-icon>
-                  </md-standard-icon-button>
-                  <md-standard-icon-button
-                    aria-label="Close"
-                    @click="${(e: CustomEvent): void => {
-                      e.stopPropagation();
-                      this.activeSubProblemIndex = null;
-                      this.fire('yp-theme-color', this.subProblemColors[7]);
-                      this.exitSubProblemScreen();
-                      this.activeGroupIndex = null;
-                      window.appGlobals.activity("Sub Problem - exit");
-                    }}"
-                  >
-                    <md-icon>close</md-icon>
-                  </md-standard-icon-button>
-                `
-              : nothing}
+                        window.appGlobals.activity('Sub Problem - exit');
+                      }}"
+                    >
+                      <md-icon>close</md-icon>
+                    </md-standard-icon-button>
+                  `
+                : nothing}
+            </div>
           </div>
         </div>
 
-        <div class="subProblemStatement">${subProblem.description}</div>
-        ${renderMoreInfo
+        <div ?hidden="${renderCloseButton}" class="subProblemStatement">
+          ${subProblem.description}
+        </div>
+        ${renderMoreInfo && !renderCloseButton
           ? html`
               <div class="subProblemStatement">
                 ${subProblem.whyIsSubProblemImportant}

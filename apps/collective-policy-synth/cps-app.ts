@@ -12,6 +12,8 @@ import '@material/web/iconbutton/standard-icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/mwc-snackbar/mwc-snackbar.js';
 
+import { Router } from '@lit-labs/router';
+
 import {
   applyTheme,
   argbFromHex,
@@ -51,6 +53,7 @@ import { Dialog } from '@material/web/dialog/lib/dialog.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
+import { debug } from 'console';
 
 const PagesTypes = {
   ProblemStatement: 1,
@@ -76,6 +79,15 @@ export class CpsApp extends YpBaseElement {
   currentProjectId = 1;
 
   @property({ type: Number })
+  activeSubProblemIndex: number | undefined;
+
+  @property({ type: Number })
+  activePopulationIndex: number | undefined;
+
+  @property({ type: Number })
+  activeSolutionIndex: number | undefined;
+
+  @property({ type: Number })
   pageIndex = PagesTypes.Solutions;
 
   @property({ type: Object })
@@ -97,7 +109,6 @@ export class CpsApp extends YpBaseElement {
   earlName!: string;
 
   @property({ type: String })
-
   currentError: string | undefined;
 
   @property({ type: String })
@@ -186,6 +197,71 @@ export class CpsApp extends YpBaseElement {
     window.appGlobals.activity('pageview');
   }
 
+  private router: Router = new Router(
+    this,
+    [
+      {
+        path: '/',
+        render: () => {
+          return html`<h1>jij</h1>
+            <cps-home></cps-home>`;
+        },
+      },
+      {
+        path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?',
+        render: params => {
+          // Update properties based on the route parameters
+          const newProjectId = parseInt(params.projectId, 10) || 1;
+          if (newProjectId !== this.currentProjectId) {
+            this.currentProjectId = newProjectId;
+            this.boot();
+          }
+
+          this.activeSubProblemIndex = params.subProblemIndex
+            ? parseInt(params.subProblemIndex, 10)
+            : null;
+          this.activePopulationIndex = params.populationIndex
+            ? parseInt(params.populationIndex, 10)
+            : null;
+          this.activeSolutionIndex = params.solutionIndex
+            ? parseInt(params.solutionIndex, 10)
+            : null;
+
+          return html`<cps-solutions
+            .memory="${this.currentMemory}"
+            .activeSubProblemIndex="${this.activeSubProblemIndex}"
+            .activePopulationIndex="${this.activePopulationIndex}"
+            .activeSolutionIndex="${this.activeSolutionIndex}"
+            @update-route="${this.updateActiveSolutionIndexes}"
+            .router="${this.router}"
+          ></cps-solutions>`;
+        },
+      },
+      {
+        path: '/webSearches/:projectId',
+        render: params => {
+          debugger;
+          // Update properties based on the route parameters
+          const newProjectId = parseInt(params.projectId, 10) || 1;
+          if (newProjectId !== this.currentProjectId) {
+            this.currentProjectId = newProjectId;
+            this.boot();
+          }
+
+          return html`<cps-web-searches
+            .memory="${this.currentMemory}"
+            .router="${this.router}"
+          ></cps-web-searches>`;
+        },
+      },
+    ],
+    {
+      fallback: {
+        render: () => html`<h2>gogogo</h2>`,
+      },
+    }
+  );
+
   getServerUrlFromClusterId(clusterId: number) {
     if (clusterId == 1) {
       return 'https://betrireykjavik.is/api';
@@ -204,36 +280,21 @@ export class CpsApp extends YpBaseElement {
     if (savedColor) {
       this.fireGlobal('yp-theme-color', savedColor);
     }
-
-    const urlPath = window.location.pathname;
-    const urlParts = urlPath.split('/');
-    const projectIndex = urlParts.indexOf('projects');
-    if (projectIndex !== -1 && urlParts[projectIndex + 1]) {
-      const projectId = parseInt(urlParts[projectIndex + 1], 10);
-      if (!isNaN(projectId)) {
-        this.currentProjectId = projectId;
-      }
-
-      // If forceGetBackupForProject is specified in the URL, save it
-      if (urlParts[projectIndex + 2]) {
-        this.forceGetBackupForProject = urlParts[projectIndex + 2];
-      }
-    }
-
     this.boot();
   }
 
-
   openTempPassword() {
     this.tempPassword = undefined;
-    (this.$$('#tempPassword') as TextField).value = "";
-    (this.$$("#tempPasswordDialog") as Dialog).open = true;
+    (this.$$('#tempPassword') as TextField).value = '';
+    (this.$$('#tempPasswordDialog') as Dialog).open = true;
   }
 
   async boot() {
     window.appGlobals.activity('Boot - fetch start');
     const firstBootResponse = (await window.serverApi.getProject(
-      this.currentProjectId, this.tempPassword, this.forceGetBackupForProject
+      this.currentProjectId,
+      this.tempPassword,
+      this.forceGetBackupForProject
     )) as CpsBootResponse | { needsTrm: boolean };
 
     if ('needsTrm' in firstBootResponse) {
@@ -262,7 +323,8 @@ export class CpsApp extends YpBaseElement {
         ? bootResponse.configuration.theme_color
         : '#3f5fce';
       this.themePrimaryColor = bootResponse.configuration.theme_primary_color;
-      this.themeSecondaryColor = bootResponse.configuration.theme_secondary_color;
+      this.themeSecondaryColor =
+        bootResponse.configuration.theme_secondary_color;
       this.themeTertiaryColor = bootResponse.configuration.theme_tertiary_color;
       this.themeNeutralColor = bootResponse.configuration.theme_neutral_color;
       this.themeScheme = bootResponse.configuration.theme_scheme
@@ -381,11 +443,11 @@ export class CpsApp extends YpBaseElement {
 
   mobileTabChanged(event: CustomEvent) {
     if (event.detail.activeIndex == 0) {
-      this.pageIndex = PagesTypes.ProblemStatement;
+      this.openSolutions();
     } else if (event.detail.activeIndex == 1) {
-      this.pageIndex = PagesTypes.Solutions;
+      //this.openPolicies();
     } else if (event.detail.activeIndex == 2) {
-      this.pageIndex = PagesTypes.PolicyIdeas;
+      this.openWebSearches();
     } else if (event.detail.activeIndex == 3) {
       this.openGitHub();
       (event.target as NavigationBar).activeIndex = 1;
@@ -457,6 +519,32 @@ export class CpsApp extends YpBaseElement {
         error
       );
     }
+  }
+
+  async updateActiveSolutionIndexes(event: CustomEvent) {
+    this.activeSubProblemIndex = event.detail.activeSubProblemIndex;
+    this.activePopulationIndex = event.detail.activePopulationIndex;
+    this.activeSolutionIndex = event.detail.activeSolutionIndex;
+
+    console.error(`SET ${this.activeSubProblemIndex} ${this.activePopulationIndex} ${this.activeSolutionIndex}}`)
+    await this.updateSolutionRouter();
+  }
+
+  async updateSolutionRouter() {
+    let path;
+    if (this.activeSolutionIndex!==null && this.activeSubProblemIndex!==null && this.activePopulationIndex!==null) {
+      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}/${this.activeSolutionIndex}`;
+    } else if (this.activeSubProblemIndex!==null && this.activePopulationIndex!==null) {
+      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}`
+    } else if (this.activeSubProblemIndex!==null && this.activeSubProblemIndex!==undefined) {
+      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}`
+    } else {
+      path = `/projects/${this.currentProjectId}`;
+    }
+
+    await this.router.goto(path);
+
+    history.pushState({}, '', path);
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -533,7 +621,7 @@ export class CpsApp extends YpBaseElement {
           padding-top: 20px;
         }
 
-        md-outlined-text-field  {
+        md-outlined-text-field {
           margin: 32px;
         }
 
@@ -1020,6 +1108,16 @@ export class CpsApp extends YpBaseElement {
     `;
   }
 
+  async openSolutions() {
+    this.updateSolutionRouter();
+    await this.updateComplete;
+    (this.$$('cps-solutions') as CpsSolutions)?.reset();
+  }
+
+  async openWebSearches() {
+    this.router.goto(`/projects/${this.currentProjectId}`);
+  }
+
   renderNavigationBar() {
     if (this.wide) {
       return html`
@@ -1032,73 +1130,18 @@ export class CpsApp extends YpBaseElement {
 
           <md-list>
             <md-list-item
-              class="${
-                this.pageIndex == PagesTypes.ProblemStatement &&
-                'selectedContainer'
-              }"
-              headline="${this.t('Problem Statement')}"
-              @click="${() => this.changeTabTo(0)}"
-              @keydown="${(e: KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  this.changeTabTo(0);
-                }
-              }}"
-              supportingText="${this.t(
-                'The core high level problem statement'
-              )}"
-            >
-              <md-list-item-icon slot="start">
-                <md-icon>problem</md-icon>
-              </md-list-item-icon></md-list-item
-            >
-            <md-list-item
-              class="${
-                this.pageIndex == PagesTypes.SubProblems && 'selectedContainer'
-              }"
-              headline="${this.t('Sub Problems')}"
-              @click="${() => this.changeTabTo(1)}"
-              @keydown="${(e: KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  this.changeTabTo(1);
-                }
-              }}"
-              supportingText="${this.t('Specific sub problems')}"
-            >
-              <md-list-item-icon slot="start">
-                <md-icon>folder_open</md-icon>
-              </md-list-item-icon></md-list-item
-            >
-            <md-list-item
-              class="${
-                this.pageIndex == PagesTypes.Entities && 'selectedContainer'
-              }"
-              headline="${this.t('Entities / Stakeholders')}"
-              @click="${() => this.changeTabTo(2)}"
-              @keydown="${(e: KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  this.changeTabTo(2);
-                }
-              }}"
-              supportingText="${this.t('The affected entities / stakeholders')}"
-            >
-              <md-list-item-icon slot="start">
-                <md-icon>group</md-icon>
-              </md-list-item-icon></md-list-item
-            >
-            <md-list-item
-              class="${
-                this.pageIndex == PagesTypes.Solutions && 'selectedContainer'
-              }"
+            class="${
+              location.href.indexOf('/projects') > -1 && 'selectedContainer'
+            }"
               headline="${this.t('Solutions')} (${
         this.numberOfSolutionsGenerations
       } gen)"
-              @click="${() => {
-                this.changeTabTo(3);
-                (this.$$('cps-solutions') as CpsSolutions)?.reset();
+              @click="${async () => {
+                this.openSolutions();
               }}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
-                  this.changeTabTo(3);
+                  this.openSolutions();
                 }
               }}"
               supportingText="${this.t('Evolving solutions to sub problems')}"
@@ -1107,6 +1150,27 @@ export class CpsApp extends YpBaseElement {
                 <md-icon>online_prediction</md-icon>
               </md-list-item-icon></md-list-item
             >
+            <md-list-item
+              class="${
+                location.href.indexOf('/webSearches') > -1 &&
+                'selectedContainer'
+              }"
+              headline="${this.t('Web Searches')}"
+              @click="${() => this.openWebSearches()}"
+              @keydown="${(e: KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  this.openWebSearches();
+                }
+              }}"
+              supportingText="${this.t(
+                'The core high level problem statement'
+              )}"
+            >
+              <md-list-item-icon slot="start">
+                <md-icon>manage_search</md-icon>
+              </md-list-item-icon></md-list-item
+            >
+
             <md-list-item
               class="${
                 this.pageIndex == PagesTypes.PolicyCategories &&
@@ -1211,14 +1275,16 @@ export class CpsApp extends YpBaseElement {
             activeIndex="1"
             @navigation-bar-activated="${this.mobileTabChanged}"
           >
-            <md-navigation-tab .label="${this.t('Problem')}"
-              ><md-icon slot="activeIcon">problem</md-icon>
-              <md-icon slot="inactiveIcon">problem</md-icon></md-navigation-tab
-            >
             <md-navigation-tab .label="${this.t('Solutions')}"
               ><md-icon slot="activeIcon">online_prediction</md-icon>
               <md-icon slot="inactiveIcon"
                 >online_prediction</md-icon
+              ></md-navigation-tab
+            >
+            <md-navigation-tab .label="${this.t('Web Searches')}"
+              ><md-icon slot="activeIcon">manage_search</md-icon>
+              <md-icon slot="inactiveIcon"
+                >manage_search</md-icon
               ></md-navigation-tab
             >
             <md-navigation-tab .label="${this.t('Policies')}"
@@ -1227,7 +1293,9 @@ export class CpsApp extends YpBaseElement {
             >
             <md-navigation-tab .label="${this.t('Open Source')}"
               ><md-icon slot="activeIcon">crowdsource</md-icon>
-              <md-icon slot="inactiveIcon">crowdsource</md-icon></md-navigation-tab
+              <md-icon slot="inactiveIcon"
+                >crowdsource</md-icon
+              ></md-navigation-tab
             >
           </md-navigation-bar>
         </div>
@@ -1241,17 +1309,28 @@ export class CpsApp extends YpBaseElement {
     this.boot();
   }
 
-
   renderTempLoginDialog() {
-    return html`<md-dialog id="tempPasswordDialog" scrimClickAction="" escapeKeyAction="">
-      <div slot="header" class="postHeader">${this.t("Please Enter Password")}</div>
+    return html`<md-dialog
+      id="tempPasswordDialog"
+      scrimClickAction=""
+      escapeKeyAction=""
+    >
+      <div slot="header" class="postHeader">
+        ${this.t('Please Enter Password')}
+      </div>
       <div id="content" class="layout vertical center-center">
-        <md-outlined-text-field id="tempPassword" type="password" @keyup="${(e:KeyboardEvent) => {
-          if (e.key === 'Enter') {
-            this.submitTempPassword();
-          }
-        }}"></md-outlined-text-field>
-        <md-elevated-button @click="${this.submitTempPassword}">${this.t("Submit")}</md-elevated-button>
+        <md-outlined-text-field
+          id="tempPassword"
+          type="password"
+          @keyup="${(e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+              this.submitTempPassword();
+            }
+          }}"
+        ></md-outlined-text-field>
+        <md-elevated-button @click="${this.submitTempPassword}"
+          >${this.t('Submit')}</md-elevated-button
+        >
       </div>
       <div slot="footer"></div>
     </md-dialog> `;
@@ -1261,12 +1340,20 @@ export class CpsApp extends YpBaseElement {
     return html`
     ${this.renderTempLoginDialog()}
     <div class="layout horizontal">
-      ${this.currentMemory ? this.renderNavigationBar() : nothing}
-      <div class="rightPanel">
-        <main>
-          <div class="mainPageContainer">${this._renderPage()}</div>
-        </main>
-      </div>
+      ${
+        this.currentMemory
+          ? html`
+              ${this.renderNavigationBar()}
+              <div class="rightPanel">
+                <main>
+                  <div class="mainPageContainer">
+                    ${this.router.outlet()}
+                  </div>
+                </main>
+              </div>
+            `
+          : nothing
+      }
     </div>
 
     </div>
