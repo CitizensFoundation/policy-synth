@@ -175,7 +175,10 @@ export class CpsSolutions extends CpsStageBase {
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
-    if (changedProperties.has('searchText') ||  changedProperties.has('activeSolutionIndex')) {
+    if (
+      changedProperties.has('searchText') ||
+      changedProperties.has('activeSolutionIndex')
+    ) {
       this.activeFilteredSolutionIndex = this.filteredSolutions.findIndex(
         solution =>
           solution ===
@@ -225,6 +228,10 @@ export class CpsSolutions extends CpsStageBase {
     return [
       super.styles,
       css`
+        .topContainer {
+          max-width: 100%;
+        }
+
         md-outlined-text-field {
           width: 180px;
           margin-top: -12px;
@@ -267,8 +274,8 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .solutionTopImage {
-          margin-bottom: 16px;
-          margin-top: 24px;
+          vertical-align: top;
+          margin-top: 20px;
         }
 
         .solutionItem {
@@ -325,8 +332,12 @@ export class CpsSolutions extends CpsStageBase {
           border-radius: 16px;
           padding: 16px;
           margin: 8px 0;
-          max-width: 960px;
-          width: 100%;
+          max-width: 1360px;
+        }
+
+        .solutionImageContainer {
+          display: inline-block;
+          margin-left: 8px;
         }
 
         .solutionItemTitle {
@@ -389,21 +400,26 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .solutionTitle {
-          font-size: 28px;
+          font-size: 26px;
           line-height: 1.4;
           margin: 8px;
-          margin-left: 32px;
-          margin-right: 32px;
+          margin-left: 8px;
+          margin-right: 8px;
           margin-top: 16px;
           font-family: 'Roboto Condensed', sans-serif;
         }
 
+        .solutionTitleDesc {
+          max-width: 600px;
+          margin-right: 8px;
+        }
+
         .solutionDescription {
           padding: 8px;
-          font-size: 22px;
+          font-size: 20px;
           line-height: 1.4;
-          margin-left: 24px;
-          margin-right: 24px;
+          margin-left: 0px;
+          margin-right: 8px;
         }
 
         .solutionAttributes {
@@ -427,7 +443,7 @@ export class CpsSolutions extends CpsStageBase {
           }
 
           .solutionTopImage {
-            margin-top: 8px;
+            margin-top: 10px;
           }
 
           .solution {
@@ -921,6 +937,22 @@ export class CpsSolutions extends CpsStageBase {
     `;
   }
 
+  getSolutionImgHeight() {
+    if (this.wide) {
+      return 314;
+    } else {
+      return 150;
+    }
+  }
+
+  getSolutionImgWidth() {
+    if (this.wide) {
+      return 550;
+    } else {
+      return 263;
+    }
+  }
+
   renderSolutionScreen(solutionIndex: number) {
     const solutions = this.filteredSolutions;
     const solution = solutions[solutionIndex];
@@ -933,21 +965,27 @@ export class CpsSolutions extends CpsStageBase {
                   solutionIndex,
                   solutions
                 )}
-                <div class="solution">
+                <div class="solution layout horizontal center-cener">
+                  <div class="solutionTitleDesc">
+                    <div class="solutionTitle">${solution.title}</div>
+                    <div class="solutionDescription">
+                      ${solution.description}
+                    </div>
+                  </div>
                   ${solution.imageUrl
-                    ? html`<div class="layout horizontal center-center">
+                    ? html`<div class="solutionImageContainer">
                         <img
                           loading="lazy"
                           class="solutionTopImage"
-                          height="${this.getImgHeight(true)}"
+                          height="${this.getSolutionImgHeight()}"
+                          width="${this.getSolutionImgWidth()}"
                           src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
                           alt="${solution.title}"
                           .key="${solution.imageUrl}"
                         />
                       </div> `
                     : nothing}
-                  <div class="solutionTitle">${solution.title}</div>
-                  <div class="solutionDescription">${solution.description}</div>
+
                   <div
                     class="solutionDescription"
                     ?hidden="${this.hideExtraSolutionInformation}"
