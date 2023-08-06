@@ -199,6 +199,49 @@ export class CpsApp extends YpBaseElement {
     window.appGlobals.activity('pageview');
   }
 
+  renderSolutionPage() {
+    return this.renderContentOrLoader(html`
+    <div class="layout horizontal">
+      ${this.currentMemory
+        ? html`
+            ${this.renderNavigationBar()}
+            <div class="rightPanel">
+              <main>
+                <div class="mainPageContainer">
+                  <cps-solutions
+                    .memory="${this.currentMemory}"
+                    .activeSubProblemIndex="${this
+                      .activeSubProblemIndex}"
+                    .activePopulationIndex="${this
+                      .activePopulationIndex}"
+                    .activeSolutionIndex="${this.activeSolutionIndex}"
+                    @update-route="${this.updateActiveSolutionIndexes}"
+                    .router="${this.router}"
+                  ></cps-solutions>
+                </div>
+              </main>
+            </div>
+          `
+        : nothing}
+    </div>
+  `);
+  }
+
+  setupCurrentProjectFromRoute(newProjectId: number, clearAll = false) {
+    if (newProjectId !== this.currentProjectId) {
+      this.currentProjectId = newProjectId;
+      this.boot();
+
+    }
+
+    if (clearAll) {
+      this.activeSubProblemIndex = null;
+      this.activePopulationIndex = null;
+      this.activeSolutionIndex = null;
+    }
+
+  }
+
   private router: Router = new Router(
     this,
     [
@@ -207,6 +250,21 @@ export class CpsApp extends YpBaseElement {
         render: () => {
           return this.renderContentOrLoader(html`<cps-home .memory="${this.currentMemory}"></cps-home>`);
         },
+      },
+      {
+        path: '/projects/:projectId',
+        render: (params) => {
+          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1, true);
+          return this.renderSolutionPage();
+        }
+      },
+      {
+        path: '/projects/:projectId/',
+        render: (params) => {
+          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1, true);
+
+          return this.renderSolutionPage();
+        }
       },
       {
         path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?',
@@ -228,31 +286,7 @@ export class CpsApp extends YpBaseElement {
             ? parseInt(params.solutionIndex, 10)
             : null;
 
-          return this.renderContentOrLoader(html`
-            <div class="layout horizontal">
-              ${this.currentMemory
-                ? html`
-                    ${this.renderNavigationBar()}
-                    <div class="rightPanel">
-                      <main>
-                        <div class="mainPageContainer">
-                          <cps-solutions
-                            .memory="${this.currentMemory}"
-                            .activeSubProblemIndex="${this
-                              .activeSubProblemIndex}"
-                            .activePopulationIndex="${this
-                              .activePopulationIndex}"
-                            .activeSolutionIndex="${this.activeSolutionIndex}"
-                            @update-route="${this.updateActiveSolutionIndexes}"
-                            .router="${this.router}"
-                          ></cps-solutions>
-                        </div>
-                      </main>
-                    </div>
-                  `
-                : nothing}
-            </div>
-          `);
+          return this.renderSolutionPage();
         },
       },
       {
