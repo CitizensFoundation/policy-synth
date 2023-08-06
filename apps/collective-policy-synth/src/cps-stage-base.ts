@@ -215,6 +215,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           color: var(--md-sys-color-on-secondary-container);
           max-height: 220px;
           margin: 0;
+          max-width: 960px;
         }
 
         .subProblem[not-header] {
