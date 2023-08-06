@@ -709,7 +709,7 @@ export abstract class CpsStageBase extends YpBaseElement {
               : 'vertical'
             : 'vertical center-center'}"
         >
-          ${subProblem.imageUrl && !renderCloseButton
+          ${(subProblem.imageUrl && !renderCloseButton) || !this.wide
             ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
             : nothing}
           <div
@@ -731,7 +731,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                 ${subProblem.description}
               </div>
               </div>
-            ${subProblem.imageUrl && renderCloseButton
+            ${subProblem.imageUrl && renderCloseButton && this.wide
               ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
               : nothing}
 
