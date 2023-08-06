@@ -1,4 +1,4 @@
-import { html, css, nothing } from 'lit';
+import { html, css, nothing, TemplateResult } from 'lit';
 import { property, customElement, query } from 'lit/decorators.js';
 
 import '@material/web/labs/navigationbar/navigation-bar.js';
@@ -40,6 +40,8 @@ import {
   themeFromSourceColorWithContrast,
 } from './src/@yrpri/common/YpMaterialThemeHelper.js';
 import { CpsAppUser } from './src/CpsAppUser.js';
+
+import './src/cps-home.js';
 
 import './src/cps-problem-statement.js';
 import './src/cps-sub-problems.js';
@@ -203,8 +205,7 @@ export class CpsApp extends YpBaseElement {
       {
         path: '/',
         render: () => {
-          return html`<h1>jij</h1>
-            <cps-home></cps-home>`;
+          return this.renderContentOrLoader(html`<cps-home .memory="${this.currentMemory}"></cps-home>`);
         },
       },
       {
@@ -227,14 +228,31 @@ export class CpsApp extends YpBaseElement {
             ? parseInt(params.solutionIndex, 10)
             : null;
 
-          return html`<cps-solutions
-            .memory="${this.currentMemory}"
-            .activeSubProblemIndex="${this.activeSubProblemIndex}"
-            .activePopulationIndex="${this.activePopulationIndex}"
-            .activeSolutionIndex="${this.activeSolutionIndex}"
-            @update-route="${this.updateActiveSolutionIndexes}"
-            .router="${this.router}"
-          ></cps-solutions>`;
+          return this.renderContentOrLoader(html`
+            <div class="layout horizontal">
+              ${this.currentMemory
+                ? html`
+                    ${this.renderNavigationBar()}
+                    <div class="rightPanel">
+                      <main>
+                        <div class="mainPageContainer">
+                          <cps-solutions
+                            .memory="${this.currentMemory}"
+                            .activeSubProblemIndex="${this
+                              .activeSubProblemIndex}"
+                            .activePopulationIndex="${this
+                              .activePopulationIndex}"
+                            .activeSolutionIndex="${this.activeSolutionIndex}"
+                            @update-route="${this.updateActiveSolutionIndexes}"
+                            .router="${this.router}"
+                          ></cps-solutions>
+                        </div>
+                      </main>
+                    </div>
+                  `
+                : nothing}
+            </div>
+          `);
         },
       },
       {
@@ -248,10 +266,19 @@ export class CpsApp extends YpBaseElement {
             this.boot();
           }
 
-          return html`<cps-web-searches
-            .memory="${this.currentMemory}"
-            .router="${this.router}"
-          ></cps-web-searches>`;
+          return html`
+            ${this.renderNavigationBar()}
+            <div class="rightPanel">
+              <main>
+                <div class="mainPageContainer">
+                  <cps-web-research
+                    .memory="${this.currentMemory}"
+                    .router="${this.router}"
+                  ></cps-web-research>
+                </div>
+              </main>
+            </div>
+          `;
         },
       },
     ],
@@ -477,6 +504,11 @@ export class CpsApp extends YpBaseElement {
       'yp-external-goal-trigger',
       this.externalGoalTrigger.bind(this)
     );
+    window.addEventListener('popstate', () => {
+      //console.error(`pop state ${window.location.pathname}`)
+      this.router.goto(window.location.pathname);
+      this.requestUpdate();
+    });
   }
 
   _removeEventListeners() {
@@ -525,26 +557,43 @@ export class CpsApp extends YpBaseElement {
     this.activeSubProblemIndex = event.detail.activeSubProblemIndex;
     this.activePopulationIndex = event.detail.activePopulationIndex;
     this.activeSolutionIndex = event.detail.activeSolutionIndex;
-
-    console.error(`SET ${this.activeSubProblemIndex} ${this.activePopulationIndex} ${this.activeSolutionIndex}}`)
     await this.updateSolutionRouter();
+    /*console.error(
+      `updateActiveSolutionIndexes ${this.activeSubProblemIndex} ${this.activePopulationIndex} ${this.activeSolutionIndex}`
+    )*/
   }
 
   async updateSolutionRouter() {
-    let path;
-    if (this.activeSolutionIndex!==null && this.activeSubProblemIndex!==null && this.activePopulationIndex!==null) {
+    let path: string;
+    if (
+      this.activeSolutionIndex !== null &&
+      this.activeSubProblemIndex !== null &&
+      this.activePopulationIndex !== null
+    ) {
       path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}/${this.activeSolutionIndex}`;
-    } else if (this.activeSubProblemIndex!==null && this.activePopulationIndex!==null) {
-      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}`
-    } else if (this.activeSubProblemIndex!==null && this.activeSubProblemIndex!==undefined) {
-      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}`
+    } else if (
+      this.activeSubProblemIndex !== null &&
+      this.activePopulationIndex !== null
+    ) {
+      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}`;
+    } else if (
+      this.activeSubProblemIndex !== null &&
+      this.activeSubProblemIndex !== undefined
+    ) {
+      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}`;
     } else {
       path = `/projects/${this.currentProjectId}`;
     }
 
     await this.router.goto(path);
 
-    history.pushState({}, '', path);
+    setTimeout(() => {
+      if (window.location.pathname!=path) {
+        history.pushState({}, '', path);
+        //console.error(`push state ${path}`)
+      }
+    });
+
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -992,6 +1041,18 @@ export class CpsApp extends YpBaseElement {
     return html`<div class="layout vertical">${costTemplates}</div>`;
   }
 
+  renderContentOrLoader(content: TemplateResult) {
+    if (this.currentMemory) {
+      return content;
+    } else {
+      return html`
+        <div class="loading">
+          <md-circular-progress indeterminate></md-circular-progress>
+        </div>
+      `;
+    }
+  }
+
   handleShowMore(event: CustomEvent) {
     event.preventDefault();
     this.showAllCosts = true;
@@ -1046,7 +1107,7 @@ export class CpsApp extends YpBaseElement {
           return html``;
       }
     } else {
-      return html` <div class="loading">
+      return html`<div class="loading">
         <md-circular-progress indeterminate></md-circular-progress>
       </div>`;
     }
@@ -1162,9 +1223,7 @@ export class CpsApp extends YpBaseElement {
                   this.openWebSearches();
                 }
               }}"
-              .supportingText="${this.t(
-                'Automated research'
-              )}"
+              .supportingText="${this.t('Automated research')}"
             >
               <md-list-item-icon slot="start">
                 <md-icon>manage_search</md-icon>
@@ -1195,8 +1254,8 @@ export class CpsApp extends YpBaseElement {
                 'selectedContainer'
               }"
               headline="${this.t('Policy ideas')} (${
-              this.currentPolicyIdeasGeneration
-            } gen)"
+        this.currentPolicyIdeasGeneration
+      } gen)"
               @click="${() => this.changeTabTo(5)}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
@@ -1339,22 +1398,7 @@ export class CpsApp extends YpBaseElement {
   render() {
     return html`
     ${this.renderTempLoginDialog()}
-    <div class="layout horizontal">
-      ${
-        this.currentMemory
-          ? html`
-              ${this.renderNavigationBar()}
-              <div class="rightPanel">
-                <main>
-                  <div class="mainPageContainer">
-                    ${this.router.outlet()}
-                  </div>
-                </main>
-              </div>
-            `
-          : nothing
-      }
-    </div>
+    ${this.router.outlet()}
 
     </div>
       ${

@@ -132,13 +132,24 @@ export abstract class CpsStageBase extends YpBaseElement {
           margin-bottom: 64px;
         }
 
+        .topContainer[is-header] {
+          width: 100%;
+          max-width: 100%;
+        }
+
         .subProblemImage {
-          margin-bottom: 16px;
-          margin-top: 4px;
         }
 
         .subProblemImage[is-header] {
           margin-bottom: 32px;
+          margin-top: 0;
+        }
+
+        .subProblemImage[not-header] {
+          margin-bottom: 16px;
+          margin-top: -16px;
+          margin-left: 8px;
+          margin-right: 8px;
         }
 
         .problemStatement {
@@ -213,7 +224,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           cursor: pointer;
           background-color: var(--md-sys-color-secondary-container);
           color: var(--md-sys-color-on-secondary-container);
-          max-height: 220px;
+          max-height: 206px;
           margin: 0;
           max-width: 960px;
         }
@@ -222,7 +233,12 @@ export abstract class CpsStageBase extends YpBaseElement {
           cursor: pointer;
           background-color: var(--md-sys-color-secondary-container);
           color: var(--md-sys-color-on-secondary-container);
-          max-width: 600px;
+          max-width: 450px;
+          margin-top: 16px;
+          margin-bottom: 16px;
+          padding-top: 0;
+          margin-right: 16px;
+          margin-left: 16px;
         }
 
         .navButton[is-header] {
@@ -250,7 +266,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblem.lessProminent {
-          opacity: 0.65;
+          opacity: 0.55;
         }
 
         .subTitle {
@@ -306,6 +322,10 @@ export abstract class CpsStageBase extends YpBaseElement {
 
         .nameAndScore {
           width: 100%;
+        }
+
+        .subProblemContainer {
+          width:100%;
         }
 
         .scores {
@@ -570,6 +590,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     `;
   }
 
+
   renderSubProblemList(
     subProblems: IEngineSubProblem[],
     title = this.t('Sub Problems')
@@ -579,10 +600,12 @@ export abstract class CpsStageBase extends YpBaseElement {
         ${this.renderProblemStatement()}
 
         <div class="title">${title}</div>
-        ${subProblems.map((subProblem, index) => {
-          const isLessProminent = index >= maxNumberOfSubProblems;
-          return this.renderSubProblem(subProblem, isLessProminent, index);
-        })}
+        <div class="subProblemContainer layout horizontal center-justified wrap">
+          ${subProblems.map((subProblem, index) => {
+            const isLessProminent = index >= maxNumberOfSubProblems;
+            return this.renderSubProblem(subProblem, isLessProminent, index);
+          })}
+                </div>
       </div>
     `;
   }
@@ -634,6 +657,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                   <img
                     loading="lazy"
                     ?is-header="${renderCloseButton}"
+                    ?not-header="${!renderCloseButton}"
                     class="subProblemImage"
                     height="${this.getImgHeight(renderCloseButton)}"
                     width="${this.getImgWidth(renderCloseButton)}"
@@ -645,6 +669,7 @@ export abstract class CpsStageBase extends YpBaseElement {
             : nothing}
           <div
             ?is-header="${renderCloseButton}"
+            ?not-header="${!renderCloseButton}"
             class="layout headerContainer ${renderCloseButton
               ? 'vertical'
               : 'horizontal'}"
