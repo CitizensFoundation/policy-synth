@@ -1144,7 +1144,7 @@ export class CpsApp extends YpBaseElement {
                   this.openSolutions();
                 }
               }}"
-              supportingText="${this.t('Evolving solutions to sub problems')}"
+              .supportingText="${this.t('Evolving solutions')}"
             >
               <md-list-item-icon slot="start">
                 <md-icon>online_prediction</md-icon>
@@ -1155,15 +1155,15 @@ export class CpsApp extends YpBaseElement {
                 location.href.indexOf('/webSearches') > -1 &&
                 'selectedContainer'
               }"
-              headline="${this.t('Web Searches')}"
+              headline="${this.t('Web Research')}"
               @click="${() => this.openWebSearches()}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
                   this.openWebSearches();
                 }
               }}"
-              supportingText="${this.t(
-                'The core high level problem statement'
+              .supportingText="${this.t(
+                'Automated research'
               )}"
             >
               <md-list-item-icon slot="start">
@@ -1183,7 +1183,7 @@ export class CpsApp extends YpBaseElement {
                   this.changeTabTo(4);
                 }
               }}"
-              supportingText="${this.t('Policy categories')}"
+              .supportingText="${this.t('Policy categories')}"
             >
               <md-list-item-icon slot="start">
                 <md-icon>category</md-icon>
@@ -1195,15 +1195,15 @@ export class CpsApp extends YpBaseElement {
                 'selectedContainer'
               }"
               headline="${this.t('Policy ideas')} (${
-        this.currentPolicyIdeasGeneration
-      } gen)"
+              this.currentPolicyIdeasGeneration
+            } gen)"
               @click="${() => this.changeTabTo(5)}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
                   this.changeTabTo(3);
                 }
               }}"
-              supportingText="${this.t('Evolving policy ideas')}"
+              .supportingText="${this.t('Evolving policy ideas')}"
             >
               <md-list-item-icon slot="start">
                 <md-icon>policy</md-icon>
@@ -1249,7 +1249,7 @@ export class CpsApp extends YpBaseElement {
               }}"
               @click="${this.openGitHub}"
               headline="${this.t('Open Source Collab')}"
-              supportingText="${this.t('Open Source on Github')}"
+              .supportingText="${this.t('Join us!')}"
             >
               <md-list-item-icon slot="start"
                 ><md-icon>crowdsource</md-icon></md-list-item-icon

@@ -140,6 +140,7 @@ export class CpsSolutions extends CpsStageBase {
         this.exitSolutionScreen();
       } else if (this.activeSubProblemIndex !== null) {
         this.activeSubProblemIndex = null;
+        this.fire('yp-theme-color', this.subProblemColors[7]);
         this.exitSubProblemScreen();
       }
     }
