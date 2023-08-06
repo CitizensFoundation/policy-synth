@@ -92,9 +92,9 @@ export class CpsSolutions extends CpsStageBase {
   }
 
   updateSwipeIndex(direction: string) {
-    console.error(
+    /*console.error(
       `updateSwipeIndex ${this.activeFilteredSolutionIndex} ${this.activeSolutionIndex}`
-    );
+    );*/
     if (direction === 'right') {
       if (
         this.activeSolutionIndex !== null &&
@@ -175,7 +175,7 @@ export class CpsSolutions extends CpsStageBase {
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
-    if (changedProperties.has('searchText')) {
+    if (changedProperties.has('searchText') ||  changedProperties.has('activeSolutionIndex')) {
       this.activeFilteredSolutionIndex = this.filteredSolutions.findIndex(
         solution =>
           solution ===
@@ -208,12 +208,16 @@ export class CpsSolutions extends CpsStageBase {
         solution => solution === filteredSolution
       );
 
-      if (solutionIndex!==undefined && solutionIndex !== -1) {
+      if (solutionIndex !== undefined && solutionIndex !== -1) {
         this.activeSolutionIndex = solutionIndex;
       }
 
-      console.error(`activeFilteredSolutionIndex`, this.activeFilteredSolutionIndex);
+      /*console.error(
+        `activeFilteredSolutionIndex`,
+        this.activeFilteredSolutionIndex
+      );
       console.error(`activeSolutionIndex`, this.activeSolutionIndex);
+      */
     }
   }
 
@@ -316,8 +320,8 @@ export class CpsSolutions extends CpsStageBase {
 
         .solution {
           text-align: left;
-          background-color: var(--md-sys-color-surface-variant);
-          color: var(--md-sys-color-on-surface-variant);
+          background-color: var(--md-sys-color-surface);
+          color: var(--md-sys-color-on-surface);
           border-radius: 16px;
           padding: 16px;
           margin: 8px 0;
@@ -597,8 +601,8 @@ export class CpsSolutions extends CpsStageBase {
           this.solutionListScrollPositionX = window.scrollX;
           this.solutionListScrollPositionY = window.scrollY;
           window.scrollTo(0, 0);
-          console.error(`click`, this.activeFilteredSolutionIndex);
-          console.error(`click`, this.activeSolutionIndex);
+          //console.error(`click`, this.activeFilteredSolutionIndex);
+          //console.error(`click`, this.activeSolutionIndex);
           window.appGlobals.activity('Solutions - open detail');
         }}"
       >
@@ -731,8 +735,15 @@ export class CpsSolutions extends CpsStageBase {
         ?middle-open="${this.isDropdownVisible}"
         .label="${this.t('Filter')}"
         .value="${this.searchText}"
-        @keyup="${(e: Event) =>
-          (this.searchText = (e.target as HTMLInputElement).value)}"
+        @keyup="${(e: Event) => {
+          this.searchText = (e.target as HTMLInputElement).value;
+        }}"
+        @keydown="${(e: KeyboardEvent) => {
+          if (e.key == 'Escape') {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        }}"
         @blur="${this.handleSearchBlur}"
       ></md-outlined-text-field>
     `;

@@ -11,3 +11,10 @@ interface PsRoutingParams {
   populationIndex?: number;
   solutionIndex?: number;
 }
+
+interface PsProjectData {
+  id: number;
+  title: string;
+  imageUrl: string;
+  description: string;
+}
