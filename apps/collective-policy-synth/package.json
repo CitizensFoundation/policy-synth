@@ -126,6 +126,7 @@
   "license": "AGPL",
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^3.4.1",
+    "@lit-labs/router": "^0.1.1",
     "@lit-labs/virtualizer": "^1.0.1",
     "@material/material-color-utilities": "^0.2.6",
     "@material/mwc-snackbar": "^0.27.0",
@@ -153,6 +154,7 @@
     "sanitize-html": "^2.10.0",
     "share-menu": "^5.0.0-rc.4",
     "twemoji": "^14.0.2",
+    "urlpattern-polyfill": "^9.0.0",
     "vanilla-colorful": "^0.7.1"
   }
 }
