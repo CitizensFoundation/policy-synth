@@ -12,7 +12,7 @@ const projects = [
     imageUrl:
       'https://cps-images.citizens.is/projects/2/subProblems/images/1_v10.png',
     description:
-      'Our first test project. Our first test project. Our first test project. Our first test project. Our first test project. Our first test project. Our first test project. ',
+      'The first test run is entirely automated except for the problem statement provided by us. All sub problems, entities and solutions with pros & cons are generated using GPT-4 & GPT-3.5. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.',
   },
   /*{
     id: 2,
@@ -45,7 +45,7 @@ export class CpsSubProblems extends CpsStageBase {
       css`
         .subContainer {
           max-width: 960px;
-          margin-top: 32px;
+          margin-top: 8px;
           padding: 16px;
         }
 
@@ -54,6 +54,7 @@ export class CpsSubProblems extends CpsStageBase {
           color: var(--md-sys-color-on-surface-variant);
           border-radius: 16px;
           margin: 16px;
+          margin-top: 32px;
           width: 100%;
           max-width: 420px;
           padding: 0;
@@ -63,7 +64,7 @@ export class CpsSubProblems extends CpsStageBase {
           font-size: 32px;
           background-color: var(--md-sys-color-primary);
           color: var(--md-sys-color-on-primary);
-          width:100%;
+          width: 100%;
           max-width: 420px;
           height: 100%;
           padding: 0;
@@ -73,7 +74,7 @@ export class CpsSubProblems extends CpsStageBase {
 
         .projectDescription {
           padding: 16px;
-          height: 90px;
+          height: 142px;
         }
 
         .projectTitleInner {
@@ -86,13 +87,15 @@ export class CpsSubProblems extends CpsStageBase {
           padding: 0;
         }
 
-
         .moreInfo {
           margin: 16px;
+          font-size: 18px;
           padding: 24px;
-          max-width: 960px;
-          color: var(--md-sys-color-surface-variant);
-          background-color: var(--md-sys-color-on-surface-variant);
+          line-height: 1.5;
+          max-width: 944px;
+          border-radius: 24px;
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface);
         }
 
         a {
@@ -107,19 +110,63 @@ export class CpsSubProblems extends CpsStageBase {
           text-decoration: underline;
         }
 
+        .title {
+          color: var(--md-sys-color-primary);
+          background-color: var(--md-sys-color-on-primary);
+        }
+        @media (max-width: 960px) {
+          .projectItem,
+          .projectTitle {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+          }
+
+          .projectTitle {
+            font-size: 26px;
+            margin-top: -3px;
+          }
+
+          .subContainer {
+            max-width: 100%;
+            margin-top: 8px;
+            padding: 8px;
+          }
+
+          .moreInfo {
+            margin: 8px;
+            max-width: 100%;
+            width: 100%;
+          }
+
+          .projectDescription {
+            padding-bottom: 24px;
+            height: 100%;
+          }
+
+          .title {
+            font-size: 26px;
+            padding: 16px;
+            line-height: 1.45;
+          }
+        }
       `,
     ];
   }
 
   renderProject(project: PsProjectData) {
     return html`
-      <a href="/projects/${project.id}" @click="${() => window.scrollTo(0,0)}">
+      <a href="/projects/${project.id}" @click="${() => window.scrollTo(0, 0)}">
         <div class="projectItem layout vertical center-center">
           <div class="projectImage">
-            <img width="420" height="240" src="${project.imageUrl}" />
+            <img
+              width="${this.wide ? 420 : 343}"
+              height="${this.wide ? 240 : 196}"
+              src="${project.imageUrl}"
+            />
           </div>
           <div class="projectTitle layout vertical center-center">
-           <div class="projectTitleInner">${project.title}</div>
+            <div class="projectTitleInner">${project.title}</div>
           </div>
           <div class="projectDescription">${project.description}</div>
         </div>
@@ -131,7 +178,7 @@ export class CpsSubProblems extends CpsStageBase {
     return html`
       <div class="topContainer layout vertical center-center">
         <img
-          height="300"
+          height="${this.wide ? 300 : 190}"
           src="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png"
         />
         <div class="title">${this.t('Welcome to Policy Synth')}</div>
@@ -158,7 +205,7 @@ export class CpsSubProblems extends CpsStageBase {
             <a
               href="https://github.com/CitizensFoundation/policy-synth"
               target="_blank"
-              >${this.t('Visit our project GitHub Page')}</a
+              >${this.t('Join us and collaborate on Github')}</a
             >
           </div>
         </div>
