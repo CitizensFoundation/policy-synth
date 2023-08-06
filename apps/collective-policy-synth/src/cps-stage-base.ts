@@ -235,6 +235,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           max-height: 206px;
           margin: 0;
           max-width: 960px;
+          margin-top: 24px;
         }
 
         .subProblem[not-header] {
