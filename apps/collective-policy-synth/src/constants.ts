@@ -5,6 +5,9 @@ const gpt35_16kInTokenPrice = 0.003 / 1000;
 const gpt35_16kOutTokenPrice = 0.004 / 1000;
 
 const gpt35InTokenPrice = 0.0015 / 1000;
+
+const adaInTokenPrice = 0.0001;
+
 const gpt35kOutTokenPrice = 0.002 / 1000;
 
 export class IEngineConstants {
@@ -27,6 +30,10 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     verbose: true,
   };
+
+  static topicMapSolutionsModel = {
+    inTokenCostsUSD: adaInTokenPrice
+  }
 
 
   static createSolutionImagesModel: IEngineBaseAIModelConstants = {
@@ -119,6 +126,16 @@ export class IEngineConstants {
     verbose: false,
   };
 
+  static rankWebSolutionsModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    verbose: true
+  };
+
   static reapSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.0,
@@ -132,11 +149,11 @@ export class IEngineConstants {
   static groupSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.0,
-    maxOutputTokens: 512,
+    maxOutputTokens: 2048,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
-    verbose: true
+    verbose: false
   };
 
   static rateSolutionsModel: IEngineBaseAIModelConstants = {
@@ -199,17 +216,17 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static getPageTimeout = 1000 * 10;
-
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
 
   static maxSubProblems = 7;
 
   static maxNumberGeneratedOfEntities = 7;
 
-  static maxStabilityRetryCount = 7;
+  static maxStabilityRetryCount = 14;
 
   static mainLLMmaxRetryCount = 40;
+
+  static limitedLLMmaxRetryCount = 10;
 
   static rankingLLMmaxRetryCount = 40;
 
@@ -223,21 +240,25 @@ export class IEngineConstants {
 
   static maxDalleRetryCount = 7;
 
-  static maxTopWebPagesToGet = 7;
+  static maxTopWebPagesToGet = 10;
 
-  static maxWebPagesToGetByTopSearchPosition = 7;
+  static maxWebPagesToGetByTopSearchPosition = 10;
 
-  static maxSearchResults = 10;
+  static maxBingSearchResults = 10;
 
   static maxTopProsConsUsedForRating = 2;
 
   static maxNumberGeneratedProsConsForSolution = 3;
 
-  static minSleepBeforeBrowserRequest = 1100;
+  static minSleepBeforeBrowserRequest = 50;
 
-  static maxAdditionalRandomSleepBeforeBrowserRequest = 1100;
+  static maxAdditionalRandomSleepBeforeBrowserRequest = 100;
 
   static numberOfSearchTypes = 4;
+
+  static webPageNavTimeout = 60 * 1000;
+
+  static topItemsToKeepForTopicClusterPruning = 7;
 
   static chances = {
     createSolutions: {
@@ -245,18 +266,18 @@ export class IEngineConstants {
         useMainProblemSearchQueries: 0.1,
         useOtherSubProblemSearchQueries: 0.1,
         useSubProblemSearchQueries: 0.4,
-        useRandomEntitySearchQueries: 0.4,
+        useRandomEntitySearchQueries: 0.5,
       },
-      notUsingFirstSearchQuery: 0.8,
+      notUsingTopSearchQueries: 0.33,
       vectorSearchAcrossAllProblems: 0.25,
     },
   };
 
-  static maxTopSearchQueriesForSolutionCreation = 7;
+  static maxTopSearchQueriesForSolutionCreation = 9;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 10,
-    useRandomTopFromVectorSearchResults: 7,
+    useRandomTopFromVectorSearchResults: 8,
   };
 
   static enable = {
@@ -269,7 +290,7 @@ export class IEngineConstants {
   };
 
   static evolution = {
-    populationSize: 68,
+    populationSize: 72,
 
     // Population split
     keepElitePercent: 0.1,
@@ -278,12 +299,12 @@ export class IEngineConstants {
     crossoverPercent: 0.1,
 
     // General mutation rate split
-    lowMutationRate: 0.2,
-    mediumMutationRate: 0.6,
-    highMutationRate: 0.2,
+    lowMutationRate: 0.15,
+    mediumMutationRate: 0.55,
+    highMutationRate: 0.3,
 
-    selectParentTournamentSize: 7,
-    crossoverMutationPercent: 0.2,
+    selectParentTournamentSize: 5,
+    crossoverMutationPercent: 0.1,
   };
 
   static maxPercentOfEloMatched = 0.75;

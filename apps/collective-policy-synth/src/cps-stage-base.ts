@@ -170,7 +170,7 @@ export abstract class CpsStageBase extends YpBaseElement {
 
         .problemStatementText {
           padding: 16px;
-          font-size: 24px;
+          font-size: 26px;
         }
 
         .subProblemStatement,
@@ -432,6 +432,10 @@ export abstract class CpsStageBase extends YpBaseElement {
           margin-top: 4px;
         }
 
+        .problemStatementImage {
+          margin-top: 24px
+        }
+
         @media (max-width: 960px) {
           .problemStatementText {
             font-size: 22px;
@@ -541,6 +545,15 @@ export abstract class CpsStageBase extends YpBaseElement {
             max-width: 320px;
           }
 
+          .problemStatement {
+            padding-left: 0px;
+            padding-right: 0px;
+            padding-bottom: 0;
+            margin: 0;
+            margin-top: 8px;
+            margin-bottom: 16px;
+          }
+
           .problemStatementText {
             margin-top: 0;
             padding-top: 0;
@@ -632,7 +645,11 @@ export abstract class CpsStageBase extends YpBaseElement {
   renderProblemStatement(title: string | undefined = undefined) {
     return html`
       ${!this.wide ? html` ${this.renderThemeToggle()} ` : nothing}
-      <div class="title">${title? title : this.t('Problem Statement')}</div>
+      ${this.memory.problemStatement.imageUrl ? html`
+      <img class="problemStatementImage" width="${this.wide ? 650 : 340}" src="${this.memory.problemStatement.imageUrl}" />
+      ` : html`
+        <div class="title">${title? title : this.t('Problem Statement')}</div>
+      `}
       <div class="problemStatement">
         <div class="problemStatementText">
           ${this.memory.problemStatement.description}
