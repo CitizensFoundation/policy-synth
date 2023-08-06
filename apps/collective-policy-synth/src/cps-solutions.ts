@@ -368,7 +368,7 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .ratingsHeader {
-          font-size: 24px;
+          font-size: 22px;
           margin-bottom: 4px;
           margin-top: 16px;
           color: var(--md-sys-color-secondary);
@@ -377,11 +377,13 @@ export class CpsSolutions extends CpsStageBase {
         .ratings {
           background-color: var(--md-sys-color-on-secondary);
           color: var(--md-sys-color-secondary);
-          padding: 24px;
+          padding: 32px;
           max-width: 380px;
           width: 380px;
           border-radius: 16px;
           margin: 32px;
+          padding-top: 8px;
+          padding-bottom: 32px;
         }
 
         .rating {
@@ -390,8 +392,9 @@ export class CpsSolutions extends CpsStageBase {
         }
 
         .eloRatings {
+          font-size: 24px;
           color: var(--md-sys-color-primary);
-          margin-bottom: 16px;
+          margin-bottom: 24px;
         }
 
         .prosConsHeader {
