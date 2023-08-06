@@ -299,6 +299,16 @@ export class CpsApp extends YpBaseElement {
         },
       },
       {
+        path: '/projects/:projectId/refresh827cDb',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1,
+            true
+          );
+          return this.renderSolutionPage();
+        },
+      },
+      {
         path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?',
         render: params => {
           this.setupCurrentProjectFromRoute(
@@ -400,10 +410,10 @@ export class CpsApp extends YpBaseElement {
     const firstBootResponse = (await window.serverApi.getProject(
       this.currentProjectId,
       this.tempPassword,
-      this.forceGetBackupForProject
+      location.pathname.indexOf("refresh827cDb") > -1 ? "true" : undefined
     )) as CpsBootResponse | { needsTrm: boolean };
 
-    if ('needsTrm' in firstBootResponse) {
+    if (firstBootResponse && 'needsTrm' in firstBootResponse) {
       if (this.tempPassword) {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
@@ -1057,7 +1067,7 @@ export class CpsApp extends YpBaseElement {
             totalCost += stageCost;
             // Calculate costs for each model
             const camelCaseStage = this.toCamelCase(stage);
-            console.error(`stage: ${stage} camelCaseStage: ${camelCaseStage}`)
+            //console.info(`stage: ${stage} camelCaseStage: ${camelCaseStage}`)
             //@ts-ignore
             const modelConstants = this.stageModelMap[camelCaseStage];
             if (modelConstants.name === 'gpt-4') {
