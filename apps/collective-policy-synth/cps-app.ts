@@ -242,6 +242,18 @@ export class CpsApp extends YpBaseElement {
 
   }
 
+  parseAllActiveIndexes(params: any) {
+    this.activeSubProblemIndex = params.subProblemIndex
+    ? parseInt(params.subProblemIndex, 10)
+    : null;
+  this.activePopulationIndex = params.populationIndex
+    ? parseInt(params.populationIndex, 10)
+    : null;
+  this.activeSolutionIndex = params.solutionIndex
+    ? parseInt(params.solutionIndex, 10)
+    : null;
+  }
+
   private router: Router = new Router(
     this,
     [
@@ -269,23 +281,16 @@ export class CpsApp extends YpBaseElement {
       {
         path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?',
         render: params => {
-          // Update properties based on the route parameters
-          const newProjectId = parseInt(params.projectId, 10) || 1;
-          if (newProjectId !== this.currentProjectId) {
-            this.currentProjectId = newProjectId;
-            this.boot();
-          }
-
-          this.activeSubProblemIndex = params.subProblemIndex
-            ? parseInt(params.subProblemIndex, 10)
-            : null;
-          this.activePopulationIndex = params.populationIndex
-            ? parseInt(params.populationIndex, 10)
-            : null;
-          this.activeSolutionIndex = params.solutionIndex
-            ? parseInt(params.solutionIndex, 10)
-            : null;
-
+          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1);
+          this.parseAllActiveIndexes(params);
+          return this.renderSolutionPage();
+        },
+      },
+      {
+        path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?/',
+        render: params => {
+          this.setupCurrentProjectFromRoute(parseInt(params.projectId, 10) || 1);
+          this.parseAllActiveIndexes(params);
           return this.renderSolutionPage();
         },
       },
