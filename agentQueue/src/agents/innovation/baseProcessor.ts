@@ -8,7 +8,7 @@ import {
 } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { IEngineConstants } from "../../constants.js";
-import { jsonrepair } from 'jsonrepair'
+import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
 
 const redis = new ioredis.default(
@@ -39,13 +39,15 @@ export abstract class BaseProcessor extends Base {
   }
 
   lastPopulationIndex(subProblemIndex: number) {
-    return this.memory.subProblems[subProblemIndex].solutions.populations.length - 1;
+    return (
+      this.memory.subProblems[subProblemIndex].solutions.populations.length - 1
+    );
   }
 
   renderSubProblem(subProblemIndex: number, useProblemAsHeader = false) {
     const subProblem = this.memory.subProblems[subProblemIndex];
     return `
-      ${useProblemAsHeader ? 'Problem' : 'Sub Problem'}:
+      ${useProblemAsHeader ? "Problem" : "Sub Problem"}:
       ${subProblem.title}
 
       ${subProblem.description}
@@ -55,9 +57,10 @@ export abstract class BaseProcessor extends Base {
   }
 
   getActiveSolutionsLastPopulation(subProblemIndex: number) {
-    const populations = this.memory.subProblems[subProblemIndex].solutions.populations;
+    const populations =
+      this.memory.subProblems[subProblemIndex].solutions.populations;
     const lastPopulation = populations[populations.length - 1];
-    return lastPopulation.filter(solution => !solution.reaped);
+    return lastPopulation.filter((solution) => !solution.reaped);
   }
 
   renderSubProblems() {
@@ -73,6 +76,15 @@ export abstract class BaseProcessor extends Base {
         `;
       })}
    `;
+  }
+
+  renderEntity(subProblemIndex: number, entityIndex: number) {
+    const entity =
+      this.memory.subProblems[subProblemIndex].entities[entityIndex];
+    return `
+      Entity: ${entity.name}
+      ${this.renderEntityPosNegReasons(entity)}
+      `;
   }
 
   renderProblemStatement() {
@@ -107,7 +119,7 @@ export abstract class BaseProcessor extends Base {
 
       ${entitiesText ? `Top Affected Entities:\n${entitiesText}` : ""}
     `;
-}
+  }
 
   renderEntityPosNegReasons(item: IEngineAffectedEntity) {
     let itemEffects = "";
@@ -133,22 +145,26 @@ export abstract class BaseProcessor extends Base {
     stage: IEngineStageTypes,
     modelConstants: IEngineBaseAIModelConstants,
     messages: BaseChatMessage[],
-    parseJson = true
+    parseJson = true,
+    limitedRetries = false
   ) {
     try {
       let retryCount = 0;
-      const maxRetries = IEngineConstants.mainLLMmaxRetryCount;
+      const maxRetries = limitedRetries
+        ? IEngineConstants.limitedLLMmaxRetryCount
+        : IEngineConstants.mainLLMmaxRetryCount;
       let retry = true;
 
       while (retry && retryCount < maxRetries && this.chat) {
-
         let response;
         try {
           response = await this.chat.call(messages);
 
           if (response) {
             this.logger.debug("Got response from LLM");
-            const tokensIn = await this.chat!.getNumTokensFromMessages(messages);
+            const tokensIn = await this.chat!.getNumTokensFromMessages(
+              messages
+            );
             const tokensOut = await this.chat!.getNumTokensFromMessages([
               response,
             ]);
@@ -190,15 +206,17 @@ export abstract class BaseProcessor extends Base {
                 this.logger.warn(`Error parsing JSON ${response.text.trim()}`);
                 try {
                   this.logger.info(`Trying to fix JSON`);
-                  const repaired = jsonrepair(response.text.trim())
+                  const repaired = jsonrepair(response.text.trim());
                   parsedJson = JSON.parse(repaired);
                 } catch (error) {
                   this.logger.warn(`Error parsing fixed JSON`);
                   try {
                     this.logger.info(`Trying to fix JSON AGAIN`);
                     // Edge case hack that jsonrepair can't fix
-                    const preprocessed = response.text.trim().replace(/"(\d+)(-[A-Za-z]+)"/g, '$1$2');
-                    const repaired = jsonrepair(preprocessed)
+                    const preprocessed = response.text
+                      .trim()
+                      .replace(/"(\d+)(-[A-Za-z]+)"/g, "$1$2");
+                    const repaired = jsonrepair(preprocessed);
                     parsedJson = JSON.parse(repaired);
                   } catch (error) {
                     this.logger.warn(`Error parsing fixed JSON AGAIN`);
@@ -214,7 +232,7 @@ export abstract class BaseProcessor extends Base {
               }
 
               retryCount++;
-              this.logger.warn(`Retrying callLLM ${retryCount}`)
+              this.logger.warn(`Retrying callLLM ${retryCount}`);
             } else {
               retry = false;
               if (response.text) {
@@ -229,7 +247,7 @@ export abstract class BaseProcessor extends Base {
             retry = false;
             this.logger.warn(`callLLM response was empty, retrying`);
             if (retryCount >= maxRetries) {
-              throw new Error("callLLM response was empty");;
+              throw new Error("callLLM response was empty");
             } else {
               retryCount++;
             }
@@ -250,10 +268,10 @@ export abstract class BaseProcessor extends Base {
           }
         }
         const sleepTime = 4500 + retryCount * 5000;
-        this.logger.debug(`Sleeping for ${sleepTime} ms before retrying. Retry count: ${retryCount}}`);
-        await new Promise((resolve) =>
-          setTimeout(resolve, sleepTime)
+        this.logger.debug(
+          `Sleeping for ${sleepTime} ms before retrying. Retry count: ${retryCount}}`
         );
+        await new Promise((resolve) => setTimeout(resolve, sleepTime));
       }
     } catch (error) {
       this.logger.error("Unrecoverable Error in callLLM method");

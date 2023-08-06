@@ -89,6 +89,8 @@ interface IEngineProblemStatement {
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
   haveScannedWeb?: boolean;
+  imagePrompt?: string;
+  imageUrl?: string;
 }
 
 interface IEngineSubProblem {
@@ -182,10 +184,12 @@ type IEngineStageTypes =
   | "create-pros-cons"
   | "create-solution-images"
   | "create-sub-problem-images"
+  | "create-problem-statement-image"
   | "rank-search-results"
   | "rank-search-queries"
   | "rank-sub-problems"
   | "rank-entities"
+  | "rank-web-solutions"
   | "rank-solutions"
   | "rank-pros-cons"
   | "rate-solutions"
@@ -318,6 +322,7 @@ interface IEngineWebPageAnalysisData {
   domainId: number;
   _additional?: {
     distance: number;
+    id?: string;
   };
 }
 
@@ -340,6 +345,21 @@ interface IEngineSolutionForReapReturnData {
 
 interface IEngineSolutionForGroupCheck extends IEngineSolutionForReapCheck {
   index: number;
+}
+
+interface IEngineWebPageGraphQlSingleResult {
+  class?: string | undefined;
+  vectorWeights?: {
+      [key: string]: unknown;
+  } | undefined;
+  properties?: object | undefined;
+  id?: string | undefined;
+  creationTimeUnix?: number | undefined;
+  lastUpdateTimeUnix?: number | undefined;
+  vector?: number[] | undefined;
+  additional?: {
+    id?: string | undefined;
+  }
 }
 
 type IEngineMutationRates = "low" | "medium" | "high";

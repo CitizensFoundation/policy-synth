@@ -1,6 +1,6 @@
 import { Base } from "../../base.js";
 import { IEngineConstants } from "../../constants.js";
-import { jsonrepair } from 'jsonrepair';
+import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class BaseProcessor extends Base {
@@ -23,12 +23,12 @@ export class BaseProcessor extends Base {
         await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
     }
     lastPopulationIndex(subProblemIndex) {
-        return this.memory.subProblems[subProblemIndex].solutions.populations.length - 1;
+        return (this.memory.subProblems[subProblemIndex].solutions.populations.length - 1);
     }
     renderSubProblem(subProblemIndex, useProblemAsHeader = false) {
         const subProblem = this.memory.subProblems[subProblemIndex];
         return `
-      ${useProblemAsHeader ? 'Problem' : 'Sub Problem'}:
+      ${useProblemAsHeader ? "Problem" : "Sub Problem"}:
       ${subProblem.title}
 
       ${subProblem.description}
@@ -39,7 +39,7 @@ export class BaseProcessor extends Base {
     getActiveSolutionsLastPopulation(subProblemIndex) {
         const populations = this.memory.subProblems[subProblemIndex].solutions.populations;
         const lastPopulation = populations[populations.length - 1];
-        return lastPopulation.filter(solution => !solution.reaped);
+        return lastPopulation.filter((solution) => !solution.reaped);
     }
     renderSubProblems() {
         return `
@@ -54,6 +54,13 @@ export class BaseProcessor extends Base {
         `;
         })}
    `;
+    }
+    renderEntity(subProblemIndex, entityIndex) {
+        const entity = this.memory.subProblems[subProblemIndex].entities[entityIndex];
+        return `
+      Entity: ${entity.name}
+      ${this.renderEntityPosNegReasons(entity)}
+      `;
     }
     renderProblemStatement() {
         return `
@@ -101,10 +108,12 @@ export class BaseProcessor extends Base {
         }
         return itemEffects;
     }
-    async callLLM(stage, modelConstants, messages, parseJson = true) {
+    async callLLM(stage, modelConstants, messages, parseJson = true, limitedRetries = false) {
         try {
             let retryCount = 0;
-            const maxRetries = IEngineConstants.mainLLMmaxRetryCount;
+            const maxRetries = limitedRetries
+                ? IEngineConstants.limitedLLMmaxRetryCount
+                : IEngineConstants.mainLLMmaxRetryCount;
             let retry = true;
             while (retry && retryCount < maxRetries && this.chat) {
                 let response;
@@ -159,7 +168,9 @@ export class BaseProcessor extends Base {
                                     try {
                                         this.logger.info(`Trying to fix JSON AGAIN`);
                                         // Edge case hack that jsonrepair can't fix
-                                        const preprocessed = response.text.trim().replace(/"(\d+)(-[A-Za-z]+)"/g, '$1$2');
+                                        const preprocessed = response.text
+                                            .trim()
+                                            .replace(/"(\d+)(-[A-Za-z]+)"/g, "$1$2");
                                         const repaired = jsonrepair(preprocessed);
                                         parsedJson = JSON.parse(repaired);
                                     }
@@ -192,7 +203,6 @@ export class BaseProcessor extends Base {
                         this.logger.warn(`callLLM response was empty, retrying`);
                         if (retryCount >= maxRetries) {
                             throw new Error("callLLM response was empty");
-                            ;
                         }
                         else {
                             retryCount++;

@@ -108,6 +108,15 @@ export class IEngineConstants {
         outTokenCostUSD: gpt35_16kOutTokenPrice,
         verbose: false,
     };
+    static rankWebSolutionsModel = {
+        name: "gpt-4",
+        temperature: 0.0,
+        maxOutputTokens: 2048,
+        tokenLimit: 8192,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        verbose: true
+    };
     static reapSolutionsModel = {
         name: "gpt-4",
         temperature: 0.0,
@@ -180,12 +189,12 @@ export class IEngineConstants {
         outTokenCostUSD: gpt4OutTokenPrice,
         verbose: false,
     };
-    static getPageTimeout = 1000 * 10;
     static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
     static maxSubProblems = 7;
     static maxNumberGeneratedOfEntities = 7;
     static maxStabilityRetryCount = 14;
     static mainLLMmaxRetryCount = 40;
+    static limitedLLMmaxRetryCount = 10;
     static rankingLLMmaxRetryCount = 40;
     static maxTopEntitiesToSearch = 3;
     static maxTopEntitiesToRender = 3;
@@ -200,6 +209,7 @@ export class IEngineConstants {
     static minSleepBeforeBrowserRequest = 50;
     static maxAdditionalRandomSleepBeforeBrowserRequest = 100;
     static numberOfSearchTypes = 4;
+    static webPageNavTimeout = 60 * 1000;
     static topItemsToKeepForTopicClusterPruning = 7;
     static chances = {
         createSolutions: {

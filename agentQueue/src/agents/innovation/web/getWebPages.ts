@@ -35,6 +35,8 @@ const redis = new ioredis.default(
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 
+const onlyCheckWhatNeedsToBeScanned = false;
+
 export class GetWebPagesProcessor extends BaseProcessor {
   webPageVectorStore = new WebPageVectorStore();
 
@@ -342,7 +344,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
     const analysis = (await this.callLLM(
       "web-get-pages",
       IEngineConstants.getPageAnalysisModel,
-      messages
+      messages,
+      true,
+      true
     )) as IEngineWebPageAnalysisData;
 
     return analysis;
@@ -389,19 +393,28 @@ export class GetWebPagesProcessor extends BaseProcessor {
             subProblemIndex
           );
 
-          if (t == 0) {
-            textAnalysis = nextAnalysis;
-          } else {
-            textAnalysis = this.mergeAnalysisData(textAnalysis!, nextAnalysis);
-          }
+          if (nextAnalysis) {
+            if (t == 0) {
+              textAnalysis = nextAnalysis;
+            } else {
+              textAnalysis = this.mergeAnalysisData(
+                textAnalysis!,
+                nextAnalysis
+              );
+            }
 
-          this.logger.debug(
-            `Refined text analysis (${t}): ${JSON.stringify(
-              textAnalysis,
-              null,
-              2
-            )}`
-          );
+            this.logger.debug(
+              `Refined text analysis (${t}): ${JSON.stringify(
+                textAnalysis,
+                null,
+                2
+              )}`
+            );
+          } else {
+            this.logger.error(
+              `Error getting AI analysis for text ${currentText}`
+            );
+          }
         }
       } else {
         textAnalysis = await this.getAIAnalysis(text, subProblemIndex);
@@ -431,42 +444,51 @@ export class GetWebPagesProcessor extends BaseProcessor {
       )} for ${url} for ${type} search results ${subProblemIndex} sub problem index`
     );
 
-    const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
-
-    textAnalysis.url = url;
-    textAnalysis.subProblemIndex = subProblemIndex;
-    textAnalysis.entityIndex = entityIndex;
-    textAnalysis.searchType = type;
-    textAnalysis.groupId = this.memory.groupId;
-    textAnalysis.communityId = this.memory.communityId;
-    textAnalysis.domainId = this.memory.domainId;
-
-    if (
-      Array.isArray(textAnalysis.contacts) &&
-      textAnalysis.contacts.length > 0
-    ) {
-      if (
-        typeof textAnalysis.contacts[0] === "object" &&
-        textAnalysis.contacts[0] !== null
-      ) {
-        textAnalysis.contacts = textAnalysis.contacts.map((contact) =>
-          JSON.stringify(contact)
-        );
-      }
-    }
-
-    this.logger.debug(
-      `Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`
-    );
-
     try {
-      await this.webPageVectorStore.postWebPage(textAnalysis);
-      this.totalPagesSave += 1;
-      this.logger.info(`Total ${this.totalPagesSave} saved pages`);
+      const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
+
+      if (textAnalysis) {
+        textAnalysis.url = url;
+        textAnalysis.subProblemIndex = subProblemIndex;
+        textAnalysis.entityIndex = entityIndex;
+        textAnalysis.searchType = type;
+        textAnalysis.groupId = this.memory.groupId;
+        textAnalysis.communityId = this.memory.communityId;
+        textAnalysis.domainId = this.memory.domainId;
+
+        if (
+          Array.isArray(textAnalysis.contacts) &&
+          textAnalysis.contacts.length > 0
+        ) {
+          if (
+            typeof textAnalysis.contacts[0] === "object" &&
+            textAnalysis.contacts[0] !== null
+          ) {
+            textAnalysis.contacts = textAnalysis.contacts.map((contact) =>
+              JSON.stringify(contact)
+            );
+          }
+        }
+
+        this.logger.debug(
+          `Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+        );
+
+        try {
+          await this.webPageVectorStore.postWebPage(textAnalysis);
+          this.totalPagesSave += 1;
+          this.logger.info(`Total ${this.totalPagesSave} saved pages`);
+        } catch (e: any) {
+          this.logger.error(`Error posting web page for url ${url}`);
+          this.logger.error(e);
+          this.logger.error(e.stack);
+        }
+      } else {
+        this.logger.warn(`No text analysis for ${url}`);
+      }
     } catch (e: any) {
-      this.logger.error(`Error posting web page for url ${url}`);
-      this.logger.error(e);
-      this.logger.error(e.stack);
+      this.logger.error(`Error in processPageText`);
+      this.logger.error(e.stack || e);
     }
   }
 
@@ -660,16 +682,35 @@ export class GetWebPagesProcessor extends BaseProcessor {
     type: IEngineWebPageTypes,
     entityIndex: number | undefined
   ) {
-    if (url.toLowerCase().endsWith(".pdf")) {
-      await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
-    } else {
-      await this.getAndProcessHtml(
-        subProblemIndex,
+    if (onlyCheckWhatNeedsToBeScanned) {
+      const hasPage = await this.webPageVectorStore.webPageExist(
+        this.memory.groupId,
         url,
-        browserPage,
         type,
+        subProblemIndex,
         entityIndex
       );
+      if (hasPage) {
+        this.logger.warn(
+          `Already have scanned ${type} / ${subProblemIndex} / ${entityIndex} ${url}`
+        );
+      } else {
+        this.logger.warn(
+          `Need to scan ${type} / ${subProblemIndex} / ${entityIndex} ${url}`
+        );
+      }
+    } else {
+      if (url.toLowerCase().endsWith(".pdf")) {
+        await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
+      } else {
+        await this.getAndProcessHtml(
+          subProblemIndex,
+          url,
+          browserPage,
+          type,
+          entityIndex
+        );
+      }
     }
 
     return true;
@@ -693,7 +734,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
       promises.push(
         (async () => {
           const newPage = await browser.newPage();
-          newPage.setDefaultTimeout(45 * 1000);
+          newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+          newPage.setDefaultNavigationTimeout(
+            IEngineConstants.webPageNavTimeout
+          );
 
           await newPage.setUserAgent(IEngineConstants.currentUserAgent);
 
@@ -871,7 +915,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(45 * 1000);
+    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
 
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
@@ -892,7 +937,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
     const processPromises = searchQueryTypes.map(async (searchQueryType) => {
       const newPage = await browser.newPage();
-      newPage.setDefaultTimeout(45 * 1000);
+      newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+      newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+
       await newPage.setUserAgent(IEngineConstants.currentUserAgent);
 
       await this.processProblemStatement(

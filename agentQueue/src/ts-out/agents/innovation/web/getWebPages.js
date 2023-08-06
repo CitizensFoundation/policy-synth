@@ -19,6 +19,7 @@ import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
+const onlyCheckWhatNeedsToBeScanned = false;
 export class GetWebPagesProcessor extends BaseProcessor {
     webPageVectorStore = new WebPageVectorStore();
     totalPagesSave = 0;
@@ -263,7 +264,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     async getAIAnalysis(text, subProblemIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt(this.memory.problemStatement, text, subProblemIndex);
-        const analysis = (await this.callLLM("web-get-pages", IEngineConstants.getPageAnalysisModel, messages));
+        const analysis = (await this.callLLM("web-get-pages", IEngineConstants.getPageAnalysisModel, messages, true, true));
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex) {
@@ -281,13 +282,18 @@ export class GetWebPagesProcessor extends BaseProcessor {
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];
                     let nextAnalysis = await this.getAIAnalysis(currentText, subProblemIndex);
-                    if (t == 0) {
-                        textAnalysis = nextAnalysis;
+                    if (nextAnalysis) {
+                        if (t == 0) {
+                            textAnalysis = nextAnalysis;
+                        }
+                        else {
+                            textAnalysis = this.mergeAnalysisData(textAnalysis, nextAnalysis);
+                        }
+                        this.logger.debug(`Refined text analysis (${t}): ${JSON.stringify(textAnalysis, null, 2)}`);
                     }
                     else {
-                        textAnalysis = this.mergeAnalysisData(textAnalysis, nextAnalysis);
+                        this.logger.error(`Error getting AI analysis for text ${currentText}`);
                     }
-                    this.logger.debug(`Refined text analysis (${t}): ${JSON.stringify(textAnalysis, null, 2)}`);
                 }
             }
             else {
@@ -303,31 +309,42 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
     async processPageText(text, subProblemIndex, url, type, entityIndex) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
-        const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
-        textAnalysis.url = url;
-        textAnalysis.subProblemIndex = subProblemIndex;
-        textAnalysis.entityIndex = entityIndex;
-        textAnalysis.searchType = type;
-        textAnalysis.groupId = this.memory.groupId;
-        textAnalysis.communityId = this.memory.communityId;
-        textAnalysis.domainId = this.memory.domainId;
-        if (Array.isArray(textAnalysis.contacts) &&
-            textAnalysis.contacts.length > 0) {
-            if (typeof textAnalysis.contacts[0] === "object" &&
-                textAnalysis.contacts[0] !== null) {
-                textAnalysis.contacts = textAnalysis.contacts.map((contact) => JSON.stringify(contact));
+        try {
+            const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
+            if (textAnalysis) {
+                textAnalysis.url = url;
+                textAnalysis.subProblemIndex = subProblemIndex;
+                textAnalysis.entityIndex = entityIndex;
+                textAnalysis.searchType = type;
+                textAnalysis.groupId = this.memory.groupId;
+                textAnalysis.communityId = this.memory.communityId;
+                textAnalysis.domainId = this.memory.domainId;
+                if (Array.isArray(textAnalysis.contacts) &&
+                    textAnalysis.contacts.length > 0) {
+                    if (typeof textAnalysis.contacts[0] === "object" &&
+                        textAnalysis.contacts[0] !== null) {
+                        textAnalysis.contacts = textAnalysis.contacts.map((contact) => JSON.stringify(contact));
+                    }
+                }
+                this.logger.debug(`Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
+                try {
+                    await this.webPageVectorStore.postWebPage(textAnalysis);
+                    this.totalPagesSave += 1;
+                    this.logger.info(`Total ${this.totalPagesSave} saved pages`);
+                }
+                catch (e) {
+                    this.logger.error(`Error posting web page for url ${url}`);
+                    this.logger.error(e);
+                    this.logger.error(e.stack);
+                }
+            }
+            else {
+                this.logger.warn(`No text analysis for ${url}`);
             }
         }
-        this.logger.debug(`Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
-        try {
-            await this.webPageVectorStore.postWebPage(textAnalysis);
-            this.totalPagesSave += 1;
-            this.logger.info(`Total ${this.totalPagesSave} saved pages`);
-        }
         catch (e) {
-            this.logger.error(`Error posting web page for url ${url}`);
-            this.logger.error(e);
-            this.logger.error(e.stack);
+            this.logger.error(`Error in processPageText`);
+            this.logger.error(e.stack || e);
         }
     }
     //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
@@ -467,11 +484,22 @@ export class GetWebPagesProcessor extends BaseProcessor {
         }
     }
     async getAndProcessPage(subProblemIndex, url, browserPage, type, entityIndex) {
-        if (url.toLowerCase().endsWith(".pdf")) {
-            await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
+        if (onlyCheckWhatNeedsToBeScanned) {
+            const hasPage = await this.webPageVectorStore.webPageExist(this.memory.groupId, url, type, subProblemIndex, entityIndex);
+            if (hasPage) {
+                this.logger.warn(`Already have scanned ${type} / ${subProblemIndex} / ${entityIndex} ${url}`);
+            }
+            else {
+                this.logger.warn(`Need to scan ${type} / ${subProblemIndex} / ${entityIndex} ${url}`);
+            }
         }
         else {
-            await this.getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex);
+            if (url.toLowerCase().endsWith(".pdf")) {
+                await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
+            }
+            else {
+                await this.getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex);
+            }
         }
         return true;
     }
@@ -487,7 +515,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
             Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
             promises.push((async () => {
                 const newPage = await browser.newPage();
-                newPage.setDefaultTimeout(45 * 1000);
+                newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+                newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
                 await newPage.setUserAgent(IEngineConstants.currentUserAgent);
                 for (const searchQueryType of searchQueryTypes) {
                     this.logger.info(`Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`);
@@ -560,7 +589,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
         const browser = await puppeteer.launch({ headless: "new" });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(45 * 1000);
+        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
         await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
         await this.processSubProblems(browser);
         await this.saveMemory();
@@ -574,7 +604,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
         ];
         const processPromises = searchQueryTypes.map(async (searchQueryType) => {
             const newPage = await browser.newPage();
-            newPage.setDefaultTimeout(45 * 1000);
+            newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+            newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
             await newPage.setUserAgent(IEngineConstants.currentUserAgent);
             await this.processProblemStatement(searchQueryType, newPage);
             await newPage.close();

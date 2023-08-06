@@ -20,6 +20,8 @@ import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./ranking/groupSolutions.js";
 import { TopicMapSolutionsProcessor } from "./ranking/topicMapSolutions.js";
+import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
+import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
 
 export class AgentInnovation extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -61,6 +63,8 @@ export class AgentInnovation extends BaseAgent {
         // Rank the search results based on their relevance or usefulness
         "rank-search-results": {},
 
+        "rank-web-solutions": {},
+
         // Retrieve web pages obtained from the search
         "web-get-pages": {},
 
@@ -71,6 +75,8 @@ export class AgentInnovation extends BaseAgent {
         "create-pros-cons": {},
 
         "create-solution-images": {},
+
+        "create-problem-statement-image": {},
 
         // Rank the pros and cons based on their impact on the solution
         "rank-pros-cons": {},
@@ -181,6 +187,13 @@ export class AgentInnovation extends BaseAgent {
         );
         await createSubProblemImagesProcessor.process();
         break;
+      case "create-problem-statement-image":
+        const createProblemStatementImageProcessor = new CreateProblemStatementImageProcessor(
+          this.job,
+          this.memory
+        );
+        await createProblemStatementImageProcessor.process();
+        break;
       case "create-search-queries":
         const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(
           this.job,
@@ -222,6 +235,13 @@ export class AgentInnovation extends BaseAgent {
           this.memory
         );
         await rankSearchResultsProcessor.process();
+        break;
+      case "rank-web-solutions":
+        const rankWebSolutionsProcessor = new RankWebSolutionsProcessor(
+          this.job,
+          this.memory
+        );
+        await rankWebSolutionsProcessor.process();
         break;
       case "rank-solutions":
         const rankSolutionsProcessor = new RankSolutionsProcessor(

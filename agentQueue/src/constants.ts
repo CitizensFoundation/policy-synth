@@ -126,6 +126,16 @@ export class IEngineConstants {
     verbose: false,
   };
 
+  static rankWebSolutionsModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    verbose: true
+  };
+
   static reapSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.0,
@@ -206,8 +216,6 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static getPageTimeout = 1000 * 10;
-
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
 
   static maxSubProblems = 7;
@@ -217,6 +225,8 @@ export class IEngineConstants {
   static maxStabilityRetryCount = 14;
 
   static mainLLMmaxRetryCount = 40;
+
+  static limitedLLMmaxRetryCount = 10;
 
   static rankingLLMmaxRetryCount = 40;
 
@@ -245,6 +255,8 @@ export class IEngineConstants {
   static maxAdditionalRandomSleepBeforeBrowserRequest = 100;
 
   static numberOfSearchTypes = 4;
+
+  static webPageNavTimeout = 60 * 1000;
 
   static topItemsToKeepForTopicClusterPruning = 7;
 

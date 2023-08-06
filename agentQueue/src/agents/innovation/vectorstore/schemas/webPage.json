@@ -9,7 +9,8 @@
     }
   },
   "invertedIndexConfig": {
-    "indexPropertyLength": true
+    "indexPropertyLength": true,
+    "indexNullState": true
   },
   "properties": [
     {

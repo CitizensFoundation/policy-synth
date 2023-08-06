@@ -20,6 +20,8 @@ import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./ranking/groupSolutions.js";
 import { TopicMapSolutionsProcessor } from "./ranking/topicMapSolutions.js";
+import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
+import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
 export class AgentInnovation extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -48,6 +50,7 @@ export class AgentInnovation extends BaseAgent {
                 "rate-solutions": {},
                 // Rank the search results based on their relevance or usefulness
                 "rank-search-results": {},
+                "rank-web-solutions": {},
                 // Retrieve web pages obtained from the search
                 "web-get-pages": {},
                 // Create initial or seed solutions based on the gathered information
@@ -55,6 +58,7 @@ export class AgentInnovation extends BaseAgent {
                 // Analyze the advantages and disadvantages of each solution
                 "create-pros-cons": {},
                 "create-solution-images": {},
+                "create-problem-statement-image": {},
                 // Rank the pros and cons based on their impact on the solution
                 "rank-pros-cons": {},
                 // Rank the potential solutions based on their efficacy
@@ -132,6 +136,10 @@ export class AgentInnovation extends BaseAgent {
                 const createSubProblemImagesProcessor = new CreateSubProblemImagesProcessor(this.job, this.memory);
                 await createSubProblemImagesProcessor.process();
                 break;
+            case "create-problem-statement-image":
+                const createProblemStatementImageProcessor = new CreateProblemStatementImageProcessor(this.job, this.memory);
+                await createProblemStatementImageProcessor.process();
+                break;
             case "create-search-queries":
                 const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(this.job, this.memory);
                 await createSearchQueriesProcessor.process();
@@ -155,6 +163,10 @@ export class AgentInnovation extends BaseAgent {
             case "rank-search-results":
                 const rankSearchResultsProcessor = new RankSearchResultsProcessor(this.job, this.memory);
                 await rankSearchResultsProcessor.process();
+                break;
+            case "rank-web-solutions":
+                const rankWebSolutionsProcessor = new RankWebSolutionsProcessor(this.job, this.memory);
+                await rankWebSolutionsProcessor.process();
                 break;
             case "rank-solutions":
                 const rankSolutionsProcessor = new RankSolutionsProcessor(this.job, this.memory);
