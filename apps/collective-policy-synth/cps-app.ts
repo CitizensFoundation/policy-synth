@@ -410,7 +410,7 @@ export class CpsApp extends YpBaseElement {
     const firstBootResponse = (await window.serverApi.getProject(
       this.currentProjectId,
       this.tempPassword,
-      location.pathname.indexOf("refresh827cDb") > -1 ? "true" : undefined
+      location.pathname.indexOf("refresh827cDb") > -1 ? "999" : undefined
     )) as CpsBootResponse | { needsTrm: boolean };
 
     if (firstBootResponse && 'needsTrm' in firstBootResponse) {
