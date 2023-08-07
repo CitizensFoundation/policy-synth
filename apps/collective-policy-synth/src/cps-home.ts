@@ -8,7 +8,7 @@ import { CpsStageBase } from './cps-stage-base.js';
 const projects = [
   {
     id: 1,
-    title: 'Save Democracy',
+    title: 'Democracy in Distress',
     imageUrl:
       'https://cps-images.citizens.is/projects/1/problemStatement/images/916898992.png',
     description:
