@@ -409,6 +409,7 @@ export abstract class CpsStageBase extends YpBaseElement {
           border-radius: 8px;
           width: 100%;
           max-width: 960px;
+          color: var(--md-sys-color-on-surface);
         }
 
         .searchItem {
@@ -424,7 +425,6 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .searchTitle {
-          font-weight: 500;
           margin-top: 16px;
         }
 
