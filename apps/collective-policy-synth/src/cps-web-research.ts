@@ -38,6 +38,8 @@ export class CpsWebResearch extends CpsStageBase {
         .entity {
           width: 940px;
           max-width: 100%;
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface);
         }
 
         .entity[not-scanned] {
