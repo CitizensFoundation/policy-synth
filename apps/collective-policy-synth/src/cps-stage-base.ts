@@ -50,7 +50,7 @@ export abstract class CpsStageBase extends YpBaseElement {
   subProblemColors: string[] = [];
 
   maxTopSearchQueries = 4;
-  maxUsedSearchResults = 10;
+  maxUsedSearchResults = 1000;
 
   connectedCallback(): void {
     super.connectedCallback();
