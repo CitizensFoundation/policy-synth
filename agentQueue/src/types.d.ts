@@ -96,6 +96,7 @@ interface IEngineProblemStatement {
 interface IEngineSubProblem {
   title: string;
   description: string;
+  displayDescription?: string;
   imageUrl?: string;
   imagePrompt?: string;
   whyIsSubProblemImportant: string;
