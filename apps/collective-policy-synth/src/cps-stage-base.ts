@@ -763,7 +763,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                 ?is_header="${renderCloseButton}"
                 class="subProblemStatement"
               >
-                ${subProblem.description}
+                ${subProblem.displayDescription || subProblem.description}
               </div>
               </div>
             ${subProblem.imageUrl && renderCloseButton && this.wide
