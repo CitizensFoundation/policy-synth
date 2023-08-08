@@ -252,8 +252,8 @@ export abstract class CpsStageBase extends YpBaseElement {
 
         .navButton[is-header] {
           position: absolute;
-          bottom: 16px;
-          right: 16px;
+          bottom: 0px;
+          left: 0;
         }
 
         .title {
