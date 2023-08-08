@@ -241,13 +241,13 @@ export class CpsApp extends YpBaseElement {
 
     if (!this.wide) {
       setTimeout(() => {
-        if (window.location.pathname.includes('webResearch')) {
+        if (window.location.pathname.indexOf('webResearch') > -1) {
+          if (this.$$('#navBar') as NavigationBar) {
+            (this.$$('#navBar') as NavigationBar).activeIndex = 0;
+          }
+        } else if (window.location.pathname.indexOf('projects') > -1) {
           if (this.$$('#navBar') as NavigationBar) {
             (this.$$('#navBar') as NavigationBar).activeIndex = 1;
-          } else if (window.location.pathname.includes('projects')) {
-            if (this.$$('#navBar') as NavigationBar) {
-              (this.$$('#navBar') as NavigationBar).activeIndex = 0;
-            }
           }
         }
       }, 100);
@@ -410,7 +410,7 @@ export class CpsApp extends YpBaseElement {
     const firstBootResponse = (await window.serverApi.getProject(
       this.currentProjectId,
       this.tempPassword,
-      location.pathname.indexOf("refresh827cDb") > -1 ? "999" : undefined
+      location.pathname.indexOf('refresh827cDb') > -1 ? '999' : undefined
     )) as CpsBootResponse | { needsTrm: boolean };
 
     if (firstBootResponse && 'needsTrm' in firstBootResponse) {
@@ -558,6 +558,9 @@ export class CpsApp extends YpBaseElement {
   }
 
   mobileTabChanged(event: CustomEvent) {
+    if (event.detail.activeIndex == 3) {
+      (event.target as NavigationBar).activeIndex = 1;
+    }
     /*
     if (event.detail.activeIndex == 0) {
       this.openSolutions();
@@ -1081,7 +1084,7 @@ export class CpsApp extends YpBaseElement {
             }
           }
         } else {
-          console.warn(`No stage data for ${stage}`)
+          console.warn(`No stage data for ${stage}`);
         }
       });
     } catch (error: any) {
@@ -1299,6 +1302,24 @@ export class CpsApp extends YpBaseElement {
 
           <md-list>
             <md-list-item
+              class="${
+                location.href.indexOf('/webResearch') > -1 &&
+                'selectedContainer'
+              }"
+              headline="${this.t('Web Research')}"
+              @click="${() => this.openWebResearch()}"
+              @keydown="${(e: KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  this.openWebResearch();
+                }
+              }}"
+              .supportingText="${this.t('Automated research')}"
+            >
+              <md-list-item-icon slot="start">
+                <md-icon>manage_search</md-icon>
+              </md-list-item-icon></md-list-item
+            >
+            <md-list-item
             class="${
               location.href.indexOf('/projects') > -1 && 'selectedContainer'
             }"
@@ -1322,25 +1343,6 @@ export class CpsApp extends YpBaseElement {
                 <md-icon>online_prediction</md-icon>
               </md-list-item-icon></md-list-item
             >
-            <md-list-item
-              class="${
-                location.href.indexOf('/webResearch') > -1 &&
-                'selectedContainer'
-              }"
-              headline="${this.t('Web Research')}"
-              @click="${() => this.openWebResearch()}"
-              @keydown="${(e: KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  this.openWebResearch();
-                }
-              }}"
-              .supportingText="${this.t('Automated research')}"
-            >
-              <md-list-item-icon slot="start">
-                <md-icon>manage_search</md-icon>
-              </md-list-item-icon></md-list-item
-            >
-
             <md-list-item
               class="${
                 this.pageIndex == PagesTypes.PolicyCategories &&
@@ -1446,19 +1448,19 @@ export class CpsApp extends YpBaseElement {
             @navigation-bar-activated="${this.mobileTabChanged}"
           >
             <md-navigation-tab
-              @click="${this.openSolutions}"
-              .label="${this.t('Solutions')}"
-              ><md-icon slot="activeIcon">online_prediction</md-icon>
-              <md-icon slot="inactiveIcon"
-                >online_prediction</md-icon
-              ></md-navigation-tab
-            >
-            <md-navigation-tab
               @click="${this.openWebResearch}"
               .label="${this.t('Web Searches')}"
               ><md-icon slot="activeIcon">manage_search</md-icon>
               <md-icon slot="inactiveIcon"
                 >manage_search</md-icon
+              ></md-navigation-tab
+            >
+            <md-navigation-tab
+              @click="${this.openSolutions}"
+              .label="${this.t('Solutions')}"
+              ><md-icon slot="activeIcon">online_prediction</md-icon>
+              <md-icon slot="inactiveIcon"
+                >online_prediction</md-icon
               ></md-navigation-tab
             >
             <md-navigation-tab .label="${this.t('Policies')}"
