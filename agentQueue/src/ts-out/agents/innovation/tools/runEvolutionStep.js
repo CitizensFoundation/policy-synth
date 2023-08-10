@@ -12,14 +12,14 @@ if (projectId) {
         return memory;
     };
     const stages = [
-        "evolve-create-population",
-        "evolve-reap-population",
-        "evolve-reap-population",
+        // "evolve-create-population",
+        //  "evolve-reap-population",
+        //  "evolve-reap-population",
         "create-pros-cons",
         "rank-pros-cons",
         "rate-solutions",
         "rank-solutions",
-        "topic-map-solutions",
+        //   "topic-map-solutions",
         "create-solution-images",
     ];
     const runStages = async (startStage = stages[0]) => {
@@ -37,7 +37,7 @@ if (projectId) {
             await redis.set(redisKey, JSON.stringify(memory));
             // Add the job to the queue
             console.log("Adding job to queue");
-            const job = await myQueue.add("agent-innovation", { groupId: 1, communityId: 1, domainId: 1 }, { removeOnComplete: true, removeOnFail: true });
+            const job = await myQueue.add("agent-innovation", { groupId: projectId, communityId: projectId, domainId: 1 }, { removeOnComplete: true, removeOnFail: true });
             try {
                 // Wait until the job is finished
                 console.log(`Waiting for job ${job.id} to finish...`);

@@ -55,7 +55,7 @@ export abstract class CpsStageBase extends YpBaseElement {
   connectedCallback(): void {
     super.connectedCallback();
     if (this.memory.groupId == 2) {
-      this.maxTopSearchQueries = 3;
+      this.maxTopSearchQueries = 4;
       this.maxUsedSearchResults = 1000;
     }
     if (this.memory.subProblemClientColors) {
@@ -837,7 +837,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         </div>
 
         <div ?hidden="${renderCloseButton}" class="subProblemStatement">
-          ${subProblem.description}
+          ${subProblem.displayDescription || subProblem.description}
         </div>
         ${renderMoreInfo && !renderCloseButton
           ? html`

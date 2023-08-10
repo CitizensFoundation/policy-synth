@@ -75,12 +75,10 @@ declare global {
   }
 }
 
-const currentProjectId = 1;
-
 @customElement('cps-app')
 export class CpsApp extends YpBaseElement {
   @property({ type: Number })
-  currentProjectId = 1;
+  currentProjectId: number | undefined = undefined;
 
   @property({ type: Number })
   activeSubProblemIndex: number | undefined;
@@ -396,7 +394,6 @@ export class CpsApp extends YpBaseElement {
     if (savedColor) {
       this.fireGlobal('yp-theme-color', savedColor);
     }
-    this.boot();
   }
 
   openTempPassword() {
@@ -424,8 +421,10 @@ export class CpsApp extends YpBaseElement {
 
       this.currentMemory = bootResponse.currentMemory;
 
-      this.numberOfSolutionsGenerations =
+      if ( this.currentMemory.subProblems[0].solutions) {
+        this.numberOfSolutionsGenerations =
         this.currentMemory.subProblems[0].solutions.populations.length;
+      }
 
       document.title = bootResponse.name;
 

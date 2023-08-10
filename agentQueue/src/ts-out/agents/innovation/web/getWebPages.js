@@ -592,10 +592,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
         browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
         await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
-        await this.processSubProblems(browser);
-        await this.saveMemory();
-        await this.getAllCustomSearchUrls(browserPage);
-        await this.saveMemory();
+        //await this.processSubProblems(browser);
+        //await this.saveMemory();
+        //await this.getAllCustomSearchUrls(browserPage);
+        //await this.saveMemory();
         const searchQueryTypes = [
             "general",
             "scientific",

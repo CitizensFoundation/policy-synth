@@ -73,7 +73,10 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const problemText = `
           ${this.memory.subProblems[subProblemIndex].title}
+
           ${this.memory.subProblems[subProblemIndex].description}
+
+          ${this.memory.subProblems[subProblemIndex].whyIsSubProblemImportant}
         `;
             this.memory.subProblems[subProblemIndex].searchQueries =
                 await this.callLLM("create-search-queries", IEngineConstants.createSearchQueriesModel, await this.renderProblemPrompt(problemText));
