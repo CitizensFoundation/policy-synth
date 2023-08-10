@@ -703,7 +703,9 @@ export class CpsSolutions extends CpsStageBase {
     }
 
     if (subProblem.solutions.populations) {
-      let firstItems, lastItems, middleItems;
+      let firstItems,
+        lastItems: IEngineSolution[][],
+        middleItems: IEngineSolution[][];
 
       if (!this.wide) {
         firstItems = subProblem.solutions.populations.slice(0, 1);
@@ -711,8 +713,13 @@ export class CpsSolutions extends CpsStageBase {
         middleItems = subProblem.solutions.populations.slice(1, -1);
       } else {
         firstItems = subProblem.solutions.populations.slice(0, 3);
-        lastItems = subProblem.solutions.populations.slice(-3);
-        middleItems = subProblem.solutions.populations.slice(3, -3);
+        if (subProblem.solutions.populations.length > 3) {
+          lastItems = subProblem.solutions.populations.slice(-3);
+          middleItems = subProblem.solutions.populations.slice(3, -3);
+        } else {
+          lastItems = [];
+          middleItems = [];
+        }
 
         if (subProblem.solutions.populations.length === 7) {
           middleItems = subProblem.solutions.populations.slice(3, 4);
@@ -960,19 +967,18 @@ export class CpsSolutions extends CpsStageBase {
 
   renderSolutionImage(solution: IEngineSolution) {
     return html`
-    <div class="solutionImageContainer">
-                        <img
-                          loading="lazy"
-                          class="solutionTopImage"
-                          height="${this.getSolutionImgHeight()}"
-                          width="${this.getSolutionImgWidth()}"
-                          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
-                          alt="${solution.title}"
-                          .key="${solution.imageUrl}"
-                        />
-                      </div>
+      <div class="solutionImageContainer">
+        <img
+          loading="lazy"
+          class="solutionTopImage"
+          height="${this.getSolutionImgHeight()}"
+          width="${this.getSolutionImgWidth()}"
+          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
+          alt="${solution.title}"
+          .key="${solution.imageUrl}"
+        />
+      </div>
     `;
-
   }
 
   renderSolutionScreen(solutionIndex: number) {
@@ -987,8 +993,12 @@ export class CpsSolutions extends CpsStageBase {
                   solutionIndex,
                   solutions
                 )}
-                <div class="solution layout ${this.wide ? 'horizontal' : 'vertical'} center-cener">
-                  ${(solution.imageUrl && !this.wide)
+                <div
+                  class="solution layout ${this.wide
+                    ? 'horizontal'
+                    : 'vertical'} center-cener"
+                >
+                  ${solution.imageUrl && !this.wide
                     ? this.renderSolutionImage(solution)
                     : nothing}
 
@@ -998,7 +1008,7 @@ export class CpsSolutions extends CpsStageBase {
                       ${solution.description}
                     </div>
                   </div>
-                  ${(solution.imageUrl && this.wide)
+                  ${solution.imageUrl && this.wide
                     ? this.renderSolutionImage(solution)
                     : nothing}
                   <div
