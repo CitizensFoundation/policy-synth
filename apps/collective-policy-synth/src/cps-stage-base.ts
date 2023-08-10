@@ -38,6 +38,9 @@ export abstract class CpsStageBase extends YpBaseElement {
   @property({ type: Number })
   activeGroupIndex: number = null;
 
+  @property({ type: Boolean })
+  longDescriptions = false;
+
   @property({ type: Object })
   router!: Router;
 
@@ -58,6 +61,9 @@ export abstract class CpsStageBase extends YpBaseElement {
       if (this.memory.groupId == 2) {
         this.maxTopSearchQueries = 4;
         this.maxUsedSearchResults = 1000;
+      }
+      if (this.memory.groupId === 2) {
+        this.longDescriptions = true;
       }
       if (this.memory.subProblemClientColors) {
         this.subProblemColors = this.memory.subProblemClientColors;
@@ -238,6 +244,14 @@ export abstract class CpsStageBase extends YpBaseElement {
           margin: 0;
           max-width: 960px;
           margin-top: 24px;
+        }
+
+        .subProblem[is-wordy] {
+          max-height: 300px;
+        }
+
+        .headerContainer[is-wordy] {
+          padding-bottom: 28px;
         }
 
         .subProblem[not-header] {
@@ -436,12 +450,15 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .problemStatementImage {
-          margin-top: 24px
+          margin-top: 24px;
         }
 
         @media (max-width: 960px) {
           .problemStatementText {
             font-size: 22px;
+          }
+          .headerContainer[is-wordy] {
+            padding-bottom: 16px;
           }
 
           .subProblemMainTitle {
@@ -648,11 +665,20 @@ export abstract class CpsStageBase extends YpBaseElement {
   renderProblemStatement(title: string | undefined = undefined) {
     return html`
       ${!this.wide ? html` ${this.renderThemeToggle()} ` : nothing}
-      ${this.memory.problemStatement.imageUrl ? html`
-      <img class="problemStatementImage" width="${this.wide ? 650 : 340}" src="${this.memory.problemStatement.imageUrl}" />
-      ` : html`
-        <div class="title">${title? title : this.t('Problem Statement')}</div>
-      `}
+      ${this.memory.problemStatement.imageUrl
+        ? html`
+            <img
+              class="problemStatementImage"
+              width="${this.wide ? 650 : 340}"
+              height="${this.wide ? 371 : 194}"
+              src="${this.memory.problemStatement.imageUrl}"
+            />
+          `
+        : html`
+            <div class="title">
+              ${title ? title : this.t('Problem Statement')}
+            </div>
+          `}
       <div class="problemStatement">
         <div class="problemStatementText">
           ${this.memory.problemStatement.description}
@@ -732,6 +758,7 @@ export abstract class CpsStageBase extends YpBaseElement {
   ) {
     return html`
       <div
+        ?is-wordy="${renderCloseButton && this.longDescriptions}"
         ?not-header="${!renderCloseButton}"
         ?is-header="${renderCloseButton}"
         class="subProblem ${isLessProminent ? 'lessProminent' : ''}"
@@ -750,6 +777,7 @@ export abstract class CpsStageBase extends YpBaseElement {
             ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
             : nothing}
           <div
+            ?is-wordy="${this.longDescriptions}"
             ?is-header="${renderCloseButton}"
             ?not-header="${!renderCloseButton}"
             class="layout headerContainer ${renderCloseButton
@@ -757,7 +785,10 @@ export abstract class CpsStageBase extends YpBaseElement {
               : 'horizontal'}"
           >
             <div class="layout vertical">
-              <div class="subProblemMainTitle" ?is-header="${renderCloseButton}">
+              <div
+                class="subProblemMainTitle"
+                ?is-header="${renderCloseButton}"
+              >
                 ${subProblem.title}
               </div>
               <div
@@ -767,7 +798,7 @@ export abstract class CpsStageBase extends YpBaseElement {
               >
                 ${subProblem.displayDescription || subProblem.description}
               </div>
-              </div>
+            </div>
             ${subProblem.imageUrl && renderCloseButton && this.wide
               ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
               : nothing}
@@ -776,7 +807,7 @@ export abstract class CpsStageBase extends YpBaseElement {
               ?is-header="${renderCloseButton}"
               class="navButton ${renderCloseButton ? 'horizontal flex' : ''}"
             >
-              ${(renderCloseButton && !hideAllButtons)
+              ${renderCloseButton && !hideAllButtons
                 ? html`
                     <md-standard-icon-button
                       aria-label="Previous"
@@ -952,7 +983,9 @@ export abstract class CpsStageBase extends YpBaseElement {
                               href="${result.url || result.link}"
                               target="_blank"
                             >
-                              ${this.getUrlInRightSize(result.url || result.link)}
+                              ${this.getUrlInRightSize(
+                                result.url || result.link
+                              )}
                             </a>
                           </div>
                         </div>
