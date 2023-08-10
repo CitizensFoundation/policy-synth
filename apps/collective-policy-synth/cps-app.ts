@@ -270,9 +270,7 @@ export class CpsApp extends YpBaseElement {
       {
         path: '/',
         render: () => {
-          return this.renderContentOrLoader(
-            html`<cps-home .memory="${this.currentMemory}"></cps-home>`
-          );
+          return  html`<cps-home .memory="${this.currentMemory}"></cps-home>`
         },
       },
       {
