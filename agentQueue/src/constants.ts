@@ -230,7 +230,7 @@ export class IEngineConstants {
 
   static rankingLLMmaxRetryCount = 40;
 
-  static maxTopEntitiesToSearch = 3;
+  static maxTopEntitiesToSearch = 4;
 
   static maxTopEntitiesToRender = 3;
 
@@ -263,13 +263,13 @@ export class IEngineConstants {
   static chances = {
     createSolutions: {
       searchQueries: {
-        useMainProblemSearchQueries: 0.1,
-        useOtherSubProblemSearchQueries: 0.1,
-        useSubProblemSearchQueries: 0.4,
-        useRandomEntitySearchQueries: 0.5,
+        useMainProblemSearchQueries: 0.05,
+        useOtherSubProblemSearchQueries: 0.05,
+        useSubProblemSearchQueries: 0.45,
+        useRandomEntitySearchQueries: 0.45,
       },
       notUsingTopSearchQueries: 0.33,
-      vectorSearchAcrossAllProblems: 0.25,
+      vectorSearchAcrossAllProblems: 0.01,
     },
   };
 

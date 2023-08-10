@@ -920,13 +920,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-    await this.processSubProblems(browser);
+    //await this.processSubProblems(browser);
 
-    await this.saveMemory();
+    //await this.saveMemory();
 
-    await this.getAllCustomSearchUrls(browserPage);
+    //await this.getAllCustomSearchUrls(browserPage);
 
-    await this.saveMemory();
+    //await this.saveMemory();
 
     const searchQueryTypes = [
       "general",

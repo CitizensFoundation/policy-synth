@@ -14,7 +14,7 @@ if (projectId) {
   const output = await redis.get(redisKey);
 
   const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
-  memory.currentStage = "create-problem-statement-image";
+  //memory.currentStage = "create-problem-statement-image";
   //memory.currentStage = "create-sub-problems";
   //memory.currentStage = "create-sub-problem-images";
   //memory.currentStage = "rank-sub-problems";

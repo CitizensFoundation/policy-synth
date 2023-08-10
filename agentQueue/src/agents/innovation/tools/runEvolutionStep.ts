@@ -18,14 +18,14 @@ if (projectId) {
   };
 
   const stages = [
-    "evolve-create-population",
-    "evolve-reap-population",
-    "evolve-reap-population",
+   // "evolve-create-population",
+  //  "evolve-reap-population",
+  //  "evolve-reap-population",
     "create-pros-cons",
     "rank-pros-cons",
     "rate-solutions",
     "rank-solutions",
-    "topic-map-solutions",
+ //   "topic-map-solutions",
     "create-solution-images",
   ] as unknown as IEngineStageTypes;
 
@@ -50,7 +50,7 @@ if (projectId) {
       console.log("Adding job to queue");
       const job = await myQueue.add(
         "agent-innovation",
-        { groupId: 1, communityId: 1, domainId: 1 },
+        { groupId: projectId, communityId: projectId, domainId: 1 },
         { removeOnComplete: true, removeOnFail: true }
       );
 
