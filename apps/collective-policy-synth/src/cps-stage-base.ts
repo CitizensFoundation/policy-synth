@@ -54,23 +54,25 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    if (this.memory.groupId == 2) {
-      this.maxTopSearchQueries = 4;
-      this.maxUsedSearchResults = 1000;
-    }
-    if (this.memory.subProblemClientColors) {
-      this.subProblemColors = this.memory.subProblemClientColors;
-    } else {
-      this.subProblemColors = [
-        '#0b60b9',
-        '#ee782d',
-        '#face2d',
-        '#50c363',
-        '#cf1103',
-        '#e9a633',
-        '#87559b',
-        '#3f5fce',
-      ];
+    if (this.memory) {
+      if (this.memory.groupId == 2) {
+        this.maxTopSearchQueries = 4;
+        this.maxUsedSearchResults = 1000;
+      }
+      if (this.memory.subProblemClientColors) {
+        this.subProblemColors = this.memory.subProblemClientColors;
+      } else {
+        this.subProblemColors = [
+          '#0b60b9',
+          '#ee782d',
+          '#face2d',
+          '#50c363',
+          '#cf1103',
+          '#e9a633',
+          '#87559b',
+          '#3f5fce',
+        ];
+      }
     }
   }
 
