@@ -258,7 +258,7 @@ export class IEngineConstants {
 
   static webPageNavTimeout = 60 * 1000;
 
-  static topItemsToKeepForTopicClusterPruning = 7;
+  static topItemsToKeepForTopicClusterPruning = 5;
 
   static chances = {
     createSolutions: {
@@ -273,11 +273,11 @@ export class IEngineConstants {
     },
   };
 
-  static maxTopSearchQueriesForSolutionCreation = 9;
+  static maxTopSearchQueriesForSolutionCreation = 6;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 10,
-    useRandomTopFromVectorSearchResults: 8,
+    useRandomTopFromVectorSearchResults: 7,
   };
 
   static enable = {

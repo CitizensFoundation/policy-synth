@@ -244,7 +244,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         newPopulation.push(...newSolutions);
     }
     addUniqueAboveAverageSolutionAsElite(previousPopulation, newPopulation, usedSolutionTitles) {
-        this.logger.debug(`Adding unique solution as elite`);
+        this.logger.debug(`addUniqueAboveAverageSolutionAsElite`);
         const groups = new Map();
         for (let solution of previousPopulation) {
             if (solution.similarityGroup) {
@@ -252,8 +252,11 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                 if (!groups.has(groupId)) {
                     groups.set(groupId, []);
                 }
-                if (solution.eloRating > 1000) {
+                if (solution.eloRating && solution.eloRating > 1000) {
                     groups.get(groupId).push(solution);
+                }
+                else {
+                    this.logger.debug(`Not adding top group solution with lower then average rating: ${solution.title} ${solution.eloRating}`);
                 }
             }
         }
