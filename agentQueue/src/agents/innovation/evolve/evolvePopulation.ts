@@ -395,7 +395,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     newPopulation.push(...newSolutions);
   }
 
-  addUniqueSolutionAsElite(
+  addUniqueAboveAverageSolutionAsElite(
     previousPopulation: IEngineSolution[],
     newPopulation: IEngineSolution[],
     usedSolutionTitles: Set<string>
@@ -409,7 +409,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         if (!groups.has(groupId)) {
           groups.set(groupId, []);
         }
-        groups.get(groupId)!.push(solution);
+        if (solution.eloRating!>1000) {
+          groups.get(groupId)!.push(solution);
+        }
       }
     }
 
@@ -422,8 +424,6 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       }
     }
   }
-
-
 
   addElites(
     previousPopulation: IEngineSolution[],
@@ -501,7 +501,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     const usedGroupIds = new Set<number>();
     const usedSolutionTitles = new Set<string>();
 
-    this.addUniqueSolutionAsElite(
+    this.addUniqueAboveAverageSolutionAsElite(
       previousPopulation,
       newPopulation,
       usedSolutionTitles

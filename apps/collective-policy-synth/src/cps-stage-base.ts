@@ -237,7 +237,7 @@ export abstract class CpsStageBase extends YpBaseElement {
         }
 
         .subProblem[is-header] {
-          cursor: pointer;
+          cursor: default;
           background-color: var(--md-sys-color-secondary-container);
           color: var(--md-sys-color-on-secondary-container);
           max-height: 206px;
@@ -669,6 +669,8 @@ export abstract class CpsStageBase extends YpBaseElement {
         ? html`
             <img
               class="problemStatementImage"
+              alt="${this.memory.problemStatement.imagePrompt}"
+              title="${this.memory.problemStatement.imagePrompt}"
               width="${this.wide ? 650 : 340}"
               height="${this.wide ? 371 : 194}"
               src="${this.memory.problemStatement.imageUrl}"
@@ -736,13 +738,14 @@ export abstract class CpsStageBase extends YpBaseElement {
       >
         <img
           loading="lazy"
+          title="${subProblem.imagePrompt}"
+          alt="${subProblem.imagePrompt}"
           ?is-header="${renderCloseButton}"
           ?not-header="${!renderCloseButton}"
           class="subProblemImage"
           height="${this.getImgHeight(renderCloseButton)}"
           width="${this.getImgWidth(renderCloseButton)}"
           src="${this.fixImageUrlIfNeeded(subProblem.imageUrl)}"
-          alt="${subProblem.title}"
         />
       </div>
     `;

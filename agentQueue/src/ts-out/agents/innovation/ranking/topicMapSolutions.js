@@ -90,7 +90,7 @@ export class TopicMapSolutionsProcessor extends BaseProcessor {
                 const reducedData = pca.predict(data, { nComponents: 2 });
                 // Cluster the reduced data using DBSCAN
                 const dbscan = new DBSCAN();
-                clusters = dbscan.run(reducedData.data, 0.04, 3);
+                clusters = dbscan.run(reducedData.data, 0.07, 12);
                 break;
             case "AGNES":
                 const treeA = agnes(data, { method: 'ward' });

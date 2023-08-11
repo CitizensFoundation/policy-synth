@@ -18,14 +18,13 @@ if (projectId) {
   };
 
   const stages = [
-   // "evolve-create-population",
-  //  "evolve-reap-population",
-  //  "evolve-reap-population",
+    //"evolve-create-population",
+    //"evolve-reap-population",
     "create-pros-cons",
     "rank-pros-cons",
     "rate-solutions",
     "rank-solutions",
- //   "topic-map-solutions",
+    "group-solutions",
     "create-solution-images",
   ] as unknown as IEngineStageTypes;
 
@@ -78,6 +77,6 @@ if (projectId) {
     });
 
 } else {
-  console.log("Usage: yarn runEvolutionStep <projectId>");
+  console.log("Usage: npm runEvolutionStep <projectId>");
   process.exit(0);
 }

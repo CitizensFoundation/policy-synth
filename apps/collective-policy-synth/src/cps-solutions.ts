@@ -556,6 +556,18 @@ export class CpsSolutions extends CpsStageBase {
           }
         });
 
+        // Check if the active solution is part of a similarity group and the group is not already active
+        if (this.activeSolutionIndex !== null) {
+          const activeSolution = solutions[this.activeSolutionIndex];
+          if (
+            activeSolution?.similarityGroup &&
+            this.activeGroupIndex !== activeSolution.similarityGroup.index &&
+            !activeSolution.similarityGroup.isFirst
+          ) {
+            this.activeGroupIndex = activeSolution.similarityGroup.index;
+          }
+        }
+
         if (this.activeGroupIndex !== null) {
           // If a group is active, only return solutions from this group
           solutions = solutions.filter(
@@ -631,11 +643,11 @@ export class CpsSolutions extends CpsStageBase {
           ? html`
               <div>
                 <img
+                  alt="${solution.imagePrompt}"
                   loading="lazy"
                   class="solutionImage"
                   height="${this.wide ? `250` : `200`}"
                   src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
-                  alt="${solution.title}"
                 />
               </div>
             `
@@ -970,11 +982,12 @@ export class CpsSolutions extends CpsStageBase {
       <div class="solutionImageContainer">
         <img
           loading="lazy"
+          alt="${solution.imagePrompt}"
+          title="${solution.imagePrompt}"
           class="solutionTopImage"
           height="${this.getSolutionImgHeight()}"
           width="${this.getSolutionImgWidth()}"
           src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
-          alt="${solution.title}"
           .key="${solution.imageUrl}"
         />
       </div>
