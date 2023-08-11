@@ -243,7 +243,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.logger.debug("After creating new solutions: " + newSolutions.length);
         newPopulation.push(...newSolutions);
     }
-    addUniqueSolutionAsElite(previousPopulation, newPopulation, usedSolutionTitles) {
+    addUniqueAboveAverageSolutionAsElite(previousPopulation, newPopulation, usedSolutionTitles) {
         this.logger.debug(`Adding unique solution as elite`);
         const groups = new Map();
         for (let solution of previousPopulation) {
@@ -252,7 +252,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                 if (!groups.has(groupId)) {
                     groups.set(groupId, []);
                 }
-                groups.get(groupId).push(solution);
+                if (solution.eloRating > 1000) {
+                    groups.get(groupId).push(solution);
+                }
             }
         }
         for (let [groupId, groupSolutions] of groups) {
@@ -310,7 +312,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         const newPopulation = [];
         const usedGroupIds = new Set();
         const usedSolutionTitles = new Set();
-        this.addUniqueSolutionAsElite(previousPopulation, newPopulation, usedSolutionTitles);
+        this.addUniqueAboveAverageSolutionAsElite(previousPopulation, newPopulation, usedSolutionTitles);
         this.addElites(previousPopulation, newPopulation, usedSolutionTitles);
         previousPopulation = this.pruneTopicClusters(previousPopulation);
         await this.addRandomMutation(newPopulation, previousPopulation, subProblemIndex);

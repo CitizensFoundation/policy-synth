@@ -12,7 +12,8 @@ export class GroupSolutionsProcessor extends BaseProcessor {
         1. You will receive an array of solution components, each having an index and title, formatted in JSON: [ { index, title } ]
         2. You are to output a list of lists. Each sub-list should contain indexes and titles of solution components containing exactly the same core ideas: [ [ { index, title } ] ]
         3. Solution Components should only be grouped if they share exactly the same core ideas.
-        4. Never group the same solution component in more than one group.
+        4. Not all solution components need to be grouped.
+        5. Never group the same solution component in more than one group.
 
         Think step by step.
                 `),
@@ -39,17 +40,10 @@ export class GroupSolutionsProcessor extends BaseProcessor {
                 for (let k = 0; k < group.length; k++) {
                     const solutionIndex = group[k].index;
                     if (solutionIndex < solutions.length) {
-                        if (k === 0) {
-                            solutions[solutionIndex].similarityGroup = {
-                                index: groupIndex,
-                                totalCount: group.length,
-                            };
-                        }
-                        else {
-                            solutions[solutionIndex].similarityGroup = {
-                                index: groupIndex,
-                            };
-                        }
+                        solutions[solutionIndex].similarityGroup = {
+                            index: groupIndex,
+                            totalCount: group.length,
+                        };
                         this.logger.info(`Grouped solution: ${solutions[solutionIndex].title}`);
                     }
                 }
