@@ -367,6 +367,12 @@ export class CpsSolutions extends CpsStageBase {
           line-height: 1.4;
         }
 
+        .solutionItemEloRating {
+          font-size: 18px;
+          margin-top: 8px;
+          opacity: 0.5;
+        }
+
         .ratingsHeader {
           font-size: 22px;
           margin-bottom: 4px;
@@ -654,6 +660,12 @@ export class CpsSolutions extends CpsStageBase {
           : html``}
         <div class="solutionItemTitle" ?has-image="${solution.imageUrl}">
           ${solution.title}
+        </div>
+        <div
+          class="solutionItemEloRating"
+          ?hidden="${this.activeGroupIndex === null}"
+        >
+          ${YpFormattingHelpers.number(solution.eloRating)}
         </div>
         ${solution.similarityGroup?.isFirst !== undefined &&
         solution.similarityGroup.isFirst
