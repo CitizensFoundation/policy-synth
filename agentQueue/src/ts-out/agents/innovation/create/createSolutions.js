@@ -138,10 +138,10 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         }
         else {
             this.logger.info(`Calling LLM for sub problem ${subProblemIndex}`);
-            let results = await this.callLLM(stageName, IEngineConstants.createSolutionsModel, await this.renderCreatePrompt(generalTextContext, scientificTextContext, openDataTextContext, newsTextContext, subProblemIndex, alreadyCreatedSolutions));
+            let results = await this.callLLM(stageName, IEngineConstants.createSolutionsModel, await this.renderCreatePrompt(generalTextContext, scientificTextContext, openDataTextContext, newsTextContext, subProblemIndex, alreadyCreatedSolutions), true, false, 860);
             if (IEngineConstants.enable.refine.createSolutions) {
                 this.logger.info(`Calling LLM refine for sub problem ${subProblemIndex}`);
-                results = await this.callLLM(stageName, IEngineConstants.createSolutionsModel, await this.renderRefinePrompt(results, generalTextContext, scientificTextContext, openDataTextContext, newsTextContext, subProblemIndex, alreadyCreatedSolutions));
+                results = await this.callLLM(stageName, IEngineConstants.createSolutionsModel, await this.renderRefinePrompt(results, generalTextContext, scientificTextContext, openDataTextContext, newsTextContext, subProblemIndex, alreadyCreatedSolutions), true, false, 860);
             }
             return results;
         }

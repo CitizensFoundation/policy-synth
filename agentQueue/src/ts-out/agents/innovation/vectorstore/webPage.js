@@ -160,13 +160,12 @@ export class WebPageVectorStore extends Base {
                     valueInt: subProblemIndex,
                 });
             }
-            else {
-                //TODO: Enable when null index has been merged into schema
-                /*where.push({
-                  path: ["subProblemIndex"],
-                  operator: "IsNull",
-                  valueBoolean: true,
-                });*/
+            else if (subProblemIndex === null) {
+                where.push({
+                    path: ["subProblemIndex"],
+                    operator: "IsNull",
+                    valueBoolean: true,
+                });
             }
             if (searchType) {
                 where.push({
@@ -182,12 +181,12 @@ export class WebPageVectorStore extends Base {
                     valueInt: entityIndex,
                 });
             }
-            else {
-                /*where.push({
-                  path: ["entityIndex"],
-                  operator: "IsNull",
-                  valueBoolean: true,
-                });*/
+            else if (entityIndex === null) {
+                where.push({
+                    path: ["entityIndex"],
+                    operator: "IsNull",
+                    valueBoolean: true,
+                });
             }
             where.push({
                 path: ["len(solutionsIdentifiedInTextContext)"],
@@ -255,11 +254,25 @@ export class WebPageVectorStore extends Base {
                 valueInt: subProblemIndex,
             });
         }
+        else {
+            where.push({
+                path: ["subProblemIndex"],
+                operator: "IsNull",
+                valueBoolean: true,
+            });
+        }
         if (entityIndex !== undefined) {
             where.push({
                 path: ["entityIndex"],
                 operator: "Equal",
                 valueInt: entityIndex,
+            });
+        }
+        else {
+            where.push({
+                path: ["entityIndex"],
+                operator: "IsNull",
+                valueBoolean: true,
             });
         }
         let results;

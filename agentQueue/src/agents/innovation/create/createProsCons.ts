@@ -101,9 +101,12 @@ export class CreateProsConsProcessor extends BaseProcessor {
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
-        const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
+        const solutions =
+          this.getActiveSolutionsLastPopulation(subProblemIndex);
 
-        this.logger.debug(`Sub Problem ${subProblemIndex} Solution Components length: ${solutions.length}`);
+        this.logger.debug(
+          `Sub Problem ${subProblemIndex} Solution Components length: ${solutions.length}`
+        );
 
         // Sequentially process each solution for this subproblem
         for (
@@ -136,7 +139,10 @@ export class CreateProsConsProcessor extends BaseProcessor {
                   prosOrCons,
                   subProblemIndex,
                   solution
-                )
+                ),
+                true,
+                false,
+                135
               )) as string[];
 
               if (IEngineConstants.enable.refine.createProsCons) {
@@ -148,7 +154,10 @@ export class CreateProsConsProcessor extends BaseProcessor {
                     results,
                     subProblemIndex,
                     solution
-                  )
+                  ),
+                  true,
+                  false,
+                  135
                 )) as string[];
               }
 

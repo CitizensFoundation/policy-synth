@@ -21,10 +21,110 @@ export abstract class BaseProcessor extends Base {
   chat: ChatOpenAI | undefined;
   currentSubProblemIndex: number | undefined;
 
+  private rateLimits: IEngineRateLimits = {};
+
   constructor(job: Job, memory: IEngineInnovationMemoryData) {
     super();
     this.job = job;
     this.memory = memory;
+  }
+
+  formatNumber(number: number, fractions = 0) {
+    return new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: fractions,
+    }).format(number);
+  }
+
+  private async checkRateLimits(
+    model: IEngineBaseAIModelConstants,
+    tokensToAdd: number
+  ) {
+    let now = Date.now();
+    const windowSize = 60000; // 60 seconds
+
+    // Initialize if not exist
+    if (!this.rateLimits[model.name]) {
+      this.rateLimits[model.name] = {
+        requests: [],
+        tokens: [],
+      };
+    }
+
+    const limits = this.rateLimits[model.name];
+
+    // Slide the window for requests
+    limits.requests = limits.requests.filter(
+      (request) => now - request.timestamp < windowSize
+    );
+
+    // Check and update requests
+    if (limits.requests.length >= model.limitRPM) {
+      const remainingTimeRequests =
+        60000 - (now - limits.requests[0].timestamp);
+      this.logger.info(
+        `RPM limit reached (${
+          model.limitRPM
+        }), sleeping for ${this.formatNumber(
+          (remainingTimeRequests + 1000) / 1000
+        )} seconds`
+      );
+      await new Promise((resolve) =>
+        setTimeout(resolve, remainingTimeRequests + 1000)
+      );
+    }
+
+    now = Date.now();
+
+    // Slide the window for tokens
+    limits.tokens = limits.tokens.filter(
+      (token) => now - token.timestamp < windowSize
+    );
+
+    // Check and update tokens
+    const currentTokensCount = limits.tokens.reduce(
+      (acc, token) => acc + token.count,
+      0
+    );
+
+    this.logger.debug(`Current ${limits.requests.length}/${currentTokensCount}`)
+
+    if (currentTokensCount + tokensToAdd > model.limitTPM) {
+      const remainingTimeTokens = 60000 - (now - limits.tokens[0].timestamp);
+      this.logger.info(
+        `TPM limit reached (${
+          model.limitTPM
+        }), sleeping for ${this.formatNumber(
+          (remainingTimeTokens + 1000) / 1000
+        )} seconds`
+      );
+      await new Promise((resolve) =>
+        setTimeout(resolve, remainingTimeTokens + 1000)
+      );
+    }
+  }
+
+  private async updateRateLimits(
+    model: IEngineBaseAIModelConstants,
+    tokensToAdd: number
+  ) {
+    const now = Date.now();
+
+    // If the model's rate limits are not defined, initialize them
+    if (!this.rateLimits[model.name]) {
+      this.rateLimits[model.name] = {
+        requests: [],
+        tokens: [],
+      };
+    }
+
+    // Add a new request timestamp
+    this.rateLimits[model.name].requests.push({ timestamp: now });
+
+    // Add a new token entry with the count and timestamp
+    this.rateLimits[model.name].tokens.push({ count: tokensToAdd, timestamp: now });
+
+    // Optionally, you may log the updated limits
+    //this.logger.debug(`Updated rate limits for ${model.name} model: ${JSON.stringify(this.rateLimits[model.name])}`);
   }
 
   async process() {
@@ -146,7 +246,8 @@ export abstract class BaseProcessor extends Base {
     modelConstants: IEngineBaseAIModelConstants,
     messages: BaseChatMessage[],
     parseJson = true,
-    limitedRetries = false
+    limitedRetries = false,
+    tokenOutEstimate = 120
   ) {
     try {
       let retryCount = 0;
@@ -158,10 +259,16 @@ export abstract class BaseProcessor extends Base {
       while (retry && retryCount < maxRetries && this.chat) {
         let response;
         try {
+          const tokensIn = await this.chat!.getNumTokensFromMessages(messages);
+          const estimatedTokensToAdd = tokensIn.totalCount + tokenOutEstimate;
+
+          await this.checkRateLimits(modelConstants, estimatedTokensToAdd);
+          await this.updateRateLimits(modelConstants, tokensIn.totalCount);
+
           response = await this.chat.call(messages);
 
           if (response) {
-            this.logger.debug("Got response from LLM");
+            //this.logger.debug("Got response from LLM");
             const tokensIn = await this.chat!.getNumTokensFromMessages(
               messages
             );
@@ -197,6 +304,8 @@ export abstract class BaseProcessor extends Base {
             } catch (error) {
               this.logger.error("Error saving memory");
             }
+
+            await this.updateRateLimits(modelConstants, tokensOut.totalCount);
 
             if (parseJson) {
               let parsedJson;

@@ -161,15 +161,15 @@ export class WebPageVectorStore extends Base {
 
   async getWebPagesForProcessing(
     groupId: number,
-    subProblemIndex: number | undefined,
-    entityIndex: number | undefined,
+    subProblemIndex: number | undefined | null,
+    entityIndex: number | undefined | null,
     searchType: IEngineSearchQueries | undefined,
     cursor: string | undefined,
     batchSize = 10,
     solutionCountLimit = 7
   ): Promise<IEngineWebPageGraphQlResults> {
-    let where: any[] | undefined = undefined
-    if(!cursor) {
+    let where: any[] | undefined = undefined;
+    if (!cursor) {
       where = [
         {
           path: ["groupId"],
@@ -184,13 +184,12 @@ export class WebPageVectorStore extends Base {
           operator: "Equal",
           valueInt: subProblemIndex,
         });
-      } else {
-        //TODO: Enable when null index has been merged into schema
-        /*where.push({
+      } else if (subProblemIndex === null) {
+        where.push({
           path: ["subProblemIndex"],
           operator: "IsNull",
           valueBoolean: true,
-        });*/
+        });
       }
 
       if (searchType) {
@@ -201,19 +200,18 @@ export class WebPageVectorStore extends Base {
         });
       }
 
-
       if (entityIndex) {
         where.push({
           path: ["entityIndex"],
           operator: "Equal",
           valueInt: entityIndex,
         });
-      } else {
-        /*where.push({
+      } else if (entityIndex === null) {
+        where.push({
           path: ["entityIndex"],
           operator: "IsNull",
           valueBoolean: true,
-        });*/
+        });
       }
 
       where.push({
@@ -221,36 +219,34 @@ export class WebPageVectorStore extends Base {
         operator: "GreaterThan",
         valueInt: solutionCountLimit,
       });
-
-
     }
     let query;
 
     try {
-      if (where!==undefined) {
+      if (where !== undefined) {
         query = WebPageVectorStore.client.graphql
-        .get()
-        .withClassName("WebPage")
-        .withLimit(batchSize)
-        .withWhere({
-          operator: "And",
-          operands: where,
-        })
-        .withFields(
-          "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
+          .get()
+          .withClassName("WebPage")
+          .withLimit(batchSize)
+          .withWhere({
+            operator: "And",
+            operands: where,
+          })
+          .withFields(
+            "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
           solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
           _additional { distance, id }"
-        );
+          );
       } else {
         query = WebPageVectorStore.client.graphql
-        .get()
-        .withClassName("WebPage")
-        .withLimit(batchSize)
-        .withFields(
-          "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
+          .get()
+          .withClassName("WebPage")
+          .withLimit(batchSize)
+          .withFields(
+            "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
           solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
           _additional { distance, id }"
-        );
+          );
       }
 
       if (cursor) {
@@ -297,6 +293,12 @@ export class WebPageVectorStore extends Base {
         operator: "Equal",
         valueInt: subProblemIndex,
       });
+    } else {
+      where.push({
+        path: ["subProblemIndex"],
+        operator: "IsNull",
+        valueBoolean: true,
+      });
     }
 
     if (entityIndex !== undefined) {
@@ -304,6 +306,12 @@ export class WebPageVectorStore extends Base {
         path: ["entityIndex"],
         operator: "Equal",
         valueInt: entityIndex,
+      });
+    } else {
+      where.push({
+        path: ["entityIndex"],
+        operator: "IsNull",
+        valueBoolean: true,
       });
     }
 

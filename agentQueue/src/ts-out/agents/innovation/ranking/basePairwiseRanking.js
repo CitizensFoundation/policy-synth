@@ -51,7 +51,7 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
         }
     }
     async getResultsFromLLM(subProblemIndex, stageName, modelConstant, messages, itemOneIndex, itemTwoIndex) {
-        this.logger.info("Getting results from LLM");
+        //this.logger.info("Getting results from LLM");
         let wonItemIndex;
         let lostItemIndex;
         const maxRetryCount = IEngineConstants.rankingLLMmaxRetryCount;
@@ -59,7 +59,7 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
         let retryCount = 0;
         while (retry && retryCount < maxRetryCount) {
             try {
-                const winningItemText = await this.callLLM(stageName, modelConstant, messages, false);
+                const winningItemText = await this.callLLM(stageName, modelConstant, messages, false, false, 1);
                 if (!winningItemText) {
                     throw new Error("No winning item text");
                 }

@@ -5,6 +5,12 @@ const gpt35_16kOutTokenPrice = 0.004 / 1000;
 const gpt35InTokenPrice = 0.0015 / 1000;
 const adaInTokenPrice = 0.0001;
 const gpt35kOutTokenPrice = 0.002 / 1000;
+const gpt35_16k_TPM = 750000;
+const gpt35_16k_RPM = 10000;
+const gpt35_TPM = 180000;
+const gpt35_RPM = 3500;
+const gpt4_TPM = 40000;
+const gpt4_RPM = 200;
 export class IEngineConstants {
     static createSubProblemsModel = {
         name: "gpt-4",
@@ -13,7 +19,9 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
-        verbose: true,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: true
     };
     static createEntitiesModel = {
         name: "gpt-4",
@@ -22,7 +30,9 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
-        verbose: true,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: true
     };
     static topicMapSolutionsModel = {
         inTokenCostsUSD: adaInTokenPrice
@@ -34,7 +44,9 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
-        verbose: false,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: false
     };
     static createSearchQueriesModel = {
         name: "gpt-4",
@@ -43,6 +55,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: true,
     };
     static searchQueryRankingsModel = {
@@ -52,6 +66,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: true,
     };
     static searchResultsRankingsModel = {
@@ -61,6 +77,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static subProblemsRankingsModel = {
@@ -70,6 +88,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: true,
     };
     static entitiesRankingsModel = {
@@ -79,6 +99,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: true,
     };
     static solutionsRankingsModel = {
@@ -88,6 +110,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static prosConsRankingsModel = {
@@ -97,6 +121,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt35InTokenPrice,
         outTokenCostUSD: gpt35kOutTokenPrice,
+        limitTPM: gpt35_TPM,
+        limitRPM: gpt35_RPM,
         verbose: false,
     };
     static getPageAnalysisModel = {
@@ -106,15 +132,19 @@ export class IEngineConstants {
         tokenLimit: 16385,
         inTokenCostUSD: gpt35_16kInTokenPrice,
         outTokenCostUSD: gpt35_16kOutTokenPrice,
+        limitTPM: gpt35_16k_TPM,
+        limitRPM: gpt35_16k_RPM,
         verbose: false,
     };
     static rankWebSolutionsModel = {
         name: "gpt-4",
         temperature: 0.0,
         maxOutputTokens: 2048,
-        tokenLimit: 8192,
+        tokenLimit: 4096,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: true
     };
     static reapSolutionsModel = {
@@ -124,6 +154,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false
     };
     static groupSolutionsModel = {
@@ -133,6 +165,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false
     };
     static rateSolutionsModel = {
@@ -142,6 +176,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false
     };
     static createSolutionsModel = {
@@ -151,6 +187,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static evolveSolutionsModel = {
@@ -160,6 +198,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static createProsConsModel = {
@@ -169,6 +209,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static evolutionMutateModel = {
@@ -178,6 +220,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static evolutionRecombineModel = {
@@ -187,6 +231,8 @@ export class IEngineConstants {
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
