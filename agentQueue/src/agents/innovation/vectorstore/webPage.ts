@@ -161,12 +161,12 @@ export class WebPageVectorStore extends Base {
 
   async getWebPagesForProcessing(
     groupId: number,
-    subProblemIndex: number | undefined | null,
-    entityIndex: number | undefined | null,
+    subProblemIndex: number | undefined | null = undefined,
+    entityIndex: number | undefined | null = undefined,
     searchType: IEngineSearchQueries | undefined,
     cursor: string | undefined,
     batchSize = 10,
-    solutionCountLimit = 7
+    solutionCountLimit = 20
   ): Promise<IEngineWebPageGraphQlResults> {
     let where: any[] | undefined = undefined;
     if (!cursor) {
@@ -177,6 +177,8 @@ export class WebPageVectorStore extends Base {
           valueInt: groupId,
         },
       ];
+
+
 
       if (subProblemIndex) {
         where.push({
@@ -213,13 +215,14 @@ export class WebPageVectorStore extends Base {
           valueBoolean: true,
         });
       }
-
+   /*
       where.push({
         path: ["len(solutionsIdentifiedInTextContext)"],
-        operator: "GreaterThan",
-        valueInt: solutionCountLimit,
-      });
+        operator: "LessThan",
+        valueInt: 1,
+      });*/
     }
+
     let query;
 
     try {

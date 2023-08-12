@@ -16,6 +16,8 @@ class ShowCounts extends BaseProcessor {
   foundUrls = new Set<string>();
   totalWebPageCount = 0;
   totalSolutionsFound = 0;
+  totalEmptySolutions = 0;
+  totalNonEmptySolutions = 0;
 
   async countWebPages(subProblemIndex: number | undefined) {
     let cursor;
@@ -46,6 +48,11 @@ class ShowCounts extends BaseProcessor {
 
         if (webPage.solutionsIdentifiedInTextContext) {
           solutionsCount += webPage.solutionsIdentifiedInTextContext.length;
+          if (webPage.solutionsIdentifiedInTextContext.length === 0) {
+            this.totalEmptySolutions++;
+          } else {
+            this.totalNonEmptySolutions++
+          }
         }
 
         this.totalSolutionsFound += solutionsCount;
@@ -112,6 +119,9 @@ class ShowCounts extends BaseProcessor {
     this.logger.debug(`Total Uinque URLs Count: ${this.foundUrls.size}`);
     this.logger.debug(`Total Unique Solutions Count: ${this.totalSolutionsFound}`);
     this.logger.debug(`Total Web Pages Count: ${this.totalWebPageCount}`);
+
+    this.logger.debug(`Total Empty Solutions Count: ${this.totalEmptySolutions}`);
+    this.logger.debug(`Total Non Empty Solutions Count: ${this.totalNonEmptySolutions}`);
 
     this.logger.info("Finished counting all solutions");
   }
