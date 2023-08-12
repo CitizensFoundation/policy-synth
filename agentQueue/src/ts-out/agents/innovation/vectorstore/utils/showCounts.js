@@ -5,6 +5,10 @@ import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 class ShowCounts extends BaseProcessor {
     webPageVectorStore = new WebPageVectorStore();
+    foundIds = new Set();
+    foundUrls = new Set();
+    totalWebPageCount = 0;
+    totalSolutionsFound = 0;
     async countWebPages(subProblemIndex) {
         let cursor;
         let webPageCount = 0;
@@ -16,17 +20,14 @@ class ShowCounts extends BaseProcessor {
             for (const retrievedObject of results.data.Get["WebPage"]) {
                 const webPage = retrievedObject;
                 const id = webPage._additional.id;
-                if (!subProblemIndex && webPage.subProblemIndex) {
-                    /*this.logger.debug(
-                      `Skipping web page ${id} as it is an entity page or sub problem page`
-                    );*/
+                this.foundIds.add(id);
+                this.foundUrls.add(webPage.url);
+                webPageCount++;
+                this.totalWebPageCount++;
+                if (webPage.solutionsIdentifiedInTextContext) {
+                    solutionsCount += webPage.solutionsIdentifiedInTextContext.length;
                 }
-                else {
-                    webPageCount++;
-                    if (webPage.solutionsIdentifiedInTextContext) {
-                        solutionsCount += webPage.solutionsIdentifiedInTextContext.length;
-                    }
-                }
+                this.totalSolutionsFound += solutionsCount;
             }
             cursor = results.data.Get["WebPage"].at(-1)["_additional"]["id"];
         }
@@ -58,6 +59,10 @@ class ShowCounts extends BaseProcessor {
         this.logger.debug("============================");
         this.logger.debug(`Total Web Page Count: ${totalWebPages}`);
         this.logger.debug(`Total Solutions Count: ${totalSolutions}`);
+        this.logger.debug(`Total Unique Web Page Ids Count: ${this.foundIds.size}`);
+        this.logger.debug(`Total Uinque URLs Count: ${this.foundUrls.size}`);
+        this.logger.debug(`Total Unique Solutions Count: ${this.totalSolutionsFound}`);
+        this.logger.debug(`Total Web Pages Count: ${this.totalWebPageCount}`);
         this.logger.info("Finished counting all solutions");
     }
 }

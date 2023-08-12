@@ -222,6 +222,8 @@ interface IEngineBaseAIModelConstants {
   tokenLimit: number;
   inTokenCostUSD: number;
   outTokenCostUSD: number;
+  limitTPM: number;
+  limitRPM: number;
   verbose: boolean;
 }
 
@@ -361,6 +363,13 @@ interface IEngineWebPageGraphQlSingleResult {
   additional?: {
     id?: string | undefined;
   }
+}
+
+interface IEngineRateLimits {
+  [modelName: string]: {
+    requests: Array<{ timestamp: number }>;
+    tokens: Array<{ count: number; timestamp: number }>;
+  };
 }
 
 type IEngineMutationRates = "low" | "medium" | "high";

@@ -1,7 +1,7 @@
-import { BaseProcessor } from "../baseProcessor.js";
+import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
-import { IEngineConstants } from "../../../constants.js";
+import { IEngineConstants } from "../../../../constants.js";
 import * as clustering from "density-clustering";
 import { PCA } from "ml-pca";
 import { Configuration, CreateEmbeddingResponse, OpenAIApi } from "openai";
@@ -11,6 +11,7 @@ import { agnes } from "ml-hclust";
 
 const includeDescriptionInVector = true;
 
+//TODO: Depricated and not used, the GPT-4 grouping is much better
 export class TopicMapSolutionsProcessor extends BaseProcessor {
   async getAllSolutionVectors(solutions: IEngineSolution[]) {
     // Get the vector embeddings of the solutions using OpenAI API

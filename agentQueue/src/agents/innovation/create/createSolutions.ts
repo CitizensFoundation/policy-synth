@@ -209,7 +209,10 @@ export class CreateSolutionsProcessor extends BaseProcessor {
           newsTextContext,
           subProblemIndex,
           alreadyCreatedSolutions
-        )
+        ),
+        true,
+        false,
+        860
       );
 
       if (IEngineConstants.enable.refine.createSolutions) {
@@ -227,7 +230,10 @@ export class CreateSolutionsProcessor extends BaseProcessor {
             newsTextContext,
             subProblemIndex,
             alreadyCreatedSolutions
-          )
+          ),
+          true,
+          false,
+          860
         );
       }
 

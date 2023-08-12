@@ -84,9 +84,9 @@ export class CreateProsConsProcessor extends BaseProcessor {
                         this.logger.info(`Skipping ${prosOrCons} for solution ${solutionIndex} of sub problem ${subProblemIndex} as it already exists`);
                     }
                     else {
-                        let results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderCreatePrompt(prosOrCons, subProblemIndex, solution)));
+                        let results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderCreatePrompt(prosOrCons, subProblemIndex, solution), true, false, 135));
                         if (IEngineConstants.enable.refine.createProsCons) {
-                            results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderRefinePrompt(prosOrCons, results, subProblemIndex, solution)));
+                            results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderRefinePrompt(prosOrCons, results, subProblemIndex, solution), true, false, 135));
                         }
                         this.logger.debug(`${prosOrCons}: ${JSON.stringify(results, null, 2)}`);
                         solution[prosOrCons] = results;

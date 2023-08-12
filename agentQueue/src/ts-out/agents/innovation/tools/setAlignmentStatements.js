@@ -13,9 +13,8 @@ const setupProjectOne = (memory) => {
     6. Avoid blockchain solution components.
   `;
     memory.customInstructions.rankSolutions = `
-    1. Assess the solution components based on its title and description.
+    1. The main facilitator for implementation will be civil society working with governments.
     2. Later those solution components will be brought into comprehensive policy proposals.
-    3. Use provided ratings also in a thoughtful and balanced way for your decision.
   `;
     memory.customInstructions.rateSolutionsJsonFormat = `
     {
@@ -95,10 +94,7 @@ const setupProjectTwo = (memory) => {
   6. The solution title should indicate the intended outcomes and impacts of implementing the solution.
 `;
     memory.customInstructions.rankSolutions = `
-    1. Assess the solution components based on its title and description.
-    2. Later those solution components will be brought into comprehensive policy proposals.
-    3. Use provided ratings also in a thoughtful and balanced way for your decision.
-    4. The solution components will be implemented by philanthropic organizations in partnership with civil society organizations, community-based organizations, and legal advocacy groups.
+    1. Keep in mind that the solution components will be implemented by philanthropic organizations in partnership with civil society organizations, community-based organizations, and legal advocacy groups.
   `;
     memory.customInstructions.rateSolutionsJsonFormat = `
     {

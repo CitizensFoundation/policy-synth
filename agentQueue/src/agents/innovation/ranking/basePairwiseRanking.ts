@@ -106,7 +106,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
     itemOneIndex: number,
     itemTwoIndex: number
   ) {
-    this.logger.info("Getting results from LLM");
+    //this.logger.info("Getting results from LLM");
     let wonItemIndex;
     let lostItemIndex;
 
@@ -120,7 +120,9 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
           stageName,
           modelConstant,
           messages,
-          false
+          false,
+          false,
+          1
         );
 
         if (!winningItemText) {

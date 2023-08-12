@@ -18,8 +18,8 @@ import { CreateSolutionImagesProcessor } from "./create/createImages.js";
 import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
 import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
-import { GroupSolutionsProcessor } from "./ranking/groupSolutions.js";
-import { TopicMapSolutionsProcessor } from "./ranking/topicMapSolutions.js";
+import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
+import { TopicMapSolutionsProcessor } from "./group/old/topicMapSolutions.js";
 import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
 import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
 

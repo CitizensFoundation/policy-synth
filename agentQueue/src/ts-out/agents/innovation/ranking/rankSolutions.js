@@ -9,12 +9,12 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
         const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemChatMessage(`You are an expert in comparing and assessing solution components to problems.
+            new SystemChatMessage(`You're an expert in evaluating solution components to problems.
 
          Instructions:
-         1. You will be presented with a problem and two corresponding solution components. These will be labelled "Solution Component One" and "Solution Component Two".
-         2. Assess which of the two solution component is more important and practical in relation to the problem.
-         3. Consider the provided ratings for each solution component also.
+         1. Analyze a problem and two solution components, labeled "Solution Component One" and "Solution Component Two."
+         2. Determine which is more important and practical.
+         3. Consider the provided ratings for each component also in your decision.
          ${this.memory.customInstructions.rankSolutions
                 ? `
            Important Instructions: ${this.memory.customInstructions.rankSolutions}
