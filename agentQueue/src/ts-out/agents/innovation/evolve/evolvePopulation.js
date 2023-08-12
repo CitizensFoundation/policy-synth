@@ -256,11 +256,19 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                     groups.get(groupId).push(solution);
                 }
                 else {
-                    this.logger.debug(`Not adding top group solution with lower then average rating: ${solution.title} ${solution.eloRating}`);
+                    this.logger.debug(`Not adding top group solution with lower than average rating: ${solution.title} ${solution.eloRating}`);
                 }
             }
         }
+        // Sorting solutions within each group by eloRating in descending order
+        groups.forEach((groupSolutions) => {
+            groupSolutions.sort((a, b) => (b.eloRating ?? 0) - (a.eloRating ?? 0));
+        });
         for (let [groupId, groupSolutions] of groups) {
+            if (groupSolutions.length === 0) {
+                this.logger.debug(`No solutions above average rating in group ID: ${groupId}`);
+                continue;
+            }
             const bestSolutionInGroup = groupSolutions[0];
             if (!usedSolutionTitles.has(bestSolutionInGroup.title)) {
                 usedSolutionTitles.add(bestSolutionInGroup.title);

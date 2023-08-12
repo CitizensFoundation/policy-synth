@@ -18,8 +18,8 @@ if (projectId) {
   };
 
   const stages = [
-    //"evolve-create-population",
-    //"create-pros-cons",
+    "evolve-create-population",
+    "create-pros-cons",
     "rank-pros-cons",
     "rate-solutions",
     "rank-solutions",
