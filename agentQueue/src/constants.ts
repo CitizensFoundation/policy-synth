@@ -309,7 +309,7 @@ export class IEngineConstants {
 
   static maxPercentOfEloMatched = 0.75;
 
-  static minimumNumberOfPairwiseVotesForPopulation = 7;
+  static minimumNumberOfPairwiseVotesForPopulation = 8;
 
   static maxNumberOfPairwiseRankingPrompts =
     IEngineConstants.evolution.populationSize *

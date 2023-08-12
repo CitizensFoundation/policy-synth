@@ -12,10 +12,11 @@ export class ReapSolutionsProcessor extends BaseProcessor {
 
         Instructions:
         1. You will be provided an array of solution components in JSON format.
-        2. You will output a list of titles, exactly like the original, of the solutions you wish to filter out, as a JSON Array: [ { title } ]
-        3. Sometimes no solution components need to be filtered out.
-        4. If you do not need to filter out any solution components, return an empty JSON Array: []
-        5. Review the "Important Instructions" below for further instructions.
+        2. You will filter out solution components that are too complicated and have more than two core ideas.
+        3. You will output a list of titles of the solutions you wish to filter out, as a JSON Array: [ { title } ]
+        4. Most of the time no solution components need to be filtered out, if you are not sure do not filter them out.
+        5. If you do not need to filter out any solution components, return an empty JSON Array: []
+        6. Review the "Important Instructions" below for further instructions.
         ${
           this.memory.customInstructions.reapSolutions
             ? `

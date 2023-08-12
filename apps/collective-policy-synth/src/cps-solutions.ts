@@ -739,7 +739,11 @@ export class CpsSolutions extends CpsStageBase {
         firstItems = subProblem.solutions.populations.slice(0, 3);
         if (subProblem.solutions.populations.length > 3) {
           lastItems = subProblem.solutions.populations.slice(-3);
-          middleItems = subProblem.solutions.populations.slice(3, -3);
+          if (subProblem.solutions.populations.length > 6) {
+            middleItems = subProblem.solutions.populations.slice(3, -3);
+          } else {
+            middleItems = [];
+          }
         } else {
           lastItems = [];
           middleItems = [];
