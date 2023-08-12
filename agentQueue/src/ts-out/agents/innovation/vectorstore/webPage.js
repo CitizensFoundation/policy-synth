@@ -143,7 +143,7 @@ export class WebPageVectorStore extends Base {
             });
         });
     }
-    async getWebPagesForProcessing(groupId, subProblemIndex, entityIndex, searchType, cursor, batchSize = 10, solutionCountLimit = 7) {
+    async getWebPagesForProcessing(groupId, subProblemIndex = undefined, entityIndex = undefined, searchType, cursor, batchSize = 10, solutionCountLimit = 20) {
         let where = undefined;
         if (!cursor) {
             where = [
@@ -188,11 +188,12 @@ export class WebPageVectorStore extends Base {
                     valueBoolean: true,
                 });
             }
-            where.push({
-                path: ["len(solutionsIdentifiedInTextContext)"],
-                operator: "GreaterThan",
-                valueInt: solutionCountLimit,
-            });
+            /*
+               where.push({
+                 path: ["len(solutionsIdentifiedInTextContext)"],
+                 operator: "LessThan",
+                 valueInt: 1,
+               });*/
         }
         let query;
         try {

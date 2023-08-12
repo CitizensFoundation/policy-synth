@@ -10,6 +10,15 @@ const adaInTokenPrice = 0.0001;
 
 const gpt35kOutTokenPrice = 0.002 / 1000;
 
+const gpt35_16k_TPM = 750000;
+const gpt35_16k_RPM = 10000;
+
+const gpt35_TPM = 180000;
+const gpt35_RPM = 3500;
+
+const gpt4_TPM = 40000;
+const gpt4_RPM = 200;
+
 export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
@@ -18,7 +27,9 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
-    verbose: true,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: true
   };
 
   static createEntitiesModel: IEngineBaseAIModelConstants = {
@@ -28,7 +39,9 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
-    verbose: true,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: true
   };
 
   static topicMapSolutionsModel = {
@@ -43,7 +56,9 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
-    verbose: false,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
   };
 
   static createSearchQueriesModel: IEngineBaseAIModelConstants = {
@@ -53,6 +68,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: true,
   };
 
@@ -63,6 +80,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: true,
   };
 
@@ -73,6 +92,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -83,6 +104,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: true,
   };
 
@@ -93,6 +116,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: true,
   };
 
@@ -103,6 +128,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -113,6 +140,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt35InTokenPrice,
     outTokenCostUSD: gpt35kOutTokenPrice,
+    limitTPM: gpt35_TPM,
+    limitRPM: gpt35_RPM,
     verbose: false,
   };
 
@@ -123,6 +152,8 @@ export class IEngineConstants {
     tokenLimit: 16385,
     inTokenCostUSD: gpt35_16kInTokenPrice,
     outTokenCostUSD: gpt35_16kOutTokenPrice,
+    limitTPM: gpt35_16k_TPM,
+    limitRPM: gpt35_16k_RPM,
     verbose: false,
   };
 
@@ -130,9 +161,11 @@ export class IEngineConstants {
     name: "gpt-4",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 8192,
+    tokenLimit: 4096,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: true
   };
 
@@ -143,6 +176,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false
   };
 
@@ -153,6 +188,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false
   };
 
@@ -163,6 +200,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false
   };
 
@@ -173,6 +212,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -183,6 +224,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -193,6 +236,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -203,6 +248,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -213,6 +260,8 @@ export class IEngineConstants {
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -230,7 +279,7 @@ export class IEngineConstants {
 
   static rankingLLMmaxRetryCount = 40;
 
-  static maxTopEntitiesToSearch = 3;
+  static maxTopEntitiesToSearch = 4;
 
   static maxTopEntitiesToRender = 3;
 
@@ -258,26 +307,26 @@ export class IEngineConstants {
 
   static webPageNavTimeout = 60 * 1000;
 
-  static topItemsToKeepForTopicClusterPruning = 7;
+  static topItemsToKeepForTopicClusterPruning = 5;
 
   static chances = {
     createSolutions: {
       searchQueries: {
-        useMainProblemSearchQueries: 0.1,
-        useOtherSubProblemSearchQueries: 0.1,
-        useSubProblemSearchQueries: 0.4,
-        useRandomEntitySearchQueries: 0.5,
+        useMainProblemSearchQueries: 0.05,
+        useOtherSubProblemSearchQueries: 0.05,
+        useSubProblemSearchQueries: 0.45,
+        useRandomEntitySearchQueries: 0.45,
       },
       notUsingTopSearchQueries: 0.33,
-      vectorSearchAcrossAllProblems: 0.25,
+      vectorSearchAcrossAllProblems: 0.01,
     },
   };
 
-  static maxTopSearchQueriesForSolutionCreation = 9;
+  static maxTopSearchQueriesForSolutionCreation = 6;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 10,
-    useRandomTopFromVectorSearchResults: 8,
+    useRandomTopFromVectorSearchResults: 7,
   };
 
   static enable = {
@@ -309,7 +358,7 @@ export class IEngineConstants {
 
   static maxPercentOfEloMatched = 0.75;
 
-  static minimumNumberOfPairwiseVotesForPopulation = 7;
+  static minimumNumberOfPairwiseVotesForPopulation = 8;
 
   static maxNumberOfPairwiseRankingPrompts =
     IEngineConstants.evolution.populationSize *
