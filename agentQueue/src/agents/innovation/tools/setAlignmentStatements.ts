@@ -143,7 +143,7 @@ const setupProjectTwo = (memory: IEngineInnovationMemoryData) => {
     1. Filter out solution components that include more than two unique core ideas, if the ideas are closely related then do not filter them out.
     2. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
     3. Core ideas are distinct concepts or strategies that are central to the solution component.
-    4. If a solution component includes multiple strategies or methods that serve to implement or facilitate a single core idea, do not consider these as separate core ideas. Instead, view them as parts of a comprehensive approach to implementing the core idea.
+    4. Be careful not filtering out any solution components that are not too complex.
   `;
 }
 
