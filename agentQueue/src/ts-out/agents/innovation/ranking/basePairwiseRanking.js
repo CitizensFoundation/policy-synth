@@ -11,8 +11,22 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
     numComparisons = {};
     KFactors = {};
     eloRatings = {};
+    fisherYatesShuffle(array) {
+        if (array && array.length > 0) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const randomIndex = Math.floor(Math.random() * (i + 1));
+                [array[i], array[randomIndex]] = [array[randomIndex], array[i]]; // Swap the elements
+            }
+            return array;
+        }
+        else {
+            this.logger.warn(`Array is empty or undefined`);
+            return array;
+        }
+    }
     setupRankingPrompts(subProblemIndex, allItems, maxPrompts = undefined) {
         this.logger.info(`Item count for sub-problem ${subProblemIndex}: ${allItems.length}`);
+        allItems = this.fisherYatesShuffle(allItems);
         this.allItems[subProblemIndex] = allItems;
         this.maxNumberOfPrompts =
             maxPrompts ||
