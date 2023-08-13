@@ -370,16 +370,21 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
 
     let newSolutions: IEngineSolution[] = [];
 
+    let allSolutions = [...newPopulation];
+
     this.logger.debug("Before creating new solutions");
 
     while (newSolutions.length < immigrationCount) {
       const currentSolutions = await this.getNewSolutions(
-        newSolutions,
+        allSolutions,
         subProblemIndex
       );
+
       this.logger.debug("After getting new solutions");
 
       newSolutions = [...newSolutions, ...currentSolutions];
+
+      allSolutions = [...allSolutions, ...currentSolutions];
 
       this.logger.debug(
         `New solutions for population: ${JSON.stringify(newSolutions, null, 2)}`
@@ -529,9 +534,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       subProblemIndex
     );
 
-    await this.addRandomImmigration(newPopulation, subProblemIndex);
-
     await this.addCrossover(newPopulation, previousPopulation, subProblemIndex);
+
+    await this.addRandomImmigration(newPopulation, subProblemIndex);
 
     this.logger.info(
       `New population size: ${newPopulation.length} for sub problem ${subProblemIndex}`

@@ -25,6 +25,7 @@ if (projectId) {
   //memory.currentStage = "web-search";
   //memory.currentStage = "rank-search-results";
   //memory.currentStage = "web-get-pages";
+  memory.currentStage = "rank-web-solutions";
   //memory.currentStage = "create-seed-solutions";
   //memory.currentStage = "create-pros-cons";
   //memory.currentStage = "rank-pros-cons";
@@ -37,7 +38,7 @@ if (projectId) {
   //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rate-solutions";
   //memory.currentStage = "rank-solutions";
-  memory.currentStage = "group-solutions";
+  //memory.currentStage = "group-solutions";
   //memory.currentStage = "create-solution-images";
   //memory.currentStage = "topic-map-solutions";
 

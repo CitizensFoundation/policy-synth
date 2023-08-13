@@ -106,7 +106,7 @@ export class WebPageVectorStore extends Base {
             });
         });
     }
-    async updateWebSolutions(id, webSolutions) {
+    async updateWebSolutions(id, webSolutions, quiet = false) {
         return new Promise((resolve, reject) => {
             WebPageVectorStore.client.data
                 .merger()
@@ -117,10 +117,12 @@ export class WebPageVectorStore extends Base {
             })
                 .do()
                 .then((res) => {
-                this.logger.info(`Weaviate: Have updated web solutions for ${id}`);
+                if (!quiet)
+                    this.logger.info(`Weaviate: Have updated web solutions for ${id}`);
                 resolve(res);
             })
                 .catch((err) => {
+                this.logger.error(err.stack || err);
                 reject(err);
             });
         });

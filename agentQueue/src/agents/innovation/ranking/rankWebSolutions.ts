@@ -4,7 +4,6 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { WebPageVectorStore } from "../vectorstore/webPage.js";
-import { off } from "process";
 
 export class RankWebSolutionsProcessor extends BaseProcessor {
   webPageVectorStore = new WebPageVectorStore();
@@ -21,9 +20,9 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
         1. Remove irrelevant and inactionable solution components.
         2. Eliminate duplicates or near duplicates.
         3. Rank solutions by importance and practicality.
-        4. Always output the ranked solutions in a JSON string Array: [ solution ].
+        4. Always and only output a JSON string Array: [ solution ].
 
-        Think step by step.`
+        Think step by step. Never explain your actions.`
       ),
       new HumanChatMessage(
         `
@@ -38,7 +37,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
         Solution components to filter and rank:
         ${JSON.stringify(solutionsToRank, null, 2)}
 
-        Your filtered and ranked solution components as a JSON string array:
+        Filtered and ranked solution components as a JSON string array:
        `
       ),
     ];
@@ -51,65 +50,80 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
     const limit = 100;
 
     while (true) {
-      const results = await this.webPageVectorStore.getWebPagesForProcessing(
-        this.memory.groupId,
-        subProblemIndex,
-        undefined,
-        undefined,
-        limit,
-        offset
-      );
-
-      if (results.data.Get["WebPage"].length === 0) break;
-
-      for (const retrievedObject of results.data.Get["WebPage"]) {
-        const webPage = retrievedObject as IEngineWebPageAnalysisData;
-        const id = webPage._additional!.id!;
-
-        this.logger.debug(
-          `${id} - Solutions before ranking: ${JSON.stringify(
-            webPage.solutionsIdentifiedInTextContext,
-            null,
-            2
-          )}`
+      try {
+        const results = await this.webPageVectorStore.getWebPagesForProcessing(
+          this.memory.groupId,
+          subProblemIndex,
+          undefined,
+          undefined,
+          limit,
+          offset
         );
 
-        const rankedSolutions = await this.callLLM(
-          "rank-web-solutions",
-          IEngineConstants.rankWebSolutionsModel,
-          await this.renderProblemPrompt(
-            webPage.solutionsIdentifiedInTextContext,
-            subProblemIndex
-          )
-        );
+        this.logger.debug(`Got ${results.data.Get["WebPage"].length} WebPage results from Weaviate`);
 
-        this.logger.debug(
-          `${id} - Solutions after ranking: ${JSON.stringify(
-            rankedSolutions,
-            null,
-            2
-          )}`
-        );
+        if (results.data.Get["WebPage"].length === 0) {
+          this.logger.info("Exiting");
+          break;
+        };
 
-        //await this.webPageVectorStore.updateWebSolutions(id, rankedSolutions);
+        let pageCounter = 0;
+        for (const retrievedObject of results.data.Get["WebPage"]) {
+          const webPage = retrievedObject as IEngineWebPageAnalysisData;
+          const id = webPage._additional!.id!;
 
-        this.logger.debug(`${id} - Updated`);
+          /*this.logger.debug(
+            `${id} - Solutions before ranking:
+             ${JSON.stringify(
+              webPage.solutionsIdentifiedInTextContext,
+              null,
+              2
+            )}`
+          );*/
 
-        if (false) {
-          const testWebPageBack = await this.webPageVectorStore.getWebPage(id);
-          if (testWebPageBack) {
-            this.logger.debug(
-              `${id} - Solutions Test Get ${JSON.stringify(
-                testWebPageBack.solutionsIdentifiedInTextContext,
-                null,
-                2
-              )}`
-            );
+          let rankedSolutions = await this.callLLM(
+            "rank-web-solutions",
+            IEngineConstants.rankWebSolutionsModel,
+            await this.renderProblemPrompt(
+              webPage.solutionsIdentifiedInTextContext,
+              subProblemIndex
+            )
+          );
+
+          this.logger.debug(
+            `${id} - Solutions after ranking:
+             ${JSON.stringify(
+              rankedSolutions,
+              null,
+              2
+            )}`
+          );
+
+          await this.webPageVectorStore.updateWebSolutions(id, rankedSolutions, true);
+
+          this.logger.info(`${subProblemIndex} - (+${offset + (pageCounter++)}) - ${id} - Updated`);
+
+          if (false) {
+            const testWebPageBack = await this.webPageVectorStore.getWebPage(id);
+            if (testWebPageBack) {
+              this.logger.debug(
+                `${id} - Solutions Test Get ${JSON.stringify(
+                  testWebPageBack.solutionsIdentifiedInTextContext,
+                  null,
+                  2
+                )}`
+              );
+            } else {
+              this.logger.error(`${id} - Solutions Test Get Failed`)
+            }
           }
         }
-      }
 
-      offset+=limit;
+        offset+=limit;
+      } catch (error: any) {
+        this.logger.error(error.stack  || error);
+        throw error;
+      }
     }
   }
 
@@ -128,17 +142,29 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
     //this.logger.info("Ranking problem statement solutions");
     //await this.rankWebSolutions(null, null);
 
-    const subProblemsLimit = 1; /*Math.min(
+    const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
       IEngineConstants.maxSubProblems
-    );*/
+    );
+
+    const skipSubProblemsIndexes = [1,2];
 
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
-        this.logger.info(`Ranking sub problem ${subProblemIndex + 1}`);
+        this.logger.info(`Ranking sub problem ${subProblemIndex}`);
 
-        await this.rankWebSolutions(subProblemIndex);
+        if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
+          try {
+            await this.rankWebSolutions(subProblemIndex);
+            this.logger.debug(`Finished ranking sub problem ${subProblemIndex}`)
+          } catch (error: any) {
+            this.logger.error(error.stack || error);
+            throw error;
+          }
+        } else {
+          this.logger.info(`Skipping sub problem ${subProblemIndex}`);
+        }
 
         //TODO: Get working after null check is working in the weaviate index
         /*for (
@@ -151,7 +177,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
           e++
         ) {
           this.logger.info(
-            `Ranking entity ${e + 1} for sub problem ${subProblemIndex + 1}`
+            `Ranking entity ${e + 1} for sub problem ${subProblemIndex}`
           );
           await this.rankWebSolutions(subProblemIndex, e);
         }*/
@@ -159,6 +185,6 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
     );
 
     await Promise.all(subProblemsPromises);
-    this.logger.info("Finished ranking web solutions");
+    this.logger.info("Finished ranking all web solutions");
   }
 }
