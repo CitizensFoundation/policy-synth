@@ -164,99 +164,82 @@ export class WebPageVectorStore extends Base {
     subProblemIndex: number | undefined | null = undefined,
     entityIndex: number | undefined | null = undefined,
     searchType: IEngineSearchQueries | undefined,
-    cursor: string | undefined,
-    batchSize = 10,
-    solutionCountLimit = 20
+    limit = 10,
+    offset = 0,
+    solutionCountLimit: number | undefined = 0
   ): Promise<IEngineWebPageGraphQlResults> {
     let where: any[] | undefined = undefined;
-    if (!cursor) {
-      where = [
-        {
-          path: ["groupId"],
-          operator: "Equal",
-          valueInt: groupId,
-        },
-      ];
+    where = [
+      {
+        path: ["groupId"],
+        operator: "Equal",
+        valueInt: groupId,
+      },
+    ];
 
+    if (subProblemIndex!==undefined && subProblemIndex!==null) {
+      where.push({
+        path: ["subProblemIndex"],
+        operator: "Equal",
+        valueInt: subProblemIndex,
+      });
+    } else if (subProblemIndex === null) {
+      where.push({
+        path: ["subProblemIndex"],
+        operator: "IsNull",
+        valueBoolean: true,
+      });
+    }
 
+    if (searchType) {
+      where.push({
+        path: ["searchType"],
+        operator: "Equal",
+        valueString: searchType,
+      });
+    }
 
-      if (subProblemIndex) {
-        where.push({
-          path: ["subProblemIndex"],
-          operator: "Equal",
-          valueInt: subProblemIndex,
-        });
-      } else if (subProblemIndex === null) {
-        where.push({
-          path: ["subProblemIndex"],
-          operator: "IsNull",
-          valueBoolean: true,
-        });
-      }
+    if (entityIndex) {
+      where.push({
+        path: ["entityIndex"],
+        operator: "Equal",
+        valueInt: entityIndex,
+      });
+    } else if (entityIndex === null) {
+      where.push({
+        path: ["entityIndex"],
+        operator: "IsNull",
+        valueBoolean: true,
+      });
+    }
 
-      if (searchType) {
-        where.push({
-          path: ["searchType"],
-          operator: "Equal",
-          valueString: searchType,
-        });
-      }
-
-      if (entityIndex) {
-        where.push({
-          path: ["entityIndex"],
-          operator: "Equal",
-          valueInt: entityIndex,
-        });
-      } else if (entityIndex === null) {
-        where.push({
-          path: ["entityIndex"],
-          operator: "IsNull",
-          valueBoolean: true,
-        });
-      }
-   /*
+    if (solutionCountLimit!==undefined) {
       where.push({
         path: ["len(solutionsIdentifiedInTextContext)"],
-        operator: "LessThan",
-        valueInt: 1,
-      });*/
+        operator: "GreaterThan",
+        valueInt: solutionCountLimit,
+      });
     }
 
     let query;
 
     try {
-      if (where !== undefined) {
-        query = WebPageVectorStore.client.graphql
-          .get()
-          .withClassName("WebPage")
-          .withLimit(batchSize)
-          .withWhere({
-            operator: "And",
-            operands: where,
-          })
-          .withFields(
-            "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
-          solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
-          _additional { distance, id }"
-          );
-      } else {
-        query = WebPageVectorStore.client.graphql
-          .get()
-          .withClassName("WebPage")
-          .withLimit(batchSize)
-          .withFields(
-            "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
-          solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
-          _additional { distance, id }"
-          );
-      }
+      query = WebPageVectorStore.client.graphql
+      .get()
+      .withClassName("WebPage")
+      .withLimit(limit)
+      .withOffset(offset)
+      .withWhere({
+        operator: "And",
+        operands: where,
+      })
+      .withFields(
+        "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
+      solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
+      _additional { distance, id }"
+      );
 
-      if (cursor) {
-        return await query.withAfter(cursor).do();
-      } else {
-        return await query.do();
-      }
+      return await query.do();
     } catch (err) {
       throw err;
     }

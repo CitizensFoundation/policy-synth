@@ -143,88 +143,72 @@ export class WebPageVectorStore extends Base {
             });
         });
     }
-    async getWebPagesForProcessing(groupId, subProblemIndex = undefined, entityIndex = undefined, searchType, cursor, batchSize = 10, solutionCountLimit = 20) {
+    async getWebPagesForProcessing(groupId, subProblemIndex = undefined, entityIndex = undefined, searchType, limit = 10, offset = 0, solutionCountLimit = 0) {
         let where = undefined;
-        if (!cursor) {
-            where = [
-                {
-                    path: ["groupId"],
-                    operator: "Equal",
-                    valueInt: groupId,
-                },
-            ];
-            if (subProblemIndex) {
-                where.push({
-                    path: ["subProblemIndex"],
-                    operator: "Equal",
-                    valueInt: subProblemIndex,
-                });
-            }
-            else if (subProblemIndex === null) {
-                where.push({
-                    path: ["subProblemIndex"],
-                    operator: "IsNull",
-                    valueBoolean: true,
-                });
-            }
-            if (searchType) {
-                where.push({
-                    path: ["searchType"],
-                    operator: "Equal",
-                    valueString: searchType,
-                });
-            }
-            if (entityIndex) {
-                where.push({
-                    path: ["entityIndex"],
-                    operator: "Equal",
-                    valueInt: entityIndex,
-                });
-            }
-            else if (entityIndex === null) {
-                where.push({
-                    path: ["entityIndex"],
-                    operator: "IsNull",
-                    valueBoolean: true,
-                });
-            }
-            /*
-               where.push({
-                 path: ["len(solutionsIdentifiedInTextContext)"],
-                 operator: "LessThan",
-                 valueInt: 1,
-               });*/
+        where = [
+            {
+                path: ["groupId"],
+                operator: "Equal",
+                valueInt: groupId,
+            },
+        ];
+        if (subProblemIndex !== undefined && subProblemIndex !== null) {
+            where.push({
+                path: ["subProblemIndex"],
+                operator: "Equal",
+                valueInt: subProblemIndex,
+            });
+        }
+        else if (subProblemIndex === null) {
+            where.push({
+                path: ["subProblemIndex"],
+                operator: "IsNull",
+                valueBoolean: true,
+            });
+        }
+        if (searchType) {
+            where.push({
+                path: ["searchType"],
+                operator: "Equal",
+                valueString: searchType,
+            });
+        }
+        if (entityIndex) {
+            where.push({
+                path: ["entityIndex"],
+                operator: "Equal",
+                valueInt: entityIndex,
+            });
+        }
+        else if (entityIndex === null) {
+            where.push({
+                path: ["entityIndex"],
+                operator: "IsNull",
+                valueBoolean: true,
+            });
+        }
+        if (solutionCountLimit !== undefined) {
+            where.push({
+                path: ["len(solutionsIdentifiedInTextContext)"],
+                operator: "GreaterThan",
+                valueInt: solutionCountLimit,
+            });
         }
         let query;
         try {
-            if (where !== undefined) {
-                query = WebPageVectorStore.client.graphql
-                    .get()
-                    .withClassName("WebPage")
-                    .withLimit(batchSize)
-                    .withWhere({
-                    operator: "And",
-                    operands: where,
-                })
-                    .withFields("searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
-          solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
-          _additional { distance, id }");
-            }
-            else {
-                query = WebPageVectorStore.client.graphql
-                    .get()
-                    .withClassName("WebPage")
-                    .withLimit(batchSize)
-                    .withFields("searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
-          solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
-          _additional { distance, id }");
-            }
-            if (cursor) {
-                return await query.withAfter(cursor).do();
-            }
-            else {
-                return await query.do();
-            }
+            query = WebPageVectorStore.client.graphql
+                .get()
+                .withClassName("WebPage")
+                .withLimit(limit)
+                .withOffset(offset)
+                .withWhere({
+                operator: "And",
+                operands: where,
+            })
+                .withFields("searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
+      solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
+      _additional { distance, id }");
+            return await query.do();
         }
         catch (err) {
             throw err;

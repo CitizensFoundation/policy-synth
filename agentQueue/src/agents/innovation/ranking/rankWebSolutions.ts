@@ -4,6 +4,7 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { WebPageVectorStore } from "../vectorstore/webPage.js";
+import { off } from "process";
 
 export class RankWebSolutionsProcessor extends BaseProcessor {
   webPageVectorStore = new WebPageVectorStore();
@@ -44,18 +45,19 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
   }
 
   async rankWebSolutions(
-    subProblemIndex: number | null,
-    entityIndex: number | null
+    subProblemIndex: number
   ) {
-    let cursor = "";
+    let offset = 0;
+    const limit = 100;
 
     while (true) {
       const results = await this.webPageVectorStore.getWebPagesForProcessing(
         this.memory.groupId,
         subProblemIndex,
-        entityIndex,
         undefined,
-        cursor
+        undefined,
+        limit,
+        offset
       );
 
       if (results.data.Get["WebPage"].length === 0) break;
@@ -107,7 +109,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
         }
       }
 
-      cursor = results!.data!.Get["WebPage"]!.at(-1)!["_additional"]!["id"]!;
+      offset+=limit;
     }
   }
 
@@ -122,22 +124,24 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
       verbose: IEngineConstants.rankWebSolutionsModel.verbose,
     });
 
-    this.logger.info("Ranking problem statement solutions");
-    await this.rankWebSolutions(null, null);
+    //TODO: Get working after null check is working in the weaviate index
+    //this.logger.info("Ranking problem statement solutions");
+    //await this.rankWebSolutions(null, null);
 
-    const subProblemsLimit = Math.min(
+    const subProblemsLimit = 1; /*Math.min(
       this.memory.subProblems.length,
       IEngineConstants.maxSubProblems
-    );
+    );*/
 
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
         this.logger.info(`Ranking sub problem ${subProblemIndex + 1}`);
 
-        await this.rankWebSolutions(subProblemIndex, null);
+        await this.rankWebSolutions(subProblemIndex);
 
-        for (
+        //TODO: Get working after null check is working in the weaviate index
+        /*for (
           let e = 0;
           e <
           Math.min(
@@ -150,7 +154,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
             `Ranking entity ${e + 1} for sub problem ${subProblemIndex + 1}`
           );
           await this.rankWebSolutions(subProblemIndex, e);
-        }
+        }*/
       }
     );
 
