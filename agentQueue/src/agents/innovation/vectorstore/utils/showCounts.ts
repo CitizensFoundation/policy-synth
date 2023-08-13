@@ -20,10 +20,10 @@ class ShowCounts extends BaseProcessor {
   totalNonEmptySolutions = 0;
 
   async countWebPages(subProblemIndex: number | undefined) {
-    let cursor;
-
     let webPageCount = 0;
     let solutionsCount = 0;
+    let offset = 0;
+    const limit = 100;
 
     while (true) {
       const results = await this.webPageVectorStore.getWebPagesForProcessing(
@@ -31,7 +31,8 @@ class ShowCounts extends BaseProcessor {
         subProblemIndex,
         undefined,
         undefined,
-        cursor
+        limit,
+        offset
       );
 
       if (results.data.Get["WebPage"].length === 0) break;
@@ -46,19 +47,22 @@ class ShowCounts extends BaseProcessor {
         webPageCount++;
         this.totalWebPageCount++;
 
-        if (webPage.solutionsIdentifiedInTextContext) {
+        if (webPage.solutionsIdentifiedInTextContext &&
+          webPage.solutionsIdentifiedInTextContext instanceof Array) {
           solutionsCount += webPage.solutionsIdentifiedInTextContext.length;
           if (webPage.solutionsIdentifiedInTextContext.length === 0) {
             this.totalEmptySolutions++;
           } else {
             this.totalNonEmptySolutions++
           }
+          //this.logger.debug(`Solutions found: ${webPage.solutionsIdentifiedInTextContext.length}`)
         }
 
         this.totalSolutionsFound += solutionsCount;
       }
 
-      cursor = results!.data!.Get["WebPage"]!.at(-1)!["_additional"]!["id"]!;
+      offset+=limit;
+      //this.logger.debug(`Offset: ${offset}`)
     }
 
     return { webPageCount, solutionsCount };
