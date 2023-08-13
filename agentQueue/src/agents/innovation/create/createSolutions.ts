@@ -31,10 +31,14 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         4. Do not replicate solution components listed under 'Already Created Solution Components'.
         5. Refer to the relevant entities in your solution components, if mentioned.
         6. Ensure your output is not in markdown format.
-        ${this.memory.customInstructions.createSolutions ? `
+        ${
+          this.memory.customInstructions.createSolutions
+            ? `
           Important Instructions: ${this.memory.customInstructions.createSolutions}
 
-        ` : '' }
+        `
+            : ""
+        }
 
         Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
         Think step by step.
@@ -81,10 +85,14 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       9. Be creative in using the Contexts as inspiration for your solution components.
       10. Do not refer to the Contexts in your solution components, as the contexts won't be visible to the user.
       11. Do not use markdown format in your output.
-      ${this.memory.customInstructions.createSolutions ? `
+      ${
+        this.memory.customInstructions.createSolutions
+          ? `
         Important Instructions (override the previous instructions if needed):${this.memory.customInstructions.createSolutions}
 
-    ` : '' }
+    `
+          : ""
+      }
 
       Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
       Think step by step.
@@ -256,18 +264,17 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       Math.random() <
       IEngineConstants.chances.createSolutions.notUsingTopSearchQueries
     ) {
-      this.logger.debug(`Using random search query index ${randomIndex}`)
+      this.logger.debug(`Using random search query index ${randomIndex}`);
       return randomIndex;
     } else {
       const randomTop = Math.min(
         Math.floor(
-          Math.random() *
-            (IEngineConstants.maxTopQueriesToSearchPerType + 1)
+          Math.random() * (IEngineConstants.maxTopQueriesToSearchPerType + 1)
         ),
         searchQueries[type].length - 1
       );
 
-      this.logger.debug(`Using top search query index ${randomIndex}`)
+      this.logger.debug(`Using top search query index ${randomIndex}`);
 
       return randomTop;
     }
@@ -310,23 +317,33 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
     let selectedQuery: string;
 
-    const mainProblemChance = IEngineConstants.chances.createSolutions.searchQueries.useMainProblemSearchQueries;
-    const otherSubProblemChance = mainProblemChance + IEngineConstants.chances.createSolutions.searchQueries.useOtherSubProblemSearchQueries;
-    const subProblemChance = otherSubProblemChance + IEngineConstants.chances.createSolutions.searchQueries.useSubProblemSearchQueries;
+    const mainProblemChance =
+      IEngineConstants.chances.createSolutions.searchQueries
+        .useMainProblemSearchQueries;
+    const otherSubProblemChance =
+      mainProblemChance +
+      IEngineConstants.chances.createSolutions.searchQueries
+        .useOtherSubProblemSearchQueries;
+    const subProblemChance =
+      otherSubProblemChance +
+      IEngineConstants.chances.createSolutions.searchQueries
+        .useSubProblemSearchQueries;
     // The remaining probability is assigned to randomEntitySearchQueries
 
     if (random < mainProblemChance) {
       selectedQuery = problemStatementQueries[type];
-      this.logger.debug(`Using main problem search query for type ${type}`)
+      this.logger.debug(`Using main problem search query for type ${type}`);
     } else if (random < otherSubProblemChance) {
       selectedQuery = otherSubProblemQueries[type];
-      this.logger.debug(`Using other sub problem search query for type ${type}`)
+      this.logger.debug(
+        `Using other sub problem search query for type ${type}`
+      );
     } else if (random < subProblemChance) {
       selectedQuery = subProblemQueries[type];
-      this.logger.debug(`Using sub problem search query for type ${type}`)
+      this.logger.debug(`Using sub problem search query for type ${type}`);
     } else {
       selectedQuery = randomEntitySearchQueries[type];
-      this.logger.debug(`Using random entity search query for type ${type}`)
+      this.logger.debug(`Using random entity search query for type ${type}`);
     }
 
     return selectedQuery;
@@ -369,11 +386,17 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     const entities = this.memory.subProblems[subProblemIndex].entities;
     //this.logger.debug(`Entities: ${JSON.stringify(entities, null, 2)}`);
 
-    const chosenEntities = entities.slice(0, IEngineConstants.maxTopEntitiesToSearch);
+    const chosenEntities = entities.slice(
+      0,
+      IEngineConstants.maxTopEntitiesToSearch
+    );
 
-    const randomEntity = chosenEntities[Math.floor(Math.random() * chosenEntities.length)];
+    const randomEntity =
+      chosenEntities[Math.floor(Math.random() * chosenEntities.length)];
 
-    this.logger.debug(`Random Entity: ${JSON.stringify(randomEntity.searchQueries, null, 2)}`)
+    this.logger.debug(
+      `Random Entity: ${JSON.stringify(randomEntity.searchQueries, null, 2)}`
+    );
 
     const randomEntitySearchQueries = this.getAllTypeQueries(
       randomEntity.searchQueries!,
@@ -461,6 +484,35 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     };
   }
 
+  getWeightedRandomSolution<T>(array: T[]) {
+    if (!array || array.length === 0) {
+      return "";
+    }
+
+    const randomValue = Math.random(); // Value between 0 and 1
+
+    if (
+      randomValue < IEngineConstants.chances.createSolutions.webSolutions.top
+    ) {
+      return array[0];
+    } else if (
+      randomValue <
+      IEngineConstants.chances.createSolutions.webSolutions.top +
+        IEngineConstants.chances.createSolutions.webSolutions.topThree
+    ) {
+      return this.getRandomItemFromArray(array.slice(0, 3));
+    } else if (
+      randomValue <
+      IEngineConstants.chances.createSolutions.webSolutions.top +
+        IEngineConstants.chances.createSolutions.webSolutions.topThree +
+        IEngineConstants.chances.createSolutions.webSolutions.topSeven
+    ) {
+      return this.getRandomItemFromArray(array.slice(0, 7));
+    } else {
+      return this.getRandomItemFromArray(array);
+    }
+  }
+
   async countTokensForString(text: string) {
     const tokenCountData = await this.chat!.getNumTokensFromMessages([
       new HumanChatMessage(text),
@@ -490,9 +542,10 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       IEngineConstants.limits.useRandomTopFromVectorSearchResults
     ) as IEngineWebPageAnalysisData;
 
-    const solutionIdentifiedInTextContext = this.getRandomItemFromArray(
+    const solutionIdentifiedInTextContext = this.getWeightedRandomSolution(
       results.solutionsIdentifiedInTextContext
     );
+
     const mostRelevantParagraphs = this.getRandomItemFromArray(
       results.mostRelevantParagraphs
     );
@@ -573,7 +626,6 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     type: IEngineWebPageTypes,
     alreadyCreatedSolutions: string | undefined = undefined
   ) {
-
     //TODO: What about the system prompt?
     const tokenCountData = await this.chat!.getNumTokensFromMessages(
       this.renderCreateForTestTokens(subProblemIndex, alreadyCreatedSolutions)
@@ -581,8 +633,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     const currentTokens = tokenCountData.totalCount;
     const tokensLeft =
       IEngineConstants.createSolutionsModel.tokenLimit -
-      (currentTokens +
-        IEngineConstants.createSolutionsModel.maxOutputTokens);
+      (currentTokens + IEngineConstants.createSolutionsModel.maxOutputTokens);
     const tokensLeftForType = Math.floor(
       tokensLeft / IEngineConstants.numberOfSearchTypes
     );
@@ -650,7 +701,9 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         };
       }
 
-      this.memory.subProblems[subProblemIndex].solutions.populations.push(solutions);
+      this.memory.subProblems[subProblemIndex].solutions.populations.push(
+        solutions
+      );
 
       await this.saveMemory();
       this.logger.debug(`Saved memory for sub problem ${subProblemIndex}`);
@@ -676,6 +729,5 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       this.logger.error(error.stack);
       throw error;
     }
-
   }
 }

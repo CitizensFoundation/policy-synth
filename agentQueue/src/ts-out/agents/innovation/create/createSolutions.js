@@ -18,10 +18,12 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         4. Do not replicate solution components listed under 'Already Created Solution Components'.
         5. Refer to the relevant entities in your solution components, if mentioned.
         6. Ensure your output is not in markdown format.
-        ${this.memory.customInstructions.createSolutions ? `
+        ${this.memory.customInstructions.createSolutions
+                ? `
           Important Instructions: ${this.memory.customInstructions.createSolutions}
 
-        ` : ''}
+        `
+                : ""}
 
         Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
         Think step by step.
@@ -60,10 +62,12 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       9. Be creative in using the Contexts as inspiration for your solution components.
       10. Do not refer to the Contexts in your solution components, as the contexts won't be visible to the user.
       11. Do not use markdown format in your output.
-      ${this.memory.customInstructions.createSolutions ? `
+      ${this.memory.customInstructions.createSolutions
+            ? `
         Important Instructions (override the previous instructions if needed):${this.memory.customInstructions.createSolutions}
 
-    ` : ''}
+    `
+            : ""}
 
       Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
       Think step by step.
@@ -155,8 +159,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
             return randomIndex;
         }
         else {
-            const randomTop = Math.min(Math.floor(Math.random() *
-                (IEngineConstants.maxTopQueriesToSearchPerType + 1)), searchQueries[type].length - 1);
+            const randomTop = Math.min(Math.floor(Math.random() * (IEngineConstants.maxTopQueriesToSearchPerType + 1)), searchQueries[type].length - 1);
             this.logger.debug(`Using top search query index ${randomIndex}`);
             return randomTop;
         }
@@ -173,9 +176,14 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     getRandomSearchQueryForType(type, problemStatementQueries, subProblemQueries, otherSubProblemQueries, randomEntitySearchQueries) {
         let random = Math.random();
         let selectedQuery;
-        const mainProblemChance = IEngineConstants.chances.createSolutions.searchQueries.useMainProblemSearchQueries;
-        const otherSubProblemChance = mainProblemChance + IEngineConstants.chances.createSolutions.searchQueries.useOtherSubProblemSearchQueries;
-        const subProblemChance = otherSubProblemChance + IEngineConstants.chances.createSolutions.searchQueries.useSubProblemSearchQueries;
+        const mainProblemChance = IEngineConstants.chances.createSolutions.searchQueries
+            .useMainProblemSearchQueries;
+        const otherSubProblemChance = mainProblemChance +
+            IEngineConstants.chances.createSolutions.searchQueries
+                .useOtherSubProblemSearchQueries;
+        const subProblemChance = otherSubProblemChance +
+            IEngineConstants.chances.createSolutions.searchQueries
+                .useSubProblemSearchQueries;
         // The remaining probability is assigned to randomEntitySearchQueries
         if (random < mainProblemChance) {
             selectedQuery = problemStatementQueries[type];
@@ -237,6 +245,29 @@ export class CreateSolutionsProcessor extends BaseProcessor {
             news: await this.getSearchQueryTextContext(subProblemIndex, selectedSearchQueries["news"], "news", alreadyCreatedSolutions),
         };
     }
+    getWeightedRandomSolution(array) {
+        if (!array || array.length === 0) {
+            return "";
+        }
+        const randomValue = Math.random(); // Value between 0 and 1
+        if (randomValue < IEngineConstants.chances.createSolutions.webSolutions.top) {
+            return array[0];
+        }
+        else if (randomValue <
+            IEngineConstants.chances.createSolutions.webSolutions.top +
+                IEngineConstants.chances.createSolutions.webSolutions.topThree) {
+            return this.getRandomItemFromArray(array.slice(0, 3));
+        }
+        else if (randomValue <
+            IEngineConstants.chances.createSolutions.webSolutions.top +
+                IEngineConstants.chances.createSolutions.webSolutions.topThree +
+                IEngineConstants.chances.createSolutions.webSolutions.topSeven) {
+            return this.getRandomItemFromArray(array.slice(0, 7));
+        }
+        else {
+            return this.getRandomItemFromArray(array);
+        }
+    }
     async countTokensForString(text) {
         const tokenCountData = await this.chat.getNumTokensFromMessages([
             new HumanChatMessage(text),
@@ -256,7 +287,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     //TODO: Figure out the closest mostRelevantParagraphs from Weaviate
     renderRawSearchResults(rawSearchResults) {
         const results = this.getRandomItemFromArray(rawSearchResults.data.Get.WebPage, IEngineConstants.limits.useRandomTopFromVectorSearchResults);
-        const solutionIdentifiedInTextContext = this.getRandomItemFromArray(results.solutionsIdentifiedInTextContext);
+        const solutionIdentifiedInTextContext = this.getWeightedRandomSolution(results.solutionsIdentifiedInTextContext);
         const mostRelevantParagraphs = this.getRandomItemFromArray(results.mostRelevantParagraphs);
         this.logger.debug(`Random Solution: ${solutionIdentifiedInTextContext}`);
         this.logger.debug(`Summary: ${results.summary}`);
@@ -302,8 +333,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         const tokenCountData = await this.chat.getNumTokensFromMessages(this.renderCreateForTestTokens(subProblemIndex, alreadyCreatedSolutions));
         const currentTokens = tokenCountData.totalCount;
         const tokensLeft = IEngineConstants.createSolutionsModel.tokenLimit -
-            (currentTokens +
-                IEngineConstants.createSolutionsModel.maxOutputTokens);
+            (currentTokens + IEngineConstants.createSolutionsModel.maxOutputTokens);
         const tokensLeftForType = Math.floor(tokensLeft / IEngineConstants.numberOfSearchTypes);
         this.logger.debug(`Tokens left ${tokensLeftForType} for type ${type}`);
         return await this.searchForType(subProblemIndex, type, searchQuery, tokensLeftForType);

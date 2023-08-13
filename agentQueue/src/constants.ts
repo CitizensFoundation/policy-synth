@@ -166,7 +166,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true
+    verbose: false
   };
 
   static reapSolutionsModel: IEngineBaseAIModelConstants = {
@@ -317,16 +317,22 @@ export class IEngineConstants {
         useSubProblemSearchQueries: 0.45,
         useRandomEntitySearchQueries: 0.45,
       },
+      webSolutions: {
+        top: 0.25,
+        topThree: 0.40,
+        topSeven: 0.25,
+        all: 0.10
+      },
       notUsingTopSearchQueries: 0.33,
       vectorSearchAcrossAllProblems: 0.01,
     },
   };
 
-  static maxTopSearchQueriesForSolutionCreation = 6;
+  static maxTopSearchQueriesForSolutionCreation = 7;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 10,
-    useRandomTopFromVectorSearchResults: 7,
+    useRandomTopFromVectorSearchResults: 10,
   };
 
   static enable = {

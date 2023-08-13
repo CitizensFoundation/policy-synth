@@ -230,11 +230,13 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             immigrationCount = populationSize - newPopulation.length;
         }
         let newSolutions = [];
+        let allSolutions = [...newPopulation];
         this.logger.debug("Before creating new solutions");
         while (newSolutions.length < immigrationCount) {
-            const currentSolutions = await this.getNewSolutions(newSolutions, subProblemIndex);
+            const currentSolutions = await this.getNewSolutions(allSolutions, subProblemIndex);
             this.logger.debug("After getting new solutions");
             newSolutions = [...newSolutions, ...currentSolutions];
+            allSolutions = [...allSolutions, ...currentSolutions];
             this.logger.debug(`New solutions for population: ${JSON.stringify(newSolutions, null, 2)}`);
         }
         if (newSolutions.length > immigrationCount) {
@@ -327,8 +329,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.addElites(previousPopulation, newPopulation, usedSolutionTitles);
         previousPopulation = this.pruneTopicClusters(previousPopulation);
         await this.addRandomMutation(newPopulation, previousPopulation, subProblemIndex);
-        await this.addRandomImmigration(newPopulation, subProblemIndex);
         await this.addCrossover(newPopulation, previousPopulation, subProblemIndex);
+        await this.addRandomImmigration(newPopulation, subProblemIndex);
         this.logger.info(`New population size: ${newPopulation.length} for sub problem ${subProblemIndex}`);
         this.memory.subProblems[subProblemIndex].solutions.populations.push(newPopulation);
         this.logger.debug(`Current number of generations after push: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`);

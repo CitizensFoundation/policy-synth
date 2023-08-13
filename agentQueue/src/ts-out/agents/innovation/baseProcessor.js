@@ -43,7 +43,9 @@ export class BaseProcessor extends Base {
         limits.tokens = limits.tokens.filter((token) => now - token.timestamp < windowSize);
         // Check and update tokens
         const currentTokensCount = limits.tokens.reduce((acc, token) => acc + token.count, 0);
-        this.logger.debug(`Current ${limits.requests.length}/${currentTokensCount}`);
+        /*this.logger.debug(
+          `Current ${limits.requests.length}/${currentTokensCount}`
+        );*/
         if (currentTokensCount + tokensToAdd > model.limitTPM) {
             const remainingTimeTokens = 60000 - (now - limits.tokens[0].timestamp);
             this.logger.info(`TPM limit reached (${model.limitTPM}), sleeping for ${this.formatNumber((remainingTimeTokens + 1000) / 1000)} seconds`);
@@ -62,7 +64,10 @@ export class BaseProcessor extends Base {
         // Add a new request timestamp
         this.rateLimits[model.name].requests.push({ timestamp: now });
         // Add a new token entry with the count and timestamp
-        this.rateLimits[model.name].tokens.push({ count: tokensToAdd, timestamp: now });
+        this.rateLimits[model.name].tokens.push({
+            count: tokensToAdd,
+            timestamp: now,
+        });
         // Optionally, you may log the updated limits
         //this.logger.debug(`Updated rate limits for ${model.name} model: ${JSON.stringify(this.rateLimits[model.name])}`);
     }
@@ -220,6 +225,7 @@ export class BaseProcessor extends Base {
                                     this.logger.info(`Trying to fix JSON`);
                                     const repaired = jsonrepair(response.text.trim());
                                     parsedJson = JSON.parse(repaired);
+                                    this.logger.info("Fixed JSON");
                                 }
                                 catch (error) {
                                     this.logger.warn(`Error parsing fixed JSON`);
@@ -241,6 +247,12 @@ export class BaseProcessor extends Base {
                             }
                             if (parsedJson) {
                                 retry = false;
+                                if (parsedJson == '"[]"' ||
+                                    parsedJson == "[]" ||
+                                    parsedJson == "'[]'") {
+                                    this.logger.warn(`JSON processing returned an empty array string ${parsedJson}`);
+                                    parsedJson = [];
+                                }
                                 return parsedJson;
                             }
                             retryCount++;
