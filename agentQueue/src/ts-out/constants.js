@@ -23,6 +23,17 @@ export class IEngineConstants {
         limitRPM: gpt4_RPM,
         verbose: true
     };
+    static analyseExternalSolutionsModel = {
+        name: "gpt-4",
+        temperature: 0.0,
+        maxOutputTokens: 256,
+        tokenLimit: 8192,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: true
+    };
     static createEntitiesModel = {
         name: "gpt-4",
         temperature: 0.7,
@@ -260,25 +271,25 @@ export class IEngineConstants {
     static chances = {
         createSolutions: {
             searchQueries: {
-                useMainProblemSearchQueries: 0.05,
-                useOtherSubProblemSearchQueries: 0.05,
+                useMainProblemSearchQueries: 0.01,
+                useOtherSubProblemSearchQueries: 0.09,
                 useSubProblemSearchQueries: 0.45,
                 useRandomEntitySearchQueries: 0.45,
             },
             webSolutions: {
-                top: 0.25,
-                topThree: 0.40,
+                top: 0.20,
+                topThree: 0.45,
                 topSeven: 0.25,
                 all: 0.10
             },
-            notUsingTopSearchQueries: 0.33,
+            notUsingTopSearchQueries: 0.50,
             vectorSearchAcrossAllProblems: 0.01,
         },
     };
-    static maxTopSearchQueriesForSolutionCreation = 7;
+    static maxTopSearchQueriesForSolutionCreation = 8;
     static limits = {
-        webPageVectorResultsForNewSolutions: 10,
-        useRandomTopFromVectorSearchResults: 10,
+        webPageVectorResultsForNewSolutions: 14,
+        useRandomTopFromVectorSearchResults: 14,
     };
     static enable = {
         refine: {
@@ -299,7 +310,7 @@ export class IEngineConstants {
         lowMutationRate: 0.15,
         mediumMutationRate: 0.55,
         highMutationRate: 0.3,
-        selectParentTournamentSize: 5,
+        selectParentTournamentSize: 7,
         crossoverMutationPercent: 0.1,
     };
     static maxPercentOfEloMatched = 0.75;

@@ -168,6 +168,17 @@ export abstract class BaseProcessor extends Base {
     return lastPopulation.filter((solution) => !solution.reaped);
   }
 
+  getActiveSolutionsFromPopulation(subProblemIndex: number, populationIndex: number) {
+    const populations =
+      this.memory.subProblems[subProblemIndex].solutions.populations;
+    const lastPopulation = populations[populationIndex];
+    return lastPopulation.filter((solution) => !solution.reaped);
+  }
+
+  numberOfPopulations(subProblemIndex: number) {
+    return this.memory.subProblems[subProblemIndex].solutions.populations.length;
+  }
+
   renderSubProblems() {
     return `
       Sub Problems:

@@ -99,6 +99,14 @@ export class BaseProcessor extends Base {
         const lastPopulation = populations[populations.length - 1];
         return lastPopulation.filter((solution) => !solution.reaped);
     }
+    getActiveSolutionsFromPopulation(subProblemIndex, populationIndex) {
+        const populations = this.memory.subProblems[subProblemIndex].solutions.populations;
+        const lastPopulation = populations[populationIndex];
+        return lastPopulation.filter((solution) => !solution.reaped);
+    }
+    numberOfPopulations(subProblemIndex) {
+        return this.memory.subProblems[subProblemIndex].solutions.populations.length;
+    }
     renderSubProblems() {
         return `
       Sub Problems:

@@ -204,7 +204,7 @@ type IEngineStageTypes =
   | "web-search"
   | "web-get-pages"
   | "create-seed-solutions"
-  | "parse"
+  | "analyse-external-solutions"
   | "save"
   | "done";
 
@@ -370,6 +370,22 @@ interface IEngineRateLimits {
     requests: Array<{ timestamp: number }>;
     tokens: Array<{ count: number; timestamp: number }>;
   };
+}
+
+interface IEngineExternalSolutionAnalysis {
+  externalSolution: string;
+  subProblemIndex: number;
+  populationIndex: number;
+  topSolutionMatches: {
+    index: number;
+    title: string;
+    description: string;
+    percent: number;
+  }[];
+}
+
+interface IEngineExternalSolutionAnalysisResults {
+  solutionCoversPercentOfKeyRequirements: number;
 }
 
 type IEngineMutationRates = "low" | "medium" | "high";

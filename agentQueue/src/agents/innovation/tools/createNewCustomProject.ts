@@ -53,7 +53,7 @@ if (projectId) {
         "evolve-reap-population": {},
         "topic-map-solutions": {},
         "evolve-rank-population": {},
-        parse: {},
+        "analyse-external-solutions": {},
         save: {},
         done: {},
       },

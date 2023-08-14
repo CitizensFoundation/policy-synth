@@ -99,6 +99,13 @@ export abstract class CpsStageBase extends YpBaseElement {
     ) {
       this.updateRoutes();
     }
+
+    if (
+      changedProperties.has('activeSubProblemIndex') &&
+      this.activeSubProblemIndex !== null
+    ) {
+      this.setSubProblemColor(this.activeSubProblemIndex);
+    }
   }
 
   exitSubProblemScreen() {
@@ -617,8 +624,6 @@ export abstract class CpsStageBase extends YpBaseElement {
     this.subProblemListScrollPositionY = window.scrollY;
 
     window.scrollTo(0, 0);
-
-    this.setSubProblemColor(index);
 
     if (this.firstTimeSubProblemClick || this.activePopulationIndex === null) {
       this.firstTimeSubProblemClick = false;
