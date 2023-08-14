@@ -197,9 +197,9 @@ export class AnalyseExternalSolutions extends BaseProcessor {
   }
 
   toCSV(analysisResult: IEngineExternalSolutionAnalysis): string {
-    let csvText = `"Sub Problem",Population,"External Solution"\n`;
+    let csvText = `"Sub Problem",Population,"Recommendation ${analysisResult.externalSolutionIndex+1}"\n`;
     csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex},"${analysisResult.externalSolution}"\n`;
-    csvText += "Match, Index, Description, Title, URL\n";
+    csvText += "Match, Rank, Description, Title, URL\n";
     analysisResult.topSolutionMatches.sort((a, b) => b.percent - a.percent);
 
     analysisResult.topSolutionMatches.forEach((match) => {
