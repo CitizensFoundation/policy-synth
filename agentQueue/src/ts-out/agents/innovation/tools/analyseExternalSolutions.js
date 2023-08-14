@@ -5,6 +5,9 @@ import fs from "fs/promises";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import path from "path";
+import fetch from "node-fetch";
+//@ts-ignore
+global.fetch = fetch;
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const externalSolutions = [
     {
@@ -71,7 +74,9 @@ export class AnalyseExternalSolutions extends BaseProcessor {
         return messages;
     }
     async compareSolutionToExternal(solutionDescription, requirement) {
-        return (await this.callLLM("analyse-external-solutions", IEngineConstants.analyseExternalSolutionsModel, await this.renderAnalysisPrompt(solutionDescription, requirement)));
+        this.logger.debug(`Comparing solution to external: ${solutionDescription} ${requirement}`);
+        const result = (await this.callLLM("analyse-external-solutions", IEngineConstants.analyseExternalSolutionsModel, await this.renderAnalysisPrompt(solutionDescription, requirement)));
+        return result;
     }
     async analyze() {
         const subProblemIndex = 1;
@@ -83,6 +88,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
             const externalSolutionPromises = Array.from({ length: externalSolutionLimit }, async (_, externalSolutionIndex) => {
                 const solutions = this.getActiveSolutionsFromPopulation(subProblemIndex, populationIndex);
                 const matches = {
+                    externalSolutionIndex: externalSolutionIndex,
                     externalSolution: externalSolutions[externalSolutionIndex].description,
                     subProblemIndex,
                     populationIndex,
@@ -92,6 +98,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
                     this.logger.info(`Analyzing ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${populationIndex})`);
                     const solution = solutions[solutionIndex];
                     const solutionResults = await this.compareSolutionToExternal(solution.description, externalSolutions[externalSolutionIndex].description);
+                    this.logger.debug(`Solution results: ${JSON.stringify(solutionResults, null, 2)}`);
                     const percent = solutionResults.solutionCoversPercentOfKeyRequirements;
                     if (percent >= 70) {
                         matches.topSolutionMatches.push({
@@ -113,20 +120,19 @@ export class AnalyseExternalSolutions extends BaseProcessor {
         this.logger.info("Finished analysing all");
     }
     toCSV(analysisResult) {
-        let csvText = "Sub Problem,Population\n";
-        csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex}\n`;
-        csvText += `"${analysisResult.externalSolution}"\n`;
-        csvText += "Match %, Index, Title, Description\n";
+        let csvText = `"Sub Problem",Population,"External Solution"\n`;
+        csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex},"${analysisResult.externalSolution}"\n`;
+        csvText += "Match, Index, Description, Title, URL\n";
         analysisResult.topSolutionMatches.sort((a, b) => b.percent - a.percent);
         analysisResult.topSolutionMatches.forEach((match) => {
-            const url = `https://policy-synth.ai/${this.memory.groupId}/${analysisResult.subProblemIndex}/${analysisResult.populationIndex}/${match.index}`;
-            csvText += `${match.percent},${match.index},"${match.title}","${match.description}","${url}"\n`;
+            const url = `https://policy-synth.ai/projects/${this.memory.groupId}/${analysisResult.subProblemIndex}/${analysisResult.populationIndex}/${match.index}`;
+            csvText += `${match.percent},${match.index},"${match.description}","${match.title}","${url}"\n`;
         });
         return csvText;
     }
     async processAnalysis(folderPath) {
         this.folderPath = folderPath;
-        this.logger.info("Create Images Processor");
+        this.logger.info("Create Analysis Processor");
         super.process();
         this.chat = new ChatOpenAI({
             temperature: IEngineConstants.analyseExternalSolutionsModel.temperature,
@@ -160,7 +166,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
         for (let i = 0; i < analysisResults.length; i++) {
             try {
                 const csvText = this.toCSV(analysisResults[i]);
-                const fileName = `external_solution_${i}.csv`;
+                const fileName = `external_solution_${analysisResults[i].subProblemIndex}_${analysisResults[i].externalSolutionIndex}_${analysisResults[i].populationIndex}.csv`;
                 const fullPath = path.join(this.folderPath, fileName);
                 await fs.writeFile(fullPath, csvText);
             }
