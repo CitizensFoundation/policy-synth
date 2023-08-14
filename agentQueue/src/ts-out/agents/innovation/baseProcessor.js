@@ -184,17 +184,7 @@ export class BaseProcessor extends Base {
             while (retry && retryCount < maxRetries && this.chat) {
                 let response;
                 try {
-                    let tokensIn;
-                    try {
-                        this.logger.debug(`Calling LLM with ${JSON.stringify(this.chat, null, 2)} messages`);
-                        tokensIn = await this.chat.getNumTokensFromMessages(messages);
-                        this.logger.debug("home");
-                    }
-                    catch (error) {
-                        this.logger.error(error.stack || error);
-                        throw error;
-                    }
-                    this.logger.debug(`Calling LLM 2 with ${JSON.stringify(messages, null, 2)} messages`);
+                    const tokensIn = await this.chat.getNumTokensFromMessages(messages);
                     const estimatedTokensToAdd = tokensIn.totalCount + tokenOutEstimate;
                     await this.checkRateLimits(modelConstants, estimatedTokensToAdd);
                     await this.updateRateLimits(modelConstants, tokensIn.totalCount);
