@@ -74,8 +74,7 @@ export class AgentInnovation extends BaseAgent {
                 "topic-map-solutions": {},
                 // Evaluate and rank the population after mutation and recombination
                 "evolve-rank-population": {},
-                // Parse the solution into a human-readable format
-                parse: {},
+                "analyse-external-solutions": {},
                 // Save the final solution for future use or reference
                 save: {},
                 // Indicate the end of the process

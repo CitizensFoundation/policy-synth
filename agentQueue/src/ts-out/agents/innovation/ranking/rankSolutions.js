@@ -12,7 +12,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
             new SystemChatMessage(`You're an expert in evaluating solution components to problems.
 
          Instructions:
-         1. Analyze a problem and two solution components, labeled "Solution Component One" and "Solution Component Two."
+         1. Analyze a problem and two solution components, labeled "Solution Component One" and "Solution Component Two"
          2. Determine which is more important and practical.
          3. Consider the provided ratings for each component also in your decision.
          ${this.memory.customInstructions.rankSolutions

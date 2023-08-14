@@ -105,14 +105,14 @@ const setupProjectTwo = (memory: IEngineInnovationMemoryData) => {
   memory.customInstructions.createSolutions = `
   1. Never create solution components in the form of frameworks or holistic approaches
   2. Solution components should include only one core idea
-  3. Remember that the main facilitator for implementation will be philanthropic organizations working alongside civil society organizations, community-based organizations, and legal advocacy groups.
-  4. The solution component description should clearly articulate what action the philanthropic organization needs to take in order to implement the solution.
+  3. Remember that the main facilitator for implementation will be US philanthropic organizations working alongside US civil society organizations, community-based organizations, and legal advocacy groups.
+  4. The solution component description should clearly articulate what action the US philanthropic organization needs to take in order to implement the solution in the US.
   5. The solution component description should clearly articulate how the solution component addresses an aspect of the problem.
   6. The solution title should indicate the intended outcomes and impacts of implementing the solution.
 `;
 
   memory.customInstructions.rankSolutions = `
-    1. Keep in mind that the solution components will be implemented by philanthropic organizations in partnership with civil society organizations, community-based organizations, and legal advocacy groups.
+    1. Solution components will be implemented by US philanthropic organizations in partnership with US civil society organizations, community-based organizations, and legal advocacy groups.
   `;
 
   memory.customInstructions.rateSolutionsJsonFormat = `
