@@ -7,6 +7,10 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import path from "path";
 
+import fetch from "node-fetch";
+//@ts-ignore
+global.fetch = fetch;
+
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
@@ -101,11 +105,16 @@ export class AnalyseExternalSolutions extends BaseProcessor {
     solutionDescription: string,
     requirement: string
   ) {
-    return (await this.callLLM(
+    this.logger.debug(
+      `Comparing solution to external: ${solutionDescription} ${requirement}`
+    );
+    const result = (await this.callLLM(
       "analyse-external-solutions",
       IEngineConstants.analyseExternalSolutionsModel,
       await this.renderAnalysisPrompt(solutionDescription, requirement)
     )) as IEngineExternalSolutionAnalysisResults;
+
+    return result;
   }
 
   async analyze() {
@@ -131,6 +140,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
           );
 
           const matches = {
+            externalSolutionIndex: externalSolutionIndex,
             externalSolution:
               externalSolutions[externalSolutionIndex].description,
             subProblemIndex,
@@ -152,6 +162,9 @@ export class AnalyseExternalSolutions extends BaseProcessor {
             const solutionResults = await this.compareSolutionToExternal(
               solution.description,
               externalSolutions[externalSolutionIndex].description
+            );
+            this.logger.debug(
+              `Solution results: ${JSON.stringify(solutionResults, null, 2)}`
             );
             const percent =
               solutionResults.solutionCoversPercentOfKeyRequirements;
@@ -184,15 +197,14 @@ export class AnalyseExternalSolutions extends BaseProcessor {
   }
 
   toCSV(analysisResult: IEngineExternalSolutionAnalysis): string {
-    let csvText = "Sub Problem,Population\n";
-    csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex}\n`;
-    csvText += `"${analysisResult.externalSolution}"\n`;
-    csvText += "Match %, Index, Title, Description\n";
+    let csvText = `"Sub Problem",Population,"External Solution"\n`;
+    csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex},"${analysisResult.externalSolution}"\n`;
+    csvText += "Match, Index, Description, Title, URL\n";
     analysisResult.topSolutionMatches.sort((a, b) => b.percent - a.percent);
 
     analysisResult.topSolutionMatches.forEach((match) => {
-      const url = `https://policy-synth.ai/${this.memory.groupId}/${analysisResult.subProblemIndex}/${analysisResult.populationIndex}/${match.index}`;
-      csvText += `${match.percent},${match.index},"${match.title}","${match.description}","${url}"\n`;
+      const url = `https://policy-synth.ai/projects/${this.memory.groupId}/${analysisResult.subProblemIndex}/${analysisResult.populationIndex}/${match.index}`;
+      csvText += `${match.percent},${match.index},"${match.description}","${match.title}","${url}"\n`;
     });
 
     return csvText;
@@ -200,7 +212,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
 
   async processAnalysis(folderPath: string) {
     this.folderPath = folderPath;
-    this.logger.info("Create Images Processor");
+    this.logger.info("Create Analysis Processor");
     super.process();
 
     this.chat = new ChatOpenAI({
@@ -235,7 +247,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
     for (let i = 0; i < analysisResults.length; i++) {
       try {
         const csvText = this.toCSV(analysisResults[i]);
-        const fileName = `external_solution_${i}.csv`;
+        const fileName = `external_solution_${analysisResults[i].subProblemIndex}_${analysisResults[i].externalSolutionIndex}_${analysisResults[i].populationIndex}.csv`;
         const fullPath = path.join(this.folderPath, fileName);
         await fs.writeFile(fullPath, csvText);
       } catch (error) {

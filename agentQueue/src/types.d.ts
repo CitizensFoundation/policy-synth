@@ -373,6 +373,7 @@ interface IEngineRateLimits {
 }
 
 interface IEngineExternalSolutionAnalysis {
+  externalSolutionIndex: number;
   externalSolution: string;
   subProblemIndex: number;
   populationIndex: number;

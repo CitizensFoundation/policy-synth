@@ -6,10 +6,10 @@ import {
   HumanChatMessage,
   SystemChatMessage,
 } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
 import { IEngineConstants } from "../../constants.js";
 import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
+import { ChatOpenAI } from "langchain/chat_models";
 
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -275,7 +275,16 @@ export abstract class BaseProcessor extends Base {
       while (retry && retryCount < maxRetries && this.chat) {
         let response;
         try {
-          const tokensIn = await this.chat!.getNumTokensFromMessages(messages);
+          let tokensIn: any;
+          try {
+            this.logger.debug(`Calling LLM with ${JSON.stringify(this.chat, null, 2)} messages`)
+            tokensIn = await this.chat.getNumTokensFromMessages(messages);
+            this.logger.debug("home")
+          } catch (error: any) {
+            this.logger.error(error.stack || error)
+            throw error;
+          }
+          this.logger.debug(`Calling LLM 2 with ${JSON.stringify(messages, null, 2)} messages`)
           const estimatedTokensToAdd = tokensIn.totalCount + tokenOutEstimate;
 
           await this.checkRateLimits(modelConstants, estimatedTokensToAdd);
