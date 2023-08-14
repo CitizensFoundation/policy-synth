@@ -29,7 +29,8 @@ For the real-world application of our platform, a series of expert and mass citi
 - **End of August 2023**: Plan to release initial crowdsourcing components
 - **End of September 2023**: First iteration of the policy ideas modules
 
-![Policy Synth v 22](https://github.com/CitizensFoundation/policy-synth/assets/43699/5778a862-7f46-49e4-9d00-a865003f4e84)
+![Policy Synth v 23](https://github.com/CitizensFoundation/policy-synth/assets/43699/785e7318-0e66-4dd6-9701-c995dfb37467)
+
 
 
 
