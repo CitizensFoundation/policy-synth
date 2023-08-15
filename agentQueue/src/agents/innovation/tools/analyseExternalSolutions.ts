@@ -81,7 +81,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
     const messages = [
       new SystemChatMessage(
         `
-        1. You are an expert in analyzing how well a  solution matches a requirement
+        1. You are an expert in analyzing how well a solution matches a requirement
         2. Always and only output the following JSON format: { solutionCoversPercentOfKeyRequirements }        `
       ),
       new HumanChatMessage(

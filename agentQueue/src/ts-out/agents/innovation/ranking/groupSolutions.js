@@ -15,7 +15,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
         4. Not all solution components need to be grouped.
         5. Never group the same solution component in more than one group.
 
-        Think step by step.
+        Let's think step by step.
                 `),
             new HumanChatMessage(`${JSON.stringify(solutionsToGroup, null, 2)}
 

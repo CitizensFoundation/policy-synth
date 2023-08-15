@@ -4,34 +4,26 @@ import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class ReapSolutionsProcessor extends BaseProcessor {
-  async renderReapPrompt(solutionsToFilter: IEngineSolutionForReapInputData[]) {
+  async renderReapPrompt(solution: IEngineSolution) {
     const messages = [
       new SystemChatMessage(
         `
-        You are an expert in filtering out non-viable solution components to problems, if needed.
-
-        Instructions:
-        1. You will be provided an array of solution components in JSON format.
-        2. You will filter out solution components that are too complicated and have more than two core ideas.
-        3. You will output a list of titles of the solutions you wish to filter out, as a JSON Array: [ { title } ]
-        4. Most of the time no solution components need to be filtered out, if you are not sure do not filter them out.
-        5. If you do not need to filter out any solution components, return an empty JSON Array: []
-        6. Review the "Important Instructions" below for further instructions.
-        ${
-          this.memory.customInstructions.reapSolutions
-            ? `
-        Important Instructions: ${this.memory.customInstructions.reapSolutions}
+        You are an expert in assessing if a solution component fits given requirements.
+        Always output either true or false in a JSON Object: { solutionFitsRequirements }
         `
-            : ""
-        }
-
-        Think step by step.
-                `
       ),
       new HumanChatMessage(
-        `${JSON.stringify(solutionsToFilter, null, 2)}
+        `
+        Solution component to assess:
+        ${solution.title}
+        ${solution.description}
 
-        The solution components to filter out in a JSON Array:
+        Requirements:
+        ${this.memory.customInstructions.reapSolutions}
+
+        Let's think step by step.
+
+        JSON Object with the results:
         `
       ),
     ];
@@ -45,55 +37,24 @@ export class ReapSolutionsProcessor extends BaseProcessor {
     this.logger.info(`Reaping solution components for subproblem ${subProblemIndex}`);
 
     this.logger.info(`Initial population size: ${solutions.length}`);
+    for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
 
-    const chunkSize = 4;
-    const chunks = solutions.reduce(
-      (
-        resultArray: Array<Array<IEngineSolution>>,
-        item: IEngineSolution,
-        index: number
-      ) => {
-        const chunkIndex = Math.floor(index / chunkSize);
-        if (!resultArray[chunkIndex]) {
-          resultArray[chunkIndex] = []; // new chunk
-        }
-        resultArray[chunkIndex].push(item);
-        return resultArray;
-      },
-      []
-    );
+      const solution = solutions[solutionIndex];
 
-
-
-    this.logger.debug(`Chunks: ${chunks.length}`);
-
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-
-      const solutionsToFilter: IEngineSolutionForReapInputData[] = chunk.map(solution => {
-        return {
-          title: solution.title,
-          description: solution.description
-        }
-      });
-
-      this.logger.debug(`Solution Components (${i+1}/${chunks.length}) going into LLM ${solutionsToFilter.length}`);
-
-      const reapedData: Array<IEngineSolutionForReapReturnData> = await this.callLLM(
+      const reapedResults: IEngineReapingResults = await this.callLLM(
         "evolve-reap-population",
         IEngineConstants.reapSolutionsModel,
-        await this.renderReapPrompt(solutionsToFilter)
+        await this.renderReapPrompt(solutions[solutionIndex])
       );
 
-      for (let j = 0; j < solutionsToFilter.length; j++) {
-        if (reapedData.some(reapedItem => reapedItem.title === solutionsToFilter[j].title)) {
-          chunk[j].reaped = true;
-          this.logger.info(`Reaped solution: ${solutionsToFilter[j].title}`);
-        }
+      if (reapedResults.solutionFitsRequirements===false) {
+        this.logger.info(`Reaped solution: ${solution.title}`);
+        solution.reaped = true;
       }
     }
 
     const afterSize = solutions.filter(solution => !solution.reaped).length;
+
     this.logger.info(`Population size after reaping: ${afterSize}`);
   }
 

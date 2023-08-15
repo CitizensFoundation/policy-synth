@@ -56,7 +56,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
         5. Output should be in JSON format only, not markdown format.
         6. The ${prosOrCons} should be outputted as an JSON array: [ "...", "..." ].
         7. Never output the index number of the ${prosOrCons} in the text.
-        8. Think step by step.
+        8. Let's think step by step.
         `),
             new HumanChatMessage(`
          ${this.renderSubProblem(subProblemIndex, true)}

@@ -28,7 +28,7 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
         6. Never output prompts involving asking for text to be written out, like on a document.
         7. Follow the Dalle-2 Prompt Guide in your work.
         8. Output only your Dalle-2 prompt, nothing else.
-        9. Think step by step.
+        9. Let's think step by step.
 
         Dalle-2 Prompt Guide:
         For successful Dall-E 2 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.

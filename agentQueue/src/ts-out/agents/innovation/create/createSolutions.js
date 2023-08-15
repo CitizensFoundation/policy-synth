@@ -26,7 +26,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
                 : ""}
 
         Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
-        Think step by step.
+        Let's think step by step.
         `),
             new HumanChatMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
@@ -70,7 +70,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
             : ""}
 
       Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
-      Think step by step.
+      Let's think step by step.
       `);
     }
     renderCreateForTestTokens(subProblemIndex, alreadyCreatedSolutions = undefined) {

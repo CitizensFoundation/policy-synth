@@ -24,7 +24,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
           `
                 : ""}
 
-        Think step by step.
+        Let's think step by step.
         `),
             new HumanChatMessage(`
         ${this.renderProblemStatement()}
