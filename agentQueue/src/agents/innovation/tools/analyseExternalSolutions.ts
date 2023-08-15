@@ -105,9 +105,6 @@ export class AnalyseExternalSolutions extends BaseProcessor {
     solutionDescription: string,
     requirement: string
   ) {
-    this.logger.debug(
-      `Comparing solution to external: ${solutionDescription} ${requirement}`
-    );
     const result = (await this.callLLM(
       "analyse-external-solutions",
       IEngineConstants.analyseExternalSolutionsModel,
@@ -119,17 +116,17 @@ export class AnalyseExternalSolutions extends BaseProcessor {
 
   async analyze() {
     const subProblemIndex = 1;
-    const startPopulationIndex = 0;
+    const startPopulationIndex = 7;
     const analysisResults: IEngineExternalSolutionAnalysis[] = [];
 
-    const numberOfPoplations = 1; //this.numberOfPopulations(subProblemIndex);
+    const numberOfPopulations = 8; //this.numberOfPopulations(subProblemIndex);
 
     for (
       let populationIndex = startPopulationIndex;
-      populationIndex < numberOfPoplations;
+      populationIndex < numberOfPopulations;
       populationIndex++
     ) {
-      const externalSolutionLimit = 1; //externalSolutions.length;
+      const externalSolutionLimit = externalSolutions.length;
 
       const externalSolutionPromises = Array.from(
         { length: externalSolutionLimit },
@@ -163,11 +160,11 @@ export class AnalyseExternalSolutions extends BaseProcessor {
               solution.description,
               externalSolutions[externalSolutionIndex].description
             );
-            this.logger.debug(
-              `Solution results: ${JSON.stringify(solutionResults, null, 2)}`
-            );
+
             const percent =
               solutionResults.solutionCoversPercentOfKeyRequirements;
+
+            this.logger.debug(`Percent match: ${percent}`)
 
             if (percent >= 70) {
               matches.topSolutionMatches.push({
@@ -199,7 +196,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
   toCSV(analysisResult: IEngineExternalSolutionAnalysis): string {
     let csvText = `"Sub Problem",Population,"Recommendation ${analysisResult.externalSolutionIndex+1}"\n`;
     csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex},"${analysisResult.externalSolution}"\n`;
-    csvText += "Match, Rank, Description, Title, URL\n";
+    csvText += "Match,Rank,Description,Title,URL\n";
     analysisResult.topSolutionMatches.sort((a, b) => b.percent - a.percent);
 
     analysisResult.topSolutionMatches.forEach((match) => {
