@@ -179,7 +179,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         6. Never output prompts involving asking for text to be written out, like on a document.
         7. Follow the Dall-E 2 Prompt Guide in your work.
         8. Output only your Dall-E 2 prompt, nothing else.
-        9. Think step by step.
+        9. Let's think step by step.
         ${injectText ? injectText : ""}
 
         Dall-E 2 Prompt Guide:

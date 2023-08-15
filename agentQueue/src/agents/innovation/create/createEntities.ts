@@ -22,7 +22,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
         7. Only add positive effects if the sub problem really has a positive effect on the entity, that rarely happens in this analysis as we are analysis problems.
         8. If no positive effects are identified leave the positiveEffects array empty.
         9. Always output in exactly this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
-        10. Think step by step.
+        10. Let's think step by step.
         `
       ),
       new HumanChatMessage(
@@ -60,7 +60,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
         9. Only add positive effects if the sub problem really has a positive effect on the entity, that rarely happens in this analysis.
         9. If no positive effects are identified leave the positiveEffects array empty.
         11. After reviewing the problem statement and subproblem, output in this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
-        12. Think step by step.
+        12. Let's think step by step.
 
         Example:
 

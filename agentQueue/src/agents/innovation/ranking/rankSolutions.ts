@@ -36,7 +36,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
          }
 
          Always output your decision as "One", "Two" or "Neither. No explanation is necessary.
-         Think step by step.
+         Let's think step by step.
         `
       ),
       new HumanChatMessage(

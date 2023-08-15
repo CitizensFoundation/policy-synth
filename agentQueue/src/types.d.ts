@@ -389,4 +389,8 @@ interface IEngineExternalSolutionAnalysisResults {
   solutionCoversPercentOfKeyRequirements: number;
 }
 
+interface IEngineReapingResults {
+  solutionFitsRequirements: boolean;
+}
+
 type IEngineMutationRates = "low" | "medium" | "high";

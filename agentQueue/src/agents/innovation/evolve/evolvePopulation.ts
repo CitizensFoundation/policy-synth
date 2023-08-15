@@ -51,7 +51,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         }
 
         Always output your merged solution component in the following JSON format: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not add any new JSON properties.
-        Think step by step.
+        Let's think step by step.
         `
       ),
       new HumanChatMessage(
@@ -111,7 +111,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         }
 
         Always format your mutated solution component in the following JSON structure: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not introduce any new JSON properties.
-        Think step by step.
+        Let's think step by step.
         `
       ),
       new HumanChatMessage(

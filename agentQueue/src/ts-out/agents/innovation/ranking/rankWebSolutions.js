@@ -15,7 +15,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
         3. Rank solutions by importance and practicality.
         4. Always and only output a JSON string Array: [ solution ].
 
-        Think step by step. Never explain your actions.`),
+        Let's think step by step. Never explain your actions.`),
             new HumanChatMessage(`
         ${subProblemIndex === null ? this.renderProblemStatement() : ""}
 

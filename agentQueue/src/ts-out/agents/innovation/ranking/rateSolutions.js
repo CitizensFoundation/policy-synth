@@ -23,7 +23,7 @@ export class RateSolutionsProcessor extends BaseProcessor {
          Always output your ratings in the following JSON format:
          ${this.memory.customInstructions.rateSolutionsJsonFormat}
 
-        Think step by step.
+        Let's think step by step.
         `),
             new HumanChatMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}

@@ -41,7 +41,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         }
 
         Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
-        Think step by step.
+        Let's think step by step.
         `
       ),
       new HumanChatMessage(
@@ -95,7 +95,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
       }
 
       Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
-      Think step by step.
+      Let's think step by step.
       `
     );
   }

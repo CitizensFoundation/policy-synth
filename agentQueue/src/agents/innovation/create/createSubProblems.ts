@@ -25,7 +25,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             6. Do not suggest tasks or actions; your task is to explain the problems.
             8. Do not provide output in markdown format.
             9. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            10. Think step by step.`
+            10. Let's think step by step.`
       ),
       new HumanChatMessage(
         `
@@ -58,7 +58,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             5. Never output in markdown format.
             6. Always output 21 sub problems.
             7. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            8. Think step by step.
+            8. Let's think step by step.
             `
       ),
       new HumanChatMessage(
