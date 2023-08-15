@@ -32,7 +32,7 @@ export class IEngineConstants {
         outTokenCostUSD: gpt4OutTokenPrice,
         limitTPM: gpt4_TPM,
         limitRPM: gpt4_RPM,
-        verbose: true
+        verbose: false
     };
     static createEntitiesModel = {
         name: "gpt-4",

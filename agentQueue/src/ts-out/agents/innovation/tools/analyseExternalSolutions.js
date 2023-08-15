@@ -74,17 +74,16 @@ export class AnalyseExternalSolutions extends BaseProcessor {
         return messages;
     }
     async compareSolutionToExternal(solutionDescription, requirement) {
-        this.logger.debug(`Comparing solution to external: ${solutionDescription} ${requirement}`);
         const result = (await this.callLLM("analyse-external-solutions", IEngineConstants.analyseExternalSolutionsModel, await this.renderAnalysisPrompt(solutionDescription, requirement)));
         return result;
     }
     async analyze() {
         const subProblemIndex = 1;
-        const startPopulationIndex = 0;
+        const startPopulationIndex = 7;
         const analysisResults = [];
-        const numberOfPoplations = 1; //this.numberOfPopulations(subProblemIndex);
-        for (let populationIndex = startPopulationIndex; populationIndex < numberOfPoplations; populationIndex++) {
-            const externalSolutionLimit = 1; //externalSolutions.length;
+        const numberOfPopulations = 8; //this.numberOfPopulations(subProblemIndex);
+        for (let populationIndex = startPopulationIndex; populationIndex < numberOfPopulations; populationIndex++) {
+            const externalSolutionLimit = externalSolutions.length;
             const externalSolutionPromises = Array.from({ length: externalSolutionLimit }, async (_, externalSolutionIndex) => {
                 const solutions = this.getActiveSolutionsFromPopulation(subProblemIndex, populationIndex);
                 const matches = {
@@ -98,8 +97,8 @@ export class AnalyseExternalSolutions extends BaseProcessor {
                     this.logger.info(`Analyzing ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} (${populationIndex})`);
                     const solution = solutions[solutionIndex];
                     const solutionResults = await this.compareSolutionToExternal(solution.description, externalSolutions[externalSolutionIndex].description);
-                    this.logger.debug(`Solution results: ${JSON.stringify(solutionResults, null, 2)}`);
                     const percent = solutionResults.solutionCoversPercentOfKeyRequirements;
+                    this.logger.debug(`Percent match: ${percent}`);
                     if (percent >= 70) {
                         matches.topSolutionMatches.push({
                             index: solutionIndex,
@@ -122,7 +121,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
     toCSV(analysisResult) {
         let csvText = `"Sub Problem",Population,"Recommendation ${analysisResult.externalSolutionIndex + 1}"\n`;
         csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex},"${analysisResult.externalSolution}"\n`;
-        csvText += "Match, Rank, Description, Title, URL\n";
+        csvText += "Match,Rank,Description,Title,URL\n";
         analysisResult.topSolutionMatches.sort((a, b) => b.percent - a.percent);
         analysisResult.topSolutionMatches.forEach((match) => {
             const url = `https://policy-synth.ai/projects/${this.memory.groupId}/${analysisResult.subProblemIndex}/${analysisResult.populationIndex}/${match.index}`;
