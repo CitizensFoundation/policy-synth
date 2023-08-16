@@ -147,7 +147,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
       IEngineConstants.maxSubProblems
     );
 
-    const skipSubProblemsIndexes = [1,2];
+    const skipSubProblemsIndexes: number[] = [];
 
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },

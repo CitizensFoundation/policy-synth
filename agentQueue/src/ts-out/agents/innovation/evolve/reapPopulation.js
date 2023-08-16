@@ -29,7 +29,7 @@ export class ReapSolutionsProcessor extends BaseProcessor {
         this.logger.info(`Initial population size: ${solutions.length}`);
         for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
             const solution = solutions[solutionIndex];
-            const reapedResults = await this.callLLM("evolve-reap-population", IEngineConstants.reapSolutionsModel, await this.renderReapPrompt(solutions[solutionIndex]));
+            const reapedResults = await this.callLLM("evolve-reap-population", IEngineConstants.reapSolutionsModel, await this.renderReapPrompt(solution));
             if (reapedResults.solutionFitsRequirements === false) {
                 this.logger.info(`Reaped solution: ${solution.title}`);
                 solution.reaped = true;

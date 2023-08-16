@@ -90,7 +90,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
         //this.logger.info("Ranking problem statement solutions");
         //await this.rankWebSolutions(null, null);
         const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
-        const skipSubProblemsIndexes = [1, 2];
+        const skipSubProblemsIndexes = [];
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             this.logger.info(`Ranking sub problem ${subProblemIndex}`);
             if (!skipSubProblemsIndexes.includes(subProblemIndex)) {

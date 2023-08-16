@@ -35,10 +35,11 @@ const setupProjectOne = (memory) => {
     }
   `;
     memory.customInstructions.reapSolutions = `
-    1. Filter out solution components that include more than two unique core ideas, if the ideas are closely related then do not filter them out.
-    2. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
-    3. Core ideas are distinct concepts or strategies that are central to the solution component.
-    4. If a solution component includes multiple strategies or methods that serve to implement or facilitate a single core idea, do not consider these as separate core ideas. Instead, view them as parts of a comprehensive approach to implementing the core idea.
+    1. Solution components should not include more than one core idea.
+    2. Solution components can have more than one implementation detail ideas.
+    3. If the solution components has two core ideas that are hard to implement without each other then the solution component can be included.
+    4. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
+    5. Core ideas are distinct concepts or strategies that are central to the solution component.
   `;
 };
 const setupProjectTwo = (memory) => {
