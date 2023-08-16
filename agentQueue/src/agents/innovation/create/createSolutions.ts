@@ -287,11 +287,25 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     this.logger.info(
       `Getting all type queries for sub problem ${subProblemIndex}`
     );
-    return {
-      general:
-        searchQueries.general[
+
+    const general = searchQueries.general
+      ? searchQueries.general[
           this.randomSearchQueryIndex(searchQueries, "general")
-        ],
+        ]
+      : "";
+
+    if (!general) {
+      this.logger.error(
+        `No general search queries for sub problem ${subProblemIndex} ${JSON.stringify(
+          searchQueries,
+          null,
+          2
+        )}`
+      );
+    }
+
+    return {
+      general: general as string,
       scientific:
         searchQueries.scientific[
           this.randomSearchQueryIndex(searchQueries, "scientific")
@@ -388,7 +402,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
     const chosenEntities = entities.slice(
       0,
-      IEngineConstants.maxTopEntitiesToSearch
+      this.memory.groupId === 1 ? 3 : IEngineConstants.maxTopEntitiesToSearch
     );
 
     const randomEntity =
@@ -549,6 +563,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     const mostRelevantParagraphs = this.getRandomItemFromArray(
       results.mostRelevantParagraphs
     );
+
     this.logger.debug(`Random Solution: ${solutionIdentifiedInTextContext}`);
     this.logger.debug(`Summary: ${results.summary}`);
     this.logger.debug(
@@ -567,7 +582,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         ${mostRelevantParagraphs}
     `;
 
-    return searchResults;
+    return { searchResults, selectedUrl: results.url };
   }
 
   async searchForType(
@@ -603,7 +618,8 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     }
     this.logger.debug("got raw search results");
 
-    let searchResults = this.renderRawSearchResults(rawSearchResults);
+    let searchResultsData = this.renderRawSearchResults(rawSearchResults);
+    let searchResults = searchResultsData.searchResults;
     //this.logger.debug(`Before token count: ${searchResults}`)
 
     while (
@@ -617,7 +633,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
     //this.logger.debug(`After token count: ${searchResults}`)
 
-    return searchResults;
+    return { searchResults, selectedUrl: searchResultsData.selectedUrl };
   }
 
   async getSearchQueryTextContext(
@@ -679,10 +695,10 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
         const newSolutions = await this.createSolutions(
           subProblemIndex,
-          textContexts.general,
-          textContexts.scientific,
-          textContexts.openData,
-          textContexts.news,
+          textContexts.general.searchResults,
+          textContexts.scientific.searchResults,
+          textContexts.openData.searchResults,
+          textContexts.news.searchResults,
           alreadyCreatedSolutions
         );
 
@@ -691,6 +707,19 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         );
 
         solutions = solutions.concat(newSolutions);
+
+        const seedUrls = [
+          textContexts.general.selectedUrl,
+          textContexts.scientific.selectedUrl,
+          textContexts.openData.selectedUrl,
+          textContexts.news.selectedUrl
+        ]
+
+        for (let solution of solutions) {
+          solution.family = {
+            seedUrls
+          }
+        }
       }
 
       this.logger.debug("Created all solutions batches");

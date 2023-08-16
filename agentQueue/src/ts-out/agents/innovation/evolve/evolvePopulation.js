@@ -49,21 +49,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         `),
         ];
     }
-    renderMutatePrompt(individual, subProblemIndex, mutateRate = undefined) {
-        if (!mutateRate) {
-            const random = Math.random();
-            if (random < IEngineConstants.evolution.lowMutationRate) {
-                mutateRate = "low";
-            }
-            else if (random <
-                IEngineConstants.evolution.lowMutationRate +
-                    IEngineConstants.evolution.mediumMutationRate) {
-                mutateRate = "medium";
-            }
-            else {
-                mutateRate = "high";
-            }
-        }
+    renderMutatePrompt(individual, subProblemIndex, mutateRate) {
         this.logger.debug(`Mutate rate: ${mutateRate}`);
         return [
             new SystemChatMessage(`
@@ -106,7 +92,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         const offspring = await this.performRecombination(parentA, parentB, subProblemIndex);
         return offspring;
     }
-    async performMutation(individual, subProblemIndex, mutateRate = undefined) {
+    async performMutation(individual, subProblemIndex, mutateRate) {
         this.logger.debug("Performing mutation");
         this.chat = new ChatOpenAI({
             temperature: IEngineConstants.evolutionMutateModel.temperature,
@@ -126,7 +112,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             throw error;
         }
     }
-    async mutate(individual, subProblemIndex, mutateRate = undefined) {
+    async mutate(individual, subProblemIndex, mutateRate) {
         try {
             const mutant = await this.performMutation(individual, subProblemIndex, mutateRate);
             return mutant;
@@ -153,7 +139,19 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         }
         const textContexts = await this.getTextContext(subProblemIndex, alreadyCreatedSolutionsText);
         this.logger.debug(`Evolution Text contexts: ${JSON.stringify(textContexts, null, 2)}`);
-        const newSolutions = await this.createSolutions(subProblemIndex, textContexts.general, textContexts.scientific, textContexts.openData, textContexts.news, alreadyCreatedSolutionsText, "evolve-create-population");
+        const newSolutions = await this.createSolutions(subProblemIndex, textContexts.general.searchResults, textContexts.scientific.searchResults, textContexts.openData.searchResults, textContexts.news.searchResults, alreadyCreatedSolutionsText, "evolve-create-population");
+        const seedUrls = [
+            textContexts.general.selectedUrl,
+            textContexts.scientific.selectedUrl,
+            textContexts.openData.selectedUrl,
+            textContexts.news.selectedUrl,
+        ];
+        // Go over newSolutions and add selectedUrl
+        for (let solution of newSolutions) {
+            solution.family = {
+                seedUrls
+            };
+        }
         return newSolutions;
     }
     selectParent(population, excludedIndividual) {
@@ -168,6 +166,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         tournament.sort((a, b) => b.eloRating - a.eloRating);
         return tournament[0];
     }
+    getNumberOfGenerations(subProblemIndex) {
+        return this.memory.subProblems[subProblemIndex].solutions.populations.length;
+    }
     getPreviousPopulation(subProblemIndex) {
         if (!this.memory.subProblems[subProblemIndex].solutions.populations) {
             this.memory.subProblems[subProblemIndex].solutions.populations = [];
@@ -179,6 +180,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             this.logger.error("No previous population found." + subProblemIndex);
             throw new Error("No previous population found." + subProblemIndex);
         }
+    }
+    getIndexOfParent(parent, previousPopulation) {
+        return previousPopulation.findIndex((solution) => solution === parent);
     }
     async addRandomMutation(newPopulation, previousPopulation, subProblemIndex) {
         const populationSize = IEngineConstants.evolution.populationSize;
@@ -192,7 +196,24 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             const parent = this.selectParent(previousPopulation);
             this.logger.debug(`Parent: ${parent.title}`);
             try {
-                const mutant = await this.mutate(parent, subProblemIndex);
+                const random = Math.random();
+                let mutateRate;
+                if (random < IEngineConstants.evolution.lowMutationRate) {
+                    mutateRate = "low";
+                }
+                else if (random <
+                    IEngineConstants.evolution.lowMutationRate +
+                        IEngineConstants.evolution.mediumMutationRate) {
+                    mutateRate = "medium";
+                }
+                else {
+                    mutateRate = "high";
+                }
+                const mutant = await this.mutate(parent, subProblemIndex, mutateRate);
+                mutant.family = {
+                    parentA: `${this.getNumberOfGenerations(subProblemIndex) - 1}:${this.getIndexOfParent(parent, previousPopulation)}`,
+                    mutationRate: mutateRate
+                };
                 this.logger.debug(`Mutant: ${JSON.stringify(mutant, null, 2)}`);
                 newPopulation.push(mutant);
                 this.logger.debug("After mutant push");
@@ -215,9 +236,16 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             this.logger.debug(`Parent A: ${parentA.title}`);
             this.logger.debug(`Parent B: ${parentB.title}`);
             let offspring = await this.recombine(parentA, parentB, subProblemIndex);
+            let mutationRate = undefined;
             if (Math.random() < IEngineConstants.evolution.crossoverMutationPercent) {
-                offspring = await this.mutate(offspring, subProblemIndex, "low");
+                mutationRate = "low";
+                offspring = await this.mutate(offspring, subProblemIndex, mutationRate);
             }
+            offspring.family = {
+                parentA: `${this.getNumberOfGenerations(subProblemIndex) - 1}:${this.getIndexOfParent(parentA, previousPopulation)}`,
+                parentB: `${this.getNumberOfGenerations(subProblemIndex) - 1}:${this.getIndexOfParent(parentB, previousPopulation)}`,
+                mutationRate
+            };
             this.logger.debug(`Offspring: ${JSON.stringify(offspring, null, 2)}`);
             newPopulation.push(offspring);
         }
@@ -255,7 +283,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                     groups.set(groupId, []);
                 }
                 if (solution.eloRating && solution.eloRating > 1000) {
-                    groups.get(groupId).push(solution);
+                    groups.get(groupId).push({ ...solution });
                 }
                 else {
                     this.logger.debug(`Not adding top group solution with lower than average rating: ${solution.title} ${solution.eloRating}`);
@@ -286,7 +314,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         for (let i = 0; i < eliteCount; i++) {
             if (!usedSolutionTitles.has(previousPopulation[i].title)) {
                 usedSolutionTitles.add(previousPopulation[i].title);
-                newPopulation.push(previousPopulation[i]);
+                newPopulation.push({ ...previousPopulation[i] });
                 this.logger.debug(`Added elite: ${previousPopulation[i].title}`);
             }
         }
