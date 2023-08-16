@@ -73,23 +73,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
   renderMutatePrompt(
     individual: IEngineSolution,
     subProblemIndex: number,
-    mutateRate: IEngineMutationRates | undefined = undefined
+    mutateRate: IEngineMutationRates
   ) {
-    if (!mutateRate) {
-      const random = Math.random();
-      if (random < IEngineConstants.evolution.lowMutationRate) {
-        mutateRate = "low";
-      } else if (
-        random <
-        IEngineConstants.evolution.lowMutationRate +
-          IEngineConstants.evolution.mediumMutationRate
-      ) {
-        mutateRate = "medium";
-      } else {
-        mutateRate = "high";
-      }
-    }
-
     this.logger.debug(`Mutate rate: ${mutateRate}`);
 
     return [
@@ -162,7 +147,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
   async performMutation(
     individual: IEngineSolution,
     subProblemIndex: number,
-    mutateRate: IEngineMutationRates | undefined = undefined
+    mutateRate: IEngineMutationRates
   ) {
     this.logger.debug("Performing mutation");
     this.chat = new ChatOpenAI({
@@ -194,7 +179,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
   async mutate(
     individual: IEngineSolution,
     subProblemIndex: number,
-    mutateRate: IEngineMutationRates | undefined = undefined
+    mutateRate: IEngineMutationRates
   ) {
     try {
       const mutant = await this.performMutation(
@@ -242,13 +227,27 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
 
     const newSolutions = await this.createSolutions(
       subProblemIndex,
-      textContexts.general,
-      textContexts.scientific,
-      textContexts.openData,
-      textContexts.news,
+      textContexts.general.searchResults,
+      textContexts.scientific.searchResults,
+      textContexts.openData.searchResults,
+      textContexts.news.searchResults,
       alreadyCreatedSolutionsText,
       "evolve-create-population"
     );
+
+    const seedUrls = [
+      textContexts.general.selectedUrl,
+      textContexts.scientific.selectedUrl,
+      textContexts.openData.selectedUrl,
+      textContexts.news.selectedUrl,
+    ]
+
+    // Go over newSolutions and add selectedUrl
+    for (let solution of newSolutions) {
+      solution.family = {
+        seedUrls
+      }
+    }
 
     return newSolutions;
   }
@@ -272,6 +271,10 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     return tournament[0];
   }
 
+  getNumberOfGenerations(subProblemIndex: number) {
+    return this.memory.subProblems[subProblemIndex].solutions.populations.length;
+  }
+
   getPreviousPopulation(subProblemIndex: number) {
     if (!this.memory.subProblems[subProblemIndex].solutions.populations) {
       this.memory.subProblems[subProblemIndex].solutions.populations = [];
@@ -285,6 +288,13 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       this.logger.error("No previous population found." + subProblemIndex);
       throw new Error("No previous population found." + subProblemIndex);
     }
+  }
+
+  getIndexOfParent(
+    parent: IEngineSolution,
+    previousPopulation: IEngineSolution[]
+  ): number | undefined {
+    return previousPopulation.findIndex((solution) => solution === parent);
   }
 
   async addRandomMutation(
@@ -308,7 +318,24 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       const parent = this.selectParent(previousPopulation);
       this.logger.debug(`Parent: ${parent.title}`);
       try {
-        const mutant = await this.mutate(parent, subProblemIndex);
+        const random = Math.random();
+        let mutateRate: IEngineMutationRates;
+        if (random < IEngineConstants.evolution.lowMutationRate) {
+          mutateRate = "low";
+        } else if (
+          random <
+          IEngineConstants.evolution.lowMutationRate +
+            IEngineConstants.evolution.mediumMutationRate
+        ) {
+          mutateRate = "medium";
+        } else {
+          mutateRate = "high";
+        }
+        const mutant = await this.mutate(parent, subProblemIndex, mutateRate);
+        mutant.family = {
+          parentA: `${this.getNumberOfGenerations(subProblemIndex)-1}:${this.getIndexOfParent(parent, previousPopulation)}`,
+          mutationRate: mutateRate
+        }
         this.logger.debug(`Mutant: ${JSON.stringify(mutant, null, 2)}`);
         newPopulation.push(mutant);
         this.logger.debug("After mutant push");
@@ -342,8 +369,17 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
 
       let offspring = await this.recombine(parentA, parentB, subProblemIndex);
 
+      let mutationRate: IEngineMutationRates | undefined = undefined;
+
       if (Math.random() < IEngineConstants.evolution.crossoverMutationPercent) {
-        offspring = await this.mutate(offspring, subProblemIndex, "low");
+        mutationRate = "low";
+        offspring = await this.mutate(offspring, subProblemIndex, mutationRate);
+      }
+
+      offspring.family = {
+        parentA: `${this.getNumberOfGenerations(subProblemIndex)-1}:${this.getIndexOfParent(parentA, previousPopulation)}`,
+        parentB: `${this.getNumberOfGenerations(subProblemIndex)-1}:${this.getIndexOfParent(parentB, previousPopulation)}`,
+        mutationRate
       }
 
       this.logger.debug(`Offspring: ${JSON.stringify(offspring, null, 2)}`);
@@ -415,7 +451,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
           groups.set(groupId, []);
         }
         if (solution.eloRating && solution.eloRating > 1000) {
-          groups.get(groupId)!.push(solution);
+          groups.get(groupId)!.push({...solution});
         } else {
           this.logger.debug(`Not adding top group solution with lower than average rating: ${solution.title} ${solution.eloRating}`);
         }
@@ -457,7 +493,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     for (let i = 0; i < eliteCount; i++) {
       if (!usedSolutionTitles.has(previousPopulation[i].title)) {
         usedSolutionTitles.add(previousPopulation[i].title);
-        newPopulation.push(previousPopulation[i]);
+        newPopulation.push({...previousPopulation[i]});
         this.logger.debug(`Added elite: ${previousPopulation[i].title}`);
       }
     }

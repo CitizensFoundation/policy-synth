@@ -158,6 +158,12 @@ interface IEngineSolution {
   imagePrompt?: string;
   reaped?: boolean;
   ratings?: object;
+  family?: {
+    parentA?: string; // "<generationIndex>:<solutionId>"
+    parentB?: string;
+    mutationRate?: IEngineMutationRates;
+    seedUrls?: string[];
+  }
 }
 
 interface IEngineProCon {

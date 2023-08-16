@@ -166,8 +166,14 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     }
     getAllTypeQueries(searchQueries, subProblemIndex) {
         this.logger.info(`Getting all type queries for sub problem ${subProblemIndex}`);
+        const general = searchQueries.general
+            ? searchQueries.general[this.randomSearchQueryIndex(searchQueries, "general")]
+            : "";
+        if (!general) {
+            this.logger.error(`No general search queries for sub problem ${subProblemIndex} ${JSON.stringify(searchQueries, null, 2)}`);
+        }
         return {
-            general: searchQueries.general[this.randomSearchQueryIndex(searchQueries, "general")],
+            general: general,
             scientific: searchQueries.scientific[this.randomSearchQueryIndex(searchQueries, "scientific")],
             openData: searchQueries.openData[this.randomSearchQueryIndex(searchQueries, "openData")],
             news: searchQueries.news[this.randomSearchQueryIndex(searchQueries, "news")],
@@ -218,7 +224,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         const subProblemQueries = this.getAllTypeQueries(this.memory.subProblems[subProblemIndex].searchQueries, subProblemIndex);
         const entities = this.memory.subProblems[subProblemIndex].entities;
         //this.logger.debug(`Entities: ${JSON.stringify(entities, null, 2)}`);
-        const chosenEntities = entities.slice(0, IEngineConstants.maxTopEntitiesToSearch);
+        const chosenEntities = entities.slice(0, this.memory.groupId === 1 ? 3 : IEngineConstants.maxTopEntitiesToSearch);
         const randomEntity = chosenEntities[Math.floor(Math.random() * chosenEntities.length)];
         this.logger.debug(`Random Entity: ${JSON.stringify(randomEntity.searchQueries, null, 2)}`);
         const randomEntitySearchQueries = this.getAllTypeQueries(randomEntity.searchQueries, subProblemIndex);
@@ -301,7 +307,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
         ${mostRelevantParagraphs}
     `;
-        return searchResults;
+        return { searchResults, selectedUrl: results.url };
     }
     async searchForType(subProblemIndex, type, searchQuery, tokensLeftForType) {
         this.logger.info(`Searching for type ${type} with query ${searchQuery}`);
@@ -317,7 +323,8 @@ export class CreateSolutionsProcessor extends BaseProcessor {
             rawSearchResults = await this.webPageVectorStore.searchWebPages(searchQuery, this.memory.groupId, subProblemIndex, type);
         }
         this.logger.debug("got raw search results");
-        let searchResults = this.renderRawSearchResults(rawSearchResults);
+        let searchResultsData = this.renderRawSearchResults(rawSearchResults);
+        let searchResults = searchResultsData.searchResults;
         //this.logger.debug(`Before token count: ${searchResults}`)
         while ((await this.countTokensForString(searchResults)) > tokensLeftForType) {
             this.logger.debug(`Tokens left for type ${type}: ${tokensLeftForType}`);
@@ -326,7 +333,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
             searchResults = sentences.join(". ");
         }
         //this.logger.debug(`After token count: ${searchResults}`)
-        return searchResults;
+        return { searchResults, selectedUrl: searchResultsData.selectedUrl };
     }
     async getSearchQueryTextContext(subProblemIndex, searchQuery, type, alreadyCreatedSolutions = undefined) {
         //TODO: What about the system prompt?
@@ -355,9 +362,20 @@ export class CreateSolutionsProcessor extends BaseProcessor {
                         .join("\n");
                 }
                 const textContexts = await this.getTextContext(subProblemIndex, alreadyCreatedSolutions);
-                const newSolutions = await this.createSolutions(subProblemIndex, textContexts.general, textContexts.scientific, textContexts.openData, textContexts.news, alreadyCreatedSolutions);
+                const newSolutions = await this.createSolutions(subProblemIndex, textContexts.general.searchResults, textContexts.scientific.searchResults, textContexts.openData.searchResults, textContexts.news.searchResults, alreadyCreatedSolutions);
                 this.logger.debug(`New Solution Components: ${JSON.stringify(newSolutions, null, 2)}`);
                 solutions = solutions.concat(newSolutions);
+                const seedUrls = [
+                    textContexts.general.selectedUrl,
+                    textContexts.scientific.selectedUrl,
+                    textContexts.openData.selectedUrl,
+                    textContexts.news.selectedUrl
+                ];
+                for (let solution of solutions) {
+                    solution.family = {
+                        seedUrls
+                    };
+                }
             }
             this.logger.debug("Created all solutions batches");
             if (!this.memory.subProblems[subProblemIndex].solutions) {
