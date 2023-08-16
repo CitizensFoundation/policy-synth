@@ -997,6 +997,7 @@ export class CpsApp extends YpBaseElement {
     createSubProblems: IEngineConstants.createSubProblemsModel,
     createEntities: IEngineConstants.createEntitiesModel,
     rankWebSolutions: IEngineConstants.rankWebSolutionsModel,
+    analyseExternalSolutions: IEngineConstants.analyseExternalSolutionsModel,
     createSearchQueries: IEngineConstants.createSearchQueriesModel,
     createSolutionImages: IEngineConstants.createSolutionImagesModel,
     createProblemStatementImage: IEngineConstants.createSolutionImagesModel,

@@ -44,7 +44,7 @@ export class ReapSolutionsProcessor extends BaseProcessor {
       const reapedResults: IEngineReapingResults = await this.callLLM(
         "evolve-reap-population",
         IEngineConstants.reapSolutionsModel,
-        await this.renderReapPrompt(solutions[solutionIndex])
+        await this.renderReapPrompt(solution)
       );
 
       if (reapedResults.solutionFitsRequirements===false) {
