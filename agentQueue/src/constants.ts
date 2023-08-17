@@ -364,14 +364,14 @@ export class IEngineConstants {
 
     // Population split
     keepElitePercent: 0.1,
-    randomImmigrationPercent: 0.45,
-    mutationOffspringPercent: 0.35,
+    randomImmigrationPercent: 0.40,
+    mutationOffspringPercent: 0.40,
     crossoverPercent: 0.1,
 
     // General mutation rate split
-    lowMutationRate: 0.3,
+    lowMutationRate: 0.4,
     mediumMutationRate: 0.4,
-    highMutationRate: 0.3,
+    highMutationRate: 0.2,
 
     selectParentTournamentSize: 7,
     crossoverMutationPercent: 0.1,
