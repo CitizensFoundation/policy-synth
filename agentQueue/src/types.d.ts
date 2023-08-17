@@ -163,6 +163,7 @@ interface IEngineSolution {
     parentB?: string;
     mutationRate?: IEngineMutationRates;
     seedUrls?: string[];
+    gen?: number;
   }
 }
 

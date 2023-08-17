@@ -149,7 +149,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         // Go over newSolutions and add selectedUrl
         for (let solution of newSolutions) {
             solution.family = {
-                seedUrls
+                seedUrls,
+                gen: this.getNumberOfGenerations(subProblemIndex)
             };
         }
         return newSolutions;
@@ -167,7 +168,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         return tournament[0];
     }
     getNumberOfGenerations(subProblemIndex) {
-        return this.memory.subProblems[subProblemIndex].solutions.populations.length;
+        return this.memory.subProblems[subProblemIndex].solutions.populations
+            .length;
     }
     getPreviousPopulation(subProblemIndex) {
         if (!this.memory.subProblems[subProblemIndex].solutions.populations) {
@@ -212,7 +214,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                 const mutant = await this.mutate(parent, subProblemIndex, mutateRate);
                 mutant.family = {
                     parentA: `${this.getNumberOfGenerations(subProblemIndex) - 1}:${this.getIndexOfParent(parent, previousPopulation)}`,
-                    mutationRate: mutateRate
+                    mutationRate: mutateRate,
+                    gen: this.getNumberOfGenerations(subProblemIndex)
                 };
                 this.logger.debug(`Mutant: ${JSON.stringify(mutant, null, 2)}`);
                 newPopulation.push(mutant);
@@ -244,7 +247,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             offspring.family = {
                 parentA: `${this.getNumberOfGenerations(subProblemIndex) - 1}:${this.getIndexOfParent(parentA, previousPopulation)}`,
                 parentB: `${this.getNumberOfGenerations(subProblemIndex) - 1}:${this.getIndexOfParent(parentB, previousPopulation)}`,
-                mutationRate
+                mutationRate,
+                gen: this.getNumberOfGenerations(subProblemIndex)
             };
             this.logger.debug(`Offspring: ${JSON.stringify(offspring, null, 2)}`);
             newPopulation.push(offspring);
@@ -282,7 +286,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                 if (!groups.has(groupId)) {
                     groups.set(groupId, []);
                 }
-                if (solution.eloRating && solution.eloRating > 1000) {
+                if (solution.eloRating &&
+                    solution.eloRating >=
+                        IEngineConstants.evolution.limitTopTopicClusterElitesToEloRating) {
                     groups.get(groupId).push({ ...solution });
                 }
                 else {
