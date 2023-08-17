@@ -358,7 +358,7 @@ export class IEngineConstants {
   };
 
   static evolution = {
-    populationSize: 72,
+    populationSize: 80,
 
     limitTopTopicClusterElitesToEloRating: 850,
 
