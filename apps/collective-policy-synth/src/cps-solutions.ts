@@ -17,7 +17,8 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 import { IEngineConstants } from './constants.js';
 import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
-import { Router } from '@lit-labs/router';
+
+import './ps-family-tree.js';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
@@ -738,7 +739,7 @@ export class CpsSolutions extends CpsStageBase {
       } else {
         firstItems = subProblem.solutions.populations.slice(0, 3);
         if (subProblem.solutions.populations.length > 3) {
-          lastItems = subProblem.solutions.populations.slice(3,6);
+          lastItems = subProblem.solutions.populations.slice(3, 6);
           if (subProblem.solutions.populations.length > 6) {
             lastItems = subProblem.solutions.populations.slice(-3);
             middleItems = subProblem.solutions.populations.slice(3, -3);
@@ -1077,6 +1078,11 @@ export class CpsSolutions extends CpsStageBase {
                   solutionIndex,
                   solutions
                 )}
+                <ps-family-tree
+                  .memory="${this.memory}"
+                  .subProblemIndex="${this.activeSubProblemIndex}"
+                  .solution="${solution}"
+                ></ps-family-tree>
               </div>
             `
           : html`<div class="reapedInfo layout horizontal center-center">
