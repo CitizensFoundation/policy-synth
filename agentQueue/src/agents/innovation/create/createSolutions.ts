@@ -717,7 +717,8 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
         for (let solution of solutions) {
           solution.family = {
-            seedUrls
+            seedUrls,
+            gen: 0
           }
         }
       }

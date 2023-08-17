@@ -240,13 +240,14 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       textContexts.scientific.selectedUrl,
       textContexts.openData.selectedUrl,
       textContexts.news.selectedUrl,
-    ]
+    ];
 
     // Go over newSolutions and add selectedUrl
     for (let solution of newSolutions) {
       solution.family = {
-        seedUrls
-      }
+        seedUrls,
+        gen: this.getNumberOfGenerations(subProblemIndex)
+      };
     }
 
     return newSolutions;
@@ -272,7 +273,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
   }
 
   getNumberOfGenerations(subProblemIndex: number) {
-    return this.memory.subProblems[subProblemIndex].solutions.populations.length;
+    return this.memory.subProblems[subProblemIndex].solutions.populations
+      .length;
   }
 
   getPreviousPopulation(subProblemIndex: number) {
@@ -333,9 +335,12 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         }
         const mutant = await this.mutate(parent, subProblemIndex, mutateRate);
         mutant.family = {
-          parentA: `${this.getNumberOfGenerations(subProblemIndex)-1}:${this.getIndexOfParent(parent, previousPopulation)}`,
-          mutationRate: mutateRate
-        }
+          parentA: `${
+            this.getNumberOfGenerations(subProblemIndex) - 1
+          }:${this.getIndexOfParent(parent, previousPopulation)}`,
+          mutationRate: mutateRate,
+          gen: this.getNumberOfGenerations(subProblemIndex)
+        };
         this.logger.debug(`Mutant: ${JSON.stringify(mutant, null, 2)}`);
         newPopulation.push(mutant);
         this.logger.debug("After mutant push");
@@ -377,10 +382,15 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       }
 
       offspring.family = {
-        parentA: `${this.getNumberOfGenerations(subProblemIndex)-1}:${this.getIndexOfParent(parentA, previousPopulation)}`,
-        parentB: `${this.getNumberOfGenerations(subProblemIndex)-1}:${this.getIndexOfParent(parentB, previousPopulation)}`,
-        mutationRate
-      }
+        parentA: `${
+          this.getNumberOfGenerations(subProblemIndex) - 1
+        }:${this.getIndexOfParent(parentA, previousPopulation)}`,
+        parentB: `${
+          this.getNumberOfGenerations(subProblemIndex) - 1
+        }:${this.getIndexOfParent(parentB, previousPopulation)}`,
+        mutationRate,
+        gen: this.getNumberOfGenerations(subProblemIndex)
+      };
 
       this.logger.debug(`Offspring: ${JSON.stringify(offspring, null, 2)}`);
 
@@ -450,10 +460,16 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         if (!groups.has(groupId)) {
           groups.set(groupId, []);
         }
-        if (solution.eloRating && solution.eloRating > 1000) {
-          groups.get(groupId)!.push({...solution});
+        if (
+          solution.eloRating &&
+          solution.eloRating >=
+            IEngineConstants.evolution.limitTopTopicClusterElitesToEloRating
+        ) {
+          groups.get(groupId)!.push({ ...solution });
         } else {
-          this.logger.debug(`Not adding top group solution with lower than average rating: ${solution.title} ${solution.eloRating}`);
+          this.logger.debug(
+            `Not adding top group solution with lower than average rating: ${solution.title} ${solution.eloRating}`
+          );
         }
       }
     }
@@ -465,7 +481,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
 
     for (let [groupId, groupSolutions] of groups) {
       if (groupSolutions.length === 0) {
-        this.logger.debug(`No solutions above average rating in group ID: ${groupId}`);
+        this.logger.debug(
+          `No solutions above average rating in group ID: ${groupId}`
+        );
         continue;
       }
 
@@ -473,7 +491,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       if (!usedSolutionTitles.has(bestSolutionInGroup.title!)) {
         usedSolutionTitles.add(bestSolutionInGroup.title!);
         newPopulation.push(bestSolutionInGroup);
-        this.logger.debug(`Added solution with unique group ID: ${bestSolutionInGroup.similarityGroup?.index}`);
+        this.logger.debug(
+          `Added solution with unique group ID: ${bestSolutionInGroup.similarityGroup?.index}`
+        );
       }
     }
   }
@@ -493,7 +513,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     for (let i = 0; i < eliteCount; i++) {
       if (!usedSolutionTitles.has(previousPopulation[i].title)) {
         usedSolutionTitles.add(previousPopulation[i].title);
-        newPopulation.push({...previousPopulation[i]});
+        newPopulation.push({ ...previousPopulation[i] });
         this.logger.debug(`Added elite: ${previousPopulation[i].title}`);
       }
     }
