@@ -12,6 +12,7 @@ const redis = new ioredis.default(
 );
 
 export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
+  searchCounter = 0
   async searchWeb(
     policy: PSPolicy,
     subProblemIndex: number,
@@ -23,11 +24,28 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
     }
     for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
 
+      // If searchCounter mod 10 then print
+      if (this.searchCounter % 10 == 0) {
+        this.logger.info(`Have searched ${this.searchCounter} queries`);
+      }
+      if (this.searchCounter > 990) {
+        // Sleep for 15 minutes
+        this.logger.info(`Sleeping for 15 minutes to avoid search API rate limit`);
+        await new Promise((resolve) => setTimeout(resolve, 15 * 60 * 1000));
+        this.searchCounter = 300;
+      }
+
       if (!policy.evidenceSearchResults![searchResultType]) {
+
+        let queriesToSearch =  policy.evidenceSearchQueries![searchResultType]
+         .slice(0, IEngineConstants.maxTopEvidenceQueriesToSearchPerType);
+
         const results = await this.getQueryResults(
-          policy.evidenceSearchQueries![searchResultType],
+          queriesToSearch,
           `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`
         );
+
+        this.searchCounter+=IEngineConstants.maxTopEvidenceQueriesToSearchPerType;
 
         policy.evidenceSearchResults![searchResultType] = results.searchResults;
 
@@ -46,7 +64,7 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
     this.logger.info("Search Web for Evidence Processor");
     this.seenUrls = new Map();
 
-    super.process();
+    //super.process();
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
