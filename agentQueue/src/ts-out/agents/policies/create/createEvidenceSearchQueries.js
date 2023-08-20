@@ -3,28 +3,29 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
-    evidenceWebPageTypesArray = [
+    static evidenceWebPageTypesArray = [
         "positiveEvidence",
         "negativeEvidence",
         "neutralEvidence",
         "economicEvidence",
-        "legalEvidence",
-        "technologicalEvidence",
         "scientificEvidence",
         "culturalEvidence",
         "environmentalEvidence",
-        "stakeholderOpinions",
-        "historicalContext",
+        "legalEvidence",
+        "technologicalEvidence",
         "geopoliticalEvidence",
         "caseStudies",
+        "stakeholderOpinions",
         "expertOpinions",
+        "publicOpinions",
+        "historicalContext",
         "ethicalConsiderations",
         "longTermImpact",
         "shortTermImpact",
         "localPerspective",
         "globalPerspective",
-        "implementationFeasibility",
-        "publicOpinion",
+        "costAnalysis",
+        "implementationFeasibility"
     ];
     filterPolicyParameters(policy) {
         const { imageUrl, imagePrompt, solutionIndex, ...filteredPolicy } = policy;
@@ -123,20 +124,25 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
         return (this.memory.subProblems[subProblemIndex].policies.populations.length - 1);
     }
     async createEvidenceSearchQueries(policy, subProblemIndex, policyIndex) {
-        for (const searchResultType of this.evidenceWebPageTypesArray) {
-            this.logger.info(`Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-            // create search queries for each type
-            let searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
-            this.logger.info(`Refine evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-            searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
-            this.logger.info(`Ranking evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-            searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
-            this.logger.debug(`Search query type: ${searchResultType} ${JSON.stringify(searchResults, null, 2)}`);
-            if (!policy.evidenceSearchQueries) {
-                //@ts-ignore
-                policy.evidenceSearchQueries = {};
+        if (!policy.evidenceSearchQueries) {
+            //@ts-ignore
+            policy.evidenceSearchQueries = {};
+        }
+        for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+            if (!policy.evidenceSearchQueries[searchResultType]) {
+                this.logger.info(`Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
+                // create search queries for each type
+                let searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
+                this.logger.info(`Refine evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
+                searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                this.logger.info(`Ranking evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
+                searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                this.logger.debug(`Search query type: ${searchResultType} ${JSON.stringify(searchResults, null, 2)}`);
+                policy.evidenceSearchQueries[searchResultType] = searchResults;
             }
-            policy.evidenceSearchQueries[searchResultType] = searchResults;
+            else {
+                this.logger.info(`Evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results already exist`);
+            }
         }
     }
     async process() {
@@ -148,10 +154,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
             modelName: IEngineConstants.createEvidenceSearchQueriesModel.name,
             verbose: IEngineConstants.createEvidenceSearchQueriesModel.verbose,
         });
-        const subProblemsLimit = 1; /*Math.min(
-          this.memory.subProblems.length,
-          IEngineConstants.maxSubProblems
-        );*/
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const subProblem = this.memory.subProblems[subProblemIndex];
             const policies = subProblem.policies?.populations[subProblem.policies.populations.length - 1];

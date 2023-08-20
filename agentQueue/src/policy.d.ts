@@ -24,20 +24,27 @@ type PSEvidenceWebPageTypes =
   | "scientificEvidence"
   | "culturalEvidence"
   | "environmentalEvidence"
-  | "stakeholderOpinions"
-  | "historicalContext"
   | "legalEvidence"
   | "technologicalEvidence"
   | "geopoliticalEvidence"
+
   | "caseStudies"
+
+  | "stakeholderOpinions"
   | "expertOpinions"
+  | "publicOpinions"
+
+  | "historicalContext"
   | "ethicalConsiderations"
+
   | "longTermImpact"
   | "shortTermImpact"
+
   | "localPerspective"
   | "globalPerspective"
-  | "implementationFeasibility"
-  | "publicOpinion";
+
+  | "costAnalysis"
+  | "implementationFeasibility";
 
 type SearchResultItem = IEngineSearchResultItem[];
 
@@ -66,8 +73,28 @@ interface PSPolicyAction {
 
 interface PSEvidenceRawWebPageData {
   mostRelevantParagraphs: string[];
-  possibleEvidenceIdentifiedInTextContext: string[];
-  relevanceToPolicy: string;
+  possibleRawEvidenceIdentifiedInTextContext?: string[];
+
+  possibleRawCaseStudiesIdentifiedInTextContext?: string[];
+  possibleRawStakeholderOpinionsIdentifiedInTextContext?: string[];
+  possibleRawExpertOpinionsIdentifiedInTextContext?: string[];
+  possibleRawPublicOpinionsIdentifiedInTextContext?: string[];
+
+  possibleRawHistoricalContextIdentifiedInTextContext?: string[];
+  possibleRawEthicalConsiderationsIdentifiedInTextContext?: string[];
+
+  possibleRawLongTermImpactIdentifiedInTextContext?: string[];
+  possibleRawShortTermImpactIdentifiedInTextContext?: string[];
+
+  possibleRawLocalPerspectiveIdentifiedInTextContext?: string[];
+  possibleRawGlobalPerspectiveIdentifiedInTextContext?: string[];
+
+  possibleRawImplementationFeasibilityIdentifiedInTextContext?: string[];
+
+  relevanceToPolicyProposal: string;
+  confidenceScore?: number;
+  relvanceScore?: number;
+  qualityScore?: number;
   tags?: string[];
   entities?: string[];
   contacts?: string[];

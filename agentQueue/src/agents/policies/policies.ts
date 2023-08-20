@@ -3,6 +3,7 @@ import { Worker, Job } from "bullmq";
 import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
 import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
+import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
 
 export class AgentPolicies extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -19,8 +20,7 @@ export class AgentPolicies extends BaseAgent {
       stages: this.defaultStages,
       timeStart: Date.now(),
       totalCost: 0,
-      customInstructions: {
-      },
+      customInstructions: {},
       problemStatement: {
         description: jobData.initialProblemStatement,
         searchQueries: {
@@ -35,7 +35,7 @@ export class AgentPolicies extends BaseAgent {
             scientific: [],
             news: [],
             openData: [],
-          }
+          },
         },
       },
       subProblems: [],
@@ -67,15 +67,17 @@ export class AgentPolicies extends BaseAgent {
         );
         await createPolicyImages.process();
         break;
-    case "create-evidence-search-queries":
-      const createEvidenceSearchQueries = new CreateEvidenceSearchQueriesProcessor(
-        this.job,
-        this.memory
-      );
-      await createEvidenceSearchQueries.process();
-      break;
-    default:
-      console.log("No stage matched");
+      case "create-evidence-search-queries":
+        const createEvidenceSearchQueries =
+          new CreateEvidenceSearchQueriesProcessor(this.job, this.memory);
+        await createEvidenceSearchQueries.process();
+        break;
+      case "web-search-evidence":
+        const search = new SearchWebForEvidenceProcessor(this.job, this.memory);
+        await search.process();
+        break;
+      default:
+        console.log("No stage matched");
     }
   }
 }

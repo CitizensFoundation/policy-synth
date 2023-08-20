@@ -220,7 +220,9 @@ type IEngineStageTypes =
   | "analyse-external-solutions"
   | "policies-create-images"
   | "policies-seed"
-  | "create-evidence-search-queries";
+  | "create-evidence-search-queries"
+  | "web-search-evidence"
+  | "web-get-evidence-pages";
 
 interface IEngineUserFeedback {
   feedbackType: string;

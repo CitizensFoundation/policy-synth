@@ -27,6 +27,7 @@ import { isWithinTokenLimit } from "gpt-tokenizer";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 import ioredis from "ioredis";
+import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -37,10 +38,105 @@ puppeteer.use(StealthPlugin());
 
 const onlyCheckWhatNeedsToBeScanned = false;
 
-export class GetWebPagesProcessor extends BaseProcessor {
-  webPageVectorStore = new WebPageVectorStore();
+export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
-  totalPagesSave = 0;
+  renderCommonPrefixPrompt() {
+    return `
+    Your are an expert in analyzing textual data:
+
+    Important Instructions:
+    `
+  }
+
+  renderCommonPostfixPrompt() {
+    return `
+    - Only use information found within the "Text Context" - do not create your own data.
+    - Never output in markdown format.
+    - Never include references or citations as part of the 'allMostRelevantParagraphs' array.
+    - Always output your results in the JSON format with no additional explanation.
+    - Let's think step-by-step.
+    `
+  }
+
+  renderCommonEvidence(type: PSEvidenceWebPageTypes, nameOfColumn: string) {
+    return `
+    1. Examine the "Text context" and determine how it relates to the problem and the specified policy proposal.
+    2. Identify any specific raw ${type} in the "Text Context" and include them in the 'possibleRawEvidenceIdentifiedInTextContext' JSON array. We will analyse this later.
+    3. Include any paragraphs with potential ${type} also in the  the "Text Context" in the 'mostRelevantParagraphs' JSON array.
+    `
+  }
+
+  renderPositiveEvidenceOneShot() {
+    return `
+      Example:
+
+      Problem:
+      Ineffectiveness of Democratic Institutions
+      Democratic institutions are consistently failing to deliver on policy expectations, leading to public disapproval.
+
+      Policy Proposal:
+      Public-Friendly Open Data Platform
+      Create an intuitively navigable, comprehensive platform that renders government data comprehensible and accessible to the general public, thereby fostering transparency and enhancing democratic trust.
+
+      Web page type: positiveEvidence
+
+      Text context:
+      Open data portals
+      Open data portals facilitate access to and reuse of public sector information. They can help encourage cross-border use of reusable data in Europe.
+
+          Laptop with a book behind it
+
+      © iStock by Getty Images -940972538 Bet_Noire
+
+      Open data portals are web-based interfaces designed to make it easier to find reusable information. Like library catalogues, they contain metadata records of datasets published for reuse, mostly relating to information in the form of raw, numerical data rather than textual documents.
+
+      In combination with specific search functionalities, they facilitate finding datasets of interest. Application programming interfaces (APIs) are often available as well, offering direct and automated access to data for software applications.
+
+      Open data portals are an important element of most open data initiatives and are mainly used by public administrations at European, national and local level in EU countries. Notable examples of Open Data portals maintained by public administrations in Europe are:
+
+      opendata.paris.fr
+      www.data.gouv.fr
+      www.dati.piemonte.it
+      www.dati.gov.it
+      www.data.overheid.nl
+      While supporting policy development by offering easy access to published data, open data portals can also work as a catalyst triggering the publication of more and better quality data. For administrations obliged or willing to disseminate their data, they offer the advantage of providing public access without the need to reply to individual requests for access to data. And, more and more companies are opening up some of their data for developers to reuse.
+
+      The European Commission offers an open data portal for any type of information held by the Commission and other EU institutions and bodies. The European Union's Open Data Portal has been in operation since December 2012.
+
+      The European Data Portal
+      The European Commission has funded the European Data Portal through the Connecting Europe Facility programme. The portal is a pan-European repository of public sector information open for reuse in the EU. It offers a training centre on how to reuse open data and a database of success stories from European and international re-users.
+
+      The principal function of the European Data Portal is to provide a single point of access in all 24 EU official languages for data published by public administrations at all levels of government in Europe (EU countries, countries of the European Economic Area and certain other European countries).
+
+      In order to foster comparability of data published across borders, it presents metadata references in a common format (Data Catalog Vocabulary application profile for data portals in Europe), using resource description framework (RDF) technology.  It provides translations of metadata descriptions in all 24 languages using machine-translation technology.
+
+      The portal complements national, regional and thematic open data portals, and the EU's Open Data Portal. Each of these portals target relevant user audiences, offering tailored content. This infrastructure will stimulate cross-border use of reusable information in Europe by improving the findability of data across countries and supporting the development of data applications and products including data from different countries.
+
+              JSON Output:
+        {
+        "summary": "Open data portals are web-based platforms that make public sector information easily accessible and reusable, primarily in the form of raw, numerical data. These platforms support policy development, catalyze the publication of high-quality data, and offer public access without individual data access requests. The European Commission offers an open data portal which provides a single point of access for data from various European public administrations.",
+        "mostRelevantParagraphs": [
+          "Open data portals facilitate access to and reuse of public sector information. They can help encourage cross-border use of reusable data in Europe.",
+          "Open data portals are web-based interfaces designed to make it easier to find reusable information. Like library catalogues, they contain metadata records of datasets published for reuse, mostly relating to information in the form of raw, numerical data rather than textual documents.",
+          "In combination with specific search functionalities, they facilitate finding datasets of interest. Application programming interfaces (APIs) are often available as well, offering direct and automated access to data for software applications.",
+          "Open data portals are an important element of most open data initiatives and are mainly used by public administrations at European, national and local level in EU countries. Notable examples of Open Data portals maintained by public administrations in Europe are:",
+          "While supporting policy development by offering easy access to published data, open data portals can also work as a catalyst triggering the publication of more and better quality data. For administrations obliged or willing to disseminate their data, they offer the advantage of providing public access without the need to reply to individual requests for access to data. And, more and more companies are opening up some of their data for developers to reuse.",
+          "The European Commission offers an open data portal for any type of information held by the Commission and other EU institutions and bodies. The European Union's Open Data Portal has been in operation since December 2012.",
+          "The principal function of the European Data Portal is to provide a single point of access in all 24 EU official languages for data published by public administrations at all levels of government in Europe (EU countries, countries of the European Economic Area and certain other European countries)."
+        ],
+        "possibleRawEvidenceIdentifiedInTextContext": [
+          "Open data portals facilitate access to and reuse of public sector information.",
+          "Open data portals are an important element of most open data initiatives.",
+          "The European Commission offers an open data portal for any type of information held by the Commission and other EU institutions and bodies.",
+          "The European Union's Open Data Portal has been in operation since December 2012.",
+          "While supporting policy development by offering easy access to published data, open data portals can also work as a catalyst triggering the publication of more and better quality data.",
+          "For administrations obliged or willing to disseminate their data, they offer the advantage of providing public access without the need to reply to individual requests for access to data.",
+          "The European Commission has funded the European Data Portal through the Connecting Europe Facility programme."
+        ],
+        "relevanceToPolicyProposal": "The text provides insights into the potential effectiveness and importance of open data portals as a tool to increase transparency and trust in democratic institutions. Open data portals can simplify the process of accessing public sector data and encourage cross-border usage, making government data comprehensible and accessible. As mentioned in the policy proposal, an intuitively navigable and comprehensive platform that renders government data comprehensible and accessible can foster transparency and enhance democratic trust, and the provided text supports this claim."
+      }
+    `
+  }
 
   renderScanningPrompt(
     problemStatement: IEngineProblemStatement,
@@ -198,59 +294,68 @@ export class GetWebPagesProcessor extends BaseProcessor {
     ];
   }
 
-  async getTokenCount(text: string, subProblemIndex: number | undefined) {
-    const emptyMessages = this.renderScanningPrompt(
-      this.memory.problemStatement,
-      "",
-      subProblemIndex
-    );
-
-    const promptTokenCount = await this.chat!.getNumTokensFromMessages(
-      emptyMessages
-    );
-
-    const textForTokenCount = new HumanChatMessage(text);
-
-    const textTokenCount = await this.chat!.getNumTokensFromMessages([
-      textForTokenCount,
-    ]);
-
-    const totalTokenCount =
-      promptTokenCount.totalCount +
-      textTokenCount.totalCount +
-      IEngineConstants.getPageAnalysisModel.maxOutputTokens;
-
-    return { totalTokenCount, promptTokenCount };
-  }
-
-  getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined) {
-    const promptMessages = this.renderScanningPrompt(
-      this.memory.problemStatement,
-      "",
-      subProblemIndex
-    );
-
-    const promptMessagesText = promptMessages.map((m) => m.text).join("\n");
-
-    return `${promptMessagesText} ${text}`;
-  }
 
   mergeAnalysisData(
     data1: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData,
     data2: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData
   ): IEngineWebPageAnalysisData | PSEvidenceRawWebPageData {
-    data1 = data1 as IEngineWebPageAnalysisData;
-    data2 = data2 as IEngineWebPageAnalysisData;
+    data1 = data1 as PSEvidenceRawWebPageData;
+    data2 = data2 as PSEvidenceRawWebPageData;
     return {
       mostRelevantParagraphs: [
         ...(data1.mostRelevantParagraphs || []),
         ...(data2.mostRelevantParagraphs || []),
       ],
-      solutionsIdentifiedInTextContext: [
-        ...(data1.solutionsIdentifiedInTextContext || []),
-        ...(data2.solutionsIdentifiedInTextContext || []),
+      possibleRawEvidenceIdentifiedInTextContext: [
+        ...(data1.possibleRawEvidenceIdentifiedInTextContext || []),
+        ...(data2.possibleRawEvidenceIdentifiedInTextContext || []),
       ],
-      relevanceToProblem: data1.relevanceToProblem,
+
+      possibleRawCaseStudiesIdentifiedInTextContext: [
+        ...(data1.possibleRawCaseStudiesIdentifiedInTextContext || []),
+        ...(data2.possibleRawCaseStudiesIdentifiedInTextContext || []),
+      ],
+      possibleRawHistoricalContextIdentifiedInTextContext: [
+        ...(data1.possibleRawHistoricalContextIdentifiedInTextContext || []),
+        ...(data2.possibleRawHistoricalContextIdentifiedInTextContext || []),
+      ],
+      possibleRawStakeholderOpinionsIdentifiedInTextContext: [
+        ...(data1.possibleRawStakeholderOpinionsIdentifiedInTextContext || []),
+        ...(data2.possibleRawStakeholderOpinionsIdentifiedInTextContext || []),
+      ],
+      possibleRawExpertOpinionsIdentifiedInTextContext: [
+        ...(data1.possibleRawExpertOpinionsIdentifiedInTextContext || []),
+        ...(data2.possibleRawExpertOpinionsIdentifiedInTextContext || []),
+      ],
+      possibleRawPublicOpinionsIdentifiedInTextContext: [
+        ...(data1.possibleRawPublicOpinionsIdentifiedInTextContext || []),
+        ...(data2.possibleRawPublicOpinionsIdentifiedInTextContext || []),
+      ],
+      possibleRawImplementationFeasibilityIdentifiedInTextContext: [
+        ...(data1.possibleRawImplementationFeasibilityIdentifiedInTextContext || []),
+        ...(data2.possibleRawImplementationFeasibilityIdentifiedInTextContext || []),
+      ],
+      possibleRawGlobalPerspectiveIdentifiedInTextContext: [
+        ...(data1.possibleRawGlobalPerspectiveIdentifiedInTextContext || []),
+        ...(data2.possibleRawGlobalPerspectiveIdentifiedInTextContext || []),
+      ],
+      possibleRawLocalPerspectiveIdentifiedInTextContext: [
+        ...(data1.possibleRawLocalPerspectiveIdentifiedInTextContext || []),
+        ...(data2.possibleRawLocalPerspectiveIdentifiedInTextContext || []),
+      ],
+      possibleRawShortTermImpactIdentifiedInTextContext: [
+        ...(data1.possibleRawShortTermImpactIdentifiedInTextContext || []),
+        ...(data2.possibleRawShortTermImpactIdentifiedInTextContext || []),
+      ],
+      possibleRawLongTermImpactIdentifiedInTextContext: [
+        ...(data1.possibleRawLongTermImpactIdentifiedInTextContext || []),
+        ...(data2.possibleRawLongTermImpactIdentifiedInTextContext || []),
+      ],
+      possibleRawEthicalConsiderationsIdentifiedInTextContext: [
+        ...(data1.possibleRawEthicalConsiderationsIdentifiedInTextContext || []),
+        ...(data2.possibleRawEthicalConsiderationsIdentifiedInTextContext || []),
+      ],
+      relevanceToPolicyProposal: data1.relevanceToPolicyProposal,
       tags: [...(data1.tags || []), ...(data2.tags || [])],
       entities: [...(data1.entities || []), ...(data2.entities || [])],
       contacts: [...(data1.contacts || []), ...(data2.contacts || [])],
@@ -265,178 +370,16 @@ export class GetWebPagesProcessor extends BaseProcessor {
     };
   }
 
-  async splitText(
-    fullText: string,
-    maxChunkTokenCount: number,
-    subProblemIndex: number | undefined
-  ): Promise<string[]> {
-    const chunks: string[] = [];
-    const elements = fullText.split("\n");
-    let currentChunk = "";
-
-    const addElementToChunk = async (element: string) => {
-      const potentialChunk =
-        (currentChunk !== "" ? currentChunk + "\n" : "") + element;
-
-      if (
-        !isWithinTokenLimit(
-          this.getAllTextForTokenCheck(potentialChunk, subProblemIndex),
-          maxChunkTokenCount
-        )
-      ) {
-        // If currentChunk is not empty, add it to chunks and start a new chunk with the element
-        if (currentChunk !== "") {
-          chunks.push(currentChunk);
-          currentChunk = element;
-        } else {
-          // If currentChunk is empty, it means that the element is too large to fit in a chunk
-          // In this case, split the element further.
-          if (element.includes(" ")) {
-            // If the element is a sentence, split it by words
-            const words = element.split(" ");
-            for (let word of words) {
-              await addElementToChunk(word);
-            }
-          } else {
-            // If the element is a single word that exceeds maxChunkTokenCount, add it as is
-            chunks.push(element);
-          }
-        }
-      } else {
-        currentChunk = potentialChunk;
-      }
-    };
-
-    for (let element of elements) {
-      // Before adding an element to a chunk, check its size
-      if (
-        !isWithinTokenLimit(
-          this.getAllTextForTokenCheck(element, subProblemIndex),
-          maxChunkTokenCount
-        )
-      ) {
-        // If the element is too large, split it by sentences
-        const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
-        for (let sentence of sentences) {
-          await addElementToChunk(sentence);
-        }
-      } else {
-        await addElementToChunk(element);
-      }
-    }
-
-    // Push any remaining text in currentChunk to chunks
-    if (currentChunk !== "") {
-      chunks.push(currentChunk);
-    }
-
-    this.logger.debug(`Split text into ${chunks.length} chunks`);
-
-    return chunks;
+  get maxWebPagesToGetByTopSearchPosition() {
+    return IEngineConstants.maxEvidenceWebPagesToGetByTopSearchPosition;
   }
 
-  async getAIAnalysis(text: string, subProblemIndex?: number) {
-    this.logger.info("Get AI Analysis");
-    const messages = this.renderScanningPrompt(
-      this.memory.problemStatement,
-      text,
-      subProblemIndex
-    );
-
-    const analysis = (await this.callLLM(
-      "web-get-pages",
-      IEngineConstants.getPageAnalysisModel,
-      messages,
-      true,
-      true
-    )) as IEngineWebPageAnalysisData;
-
-    return analysis;
-  }
-
-  async getTextAnalysis(text: string, subProblemIndex?: number) {
-    try {
-      const { totalTokenCount, promptTokenCount } = await this.getTokenCount(
-        text,
-        subProblemIndex
-      );
-
-      this.logger.debug(
-        `Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(
-          promptTokenCount
-        )}`
-      );
-
-      let textAnalysis: IEngineWebPageAnalysisData;
-
-      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-        const maxTokenLengthForChunk =
-          IEngineConstants.getPageAnalysisModel.tokenLimit -
-          promptTokenCount.totalCount -
-          128;
-
-        this.logger.debug(
-          `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
-        );
-
-        const splitText = await this.splitText(
-          text,
-          maxTokenLengthForChunk,
-          subProblemIndex
-        );
-
-        this.logger.debug(`Got ${splitText.length} splitTexts`);
-
-        for (let t = 0; t < splitText.length; t++) {
-          const currentText = splitText[t];
-
-          let nextAnalysis = await this.getAIAnalysis(
-            currentText,
-            subProblemIndex
-          );
-
-          if (nextAnalysis) {
-            if (t == 0) {
-              textAnalysis = nextAnalysis;
-            } else {
-              textAnalysis = this.mergeAnalysisData(
-                textAnalysis!,
-                nextAnalysis
-              ) as IEngineWebPageAnalysisData;
-            }
-
-            this.logger.debug(
-              `Refined text analysis (${t}): ${JSON.stringify(
-                textAnalysis,
-                null,
-                2
-              )}`
-            );
-          } else {
-            this.logger.error(
-              `Error getting AI analysis for text ${currentText}`
-            );
-          }
-        }
-      } else {
-        textAnalysis = await this.getAIAnalysis(text, subProblemIndex);
-        this.logger.debug(
-          `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
-        );
-      }
-
-      return textAnalysis!;
-    } catch (error) {
-      this.logger.error(`Error in getTextAnalysis: ${error}`);
-      throw error;
-    }
-  }
 
   async processPageText(
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: IEngineWebPageTypes,
     entityIndex: number | undefined
   ) {
     this.logger.debug(
@@ -453,7 +396,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         textAnalysis.url = url;
         textAnalysis.subProblemIndex = subProblemIndex;
         textAnalysis.entityIndex = entityIndex;
-        textAnalysis.searchType = type as IEngineWebPageTypes;
+        textAnalysis.searchType = type;
         textAnalysis.groupId = this.memory.groupId;
         textAnalysis.communityId = this.memory.communityId;
         textAnalysis.domainId = this.memory.domainId;
@@ -494,201 +437,22 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
   }
 
-  //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
-  // https://github.com/hwchase17/langchain/blob/master/langchain/document_loaders/arxiv.py
-  // https://info.arxiv.org/help/api/basics.html
-  async getAndProcessPdf(
-    subProblemIndex: number | undefined,
-    url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
-    entityIndex: number | undefined
-  ) {
-    return new Promise<void>(async (resolve, reject) => {
-      this.logger.info("getAndProcessPdf");
-
-      try {
-        let finalText = "";
-        let pdfBuffer;
-
-        const filePath = `webPagesCache/${
-          this.memory.groupId
-        }/${encodeURIComponent(url)}.gz`;
-
-        if (existsSync(filePath)) {
-          this.logger.info("Got cached PDF");
-          const cachedPdf = await readFileAsync(filePath);
-          pdfBuffer = gunzipSync(cachedPdf);
-        } else {
-          const sleepingForMs =
-            IEngineConstants.minSleepBeforeBrowserRequest +
-            Math.random() *
-              IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
-
-          this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
-
-          await new Promise((r) => setTimeout(r, sleepingForMs));
-
-          const axiosResponse = await axios.get(url, {
-            responseType: "arraybuffer",
-          });
-
-          pdfBuffer = axiosResponse.data;
-
-          if (pdfBuffer) {
-            this.logger.debug(`Caching PDF response`);
-            const gzipData = gzipSync(pdfBuffer);
-            await writeFileAsync(filePath, gzipData);
-            this.logger.debug("Have cached PDF response");
-          }
-        }
-
-        if (pdfBuffer) {
-          this.logger.debug(pdfBuffer.toString().slice(0, 100));
-          try {
-            new PdfReader({}).parseBuffer(
-              pdfBuffer,
-              async (err: any, item: any) => {
-                if (err) {
-                  this.logger.error(`Error parsing PDF ${url}`);
-                  this.logger.error(err);
-                  resolve();
-                } else if (!item) {
-                  finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-                  this.logger.debug(
-                    `Got final PDF text: ${
-                      finalText ? finalText.slice(0, 100) : ""
-                    }`
-                  );
-                  await this.processPageText(
-                    finalText,
-                    subProblemIndex,
-                    url,
-                    type,
-                    entityIndex
-                  );
-                  resolve();
-                } else if (item.text) {
-                  finalText += item.text + " ";
-                }
-              }
-            );
-          } catch (e) {
-            this.logger.error(`No PDF buffer`);
-            this.logger.error(e);
-            resolve();
-          }
-        } else {
-          this.logger.error(`No PDF buffer`);
-          resolve();
-        }
-      } catch (e) {
-        this.logger.error(`Error in get pdf`);
-        this.logger.error(e);
-        resolve();
-      }
-    });
-  }
-
-  async getAndProcessHtml(
-    subProblemIndex: number | undefined,
-    url: string,
-    browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
-    entityIndex: number | undefined
-  ) {
-    try {
-      let finalText, htmlText;
-
-      this.logger.debug(`Getting HTML for ${url}`);
-
-      const filePath = `webPagesCache/${
-        this.memory.groupId
-      }/${encodeURIComponent(url)}.gz`;
-
-      if (existsSync(filePath)) {
-        this.logger.info("Got cached HTML");
-        const cachedData = await readFileAsync(filePath);
-        htmlText = gunzipSync(cachedData).toString();
-      } else {
-        const sleepingForMs =
-          IEngineConstants.minSleepBeforeBrowserRequest +
-          Math.random() *
-            IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
-
-        this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
-
-        await new Promise((r) => setTimeout(r, sleepingForMs));
-
-        const response = await browserPage.goto(url, {
-          waitUntil: "networkidle0",
-        });
-        if (response) {
-          htmlText = await response.text();
-          if (htmlText) {
-            this.logger.debug(`Caching response`);
-            const gzipData = gzipSync(Buffer.from(htmlText));
-            await writeFileAsync(filePath, gzipData);
-          }
-        }
-      }
-
-      if (htmlText) {
-        finalText = htmlToText(htmlText, {
-          wordwrap: false,
-          selectors: [
-            {
-              selector: "a",
-              format: "skip",
-              options: {
-                ignoreHref: true,
-              },
-            },
-            {
-              selector: "img",
-              format: "skip",
-            },
-            {
-              selector: "form",
-              format: "skip",
-            },
-            {
-              selector: "nav",
-              format: "skip",
-            },
-          ],
-        });
-
-        finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-
-        //this.logger.debug(`Got HTML text: ${finalText}`);
-        await this.processPageText(
-          finalText,
-          subProblemIndex,
-          url,
-          type,
-          entityIndex
-        );
-      } else {
-        this.logger.error(`No HTML text found for ${url}`);
-      }
-    } catch (e) {
-      this.logger.error(`Error in get html`);
-      this.logger.error(e);
-    }
+  get maxTopWebPagesToGet() {
+    return IEngineConstants.maxTopWebPagesToGet;
   }
 
   async getAndProcessPage(
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: IEngineWebPageTypes,
     entityIndex: number | undefined
   ) {
     if (onlyCheckWhatNeedsToBeScanned) {
       const hasPage = await this.webPageVectorStore.webPageExist(
         this.memory.groupId,
         url,
-        type as IEngineWebPageTypes,
+        type,
         subProblemIndex,
         entityIndex
       );
@@ -764,8 +528,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
             this.memory.subProblems[s].haveScannedWeb = true;
 
-            await this.processEntities(s, searchQueryType, newPage);
-
             await this.saveMemory();
           }
 
@@ -781,144 +543,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
     await Promise.all(promises);
   }
 
-  async processEntities(
-    subProblemIndex: number,
-    searchQueryType: IEngineWebPageTypes,
-    browserPage: Page
-  ) {
-    for (
-      let e = 0;
-      e <
-      Math.min(
-        this.memory.subProblems[subProblemIndex].entities.length,
-        IEngineConstants.maxTopEntitiesToSearch
-      );
-      e++
-    ) {
-      const currentEntity =
-        this.memory.subProblems[subProblemIndex].entities[e];
-
-      this.logger.info(
-        `Fetching pages for Entity ${currentEntity.name} for ${this.memory.subProblems[subProblemIndex].title} for ${searchQueryType} search results`
-      );
-
-      const urlsToGet = this.getUrlsToFetch(
-        this.memory.subProblems[subProblemIndex].entities[e].searchResults!
-          .pages[searchQueryType]
-      );
-
-      for (let i = 0; i < urlsToGet.length; i++) {
-        await this.getAndProcessPage(
-          subProblemIndex,
-          urlsToGet[i],
-          browserPage,
-          searchQueryType,
-          e
-        );
-      }
-
-      this.memory.subProblems[subProblemIndex].entities[e].haveScannedWeb =
-        true;
-    }
-  }
-
-  get maxWebPagesToGetByTopSearchPosition() {
-    return IEngineConstants.maxWebPagesToGetByTopSearchPosition;
-  }
-
-  get maxTopWebPagesToGet() {
-    return IEngineConstants.maxTopWebPagesToGet;
-  }
-
-  getUrlsToFetch(allPages: IEngineSearchResultItem[]): string[] {
-    let outArray: IEngineSearchResultItem[] = [];
-
-    outArray = outArray.concat(
-      allPages.filter(
-        (page) =>
-          page.originalPosition <=
-          this.maxWebPagesToGetByTopSearchPosition
-      )
-    );
-
-    outArray = outArray.concat(
-      allPages.slice(0, this.maxTopWebPagesToGet)
-    );
-
-    // Map to URLs and remove duplicates
-    const urlsToGet: string[] = Array.from(
-      outArray
-        .map((p) => p.url)
-        .reduce((unique, item) => unique.add(item), new Set())
-    ) as string[];
-
-    this.logger.debug(
-      `Got ${urlsToGet.length} URLs to fetch ${JSON.stringify(
-        urlsToGet,
-        null,
-        2
-      )}`
-    );
-
-    return urlsToGet;
-  }
-
-  async processProblemStatement(
-    searchQueryType: IEngineWebPageTypes,
-    browserPage: Page
-  ) {
-    this.logger.info(
-      `Ranking Problem Statement for ${searchQueryType} search results`
-    );
-
-    const urlsToGet = this.getUrlsToFetch(
-      this.memory.problemStatement.searchResults!.pages[searchQueryType]
-    );
-
-    this.logger.debug(`Got ${urlsToGet.length} URLs`);
-
-    for (let i = 0; i < urlsToGet.length; i++) {
-      await this.getAndProcessPage(
-        undefined,
-        urlsToGet[i],
-        browserPage,
-        searchQueryType,
-        undefined
-      );
-    }
-
-    this.memory.problemStatement.haveScannedWeb = true;
-
-    this.logger.info(
-      `Ranking Problem Statement for ${searchQueryType} search results complete`
-    );
-  }
-
-  async getAllCustomSearchUrls(browserPage: Page) {
-    for (
-      let subProblemIndex = 0;
-      subProblemIndex <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
-      subProblemIndex++
-    ) {
-      const customUrls =
-        this.memory.subProblems[subProblemIndex].customSearchUrls;
-      if (customUrls) {
-        for (let i = 0; i < customUrls.length; i++) {
-          this.logger.debug(`Getting custom URL ${customUrls[i]}`);
-          await this.getAndProcessPage(
-            subProblemIndex,
-            customUrls[i],
-            browserPage,
-            "general",
-            undefined
-          );
-        }
-      } else {
-        this.logger.info(`No custom URLs for sub problem ${subProblemIndex}`);
-      }
-    }
-  }
 
   async getAllPages() {
     const browser = await puppeteer.launch({ headless: "new" });
@@ -971,8 +595,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
   }
 
   async process() {
-    this.logger.info("Get Web Pages Processor");
-    super.process();
+    this.logger.info("Get Evidence Web Pages Processor");
+    //super.process();
 
     this.chat = new ChatOpenAI({
       temperature: IEngineConstants.getPageAnalysisModel.temperature,
@@ -984,6 +608,6 @@ export class GetWebPagesProcessor extends BaseProcessor {
     await this.getAllPages();
 
     this.logger.info(`Saved ${this.totalPagesSave} pages`);
-    this.logger.info("Get Web Pages Processor Complete");
+    this.logger.info("Get Evidence Web Pages Processor Complete");
   }
 }
