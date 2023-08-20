@@ -44,7 +44,7 @@
       "name": "relevanceToPolicyProposal"
     },
     {
-      "name": "possibleRawEvidenceIdentifiedInTextContext",
+      "name": "allPossiblePositiveEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -60,7 +60,7 @@
     },
 
     {
-      "name": "possibleRawCaseStudiesIdentifiedInTextContext",
+      "name": "allPossibleNegativeEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -76,7 +76,7 @@
     },
 
     {
-      "name": "possibleRawHistoricalContextIdentifiedInTextContext",
+      "name": "allPossibleNeutralEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -91,7 +91,7 @@
       }
     },
     {
-      "name": "possibleRawStakeholderOpinionsIdentifiedInTextContext",
+      "name": "allPossibleEconomicEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -106,7 +106,7 @@
       }
     },
     {
-      "name": "possibleRawExpertOpinionsIdentifiedInTextContext",
+      "name": "allPossibleScientificEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -121,7 +121,7 @@
       }
     },
     {
-      "name": "possibleRawPublicOpinionsIdentifiedInTextContext",
+      "name": "allPossibleCulturalEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -136,7 +136,7 @@
       }
     },
     {
-      "name": "possibleRawImplementationFeasibilityIdentifiedInTextContext",
+      "name": "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -151,7 +151,7 @@
       }
     },
     {
-      "name": "possibleRawGlobalPerspectiveIdentifiedInTextContext",
+      "name": "allPossibleLegalEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -166,7 +166,7 @@
       }
     },
     {
-      "name": "possibleRawLocalPerspectiveIdentifiedInTextContext",
+      "name": "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -181,7 +181,7 @@
       }
     },
     {
-      "name": "possibleRawShortTermImpactIdentifiedInTextContext",
+      "name": "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -196,7 +196,7 @@
       }
     },
     {
-      "name": "possibleRawLongTermImpactIdentifiedInTextContext",
+      "name": "allPossibleCaseStudiesIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -212,7 +212,7 @@
     },
 
     {
-      "name": "possibleRawEthicalConsiderationsIdentifiedInTextContext",
+      "name": "allPossibleStakeholderOpinionsIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
@@ -226,6 +226,166 @@
         "indexPropertyLength": true
       }
     },
+    {
+      "name": "allPossibleExpertOpinionsIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossiblePublicOpinionsIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleHistoricalContextIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleEthicalConsiderationsIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleLongTermImpactIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleShortTermImpactIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleLocalPerspectiveIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleGlobalPerspectiveIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleCostAnalysisIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "allPossibleImplementationFeasibilityIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
 
     {
       "dataType": ["int"],
