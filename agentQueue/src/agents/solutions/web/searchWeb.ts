@@ -242,9 +242,9 @@ export class SearchWebProcessor extends BaseProcessor {
         await this.processProblemStatement(searchQueryType);
         await this.processSubProblems(searchQueryType as IEngineWebPageTypes);
       }
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error("Error processing web search");
-      this.logger.error(error);
+      this.logger.error(error.stack || error);
       throw error;
     }
 

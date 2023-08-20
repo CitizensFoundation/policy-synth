@@ -175,7 +175,7 @@ export class SearchWebProcessor extends BaseProcessor {
         }
         catch (error) {
             this.logger.error("Error processing web search");
-            this.logger.error(error);
+            this.logger.error(error.stack || error);
             throw error;
         }
         this.logger.info("Finished processing web search");
