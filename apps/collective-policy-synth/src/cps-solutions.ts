@@ -167,12 +167,28 @@ export class CpsSolutions extends CpsStageBase {
       return;
     }
 
+    let actualTarget: EventTarget = e.composedPath()[0];
+
+    let targetElement = actualTarget as Element;
+    while (targetElement) {
+      console.error(targetElement.tagName);
+      if (
+        targetElement.getAttribute('data-scrollable') === 'true'
+      ) {
+        return;
+      }
+      targetElement = targetElement.parentElement;
+    }
+
     if (diffX > 0) {
       this.updateSwipeIndex('right');
     } else if (diffX < 0) {
       this.updateSwipeIndex('left');
     }
+
+    e.stopPropagation(); // Prevent event bubbling after handling
   }
+
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);

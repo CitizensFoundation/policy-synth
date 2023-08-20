@@ -19,15 +19,7 @@ if (projectId) {
         "rate-solutions",
         "rank-solutions",
         "group-solutions",
-        "create-solution-images",
-        "evolve-create-population",
-        "evolve-reap-population",
-        "create-pros-cons",
-        "rank-pros-cons",
-        "rate-solutions",
-        "rank-solutions",
-        "group-solutions",
-        "create-solution-images",
+        "create-solution-images"
     ];
     const runStages = async (startStage = stages[0]) => {
         const startIndex = stages.indexOf(startStage);
