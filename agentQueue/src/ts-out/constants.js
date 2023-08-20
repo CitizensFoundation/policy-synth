@@ -15,7 +15,18 @@ export class IEngineConstants {
     static createSubProblemsModel = {
         name: "gpt-4",
         temperature: 0.7,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 4300,
+        tokenLimit: 8192,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: true
+    };
+    static createSeedPolicies = {
+        name: "gpt-4",
+        temperature: 0.8,
+        maxOutputTokens: 4096,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
@@ -268,6 +279,7 @@ export class IEngineConstants {
     static maxAdditionalRandomSleepBeforeBrowserRequest = 100;
     static numberOfSearchTypes = 4;
     static webPageNavTimeout = 60 * 1000;
+    static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
     static topItemsToKeepForTopicClusterPruning = 5;
     static chances = {
         createSolutions: {
@@ -298,6 +310,7 @@ export class IEngineConstants {
             createEntities: true,
             createSolutions: true,
             createProsCons: true,
+            policiesSeed: true
         },
     };
     static evolution = {
@@ -319,5 +332,5 @@ export class IEngineConstants {
     static minimumNumberOfPairwiseVotesForPopulation = 8;
     static maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize *
         IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
-    static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
+    static maxTopSolutionsToCreatePolicies = 3;
 }

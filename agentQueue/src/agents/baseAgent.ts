@@ -34,6 +34,37 @@ export abstract class BaseAgent extends BaseWorker {
     }
   }
 
+  defaultStages = {
+    "create-sub-problems": {},
+    "rank-sub-problems": {},
+    "create-entities": {},
+    "rank-entities": {},
+    "create-search-queries": {},
+    "create-sub-problem-images": {},
+    "rank-search-queries": {},
+    "web-search": {},
+    "rate-solutions": {},
+    "rank-search-results": {},
+    "rank-web-solutions": {},
+    "web-get-pages": {},
+    "create-seed-solutions": {},
+    "create-pros-cons": {},
+    "create-solution-images": {},
+    "create-problem-statement-image": {},
+    "rank-pros-cons": {},
+    "rank-solutions": {},
+    "group-solutions": {},
+    "evolve-create-population": {},
+    "evolve-mutate-population": {},
+    "evolve-recombine-population": {},
+    "evolve-reap-population": {},
+    "topic-map-solutions": {},
+    "evolve-rank-population": {},
+    "analyse-external-solutions": {},
+    "policies-seed": {},
+    "policies-create-images": {}
+  }
+
   async saveMemory() {
     this.memory.lastSavedAt = Date.now();
     await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
