@@ -347,7 +347,7 @@ export class CpsApp extends YpBaseElement {
     ],
     {
       fallback: {
-        render: () => html`<h2>gogogo</h2>`,
+        render: () => html`<h2>Page not found</h2>`,
       },
     }
   );
@@ -1341,7 +1341,7 @@ export class CpsApp extends YpBaseElement {
                 <md-icon>online_prediction</md-icon>
               </md-list-item-icon></md-list-item
             >
-            <md-list-item
+            <md-list-item disabled
               class="${
                 this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'
@@ -1359,7 +1359,7 @@ export class CpsApp extends YpBaseElement {
                 <md-icon>category</md-icon>
               </md-list-item-icon></md-list-item
             >
-            <md-list-item
+            <md-list-item disabled
               class="${
                 this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'
