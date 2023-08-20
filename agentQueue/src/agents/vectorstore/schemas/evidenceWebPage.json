@@ -14,9 +14,7 @@
   },
   "properties": [
     {
-      "dataType": [
-        "string"
-      ],
+      "dataType": ["string"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,
@@ -26,9 +24,7 @@
       "name": "searchType"
     },
     {
-      "dataType": [
-        "text"
-      ],
+      "dataType": ["text"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
@@ -38,9 +34,7 @@
       "name": "summary"
     },
     {
-      "dataType": [
-        "text"
-      ],
+      "dataType": ["text"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
@@ -50,10 +44,40 @@
       "name": "relevanceToPolicyProposal"
     },
     {
-      "name": "possibleEvidenceIdentifiedInTextContext",
-      "dataType": [
-        "text[]"
-      ],
+      "name": "possibleRawEvidenceIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "possibleRawCaseStudiesIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "possibleRawHistoricalContextIdentifiedInTextContext",
+      "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
@@ -67,10 +91,8 @@
       }
     },
     {
-      "name": "possibleStakeholderOpinionInTextContext",
-      "dataType": [
-        "text[]"
-      ],
+      "name": "possibleRawStakeholderOpinionsIdentifiedInTextContext",
+      "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
@@ -84,10 +106,8 @@
       }
     },
     {
-      "name": "possibleHistoricalContextInTextContext",
-      "dataType": [
-        "text[]"
-      ],
+      "name": "possibleRawExpertOpinionsIdentifiedInTextContext",
+      "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
@@ -101,9 +121,114 @@
       }
     },
     {
-      "dataType": [
-        "int"
-      ],
+      "name": "possibleRawPublicOpinionsIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "possibleRawImplementationFeasibilityIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "possibleRawGlobalPerspectiveIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "possibleRawLocalPerspectiveIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "possibleRawShortTermImpactIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "possibleRawLongTermImpactIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "name": "possibleRawEthicalConsiderationsIdentifiedInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+
+    {
+      "dataType": ["int"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,
@@ -113,9 +238,7 @@
       "name": "subProblemIndex"
     },
     {
-      "dataType": [
-        "int"
-      ],
+      "dataType": ["int"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,
@@ -125,9 +248,7 @@
       "name": "entityIndex"
     },
     {
-      "dataType": [
-        "string"
-      ],
+      "dataType": ["string"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,
@@ -137,21 +258,17 @@
       "name": "url"
     },
     {
-      "dataType": [
-        "text[]"
-      ],
+      "dataType": ["text[]"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
           "vectorizePropertyName": true
         }
       },
-      "name": "allMostRelevantParagraphs"
+      "name": "mostRelevantParagraphs"
     },
     {
-      "dataType": [
-        "string[]"
-      ],
+      "dataType": ["string[]"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
@@ -161,9 +278,7 @@
       "name": "tags"
     },
     {
-      "dataType": [
-        "string[]"
-      ],
+      "dataType": ["string[]"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": false,
@@ -173,9 +288,7 @@
       "name": "entities"
     },
     {
-      "dataType": [
-        "string[]"
-      ],
+      "dataType": ["string[]"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,
@@ -185,9 +298,37 @@
       "name": "contacts"
     },
     {
-      "dataType": [
-        "int"
-      ],
+      "dataType": ["int"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "name": "confidenceScore"
+    },
+    {
+      "dataType": ["int"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "name": "relevanceScore"
+    },
+    {
+      "dataType": ["int"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "name": "qualityScore"
+    },
+    {
+      "dataType": ["int"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,
@@ -197,9 +338,7 @@
       "name": "domainId"
     },
     {
-      "dataType": [
-        "int"
-      ],
+      "dataType": ["int"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,
@@ -209,9 +348,7 @@
       "name": "communityId"
     },
     {
-      "dataType": [
-        "int"
-      ],
+      "dataType": ["int"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true,

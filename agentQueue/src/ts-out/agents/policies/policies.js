@@ -3,6 +3,7 @@ import { Worker } from "bullmq";
 import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
 import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
+import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
 export class AgentPolicies extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -30,7 +31,7 @@ export class AgentPolicies extends BaseAgent {
                         scientific: [],
                         news: [],
                         openData: [],
-                    }
+                    },
                 },
             },
             subProblems: [],
@@ -56,6 +57,10 @@ export class AgentPolicies extends BaseAgent {
             case "create-evidence-search-queries":
                 const createEvidenceSearchQueries = new CreateEvidenceSearchQueriesProcessor(this.job, this.memory);
                 await createEvidenceSearchQueries.process();
+                break;
+            case "web-search-evidence":
+                const search = new SearchWebForEvidenceProcessor(this.job, this.memory);
+                await search.process();
                 break;
             default:
                 console.log("No stage matched");

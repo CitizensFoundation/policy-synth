@@ -57,8 +57,8 @@ if (projectId) {
         "evolve-rank-population": {},
         "analyse-external-solutions": {},
         "create-evidence-search-queries": {},
-        save: {},
-        done: {},
+        "web-get-evidence-pages": {},
+        "web-search-evidence": {}
       },
       timeStart: Date.now(),
       totalCost: 0,
