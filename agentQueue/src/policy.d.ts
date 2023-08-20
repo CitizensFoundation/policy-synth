@@ -73,23 +73,33 @@ interface PSPolicyAction {
 
 interface PSEvidenceRawWebPageData {
   mostRelevantParagraphs: string[];
-  possibleRawEvidenceIdentifiedInTextContext?: string[];
+  allPossiblePositiveEvidenceIdentifiedInTextContext?: string[];
+  allPossibleNegativeEvidenceIdentifiedInTextContext?: string[];
+  allPossibleNeutralEvidenceIdentifiedInTextContext?: string[];
+  allPossibleEconomicEvidenceIdentifiedInTextContext?: string[];
+  allPossibleScientificEvidenceIdentifiedInTextContext?: string[];
+  allPossibleCulturalEvidenceIdentifiedInTextContext?: string[];
+  allPossibleEnvironmentalEvidenceIdentifiedInTextContext?: string[];
+  allPossibleLegalEvidenceIdentifiedInTextContext?: string[];
+  allPossibleTechnologicalEvidenceIdentifiedInTextContext?: string[];
+  allPossibleGeopoliticalEvidenceIdentifiedInTextContext?: string[];
 
-  possibleRawCaseStudiesIdentifiedInTextContext?: string[];
-  possibleRawStakeholderOpinionsIdentifiedInTextContext?: string[];
-  possibleRawExpertOpinionsIdentifiedInTextContext?: string[];
-  possibleRawPublicOpinionsIdentifiedInTextContext?: string[];
+  allPossibleCaseStudiesIdentifiedInTextContext?: string[];
+  allPossibleStakeholderOpinionsIdentifiedInTextContext?: string[];
+  allPossibleExpertOpinionsIdentifiedInTextContext?: string[];
+  allPossiblePublicOpinionsIdentifiedInTextContext?: string[];
 
-  possibleRawHistoricalContextIdentifiedInTextContext?: string[];
-  possibleRawEthicalConsiderationsIdentifiedInTextContext?: string[];
+  allPossibleHistoricalContextIdentifiedInTextContext?: string[];
+  allPossibleEthicalConsiderationsIdentifiedInTextContext?: string[];
 
-  possibleRawLongTermImpactIdentifiedInTextContext?: string[];
-  possibleRawShortTermImpactIdentifiedInTextContext?: string[];
+  allPossibleLongTermImpactIdentifiedInTextContext?: string[];
+  allPossibleShortTermImpactIdentifiedInTextContext?: string[];
 
-  possibleRawLocalPerspectiveIdentifiedInTextContext?: string[];
-  possibleRawGlobalPerspectiveIdentifiedInTextContext?: string[];
+  allPossibleLocalPerspectiveIdentifiedInTextContext?: string[];
+  allPossibleGlobalPerspectiveIdentifiedInTextContext?: string[];
 
-  possibleRawImplementationFeasibilityIdentifiedInTextContext?: string[];
+  allPossibleCostAnalysisIdentifiedInTextContext?: string[];
+  allPossibleImplementationFeasibilityIdentifiedInTextContext?: string[];
 
   relevanceToPolicyProposal: string;
   confidenceScore?: number;
