@@ -94,7 +94,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
     }
     async process() {
         this.logger.info("Create Policy Images Processor");
-        super.process();
+        //super.process();
         this.chat = new ChatOpenAI({
             temperature: IEngineConstants.createSolutionImagesModel.temperature,
             maxTokens: IEngineConstants.createSolutionImagesModel.maxOutputTokens,
