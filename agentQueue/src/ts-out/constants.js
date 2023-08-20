@@ -15,7 +15,7 @@ export class IEngineConstants {
     static createSubProblemsModel = {
         name: "gpt-4",
         temperature: 0.7,
-        maxOutputTokens: 4300,
+        maxOutputTokens: 4500,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
@@ -23,16 +23,16 @@ export class IEngineConstants {
         limitRPM: gpt4_RPM,
         verbose: true
     };
-    static createSeedPolicies = {
+    static policiesSeedModel = {
         name: "gpt-4",
-        temperature: 0.8,
+        temperature: 0.7,
         maxOutputTokens: 4096,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
         limitTPM: gpt4_TPM,
         limitRPM: gpt4_RPM,
-        verbose: true
+        verbose: false
     };
     static analyseExternalSolutionsModel = {
         name: "gpt-4",
@@ -73,6 +73,17 @@ export class IEngineConstants {
     static createSearchQueriesModel = {
         name: "gpt-4",
         temperature: 0.7,
+        maxOutputTokens: 1024,
+        tokenLimit: 8192,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: true,
+    };
+    static createEvidenceSearchQueriesModel = {
+        name: "gpt-4",
+        temperature: 0.5,
         maxOutputTokens: 1024,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,

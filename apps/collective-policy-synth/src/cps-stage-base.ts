@@ -20,6 +20,9 @@ export abstract class CpsStageBase extends YpBaseElement {
   @property({ type: Object })
   memory: IEngineInnovationMemoryData;
 
+  @property({ type: String })
+  childType: "solution" | "policy" = "solution";
+
   @property({ type: Boolean })
   showEloRatings = false;
 
@@ -28,6 +31,9 @@ export abstract class CpsStageBase extends YpBaseElement {
 
   @property({ type: Number })
   activeSolutionIndex: number | null = null;
+
+  @property({ type: Number })
+  activePolicyIndex: number | null = null;
 
   @property({ type: Number })
   activePopulationIndex = 0;
@@ -94,6 +100,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     super.updated(changedProperties);
     if (
       changedProperties.has('activeSolutionIndex') ||
+      changedProperties.has('activePolicyIndex') ||
       changedProperties.has('activeSubProblemIndex') ||
       changedProperties.has('activePopulationIndex')
     ) {

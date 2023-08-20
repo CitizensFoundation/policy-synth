@@ -1,15 +1,11 @@
-interface PSImplentingEntity extends IEngineAffectedEntity {
-}
+interface PSImplentingEntity extends IEngineAffectedEntity {}
 
-interface PSDependentEntity extends IEngineAffectedEntity {
-}
+interface PSDependentEntity extends IEngineAffectedEntity {}
 
-interface PSMemoryData extends IEngineInnovationMemoryData {
-
-}
+interface PSMemoryData extends IEngineInnovationMemoryData {}
 
 interface PSPolicyFeedback {
-  source: 'AI' | 'Policymaker' | 'Citizen';
+  source: "AI" | "Policymaker" | "Citizen";
   feedback: string;
   timestamp: Date;
 }
@@ -20,25 +16,38 @@ interface PSPolicyReference {
   link?: URL;
 }
 
-interface PSEvidenceSearchResults {
-  pages: {
-    generalEvidence: IEngineSearchResultItem[];
-    economicEvidence: IEngineSearchResultItem[];
-    scientficEvidence: IEngineSearchResultItem[];
-    openDataEvidence: IEngineSearchResultItem[];
-    culturalEvidence: IEngineSearchResultItem[];
-    environmentalEvidence: IEngineSearchResultItem[];
-  };
-}
+type PSEvidenceWebPageTypes =
+  | "positiveEvidence"
+  | "negativeEvidence"
+  | "neutralEvidence"
+  | "economicEvidence"
+  | "scientificEvidence"
+  | "culturalEvidence"
+  | "environmentalEvidence"
+  | "stakeholderOpinions"
+  | "historicalContext"
+  | "legalEvidence"
+  | "technologicalEvidence"
+  | "geopoliticalEvidence"
+  | "caseStudies"
+  | "expertOpinions"
+  | "ethicalConsiderations"
+  | "longTermImpact"
+  | "shortTermImpact"
+  | "localPerspective"
+  | "globalPerspective"
+  | "implementationFeasibility"
+  | "publicOpinion";
 
-interface PSEvidenceSearchQueries {
-  positiveEvidence: string[];
-  negativeEvidence: string[];
-  scientficEvidence: string[];
-  openDataEvidence: string[];
-  culturalEvidence: string[];
-  environmentalEvidence: string[];
-}
+type SearchResultItem = IEngineSearchResultItem[];
+
+type PSEvidenceSearchResults = {
+  [K in PSEvidenceWebPageTypes]: SearchResultItem;
+};
+
+type PSEvidenceSearchQueries = {
+  [K in PSEvidenceWebPageTypes]: string[];
+};
 
 interface PSPolicyStage {
   description: string;
@@ -54,8 +63,6 @@ interface PSPolicyAction {
   evidenceSearchQueries?: IEngineSearchQueries;
   evidenceSearchResults?: PSEvidenceSearchResults;
 }
-
-type PSEvidenceWebPageTypes = "positiveEvidence" | "negativeEvidence" | "scientficEvidence" | "openDataEvidence";
 
 interface PSEvidenceRawWebPageData {
   mostRelevantParagraphs: string[];
@@ -87,8 +94,8 @@ interface PSEvidenceWebPageAnalysisData {
 
 interface PSPolicyRisk {
   riskDescription: string;
-  likelihood: 'High' | 'Medium' | 'Low';
-  impact: 'High' | 'Medium' | 'Low';
+  likelihood: "High" | "Medium" | "Low";
+  impact: "High" | "Medium" | "Low";
   mitigationStrategies: string[];
 }
 
@@ -123,7 +130,7 @@ interface PSEnvironmentalConsideration {
 interface PSTechnologicalDependency {
   technologyName: string;
   roleInPolicy: string; // e.g., 'Monitoring', 'Implementation'
-  reliability: 'High' | 'Medium' | 'Low';
+  reliability: "High" | "Medium" | "Low";
 }
 
 interface PSPolicy {
@@ -140,9 +147,12 @@ interface PSPolicy {
   imagePrompt?: string;
   imageUrl?: string;
   eloRating?: number;
+  reaped?: boolean;
+  similarityGroup?: IEngineSimilarityGroup;
+  isFirstInGroup?: boolean;
   implementingEntities: PSImplentingEntity[];
   dependentOnEntities: PSDependentEntity[];
-  evidenceSearchQueries?: IEngineSearchQueries;
+  evidenceSearchQueries?: PSEvidenceSearchQueries;
   evidenceSearchResults?: PSEvidenceSearchResults;
   stages?: PSPolicyStage[];
   environmentConsiderations?: PSEnvironmentalConsideration[];
@@ -150,4 +160,11 @@ interface PSPolicy {
   economicImpactsQualitative?: PSEconomicImpactQualitative[];
   legalConsiderations?: PSLegalConsideration[];
   technologicalDependencies?: PSTechnologicalDependency[];
- }
+  ratings?: object;
+  family?: {
+    parentA?: string; // "<generationIndex>:<solutionId>"
+    parentB?: string;
+    mutationRate?: IEngineMutationRates;
+    gen?: number;
+  };
+}

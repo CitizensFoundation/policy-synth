@@ -94,7 +94,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
         Policy Framing Instructions:
         1.  Your are writing policy proposal that a democracy nonprofit will bring to the US government.
 
-        Always output your policy ideas in the following JSON format: { title, shortDescription, whyTheBestChoice, conditionsForSuccess[], mainObstaclesForImplemention[], mainRisks[], policyKPIMetrics[] }.
+        Always output your policy ideas in the following JSON format: { title, description, whyTheBestChoice, conditionsForSuccess[], mainObstaclesForImplemention[], mainRisks[], policyKPIMetrics[] }.
 
         `),
             new HumanChatMessage(`
@@ -111,15 +111,21 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
         ];
         return messages;
     }
-    async createSeedPolicyForSolution(subProblemIndex, solution) {
-        let policyOptions = (await this.callLLM("policies-seed", IEngineConstants.createSeedPolicies, await this.renderCreatePrompt(subProblemIndex, solution), true, false, 1500));
-        this.logger.debug(`Before refine: ${JSON.stringify(policyOptions, null, 2)}`);
-        if (IEngineConstants.enable.refine.policiesSeed) {
-            policyOptions = (await this.callLLM("policies-seed", IEngineConstants.createSeedPolicies, await this.renderRefinePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
+    async createSeedPolicyForSolution(populationIndex, subProblemIndex, solution, solutionIndex) {
+        try {
+            let policyOptions = (await this.callLLM("policies-seed", IEngineConstants.policiesSeedModel, await this.renderCreatePrompt(subProblemIndex, solution), true, false, 1500));
+            if (IEngineConstants.enable.refine.policiesSeed) {
+                policyOptions = (await this.callLLM("policies-seed", IEngineConstants.policiesSeedModel, await this.renderRefinePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
+            }
+            const choosenPolicy = (await this.callLLM("policies-seed", IEngineConstants.policiesSeedModel, await this.renderChoosePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
+            choosenPolicy.solutionIndex = `${populationIndex}:${solutionIndex}`;
+            return choosenPolicy;
         }
-        this.logger.debug(`After refine: ${JSON.stringify(policyOptions, null, 2)}`);
-        const choosenPolicy = (await this.callLLM("policies-seed", IEngineConstants.createSeedPolicies, await this.renderChoosePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
-        return choosenPolicy;
+        catch (error) {
+            this.logger.error(error);
+            this.logger.error(error.stack);
+            throw error;
+        }
     }
     async createSeedPolicies() {
         const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
@@ -132,19 +138,24 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
                     populations: [],
                 };
             }
-            subProblem.policies.populations = [];
-            const newPopulation = [];
-            for (let solutionIndex = 0; solutionIndex < IEngineConstants.maxTopSolutionsToCreatePolicies; solutionIndex++) {
-                this.logger.info(`Creating policy for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}`);
-                const solution = solutions[solutionIndex];
-                const seedPolicy = await this.createSeedPolicyForSolution(subProblemIndex, solution);
-                this.logger.debug(seedPolicy.title);
-                newPopulation.push(seedPolicy);
-                await this.saveMemory();
+            if (!subProblem.policies.populations ||
+                subProblem.policies.populations.length === 0) {
+                subProblem.policies.populations = [];
+                let newPopulation = [];
+                for (let solutionIndex = 0; solutionIndex < IEngineConstants.maxTopSolutionsToCreatePolicies; solutionIndex++) {
+                    this.logger.info(`Creating policy for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}`);
+                    const solution = solutions[solutionIndex];
+                    const seedPolicy = await this.createSeedPolicyForSolution(this.lastPopulationIndex(subProblemIndex), subProblemIndex, solution, solutionIndex);
+                    this.logger.debug(`Adding ${seedPolicy.title} to new population for sub problem ${subProblemIndex}}`);
+                    newPopulation.push(seedPolicy);
+                    await this.saveMemory();
+                }
+                this.logger.debug(`New size of ${subProblemIndex} population: ${subProblem.policies.populations.length}`);
+                subProblem.policies.populations.push(newPopulation);
             }
-            this.logger.debug(`New population: ${JSON.stringify(newPopulation, null, 2)}`);
-            subProblem.policies.populations.push(newPopulation);
-            this.logger.debug(`New size of ${subProblemIndex} population: ${subProblem.policies.populations.length}`);
+            else {
+                this.logger.debug(`Sub problem ${subProblemIndex} already has ${subProblem.policies.populations.length} populations`);
+            }
         });
         // Wait for all subproblems to finish
         await Promise.all(subProblemsPromises);
@@ -152,12 +163,12 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
     }
     async process() {
         this.logger.info("Create Seed Policies Processor");
-        super.process();
+        //super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.createSeedPolicies.temperature,
-            maxTokens: IEngineConstants.createSeedPolicies.maxOutputTokens,
-            modelName: IEngineConstants.createSeedPolicies.name,
-            verbose: IEngineConstants.createSeedPolicies.verbose,
+            temperature: IEngineConstants.policiesSeedModel.temperature,
+            maxTokens: IEngineConstants.policiesSeedModel.maxOutputTokens,
+            modelName: IEngineConstants.policiesSeedModel.name,
+            verbose: IEngineConstants.policiesSeedModel.verbose,
         });
         try {
             await this.createSeedPolicies();

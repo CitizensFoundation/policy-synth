@@ -23,13 +23,25 @@ export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.7,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 4300,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
     verbose: true
+  };
+
+  static policiesSeedModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.7,
+    maxOutputTokens: 4300,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
   };
 
   static analyseExternalSolutionsModel: IEngineBaseAIModelConstants = {
@@ -291,6 +303,7 @@ export class IEngineConstants {
 
   static rankingLLMmaxRetryCount = 40;
 
+  // See also hardcoded 3 for project 1 in createSolutions
   static maxTopEntitiesToSearch = 4;
 
   static maxTopEntitiesToRender = 3;
@@ -318,6 +331,9 @@ export class IEngineConstants {
   static numberOfSearchTypes = 4;
 
   static webPageNavTimeout = 60 * 1000;
+
+  static currentUserAgent =
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
 
   static topItemsToKeepForTopicClusterPruning = 5;
 
@@ -353,22 +369,25 @@ export class IEngineConstants {
       createEntities: true,
       createSolutions: true,
       createProsCons: true,
+      policiesSeed: true
     },
   };
 
   static evolution = {
-    populationSize: 72,
+    populationSize: 80,
+
+    limitTopTopicClusterElitesToEloRating: 850,
 
     // Population split
     keepElitePercent: 0.1,
-    randomImmigrationPercent: 0.45,
-    mutationOffspringPercent: 0.35,
+    randomImmigrationPercent: 0.40,
+    mutationOffspringPercent: 0.40,
     crossoverPercent: 0.1,
 
     // General mutation rate split
-    lowMutationRate: 0.15,
-    mediumMutationRate: 0.55,
-    highMutationRate: 0.3,
+    lowMutationRate: 0.4,
+    mediumMutationRate: 0.4,
+    highMutationRate: 0.2,
 
     selectParentTournamentSize: 7,
     crossoverMutationPercent: 0.1,
@@ -382,6 +401,5 @@ export class IEngineConstants {
     IEngineConstants.evolution.populationSize *
     IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
 
-  static currentUserAgent =
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
+  static maxTopSolutionsToCreatePolicies = 3;
 }

@@ -16,7 +16,8 @@ if (projectId) {
   const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
 
   //memory.currentStage = "policies-seed";
-  memory.currentStage = "policies-create-images"
+  //memory.currentStage = "policies-create-images"
+  memory.currentStage = "create-evidence-search-queries"
 
   await redis.set(redisKey, JSON.stringify(memory));
 

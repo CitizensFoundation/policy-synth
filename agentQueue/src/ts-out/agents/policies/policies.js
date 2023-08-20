@@ -2,6 +2,7 @@ import { BaseAgent } from "../baseAgent.js";
 import { Worker } from "bullmq";
 import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
+import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
 export class AgentPolicies extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -51,6 +52,10 @@ export class AgentPolicies extends BaseAgent {
             case "policies-create-images":
                 const createPolicyImages = new CreatePolicyImagesProcessor(this.job, this.memory);
                 await createPolicyImages.process();
+                break;
+            case "create-evidence-search-queries":
+                const createEvidenceSearchQueries = new CreateEvidenceSearchQueriesProcessor(this.job, this.memory);
+                await createEvidenceSearchQueries.process();
                 break;
             default:
                 console.log("No stage matched");

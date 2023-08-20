@@ -8,7 +8,8 @@ if (projectId) {
     const output = await redis.get(redisKey);
     const memory = JSON.parse(output);
     //memory.currentStage = "policies-seed";
-    memory.currentStage = "policies-create-images";
+    //memory.currentStage = "policies-create-images"
+    memory.currentStage = "create-evidence-search-queries";
     await redis.set(redisKey, JSON.stringify(memory));
     console.log("Adding job to queue");
     await myQueue.add("agent-policies", {

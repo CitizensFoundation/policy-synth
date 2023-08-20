@@ -2,6 +2,7 @@ import { BaseAgent } from "../baseAgent.js";
 import { Worker, Job } from "bullmq";
 import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
+import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
 
 export class AgentPolicies extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -66,7 +67,14 @@ export class AgentPolicies extends BaseAgent {
         );
         await createPolicyImages.process();
         break;
-      default:
+    case "create-evidence-search-queries":
+      const createEvidenceSearchQueries = new CreateEvidenceSearchQueriesProcessor(
+        this.job,
+        this.memory
+      );
+      await createEvidenceSearchQueries.process();
+      break;
+    default:
       console.log("No stage matched");
     }
   }
