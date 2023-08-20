@@ -109,6 +109,9 @@ interface IEngineSubProblem {
   solutions: {
     populations: IEngineSolution[][];
   };
+  policies?: {
+    populations: PSPolicy[][];
+  };
 }
 
 interface IEngineAffectedEntityBase {
@@ -212,8 +215,8 @@ type IEngineStageTypes =
   | "web-get-pages"
   | "create-seed-solutions"
   | "analyse-external-solutions"
-  | "save"
-  | "done";
+  | "policies-create-images"
+  | "policies-seed";
 
 interface IEngineUserFeedback {
   feedbackType: string;
