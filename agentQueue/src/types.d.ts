@@ -139,16 +139,19 @@ interface IEngineSolutionAffectedEntity extends IEngineAffectedEntityBase {
   negativeScore: number;
 }
 
+interface IEngineSimilarityGroup {
+  index: number;
+  isFirst?: boolean;
+  totalCount?: number;
+};
+
+
 interface IEngineSolution {
   id: string;
   title: string;
   description: string;
   eloRating?: number;
-  similarityGroup?: {
-    index: number;
-    isFirst?: boolean;
-    totalCount?: number;
-  };
+  similarityGroup?: IEngineSimilarityGroup;
   isFirstInGroup?: boolean;
   mainBenefitOfSolutionComponent: string;
   mainObstacleToSolutionComponentAdoption: string;
@@ -216,7 +219,8 @@ type IEngineStageTypes =
   | "create-seed-solutions"
   | "analyse-external-solutions"
   | "policies-create-images"
-  | "policies-seed";
+  | "policies-seed"
+  | "create-evidence-search-queries";
 
 interface IEngineUserFeedback {
   feedbackType: string;

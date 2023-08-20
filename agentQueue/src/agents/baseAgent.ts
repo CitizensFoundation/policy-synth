@@ -62,7 +62,8 @@ export abstract class BaseAgent extends BaseWorker {
     "evolve-rank-population": {},
     "analyse-external-solutions": {},
     "policies-seed": {},
-    "policies-create-images": {}
+    "policies-create-images": {},
+    "create-evidence-search-queries": {},
   }
 
   async saveMemory() {

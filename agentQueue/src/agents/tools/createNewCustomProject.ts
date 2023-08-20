@@ -56,6 +56,7 @@ if (projectId) {
         "topic-map-solutions": {},
         "evolve-rank-population": {},
         "analyse-external-solutions": {},
+        "create-evidence-search-queries": {},
         save: {},
         done: {},
       },

@@ -18,7 +18,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
         You are an expert in generating Dall-E 2 prompts from titles and descriptions of policy components.
 
         Important Instructions:
-        1. Always end all prompts with "Simple, high quality film advertisement using hues of ${this.getSubProblemColor(
+        1. Always end all prompts with "Very high quality film advertisement using hues of ${this.getSubProblemColor(
           subProblemIndex
         )} and ${this.randomSecondaryColor}. No text."
         2. Be visual and detailed in your prompts.

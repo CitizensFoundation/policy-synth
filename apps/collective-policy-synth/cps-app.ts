@@ -49,6 +49,7 @@ import './src/cps-problem-statement.js';
 import './src/cps-sub-problems.js';
 import './src/cps-entities.js';
 import './src/cps-solutions.js';
+import './src/ps-policies.js';
 import { IEngineConstants } from './src/constants.js';
 import { YpFormattingHelpers } from './src/@yrpri/common/YpFormattingHelpers.js';
 import { CpsSolutions } from './src/cps-solutions.js';
@@ -58,6 +59,7 @@ import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import { debug } from 'console';
+import { PsPolicies } from './src/ps-policies.js';
 
 const PagesTypes = {
   ProblemStatement: 1,
@@ -88,6 +90,9 @@ export class CpsApp extends YpBaseElement {
 
   @property({ type: Number })
   activeSolutionIndex: number | undefined;
+
+  @property({ type: Number })
+  activePolicyIndex: number | undefined;
 
   @property({ type: Number })
   pageIndex = PagesTypes.Solutions;
@@ -159,7 +164,7 @@ export class CpsApp extends YpBaseElement {
   numberOfSolutionsGenerations = 0;
 
   @property({ type: Number })
-  currentPolicyIdeasGeneration = 0;
+  numberOfPoliciesIdeasGeneration = 0;
 
   @property({ type: Number })
   totalSolutions = 0;
@@ -225,6 +230,32 @@ export class CpsApp extends YpBaseElement {
     `);
   }
 
+  renderPoliciesPage() {
+    return this.renderContentOrLoader(html`
+      <div class="layout horizontal">
+        ${this.currentMemory
+          ? html`
+              ${this.renderNavigationBar()}
+              <div class="rightPanel">
+                <main>
+                  <div class="mainPageContainer">
+                    <ps-policies
+                      .memory="${this.currentMemory}"
+                      .activeSubProblemIndex="${this.activeSubProblemIndex}"
+                      .activePopulationIndex="${this.activePopulationIndex}"
+                      .activePolicyIndex="${this.activePolicyIndex}"
+                      @update-route="${this.updateActivePolicyIndexes}"
+                      .router="${this.router}"
+                    ></ps-policies>
+                  </div>
+                </main>
+              </div>
+            `
+          : nothing}
+      </div>
+    `);
+  }
+
   setupCurrentProjectFromRoute(newProjectId: number, clearAll = false) {
     if (newProjectId !== this.currentProjectId) {
       this.currentProjectId = newProjectId;
@@ -235,6 +266,7 @@ export class CpsApp extends YpBaseElement {
       this.activeSubProblemIndex = null;
       this.activePopulationIndex = null;
       this.activeSolutionIndex = null;
+      this.activePolicyIndex = null;
     }
 
     if (!this.wide) {
@@ -243,9 +275,13 @@ export class CpsApp extends YpBaseElement {
           if (this.$$('#navBar') as NavigationBar) {
             (this.$$('#navBar') as NavigationBar).activeIndex = 0;
           }
-        } else if (window.location.pathname.indexOf('projects') > -1) {
+        } else if (window.location.pathname.indexOf('solutions') > -1) {
           if (this.$$('#navBar') as NavigationBar) {
             (this.$$('#navBar') as NavigationBar).activeIndex = 1;
+          }
+        } else if (window.location.pathname.indexOf('policies') > -1) {
+          if (this.$$('#navBar') as NavigationBar) {
+            (this.$$('#navBar') as NavigationBar).activeIndex = 2
           }
         }
       }, 100);
@@ -262,6 +298,9 @@ export class CpsApp extends YpBaseElement {
     this.activeSolutionIndex = params.solutionIndex
       ? parseInt(params.solutionIndex, 10)
       : null;
+    this.activePolicyIndex = params.policyIndex
+    ? parseInt(params.policyIndex, 10)
+    : null;
   }
 
   private router: Router = new Router(
@@ -273,6 +312,7 @@ export class CpsApp extends YpBaseElement {
           return  html`<cps-home .memory="${this.currentMemory}"></cps-home>`
         },
       },
+      // Next two are depricated
       {
         path: '/projects/:projectId',
         render: params => {
@@ -295,6 +335,48 @@ export class CpsApp extends YpBaseElement {
         },
       },
       {
+        path: '/solutions/:projectId',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1,
+            true
+          );
+          return this.renderSolutionPage();
+        },
+      },
+      {
+        path: '/solutions/:projectId/',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1,
+            true
+          );
+
+          return this.renderSolutionPage();
+        },
+      },
+      {
+        path: '/policies/:projectId',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1,
+            true
+          );
+          return this.renderPoliciesPage();
+        },
+      },
+      {
+        path: '/policies/:projectId/',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1,
+            true
+          );
+
+          return this.renderPoliciesPage();
+        },
+      },
+      {
         path: '/projects/:projectId/refresh827cDb',
         render: params => {
           this.setupCurrentProjectFromRoute(
@@ -304,6 +386,7 @@ export class CpsApp extends YpBaseElement {
           return this.renderSolutionPage();
         },
       },
+      // Next two are depricated but kept of backwards compatibility
       {
         path: '/projects/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?',
         render: params => {
@@ -322,6 +405,46 @@ export class CpsApp extends YpBaseElement {
           );
           this.parseAllActiveIndexes(params);
           return this.renderSolutionPage();
+        },
+      },
+      {
+        path: '/solutions/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
+          this.parseAllActiveIndexes(params);
+          return this.renderSolutionPage();
+        },
+      },
+      {
+        path: '/solutions/:projectId/:subProblemIndex?/:populationIndex?/:solutionIndex?/',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
+          this.parseAllActiveIndexes(params);
+          return this.renderSolutionPage();
+        },
+      },
+      {
+        path: '/policies/:projectId/:subProblemIndex?/:populationIndex?/:policyIndex?',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
+          this.parseAllActiveIndexes(params);
+          return this.renderPoliciesPage();
+        },
+      },
+      {
+        path: '/policies/:projectId/:subProblemIndex?/:populationIndex?/:policyIndex?/',
+        render: params => {
+          this.setupCurrentProjectFromRoute(
+            parseInt(params.projectId, 10) || 1
+          );
+          this.parseAllActiveIndexes(params);
+          return this.renderPoliciesPage();
         },
       },
       {
@@ -422,6 +545,11 @@ export class CpsApp extends YpBaseElement {
       if ( this.currentMemory.subProblems[0].solutions) {
         this.numberOfSolutionsGenerations =
         this.currentMemory.subProblems[0].solutions.populations.length;
+      }
+
+      if ( this.currentMemory.subProblems[0].policies) {
+        this.numberOfPoliciesIdeasGeneration =
+        this.currentMemory.subProblems[0].policies.populations.length;
       }
 
       document.title = bootResponse.name;
@@ -647,32 +775,82 @@ export class CpsApp extends YpBaseElement {
     this.activeSubProblemIndex = event.detail.activeSubProblemIndex;
     this.activePopulationIndex = event.detail.activePopulationIndex;
     this.activeSolutionIndex = event.detail.activeSolutionIndex;
-    await this.updateSolutionRouter();
+    await this.updateSolutionsRouter();
     /*console.error(
       `updateActiveSolutionIndexes ${this.activeSubProblemIndex} ${this.activePopulationIndex} ${this.activeSolutionIndex}`
     )*/
   }
 
-  async updateSolutionRouter() {
+  async updateActivePolicyIndexes(event: CustomEvent) {
+    console.error(`updateActivePolicyIndexes ${event.detail.activePolicyIndex}`)
+    this.activeSubProblemIndex = event.detail.activeSubProblemIndex;
+    this.activePopulationIndex = event.detail.activePopulationIndex;
+    this.activePolicyIndex = event.detail.activePolicyIndex;
+    await this.updatePoliciesRouter();
+    console.error(
+      `updateActiveSolutionIndexes2 ${this.activeSubProblemIndex} ${this.activePopulationIndex} ${this.activePolicyIndex}`
+    )
+  }
+
+  async updatePoliciesRouter() {
     let path: string;
-    if (
-      this.activeSolutionIndex !== null &&
+     if (
+      this.activePolicyIndex !== null &&
       this.activeSubProblemIndex !== null &&
       this.activePopulationIndex !== null
     ) {
-      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}/${this.activeSolutionIndex}`;
+      path = `/policies/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}/${this.activePolicyIndex}`;
     } else if (
       this.activeSubProblemIndex !== null &&
       this.activePopulationIndex !== null
     ) {
-      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}`;
+      path = `/policies/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}`;
     } else if (
       this.activeSubProblemIndex !== null &&
       this.activeSubProblemIndex !== undefined
     ) {
-      path = `/projects/${this.currentProjectId}/${this.activeSubProblemIndex}`;
+      path = `/policies/${this.currentProjectId}/${this.activeSubProblemIndex}`;
     } else {
-      path = `/projects/${this.currentProjectId}`;
+      path = `/policies/${this.currentProjectId}`;
+    }
+
+    await this.router.goto(path);
+
+    setTimeout(() => {
+      if (window.location.pathname != path) {
+        history.pushState({}, '', path);
+        //console.error(`push state ${path}`)
+      }
+      this.requestUpdate();
+    });
+  }
+
+  async updateSolutionsRouter() {
+    let path: string;
+    if (
+      this.activePolicyIndex !== null &&
+      this.activeSubProblemIndex !== null &&
+      this.activePopulationIndex !== null
+    ) {
+      path = `/policies/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}/${this.activePolicyIndex}`;
+    } else if (
+      this.activeSolutionIndex !== null &&
+      this.activeSubProblemIndex !== null &&
+      this.activePopulationIndex !== null
+    ) {
+      path = `/solutions/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}/${this.activeSolutionIndex}`;
+    } else if (
+      this.activeSubProblemIndex !== null &&
+      this.activePopulationIndex !== null
+    ) {
+      path = `/solutions/${this.currentProjectId}/${this.activeSubProblemIndex}/${this.activePopulationIndex}`;
+    } else if (
+      this.activeSubProblemIndex !== null &&
+      this.activeSubProblemIndex !== undefined
+    ) {
+      path = `/solutions/${this.currentProjectId}/${this.activeSubProblemIndex}`;
+    } else {
+      path = `/solutions/${this.currentProjectId}`;
     }
 
     await this.router.goto(path);
@@ -1003,6 +1181,8 @@ export class CpsApp extends YpBaseElement {
     createProblemStatementImage: IEngineConstants.createSolutionImagesModel,
     createSubProblemImages: IEngineConstants.createSolutionImagesModel,
     rankSearchResults: IEngineConstants.searchResultsRankingsModel,
+    policiesSeed: IEngineConstants.policiesSeedModel,
+    policiesCreateImages: IEngineConstants.createSolutionImagesModel,
     rankSearchQueries: IEngineConstants.searchQueryRankingsModel,
     rankSubProblems: IEngineConstants.subProblemsRankingsModel,
     rankEntities: IEngineConstants.entitiesRankingsModel,
@@ -1046,6 +1226,10 @@ export class CpsApp extends YpBaseElement {
         <div class="statsItem">
           ${this.t('Solutions generations')}:
           ${YpFormattingHelpers.number(this.numberOfSolutionsGenerations)}
+        </div>
+        <div class="statsItem">
+          ${this.t('Policies generations')}:
+          ${YpFormattingHelpers.number(this.numberOfPoliciesIdeasGeneration)}
         </div>
       </div>
     `;
@@ -1168,49 +1352,6 @@ export class CpsApp extends YpBaseElement {
     return `Built on ${formattedDate} CET`;
   }
 
-  _renderPage() {
-    if (this.currentMemory) {
-      switch (this.pageIndex) {
-        case PagesTypes.ProblemStatement:
-          return html`${!this.wide
-              ? html`
-                  <div class="layout horizontal center-center">
-                    <div class="layout vertical">${this.renderLogo()}</div>
-                  </div>
-                `
-              : nothing}
-            <cps-problem-statement
-              .memory="${this.currentMemory}"
-            ></cps-problem-statement>
-            ${!this.wide
-              ? html`
-                  <div class="layout horizontal center-center">
-                    <div class="version">__VERSION__</div>
-                  </div>
-                `
-              : nothing} `;
-        case PagesTypes.SubProblems:
-          return html`<cps-sub-problems
-            .memory="${this.currentMemory}"
-          ></cps-sub-problems>`;
-        case PagesTypes.Entities:
-          return html`<cps-entities
-            .memory="${this.currentMemory}"
-          ></cps-entities>`;
-        case PagesTypes.Solutions:
-          return html`<cps-solutions
-            .memory="${this.currentMemory}"
-          ></cps-solutions>`;
-        default:
-          return html``;
-      }
-    } else {
-      return html`<div class="loading">
-        <md-circular-progress indeterminate></md-circular-progress>
-      </div>`;
-    }
-  }
-
   renderThemeToggle() {
     return html`<div class="layout vertical center-center lightDarkContainer">
         ${!this.themeDarkMode
@@ -1271,9 +1412,19 @@ export class CpsApp extends YpBaseElement {
     this.activeSolutionIndex = null;
     this.activeSubProblemIndex = null;
     this.activePopulationIndex = null;
-    this.updateSolutionRouter();
+    this.updateSolutionsRouter();
     await this.updateComplete;
     (this.$$('cps-solutions') as CpsSolutions)?.reset();
+  }
+
+  async openPolicies() {
+    this.activePolicyIndex = null;
+    this.activeSolutionIndex = null;
+    this.activeSubProblemIndex = null;
+    this.activePopulationIndex = null;
+    this.updatePoliciesRouter();
+    await this.updateComplete;
+    (this.$$('ps-policies') as PsPolicies)?.reset();
   }
 
   async openWebResearch() {
@@ -1319,7 +1470,7 @@ export class CpsApp extends YpBaseElement {
             >
             <md-list-item
             class="${
-              location.href.indexOf('/projects') > -1 && 'selectedContainer'
+              location.href.indexOf('/solutions') > -1 && 'selectedContainer'
             }"
               headline="${this.t('Solutions')} (${
         this.numberOfSolutionsGenerations
@@ -1341,36 +1492,36 @@ export class CpsApp extends YpBaseElement {
                 <md-icon>online_prediction</md-icon>
               </md-list-item-icon></md-list-item
             >
-            <md-list-item disabled
+            <md-list-item hidden
               class="${
                 this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'
               }"
               headline="${this.t('Policy categories')}"
-              @click="${() => this.changeTabTo(4)}"
-              @keydown="${(e: KeyboardEvent) => {
-                if (e.key === 'Enter') {
-                  this.changeTabTo(4);
-                }
-              }}"
+
               .supportingText="${this.t('Policy categories')}"
             >
               <md-list-item-icon slot="start">
                 <md-icon>category</md-icon>
               </md-list-item-icon></md-list-item
             >
-            <md-list-item disabled
+            <md-list-item
               class="${
                 this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'
               }"
               headline="${this.t('Policy ideas')} (${
-        this.currentPolicyIdeasGeneration
+        this.numberOfPoliciesIdeasGeneration
       } gen)"
-              @click="${() => this.changeTabTo(5)}"
+              @click="${async () => {
+                this.openPolicies();
+                setTimeout(() => {
+                  this.requestUpdate();
+                });
+              }}"
               @keydown="${(e: KeyboardEvent) => {
                 if (e.key === 'Enter') {
-                  this.changeTabTo(3);
+                  this.openPolicies();
                 }
               }}"
               .supportingText="${this.t('Evolving policy ideas')}"

@@ -47,10 +47,44 @@
           "vectorizePropertyName": true
         }
       },
-      "name": "relevanceToPolicy"
+      "name": "relevanceToPolicyProposal"
     },
     {
       "name": "possibleEvidenceIdentifiedInTextContext",
+      "dataType": [
+        "text[]"
+      ],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "possibleStakeholderOpinionInTextContext",
+      "dataType": [
+        "text[]"
+      ],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "possibleHistoricalContextInTextContext",
       "dataType": [
         "text[]"
       ],
@@ -112,7 +146,7 @@
           "vectorizePropertyName": true
         }
       },
-      "name": "mostRelevantParagraphs"
+      "name": "allMostRelevantParagraphs"
     },
     {
       "dataType": [

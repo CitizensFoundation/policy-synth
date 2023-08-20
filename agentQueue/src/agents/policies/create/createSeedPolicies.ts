@@ -30,13 +30,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
     `;
   }
 
-
-  async renderCreatePrompt(
-    subProblemIndex: number,
-    solution: IEngineSolution
-
-  ) {
-
+  async renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution) {
     const messages = [
       new SystemChatMessage(
         `
@@ -76,7 +70,6 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
     solution: IEngineSolution,
     policyProposalsToRefine: PSPolicy[]
   ) {
-
     const messages = [
       new SystemChatMessage(
         `
@@ -118,7 +111,6 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
     solution: IEngineSolution,
     policyProposalsToChooseFrom: PSPolicy[]
   ) {
-
     const messages = [
       new SystemChatMessage(
         `
@@ -131,7 +123,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
         Policy Framing Instructions:
         1.  Your are writing policy proposal that a democracy nonprofit will bring to the US government.
 
-        Always output your policy ideas in the following JSON format: { title, shortDescription, whyTheBestChoice, conditionsForSuccess[], mainObstaclesForImplemention[], mainRisks[], policyKPIMetrics[] }.
+        Always output your policy ideas in the following JSON format: { title, description, whyTheBestChoice, conditionsForSuccess[], mainObstaclesForImplemention[], mainRisks[], policyKPIMetrics[] }.
 
         `
       ),
@@ -154,56 +146,55 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
   }
 
 
-  async createSeedPolicyForSolution(subProblemIndex: number, solution: IEngineSolution): Promise<PSPolicy> {
-    let policyOptions = (await this.callLLM(
-      "policies-seed",
-      IEngineConstants.createSeedPolicies,
-      await this.renderCreatePrompt(
-        subProblemIndex,
-        solution
-      ),
-      true,
-      false,
-      1500
-    )) as PSPolicy[];
 
-    this.logger.debug(
-      `Before refine: ${JSON.stringify(policyOptions, null, 2)}`
-    );
-
-    if (IEngineConstants.enable.refine.policiesSeed) {
-      policyOptions = (await this.callLLM(
+  async createSeedPolicyForSolution(
+    populationIndex: number,
+    subProblemIndex: number,
+    solution: IEngineSolution,
+    solutionIndex: number
+  ): Promise<PSPolicy> {
+    try {
+      let policyOptions = (await this.callLLM(
         "policies-seed",
-        IEngineConstants.createSeedPolicies,
-        await this.renderRefinePrompt(
-          subProblemIndex,
-          solution,
-          policyOptions
-        ),
+        IEngineConstants.policiesSeedModel,
+        await this.renderCreatePrompt(subProblemIndex, solution),
         true,
         false,
         1500
       )) as PSPolicy[];
+
+      if (IEngineConstants.enable.refine.policiesSeed) {
+        policyOptions = (await this.callLLM(
+          "policies-seed",
+          IEngineConstants.policiesSeedModel,
+          await this.renderRefinePrompt(
+            subProblemIndex,
+            solution,
+            policyOptions
+          ),
+          true,
+          false,
+          1500
+        )) as PSPolicy[];
+      }
+
+      const choosenPolicy = (await this.callLLM(
+        "policies-seed",
+        IEngineConstants.policiesSeedModel,
+        await this.renderChoosePrompt(subProblemIndex, solution, policyOptions),
+        true,
+        false,
+        1500
+      )) as PSPolicy;
+
+      choosenPolicy.solutionIndex = `${populationIndex}:${solutionIndex}`;
+
+      return choosenPolicy;
+    } catch (error: any) {
+      this.logger.error(error);
+      this.logger.error(error.stack);
+      throw error;
     }
-
-    this.logger.debug(
-      `After refine: ${JSON.stringify(policyOptions, null, 2)}`
-    );
-
-    const choosenPolicy = (await this.callLLM(
-      "policies-seed",
-      IEngineConstants.createSeedPolicies,
-      await this.renderChoosePrompt(
-        subProblemIndex,
-        solution,
-        policyOptions
-      ),
-      true,
-      false,
-      1500
-    )) as PSPolicy;
-
-    return choosenPolicy;
   }
 
   async createSeedPolicies() {
@@ -229,40 +220,56 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
           };
         }
 
-        subProblem.policies.populations = [];
-
-        const newPopulation: PSPolicy[] = [];
-
-        for (
-          let solutionIndex = 0;
-          solutionIndex < IEngineConstants.maxTopSolutionsToCreatePolicies;
-          solutionIndex++
+        if (
+          !subProblem.policies.populations ||
+          subProblem.policies.populations.length === 0
         ) {
-          this.logger.info(
-            `Creating policy for solution ${solutionIndex}/${
-              solutions.length
-            } of sub problem ${subProblemIndex} lastPopulationIndex ${this.lastPopulationIndex(
-              subProblemIndex
-            )}`
+          subProblem.policies.populations = [];
+
+          let newPopulation: PSPolicy[] = [];
+
+          for (
+            let solutionIndex = 0;
+            solutionIndex < IEngineConstants.maxTopSolutionsToCreatePolicies;
+            solutionIndex++
+          ) {
+            this.logger.info(
+              `Creating policy for solution ${solutionIndex}/${
+                solutions.length
+              } of sub problem ${subProblemIndex} lastPopulationIndex ${this.lastPopulationIndex(
+                subProblemIndex
+              )}`
+            );
+
+            const solution = solutions[solutionIndex];
+
+            const seedPolicy = await this.createSeedPolicyForSolution(
+              this.lastPopulationIndex(subProblemIndex),
+              subProblemIndex,
+              solution,
+              solutionIndex
+            );
+
+            this.logger.debug(
+              `Adding ${seedPolicy.title} to new population for sub problem ${subProblemIndex}}`
+            );
+
+            newPopulation.push(seedPolicy);
+
+            await this.saveMemory();
+          }
+
+          this.logger.debug(
+            `New size of ${subProblemIndex} population: ${subProblem.policies.populations.length}`
           );
 
-          const solution = solutions[solutionIndex];
+          subProblem.policies.populations.push(newPopulation);
+        } else {
 
-          const seedPolicy = await this.createSeedPolicyForSolution(subProblemIndex, solution);
-
-          this.logger.debug(seedPolicy.title);
-
-          newPopulation.push(seedPolicy);
-
-          await this.saveMemory();
-
+          this.logger.debug(
+            `Sub problem ${subProblemIndex} already has ${subProblem.policies.populations.length} populations`
+          );
         }
-
-        this.logger.debug(`New population: ${JSON.stringify(newPopulation, null, 2)}`);
-
-        subProblem.policies.populations.push(newPopulation);
-
-        this.logger.debug(`New size of ${subProblemIndex} population: ${subProblem.policies.populations.length}`);
       }
     );
 
@@ -273,13 +280,13 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
 
   async process() {
     this.logger.info("Create Seed Policies Processor");
-    super.process();
+    //super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createSeedPolicies.temperature,
-      maxTokens: IEngineConstants.createSeedPolicies.maxOutputTokens,
-      modelName: IEngineConstants.createSeedPolicies.name,
-      verbose: IEngineConstants.createSeedPolicies.verbose,
+      temperature: IEngineConstants.policiesSeedModel.temperature,
+      maxTokens: IEngineConstants.policiesSeedModel.maxOutputTokens,
+      modelName: IEngineConstants.policiesSeedModel.name,
+      verbose: IEngineConstants.policiesSeedModel.verbose,
     });
 
     try {
