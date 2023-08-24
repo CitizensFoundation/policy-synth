@@ -437,7 +437,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
-    entityIndex: number | undefined
+    entityIndex: number | undefined,
+    policy: PSPolicy | undefined = undefined
   ) {
     this.logger.debug(
       `Processing page text ${text.slice(
@@ -501,7 +502,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
-    entityIndex: number | undefined
+    entityIndex: number | undefined,
+    policy: PSPolicy | undefined = undefined
   ) {
     return new Promise<void>(async (resolve, reject) => {
       this.logger.info("getAndProcessPdf");
@@ -564,7 +566,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
                     subProblemIndex,
                     url,
                     type,
-                    entityIndex
+                    entityIndex,
+                    policy
                   );
                   resolve();
                 } else if (item.text) {
@@ -594,7 +597,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
     url: string,
     browserPage: Page,
     type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
-    entityIndex: number | undefined
+    entityIndex: number | undefined,
+    policy: PSPolicy | undefined = undefined
   ) {
     try {
       let finalText, htmlText;
@@ -666,14 +670,15 @@ export class GetWebPagesProcessor extends BaseProcessor {
           subProblemIndex,
           url,
           type,
-          entityIndex
+          entityIndex,
+          policy
         );
       } else {
         this.logger.error(`No HTML text found for ${url}`);
       }
-    } catch (e) {
+    } catch (e: any) {
       this.logger.error(`Error in get html`);
-      this.logger.error(e);
+      this.logger.error(e.stack || e);
     }
   }
 
@@ -710,7 +715,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
           url,
           browserPage,
           type,
-          entityIndex
+          entityIndex,
         );
       }
     }

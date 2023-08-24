@@ -4,6 +4,7 @@ import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
 import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
 import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
+import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
 
 export class AgentPolicies extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -76,7 +77,11 @@ export class AgentPolicies extends BaseAgent {
         const search = new SearchWebForEvidenceProcessor(this.job, this.memory);
         await search.process();
         break;
-      default:
+      case "web-get-evidence-pages":
+        const getPages = new GetEvidenceWebPagesProcessor(this.job, this.memory);
+        await getPages.process();
+        break;
+        default:
         console.log("No stage matched");
     }
   }

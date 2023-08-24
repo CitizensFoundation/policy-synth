@@ -33,7 +33,11 @@ export class SearchWebProcessor extends BaseProcessor {
     async serpApiSearch(q) {
         const redisKey = `s_web_v3:${q}`;
         const searchData = await redis.get(redisKey);
-        if (searchData && searchData != null && searchData.length > 30) {
+        if (searchData &&
+            searchData != null &&
+            searchData.length > 30 &&
+            searchData.indexOf("throttle") === -1 &&
+            searchData.indexOf("Throttle") === -1) {
             this.logger.debug(`Using cached search data for ${q} ${searchData}`);
             return JSON.parse(searchData);
         }
@@ -153,7 +157,7 @@ export class SearchWebProcessor extends BaseProcessor {
     async processProblemStatement(searchQueryType) {
         let queriesToSearch = this.memory.problemStatement.searchQueries[searchQueryType].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
         this.logger.info("Getting search data for problem statement");
-        const results = await this.getQueryResults(queriesToSearch, 'problemStatement');
+        const results = await this.getQueryResults(queriesToSearch, "problemStatement");
         this.memory.problemStatement.searchResults.pages[searchQueryType] =
             results.searchResults;
         await this.saveMemory();

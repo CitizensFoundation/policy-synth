@@ -16,6 +16,14 @@ interface PSPolicyReference {
   link?: URL;
 }
 
+interface PSEvidenceWebPageGraphQlResults {
+  data: {
+    Get: {
+      WebPage: PSEvidenceRawWebPageData[];
+    };
+  };
+}
+
 type PSEvidenceWebPageTypes =
   | "positiveEvidence"
   | "negativeEvidence"
@@ -102,8 +110,9 @@ interface PSEvidenceRawWebPageData {
   allPossibleImplementationFeasibilityIdentifiedInTextContext?: string[];
 
   relevanceToPolicyProposal: string;
+  policyTitle?: string;
   confidenceScore?: number;
-  relvanceScore?: number;
+  relevanceScore?: number;
   qualityScore?: number;
   tags?: string[];
   entities?: string[];
