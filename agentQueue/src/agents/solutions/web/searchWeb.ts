@@ -40,7 +40,13 @@ export class SearchWebProcessor extends BaseProcessor {
 
     const searchData: string | null = await redis.get(redisKey);
 
-    if (searchData && searchData != null && searchData.length > 30) {
+    if (
+      searchData &&
+      searchData != null &&
+      searchData.length > 30 &&
+      searchData.indexOf("throttle") === -1 &&
+      searchData.indexOf("Throttle") === -1
+    ) {
       this.logger.debug(`Using cached search data for ${q} ${searchData}`);
       return JSON.parse(searchData);
     } else {
@@ -111,7 +117,9 @@ export class SearchWebProcessor extends BaseProcessor {
 
       this.logger.debug("Got Search Results 2");
 
-      this.logger.debug(`Search Results Batch: ${JSON.stringify(searchResults, null, 2)}`);
+      this.logger.debug(
+        `Search Results Batch: ${JSON.stringify(searchResults, null, 2)}`
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
@@ -121,18 +129,16 @@ export class SearchWebProcessor extends BaseProcessor {
     }
 
     const seen = this.seenUrls.get(id);
-    this.logger.debug(`Before dedup length ${searchResults.length}`)
-    searchResults = searchResults.filter(
-      (v, i, a) => {
-        const urlSeen = seen!.has(v.url);
-        if (!urlSeen) {
-          seen!.add(v.url);
-        }
-        return !urlSeen;
+    this.logger.debug(`Before dedup length ${searchResults.length}`);
+    searchResults = searchResults.filter((v, i, a) => {
+      const urlSeen = seen!.has(v.url);
+      if (!urlSeen) {
+        seen!.add(v.url);
       }
-    );
+      return !urlSeen;
+    });
 
-    this.logger.debug(`After dedup length ${searchResults.length}`)
+    this.logger.debug(`After dedup length ${searchResults.length}`);
 
     return { searchResults };
   }
@@ -148,7 +154,10 @@ export class SearchWebProcessor extends BaseProcessor {
         searchQueryType
       ].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
 
-      const results = await this.getQueryResults(queriesToSearch, `subProblem_${s}`);
+      const results = await this.getQueryResults(
+        queriesToSearch,
+        `subProblem_${s}`
+      );
 
       if (!this.memory.subProblems[s].searchResults) {
         this.memory.subProblems[s].searchResults = {
@@ -190,7 +199,10 @@ export class SearchWebProcessor extends BaseProcessor {
         IEngineConstants.maxTopQueriesToSearchPerType
       );
 
-      const results = await this.getQueryResults(queriesToSearch, `entity_${subProblemIndex}_${e}`);
+      const results = await this.getQueryResults(
+        queriesToSearch,
+        `entity_${subProblemIndex}_${e}`
+      );
 
       if (!this.memory.subProblems[subProblemIndex].entities[e].searchResults) {
         this.memory.subProblems[subProblemIndex].entities[e].searchResults = {
@@ -218,7 +230,10 @@ export class SearchWebProcessor extends BaseProcessor {
 
     this.logger.info("Getting search data for problem statement");
 
-    const results = await this.getQueryResults(queriesToSearch, 'problemStatement');
+    const results = await this.getQueryResults(
+      queriesToSearch,
+      "problemStatement"
+    );
 
     this.memory.problemStatement.searchResults!.pages[searchQueryType] =
       results.searchResults;
@@ -248,7 +263,7 @@ export class SearchWebProcessor extends BaseProcessor {
       throw error;
     }
 
-    this.logger.info("Finished processing web search")
+    this.logger.info("Finished processing web search");
 
     await this.saveMemory();
   }

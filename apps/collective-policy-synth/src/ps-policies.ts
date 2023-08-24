@@ -165,12 +165,18 @@ export class PsPolicies extends CpsStageBase {
   handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'ArrowRight') {
       this.updateSwipeIndex('right');
+      e.stopPropagation();
+      e.preventDefault();
     } else if (e.key === 'ArrowLeft') {
       this.updateSwipeIndex('left');
+      e.stopPropagation();
+      e.preventDefault();
     } else if (e.key === 'Escape') {
       if (this.activePolicyIndex !== null) {
         this.activePolicyIndex = null;
         this.exitPolicyScreen();
+        e.stopPropagation();
+        e.preventDefault();
       } else if (this.activeSubProblemIndex !== null) {
         this.activeSubProblemIndex = null;
         this.fire('yp-theme-color', this.subProblemColors[7]);
@@ -318,7 +324,8 @@ export class PsPolicies extends CpsStageBase {
         }
 
         .policyImage {
-          padding: 8px;
+          padding: 0;
+          margin-top: -20px;
         }
 
         .policyTopImage {
@@ -332,11 +339,11 @@ export class PsPolicies extends CpsStageBase {
           color: var(--md-sys-color-on-secondary-container);
           border-radius: 16px;
           padding: 20px;
-          margin: 8px 0;
+          margin: 16px;
           max-width: 600px;
           width: 600px;
           font-size: 22px;
-          min-height: 100px;
+          min-height: 110px;
           display: flex;
           flex-direction: column;
           justify-content: left;
@@ -353,11 +360,14 @@ export class PsPolicies extends CpsStageBase {
           right: 4px;
         }
 
-        .policyAttributes {
-          font-size: 24px;
+        .policyAttributeHeader {
+          font-size: 22px;
           margin-top: 6px;
+          margin-bottom: 6px;
           font-family: 'Cabin', sans-serif;
         }
+
+
         .groupInfoText {
           font-size: 18px;
           margin-top: 6px;
@@ -366,7 +376,7 @@ export class PsPolicies extends CpsStageBase {
         }
 
         .policyItem[has-image] {
-          margin-bottom: 16px;
+          margin-bottom: 24px;
         }
 
         .policyItem[group-solo] {
@@ -395,6 +405,8 @@ export class PsPolicies extends CpsStageBase {
 
         .policyItemTitle {
           padding: 8px;
+          font-size: 28px;
+          font-family: 'Roboto Condensed', sans-serif;
         }
 
         .policyItemTitle[has-image] {
@@ -485,9 +497,17 @@ export class PsPolicies extends CpsStageBase {
         }
 
         .policyAttributes {
-          display: flex;
-          justify-content: space-between;
-          align-items: self-start;
+          color: var(--md-sys-color-on-surface);
+        }
+
+
+        .policyAttributeHeader {
+          color: var(--md-sys-color-primary);
+        }
+
+
+        .policyInfoContainer {
+          max-width: 600px;
         }
 
         .pros,
@@ -579,6 +599,10 @@ export class PsPolicies extends CpsStageBase {
             margin-top: 6px;
             font-family: 'Roboto Condensed', sans-serif;
             opacity: 0.55;
+          }
+
+          .policyItemTitle {
+            font-size: 22px;
           }
 
           .topContainer {
@@ -702,7 +726,7 @@ export class PsPolicies extends CpsStageBase {
                   alt="${policy.imagePrompt}"
                   loading="lazy"
                   class="policyImage"
-                  height="${this.wide ? `250` : `200`}"
+                  height="${this.wide ? `365` : `200`}"
                   src="${this.fixImageUrlIfNeeded(policy.imageUrl)}"
                 />
               </div>
@@ -950,7 +974,7 @@ export class PsPolicies extends CpsStageBase {
 
   renderRatings(policy: PSPolicy) {
     return html`
-      <div class="ratings">
+      <div class="ratings" hidden>
         <div class="ratingsHeader eloRatings layout horizontal center-center">
           <div>
             ${this.t('Elo Rating')}:
@@ -1081,51 +1105,52 @@ export class PsPolicies extends CpsStageBase {
                   ${policy.imageUrl && this.wide
                     ? this.renderPolicyImage(policy)
                     : nothing}
-                  <div class="layout vertical">
-                    <div
-                      class="policyDescription"
-                      ?hidden="${this.hideExtraPolicyInformation}"
-                    >
-                    <div class="policyAttributeHeader">
-                      ${this.t('Conditions for Success')}
-                    </div>
-                      <div class="policyAttributes">
-                      ${policy.conditionsForSuccess.map(
-                        condition => html`<div>${condition}</div>`
-                      )}
+                </div>
 
-                    </div>
-                    </div>
-                    <div
-                      class="policyDescription"
-                      ?hidden="${this.hideExtraPolicyInformation}"
-                    >
-                    <div class="policyAttributeHeader">
-                      ${this.t('Main Risks')}
-                    </div>
-                    <div class="policyAttributes">
-                      ${policy.mainRisks.map(risk => html`<div>${risk}</div>`)}
-                      </div>
-                    </div>
-                    <div
-                      class="policyDescription"
-                      ?hidden="${this.hideExtraPolicyInformation}"
-                    >
-                    <div class="policyAttributeHeader">
-                      ${this.t('Main Obstacles for Implemention')}
-                    </div>
-                    <div class="policyAttributes">
-                      ${policy.mainObstaclesForImplemention.map(
-                        mainObstaclesForImplemention =>
-                          html`<div>${mainObstaclesForImplemention}</div>`
-                      )}
-                      </div>
-                    </div>
+                <div class="layout vertical center-justified policyInfoContainer">
+                <div
+                  class="policyDescription"
+                  ?hidden="${this.hideExtraPolicyInformation}"
+                >
+                  <div class="policyAttributeHeader">
+                    ${this.t('Conditions for Success')}
+                  </div>
+                  <div class="policyAttributes">
+                    ${policy.conditionsForSuccess.map(
+                      condition => html`<div>${condition}</div>`
+                    )}
+                  </div>
+                </div>
+                <div
+                  class="policyDescription"
+                  ?hidden="${this.hideExtraPolicyInformation}"
+                >
+                  <div class="policyAttributeHeader">
+                    ${this.t('Main Risks')}
+                  </div>
+                  <div class="policyAttributes">
+                    ${policy.mainRisks.map(risk => html`<div>${risk}</div>`)}
+                  </div>
+                </div>
+                <div
+                  class="policyDescription"
+                  ?hidden="${this.hideExtraPolicyInformation}"
+                >
+                  <div class="policyAttributeHeader">
+                    ${this.t('Main Obstacles for Implemention')}
+                  </div>
+                  <div class="policyAttributes">
+                    ${policy.mainObstaclesForImplemention.map(
+                      mainObstaclesForImplemention =>
+                        html`<div>${mainObstaclesForImplemention}</div>`
+                    )}
                   </div>
                 </div>
 
+              </div>
+
+
                 ${this.renderRatings(policy)}
-                ${JSON.stringify(policy, null, 2)}
                 ${this.renderPolicyNavigationButtons(policyIndex, policies)}
               </div>
             `

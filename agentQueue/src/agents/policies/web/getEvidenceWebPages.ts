@@ -1,34 +1,16 @@
-import { HTTPResponse, Page } from "puppeteer";
+import { Page } from "puppeteer";
 import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
-import { PdfReader } from "pdfreader";
-import axios from "axios";
-
-import { createGzip, gunzipSync, gzipSync } from "zlib";
-import { promisify } from "util";
-import { writeFile, readFile, existsSync } from "fs";
-
-const gzip = promisify(createGzip);
-const writeFileAsync = promisify(writeFile);
-const readFileAsync = promisify(readFile);
-
-import { htmlToText } from "html-to-text";
-import { BaseProcessor } from "../../baseProcessor.js";
-
-import weaviate, { WeaviateClient } from "weaviate-ts-client";
 
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
-
-import { isWithinTokenLimit } from "gpt-tokenizer";
-
-import { WebPageVectorStore } from "../../vectorstore/webPage.js";
-
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
+import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
+import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
 
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -78,6 +60,7 @@ class EvidenceTypeLookup {
 }
 
 export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
+  evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
   renderEvidenceScanningPrompt(
     subProblemIndex: number,
     policy: PSPolicy,
@@ -140,6 +123,148 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
       ),
     ];
   }
+  async getEvidenceTokenCount(text: string, subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes) {
+    const emptyMessages = this.renderEvidenceScanningPrompt(
+      subProblemIndex,
+      policy,
+      type,
+      ""
+    );
+
+    const promptTokenCount = await this.chat!.getNumTokensFromMessages(
+      emptyMessages
+    );
+
+    const textForTokenCount = new HumanChatMessage(text);
+
+    const textTokenCount = await this.chat!.getNumTokensFromMessages([
+      textForTokenCount,
+    ]);
+
+    const totalTokenCount =
+      promptTokenCount.totalCount +
+      textTokenCount.totalCount +
+      IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+
+    return { totalTokenCount, promptTokenCount };
+  }
+
+  async getEvidenceTextAnalysis(
+    subProblemIndex: number,
+    policy: PSPolicy,
+    type: PSEvidenceWebPageTypes,
+    text: string
+  ) {
+    try {
+      const { totalTokenCount, promptTokenCount } = await this.getEvidenceTokenCount(
+        text,
+        subProblemIndex,
+        policy,
+        type
+      );
+
+      this.logger.debug(
+        `Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(
+          promptTokenCount
+        )}`
+      );
+
+      let textAnalysis: PSEvidenceRawWebPageData;
+
+      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+        const maxTokenLengthForChunk =
+          IEngineConstants.getPageAnalysisModel.tokenLimit -
+          promptTokenCount.totalCount -
+          128;
+
+        this.logger.debug(
+          `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
+        );
+
+        const splitText = await this.splitText(
+          text,
+          maxTokenLengthForChunk,
+          subProblemIndex
+        );
+
+        this.logger.debug(`Got ${splitText.length} splitTexts`);
+
+        for (let t = 0; t < splitText.length; t++) {
+          const currentText = splitText[t];
+
+          let nextAnalysis = await this.getEvidenceAIAnalysis(
+            subProblemIndex,
+            policy,
+            type,
+            currentText
+          );
+
+          if (nextAnalysis) {
+            if (t == 0) {
+              textAnalysis = nextAnalysis;
+            } else {
+              textAnalysis = this.mergeAnalysisData(
+                textAnalysis!,
+                nextAnalysis
+              ) as PSEvidenceRawWebPageData;
+            }
+
+            this.logger.debug(
+              `Refined evidence text analysis (${t}): ${JSON.stringify(
+                textAnalysis,
+                null,
+                2
+              )}`
+            );
+          } else {
+            this.logger.error(
+              `Error getting AI analysis for text ${currentText}`
+            );
+          }
+        }
+      } else {
+        textAnalysis = await this.getEvidenceAIAnalysis(
+          subProblemIndex,
+          policy,
+          type,
+          text
+        );
+        this.logger.debug(
+          `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+        );
+      }
+
+      return textAnalysis!;
+    } catch (error) {
+      this.logger.error(`Error in getTextAnalysis: ${error}`);
+      throw error;
+    }
+  }
+
+  async getEvidenceAIAnalysis(
+    subProblemIndex: number,
+    policy: PSPolicy,
+    type: PSEvidenceWebPageTypes,
+    text: string
+  ) {
+    this.logger.info("Get Evidence AI Analysis");
+    const messages = this.renderEvidenceScanningPrompt(
+      subProblemIndex,
+      policy,
+      type,
+      text
+    );
+
+    const analysis = (await this.callLLM(
+      "web-get-evidence-pages",
+      IEngineConstants.getPageAnalysisModel,
+      messages,
+      true,
+      true
+    )) as PSEvidenceRawWebPageData;
+
+    return analysis;
+  }
 
   mergeAnalysisData(
     data1: PSEvidenceRawWebPageData,
@@ -147,8 +272,8 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
   ): PSEvidenceRawWebPageData {
     return {
       mostRelevantParagraphs: [
-        ...data1.mostRelevantParagraphs,
-        ...data2.mostRelevantParagraphs,
+        ...(data1.mostRelevantParagraphs || []),
+        ...(data2.mostRelevantParagraphs || []),
       ],
       allPossiblePositiveEvidenceIdentifiedInTextContext: [
         ...(data1.allPossiblePositiveEvidenceIdentifiedInTextContext || []),
@@ -248,7 +373,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
       ],
       relevanceToPolicyProposal: data1.relevanceToPolicyProposal, // Assuming you want data from data1. Adjust as needed.
       confidenceScore: data1.confidenceScore || data2.confidenceScore,
-      relvanceScore: data1.relvanceScore || data2.relvanceScore,
+      relevanceScore: data1.relevanceScore || data2.relevanceScore,
       qualityScore: data1.qualityScore || data2.qualityScore,
       tags: [...(data1.tags || []), ...(data2.tags || [])],
       entities: [...(data1.entities || []), ...(data2.entities || [])],
@@ -273,8 +398,9 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes,
-    entityIndex: number | undefined
+    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    entityIndex: number | undefined,
+    policy: PSPolicy | undefined = undefined
   ) {
     this.logger.debug(
       `Processing page text ${text.slice(
@@ -284,16 +410,21 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     );
 
     try {
-      const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
+      const textAnalysis = (await this.getEvidenceTextAnalysis(
+        subProblemIndex!,
+        policy!,
+        type as PSEvidenceWebPageTypes,
+        text
+      )) as unknown as PSEvidenceRawWebPageData;
 
       if (textAnalysis) {
         textAnalysis.url = url;
         textAnalysis.subProblemIndex = subProblemIndex;
-        textAnalysis.entityIndex = entityIndex;
-        textAnalysis.searchType = type;
+        textAnalysis.searchType = type as PSEvidenceWebPageTypes;
         textAnalysis.groupId = this.memory.groupId;
         textAnalysis.communityId = this.memory.communityId;
         textAnalysis.domainId = this.memory.domainId;
+        textAnalysis.policyTitle = policy!.title;
 
         if (
           Array.isArray(textAnalysis.contacts) &&
@@ -314,7 +445,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         );
 
         try {
-          await this.webPageVectorStore.postWebPage(textAnalysis);
+          await this.evidenceWebPageVectorStore.postWebPage(textAnalysis);
           this.totalPagesSave += 1;
           this.logger.info(`Total ${this.totalPagesSave} saved pages`);
         } catch (e: any) {
@@ -335,40 +466,45 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     return IEngineConstants.maxTopWebPagesToGet;
   }
 
-  async getAndProcessPage(
-    subProblemIndex: number | undefined,
+  async getAndProcessEvidencePage(
+    subProblemIndex: number,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes,
-    entityIndex: number | undefined
+    type: PSEvidenceWebPageTypes,
+    policy: PSPolicy
   ) {
     if (onlyCheckWhatNeedsToBeScanned) {
-      const hasPage = await this.webPageVectorStore.webPageExist(
+      const hasPage = await this.evidenceWebPageVectorStore.webPageExist(
         this.memory.groupId,
         url,
         type,
         subProblemIndex,
-        entityIndex
+        undefined
       );
       if (hasPage) {
         this.logger.warn(
-          `Already have scanned ${type} / ${subProblemIndex} / ${entityIndex} ${url}`
+          `Already have scanned ${type} / ${subProblemIndex}  ${url}`
         );
       } else {
-        this.logger.warn(
-          `Need to scan ${type} / ${subProblemIndex} / ${entityIndex} ${url}`
-        );
+        this.logger.warn(`Need to scan ${type} / ${subProblemIndex}  ${url}`);
       }
     } else {
       if (url.toLowerCase().endsWith(".pdf")) {
-        await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
+        await this.getAndProcessPdf(
+          subProblemIndex,
+          url,
+          type,
+          undefined,
+          policy
+        );
       } else {
         await this.getAndProcessHtml(
           subProblemIndex,
           url,
           browserPage,
           type,
-          entityIndex
+          undefined,
+          policy
         );
       }
     }
@@ -377,19 +513,13 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
   }
 
   async processSubProblems(browser: Browser) {
-    const searchQueryTypes = [
-      "general",
-      "scientific",
-      "openData",
-      "news",
-    ] as const;
     const promises = [];
 
     for (
-      let s = 0;
-      s <
+      let subProblemIndex = 0;
+      subProblemIndex <
       Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
-      s++
+      subProblemIndex++
     ) {
       promises.push(
         (async () => {
@@ -401,26 +531,50 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
           await newPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-          for (const searchQueryType of searchQueryTypes) {
-            this.logger.info(
-              `Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`
-            );
+          const subProblem = this.memory.subProblems[subProblemIndex];
 
-            const urlsToGet = this.getUrlsToFetch(
-              this.memory.subProblems[s].searchResults!.pages[searchQueryType]
-            );
+          const policies =
+            subProblem.policies?.populations[
+              subProblem.policies!.populations.length - 1
+            ];
 
-            for (let i = 0; i < urlsToGet.length; i++) {
-              await this.getAndProcessPage(
-                s,
-                urlsToGet[i],
-                newPage,
-                searchQueryType,
-                undefined
+          if (policies) {
+            for (
+              let policyIndex = 0;
+              policyIndex < policies.length;
+              policyIndex++
+            ) {
+              this.logger.info(
+                `Getting evidence web pages for policy ${policyIndex}/${
+                  policies.length
+                } of sub problem ${subProblemIndex} (${this.lastPopulationIndex(
+                  subProblemIndex
+                )})`
               );
-            }
 
-            this.memory.subProblems[s].haveScannedWeb = true;
+              const policy = policies[policyIndex];
+
+              for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+                const urlsToGet =
+                  policy.evidenceSearchResults![searchResultType];
+
+                if (urlsToGet) {
+                  for (let i = 0; i < urlsToGet.length; i++) {
+                    await this.getAndProcessEvidencePage(
+                      subProblemIndex,
+                      urlsToGet[i].url,
+                      newPage,
+                      searchResultType,
+                      policy
+                    );
+                  }
+                } else {
+                  console.error(
+                    `No urls to get for ${searchResultType} for policy ${policyIndex} of sub problem ${subProblemIndex} (${this.lastPopulationIndex})`
+                  );
+                }
+              }
+            }
 
             await this.saveMemory();
           }
@@ -428,7 +582,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
           await newPage.close();
 
           this.logger.info(
-            `Finished and closed page for ${this.memory.subProblems[s].title}`
+            `Finished and closed page for ${this.memory.subProblems[subProblemIndex].title}`
           );
         })()
       );
@@ -447,38 +601,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-    //await this.processSubProblems(browser);
-
-    //await this.saveMemory();
-
-    //await this.getAllCustomSearchUrls(browserPage);
-
-    //await this.saveMemory();
-
-    const searchQueryTypes = [
-      "general",
-      "scientific",
-      "openData",
-      "news",
-    ] as const;
-
-    const processPromises = searchQueryTypes.map(async (searchQueryType) => {
-      const newPage = await browser.newPage();
-      newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-      newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-
-      await newPage.setUserAgent(IEngineConstants.currentUserAgent);
-
-      await this.processProblemStatement(
-        searchQueryType as IEngineWebPageTypes,
-        newPage
-      );
-
-      await newPage.close();
-      this.logger.info(`Closed page for ${searchQueryType} search results`);
-    });
-
-    await Promise.all(processPromises);
+    await this.processSubProblems(browser);
 
     await this.saveMemory();
 

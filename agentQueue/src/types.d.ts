@@ -112,6 +112,7 @@ interface IEngineSubProblem {
   policies?: {
     populations: PSPolicy[][];
   };
+  processingActive?: boolean;
 }
 
 interface IEngineAffectedEntityBase {

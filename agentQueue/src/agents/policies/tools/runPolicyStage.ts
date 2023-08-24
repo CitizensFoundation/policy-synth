@@ -18,7 +18,8 @@ if (projectId) {
   //memory.currentStage = "policies-seed";
   //memory.currentStage = "policies-create-images"
   //memory.currentStage = "create-evidence-search-queries"
-  memory.currentStage = "web-search-evidence";
+  //memory.currentStage = "web-search-evidence";
+  memory.currentStage = "web-get-evidence-pages";
 
   await redis.set(redisKey, JSON.stringify(memory));
 

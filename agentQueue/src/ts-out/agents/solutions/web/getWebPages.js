@@ -309,7 +309,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             throw error;
         }
     }
-    async processPageText(text, subProblemIndex, url, type, entityIndex) {
+    async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
         try {
             const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
@@ -352,7 +352,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
     // https://github.com/hwchase17/langchain/blob/master/langchain/document_loaders/arxiv.py
     // https://info.arxiv.org/help/api/basics.html
-    async getAndProcessPdf(subProblemIndex, url, type, entityIndex) {
+    async getAndProcessPdf(subProblemIndex, url, type, entityIndex, policy = undefined) {
         return new Promise(async (resolve, reject) => {
             this.logger.info("getAndProcessPdf");
             try {
@@ -393,7 +393,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                             else if (!item) {
                                 finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
                                 this.logger.debug(`Got final PDF text: ${finalText ? finalText.slice(0, 100) : ""}`);
-                                await this.processPageText(finalText, subProblemIndex, url, type, entityIndex);
+                                await this.processPageText(finalText, subProblemIndex, url, type, entityIndex, policy);
                                 resolve();
                             }
                             else if (item.text) {
@@ -419,7 +419,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             }
         });
     }
-    async getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex) {
+    async getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex, policy = undefined) {
         try {
             let finalText, htmlText;
             this.logger.debug(`Getting HTML for ${url}`);
@@ -474,7 +474,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
                 });
                 finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
                 //this.logger.debug(`Got HTML text: ${finalText}`);
-                await this.processPageText(finalText, subProblemIndex, url, type, entityIndex);
+                await this.processPageText(finalText, subProblemIndex, url, type, entityIndex, policy);
             }
             else {
                 this.logger.error(`No HTML text found for ${url}`);
@@ -482,7 +482,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         }
         catch (e) {
             this.logger.error(`Error in get html`);
-            this.logger.error(e);
+            this.logger.error(e.stack || e);
         }
     }
     async getAndProcessPage(subProblemIndex, url, browserPage, type, entityIndex) {

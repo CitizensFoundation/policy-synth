@@ -281,7 +281,7 @@ export class CpsApp extends YpBaseElement {
           }
         } else if (window.location.pathname.indexOf('policies') > -1) {
           if (this.$$('#navBar') as NavigationBar) {
-            (this.$$('#navBar') as NavigationBar).activeIndex = 2
+            (this.$$('#navBar') as NavigationBar).activeIndex = 2;
           }
         }
       }, 100);
@@ -299,8 +299,8 @@ export class CpsApp extends YpBaseElement {
       ? parseInt(params.solutionIndex, 10)
       : null;
     this.activePolicyIndex = params.policyIndex
-    ? parseInt(params.policyIndex, 10)
-    : null;
+      ? parseInt(params.policyIndex, 10)
+      : null;
   }
 
   private router: Router = new Router(
@@ -309,7 +309,7 @@ export class CpsApp extends YpBaseElement {
       {
         path: '/',
         render: () => {
-          return  html`<cps-home .memory="${this.currentMemory}"></cps-home>`
+          return html`<cps-home .memory="${this.currentMemory}"></cps-home>`;
         },
       },
       // Next two are depricated
@@ -542,14 +542,14 @@ export class CpsApp extends YpBaseElement {
 
       this.currentMemory = bootResponse.currentMemory;
 
-      if ( this.currentMemory.subProblems[0].solutions) {
+      if (this.currentMemory.subProblems[0].solutions) {
         this.numberOfSolutionsGenerations =
-        this.currentMemory.subProblems[0].solutions.populations.length;
+          this.currentMemory.subProblems[0].solutions.populations.length;
       }
 
-      if ( this.currentMemory.subProblems[0].policies) {
+      if (this.currentMemory.subProblems[0].policies) {
         this.numberOfPoliciesIdeasGeneration =
-        this.currentMemory.subProblems[0].policies.populations.length;
+          this.currentMemory.subProblems[0].policies.populations.length;
       }
 
       document.title = bootResponse.name;
@@ -782,19 +782,21 @@ export class CpsApp extends YpBaseElement {
   }
 
   async updateActivePolicyIndexes(event: CustomEvent) {
-    console.error(`updateActivePolicyIndexes ${event.detail.activePolicyIndex}`)
+    console.error(
+      `updateActivePolicyIndexes ${event.detail.activePolicyIndex}`
+    );
     this.activeSubProblemIndex = event.detail.activeSubProblemIndex;
     this.activePopulationIndex = event.detail.activePopulationIndex;
     this.activePolicyIndex = event.detail.activePolicyIndex;
     await this.updatePoliciesRouter();
     console.error(
       `updateActiveSolutionIndexes2 ${this.activeSubProblemIndex} ${this.activePopulationIndex} ${this.activePolicyIndex}`
-    )
+    );
   }
 
   async updatePoliciesRouter() {
     let path: string;
-     if (
+    if (
       this.activePolicyIndex !== null &&
       this.activeSubProblemIndex !== null &&
       this.activePopulationIndex !== null
@@ -1197,7 +1199,9 @@ export class CpsApp extends YpBaseElement {
     evolveRankPopulation: IEngineConstants.solutionsRankingsModel,
     webSearch: IEngineConstants.createSearchQueriesModel, // Not sure about this mapping
     webGetPages: IEngineConstants.getPageAnalysisModel,
+    webGetEvidencePages: IEngineConstants.getPageAnalysisModel,
     createSeedSolutions: IEngineConstants.createSolutionsModel,
+    createEvidenceSearchQueries: IEngineConstants.createSearchQueriesModel,
     createProsCons: IEngineConstants.createProsConsModel,
     parse: IEngineConstants.createSubProblemsModel, // Not sure about this mapping
     save: IEngineConstants.createSubProblemsModel, // Not sure about this mapping
@@ -1252,7 +1256,8 @@ export class CpsApp extends YpBaseElement {
             totalCost += stageCost;
             // Calculate costs for each model
             const camelCaseStage = this.toCamelCase(stage);
-            //console.info(`stage: ${stage} camelCaseStage: ${camelCaseStage}`)
+            //console.error(`stage: ${stage} camelCaseStage: ${camelCaseStage}`)
+
             //@ts-ignore
             const modelConstants = this.stageModelMap[camelCaseStage];
             if (modelConstants.name === 'gpt-4') {
@@ -1297,18 +1302,30 @@ export class CpsApp extends YpBaseElement {
           GPT-3.5 16k cost: $${YpFormattingHelpers.number(gpt35_16kCost)}
         </div>`
       );
+      const stageCostsArray: { stage: string; cost: any }[] = [];
       Object.keys(this.currentMemory.stages).forEach(stage => {
         //@ts-ignore
         const stageData = this.currentMemory.stages[stage];
         const stageCost = stageData.tokensInCost + stageData.tokensOutCost;
         if (!isNaN(stageCost)) {
-          costTemplates.push(
-            html`<div class="costItem">
-              ${this.toCamelCase(stage)}:
-              $${YpFormattingHelpers.number(stageCost)}
-            </div>`
-          );
+          stageCostsArray.push({
+            stage,
+            cost: stageCost,
+          });
         }
+      });
+
+      // Sorting the array based on stageCost
+      stageCostsArray.sort((a, b) => b.cost - a.cost);
+
+      // Pushing sorted stages to costTemplates
+      stageCostsArray.forEach(item => {
+        costTemplates.push(
+          html`<div class="costItem">
+            $${YpFormattingHelpers.number(item.cost)}-
+            ${this.toCamelCase(item.stage)}
+          </div>`
+        );
       });
     }
 

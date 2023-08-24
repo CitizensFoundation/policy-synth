@@ -6,18 +6,20 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
     async renderRefinePrompt(results) {
         const messages = [
             new SystemChatMessage(`
-            As an AI expert, your role involves the analysis and refinement of problem statements, along with the creation of sub-problems.
+            As an AI expert, your role involves the analysis and refinement of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
-            1. Refine all the 21 sub-problems and output them all again as an JSON array with refined text.
-            2. Output a short title, two or three sentence description and two or three sentence explanation of why the sub-problem is important.
-            3. Use your extensive knowledge to enrich the details about the sub-problems but never introduce solutions.
-            4. Elaborate on the impact of these sub-problems, if necessary, to provide better context.
-            5. Never provide solutions; your focus should be on outlining the problems, we'll find the solutions later.
-            6. Do not suggest tasks or actions; your task is to explain the problems.
-            8. Do not provide output in markdown format.
-            9. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            10. Let's think step by step.`),
+            1. Review the sub problems and output a list of refined sub problems frame as root causes.
+            2. Output a short title, two or three sentence description and two or three sentence explanation of why the root cause is important.
+            3. Use your extensive knowledge to enrich the details about the root cause but never introduce solutions.
+4. Root causes should describe a hypothesis about why a problem is occurring.
+            5. Elaborate on the impact of these root causes, if necessary, to provide better context.
+            6. Never provide solutions; your focus should be on outlining the root causes of problems, we'll find the solutions later.
+            7. Do not suggest tasks or actions; your task is to explain the problems.
+8. A root cause should not be described as a lack of understanding of the problem.
+            9. Do not provide output in markdown format.
+            10. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
+            11. Let's think step by step.`),
             new HumanChatMessage(`
            Problem Statement:
            "${this.memory.problemStatement.description}"
@@ -34,17 +36,20 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
         //TODO: Human review and improvements of those GPT-4 generated few-shots
         const messages = [
             new SystemChatMessage(`
-            As an AI expert, you are tasked with the analysis of problem statements and generation of sub-problems.
+            As an AI expert, your role involves the of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
-            1. Break the given problem statement into 21 sub problems and present the sub problems as a JSON array.
-            2. Output a short title, two or three sentence description and two or three sentence explanation of why the sub-problem is important.
-            3. Never provide solutions; your focus should be on outlining the problems, we'll find the solutions later.
-            4. Do not suggest tasks or actions; your task is to explain the problems.
-            5. Never output in markdown format.
-            6. Always output 21 sub problems.
-            7. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            8. Let's think step by step.
+            1. Output a list of root causes of the stated problem as sub problems.
+            2. Output a short title, two or three sentence description and two or three sentence explanation of why the root cause is important.
+            3. Use your extensive knowledge to enrich the details about the root cause but never introduce solutions.
+            4. Root causes should describe a hypothesis about why a problem is occurring.
+            5. Elaborate on the impact of these root causes, if necessary, to provide better context.
+            6. Never provide solutions; your focus should be on outlining the root causes of problems, we'll find the solutions later.
+            7. Do not suggest tasks or actions; your task is to explain the problems.
+            8. A root cause should not be described as a lack of understanding of the problem.
+            9. Do not provide output in markdown format.
+            10. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
+            11. Let's think step by step.
             `),
             new HumanChatMessage(`
            Problem Statement:

@@ -122,6 +122,7 @@ const setupProjectTwo = (memory) => {
     3. If the solution components has two core ideas that are hard to implement without each other then the solution component can be included.
     4. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
     5. Core ideas are distinct concepts or strategies that are central to the solution component.
+    6. Solutions components should not include ideas that are international in scope.
   `;
 };
 const projectId = process.argv[2];

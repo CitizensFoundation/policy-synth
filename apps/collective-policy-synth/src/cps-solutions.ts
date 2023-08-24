@@ -133,12 +133,18 @@ export class CpsSolutions extends CpsStageBase {
   handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'ArrowRight') {
       this.updateSwipeIndex('right');
-    } else if (e.key === 'ArrowLeft') {
+      e.stopPropagation();
+      e.preventDefault();
+  } else if (e.key === 'ArrowLeft') {
       this.updateSwipeIndex('left');
-    } else if (e.key === 'Escape') {
+      e.stopPropagation();
+      e.preventDefault();
+  } else if (e.key === 'Escape') {
       if (this.activeSolutionIndex !== null) {
         this.activeSolutionIndex = null;
         this.exitSolutionScreen();
+        e.stopPropagation();
+        e.preventDefault();
       } else if (this.activeSubProblemIndex !== null) {
         this.activeSubProblemIndex = null;
         this.fire('yp-theme-color', this.subProblemColors[7]);
