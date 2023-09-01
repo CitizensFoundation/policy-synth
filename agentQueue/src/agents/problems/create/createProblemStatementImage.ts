@@ -18,7 +18,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
         You are an expert in generating visual Dalle-2 prompts from a problem statement.
 
         Important Instructions:
-        1. Always end all prompts with "Very high quality film advertisemen. No text."
+        1. Always end all prompts with "Simple professional geometric illustration. No text."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one or two sentences.
         4. Do not include quotes in your prompt.
@@ -68,8 +68,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
         -1,
         imagePrompt,
         imageFilePath,
-        undefined,
-        "low-poly"
+        undefined
       );
     } else {
       const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
