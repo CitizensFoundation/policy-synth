@@ -1,5 +1,5 @@
-import { BaseProcessor } from "../../baseProcessor.js";
-import { IEngineConstants } from "../../../constants.js";
+import { BaseProcessor } from "./baseProcessor.js";
+import { IEngineConstants } from "../constants.js";
 export class BasePairwiseRankingsProcessor extends BaseProcessor {
     prompts = {};
     allItems = {};

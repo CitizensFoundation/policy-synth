@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 
-const myQueue = new Queue("agent-policies");
+const myQueue = new Queue("agent-problems");
 await myQueue.drain();
 await myQueue.clean(0, 10000, "active");
 await myQueue.clean(0, 10000, "failed");
