@@ -2,7 +2,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "./basePairwiseRanking.js";
+import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 
 export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(

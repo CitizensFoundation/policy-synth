@@ -8,17 +8,19 @@ import axios from "axios";
 import AWS from "aws-sdk";
 import fs from "fs";
 import path from "path";
-import { CreateSolutionImagesProcessor } from "./createImages.js";
+import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
 
-export class CreateProblemStatementImageProcessor extends CreateSolutionImagesProcessor {
-  override async renderCreatePrompt(subProblemIndex: number = 0) {
+export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
+  async renderCreatePrompt(subProblemIndex: number) {
     const messages = [
       new SystemChatMessage(
         `
         You are an expert in generating visual Dalle-2 prompts from a problem statement.
 
         Important Instructions:
-        1. Always end all prompts with "Highly detailed geometric illustration using hues of red and copper. No text."
+        1. Always end all prompts with "Simple professional geometric illustration using hues of ${this.getSubProblemColor(
+          subProblemIndex
+        )} and ${this.randomSecondaryColor}. No text."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one or two sentences.
         4. Do not include quotes in your prompt.
@@ -38,7 +40,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
       new HumanChatMessage(
         `
          Problem:
-         ${this.renderProblemStatement()}
+         ${this.renderSubProblem(subProblemIndex)}
 
          Generate and output the Dall-E 2 image prompt below:
          `
@@ -48,56 +50,65 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
     return messages;
   }
 
-  async createProblemStatementImage() {
+  async createSubProblemImages() {
+    this.currentSubProblemIndex = 0;
 
-    let imagePrompt = (await this.callLLM(
-      "create-problem-statement-image",
-      IEngineConstants.createSolutionImagesModel,
-      await this.renderCreatePrompt(),
-      false
-    )) as string;
+    for (let s = 0; s < this.memory.subProblems.length; s++) {
+      this.currentSubProblemIndex = s;
 
-    this.memory.problemStatement.imagePrompt = imagePrompt;
+      if (!this.memory.subProblems[s].imageUrl) {
+        let imagePrompt = (await this.callLLM(
+          "create-sub-problem-images",
+          IEngineConstants.createSolutionImagesModel,
+          await this.renderCreatePrompt(s),
+          false
+        )) as string;
 
-    this.logger.debug(`Image Prompt: ${imagePrompt}`);
+        this.memory.subProblems[s].imagePrompt = imagePrompt;
 
-    // Download image and save it to /tmp folder
-    const imageFilePath = path.join("/tmp", `problemStatement_.png`);
+        this.logger.debug(`subProblemIndex ${s}`);
 
-    if (process.env.STABILITY_API_KEY) {
-      await this.downloadStabilityImage(-1, imagePrompt, imageFilePath);
-    } else {
-      const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
-      await this.downloadImage(imageUrl, imageFilePath);
+        this.logger.debug(`Image Prompt: ${imagePrompt}`);
+
+        // Download image and save it to /tmp folder
+        const imageFilePath = path.join("/tmp", `subProblem_${s}_.png`);
+
+        if (process.env.STABILITY_API_KEY) {
+          await this.downloadStabilityImage(s, imagePrompt, imageFilePath);
+        } else {
+          const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
+          await this.downloadImage(imageUrl, imageFilePath);
+        }
+
+        this.logger.debug(
+          fs.existsSync(imageFilePath)
+            ? "File downloaded successfully."
+            : "File download failed."
+        );
+
+        const randomNum = Math.floor(Math.random() * 1e10);
+        const s3ImagePath = `projects/${this.memory.groupId}/subProblems/images/${s}_${randomNum}.png`;
+        await this.uploadImageToS3(
+          process.env.S3_BUCKET_NAME!,
+          imageFilePath,
+          s3ImagePath
+        );
+
+        const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
+
+        this.memory.subProblems[s].imageUrl = newImageUrl;
+
+        this.logger.debug(`New Image URL: ${newImageUrl}`);
+      }
+
+      await this.saveMemory();
     }
 
-    this.logger.debug(
-      fs.existsSync(imageFilePath)
-        ? "File downloaded successfully."
-        : "File download failed."
-    );
-
-    const randomNum = Math.floor(Math.random() * 1e10);
-    const s3ImagePath = `projects/${this.memory.groupId}/problemStatement/images/${randomNum}.png`;
-    await this.uploadImageToS3(
-      process.env.S3_BUCKET_NAME!,
-      imageFilePath,
-      s3ImagePath
-    );
-
-    const newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
-
-    this.memory.problemStatement.imageUrl = newImageUrl;
-
-    this.logger.debug(`New Image URL: ${newImageUrl}`);
-
-    await this.saveMemory();
-
-    this.logger.info("Finished creating problem statement image");
+    this.logger.info("Finished creating Sub Problem images for all");
   }
 
   async process() {
-    this.logger.info("Create Problem Statement Image Processor");
+    this.logger.info("Create Sub Problem Processor");
 
     this.chat = new ChatOpenAI({
       temperature: IEngineConstants.createSolutionImagesModel.temperature,
@@ -107,7 +118,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
     });
 
     try {
-      await this.createProblemStatementImage();
+      await this.createSubProblemImages();
     } catch (error: any) {
       this.logger.error(error);
       this.logger.error(error.stack);
