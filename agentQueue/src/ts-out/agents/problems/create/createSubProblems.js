@@ -39,7 +39,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             As an AI expert, your role involves the of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
-            1. Output a list of root causes of the stated problem as sub problems.
+            1. Output a list of 21 root causes of the stated problem as sub problems.
             2. Output a short title, two or three sentence description and two or three sentence explanation of why the root cause is important.
             3. Use your extensive knowledge to enrich the details about the root cause but never introduce solutions.
             4. Root causes should describe a hypothesis about why a problem is occurring.
