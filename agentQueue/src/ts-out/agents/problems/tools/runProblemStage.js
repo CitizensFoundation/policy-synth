@@ -7,12 +7,12 @@ if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
     const output = await redis.get(redisKey);
     const memory = JSON.parse(output);
-    memory.currentStage = "create-problem-statement-image";
+    //memory.currentStage = "create-problem-statement-image";
     //memory.currentStage = "create-sub-problems";
     //memory.currentStage = "rank-sub-problems";
     //memory.currentStage = "create-sub-problem-images";
     //memory.currentStage = "create-entities";
-    //memory.currentStage = "rank-entities";
+    memory.currentStage = "rank-entities";
     //memory.currentStage = "create-search-queries";
     //memory.currentStage = "rank-search-queries";
     await redis.set(redisKey, JSON.stringify(memory));

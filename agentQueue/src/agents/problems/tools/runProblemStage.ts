@@ -15,12 +15,12 @@ if (projectId) {
 
   const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
 
-  memory.currentStage = "create-problem-statement-image";
+  //memory.currentStage = "create-problem-statement-image";
   //memory.currentStage = "create-sub-problems";
   //memory.currentStage = "rank-sub-problems";
   //memory.currentStage = "create-sub-problem-images";
   //memory.currentStage = "create-entities";
-  //memory.currentStage = "rank-entities";
+  memory.currentStage = "rank-entities";
   //memory.currentStage = "create-search-queries";
   //memory.currentStage = "rank-search-queries";
 
