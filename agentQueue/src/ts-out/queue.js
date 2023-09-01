@@ -1,4 +1,5 @@
 import winston from 'winston';
+import './agents/problems/problems.js';
 import './agents/solutions/solutions.js';
 import './agents/policies/policies.js';
 const logger = winston.createLogger({

@@ -7,7 +7,7 @@ if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
     const output = await redis.get(redisKey);
     const memory = JSON.parse(output);
-    //memory.currentStage = "create-problem-statement-image";
+    memory.currentStage = "create-problem-statement-image";
     //memory.currentStage = "create-sub-problems";
     //memory.currentStage = "rank-sub-problems";
     //memory.currentStage = "create-sub-problem-images";
@@ -17,7 +17,7 @@ if (projectId) {
     //memory.currentStage = "rank-search-queries";
     await redis.set(redisKey, JSON.stringify(memory));
     console.log("Adding job to queue");
-    await myQueue.add("agent-policies", {
+    await myQueue.add("agent-problems", {
         groupId: projectId,
         communityId: 1,
         domainId: 1,
