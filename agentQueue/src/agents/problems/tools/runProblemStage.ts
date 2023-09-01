@@ -15,7 +15,7 @@ if (projectId) {
 
   const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
 
-  //memory.currentStage = "create-problem-statement-image";
+  memory.currentStage = "create-problem-statement-image";
   //memory.currentStage = "create-sub-problems";
   //memory.currentStage = "rank-sub-problems";
   //memory.currentStage = "create-sub-problem-images";
@@ -28,7 +28,7 @@ if (projectId) {
 
   console.log("Adding job to queue");
   await myQueue.add(
-    "agent-policies",
+    "agent-problems",
     {
       groupId: projectId,
       communityId: 1,

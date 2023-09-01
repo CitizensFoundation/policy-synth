@@ -18,7 +18,7 @@ if (projectId) {
     process.exit(1);
   } else if (!currentProject || (currentProject && force)) {
 
-    const problemStatement = `Authoritarians who prioritize political outcomes over independent processes are using unfair and often illegal tactics, including political violence and changes to policies, procedures, and election administration that aim to change the outcome of elections. Authoritarians are using information and communication platforms to undermine belief in the integrity of elections leading, in turn, to declining trust in elections and democracy.`
+    const problemStatement = ``
 
     const project = {
       redisKey: redisKey,
