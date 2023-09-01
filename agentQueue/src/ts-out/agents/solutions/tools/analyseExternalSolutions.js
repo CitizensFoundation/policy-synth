@@ -79,9 +79,9 @@ export class AnalyseExternalSolutions extends BaseProcessor {
     }
     async analyze() {
         const subProblemIndex = 1;
-        const startPopulationIndex = 7;
+        const startPopulationIndex = 14;
         const analysisResults = [];
-        const numberOfPopulations = 8; //this.numberOfPopulations(subProblemIndex);
+        const numberOfPopulations = 15; //this.numberOfPopulations(subProblemIndex);
         for (let populationIndex = startPopulationIndex; populationIndex < numberOfPopulations; populationIndex++) {
             const externalSolutionLimit = externalSolutions.length;
             const externalSolutionPromises = Array.from({ length: externalSolutionLimit }, async (_, externalSolutionIndex) => {

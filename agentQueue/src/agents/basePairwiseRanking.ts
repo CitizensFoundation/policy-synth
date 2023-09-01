@@ -1,6 +1,6 @@
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
-import { BaseProcessor } from "../../baseProcessor.js";
-import { IEngineConstants } from "../../../constants.js";
+import { BaseProcessor } from "./baseProcessor.js";
+import { IEngineConstants } from "../constants.js";
 
 export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
   prompts: Record<number, number[][]> = {};
