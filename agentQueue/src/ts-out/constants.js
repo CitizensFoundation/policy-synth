@@ -180,6 +180,17 @@ export class IEngineConstants {
         limitRPM: gpt4_RPM,
         verbose: false
     };
+    static rankWebEvidenceModel = {
+        name: "gpt-4",
+        temperature: 0.0,
+        maxOutputTokens: 2048,
+        tokenLimit: 4096,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: false
+    };
     static reapSolutionsModel = {
         name: "gpt-4",
         temperature: 0.0,
@@ -346,4 +357,29 @@ export class IEngineConstants {
     static maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize *
         IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
     static maxTopSolutionsToCreatePolicies = 3;
+    static maxTopPoliciesToProcess = 1;
+    static policyEvidenceFieldTypes = [
+        'allPossiblePositiveEvidenceIdentifiedInTextContext',
+        'allPossibleNegativeEvidenceIdentifiedInTextContext',
+        'allPossibleNeutralEvidenceIdentifiedInTextContext',
+        'allPossibleEconomicEvidenceIdentifiedInTextContext',
+        'allPossibleScientificEvidenceIdentifiedInTextContext',
+        'allPossibleCulturalEvidenceIdentifiedInTextContext',
+        'allPossibleEnvironmentalEvidenceIdentifiedInTextContext',
+        'allPossibleLegalEvidenceIdentifiedInTextContext',
+        'allPossibleTechnologicalEvidenceIdentifiedInTextContext',
+        'allPossibleGeopoliticalEvidenceIdentifiedInTextContext',
+        'allPossibleCaseStudiesIdentifiedInTextContext',
+        'allPossibleStakeholderOpinionsIdentifiedInTextContext',
+        'allPossibleExpertOpinionsIdentifiedInTextContext',
+        'allPossiblePublicOpinionsIdentifiedInTextContext',
+        'allPossibleHistoricalContextIdentifiedInTextContext',
+        'allPossibleEthicalConsiderationsIdentifiedInTextContext',
+        'allPossibleLongTermImpactIdentifiedInTextContext',
+        'allPossibleShortTermImpactIdentifiedInTextContext',
+        'allPossibleLocalPerspectiveIdentifiedInTextContext',
+        'allPossibleGlobalPerspectiveIdentifiedInTextContext',
+        'allPossibleCostAnalysisIdentifiedInTextContext',
+        'allPossibleImplementationFeasibilityIdentifiedInTextContext'
+    ];
 }

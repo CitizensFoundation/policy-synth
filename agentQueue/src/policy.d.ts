@@ -19,7 +19,7 @@ interface PSPolicyReference {
 interface PSEvidenceWebPageGraphQlResults {
   data: {
     Get: {
-      WebPage: PSEvidenceRawWebPageData[];
+      EvidenceWebPage: PSEvidenceRawWebPageData[];
     };
   };
 }

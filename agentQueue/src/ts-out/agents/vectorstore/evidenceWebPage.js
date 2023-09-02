@@ -120,15 +120,15 @@ export class EvidenceWebPageVectorStore extends Base {
             });
         });
     }
-    async updateWebSolutions(id, webSolutions, quiet = false) {
+    async updateWebSolutions(id, evidenceType, evidence, quiet = false) {
+        const props = {};
+        props[evidenceType] = evidence;
         return new Promise((resolve, reject) => {
             EvidenceWebPageVectorStore.client.data
                 .merger()
                 .withId(id)
                 .withClassName("EvidenceWebPage")
-                .withProperties({
-                solutionsIdentifiedInTextContext: webSolutions,
-            })
+                .withProperties(props)
                 .do()
                 .then((res) => {
                 if (!quiet)
@@ -159,7 +159,7 @@ export class EvidenceWebPageVectorStore extends Base {
             });
         });
     }
-    async getWebPagesForProcessing(groupId, subProblemIndex = undefined, searchType, limit = 10, offset = 0, solutionCountLimit = 0) {
+    async getWebPagesForProcessing(groupId, subProblemIndex = undefined, policyTitle, limit = 10, offset = 0, evidenceCountLimit = 0) {
         let where = undefined;
         where = [
             {
@@ -182,14 +182,14 @@ export class EvidenceWebPageVectorStore extends Base {
                 valueBoolean: true,
             });
         }
-        if (searchType) {
+        if (policyTitle) {
             where.push({
-                path: ["searchType"],
+                path: ["policyTitle"],
                 operator: "Equal",
-                valueString: searchType,
+                valueString: policyTitle,
             });
         }
-        if (solutionCountLimit !== undefined) {
+        if (evidenceCountLimit !== undefined) {
         }
         let query;
         try {
@@ -202,9 +202,32 @@ export class EvidenceWebPageVectorStore extends Base {
                 operator: "And",
                 operands: where,
             })
-                .withFields("searchType groupId entityIndex subProblemIndex summary relevanceToPolicyProposal \
-      url mostRelevantParagraphs tags entities contacts \
-      _additional { distance, id }");
+                .withFields("searchType summary groupId entityIndex subProblemIndex relevanceToPolicyProposal \
+          allPossiblePositiveEvidenceIdentifiedInTextContext \
+          allPossibleNegativeEvidenceIdentifiedInTextContext \
+          allPossibleNeutralEvidenceIdentifiedInTextContext \
+          allPossibleEconomicEvidenceIdentifiedInTextContext \
+          allPossibleScientificEvidenceIdentifiedInTextContext \
+          allPossibleCulturalEvidenceIdentifiedInTextContext \
+          allPossibleEnvironmentalEvidenceIdentifiedInTextContext \
+          allPossibleLegalEvidenceIdentifiedInTextContext \
+          allPossibleTechnologicalEvidenceIdentifiedInTextContext \
+          allPossibleGeopoliticalEvidenceIdentifiedInTextContext \
+          allPossibleCaseStudiesIdentifiedInTextContext \
+          allPossibleStakeholderOpinionsIdentifiedInTextContext \
+          allPossibleExpertOpinionsIdentifiedInTextContext \
+          allPossiblePublicOpinionsIdentifiedInTextContext \
+          allPossibleHistoricalContextIdentifiedInTextContext \
+          allPossibleEthicalConsiderationsIdentifiedInTextContext \
+          allPossibleLongTermImpactIdentifiedInTextContext \
+          allPossibleShortTermImpactIdentifiedInTextContext \
+          allPossibleLocalPerspectiveIdentifiedInTextContext \
+          allPossibleGlobalPerspectiveIdentifiedInTextContext \
+          allPossibleCostAnalysisIdentifiedInTextContext \
+          policyTitle confidenceScore relevanceScore qualityScore \
+          allPossibleImplementationFeasibilityIdentifiedInTextContext \
+          mostRelevantParagraphs contacts tags entities \
+          _additional { distance, id }");
             return await query.do();
         }
         catch (err) {

@@ -49,7 +49,8 @@ if (projectId) {
                 "analyse-external-solutions": {},
                 "create-evidence-search-queries": {},
                 "web-get-evidence-pages": {},
-                "web-search-evidence": {}
+                "web-search-evidence": {},
+                "rank-web-evidence": {}
             },
             timeStart: Date.now(),
             totalCost: 0,

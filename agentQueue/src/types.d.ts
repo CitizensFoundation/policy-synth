@@ -223,7 +223,8 @@ type IEngineStageTypes =
   | "policies-seed"
   | "create-evidence-search-queries"
   | "web-search-evidence"
-  | "web-get-evidence-pages";
+  | "web-get-evidence-pages"
+  | "rank-web-evidence";
 
 interface IEngineUserFeedback {
   feedbackType: string;
