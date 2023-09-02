@@ -44,7 +44,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
         5. Never output less than 7 policy proposal variations
 
         Policy Framing Instructions:
-        1.  Your are writing policy proposal that a democracy nonprofit will bring to the US government.
+        1. Your are writing policy proposal that a democracy nonprofit will bring to the US government.
 
         Always output your policy ideas in the following JSON format: [ { title, description, conditionsForSuccess[], mainObstaclesForImplemention[], mainRisks[], policyKPIMetrics[] } ].
 

@@ -15,7 +15,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
     return [
       new SystemChatMessage(
         `
-        You are and expert in filtering and ranking solution components.
+        You are an expert in filtering and ranking solution components.
 
         1. Remove irrelevant and inactionable solution components.
         2. Eliminate duplicates or near duplicates.

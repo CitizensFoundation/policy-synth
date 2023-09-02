@@ -19,7 +19,8 @@ if (projectId) {
   //memory.currentStage = "policies-create-images"
   //memory.currentStage = "create-evidence-search-queries"
   //memory.currentStage = "web-search-evidence";
-  memory.currentStage = "web-get-evidence-pages";
+  //memory.currentStage = "web-get-evidence-pages";
+  memory.currentStage = "rank-web-evidence";
 
   await redis.set(redisKey, JSON.stringify(memory));
 

@@ -5,6 +5,7 @@ import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
 import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
 import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
 import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
+import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
 export class AgentPolicies extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -66,6 +67,10 @@ export class AgentPolicies extends BaseAgent {
             case "web-get-evidence-pages":
                 const getPages = new GetEvidenceWebPagesProcessor(this.job, this.memory);
                 await getPages.process();
+                break;
+            case "rank-web-evidence":
+                const ranker = new RankWebEvidenceProcessor(this.job, this.memory);
+                await ranker.process();
                 break;
             default:
                 console.log("No stage matched");

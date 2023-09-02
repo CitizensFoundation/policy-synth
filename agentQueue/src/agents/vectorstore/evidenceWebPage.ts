@@ -138,15 +138,15 @@ export class EvidenceWebPageVectorStore extends Base {
     });
   }
 
-  async updateWebSolutions(id: string, webSolutions: string[], quiet = false) {
+  async updateWebSolutions(id: string, evidenceType: string, evidence: string[], quiet = false) {
+    const props = {} as any;
+    props[evidenceType] = evidence;
     return new Promise((resolve, reject) => {
       EvidenceWebPageVectorStore.client.data
         .merger()
         .withId(id)
         .withClassName("EvidenceWebPage")
-        .withProperties({
-          solutionsIdentifiedInTextContext: webSolutions,
-        })
+        .withProperties(props)
         .do()
         .then((res) => {
           if (!quiet)
@@ -182,11 +182,11 @@ export class EvidenceWebPageVectorStore extends Base {
   async getWebPagesForProcessing(
     groupId: number,
     subProblemIndex: number | undefined | null = undefined,
-    searchType: PSEvidenceWebPageTypes | undefined,
+    policyTitle: string | undefined,
     limit = 10,
     offset = 0,
-    solutionCountLimit: number | undefined = 0
-  ): Promise<IEngineWebPageGraphQlResults> {
+    evidenceCountLimit: number | undefined = 0
+  ): Promise<PSEvidenceWebPageGraphQlResults> {
     let where: any[] | undefined = undefined;
     where = [
       {
@@ -210,15 +210,15 @@ export class EvidenceWebPageVectorStore extends Base {
       });
     }
 
-    if (searchType) {
+    if (policyTitle) {
       where.push({
-        path: ["searchType"],
+        path: ["policyTitle"],
         operator: "Equal",
-        valueString: searchType,
+        valueString: policyTitle,
       });
     }
 
-    if (solutionCountLimit !== undefined) {
+    if (evidenceCountLimit !== undefined) {
     }
 
     let query;
@@ -234,11 +234,33 @@ export class EvidenceWebPageVectorStore extends Base {
           operands: where,
         })
         .withFields(
-          "searchType groupId entityIndex subProblemIndex summary relevanceToPolicyProposal \
-      url mostRelevantParagraphs tags entities contacts \
-      _additional { distance, id }"
-        );
-
+          "searchType summary groupId entityIndex subProblemIndex relevanceToPolicyProposal \
+          allPossiblePositiveEvidenceIdentifiedInTextContext \
+          allPossibleNegativeEvidenceIdentifiedInTextContext \
+          allPossibleNeutralEvidenceIdentifiedInTextContext \
+          allPossibleEconomicEvidenceIdentifiedInTextContext \
+          allPossibleScientificEvidenceIdentifiedInTextContext \
+          allPossibleCulturalEvidenceIdentifiedInTextContext \
+          allPossibleEnvironmentalEvidenceIdentifiedInTextContext \
+          allPossibleLegalEvidenceIdentifiedInTextContext \
+          allPossibleTechnologicalEvidenceIdentifiedInTextContext \
+          allPossibleGeopoliticalEvidenceIdentifiedInTextContext \
+          allPossibleCaseStudiesIdentifiedInTextContext \
+          allPossibleStakeholderOpinionsIdentifiedInTextContext \
+          allPossibleExpertOpinionsIdentifiedInTextContext \
+          allPossiblePublicOpinionsIdentifiedInTextContext \
+          allPossibleHistoricalContextIdentifiedInTextContext \
+          allPossibleEthicalConsiderationsIdentifiedInTextContext \
+          allPossibleLongTermImpactIdentifiedInTextContext \
+          allPossibleShortTermImpactIdentifiedInTextContext \
+          allPossibleLocalPerspectiveIdentifiedInTextContext \
+          allPossibleGlobalPerspectiveIdentifiedInTextContext \
+          allPossibleCostAnalysisIdentifiedInTextContext \
+          policyTitle confidenceScore relevanceScore qualityScore \
+          allPossibleImplementationFeasibilityIdentifiedInTextContext \
+          mostRelevantParagraphs contacts tags entities \
+          _additional { distance, id }"
+        )
       return await query.do();
     } catch (err) {
       throw err;
