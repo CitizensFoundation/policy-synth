@@ -102,6 +102,13 @@ export class BaseProcessor extends Base {
       ${subProblem.whyIsSubProblemImportant}
       `;
     }
+    renderSubProblemSimple(subProblemIndex) {
+        const subProblem = this.memory.subProblems[subProblemIndex];
+        return `
+      ${subProblem.title}
+      ${subProblem.description}
+      `;
+    }
     getActiveSolutionsLastPopulation(subProblemIndex) {
         const populations = this.memory.subProblems[subProblemIndex].solutions.populations;
         const lastPopulation = populations[populations.length - 1];

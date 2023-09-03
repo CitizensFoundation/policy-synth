@@ -206,6 +206,17 @@ export class IEngineConstants {
     verbose: false
   };
 
+  static rateWebEvidenceModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: true
+  };
 
   static rankWebEvidenceModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",

@@ -169,6 +169,14 @@ export abstract class BaseProcessor extends Base {
       `;
   }
 
+  renderSubProblemSimple(subProblemIndex: number) {
+    const subProblem = this.memory.subProblems[subProblemIndex];
+    return `
+      ${subProblem.title}
+      ${subProblem.description}
+      `;
+  }
+
   getActiveSolutionsLastPopulation(subProblemIndex: number) {
     const populations =
       this.memory.subProblems[subProblemIndex].solutions.populations;
