@@ -157,7 +157,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
         try {
             const refinedAnalysis = (await this.getEvidenceTextAnalysis(subProblemIndex, policy, type, text));
             if (refinedAnalysis) {
-                this.logger.debug(`Saving text analysis ${JSON.stringify(refinedAnalysis, null, 2)}`);
+                this.logger.debug(`Saving refined analysis ${JSON.stringify(refinedAnalysis, null, 2)}`);
                 refinedAnalysis.hasBeenRefined = true;
                 try {
                     await this.evidenceWebPageVectorStore.updateRefinedAnalysis(policy.vectorStoreId, refinedAnalysis);
@@ -209,7 +209,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
                     const webPage = retrievedObject;
                     const id = webPage._additional.id;
                     policy.vectorStoreId = id;
-                    this.getAndProcessEvidencePage(subProblemIndex, webPage.url, page, searchType, policy);
+                    await this.getAndProcessEvidencePage(subProblemIndex, webPage.url, page, searchType, policy);
                     this.logger.info(`${subProblemIndex} - (+${pageCounter++}) - ${id} - Updated`);
                 }
             }

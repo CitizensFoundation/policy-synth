@@ -280,7 +280,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
       if (refinedAnalysis) {
 
         this.logger.debug(
-          `Saving text analysis ${JSON.stringify(refinedAnalysis, null, 2)}`
+          `Saving refined analysis ${JSON.stringify(refinedAnalysis, null, 2)}`
         );
 
         refinedAnalysis.hasBeenRefined = true;
@@ -369,7 +369,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
 
           policy.vectorStoreId = id;
 
-          this.getAndProcessEvidencePage(subProblemIndex, webPage.url, page, searchType as PSEvidenceWebPageTypes, policy);
+          await this.getAndProcessEvidencePage(subProblemIndex, webPage.url, page, searchType as PSEvidenceWebPageTypes, policy);
 
           this.logger.info(
             `${subProblemIndex} - (+${pageCounter++}) - ${id} - Updated`
