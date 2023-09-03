@@ -25,8 +25,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
         You are an expert in rating evidence for policy proposals on multiple attributes.
 
         Instructions:
-        1. Rate how well the policy evidence does with a score from 0-100, on the score attributes provided in the JSON format below
-        2. Consider all the provided information in your ratings.
+        1. Rate how well the policy evidence does with a score from 0-100, on the score attributes provided in the JSON format below.
 
         Always output your ratings in the following JSON format:
         {
