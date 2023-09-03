@@ -24,6 +24,13 @@ interface PSEvidenceWebPageGraphQlResults {
   };
 }
 
+interface PSPolicyRating {
+  evidenceRelevanceToPolicyProposalScore: number;
+  evidenceRelevanceToEvidenceTypeScore: number;
+  evidenceConfidenceScore: number;
+  evidenceQualityScore: number;
+}
+
 type PSEvidenceWebPageTypes =
   | "positiveEvidence"
   | "negativeEvidence"
@@ -112,6 +119,8 @@ interface PSEvidenceRawWebPageData {
   relevanceToPolicyProposal: string;
   policyTitle?: string;
   confidenceScore?: number;
+  relevanceToTypeScore?: number;
+  totalScore?: number;
   relevanceScore?: number;
   qualityScore?: number;
   tags?: string[];

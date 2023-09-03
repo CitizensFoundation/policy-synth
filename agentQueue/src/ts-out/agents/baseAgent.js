@@ -58,7 +58,8 @@ export class BaseAgent extends BaseWorker {
         "create-evidence-search-queries": {},
         "web-get-evidence-pages": {},
         "web-search-evidence": {},
-        "rank-web-evidence": {}
+        "rank-web-evidence": {},
+        "rate-web-evidence": {}
     };
     async saveMemory() {
         this.memory.lastSavedAt = Date.now();

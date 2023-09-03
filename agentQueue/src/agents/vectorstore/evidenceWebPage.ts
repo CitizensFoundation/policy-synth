@@ -105,7 +105,9 @@ export class EvidenceWebPageVectorStore extends Base {
         .do()
         .then((res) => {
           this.logger.info(
-            `Weaviate: Have saved evidence web page ${(webPageAnalysis as any).url}`
+            `Weaviate: Have saved evidence web page ${
+              (webPageAnalysis as any).url
+            }`
           );
           resolve(res);
         })
@@ -115,10 +117,7 @@ export class EvidenceWebPageVectorStore extends Base {
     });
   }
 
-  async updateWebPage(
-    id: string,
-    webPageAnalysis: PSEvidenceRawWebPageData
-  ) {
+  async updateWebPage(id: string, webPageAnalysis: PSEvidenceRawWebPageData) {
     return new Promise((resolve, reject) => {
       EvidenceWebPageVectorStore.client.data
         .updater()
@@ -138,7 +137,12 @@ export class EvidenceWebPageVectorStore extends Base {
     });
   }
 
-  async updateWebSolutions(id: string, evidenceType: string, evidence: string[], quiet = false) {
+  async updateWebSolutions(
+    id: string,
+    evidenceType: string,
+    evidence: string[],
+    quiet = false
+  ) {
     const props = {} as any;
     props[evidenceType] = evidence;
     return new Promise((resolve, reject) => {
@@ -151,6 +155,36 @@ export class EvidenceWebPageVectorStore extends Base {
         .then((res) => {
           if (!quiet)
             this.logger.info(`Weaviate: Have updated web solutions for ${id}`);
+          resolve(res);
+        })
+        .catch((err) => {
+          this.logger.error(err.stack || err);
+          reject(err);
+        });
+    });
+  }
+
+  async updateScores(id: string, scores: PSPolicyRating, quiet = false) {
+    return new Promise((resolve, reject) => {
+      EvidenceWebPageVectorStore.client.data
+        .merger()
+        .withId(id)
+        .withClassName("EvidenceWebPage")
+        .withProperties({
+          qualityScore: scores.evidenceQualityScore,
+          relevanceScore: scores.evidenceRelevanceToPolicyProposalScore,
+          confidenceScore: scores.evidenceConfidenceScore,
+          relevanceToTypeScore: scores.evidenceRelevanceToEvidenceTypeScore,
+          totalScore:
+            scores.evidenceQualityScore +
+            scores.evidenceRelevanceToPolicyProposalScore +
+            scores.evidenceConfidenceScore +
+            scores.evidenceRelevanceToEvidenceTypeScore,
+        })
+        .do()
+        .then((res) => {
+          if (!quiet)
+            this.logger.info(`Weaviate: Have updated scores for ${id}`);
           resolve(res);
         })
         .catch((err) => {
@@ -260,7 +294,7 @@ export class EvidenceWebPageVectorStore extends Base {
           allPossibleImplementationFeasibilityIdentifiedInTextContext \
           mostRelevantParagraphs contacts tags entities \
           _additional { distance, id }"
-        )
+        );
       return await query.do();
     } catch (err) {
       throw err;
@@ -385,7 +419,7 @@ export class EvidenceWebPageVectorStore extends Base {
     query: string,
     groupId: number | undefined,
     subProblemIndex: number | undefined,
-    searchType: PSEvidenceWebPageTypes | undefined,
+    searchType: PSEvidenceWebPageTypes | undefined
   ): Promise<PSEvidenceWebPageGraphQlResults> {
     //TODO: Fix any here
     const where: any[] = [];

@@ -141,6 +141,34 @@ export class EvidenceWebPageVectorStore extends Base {
             });
         });
     }
+    async updateScores(id, scores, quiet = false) {
+        return new Promise((resolve, reject) => {
+            EvidenceWebPageVectorStore.client.data
+                .merger()
+                .withId(id)
+                .withClassName("EvidenceWebPage")
+                .withProperties({
+                qualityScore: scores.evidenceQualityScore,
+                relevanceScore: scores.evidenceRelevanceToPolicyProposalScore,
+                confidenceScore: scores.evidenceConfidenceScore,
+                relevanceToTypeScore: scores.evidenceRelevanceToEvidenceTypeScore,
+                totalScore: scores.evidenceQualityScore +
+                    scores.evidenceRelevanceToPolicyProposalScore +
+                    scores.evidenceConfidenceScore +
+                    scores.evidenceRelevanceToEvidenceTypeScore,
+            })
+                .do()
+                .then((res) => {
+                if (!quiet)
+                    this.logger.info(`Weaviate: Have updated scores for ${id}`);
+                resolve(res);
+            })
+                .catch((err) => {
+                this.logger.error(err.stack || err);
+                reject(err);
+            });
+        });
+    }
     async getWebPage(id) {
         return new Promise((resolve, reject) => {
             EvidenceWebPageVectorStore.client.data

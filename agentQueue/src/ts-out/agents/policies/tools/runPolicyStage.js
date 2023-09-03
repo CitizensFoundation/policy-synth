@@ -12,7 +12,8 @@ if (projectId) {
     //memory.currentStage = "create-evidence-search-queries"
     //memory.currentStage = "web-search-evidence";
     //memory.currentStage = "web-get-evidence-pages";
-    memory.currentStage = "rank-web-evidence";
+    //memory.currentStage = "rank-web-evidence";
+    memory.currentStage = "rate-web-evidence";
     await redis.set(redisKey, JSON.stringify(memory));
     console.log("Adding job to queue");
     await myQueue.add("agent-policies", {

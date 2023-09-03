@@ -3,30 +3,50 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
-export class RankWebEvidenceProcessor extends BaseProcessor {
+export class RateWebEvidenceProcessor extends BaseProcessor {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-    async renderProblemPrompt(subProblemIndex, policy, evidenceToRank, evidenceType) {
+    simplifyEvidenceType(evidenceType) {
+        return evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
+    }
+    async renderProblemPrompt(subProblemIndex, policy, rawWebData, evidenceToRank, evidenceType) {
         return [
             new SystemChatMessage(`
-        You are an expert in filtering and ranking policy evidence.
+        You are an expert in rating evidence for policy proposals on multiple attributes.
 
-        1. Filter out irrelevant policy evidence.
-        2. Filter out duplicates or near duplicates.
-        3. Rank the evidence array by importance to the policy proposal.
-        4. Always and only output a JSON String Array: [ policyEvidence ].
+        Instructions:
+        1. Rate how well the policy evidence does with a score from 0-100, on the score attributes provided in the JSON format below
+        2. Consider all the provided information in your ratings.
 
-        Let's think step by step.`),
+        Always output your ratings in the following JSON format:
+        {
+          evidenceRelevanceToPolicyProposalScore,
+          evidenceRelevanceToEvidenceTypeScore,
+          evidenceConfidenceScore,
+          evidenceQualityScore
+        }
+
+       Let's think step by step.`),
             new HumanChatMessage(`
-        Evidence type: ${evidenceType}
+        Problem:
+        ${this.renderSubProblemSimple(subProblemIndex)}
 
-        Policy proposal:
+        Policy Proposal:
         ${policy.title}
         ${policy.description}
 
-        Policy evidence to filter and rank:
+        Policy Evidence type:
+        ${this.simplifyEvidenceType(evidenceType)}
+
+        Policy Evidence Source Summary:
+        ${rawWebData.summary}
+
+        Policy Evidence Source URL:
+        ${rawWebData.url}
+
+        Policy Evidence to Rate:
         ${JSON.stringify(evidenceToRank, null, 2)}
 
-        Filtered and ranked policy evidence as a JSON string array:
+        Your ratings in JSON format:
        `),
         ];
     }
@@ -47,16 +67,21 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
                     const id = webPage._additional.id;
                     for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
                         const fieldKey = evidenceType;
+                        let haveSetRatings = false;
                         if (webPage[fieldKey] &&
                             Array.isArray(webPage[fieldKey]) &&
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
-                            this.logger.debug(`${id} - Evidence before ranking (${evidenceType}):
-                ${JSON.stringify(evidenceToRank, null, 2)}`);
-                            let rankedEvidence = await this.callLLM("rank-web-evidence", IEngineConstants.rankWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
-                            await this.evidenceWebPageVectorStore.updateWebSolutions(id, fieldKey, rankedEvidence, true);
-                            this.logger.debug(`${id} - Evidence after ranking (${evidenceType}):
-                ${JSON.stringify(rankedEvidence, null, 2)}`);
+                            let ratedEvidence = await this.callLLM("rate-web-evidence", IEngineConstants.rateWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, webPage, evidenceToRank, fieldKey));
+                            if (!haveSetRatings) {
+                                await this.evidenceWebPageVectorStore.updateScores(id, ratedEvidence, true);
+                                haveSetRatings = true;
+                            }
+                            else {
+                                this.logger.warn(`${id} - Already set ratings for ${webPage.url} new type: ${evidenceType}`);
+                            }
+                            this.logger.debug(`${id} - Evident ratings (${evidenceType}):
+                ${JSON.stringify(ratedEvidence, null, 2)}`);
                         }
                         else {
                             //this.logger.info(`${id} - No evidence to rank for ${evidenceType}`)
@@ -73,19 +98,22 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
         }
     }
     async process() {
-        this.logger.info("Rank web evidence Processor");
+        this.logger.info("Rate web evidence Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.rankWebEvidenceModel.temperature,
-            maxTokens: IEngineConstants.rankWebEvidenceModel.maxOutputTokens,
-            modelName: IEngineConstants.rankWebEvidenceModel.name,
-            verbose: IEngineConstants.rankWebEvidenceModel.verbose,
+            temperature: IEngineConstants.rateWebEvidenceModel.temperature,
+            maxTokens: IEngineConstants.rateWebEvidenceModel.maxOutputTokens,
+            modelName: IEngineConstants.rateWebEvidenceModel.name,
+            verbose: IEngineConstants.rateWebEvidenceModel.verbose,
         });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = 1; /*Math.min(
+          this.memory.subProblems.length,
+          IEngineConstants.maxSubProblems
+        );*/
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
-            this.logger.info(`Ranking sub problem ${subProblemIndex}`);
+            this.logger.info(`Rating sub problem ${subProblemIndex}`);
             const subProblem = this.memory.subProblems[subProblemIndex];
             if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
                 if (subProblem.policies) {
@@ -109,6 +137,6 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
             }
         });
         await Promise.all(subProblemsPromises);
-        this.logger.info("Finished ranking all web evidence");
+        this.logger.info("Finished rating all web evidence");
     }
 }
