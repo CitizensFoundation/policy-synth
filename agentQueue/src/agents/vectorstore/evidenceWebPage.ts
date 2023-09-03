@@ -84,6 +84,9 @@ export class EvidenceWebPageVectorStore extends Base {
         allPossibleGlobalPerspectiveIdentifiedInTextContext \
         allPossibleCostAnalysisIdentifiedInTextContext \
         policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
+        mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
+        consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
+        risksForPolicy evidenceAcademicSources \
         allPossibleImplementationFeasibilityIdentifiedInTextContext \
          mostRelevantParagraphs contacts tags entities url\
         _additional { distance }"
@@ -285,7 +288,7 @@ export class EvidenceWebPageVectorStore extends Base {
         .get()
         .withClassName("EvidenceWebPage")
         .withLimit(limit)
-        .withSort([{ path: ["totalScore"], order: "asc" }])
+        .withSort([{ path: ["totalScore"], order: "desc" }])
         .withWhere({
           operator: "And",
           operands: where,
