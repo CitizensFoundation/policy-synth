@@ -189,7 +189,7 @@ export class IEngineConstants {
         outTokenCostUSD: gpt4OutTokenPrice,
         limitTPM: gpt4_TPM,
         limitRPM: gpt4_RPM,
-        verbose: true
+        verbose: false
     };
     static rankWebEvidenceModel = {
         name: "gpt-4",
@@ -201,6 +201,17 @@ export class IEngineConstants {
         limitTPM: gpt4_TPM,
         limitRPM: gpt4_RPM,
         verbose: false
+    };
+    static getRefinedEvidenceModel = {
+        name: "gpt-4",
+        temperature: 0.0,
+        maxOutputTokens: 1800,
+        tokenLimit: 8192,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
+        verbose: true
     };
     static reapSolutionsModel = {
         name: "gpt-4",

@@ -225,7 +225,8 @@ type IEngineStageTypes =
   | "web-search-evidence"
   | "web-get-evidence-pages"
   | "rank-web-evidence"
-  | "rate-web-evidence";
+  | "rate-web-evidence"
+  | "web-get-refined-evidence";
 
 interface IEngineUserFeedback {
   feedbackType: string;
