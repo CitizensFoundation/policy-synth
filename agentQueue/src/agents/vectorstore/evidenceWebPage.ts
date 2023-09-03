@@ -85,7 +85,7 @@ export class EvidenceWebPageVectorStore extends Base {
         allPossibleCostAnalysisIdentifiedInTextContext \
         policyTitle confidenceScore relevanceScore qualityScore \
         allPossibleImplementationFeasibilityIdentifiedInTextContext \
-         mostRelevantParagraphs contacts tags entities \
+         mostRelevantParagraphs contacts tags entities url\
         _additional { distance }"
       )
       .withNearText({ concepts: ["democracy"] })
@@ -292,7 +292,7 @@ export class EvidenceWebPageVectorStore extends Base {
           allPossibleCostAnalysisIdentifiedInTextContext \
           policyTitle confidenceScore relevanceScore qualityScore \
           allPossibleImplementationFeasibilityIdentifiedInTextContext \
-          mostRelevantParagraphs contacts tags entities \
+          mostRelevantParagraphs contacts tags entities url\
           _additional { distance, id }"
         );
       return await query.do();

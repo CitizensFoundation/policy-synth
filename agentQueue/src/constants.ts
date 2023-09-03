@@ -446,6 +446,8 @@ export class IEngineConstants {
 
   static maxTopPoliciesToProcess = 1;
 
+  static maxEvidenceToUseForRatingEvidence = 5;
+
   static policyEvidenceFieldTypes: string[] = [
     'allPossiblePositiveEvidenceIdentifiedInTextContext',
     'allPossibleNegativeEvidenceIdentifiedInTextContext',
