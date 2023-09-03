@@ -67,7 +67,8 @@ export abstract class BaseAgent extends BaseWorker {
     "web-get-evidence-pages": {},
     "web-search-evidence": {},
     "rank-web-evidence": {},
-    "rate-web-evidence": {}
+    "rate-web-evidence": {},
+    "web-get-refined-evidence": {}
   }
 
   async saveMemory() {

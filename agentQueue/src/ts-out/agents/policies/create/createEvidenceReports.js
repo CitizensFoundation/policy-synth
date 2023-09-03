@@ -3,7 +3,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
-export class RateWebEvidenceProcessor extends BaseProcessor {
+export class CreateEvidenceReportsProcessor extends BaseProcessor {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     simplifyEvidenceType(evidenceType) {
         return evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
@@ -49,7 +49,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
        `),
         ];
     }
-    async rateWebEvidence(policy, subProblemIndex) {
+    async rankWebEvidence(policy, subProblemIndex) {
         let offset = 0;
         const limit = 100;
         while (true) {
@@ -118,7 +118,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
                         Math.min(policies.length, IEngineConstants.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
-                            await this.rateWebEvidence(policy, subProblemIndex);
+                            await this.rankWebEvidence(policy, subProblemIndex);
                             this.logger.debug(`Finished ranking sub problem ${subProblemIndex} for policy ${policy}`);
                         }
                         catch (error) {

@@ -13,8 +13,6 @@
     "indexNullState": true
   },
 
-
-
   "properties": [
     {
       "dataType": ["string"],
@@ -399,7 +397,142 @@
       }
     },
 
+    {
+      "name": "whatPolicyNeedsToImplementInResponseToEvidence",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
 
+    {
+      "name": "mostImportantPolicyEvidenceInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "evidenceAcademicSources",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "evidenceOrganizationSources",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "evidenceHumanSources",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "prosForPolicyFoundInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "consForPolicyFoundInTextContext",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "risksForPolicy",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
+    {
+      "name": "hasBeenRefined",
+      "dataType": ["boolean"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true,
+      "invertedIndexConfig": {
+        "indexPropertyLength": true
+      }
+    },
     {
       "dataType": ["int"],
       "moduleConfig": {
@@ -489,6 +622,26 @@
         }
       },
       "name": "relevanceScore"
+    },
+    {
+      "dataType": ["int"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "name": "relevanceToTypeScore"
+    },
+    {
+      "dataType": ["int"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      },
+      "name": "totalScore"
     },
     {
       "dataType": ["int"],

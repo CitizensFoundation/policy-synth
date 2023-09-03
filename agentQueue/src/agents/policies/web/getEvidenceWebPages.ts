@@ -154,7 +154,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     policy: PSPolicy,
     type: PSEvidenceWebPageTypes,
     text: string
-  ) {
+  ): Promise<PSEvidenceRawWebPageData | PSRefinedPolicyEvidence> {
     try {
       const { totalTokenCount, promptTokenCount } = await this.getEvidenceTokenCount(
         text,

@@ -55,7 +55,7 @@ export class EvidenceWebPageVectorStore extends Base {
         const res = await EvidenceWebPageVectorStore.client.graphql
             .get()
             .withClassName("EvidenceWebPage")
-            .withFields("summary groupId entityIndex subProblemIndex relevanceToPolicyProposal \
+            .withFields("searchType summary groupId entityIndex subProblemIndex relevanceToPolicyProposal \
         allPossiblePositiveEvidenceIdentifiedInTextContext \
         allPossibleNegativeEvidenceIdentifiedInTextContext \
         allPossibleNeutralEvidenceIdentifiedInTextContext \
@@ -77,7 +77,7 @@ export class EvidenceWebPageVectorStore extends Base {
         allPossibleLocalPerspectiveIdentifiedInTextContext \
         allPossibleGlobalPerspectiveIdentifiedInTextContext \
         allPossibleCostAnalysisIdentifiedInTextContext \
-        policyTitle confidenceScore relevanceScore qualityScore \
+        policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
         allPossibleImplementationFeasibilityIdentifiedInTextContext \
          mostRelevantParagraphs contacts tags entities url\
         _additional { distance }")
@@ -141,6 +141,25 @@ export class EvidenceWebPageVectorStore extends Base {
             });
         });
     }
+    async updateRefinedAnalysis(id, refinedEvidence, quiet = false) {
+        return new Promise((resolve, reject) => {
+            EvidenceWebPageVectorStore.client.data
+                .merger()
+                .withId(id)
+                .withClassName("EvidenceWebPage")
+                .withProperties(refinedEvidence)
+                .do()
+                .then((res) => {
+                if (!quiet)
+                    this.logger.info(`Weaviate: Have updated evidence type for ${id}`);
+                resolve(res);
+            })
+                .catch((err) => {
+                this.logger.error(err.stack || err);
+                reject(err);
+            });
+        });
+    }
     async updateScores(id, scores, quiet = false) {
         return new Promise((resolve, reject) => {
             EvidenceWebPageVectorStore.client.data
@@ -186,6 +205,90 @@ export class EvidenceWebPageVectorStore extends Base {
                 reject(err);
             });
         });
+    }
+    async getTopPagesForProcessing(groupId, subProblemIndex = undefined, policyTitle, searchType, limit = 10) {
+        let query;
+        let where = undefined;
+        where = [
+            {
+                path: ["groupId"],
+                operator: "Equal",
+                valueInt: groupId,
+            },
+        ];
+        if (subProblemIndex !== undefined && subProblemIndex !== null) {
+            where.push({
+                path: ["subProblemIndex"],
+                operator: "Equal",
+                valueInt: subProblemIndex,
+            });
+        }
+        else if (subProblemIndex === null) {
+            where.push({
+                path: ["subProblemIndex"],
+                operator: "IsNull",
+                valueBoolean: true,
+            });
+        }
+        if (searchType) {
+            where.push({
+                path: ["searchType"],
+                operator: "Equal",
+                valueString: searchType,
+            });
+        }
+        if (policyTitle) {
+            where.push({
+                path: ["policyTitle"],
+                operator: "Equal",
+                valueString: policyTitle,
+            });
+        }
+        try {
+            query = EvidenceWebPageVectorStore.client.graphql
+                .get()
+                .withClassName("EvidenceWebPage")
+                .withLimit(limit)
+                .withSort([{ path: ["totalScore"], order: "asc" }])
+                .withWhere({
+                operator: "And",
+                operands: where,
+            })
+                .withFields("searchType summary groupId entityIndex subProblemIndex relevanceToPolicyProposal \
+          allPossiblePositiveEvidenceIdentifiedInTextContext \
+          allPossibleNegativeEvidenceIdentifiedInTextContext \
+          allPossibleNeutralEvidenceIdentifiedInTextContext \
+          allPossibleEconomicEvidenceIdentifiedInTextContext \
+          allPossibleScientificEvidenceIdentifiedInTextContext \
+          allPossibleCulturalEvidenceIdentifiedInTextContext \
+          allPossibleEnvironmentalEvidenceIdentifiedInTextContext \
+          allPossibleLegalEvidenceIdentifiedInTextContext \
+          allPossibleTechnologicalEvidenceIdentifiedInTextContext \
+          allPossibleGeopoliticalEvidenceIdentifiedInTextContext \
+          allPossibleCaseStudiesIdentifiedInTextContext \
+          allPossibleStakeholderOpinionsIdentifiedInTextContext \
+          allPossibleExpertOpinionsIdentifiedInTextContext \
+          allPossiblePublicOpinionsIdentifiedInTextContext \
+          allPossibleHistoricalContextIdentifiedInTextContext \
+          allPossibleEthicalConsiderationsIdentifiedInTextContext \
+          allPossibleLongTermImpactIdentifiedInTextContext \
+          allPossibleShortTermImpactIdentifiedInTextContext \
+          allPossibleLocalPerspectiveIdentifiedInTextContext \
+          allPossibleGlobalPerspectiveIdentifiedInTextContext \
+          allPossibleCostAnalysisIdentifiedInTextContext \
+          allPossibleImplementationFeasibilityIdentifiedInTextContext \
+          policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
+          mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
+          consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
+          risksForPolicy evidenceAcademicSources \
+          evidenceOrganizationSources evidenceHumanSources \
+          mostRelevantParagraphs contacts tags entities url\
+          _additional { distance, id }");
+            return await query.do();
+        }
+        catch (err) {
+            throw err;
+        }
     }
     async getWebPagesForProcessing(groupId, subProblemIndex = undefined, policyTitle, limit = 10, offset = 0, evidenceCountLimit = 0) {
         let where = undefined;
@@ -252,8 +355,12 @@ export class EvidenceWebPageVectorStore extends Base {
           allPossibleLocalPerspectiveIdentifiedInTextContext \
           allPossibleGlobalPerspectiveIdentifiedInTextContext \
           allPossibleCostAnalysisIdentifiedInTextContext \
-          policyTitle confidenceScore relevanceScore qualityScore \
           allPossibleImplementationFeasibilityIdentifiedInTextContext \
+          policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
+          mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
+          consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
+          risksForPolicy evidenceAcademicSources \
+          evidenceOrganizationSources evidenceHumanSources \
           mostRelevantParagraphs contacts tags entities url\
           _additional { distance, id }");
             return await query.do();

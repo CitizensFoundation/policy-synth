@@ -115,7 +115,7 @@ interface PSEvidenceRawWebPageData {
 
   allPossibleCostAnalysisIdentifiedInTextContext?: string[];
   allPossibleImplementationFeasibilityIdentifiedInTextContext?: string[];
-
+  hasBeenRefined?: boolean;
   relevanceToPolicyProposal: string;
   policyTitle?: string;
   confidenceScore?: number;
@@ -134,6 +134,16 @@ interface PSEvidenceRawWebPageData {
   groupId: number;
   communityId: number;
   domainId: number;
+
+  whatPolicyNeedsToImplementInResponseToEvidence?: string[];
+  mostImportantPolicyEvidenceInTextContext?: string[];
+  evidenceAcademicSources?: string[];
+  evidenceOrganizationSources?: string[];
+  evidenceHumanSources?: string[];
+  prosForPolicyFoundInTextContext?: string[];
+  consForPolicyFoundInTextContext?: string[];
+  risksForPolicy?: string[];
+
   _additional?: {
     distance: number;
     id?: string;
@@ -145,6 +155,28 @@ interface PSEvidenceWebPageAnalysisData {
   implicationsForPolicy: string[];
   relevanceToPolicy: string;
   biasesOrLimitations: string[];
+}
+
+interface PSRefinedPolicyEvidence {
+  summary: string;
+  mostRelevantParagraphs: string[];
+  relevanceToPolicyProposal: string;
+
+  mostImportantPolicyEvidenceInTextContext: string[];
+  prosForPolicyFoundInTextContext: string[];
+  consForPolicyFoundInTextContext: string[];
+  whatPolicyNeedsToImplementInResponseToEvidence: string[];
+  risksForPolicy: string[];
+  evidenceAcademicSources: string[];
+  evidenceOrganizationSources: string[];
+  evidenceHumanSources: string[];
+  hasBeenRefined: boolean;
+
+  confidenceScore: number;
+  relevanceToTypeScore: number;
+  relevanceScore: number;
+  qualityScore: number;
+  totalScore?: number;
 }
 
 interface PSPolicyRisk {
@@ -161,9 +193,9 @@ interface PSCulturalSocialImpact {
 }
 
 interface PSEconomicImpact {
-  projectedEconomicBenefit: number; // e.g., in $ amount or other relevant metric
+  projectedEconomicBenefit: number;
   potentialCosts: number;
-  ROI: number; // Return on Investment
+  ROI: number;
 }
 
 interface PSEconomicImpactQualitative {
@@ -222,4 +254,5 @@ interface PSPolicy {
     mutationRate?: IEngineMutationRates;
     gen?: number;
   };
+  vectorStoreId?: string;
 }

@@ -66,7 +66,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
     ];
   }
 
-  async rankWebEvidence(policy: PSPolicy, subProblemIndex: number) {
+  async rateWebEvidence(policy: PSPolicy, subProblemIndex: number) {
     let offset = 0;
     const limit = 100;
 
@@ -164,10 +164,10 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
       verbose: IEngineConstants.rateWebEvidenceModel.verbose,
     });
 
-    const subProblemsLimit = 1;/*Math.min(
+    const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
       IEngineConstants.maxSubProblems
-    );*/
+    );
 
     const skipSubProblemsIndexes: number[] = [];
 
@@ -192,7 +192,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
             ) {
               const policy = policies[p];
               try {
-                await this.rankWebEvidence(policy, subProblemIndex);
+                await this.rateWebEvidence(policy, subProblemIndex);
                 this.logger.debug(
                   `Finished ranking sub problem ${subProblemIndex} for policy ${policy}`
                 );
