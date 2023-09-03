@@ -369,6 +369,7 @@ export class IEngineConstants {
         IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
     static maxTopSolutionsToCreatePolicies = 3;
     static maxTopPoliciesToProcess = 1;
+    static maxEvidenceToUseForRatingEvidence = 5;
     static policyEvidenceFieldTypes = [
         'allPossiblePositiveEvidenceIdentifiedInTextContext',
         'allPossibleNegativeEvidenceIdentifiedInTextContext',

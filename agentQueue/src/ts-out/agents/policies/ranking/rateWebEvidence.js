@@ -44,7 +44,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
         ${rawWebData.url}
 
         Policy Evidence to Rate:
-        ${JSON.stringify(evidenceToRank, null, 2)}
+        ${JSON.stringify(evidenceToRank.slice(0, IEngineConstants.maxEvidenceToUseForRatingEvidence), null, 2)}
 
         Your ratings in JSON format:
        `),
