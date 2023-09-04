@@ -27,7 +27,8 @@ For the real-world application of our platform, a series of expert and mass citi
 ## Future Timeline
 - **End of September 2023**: First full iteration of the policy ideas modules
 
-![Policy Synth v 24](https://github.com/CitizensFoundation/policy-synth/assets/43699/b04e7488-ff53-4a1f-8b0b-1fc08f23cbf4)
+![Policy Synth v 25](https://github.com/CitizensFoundation/policy-synth/assets/43699/8f20d0a9-e480-44a6-9997-9fdac701e799)
+
 
 
 
