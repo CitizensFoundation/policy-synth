@@ -9,6 +9,7 @@ import {
 } from "redis";
 import { RedisClientType } from "@redis/client";
 import { EvidenceWebPageVectorStore } from "../../agentQueue/src/agents/vectorstore/evidenceWebPage.js";
+import { IEngineConstants } from "../../agentQueue/src/constants.js";
 
 let redisClient: any;
 
@@ -27,7 +28,6 @@ if (process.env.REDIS_URL) {
 
 const memoryCache: { [key: string]: { data: any; timer: NodeJS.Timeout } } = {};
 
-
 export class ProjectsController {
   public path = "/api/projects";
   public router = express.Router();
@@ -39,42 +39,58 @@ export class ProjectsController {
   public async intializeRoutes() {
     this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
     this.router.get(this.path + "/:id", this.getProject);
-    this.router.get(this.path + "/:id/:subProblemIndex/:policyIndex/rawEvidence", this.getRawEvidence);
+    this.router.get(
+      this.path + "/:id/:subProblemIndex/:policyIndex/rawEvidence",
+      this.getRawEvidence
+    );
     await redisClient.connect();
   }
 
   getRawEvidence = async (req: express.Request, res: express.Response) => {
-    let projectData;
-    /*const results =
-    await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(
-      req.params.id,
-      req.params.subProblemIndex,
-      searchType,
-      req.params.policyTitle,
-      limit,
-      offset
-    );*/
-  }
+    const allResults: PSEvidenceRawWebPageData[] = [];
+    console.log(
+      `Getting raw evidence for ${req.params.id} - ${req.params.subProblemIndex} - ${req.params.policyIndex}`
+    );
+    for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+      const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+      const results =
+        await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(
+          parseInt(req.params.id),
+          parseInt(req.params.subProblemIndex),
+          searchType,
+          req.params.policyTitle,
+          10
+        );
+
+      allResults.push(
+        ...(results.data.Get["EvidenceWebPage"] as PSEvidenceRawWebPageData[])
+      );
+    }
+
+    res.send(allResults);
+  };
 
   getProject = async (req: express.Request, res: express.Response) => {
     let projectData;
 
-    console.error(`req.params.forceBackupReloadId: ${req.params.forceBackupReloadId}`)
+    console.error(
+      `req.params.forceBackupReloadId: ${req.params.forceBackupReloadId}`
+    );
 
-    console.log(`Getting project data for ${req.params.id}`)
+    console.log(`Getting project data for ${req.params.id}`);
 
-    const temporaryPasswordKey  = `TEMP_PROJECT_${req.params.id}_PASSWORD`;
-    const backupMemoryUrlKey  = `BACKUP_PROJECT_URL_${req.params.id}`;
+    const temporaryPasswordKey = `TEMP_PROJECT_${req.params.id}_PASSWORD`;
+    const backupMemoryUrlKey = `BACKUP_PROJECT_URL_${req.params.id}`;
 
     if (process.env[temporaryPasswordKey] && !req.query.trm) {
       return res.send({
-        needsTrm: true
+        needsTrm: true,
       });
     } else if (process.env[temporaryPasswordKey] && req.query.trm) {
       if (req.query.trm !== process.env[temporaryPasswordKey]) {
         return res.send({
-          needsTrm: true
-        })
+          needsTrm: true,
+        });
       }
     }
 
@@ -112,7 +128,9 @@ export class ProjectsController {
 
     if (!projectData && process.env[backupMemoryUrlKey]) {
       try {
-        console.log(`Attempting to fetch data from backup URL: ${process.env[backupMemoryUrlKey]}`); // Log statement added
+        console.log(
+          `Attempting to fetch data from backup URL: ${process.env[backupMemoryUrlKey]}`
+        ); // Log statement added
         const response = await axios.get(process.env[backupMemoryUrlKey]!);
         projectData = response.data;
         await redisClient.set(
@@ -214,10 +232,10 @@ export class ProjectsController {
       timer: setTimeout(() => {
         console.log("Deleting memory cache data");
         delete memoryCache[filteredRedisCacheKey];
-      }, 60*60*1000),
+      }, 60 * 60 * 1000),
     };
 
-    console.log("Caching data to memory")
+    console.log("Caching data to memory");
 
     return res.send(response);
   };

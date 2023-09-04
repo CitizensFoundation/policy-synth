@@ -2,6 +2,7 @@ import express from "express";
 import axios from "axios";
 import { createClient, } from "redis";
 import { EvidenceWebPageVectorStore } from "../../agentQueue/src/agents/vectorstore/evidenceWebPage.js";
+import { IEngineConstants } from "../../agentQueue/src/constants.js";
 let redisClient;
 if (process.env.REDIS_URL) {
     redisClient = createClient({
@@ -31,16 +32,14 @@ export class ProjectsController {
         await redisClient.connect();
     }
     getRawEvidence = async (req, res) => {
-        let projectData;
-        /*const results =
-        await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(
-          req.params.id,
-          req.params.subProblemIndex,
-          searchType,
-          req.params.policyTitle,
-          limit,
-          offset
-        );*/
+        const allResults = [];
+        console.log(`Getting raw evidence for ${req.params.id} - ${req.params.subProblemIndex} - ${req.params.policyIndex}`);
+        for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+            const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+            const results = await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(parseInt(req.params.id), parseInt(req.params.subProblemIndex), searchType, req.params.policyTitle, 10);
+            allResults.push(...results.data.Get["EvidenceWebPage"]);
+        }
+        res.send(allResults);
     };
     getProject = async (req, res) => {
         let projectData;
@@ -50,13 +49,13 @@ export class ProjectsController {
         const backupMemoryUrlKey = `BACKUP_PROJECT_URL_${req.params.id}`;
         if (process.env[temporaryPasswordKey] && !req.query.trm) {
             return res.send({
-                needsTrm: true
+                needsTrm: true,
             });
         }
         else if (process.env[temporaryPasswordKey] && req.query.trm) {
             if (req.query.trm !== process.env[temporaryPasswordKey]) {
                 return res.send({
-                    needsTrm: true
+                    needsTrm: true,
                 });
             }
         }
