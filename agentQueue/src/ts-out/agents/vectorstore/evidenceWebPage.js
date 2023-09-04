@@ -145,6 +145,12 @@ export class EvidenceWebPageVectorStore extends Base {
         });
     }
     async updateRefinedAnalysis(id, refinedEvidence, quiet = false) {
+        const totalScore = refinedEvidence.qualityScore +
+            refinedEvidence.confidenceScore +
+            refinedEvidence.relevanceScore +
+            refinedEvidence.relevanceToTypeScore;
+        refinedEvidence.totalScore = totalScore;
+        this.logger.debug(`Total score is ${totalScore} for ${id}`);
         return new Promise((resolve, reject) => {
             EvidenceWebPageVectorStore.client.data
                 .merger()
@@ -154,7 +160,7 @@ export class EvidenceWebPageVectorStore extends Base {
                 .do()
                 .then((res) => {
                 if (!quiet)
-                    this.logger.info(`Weaviate: Have updated evidence type for ${id}`);
+                    this.logger.info(`Weaviate: Have updated refined evidence type for ${id}`);
                 resolve(res);
             })
                 .catch((err) => {
