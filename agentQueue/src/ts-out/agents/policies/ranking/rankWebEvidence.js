@@ -30,46 +30,47 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
        `),
         ];
     }
+    //TODO: Convert to go through the searchTypes at top like the countEvidence one
     async rankWebEvidence(policy, subProblemIndex) {
-        let offset = 0;
-        const limit = 100;
-        while (true) {
-            try {
-                const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, policy.title, limit, offset);
-                this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
-                if (results.data.Get["EvidenceWebPage"].length === 0) {
-                    this.logger.info("Exiting");
-                    break;
-                }
-                let pageCounter = 0;
-                for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
-                    const webPage = retrievedObject;
-                    const id = webPage._additional.id;
-                    for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+        this.logger.info(`Ranking all web evidence for policy ${policy.title}`);
+        try {
+            for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+                let offset = 0;
+                const limit = 100;
+                const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+                while (true) {
+                    const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, searchType, policy.title, limit, offset);
+                    this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
+                    if (results.data.Get["EvidenceWebPage"].length === 0) {
+                        this.logger.info("Exiting");
+                        break;
+                    }
+                    let pageCounter = 0;
+                    for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
+                        const webPage = retrievedObject;
+                        const id = webPage._additional.id;
                         const fieldKey = evidenceType;
                         if (webPage[fieldKey] &&
                             Array.isArray(webPage[fieldKey]) &&
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
-                            this.logger.debug(`${id} - Evidence before ranking (${evidenceType}):
-                ${JSON.stringify(evidenceToRank, null, 2)}`);
+                            this.logger.debug(`${id} - Evidence before ranking (${evidenceType}):\n${JSON.stringify(evidenceToRank, null, 2)}`);
                             let rankedEvidence = await this.callLLM("rank-web-evidence", IEngineConstants.rankWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
                             await this.evidenceWebPageVectorStore.updateWebSolutions(id, fieldKey, rankedEvidence, true);
-                            this.logger.debug(`${id} - Evidence after ranking (${evidenceType}):
-                ${JSON.stringify(rankedEvidence, null, 2)}`);
+                            this.logger.debug(`${id} - Evidence after ranking (${evidenceType}):\n${JSON.stringify(rankedEvidence, null, 2)}`);
                         }
                         else {
                             //this.logger.info(`${id} - No evidence to rank for ${evidenceType}`)
                         }
+                        this.logger.info(`${subProblemIndex} - (+${offset + pageCounter++}) - ${id} - Updated`);
                     }
-                    this.logger.info(`${subProblemIndex} - (+${offset + pageCounter++}) - ${id} - Updated`);
+                    offset += limit;
                 }
-                offset += limit;
             }
-            catch (error) {
-                this.logger.error(error.stack || error);
-                throw error;
-            }
+        }
+        catch (error) {
+            this.logger.error(error.stack || error);
+            throw error;
         }
     }
     async process() {

@@ -1,60 +1,21 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
-import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
+import { EvidenceWebPageVectorStore } from "../evidenceWebPage.js";
 export class RateWebEvidenceProcessor extends BaseProcessor {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-    simplifyEvidenceType(evidenceType) {
-        return evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
-    }
-    async renderProblemPrompt(subProblemIndex, policy, rawWebData, evidenceToRank, evidenceType) {
-        return [
-            new SystemChatMessage(`
-        You are an expert in rating evidence for policy proposals on multiple attributes.
-
-        Instructions:
-        1. Rate how well the policy evidence does with a score from 0-100, on the score attributes provided in the JSON format below.
-
-        Always output your ratings in the following JSON format:
-        {
-          evidenceRelevanceToPolicyProposalScore,
-          evidenceRelevanceToEvidenceTypeScore,
-          evidenceConfidenceScore,
-          evidenceQualityScore
-        }
-
-       Let's think step by step.`),
-            new HumanChatMessage(`
-        Problem:
-        ${this.renderSubProblemSimple(subProblemIndex)}
-
-        Policy Proposal:
-        ${policy.title}
-        ${policy.description}
-
-        Policy Evidence type:
-        ${this.simplifyEvidenceType(evidenceType)}
-
-        Policy Evidence Source Summary:
-        ${rawWebData.summary}
-
-        Policy Evidence Source URL:
-        ${rawWebData.url}
-
-        Policy Evidence to Rate:
-        ${JSON.stringify(evidenceToRank.slice(0, IEngineConstants.maxEvidenceToUseForRatingEvidence), null, 2)}
-
-        Your ratings in JSON format:
-       `),
-        ];
-    }
-    async rateWebEvidence(policy, subProblemIndex) {
-        this.logger.info(`Rating all web evidence for policy ${policy.title}`);
+    async countAll(policy, subProblemIndex) {
+        let offset = 0;
+        const limit = 100;
+        this.logger.info(`Counting all web evidence for policy ${policy.title}`);
         try {
             for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+                this.logger.info(`Counting all web evidence for type ${evidenceType}`);
                 let offset = 0;
-                const limit = 100;
+                let refinedCount = 0;
+                let totalCount = 0;
+                let revidenceCount = 0;
+                let reommendationCount = 0;
                 const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
                 while (true) {
                     const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, searchType, policy.title, limit, offset);
@@ -67,24 +28,21 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
                     for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
                         const webPage = retrievedObject;
                         const id = webPage._additional.id;
-                        const fieldKey = evidenceType;
-                        let haveSetRatings = false;
-                        if (webPage[fieldKey] &&
-                            Array.isArray(webPage[fieldKey]) &&
-                            webPage[fieldKey].length > 0) {
-                            const evidenceToRank = webPage[fieldKey];
-                            let ratedEvidence = await this.callLLM("rate-web-evidence", IEngineConstants.rateWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, webPage, evidenceToRank, fieldKey));
-                            if (!haveSetRatings) {
-                                await this.evidenceWebPageVectorStore.updateScores(id, ratedEvidence, true);
-                                haveSetRatings = true;
-                            }
-                            else {
-                                this.logger.warn(`${id} - Already set ratings for ${webPage.url} new type: ${evidenceType}`);
-                            }
-                            this.logger.debug(`${id} - Evident ratings (${evidenceType}):\n${JSON.stringify(ratedEvidence, null, 2)}`);
+                        this.logger.info(`${webPage.searchType} - ${webPage.totalScore} - ${webPage.hasBeenRefined ? "refined" : "original"} - ${webPage.url}`);
+                        if (webPage.mostImportantPolicyEvidenceInTextContext) {
+                            revidenceCount +=
+                                webPage.mostImportantPolicyEvidenceInTextContext.length;
                         }
-                        this.logger.info(`${subProblemIndex} - (+${offset + pageCounter++}) - ${id} - Updated`);
+                        if (webPage.whatPolicyNeedsToImplementInResponseToEvidence) {
+                            reommendationCount +=
+                                webPage.whatPolicyNeedsToImplementInResponseToEvidence.length;
+                        }
+                        totalCount++;
+                        if (webPage.hasBeenRefined) {
+                            refinedCount++;
+                        }
                     }
+                    this.logger.info(`${searchType} Total: ${totalCount} - Refined: ${refinedCount} - Evidence: ${revidenceCount} - Recommendation: ${reommendationCount}`);
                     offset += limit;
                 }
             }
@@ -95,7 +53,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
         }
     }
     async process() {
-        this.logger.info("Rate web evidence Processor");
+        this.logger.info("Set web evidence types Processor");
         super.process();
         this.chat = new ChatOpenAI({
             temperature: IEngineConstants.rateWebEvidenceModel.temperature,
@@ -107,7 +65,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
-            this.logger.info(`Rating sub problem ${subProblemIndex}`);
+            this.logger.info(`Set evidence type for sub problem ${subProblemIndex}`);
             const subProblem = this.memory.subProblems[subProblemIndex];
             if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
                 if (subProblem.policies) {
@@ -116,7 +74,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
                         Math.min(policies.length, IEngineConstants.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
-                            await this.rateWebEvidence(policy, subProblemIndex);
+                            await this.countAll(policy, subProblemIndex);
                             this.logger.debug(`Finished ranking sub problem ${subProblemIndex} for policy ${policy}`);
                         }
                         catch (error) {

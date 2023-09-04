@@ -188,19 +188,11 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
         }
         return true;
     }
-    simplifyEvidenceType(evidenceType) {
-        let type = evidenceType
-            .replace(/allPossible/g, "")
-            .replace(/IdentifiedInTextContext/g, "");
-        // Make the first character of type lowercase
-        type = type.charAt(0).toLowerCase() + type.slice(1);
-        return type;
-    }
     async refineWebEvidence(policy, subProblemIndex, page) {
         const limit = 10;
         try {
             for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
-                const searchType = this.simplifyEvidenceType(evidenceType);
+                const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
                 const results = await this.evidenceWebPageVectorStore.getTopPagesForProcessing(this.memory.groupId, subProblemIndex, policy.title, searchType, limit);
                 this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
                 if (results.data.Get["EvidenceWebPage"].length === 0) {
@@ -211,6 +203,8 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
                 for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
                     const webPage = retrievedObject;
                     const id = webPage._additional.id;
+                    this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
+                    this.logger.debug(`All scores ${webPage.relevanceScore} ${webPage.relevanceToTypeScore} ${webPage.confidenceScore} ${webPage.qualityScore}`);
                     policy.vectorStoreId = id;
                     await this.getAndProcessEvidencePage(subProblemIndex, webPage.url, page, searchType, policy);
                     this.logger.info(`${subProblemIndex} - (+${pageCounter++}) - ${id} - Updated`);
