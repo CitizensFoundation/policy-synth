@@ -43,37 +43,43 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
     ];
   }
 
+  //TODO: Convert to go through the searchTypes at top like the countEvidence one
   async rankWebEvidence(policy: PSPolicy, subProblemIndex: number) {
-    let offset = 0;
-    const limit = 100;
+    this.logger.info(`Ranking all web evidence for policy ${policy.title}`);
 
-    while (true) {
-      try {
-        const results =
-          await this.evidenceWebPageVectorStore.getWebPagesForProcessing(
-            this.memory.groupId,
-            subProblemIndex,
-            policy.title,
-            limit,
-            offset
+    try {
+      for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+        let offset = 0;
+        const limit = 100;
+        const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+
+        while (true) {
+          const results =
+            await this.evidenceWebPageVectorStore.getWebPagesForProcessing(
+              this.memory.groupId,
+              subProblemIndex,
+              searchType,
+              policy.title,
+              limit,
+              offset
+            );
+
+          this.logger.debug(
+            `Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`
           );
 
-        this.logger.debug(
-          `Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`
-        );
+          if (results.data.Get["EvidenceWebPage"].length === 0) {
+            this.logger.info("Exiting");
+            break;
+          }
 
-        if (results.data.Get["EvidenceWebPage"].length === 0) {
-          this.logger.info("Exiting");
-          break;
-        }
+          let pageCounter = 0;
+          for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
+            const webPage = retrievedObject as PSEvidenceRawWebPageData;
+            const id = webPage._additional!.id!;
 
-        let pageCounter = 0;
-        for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
-          const webPage = retrievedObject as PSEvidenceRawWebPageData;
-          const id = webPage._additional!.id!;
-
-          for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
             const fieldKey = evidenceType as keyof PSEvidenceRawWebPageData;
+
             if (
               webPage[fieldKey] &&
               Array.isArray(webPage[fieldKey]) &&
@@ -82,8 +88,7 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
               const evidenceToRank = webPage[fieldKey] as string[];
 
               this.logger.debug(
-                `${id} - Evidence before ranking (${evidenceType}):
-                ${JSON.stringify(evidenceToRank, null, 2)}`
+                `${id} - Evidence before ranking (${evidenceType}):\n${JSON.stringify(evidenceToRank, null, 2)}`
               );
 
               let rankedEvidence = await this.callLLM(
@@ -105,27 +110,26 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
               );
 
               this.logger.debug(
-                `${id} - Evidence after ranking (${evidenceType}):
-                ${JSON.stringify(rankedEvidence, null, 2)}`
+                `${id} - Evidence after ranking (${evidenceType}):\n${JSON.stringify(rankedEvidence, null, 2)}`
               );
             } else {
               //this.logger.info(`${id} - No evidence to rank for ${evidenceType}`)
             }
-          }
-          this.logger.info(
-            `${subProblemIndex} - (+${
-              offset + pageCounter++
-            }) - ${id} - Updated`
-          );
-        }
 
-        offset += limit;
-      } catch (error: any) {
-        this.logger.error(error.stack || error);
-        throw error;
+            this.logger.info(
+              `${subProblemIndex} - (+${offset + pageCounter++}) - ${id} - Updated`
+            );
+          }
+
+          offset += limit;
+        }
       }
+    } catch (error: any) {
+      this.logger.error(error.stack || error);
+      throw error;
     }
   }
+
 
   async process() {
     this.logger.info("Rank web evidence Processor");

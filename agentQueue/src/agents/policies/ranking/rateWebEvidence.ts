@@ -67,37 +67,39 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
   }
 
   async rateWebEvidence(policy: PSPolicy, subProblemIndex: number) {
-    let offset = 0;
-    const limit = 100;
+    this.logger.info(`Rating all web evidence for policy ${policy.title}`);
 
-    while (true) {
-      try {
-        const results =
-          await this.evidenceWebPageVectorStore.getWebPagesForProcessing(
+    try {
+      for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+        let offset = 0;
+        const limit = 100;
+        const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+
+        while (true) {
+          const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(
             this.memory.groupId,
             subProblemIndex,
+            searchType,
             policy.title,
             limit,
             offset
           );
 
-        this.logger.debug(
-          `Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`
-        );
+          this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
 
-        if (results.data.Get["EvidenceWebPage"].length === 0) {
-          this.logger.info("Exiting");
-          break;
-        }
+          if (results.data.Get["EvidenceWebPage"].length === 0) {
+            this.logger.info("Exiting");
+            break;
+          }
 
-        let pageCounter = 0;
-        for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
-          const webPage = retrievedObject as PSEvidenceRawWebPageData;
-          const id = webPage._additional!.id!;
+          let pageCounter = 0;
+          for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
+            const webPage = retrievedObject as PSEvidenceRawWebPageData;
+            const id = webPage._additional!.id!;
 
-          for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
             const fieldKey = evidenceType as keyof PSEvidenceRawWebPageData;
             let haveSetRatings = false;
+
             if (
               webPage[fieldKey] &&
               Array.isArray(webPage[fieldKey]) &&
@@ -125,33 +127,28 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
                 );
                 haveSetRatings = true;
               } else {
-                this.logger.warn(`${id} - Already set ratings for ${webPage.url} new type: ${evidenceType}`)
+                this.logger.warn(`${id} - Already set ratings for ${webPage.url} new type: ${evidenceType}`);
               }
 
               this.logger.debug(
-                `${id} - Evident ratings (${evidenceType}):
-                ${JSON.stringify(ratedEvidence, null, 2)}`
+                `${id} - Evident ratings (${evidenceType}):\n${JSON.stringify(ratedEvidence, null, 2)}`
               );
-
-
-            } else {
-              //this.logger.info(`${id} - No evidence to rank for ${evidenceType}`)
             }
-          }
-          this.logger.info(
-            `${subProblemIndex} - (+${
-              offset + pageCounter++
-            }) - ${id} - Updated`
-          );
-        }
 
-        offset += limit;
-      } catch (error: any) {
-        this.logger.error(error.stack || error);
-        throw error;
+            this.logger.info(
+              `${subProblemIndex} - (+${offset + pageCounter++}) - ${id} - Updated`
+            );
+          }
+
+          offset += limit;
+        }
       }
+    } catch (error: any) {
+      this.logger.error(error.stack || error);
+      throw error;
     }
   }
+
 
   async process() {
     this.logger.info("Rate web evidence Processor");

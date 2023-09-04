@@ -344,9 +344,10 @@ export class EvidenceWebPageVectorStore extends Base {
     }
   }
 
-  async getWebPagesForProcessing(
+  async getTopWebPagesForProcessing(
     groupId: number,
     subProblemIndex: number | undefined | null = undefined,
+    searchType: string | undefined = undefined,
     policyTitle: string | undefined,
     limit = 10,
     offset = 0,
@@ -372,6 +373,117 @@ export class EvidenceWebPageVectorStore extends Base {
         path: ["subProblemIndex"],
         operator: "IsNull",
         valueBoolean: true,
+      });
+    }
+
+    if (searchType) {
+      where.push({
+        path: ["searchType"],
+        operator: "Equal",
+        valueString: searchType,
+      });
+    }
+
+    if (policyTitle) {
+      where.push({
+        path: ["policyTitle"],
+        operator: "Equal",
+        valueString: policyTitle,
+      });
+    }
+
+    if (evidenceCountLimit !== undefined) {
+    }
+
+    let query;
+
+    try {
+      query = EvidenceWebPageVectorStore.client.graphql
+        .get()
+        .withClassName("EvidenceWebPage")
+        .withLimit(limit)
+        .withOffset(offset)
+        .withSort([{ path: ["totalScore"], order: "desc" }])
+        .withWhere({
+          operator: "And",
+          operands: where,
+        })
+        .withFields(
+          "searchType summary groupId entityIndex subProblemIndex relevanceToPolicyProposal \
+          allPossiblePositiveEvidenceIdentifiedInTextContext \
+          allPossibleNegativeEvidenceIdentifiedInTextContext \
+          allPossibleNeutralEvidenceIdentifiedInTextContext \
+          allPossibleEconomicEvidenceIdentifiedInTextContext \
+          allPossibleScientificEvidenceIdentifiedInTextContext \
+          allPossibleCulturalEvidenceIdentifiedInTextContext \
+          allPossibleEnvironmentalEvidenceIdentifiedInTextContext \
+          allPossibleLegalEvidenceIdentifiedInTextContext \
+          allPossibleTechnologicalEvidenceIdentifiedInTextContext \
+          allPossibleGeopoliticalEvidenceIdentifiedInTextContext \
+          allPossibleCaseStudiesIdentifiedInTextContext \
+          allPossibleStakeholderOpinionsIdentifiedInTextContext \
+          allPossibleExpertOpinionsIdentifiedInTextContext \
+          allPossiblePublicOpinionsIdentifiedInTextContext \
+          allPossibleHistoricalContextIdentifiedInTextContext \
+          allPossibleEthicalConsiderationsIdentifiedInTextContext \
+          allPossibleLongTermImpactIdentifiedInTextContext \
+          allPossibleShortTermImpactIdentifiedInTextContext \
+          allPossibleLocalPerspectiveIdentifiedInTextContext \
+          allPossibleGlobalPerspectiveIdentifiedInTextContext \
+          allPossibleCostAnalysisIdentifiedInTextContext \
+          allPossibleImplementationFeasibilityIdentifiedInTextContext \
+          policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
+          mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
+          consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
+          risksForPolicy evidenceAcademicSources \
+          evidenceOrganizationSources evidenceHumanSources \
+          mostRelevantParagraphs contacts tags entities url\
+          _additional { distance, id }"
+        );
+      return await query.do();
+    } catch (err) {
+      throw err;
+    }
+  }
+
+
+  async getWebPagesForProcessing(
+    groupId: number,
+    subProblemIndex: number | undefined | null = undefined,
+    searchType: string | undefined = undefined,
+    policyTitle: string | undefined,
+    limit = 10,
+    offset = 0,
+    evidenceCountLimit: number | undefined = 0
+  ): Promise<PSEvidenceWebPageGraphQlResults> {
+    let where: any[] | undefined = undefined;
+    where = [
+      {
+        path: ["groupId"],
+        operator: "Equal",
+        valueInt: groupId,
+      },
+    ];
+
+    if (subProblemIndex !== undefined && subProblemIndex !== null) {
+      where.push({
+        path: ["subProblemIndex"],
+        operator: "Equal",
+        valueInt: subProblemIndex,
+      });
+    } else if (subProblemIndex === null) {
+      where.push({
+        path: ["subProblemIndex"],
+        operator: "IsNull",
+        valueBoolean: true,
+      });
+    }
+
+    if (searchType) {
+      where.push({
+        path: ["searchType"],
+        operator: "Equal",
+        valueString: searchType,
       });
     }
 

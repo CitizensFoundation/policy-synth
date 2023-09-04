@@ -332,22 +332,12 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
     return true;
   }
 
-  simplifyEvidenceType(evidenceType: string) {
-    let type = evidenceType
-      .replace(/allPossible/g, "")
-      .replace(/IdentifiedInTextContext/g, "");
-
-    // Make the first character of type lowercase
-    type = type.charAt(0).toLowerCase() + type.slice(1);
-    return type;
-  }
-
   async refineWebEvidence(policy: PSPolicy, subProblemIndex: number, page: Page) {
     const limit = 10;
 
     try {
       for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
-        const searchType = this.simplifyEvidenceType(evidenceType);
+        const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
         const results =
           await this.evidenceWebPageVectorStore.getTopPagesForProcessing(
             this.memory.groupId,
@@ -370,6 +360,9 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
         for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
           const webPage = retrievedObject as PSEvidenceRawWebPageData;
           const id = webPage._additional!.id!;
+
+          this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
+          this.logger.debug(`All scores ${webPage.relevanceScore} ${webPage.relevanceToTypeScore} ${webPage.confidenceScore} ${webPage.qualityScore}`);
 
           policy.vectorStoreId = id;
 

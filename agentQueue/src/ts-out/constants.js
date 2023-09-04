@@ -405,4 +405,11 @@ export class IEngineConstants {
         'allPossibleCostAnalysisIdentifiedInTextContext',
         'allPossibleImplementationFeasibilityIdentifiedInTextContext'
     ];
+    static simplifyEvidenceType(evidenceType) {
+        let type = evidenceType
+            .replace(/allPossible/g, "")
+            .replace(/IdentifiedInTextContext/g, "");
+        type = type.charAt(0).toLowerCase() + type.slice(1);
+        return type;
+    }
 }

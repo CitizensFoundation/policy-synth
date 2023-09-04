@@ -299,7 +299,7 @@ export class EvidenceWebPageVectorStore extends Base {
             throw err;
         }
     }
-    async getWebPagesForProcessing(groupId, subProblemIndex = undefined, policyTitle, limit = 10, offset = 0, evidenceCountLimit = 0) {
+    async getTopWebPagesForProcessing(groupId, subProblemIndex = undefined, searchType = undefined, policyTitle, limit = 10, offset = 0, evidenceCountLimit = 0) {
         let where = undefined;
         where = [
             {
@@ -320,6 +320,100 @@ export class EvidenceWebPageVectorStore extends Base {
                 path: ["subProblemIndex"],
                 operator: "IsNull",
                 valueBoolean: true,
+            });
+        }
+        if (searchType) {
+            where.push({
+                path: ["searchType"],
+                operator: "Equal",
+                valueString: searchType,
+            });
+        }
+        if (policyTitle) {
+            where.push({
+                path: ["policyTitle"],
+                operator: "Equal",
+                valueString: policyTitle,
+            });
+        }
+        if (evidenceCountLimit !== undefined) {
+        }
+        let query;
+        try {
+            query = EvidenceWebPageVectorStore.client.graphql
+                .get()
+                .withClassName("EvidenceWebPage")
+                .withLimit(limit)
+                .withOffset(offset)
+                .withSort([{ path: ["totalScore"], order: "desc" }])
+                .withWhere({
+                operator: "And",
+                operands: where,
+            })
+                .withFields("searchType summary groupId entityIndex subProblemIndex relevanceToPolicyProposal \
+          allPossiblePositiveEvidenceIdentifiedInTextContext \
+          allPossibleNegativeEvidenceIdentifiedInTextContext \
+          allPossibleNeutralEvidenceIdentifiedInTextContext \
+          allPossibleEconomicEvidenceIdentifiedInTextContext \
+          allPossibleScientificEvidenceIdentifiedInTextContext \
+          allPossibleCulturalEvidenceIdentifiedInTextContext \
+          allPossibleEnvironmentalEvidenceIdentifiedInTextContext \
+          allPossibleLegalEvidenceIdentifiedInTextContext \
+          allPossibleTechnologicalEvidenceIdentifiedInTextContext \
+          allPossibleGeopoliticalEvidenceIdentifiedInTextContext \
+          allPossibleCaseStudiesIdentifiedInTextContext \
+          allPossibleStakeholderOpinionsIdentifiedInTextContext \
+          allPossibleExpertOpinionsIdentifiedInTextContext \
+          allPossiblePublicOpinionsIdentifiedInTextContext \
+          allPossibleHistoricalContextIdentifiedInTextContext \
+          allPossibleEthicalConsiderationsIdentifiedInTextContext \
+          allPossibleLongTermImpactIdentifiedInTextContext \
+          allPossibleShortTermImpactIdentifiedInTextContext \
+          allPossibleLocalPerspectiveIdentifiedInTextContext \
+          allPossibleGlobalPerspectiveIdentifiedInTextContext \
+          allPossibleCostAnalysisIdentifiedInTextContext \
+          allPossibleImplementationFeasibilityIdentifiedInTextContext \
+          policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
+          mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
+          consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
+          risksForPolicy evidenceAcademicSources \
+          evidenceOrganizationSources evidenceHumanSources \
+          mostRelevantParagraphs contacts tags entities url\
+          _additional { distance, id }");
+            return await query.do();
+        }
+        catch (err) {
+            throw err;
+        }
+    }
+    async getWebPagesForProcessing(groupId, subProblemIndex = undefined, searchType = undefined, policyTitle, limit = 10, offset = 0, evidenceCountLimit = 0) {
+        let where = undefined;
+        where = [
+            {
+                path: ["groupId"],
+                operator: "Equal",
+                valueInt: groupId,
+            },
+        ];
+        if (subProblemIndex !== undefined && subProblemIndex !== null) {
+            where.push({
+                path: ["subProblemIndex"],
+                operator: "Equal",
+                valueInt: subProblemIndex,
+            });
+        }
+        else if (subProblemIndex === null) {
+            where.push({
+                path: ["subProblemIndex"],
+                operator: "IsNull",
+                valueBoolean: true,
+            });
+        }
+        if (searchType) {
+            where.push({
+                path: ["searchType"],
+                operator: "Equal",
+                valueString: searchType,
             });
         }
         if (policyTitle) {
