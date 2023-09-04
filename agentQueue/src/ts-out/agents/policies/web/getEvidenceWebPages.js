@@ -115,7 +115,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
                 const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit -
                     promptTokenCount.totalCount -
-                    128;
+                    512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
                 const splitText = await this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);

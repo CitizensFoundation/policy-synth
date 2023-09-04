@@ -40,7 +40,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
           qualityScore: number;
         }`),
             new HumanChatMessage(`
-        ${this.renderSubProblem(subProblemIndex)}
+        ${this.renderSubProblem(subProblemIndex, true)}
 
         Policy Proposal:
         ${policy.title}
@@ -63,8 +63,8 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
             const { totalTokenCount, promptTokenCount } = await this.getEvidenceTokenCount(text, subProblemIndex, policy, type);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
-            if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit -
+            if (IEngineConstants.getRefinedEvidenceModel.tokenLimit < totalTokenCount) {
+                const maxTokenLengthForChunk = IEngineConstants.getRefinedEvidenceModel.tokenLimit -
                     promptTokenCount.totalCount -
                     64;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
@@ -189,9 +189,12 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
         return true;
     }
     simplifyEvidenceType(evidenceType) {
-        return evidenceType
+        let type = evidenceType
             .replace(/allPossible/g, "")
             .replace(/IdentifiedInTextContext/g, "");
+        // Make the first character of type lowercase
+        type = type.charAt(0).toLowerCase() + type.slice(1);
+        return type;
     }
     async refineWebEvidence(policy, subProblemIndex, page) {
         const limit = 10;

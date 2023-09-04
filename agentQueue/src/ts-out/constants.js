@@ -205,13 +205,13 @@ export class IEngineConstants {
     static getRefinedEvidenceModel = {
         name: "gpt-4",
         temperature: 0.0,
-        maxOutputTokens: 1800,
+        maxOutputTokens: 1750,
         tokenLimit: 8192,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
         limitTPM: gpt4_TPM,
         limitRPM: gpt4_RPM,
-        verbose: true
+        verbose: false
     };
     static reapSolutionsModel = {
         name: "gpt-4",

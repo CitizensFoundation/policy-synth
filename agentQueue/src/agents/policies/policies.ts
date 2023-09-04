@@ -7,6 +7,7 @@ import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
 import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
 import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
 import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
+import { GetRefinedEvidenceProcessor } from "./web/getRefinedEvidence.js";
 
 export class AgentPolicies extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -91,6 +92,11 @@ export class AgentPolicies extends BaseAgent {
         const rater = new RateWebEvidenceProcessor(this.job, this.memory);
         await rater.process();
         break;
+      case "web-get-refined-evidence":
+        const refiner = new GetRefinedEvidenceProcessor(this.job, this.memory);
+        await refiner.process();
+        break;
+
       default:
         console.log("No stage matched");
     }
