@@ -68,19 +68,12 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
                         const webPage = retrievedObject;
                         const id = webPage._additional.id;
                         const fieldKey = evidenceType;
-                        let haveSetRatings = false;
                         if (webPage[fieldKey] &&
                             Array.isArray(webPage[fieldKey]) &&
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
                             let ratedEvidence = await this.callLLM("rate-web-evidence", IEngineConstants.rateWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, webPage, evidenceToRank, fieldKey));
-                            if (!haveSetRatings) {
-                                await this.evidenceWebPageVectorStore.updateScores(id, ratedEvidence, true);
-                                haveSetRatings = true;
-                            }
-                            else {
-                                this.logger.warn(`${id} - Already set ratings for ${webPage.url} new type: ${evidenceType}`);
-                            }
+                            await this.evidenceWebPageVectorStore.updateScores(id, ratedEvidence, true);
                             this.logger.debug(`${id} - Evident ratings (${evidenceType}):\n${JSON.stringify(ratedEvidence, null, 2)}`);
                         }
                         this.logger.info(`${subProblemIndex} - (+${offset + pageCounter++}) - ${id} - Updated`);

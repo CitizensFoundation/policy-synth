@@ -1,12 +1,13 @@
 {
-  "name": "collective-policy-synth-api",
+  "name": "policy-synth-api",
   "version": "1.0.0",
-  "main": "ts-out/server.js",
+  "main": "ts-out/api/server.js",
   "license": "AGPL",
+  "type": "module",
   "scripts": {
-    "start": "nodemon -e ts out-ts/server.js",
-    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./out-tsc/server.js",
-    "dev": "nodemon --config nodemon.json ./out-ts/server.js",
+    "start": "nodemon -e ts out-ts/api/server.js",
+    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./out-tsc/api/server.js",
+    "dev": "nodemon --config nodemon.json ./out-ts/api/server.js",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",
     "build": "tsc --project ./ --outDir ./out-tsc"
   },
@@ -38,6 +39,8 @@
     "redis": "^4.6.7",
     "sequelize": "^6.32.1",
     "sequelize-cli": "^6.2.0",
-    "socket.io": "^4.0.0"
+    "socket.io": "^4.0.0",
+    "weaviate-ts-client": "^1.5.0",
+    "winston": "^3.10.0"
   }
 }

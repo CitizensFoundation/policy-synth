@@ -23,7 +23,7 @@ export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.7,
-    maxOutputTokens: 4300,
+    maxOutputTokens: 4500,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
@@ -35,7 +35,7 @@ export class IEngineConstants {
   static policiesSeedModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.7,
-    maxOutputTokens: 4300,
+    maxOutputTokens: 4096,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
@@ -95,6 +95,19 @@ export class IEngineConstants {
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
     verbose: true,
+  };
+
+
+  static createEvidenceSearchQueriesModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.5,
+    maxOutputTokens: 1024,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
   };
 
   static searchQueryRankingsModel: IEngineBaseAIModelConstants = {
@@ -186,6 +199,42 @@ export class IEngineConstants {
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
+  };
+
+  static rateWebEvidenceModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
+  };
+
+  static rankWebEvidenceModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
+  };
+
+  static getRefinedEvidenceModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 1750,
+    tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -310,6 +359,8 @@ export class IEngineConstants {
 
   static maxTopQueriesToSearchPerType = 4;
 
+  static maxTopEvidenceQueriesToSearchPerType = 4;
+
   static mainSearchRetryCount = 40;
 
   static maxDalleRetryCount = 7;
@@ -317,6 +368,8 @@ export class IEngineConstants {
   static maxTopWebPagesToGet = 10;
 
   static maxWebPagesToGetByTopSearchPosition = 10;
+
+  static maxEvidenceWebPagesToGetByTopSearchPosition = 10;
 
   static maxBingSearchResults = 10;
 
@@ -402,4 +455,42 @@ export class IEngineConstants {
     IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
 
   static maxTopSolutionsToCreatePolicies = 3;
+
+  static maxTopPoliciesToProcess = 1;
+
+  static maxEvidenceToUseForRatingEvidence = 5;
+
+  static policyEvidenceFieldTypes: string[] = [
+    'allPossiblePositiveEvidenceIdentifiedInTextContext',
+    'allPossibleNegativeEvidenceIdentifiedInTextContext',
+    'allPossibleNeutralEvidenceIdentifiedInTextContext',
+    'allPossibleEconomicEvidenceIdentifiedInTextContext',
+    'allPossibleScientificEvidenceIdentifiedInTextContext',
+    'allPossibleCulturalEvidenceIdentifiedInTextContext',
+    'allPossibleEnvironmentalEvidenceIdentifiedInTextContext',
+    'allPossibleLegalEvidenceIdentifiedInTextContext',
+    'allPossibleTechnologicalEvidenceIdentifiedInTextContext',
+    'allPossibleGeopoliticalEvidenceIdentifiedInTextContext',
+    'allPossibleCaseStudiesIdentifiedInTextContext',
+    'allPossibleStakeholderOpinionsIdentifiedInTextContext',
+    'allPossibleExpertOpinionsIdentifiedInTextContext',
+    'allPossiblePublicOpinionsIdentifiedInTextContext',
+    'allPossibleHistoricalContextIdentifiedInTextContext',
+    'allPossibleEthicalConsiderationsIdentifiedInTextContext',
+    'allPossibleLongTermImpactIdentifiedInTextContext',
+    'allPossibleShortTermImpactIdentifiedInTextContext',
+    'allPossibleLocalPerspectiveIdentifiedInTextContext',
+    'allPossibleGlobalPerspectiveIdentifiedInTextContext',
+    'allPossibleCostAnalysisIdentifiedInTextContext',
+    'allPossibleImplementationFeasibilityIdentifiedInTextContext'
+  ];
+
+  static simplifyEvidenceType(evidenceType: string) {
+    let type = evidenceType
+      .replace(/allPossible/g, "")
+      .replace(/IdentifiedInTextContext/g, "");
+
+    type = type.charAt(0).toLowerCase() + type.slice(1);
+    return type;
+  }
 }

@@ -1,5 +1,5 @@
 import express from "express";
-import { models } from "../models";
+import { models } from "../models/index.js";
 import { createClient } from "redis";
 
 let redisClient: any;

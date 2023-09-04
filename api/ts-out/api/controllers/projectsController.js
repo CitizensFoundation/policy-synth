@@ -1,15 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProjectsController = void 0;
-const express_1 = __importDefault(require("express"));
-const axios_1 = __importDefault(require("axios"));
-const redis_1 = require("redis");
+import express from "express";
+import axios from "axios";
+import { createClient, } from "redis";
+import { EvidenceWebPageVectorStore } from "../../agentQueue/src/agents/vectorstore/evidenceWebPage.js";
 let redisClient;
 if (process.env.REDIS_URL) {
-    redisClient = (0, redis_1.createClient)({
+    redisClient = createClient({
         url: process.env.REDIS_URL,
         socket: {
             tls: true,
@@ -17,22 +12,36 @@ if (process.env.REDIS_URL) {
     });
 }
 else {
-    redisClient = (0, redis_1.createClient)({
+    redisClient = createClient({
         url: "redis://localhost:6379",
     });
 }
 const memoryCache = {};
-class ProjectsController {
+export class ProjectsController {
     path = "/api/projects";
-    router = express_1.default.Router();
+    router = express.Router();
+    evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     constructor() {
         this.intializeRoutes();
     }
     async intializeRoutes() {
         this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
         this.router.get(this.path + "/:id", this.getProject);
+        this.router.get(this.path + "/:id/:subProblemIndex/:policyIndex/rawEvidence", this.getRawEvidence);
         await redisClient.connect();
     }
+    getRawEvidence = async (req, res) => {
+        let projectData;
+        /*const results =
+        await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(
+          req.params.id,
+          req.params.subProblemIndex,
+          searchType,
+          req.params.policyTitle,
+          limit,
+          offset
+        );*/
+    };
     getProject = async (req, res) => {
         let projectData;
         console.error(`req.params.forceBackupReloadId: ${req.params.forceBackupReloadId}`);
@@ -82,7 +91,7 @@ class ProjectsController {
         if (!projectData && process.env[backupMemoryUrlKey]) {
             try {
                 console.log(`Attempting to fetch data from backup URL: ${process.env[backupMemoryUrlKey]}`); // Log statement added
-                const response = await axios_1.default.get(process.env[backupMemoryUrlKey]);
+                const response = await axios.get(process.env[backupMemoryUrlKey]);
                 projectData = response.data;
                 await redisClient.set(`st_mem:${req.params.id}:id`, JSON.stringify(projectData));
             }
@@ -161,4 +170,3 @@ class ProjectsController {
         return res.send(response);
     };
 }
-exports.ProjectsController = ProjectsController;
