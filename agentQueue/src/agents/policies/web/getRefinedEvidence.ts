@@ -387,10 +387,10 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
   }
 
   async processSubProblems(browser: Browser) {
-    const subProblemsLimit = 1;/*Math.min(
+    const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
       IEngineConstants.maxSubProblems
-    );*/
+    );
 
     const skipSubProblemsIndexes: number[] = [];
 

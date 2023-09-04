@@ -223,10 +223,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
         }
     }
     async processSubProblems(browser) {
-        const subProblemsLimit = 1; /*Math.min(
-          this.memory.subProblems.length,
-          IEngineConstants.maxSubProblems
-        );*/
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
