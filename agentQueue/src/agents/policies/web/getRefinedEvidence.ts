@@ -60,7 +60,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
       ),
       new HumanChatMessage(
         `
-        ${this.renderSubProblem(subProblemIndex)}
+        ${this.renderSubProblem(subProblemIndex, true)}
 
         Policy Proposal:
         ${policy.title}
@@ -98,9 +98,9 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
 
       let textAnalysis: PSRefinedPolicyEvidence;
 
-      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+      if (IEngineConstants.getRefinedEvidenceModel.tokenLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          IEngineConstants.getPageAnalysisModel.tokenLimit -
+          IEngineConstants.getRefinedEvidenceModel.tokenLimit -
           promptTokenCount.totalCount -
           64;
 
@@ -333,9 +333,13 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
   }
 
   simplifyEvidenceType(evidenceType: string) {
-    return evidenceType
+    let type = evidenceType
       .replace(/allPossible/g, "")
       .replace(/IdentifiedInTextContext/g, "");
+
+    // Make the first character of type lowercase
+    type = type.charAt(0).toLowerCase() + type.slice(1);
+    return type;
   }
 
   async refineWebEvidence(policy: PSPolicy, subProblemIndex: number, page: Page) {
