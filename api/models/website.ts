@@ -1,4 +1,4 @@
-import { createEmbedding } from "../openai/embeddings";
+import { createEmbedding } from "../openai/embeddings.js";
 import pgvector from "pgvector/utils";
 import sequelize, { Sequelize } from "sequelize";
 

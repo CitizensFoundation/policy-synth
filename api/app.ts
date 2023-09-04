@@ -7,6 +7,11 @@ import { Server, Socket } from "socket.io";
 import { createClient } from "redis";
 import RedisStore from "connect-redis";
 import session from "express-session";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Initialize client.
 let redisClient;
@@ -53,28 +58,28 @@ export class App {
     this.app.use(bodyParser.json());
     this.app.use(
       express.static(
-        path.join(__dirname, "../apps/collective-policy-synth/dist")
+        path.join(__dirname, "../apps/policy-synth/dist")
       )
     );
 
     this.app.use(
       "/projects*",
       express.static(
-        path.join(__dirname, "../apps/collective-policy-synth/dist")
+        path.join(__dirname, "../apps/policy-synth/dist")
       )
     );
 
     this.app.use(
       "/webResearch*",
       express.static(
-        path.join(__dirname, "../apps/collective-policy-synth/dist")
+        path.join(__dirname, "../apps/policy-synth/dist")
       )
     );
 
     this.app.use(
       "/solutions*",
       express.static(
-        path.join(__dirname, "../apps/collective-policy-synth/dist")
+        path.join(__dirname, "../apps/policy-synth/dist")
       )
     );
 

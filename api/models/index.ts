@@ -2,7 +2,8 @@ import { Sequelize } from 'sequelize';
 import pg from 'pg';
 import safe from 'colors';
 
-const pgvector = require('pgvector/sequelize');
+import pgvector from 'pgvector/sequelize';
+
 pgvector.registerType(Sequelize);
 
 const logQuery = (query: string, options: any) => {

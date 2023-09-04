@@ -1200,6 +1200,9 @@ export class CpsApp extends YpBaseElement {
     webSearch: IEngineConstants.createSearchQueriesModel, // Not sure about this mapping
     webGetPages: IEngineConstants.getPageAnalysisModel,
     webGetEvidencePages: IEngineConstants.getPageAnalysisModel,
+    webGetRefinedEvidence: IEngineConstants.getRefinedEvidenceModel,
+    rankWebEvidence: IEngineConstants.rankWebEvidenceModel,
+    rateWebEvidence: IEngineConstants.rateWebEvidenceModel,
     createSeedSolutions: IEngineConstants.createSolutionsModel,
     createEvidenceSearchQueries: IEngineConstants.createSearchQueriesModel,
     createProsCons: IEngineConstants.createProsConsModel,

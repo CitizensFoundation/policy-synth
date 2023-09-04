@@ -1,44 +1,19 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.App = void 0;
-const express_1 = __importDefault(require("express"));
-const body_parser_1 = __importDefault(require("body-parser"));
-const path = __importStar(require("path"));
-const http_1 = require("http");
-const socket_io_1 = require("socket.io");
-const redis_1 = require("redis");
-const connect_redis_1 = __importDefault(require("connect-redis"));
-const express_session_1 = __importDefault(require("express-session"));
+import express from "express";
+import bodyParser from "body-parser";
+import * as path from "path";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { createClient } from "redis";
+import RedisStore from "connect-redis";
+import session from "express-session";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 // Initialize client.
 let redisClient;
 if (process.env.REDIS_URL) {
-    redisClient = (0, redis_1.createClient)({
+    redisClient = createClient({
         url: process.env.REDIS_URL,
         socket: {
             tls: true,
@@ -46,20 +21,20 @@ if (process.env.REDIS_URL) {
     });
 }
 else {
-    redisClient = (0, redis_1.createClient)({
+    redisClient = createClient({
         url: "redis://localhost:6379",
     });
 }
 redisClient.connect().catch(console.error);
 // Initialize store.
-let redisStore = new connect_redis_1.default({
+let redisStore = new RedisStore({
     client: redisClient,
     prefix: "cps:",
 });
-const app = (0, express_1.default)();
-const httpServer = (0, http_1.createServer)(app);
-const io = new socket_io_1.Server(httpServer, {});
-class App {
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {});
+export class App {
     app;
     port;
     constructor(controllers, port) {
@@ -69,12 +44,12 @@ class App {
         this.initializeControllers(controllers);
     }
     initializeMiddlewares() {
-        this.app.use(body_parser_1.default.json());
-        this.app.use(express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth/dist")));
-        this.app.use("/projects*", express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth/dist")));
-        this.app.use("/webResearch*", express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth/dist")));
-        this.app.use("/solutions*", express_1.default.static(path.join(__dirname, "../apps/collective-policy-synth/dist")));
-        app.use((0, express_session_1.default)({
+        this.app.use(bodyParser.json());
+        this.app.use(express.static(path.join(__dirname, "../apps/policy-synth/dist")));
+        this.app.use("/projects*", express.static(path.join(__dirname, "../apps/policy-synth/dist")));
+        this.app.use("/webResearch*", express.static(path.join(__dirname, "../apps/policy-synth/dist")));
+        this.app.use("/solutions*", express.static(path.join(__dirname, "../apps/policy-synth/dist")));
+        app.use(session({
             store: redisStore,
             secret: process.env.SESSION_SECRET
                 ? process.env.SESSION_SECRET
@@ -107,7 +82,6 @@ class App {
         });
     }
 }
-exports.App = App;
 /*io.on("connection", (socket) => {
 
   const meetingId = socket.handshake.query.meetingId;

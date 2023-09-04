@@ -1,6 +1,6 @@
 import express from "express";
 import axios from "axios";
-import { models } from "../models";
+import { models } from "../models/index.js";
 import {
   RedisFunctions,
   RedisModules,
@@ -8,6 +8,7 @@ import {
   createClient,
 } from "redis";
 import { RedisClientType } from "@redis/client";
+import { EvidenceWebPageVectorStore } from "../../agentQueue/src/agents/vectorstore/evidenceWebPage.js";
 
 let redisClient: any;
 
@@ -30,7 +31,7 @@ const memoryCache: { [key: string]: { data: any; timer: NodeJS.Timeout } } = {};
 export class ProjectsController {
   public path = "/api/projects";
   public router = express.Router();
-
+  private evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
   constructor() {
     this.intializeRoutes();
   }
@@ -38,7 +39,21 @@ export class ProjectsController {
   public async intializeRoutes() {
     this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
     this.router.get(this.path + "/:id", this.getProject);
+    this.router.get(this.path + "/:id/:subProblemIndex/:policyIndex/rawEvidence", this.getRawEvidence);
     await redisClient.connect();
+  }
+
+  getRawEvidence = async (req: express.Request, res: express.Response) => {
+    let projectData;
+    /*const results =
+    await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(
+      req.params.id,
+      req.params.subProblemIndex,
+      searchType,
+      req.params.policyTitle,
+      limit,
+      offset
+    );*/
   }
 
   getProject = async (req: express.Request, res: express.Response) => {

@@ -98,7 +98,6 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
             const id = webPage._additional!.id!;
 
             const fieldKey = evidenceType as keyof PSEvidenceRawWebPageData;
-            let haveSetRatings = false;
 
             if (
               webPage[fieldKey] &&
@@ -119,16 +118,11 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
                 )
               );
 
-              if (!haveSetRatings) {
-                await this.evidenceWebPageVectorStore.updateScores(
-                  id,
-                  ratedEvidence,
-                  true
-                );
-                haveSetRatings = true;
-              } else {
-                this.logger.warn(`${id} - Already set ratings for ${webPage.url} new type: ${evidenceType}`);
-              }
+              await this.evidenceWebPageVectorStore.updateScores(
+                id,
+                ratedEvidence,
+                true
+              );
 
               this.logger.debug(
                 `${id} - Evident ratings (${evidenceType}):\n${JSON.stringify(ratedEvidence, null, 2)}`
