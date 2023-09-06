@@ -42,6 +42,9 @@ export class CpsSolutions extends CpsStageBase {
 
   @property({ type: Number }) groupListScrollPositionY: number = null;
 
+  lastKeys: any[] = []
+  findBarProbablyOpen = false;
+
   async handleGroupButtonClick(groupIndex: number): Promise<void> {
     if (this.activeGroupIndex === groupIndex) {
       // Deactivating group filter
@@ -163,6 +166,21 @@ export class CpsSolutions extends CpsStageBase {
 
 
   handleKeyDown(e: KeyboardEvent) {
+    this.lastKeys.push(e.key);
+
+    if (this.lastKeys.length > 12) {
+      this.lastKeys.shift();
+    }
+
+    this.findBarProbablyOpen = this.lastKeys.includes('Control') && this.lastKeys.includes('f');
+
+    if (e.key === 'Escape' && this.findBarProbablyOpen) {
+      this.lastKeys = [];
+      this.findBarProbablyOpen = false;
+      console.log("Doing my escape action.");
+      return;
+    }
+
     if (e.key === 'ArrowRight') {
       this.updateSwipeIndex('right');
       e.stopPropagation();
@@ -171,7 +189,7 @@ export class CpsSolutions extends CpsStageBase {
       this.updateSwipeIndex('left');
       e.stopPropagation();
       e.preventDefault();
-  } else if (e.key === 'Escape') {
+  } else if (e.key === 'Escape' && !this.findBarProbablyOpen) {
       if (this.activeSolutionIndex !== null) {
         this.activeSolutionIndex = null;
         this.exitSolutionScreen();

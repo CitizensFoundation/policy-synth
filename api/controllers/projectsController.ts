@@ -192,24 +192,6 @@ export class ProjectsController {
       return res.sendStatus(404);
     }
 
-    if (projectData && projectData.subProblems) {
-      // Loop through all sub-problems and slice the populations
-      for (const subProblem of projectData.subProblems) {
-        if (subProblem.solutions) {
-          subProblem.solutions.populations =
-            subProblem.solutions.populations.map(
-              (population: IEngineSolution[]) => {
-                if (population.length > 6) {
-                  return population.slice(3, -3);
-                } else {
-                  return population;
-                }
-              }
-            );
-        }
-      }
-    }
-
     const filterSearchResults = (searchResults: IEngineSearchResults) => {
       if (searchResults && searchResults.pages) {
         for (const key in searchResults.pages) {
@@ -285,9 +267,10 @@ export class ProjectsController {
     };
 
     console.log("Caching data to memory");
+
     if (projectData && projectData.subProblems) {
       for (const subProblem of projectData.subProblems) {
-        if (subProblem.solutions && subProblem.solutions.populations) {
+        if (false && subProblem.solutions && subProblem.solutions.populations) {
           const populations = subProblem.solutions.populations;
 
           if (populations.length > 6) {
