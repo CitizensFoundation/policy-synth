@@ -20,6 +20,7 @@ import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
 
 import './ps-family-tree.js';
 import './ps-raw-evidence.js';
+import { cache } from 'lit/directives/cache.js';
 
 @customElement('ps-policies')
 export class PsPolicies extends CpsStageBase {
@@ -39,6 +40,9 @@ export class PsPolicies extends CpsStageBase {
   hideExtraPolicyInformation = false;
 
   @property({ type: Number }) groupListScrollPositionY: number = null;
+
+  lastKeys: any[] = []
+  findBarProbablyOpen = false;
 
   updateRoutes() {
     this.fire('update-route', {
@@ -164,6 +168,20 @@ export class PsPolicies extends CpsStageBase {
   }
 
   handleKeyDown(e: KeyboardEvent) {
+    this.lastKeys.push(e.key);
+
+    if (this.lastKeys.length > 12) {
+      this.lastKeys.shift();
+    }
+
+    this.findBarProbablyOpen = this.lastKeys.includes('Control') && this.lastKeys.includes('f');
+
+    if (e.key === 'Escape' && this.findBarProbablyOpen) {
+      this.lastKeys = [];
+      this.findBarProbablyOpen = false;
+      console.log("Doing my escape action.");
+      return;
+    }
     if (e.key === 'ArrowRight') {
       this.updateSwipeIndex('right');
       e.stopPropagation();
@@ -172,7 +190,7 @@ export class PsPolicies extends CpsStageBase {
       this.updateSwipeIndex('left');
       e.stopPropagation();
       e.preventDefault();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === 'Escape' && !this.findBarProbablyOpen) {
       if (this.activePolicyIndex !== null) {
         this.activePolicyIndex = null;
         this.exitPolicyScreen();
@@ -1150,11 +1168,11 @@ export class PsPolicies extends CpsStageBase {
 
                 ${this.renderRatings(policy)}
 
-                <ps-raw-evidence
+                ${cache(html`<ps-raw-evidence
                   .activeSubProblemIndex="${this.activeSubProblemIndex}"
                   .policy="${policy}"
                   .memory="${this.memory}"
-                ></ps-raw-evidence>
+                ></ps-raw-evidence>`)}
                 ${this.renderPolicyNavigationButtons(policyIndex, policies)}
               </div>
             `

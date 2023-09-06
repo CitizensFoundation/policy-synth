@@ -56,17 +56,36 @@ export class PsRawEvidence extends YpBaseElement {
           `${this.activeSubProblemIndex}-${this.policy.title}`
         ]
       ) {
-        this.loading = false;
         this.activeRawEvidence =
           PsRawEvidence.rawPolicyCache[
             `${this.activeSubProblemIndex}-${this.policy.title}`
           ];
+        this.setupRawEvidence();
       } else {
         this.loading = true;
         this.activeRawEvidence = null;
         this.loadRawEvidence();
       }
     }
+  }
+
+  setupRawEvidence() {
+    this.groupedRawEvidence = {};
+    this.activeRawEvidence.forEach(evidence => {
+      if (!this.groupedRawEvidence[evidence.searchType]) {
+        this.groupedRawEvidence[evidence.searchType] = [];
+      }
+      this.groupedRawEvidence[evidence.searchType].push(evidence);
+    });
+
+    // Sort each group by totalScore, in descending order
+    for (const searchType in this.groupedRawEvidence) {
+      this.groupedRawEvidence[searchType].sort((a, b) => {
+        return (b.totalScore ?? 0) - (a.totalScore ?? 0);
+      });
+    }
+
+    this.loading = false;
   }
 
   disconnectedCallback(): void {
@@ -92,23 +111,7 @@ export class PsRawEvidence extends YpBaseElement {
     ] = rawEvidence;
 
     this.activeRawEvidence = rawEvidence;
-    // Group the evidence by searchType and sort by totalScore
-    this.groupedRawEvidence = {};
-    rawEvidence.forEach(evidence => {
-      if (!this.groupedRawEvidence[evidence.searchType]) {
-        this.groupedRawEvidence[evidence.searchType] = [];
-      }
-      this.groupedRawEvidence[evidence.searchType].push(evidence);
-    });
-
-    // Sort each group by totalScore, in descending order
-    for (const searchType in this.groupedRawEvidence) {
-      this.groupedRawEvidence[searchType].sort((a, b) => {
-        return (b.totalScore ?? 0) - (a.totalScore ?? 0);
-      });
-    }
-
-    this.loading = false;
+    this.setupRawEvidence();
   }
 
   static get styles() {
@@ -150,10 +153,20 @@ export class PsRawEvidence extends YpBaseElement {
           border-radius: 12px;
         }
 
+        md-outlined-select::part(menu) {
+          max-height: 500px;
+          height: 500px;
+        }
+
+        md-outlined-select {
+          max-width: 230px;
+        }
+
         .jumpToPolicyTitle {
           max-width: 200px;
-          margin-bottom: 16px;
+          margin-bottom: 24px;
         }
+
 
         .listItem {
           text-align: left;
@@ -228,13 +241,14 @@ export class PsRawEvidence extends YpBaseElement {
         }
 
         .logoImage {
-          height: 75px;
+          height: 125px;
           margin: 8px;
         }
 
         .shareImage {
-          height: 200px;
+          height: 275px;
           margin: 8px;
+          margin-bottom: 8px;
         }
 
         a {
