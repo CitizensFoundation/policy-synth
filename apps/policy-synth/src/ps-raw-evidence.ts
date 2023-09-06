@@ -34,12 +34,26 @@ export class PsRawEvidence extends YpBaseElement {
   @property({ type: Boolean })
   loading = true;
 
+  @property({ type: Boolean })
+  showDropdown = false;
+
   @property({ type: Object })
   showFullList: Record<string, boolean> = {};
+
+  @eventOptions({ passive: true })
+  handleScroll() {
+    if (window.scrollY >= 550) {
+      this.showDropdown = true;
+    } else {
+      this.showDropdown = false;
+    }
+    this.requestUpdate();
+  }
 
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Raw evidence - open`);
+    window.addEventListener('scroll', this.handleScroll.bind(this));
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -91,6 +105,7 @@ export class PsRawEvidence extends YpBaseElement {
   disconnectedCallback(): void {
     super.disconnectedCallback();
     window.appGlobals.activity(`Raw evidence - close`);
+    window.removeEventListener('scroll', this.handleScroll.bind(this));
   }
 
   formatSearchType(searchType: string) {
@@ -153,6 +168,19 @@ export class PsRawEvidence extends YpBaseElement {
           border-radius: 12px;
         }
 
+        .fade-in {
+          animation: fadeIn ease 1s;
+        }
+
+        @keyframes fadeIn {
+          0% {
+            opacity: 0;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+
         md-outlined-select::part(menu) {
           max-height: 500px;
           height: 500px;
@@ -166,7 +194,6 @@ export class PsRawEvidence extends YpBaseElement {
           max-width: 200px;
           margin-bottom: 24px;
         }
-
 
         .listItem {
           text-align: left;
@@ -255,6 +282,10 @@ export class PsRawEvidence extends YpBaseElement {
           font-size: 18px;
         }
 
+        .hidden {
+          display: none;
+        }
+
         @media (max-width: 960px) {
           .title {
             margin-top: 16px;
@@ -318,7 +349,7 @@ export class PsRawEvidence extends YpBaseElement {
 
   renderDropdown() {
     return html`
-      <div class="dropdown">
+      <div class="dropdown ${this.showDropdown ? '' : 'hidden'}">
         <div class="jumpToPolicyTitle">${this.policy.title}</div>
         <md-outlined-select
           label="Jump to Evidence Type ..."
