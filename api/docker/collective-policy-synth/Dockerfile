@@ -2,7 +2,7 @@ FROM node:18
 
 LABEL maintainer="Robert Vidar Bjarnason <robert@citizens.is>"
 
-RUN echo 'version 1.1'
+RUN echo 'version 1.2'
 
 # Create app directory and give permissions to node user
 RUN mkdir -p /home/node/app && chown -R node:node /home/node/app
