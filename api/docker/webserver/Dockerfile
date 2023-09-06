@@ -1,7 +1,7 @@
 FROM nginx
 LABEL MAINTAINER="Robert Vidar Bjarnason <robert@citizens.is>"
 
-RUN echo 'version 1.1'
+RUN echo 'version 1.2'
 
 ENV HOME /root
 #CMD ["/sbin/my_init"]
