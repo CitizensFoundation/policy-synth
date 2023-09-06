@@ -1653,13 +1653,12 @@ export class CpsApp extends YpBaseElement {
   renderTempLoginDialog() {
     return html`<md-dialog
       id="tempPasswordDialog"
-      scrimClickAction=""
-      escapeKeyAction=""
+      @cancel="${(e: any)=>{e.preventDefault();}}"
     >
-      <div slot="header" class="postHeader">
+      <div slot="headline" class="postHeader layout vertical center-center">
         ${this.t('Please Enter Password')}
       </div>
-      <div id="content" class="layout vertical center-center">
+      <div id="content" slot="content" class="layout vertical center-center">
         <md-outlined-text-field
           id="tempPassword"
           type="password"
