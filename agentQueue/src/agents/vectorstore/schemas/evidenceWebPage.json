@@ -87,6 +87,78 @@
     },
 
     {
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "name": "metaAuthor"
+    },
+
+    {
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "name": "metaDate"
+    },
+    {
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "name": "metaImageUrl"
+    },
+    {
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "name": "metaLogoUrl"
+    },
+    {
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "name": "metaTitle"
+    },
+    {
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "name": "metaDescription"
+    },
+    {
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": true
+        }
+      },
+      "name": "metaPublisher"
+    },
+
+    {
       "name": "allPossibleNeutralEvidenceIdentifiedInTextContext",
       "dataType": ["text[]"],
       "moduleConfig": {

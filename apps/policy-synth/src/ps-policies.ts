@@ -5,7 +5,7 @@ import { CpsStageBase } from './cps-stage-base.js';
 
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
-import '@material/web/iconbutton/standard-icon-button.js';
+import '@material/web/iconbutton/icon-button.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
@@ -19,6 +19,7 @@ import { IEngineConstants } from './constants.js';
 import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
 
 import './ps-family-tree.js';
+import './ps-raw-evidence.js';
 
 @customElement('ps-policies')
 export class PsPolicies extends CpsStageBase {
@@ -367,7 +368,6 @@ export class PsPolicies extends CpsStageBase {
           font-family: 'Cabin', sans-serif;
         }
 
-
         .groupInfoText {
           font-size: 18px;
           margin-top: 6px;
@@ -500,11 +500,9 @@ export class PsPolicies extends CpsStageBase {
           color: var(--md-sys-color-on-surface);
         }
 
-
         .policyAttributeHeader {
           color: var(--md-sys-color-primary);
         }
-
 
         .policyInfoContainer {
           max-width: 600px;
@@ -1007,7 +1005,7 @@ export class PsPolicies extends CpsStageBase {
   renderPolicyNavigationButtons(policyIndex: number, policies: PSPolicy[]) {
     return html`
       <div class="layout horizontal center-center">
-        <md-standard-icon-button
+        <md-icon-button
           aria-label="Previous"
           .disabled="${policyIndex === 0}"
           @click="${(): void => {
@@ -1018,8 +1016,8 @@ export class PsPolicies extends CpsStageBase {
           }}"
         >
           <md-icon>navigate_before</md-icon>
-        </md-standard-icon-button>
-        <md-standard-icon-button
+        </md-icon-button>
+        <md-icon-button
           aria-label="Next"
           .disabled="${policyIndex === policies.length - 1}"
           @click="${(): void => {
@@ -1030,8 +1028,8 @@ export class PsPolicies extends CpsStageBase {
           }}"
         >
           <md-icon>navigate_next</md-icon>
-        </md-standard-icon-button>
-        <md-standard-icon-button
+        </md-icon-button>
+        <md-icon-button
           aria-label="Close"
           @click="${(): void => {
             this.activePolicyIndex = null;
@@ -1042,7 +1040,7 @@ export class PsPolicies extends CpsStageBase {
           }}"
         >
           <md-icon>close</md-icon>
-        </md-standard-icon-button>
+        </md-icon-button>
       </div>
     `;
   }
@@ -1107,50 +1105,56 @@ export class PsPolicies extends CpsStageBase {
                     : nothing}
                 </div>
 
-                <div class="layout vertical center-justified policyInfoContainer">
                 <div
-                  class="policyDescription"
-                  ?hidden="${this.hideExtraPolicyInformation}"
+                  class="layout vertical center-justified policyInfoContainer"
                 >
-                  <div class="policyAttributeHeader">
-                    ${this.t('Conditions for Success')}
+                  <div
+                    class="policyDescription"
+                    ?hidden="${this.hideExtraPolicyInformation}"
+                  >
+                    <div class="policyAttributeHeader">
+                      ${this.t('Conditions for Success')}
+                    </div>
+                    <div class="policyAttributes">
+                      ${policy.conditionsForSuccess.map(
+                        condition => html`<div>${condition}</div>`
+                      )}
+                    </div>
                   </div>
-                  <div class="policyAttributes">
-                    ${policy.conditionsForSuccess.map(
-                      condition => html`<div>${condition}</div>`
-                    )}
+                  <div
+                    class="policyDescription"
+                    ?hidden="${this.hideExtraPolicyInformation}"
+                  >
+                    <div class="policyAttributeHeader">
+                      ${this.t('Main Risks')}
+                    </div>
+                    <div class="policyAttributes">
+                      ${policy.mainRisks.map(risk => html`<div>${risk}</div>`)}
+                    </div>
+                  </div>
+                  <div
+                    class="policyDescription"
+                    ?hidden="${this.hideExtraPolicyInformation}"
+                  >
+                    <div class="policyAttributeHeader">
+                      ${this.t('Main Obstacles for Implemention')}
+                    </div>
+                    <div class="policyAttributes">
+                      ${policy.mainObstaclesForImplemention.map(
+                        mainObstaclesForImplemention =>
+                          html`<div>${mainObstaclesForImplemention}</div>`
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div
-                  class="policyDescription"
-                  ?hidden="${this.hideExtraPolicyInformation}"
-                >
-                  <div class="policyAttributeHeader">
-                    ${this.t('Main Risks')}
-                  </div>
-                  <div class="policyAttributes">
-                    ${policy.mainRisks.map(risk => html`<div>${risk}</div>`)}
-                  </div>
-                </div>
-                <div
-                  class="policyDescription"
-                  ?hidden="${this.hideExtraPolicyInformation}"
-                >
-                  <div class="policyAttributeHeader">
-                    ${this.t('Main Obstacles for Implemention')}
-                  </div>
-                  <div class="policyAttributes">
-                    ${policy.mainObstaclesForImplemention.map(
-                      mainObstaclesForImplemention =>
-                        html`<div>${mainObstaclesForImplemention}</div>`
-                    )}
-                  </div>
-                </div>
-
-              </div>
-
 
                 ${this.renderRatings(policy)}
+
+                <ps-raw-evidence
+                  .activeSubProblemIndex="${this.activeSubProblemIndex}"
+                  .policy="${policy}"
+                  .memory="${this.memory}"
+                ></ps-raw-evidence>
                 ${this.renderPolicyNavigationButtons(policyIndex, policies)}
               </div>
             `

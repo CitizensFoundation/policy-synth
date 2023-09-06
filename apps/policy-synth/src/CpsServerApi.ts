@@ -19,6 +19,23 @@ export class CpsServerApi extends YpServerApi {
     )) as unknown as CpsBootResponse;
   }
 
+  public async getMiddleSolutions(id: number, subProblemIndex: number): Promise<IEngineSolution[][]> {
+    return (await this.fetchWrapper(
+      this.baseUrlPath + `/projects/${id}/${subProblemIndex}/middle/solutions`
+    )) as unknown as IEngineSolution[][];
+  }
+
+  public async getRawEvidence(
+    id: number,
+    subProblemIndex: number,
+    policyTitle: string
+  ): Promise<PSEvidenceRawWebPageData[]> {
+    return (await this.fetchWrapper(
+      this.baseUrlPath +
+        `/projects/${id}/${subProblemIndex}/${policyTitle}/rawEvidence`
+    )) as unknown as PSEvidenceRawWebPageData[];
+  }
+
   /*
   public getEarl(earlName: string): AoiEarlResponse {
     return this.fetchWrapper(

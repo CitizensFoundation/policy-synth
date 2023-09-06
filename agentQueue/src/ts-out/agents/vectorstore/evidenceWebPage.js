@@ -80,7 +80,7 @@ export class EvidenceWebPageVectorStore extends Base {
         policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
         mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
         consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
-        risksForPolicy evidenceAcademicSources \
+        risksForPolicy evidenceAcademicSources hasBeenRefined \
         allPossibleImplementationFeasibilityIdentifiedInTextContext \
          mostRelevantParagraphs contacts tags entities url\
         _additional { distance }")
@@ -132,6 +132,26 @@ export class EvidenceWebPageVectorStore extends Base {
                 .withId(id)
                 .withClassName("EvidenceWebPage")
                 .withProperties(props)
+                .do()
+                .then((res) => {
+                if (!quiet)
+                    this.logger.info(`Weaviate: Have updated web solutions for ${id}`);
+                resolve(res);
+            })
+                .catch((err) => {
+                this.logger.error(err.stack || err);
+                reject(err);
+            });
+        });
+    }
+    async saveWebPageMetadata(id, metadata, quiet = false) {
+        const props = {};
+        return new Promise((resolve, reject) => {
+            EvidenceWebPageVectorStore.client.data
+                .merger()
+                .withId(id)
+                .withClassName("EvidenceWebPage")
+                .withProperties(metadata)
                 .do()
                 .then((res) => {
                 if (!quiet)
@@ -289,7 +309,9 @@ export class EvidenceWebPageVectorStore extends Base {
           policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
           mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
           consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
-          risksForPolicy evidenceAcademicSources \
+          risksForPolicy evidenceAcademicSources hasBeenRefined \
+          metaDate metaTitle metaDescription metaPublisher \
+          metaImageUrl metaLogoUrl metaAuthor \
           evidenceOrganizationSources evidenceHumanSources \
           mostRelevantParagraphs contacts tags entities url\
           _additional { distance, id }");
@@ -299,7 +321,7 @@ export class EvidenceWebPageVectorStore extends Base {
             throw err;
         }
     }
-    async getTopWebPagesForProcessing(groupId, subProblemIndex = undefined, searchType = undefined, policyTitle, limit = 10, offset = 0, evidenceCountLimit = 0) {
+    async getTopWebPagesForProcessing(groupId, subProblemIndex = undefined, searchType = undefined, policyTitle, limit = 10, offset = 0, evidenceCountLimit = 0, onlyRefined = false) {
         let where = undefined;
         where = [
             {
@@ -327,6 +349,13 @@ export class EvidenceWebPageVectorStore extends Base {
                 path: ["searchType"],
                 operator: "Equal",
                 valueString: searchType,
+            });
+        }
+        if (onlyRefined) {
+            where.push({
+                path: ["hasBeenRefined"],
+                operator: "Equal",
+                valueBoolean: true,
             });
         }
         if (policyTitle) {
@@ -377,6 +406,9 @@ export class EvidenceWebPageVectorStore extends Base {
           mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
           consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
           risksForPolicy evidenceAcademicSources \
+          metaDate metaTitle metaDescription metaPublisher \
+          metaImageUrl metaLogoUrl metaAuthor \
+          hasBeenRefined \
           evidenceOrganizationSources evidenceHumanSources \
           mostRelevantParagraphs contacts tags entities url\
           _additional { distance, id }");
@@ -462,7 +494,7 @@ export class EvidenceWebPageVectorStore extends Base {
           policyTitle confidenceScore relevanceScore qualityScore totalScore relevanceToTypeScore \
           mostImportantPolicyEvidenceInTextContext prosForPolicyFoundInTextContext \
           consForPolicyFoundInTextContext whatPolicyNeedsToImplementInResponseToEvidence \
-          risksForPolicy evidenceAcademicSources \
+          risksForPolicy evidenceAcademicSources hasBeenRefined \
           evidenceOrganizationSources evidenceHumanSources \
           mostRelevantParagraphs contacts tags entities url\
           _additional { distance, id }");

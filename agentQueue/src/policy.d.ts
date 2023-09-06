@@ -144,6 +144,14 @@ interface PSEvidenceRawWebPageData {
   consForPolicyFoundInTextContext?: string[];
   risksForPolicy?: string[];
 
+  metaTitle?: string;
+  metaDescription?: string;
+  metaPublisher?: string;
+  metaImageUrl?: string;
+  metaLogoUrl?: string;
+  metaAuthor?: string;
+  metaDate?: string;
+
   _additional?: {
     distance: number;
     id?: string;
@@ -177,6 +185,16 @@ interface PSRefinedPolicyEvidence {
   relevanceScore: number;
   qualityScore: number;
   totalScore?: number;
+}
+
+interface PSWebPageMetadata {
+  metaTitle: string;
+  metaDescription: string;
+  metaPublisher: string;
+  metaImageUrl: string;
+  metaLogoUrl: string;
+  metaAuthor: string;
+  metaDate: string;
 }
 
 interface PSPolicyRisk {

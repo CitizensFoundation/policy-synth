@@ -52,7 +52,8 @@ if (projectId) {
                 "web-search-evidence": {},
                 "rank-web-evidence": {},
                 "rate-web-evidence": {},
-                "web-get-refined-evidence": {}
+                "web-get-refined-evidence": {},
+                "get-metadata-for-top-evidence": {},
             },
             timeStart: Date.now(),
             totalCost: 0,

@@ -6,11 +6,11 @@ import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
 import { YpBaseElement } from './@yrpri/common/yp-base-element.js';
 
 import '@material/web/checkbox/checkbox.js';
-import { Checkbox } from '@material/web/checkbox/lib/checkbox.js';
+import { Checkbox } from '@material/web/checkbox/internal/checkbox.js';
 import '@material/web/button/outlined-button.js';
-import '@material/web/circularprogress/circular-progress.js';
-import '@material/web/iconbutton/standard-icon-button.js';
-import { MdStandardIconButton } from '@material/web/iconbutton/standard-icon-button.js';
+import '@material/web/progress/circular-progress.js';
+import '@material/web/iconbutton/icon-button.js';
+import { MdIconButton } from '@material/web/iconbutton/icon-button.js';
 import { Router } from '@lit-labs/router';
 
 //TDOO: Share from db config
@@ -824,7 +824,7 @@ export abstract class CpsStageBase extends YpBaseElement {
             >
               ${renderCloseButton && !hideAllButtons
                 ? html`
-                    <md-standard-icon-button
+                    <md-icon-button
                       aria-label="Previous"
                       .disabled="${this.activeSubProblemIndex === 0}"
                       @click="${(e: CustomEvent): void => {
@@ -840,8 +840,8 @@ export abstract class CpsStageBase extends YpBaseElement {
                       }}"
                     >
                       <md-icon>navigate_before</md-icon>
-                    </md-standard-icon-button>
-                    <md-standard-icon-button
+                    </md-icon-button>
+                    <md-icon-button
                       id="nextButton"
                       aria-label="Next"
                       .disabled="${this.activeSubProblemIndex ===
@@ -849,7 +849,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       @click="${(e: CustomEvent): void => {
                         e.stopPropagation();
                         if (
-                          !(this.$$('#nextButton') as MdStandardIconButton)
+                          !(this.$$('#nextButton') as MdIconButton)
                             .disabled &&
                           this.activeSubProblemIndex <
                             maxNumberOfSubProblems - 1
@@ -864,8 +864,8 @@ export abstract class CpsStageBase extends YpBaseElement {
                       }}"
                     >
                       <md-icon>navigate_next</md-icon>
-                    </md-standard-icon-button>
-                    <md-standard-icon-button
+                    </md-icon-button>
+                    <md-icon-button
                       aria-label="Close"
                       @click="${(e: CustomEvent): void => {
                         e.stopPropagation();
@@ -877,7 +877,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                       }}"
                     >
                       <md-icon>close</md-icon>
-                    </md-standard-icon-button>
+                    </md-icon-button>
                   `
                 : nothing}
             </div>
@@ -914,8 +914,8 @@ export abstract class CpsStageBase extends YpBaseElement {
         <div class="flex"></div>
         <div>${title}</div>
         <div class="flex"></div>
-        <md-standard-icon-button
-          ><md-icon>expand_more</md-icon></md-standard-icon-button
+        <md-icon-button
+          ><md-icon>expand_more</md-icon></md-icon-button
         >
       </div>
       <div class="searchResults layout vertical self-start">
@@ -971,8 +971,8 @@ export abstract class CpsStageBase extends YpBaseElement {
         <div class="flex"></div>
         <div>${title}</div>
         <div class="flex"></div>
-        <md-standard-icon-button
-          ><md-icon>expand_more</md-icon></md-standard-icon-button
+        <md-icon-button
+          ><md-icon>expand_more</md-icon></md-icon-button
         >
       </div>
       <div class="searchResults">

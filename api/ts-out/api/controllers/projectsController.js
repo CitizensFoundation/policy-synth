@@ -28,15 +28,49 @@ export class ProjectsController {
     async intializeRoutes() {
         this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
         this.router.get(this.path + "/:id", this.getProject);
-        this.router.get(this.path + "/:id/:subProblemIndex/:policyIndex/rawEvidence", this.getRawEvidence);
+        this.router.get(this.path + "/:id/:subProblemIndex/middle/solutions", this.getMiddleSolutions);
+        this.router.get(this.path + "/:id/:subProblemIndex/:policyTitle/rawEvidence", this.getRawEvidence);
         await redisClient.connect();
     }
+    getMiddleSolutions = async (req, res) => {
+        console.log("Getting middle solutions");
+        const id = req.params.id;
+        const subProblemIndex = req.params.subProblemIndex;
+        const filteredRedisCacheKey = `st_mem:${id}:id`;
+        let projectData;
+        try {
+            const cachedData = await redisClient.get(filteredRedisCacheKey);
+            if (cachedData) {
+                console.log("Using cached Redis data");
+                projectData = JSON.parse(cachedData);
+            }
+            else {
+                return res.sendStatus(404);
+            }
+        }
+        catch (err) {
+            console.error(err);
+            return res.sendStatus(500);
+        }
+        if (projectData &&
+            projectData.subProblems &&
+            projectData.subProblems[subProblemIndex]) {
+            const subProblem = projectData.subProblems[subProblemIndex];
+            const middlePopulations = subProblem.solutions
+                ? subProblem.solutions.populations.slice(3, -3)
+                : [];
+            return res.send(middlePopulations);
+        }
+        else {
+            return res.sendStatus(404);
+        }
+    };
     getRawEvidence = async (req, res) => {
         const allResults = [];
         console.log(`Getting raw evidence for ${req.params.id} - ${req.params.subProblemIndex} - ${req.params.policyIndex}`);
         for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
             const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
-            const results = await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(parseInt(req.params.id), parseInt(req.params.subProblemIndex), searchType, req.params.policyTitle, 10);
+            const results = await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(parseInt(req.params.id), parseInt(req.params.subProblemIndex), searchType, req.params.policyTitle, 10, 0, 0, true);
             allResults.push(...results.data.Get["EvidenceWebPage"]);
         }
         res.send(allResults);
@@ -102,13 +136,21 @@ export class ProjectsController {
         if (!projectData) {
             return res.sendStatus(404);
         }
-        if (projectData.subProblems) {
-            projectData.subProblems.forEach((subProblem) => {
+        if (projectData && projectData.subProblems) {
+            // Loop through all sub-problems and slice the populations
+            for (const subProblem of projectData.subProblems) {
                 if (subProblem.solutions) {
                     subProblem.solutions.populations =
-                        subProblem.solutions.populations.map((population) => population.filter((solution) => !solution.reaped));
+                        subProblem.solutions.populations.map((population) => {
+                            if (population.length > 6) {
+                                return population.slice(3, -3);
+                            }
+                            else {
+                                return population;
+                            }
+                        });
                 }
-            });
+            }
         }
         const filterSearchResults = (searchResults) => {
             if (searchResults && searchResults.pages) {
@@ -166,6 +208,37 @@ export class ProjectsController {
             }, 60 * 60 * 1000),
         };
         console.log("Caching data to memory");
+        if (projectData && projectData.subProblems) {
+            for (const subProblem of projectData.subProblems) {
+                if (subProblem.solutions && subProblem.solutions.populations) {
+                    const populations = subProblem.solutions.populations;
+                    if (populations.length > 6) {
+                        console.log(`Slicing populations for ${subProblem.title}`);
+                        const firstThree = populations.slice(0, 3);
+                        const lastThree = populations.slice(-3);
+                        const emptyMiddle = Array(populations.length - 6).fill([]);
+                        subProblem.solutions.populations = [
+                            ...firstThree,
+                            ...emptyMiddle,
+                            ...lastThree,
+                        ];
+                    }
+                    else {
+                        console.log("Not enough populations to slice");
+                    }
+                }
+                if (subProblem.policies && subProblem.policies.populations) {
+                    for (const policyPopulation of subProblem.policies.populations) {
+                        for (const policy of policyPopulation) {
+                            // Remove evidenceSearchQueries and evidenceSearchResults
+                            policy.evidenceSearchQueries = null;
+                            policy.evidenceSearchResults = null;
+                            console.log("removed evidenceSearchQueries and evidenceSearchResults");
+                        }
+                    }
+                }
+            }
+        }
         return res.send(response);
     };
 }

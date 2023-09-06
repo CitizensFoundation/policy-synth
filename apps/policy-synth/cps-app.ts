@@ -8,7 +8,7 @@ import '@material/web/labs/navigationdrawer/navigation-drawer.js';
 import '@material/web/list/list-item.js';
 import '@material/web/list/list.js';
 import '@material/web/icon/icon.js';
-import '@material/web/iconbutton/standard-icon-button.js';
+import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/mwc-snackbar/mwc-snackbar.js';
 
@@ -35,7 +35,7 @@ import { CpsServerApi } from './src/CpsServerApi.js';
 import { CpsAppGlobals } from './src/CpsAppGlobals.js';
 import { MdNavigationDrawer } from '@material/web/labs/navigationdrawer/navigation-drawer.js';
 import { Snackbar } from '@material/mwc-snackbar/mwc-snackbar.js';
-import { NavigationBar } from '@material/web/labs/navigationbar/lib/navigation-bar.js';
+import { NavigationBar } from '@material/web/labs/navigationbar/internal/navigation-bar.js';
 import {
   Scheme,
   applyThemeWithContrast,
@@ -53,8 +53,8 @@ import './src/ps-policies.js';
 import { IEngineConstants } from './src/constants.js';
 import { YpFormattingHelpers } from './src/@yrpri/common/YpFormattingHelpers.js';
 import { CpsSolutions } from './src/cps-solutions.js';
-import { TextField } from '@material/web/textfield/lib/text-field.js';
-import { Dialog } from '@material/web/dialog/lib/dialog.js';
+import { TextField } from '@material/web/textfield/internal/text-field.js';
+import { Dialog } from '@material/web/dialog/internal/dialog.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
@@ -782,16 +782,10 @@ export class CpsApp extends YpBaseElement {
   }
 
   async updateActivePolicyIndexes(event: CustomEvent) {
-    console.error(
-      `updateActivePolicyIndexes ${event.detail.activePolicyIndex}`
-    );
     this.activeSubProblemIndex = event.detail.activeSubProblemIndex;
     this.activePopulationIndex = event.detail.activePopulationIndex;
     this.activePolicyIndex = event.detail.activePolicyIndex;
     await this.updatePoliciesRouter();
-    console.error(
-      `updateActiveSolutionIndexes2 ${this.activeSubProblemIndex} ${this.activePopulationIndex} ${this.activePolicyIndex}`
-    );
   }
 
   async updatePoliciesRouter() {
@@ -1073,7 +1067,7 @@ export class CpsApp extends YpBaseElement {
           --md-text-button-label-text-color: #fefefe;
         }
 
-        md-standard-icon-button {
+        md-icon-button {
           --md-icon-button-unselected-icon-color: #f0f0f0;
         }
 
