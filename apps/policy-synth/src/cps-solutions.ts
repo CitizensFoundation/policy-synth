@@ -5,7 +5,7 @@ import { CpsStageBase } from './cps-stage-base.js';
 
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
-import '@material/web/iconbutton/standard-icon-button.js';
+import '@material/web/iconbutton/icon-button.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
@@ -36,6 +36,9 @@ export class CpsSolutions extends CpsStageBase {
 
   @property({ type: Boolean })
   hideExtraSolutionInformation = true;
+
+  @property({ type: Boolean })
+  isLoadingMiddle: boolean = false;
 
   @property({ type: Number }) groupListScrollPositionY: number = null;
 
@@ -129,6 +132,35 @@ export class CpsSolutions extends CpsStageBase {
     }
     this.setSubProblemColor(this.activeSubProblemIndex);
   }
+
+  async loadMiddleData() {
+    console.log(`loadMiddleData`)
+    try {
+      for (let i = 0; i < IEngineConstants.maxSubProblems; i++) {
+        const middleData = await window.serverApi.getMiddleSolutions(this.memory.groupId, i);
+
+        if (middleData && Array.isArray(middleData)) {
+          // Check if your populations are already initialized and have more than 6 elements
+          if (this.memory.subProblems[i].solutions.populations.length > 6) {
+            const firstThree = this.memory.subProblems[i].solutions.populations.slice(0, 3);
+            const lastThree = this.memory.subProblems[i].solutions.populations.slice(-3);
+
+            // If middleData is not of the same length as the middle portion to be replaced, you may need to adjust it
+            const middle = middleData;  // Or manipulate as needed
+
+            this.memory.subProblems[i].solutions.populations = [...firstThree, ...middle, ...lastThree];
+          } else {
+            // If populations are not initialized or have less than 6 elements, you might want to just set the middle directly
+            this.memory.subProblems[i].solutions.populations = middleData;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load middle data:", error);
+      this.isLoadingMiddle = false;
+    }
+  }
+
 
   handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'ArrowRight') {
@@ -864,8 +896,11 @@ export class CpsSolutions extends CpsStageBase {
     }
   }
 
-  toggleDropdownVisibility(): void {
+  async toggleDropdownVisibility() {
     window.appGlobals.activity('Solutions - toggle dropdown');
+    this.isLoadingMiddle = true;
+    await this.loadMiddleData();
+    this.isLoadingMiddle = false;
     this.isDropdownVisible = !this.isDropdownVisible;
     if (this.isDropdownVisible) {
       // add check to ensure activePopulationIndex is valid
@@ -889,7 +924,9 @@ export class CpsSolutions extends CpsStageBase {
   }
 
   renderDropdown(middleItems: IEngineSolution[][], startIndex: number) {
-    if (middleItems.length > 0 && !this.isDropdownVisible) {
+    if (this.isLoadingMiddle) {
+      return html`<md-circular-progress indeterminate></md-circular-progress>`;
+    } else if (middleItems.length > 0 && !this.isDropdownVisible) {
       return html`
         <md-outlined-icon-button @click="${this.toggleDropdownVisibility}">
           <md-icon>expand_more</md-icon>
@@ -961,7 +998,7 @@ export class CpsSolutions extends CpsStageBase {
   ) {
     return html`
       <div class="layout horizontal center-center">
-        <md-standard-icon-button
+        <md-icon-button
           aria-label="Previous"
           .disabled="${solutionIndex === 0}"
           @click="${(): void => {
@@ -972,8 +1009,8 @@ export class CpsSolutions extends CpsStageBase {
           }}"
         >
           <md-icon>navigate_before</md-icon>
-        </md-standard-icon-button>
-        <md-standard-icon-button
+        </md-icon-button>
+        <md-icon-button
           aria-label="Next"
           .disabled="${solutionIndex === solutions.length - 1}"
           @click="${(): void => {
@@ -984,8 +1021,8 @@ export class CpsSolutions extends CpsStageBase {
           }}"
         >
           <md-icon>navigate_next</md-icon>
-        </md-standard-icon-button>
-        <md-standard-icon-button
+        </md-icon-button>
+        <md-icon-button
           aria-label="Close"
           @click="${(): void => {
             this.activeSolutionIndex = null;
@@ -996,7 +1033,7 @@ export class CpsSolutions extends CpsStageBase {
           }}"
         >
           <md-icon>close</md-icon>
-        </md-standard-icon-button>
+        </md-icon-button>
       </div>
     `;
   }

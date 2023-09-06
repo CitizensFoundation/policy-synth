@@ -1,139 +1,109 @@
 import { EvidenceWebPageVectorStore } from "../evidenceWebPage.js";
 async function updateEvidenceWebPageSchema() {
-    const propWhatToInclude = {
-        dataType: ["text[]"],
+    const metaAuthor = {
+        dataType: ["string"],
         moduleConfig: {
             "text2vec-openai": {
                 skip: false,
                 vectorizePropertyName: true,
             },
         },
-        name: "whatPolicyNeedsToImplementInResponseToEvidence",
+        name: "metaAuthor",
     };
-    const propMostImportantEvidence = {
-        dataType: ["text[]"],
+    const metaDate = {
+        dataType: ["string"],
         moduleConfig: {
             "text2vec-openai": {
                 skip: false,
                 vectorizePropertyName: true,
             },
         },
-        name: "mostImportantPolicyEvidenceInTextContext",
+        name: "metaDate",
     };
-    const propSourcesAc = {
-        dataType: ["text[]"],
+    const metaImageUrl = {
+        dataType: ["string"],
         moduleConfig: {
             "text2vec-openai": {
                 skip: false,
                 vectorizePropertyName: true,
             },
         },
-        name: "evidenceAcademicSources",
+        name: "metaImageUrl",
     };
-    const propSourcesOr = {
-        dataType: ["text[]"],
+    const metaLogoUrl = {
+        dataType: ["string"],
         moduleConfig: {
             "text2vec-openai": {
                 skip: false,
                 vectorizePropertyName: true,
             },
         },
-        name: "evidenceOrganizationSources",
+        name: "metaLogoUrl",
     };
-    const propSourcesHU = {
-        dataType: ["text[]"],
+    const metaTitle = {
+        dataType: ["string"],
         moduleConfig: {
             "text2vec-openai": {
                 skip: false,
                 vectorizePropertyName: true,
             },
         },
-        name: "evidenceHumanSources",
+        name: "metaTitle",
     };
-    const propSourcesPros = {
-        dataType: ["text[]"],
+    const metaDescription = {
+        dataType: ["text"],
         moduleConfig: {
             "text2vec-openai": {
                 skip: false,
                 vectorizePropertyName: true,
             },
         },
-        name: "prosForPolicyFoundInTextContext",
+        name: "metaDescription",
     };
-    const propSourcesCons = {
-        dataType: ["text[]"],
+    const metaPublisher = {
+        dataType: ["string"],
         moduleConfig: {
             "text2vec-openai": {
                 skip: false,
                 vectorizePropertyName: true,
             },
         },
-        name: "consForPolicyFoundInTextContext",
-    };
-    const propSourcesRisk = {
-        dataType: ["text[]"],
-        moduleConfig: {
-            "text2vec-openai": {
-                skip: false,
-                vectorizePropertyName: true,
-            },
-        },
-        name: "risksForPolicy",
-    };
-    const hasBeenRefined = {
-        dataType: ["boolean"],
-        moduleConfig: {
-            "text2vec-openai": {
-                skip: false,
-                vectorizePropertyName: true,
-            },
-        },
-        name: "hasBeenRefined",
+        name: "metaPublisher",
     };
     let resultProp = await EvidenceWebPageVectorStore.client.schema
         .propertyCreator()
         .withClassName("EvidenceWebPage")
-        .withProperty(hasBeenRefined)
+        .withProperty(metaAuthor)
         .do();
     resultProp = await EvidenceWebPageVectorStore.client.schema
         .propertyCreator()
         .withClassName("EvidenceWebPage")
-        .withProperty(propWhatToInclude)
+        .withProperty(metaDate)
         .do();
     resultProp = await EvidenceWebPageVectorStore.client.schema
         .propertyCreator()
         .withClassName("EvidenceWebPage")
-        .withProperty(propMostImportantEvidence)
+        .withProperty(metaTitle)
         .do();
     resultProp = await EvidenceWebPageVectorStore.client.schema
         .propertyCreator()
         .withClassName("EvidenceWebPage")
-        .withProperty(propSourcesAc)
+        .withProperty(metaDescription)
         .do();
     resultProp = await EvidenceWebPageVectorStore.client.schema
         .propertyCreator()
         .withClassName("EvidenceWebPage")
-        .withProperty(propSourcesOr)
+        .withProperty(metaPublisher)
         .do();
     resultProp = await EvidenceWebPageVectorStore.client.schema
         .propertyCreator()
         .withClassName("EvidenceWebPage")
-        .withProperty(propSourcesHU)
+        .withProperty(metaImageUrl)
         .do();
     resultProp = await EvidenceWebPageVectorStore.client.schema
         .propertyCreator()
         .withClassName("EvidenceWebPage")
-        .withProperty(propSourcesPros)
-        .do();
-    resultProp = await EvidenceWebPageVectorStore.client.schema
-        .propertyCreator()
-        .withClassName("EvidenceWebPage")
-        .withProperty(propSourcesCons)
-        .do();
-    resultProp = await EvidenceWebPageVectorStore.client.schema
-        .propertyCreator()
-        .withClassName("EvidenceWebPage")
-        .withProperty(propSourcesRisk)
+        .withProperty(metaLogoUrl)
         .do();
     console.log(resultProp);
 }

@@ -8,6 +8,7 @@ import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
 import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
 import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
 import { GetRefinedEvidenceProcessor } from "./web/getRefinedEvidence.js";
+import { GetMetaDataForTopWebEvidenceProcessor } from "./web/getMetaDataForTopWebEvidence.js";
 export class AgentPolicies extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -81,6 +82,10 @@ export class AgentPolicies extends BaseAgent {
             case "web-get-refined-evidence":
                 const refiner = new GetRefinedEvidenceProcessor(this.job, this.memory);
                 await refiner.process();
+                break;
+            case "get-metadata-for-top-evidence":
+                const meta = new GetMetaDataForTopWebEvidenceProcessor(this.job, this.memory);
+                await meta.process();
                 break;
             default:
                 console.log("No stage matched");
