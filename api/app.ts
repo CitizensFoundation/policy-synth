@@ -76,6 +76,12 @@ export class App {
       )
     );
 
+    this.app.use(
+      "/policies*",
+      express.static(
+        path.join(__dirname, "../../apps/policy-synth/dist")
+      )
+    );
 
     this.app.use(
       "/solutions*",
