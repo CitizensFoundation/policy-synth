@@ -377,27 +377,37 @@ export class PsRawEvidence extends YpBaseElement {
       ${this.renderHeader(evidence)}
       <div class="layout horizontal center-center wrap">
         ${this.renderShortList(
+          evidence.url,
           'Policy Recommendations',
           evidence.whatPolicyNeedsToImplementInResponseToEvidence
         )}
         ${this.renderShortList(
+          evidence.url,
           'Evidence Collected (unproven)',
           evidence.mostImportantPolicyEvidenceInTextContext
         )}
-        ${this.renderShortList('Policy Risks', evidence.risksForPolicy)}
         ${this.renderShortList(
+          evidence.url,
+          'Policy Risks',
+          evidence.risksForPolicy
+        )}
+        ${this.renderShortList(
+          evidence.url,
           'Pros for Policy from source',
           evidence.prosForPolicyFoundInTextContext
         )}
         ${this.renderShortList(
+          evidence.url,
           'Cons for Policy from source',
           evidence.consForPolicyFoundInTextContext
         )}
         ${this.renderShortList(
+          evidence.url,
           'Academic Sources',
           evidence.evidenceOrganizationSources
         )}
         ${this.renderShortList(
+          evidence.url,
           'Organization Sources',
           evidence.evidenceAcademicSources
         )}
@@ -410,12 +420,13 @@ export class PsRawEvidence extends YpBaseElement {
     return result.charAt(0).toUpperCase() + result.slice(1);
   }
 
-  renderShortList(title: string, list: string[]) {
+  renderShortList(url: string, title: string, list: string[]) {
     if (!list || list.length === 0) {
       return nothing;
     } else {
       const maxShortListToShowInitially = 3;
-      const isFullListShown = this.showFullList[title] || false;
+      const showKey = `${url}-${title}`;
+      const isFullListShown = this.showFullList[showKey] || false;
       const itemsToShow = isFullListShown
         ? list
         : list.slice(0, maxShortListToShowInitially);
@@ -430,7 +441,7 @@ export class PsRawEvidence extends YpBaseElement {
         </div>
         ${list.length > maxShortListToShowInitially
           ? html`
-              <md-text-button @click=${() => this.toggleShowFullList(title)}>
+              <md-text-button @click=${() => this.toggleShowFullList(showKey)}>
                 ${isFullListShown
                   ? this.t('Less')
                   : `${this.t('More')} (${
@@ -443,10 +454,10 @@ export class PsRawEvidence extends YpBaseElement {
     }
   }
 
-  toggleShowFullList(title: string) {
+  toggleShowFullList(key: string) {
     this.showFullList = {
       ...this.showFullList,
-      [title]: !this.showFullList[title],
+      [key]: !this.showFullList[key],
     };
     this.requestUpdate();
   }
