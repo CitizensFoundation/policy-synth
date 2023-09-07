@@ -269,11 +269,13 @@ export class PsRawEvidence extends YpBaseElement {
 
         .logoImage {
           height: 125px;
+          max-width: 600px;
           margin: 8px;
         }
 
         .shareImage {
           height: 275px;
+          max-width: 800px;
           margin: 8px;
           margin-bottom: 8px;
         }
@@ -379,7 +381,7 @@ export class PsRawEvidence extends YpBaseElement {
           evidence.whatPolicyNeedsToImplementInResponseToEvidence
         )}
         ${this.renderShortList(
-          'Evidence Collected',
+          'Evidence Collected (unproven)',
           evidence.mostImportantPolicyEvidenceInTextContext
         )}
         ${this.renderShortList('Policy Risks', evidence.risksForPolicy)}
