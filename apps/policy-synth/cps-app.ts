@@ -1,5 +1,7 @@
+
 import { html, css, nothing, TemplateResult } from 'lit';
 import { property, customElement, query } from 'lit/decorators.js';
+import 'urlpattern-polyfill';
 
 import '@material/web/labs/navigationbar/navigation-bar.js';
 import '@material/web/labs/navigationtab/navigation-tab.js';
