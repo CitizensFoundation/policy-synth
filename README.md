@@ -27,7 +27,8 @@ For the real-world application of our platform, a series of expert and mass citi
 ## Future Timeline
 - **End of September 2023**: First full iteration of the policy ideas agents
 
-![Policy Synth v 30](https://github.com/CitizensFoundation/policy-synth/assets/43699/19df75d8-19b9-46f1-854b-ed5649846fb3)
+![Policy Synth v 31](https://github.com/CitizensFoundation/policy-synth/assets/43699/447921ba-d9fa-4035-9790-b108b0d1f107)
+
 
 
 
