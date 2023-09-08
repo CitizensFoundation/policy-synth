@@ -41,8 +41,7 @@ export default {
 
     /** Enable using HTML as rollup entrypoint */
     html({
-      minify: true,
-      exclude: ['./index.html'],
+      minify: false,
       //        publicPath: '/'
       //      injectServiceWorker: true,
       //      serviceWorkerPath: 'dist/sw.js',
