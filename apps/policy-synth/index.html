@@ -1,70 +1,96 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="Description"
+      content="A unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas."
+    />
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="Description" content="A unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas.">
+    <meta property="og:title" content="Policy Synth" />
+    <meta
+      property="og:description"
+      content="A unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas."
+    />
+    <meta
+      property="og:image"
+      content="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png"
+    />
 
-  <meta property="og:title" content="Policy Synth">
-  <meta property="og:description" content="A unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas.">
-  <meta property="og:image" content="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png">
+    <!--TODO: Have icons a part of the bundle - maybe rollup plugin?-->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!--TODO: Have icons a part of the bundle - maybe rollup plugin?-->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap"
+      rel="stylesheet"
+    />
 
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap" rel="stylesheet">
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0"
+    />
 
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="256x256"
+      href="https://cps-images.citizens.is/icons/cpsfavtest2.png"
+    />
 
-  <link rel="icon" type="image/png" sizes="256x256" href="https://cps-images.citizens.is/icons/cpsfavtest2.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato&family=Cabin&family=Roboto+Condensed&display=swap"
+      rel="stylesheet"
+    />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lato&family=Cabin&family=Roboto+Condensed&display=swap" rel="stylesheet">
+    <base href="/" />
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-SJQ488C70M"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
 
-  <base href="/">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SJQ488C70M"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+      gtag('config', 'G-SJQ488C70M');
+    </script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Lato', sans-serif;
+        background-color: var(--md-sys-color-surface, #fefefe);
+      }
 
-    gtag('config', 'G-SJQ488C70M');
+      :root {
+        --md-icon-font: 'Material Symbols Rounded';
+      }
+    </style>
 
-  </script>
-  <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Lato', sans-serif;
-      background-color: var(--md-sys-color-surface, #fefefe);
-    }
+    <title>Policy Synth</title>
+  </head>
 
-    :root {
-      --md-icon-font: 'Material Symbols Rounded';
-    }
-
-  </style>
-
-  <title>Policy Synth</title>
-  <script type="module">
-    if (!window.ElementInternals) {
-      import('./node_modules/element-internals-polyfill/dist/index.js');
-    }
+  <body>
+    <cps-app></cps-app>
+    <script type="module">
+      if (!window.ElementInternals) {
+        import('./node_modules/element-internals-polyfill/dist/index.js');
+      }
       // @ts-ignore: Property 'UrlPattern' does not exist
       if (!globalThis.URLPattern) {
-        import("urlpattern-polyfill");
+        import('urlpattern-polyfill');
       }
-  </script>
-</head>
-
-<body>
-  <cps-app></cps-app>
-
-  <script type="module" src="./out-tsc/cps-app.js"></script>
-</body>
-
+    </script>
+    <script type="module" src="./out-tsc/cps-app.js"></script>
+  </body>
 </html>
