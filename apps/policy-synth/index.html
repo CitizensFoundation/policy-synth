@@ -86,10 +86,6 @@
       if (!window.ElementInternals) {
         import('./node_modules/element-internals-polyfill/dist/index.js');
       }
-      // @ts-ignore: Property 'UrlPattern' does not exist
-      if (!globalThis.URLPattern) {
-        import('urlpattern-polyfill');
-      }
     </script>
     <script type="module" src="./out-tsc/cps-app.js"></script>
   </body>
