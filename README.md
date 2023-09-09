@@ -8,6 +8,8 @@ Our project embodies a unique effort to intertwine human insights and artificial
 
 # [Live test results](https://policy-synth.ai/projects/1/)
 
+![Policy Synth v 31](https://github.com/CitizensFoundation/policy-synth/assets/43699/447921ba-d9fa-4035-9790-b108b0d1f107)
+
 ### Figma Design
 - [Figma Prototype Design](https://www.figma.com/file/ekIKXfT3tL8Ab7MoLSnjnN/Collective-Policy-Synth-V10)
 
@@ -27,7 +29,6 @@ For the real-world application of our platform, a series of expert and mass citi
 ## Future Timeline
 - **End of September 2023**: First full iteration of the policy ideas agents
 
-![Policy Synth v 31](https://github.com/CitizensFoundation/policy-synth/assets/43699/447921ba-d9fa-4035-9790-b108b0d1f107)
 
 
 
