@@ -1,5 +1,4 @@
 # Policy Synth
-<img src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="360" height="203">
 
 ## Bringing together the best of collective and artificial intelligence
 
@@ -10,6 +9,8 @@ Our project embodies a unique effort to intertwine human insights and artificial
 </h2>
 
 ![Policy Synth v 31](https://github.com/CitizensFoundation/policy-synth/assets/43699/447921ba-d9fa-4035-9790-b108b0d1f107)
+
+<img align="center" src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="360" height="203">
 
 ### Figma Design
 - [Figma Prototype Design](https://www.figma.com/file/ekIKXfT3tL8Ab7MoLSnjnN/Collective-Policy-Synth-V10)
