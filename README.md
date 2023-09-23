@@ -18,7 +18,7 @@ Utilizing our top-rated citizen engagement solutions, over 30 GPT-4 agent types,
 ## Prototype Design
 The first test run is entirely automated except for the problem statement provided by us. All sub problems, entities and solutions with pros & cons are generated using GPT-4 & GPT-3.5 running highly specilized agents. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.
 
-We're also experimenting with genetic algorithms to foster a co-evolution of solutions between AI and citizens. We use large language models to implement random mutations and crossover, creating a vibrant and diverse pool of potential policy solutions. Fitness ranking is performed by both humans and AI, ensuring a balanced and robust evaluation of the generated options.
+We're also experimenting with genetic algorithms to foster a co-evolution of solutions between AI and citizens. We use large language models to implement random mutations and crossover, creating a vibrant and diverse pool of potential policy solutions. Fitness ranking is performed by both humans and AI, with the human ranking weighting higher.
 
 To further enrich our evolving solution space, we introduce fresh random immigration through solutions acquired via web searches. This process infuses new ideas and perspectives into our evolving policy generation, enhancing its capacity to tackle a wide range of issues.
 
