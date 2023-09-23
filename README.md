@@ -2,7 +2,7 @@
 
 ## Bringing together the best of collective and artificial intelligence
 
-Utilizing our top-rated citizen engagement solutions and over 30 GPT-4 agent types, Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse. This collaborative interaction is anticipated to expedite decision-making processes and also enhance their quality, thereby paving the way for more innovative and effective policy solutions.
+Utilizing our top-rated citizen engagement solutions, over 30 GPT-4 agent types, and advanced genetic algorithms, Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse. This collaborative interaction is anticipated to expedite decision-making processes and also enhance their quality, thereby paving the way for more innovative and effective policy solutions.
 
 <h2 align="center">
   <a href="https://policy-synth.ai/projects/1/"><strong>Live test results</strong></a>
