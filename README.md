@@ -29,7 +29,7 @@ For the real-world application of our platform, a series of expert and mass citi
 - **In Progress**: First iteration of the policy ideas agents
 
 ## Future Timeline
-- **End of September 2023**: First full iteration of the policy ideas agents
+- **End of October 2023**: First full iteration of the policy ideas agents
 
 ## Top-Rated Citizen Engagement Platforms
 Policy Synth utilizes "Your Priorities", a platform we've been refining since 2008. It's recognized as the world's leading citizen engagement tool.
@@ -37,6 +37,9 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Rated #1 on PeoplePowered: [Platform ratings](https://www.peoplepowered.org/platform-ratings)
 - Top ranking in the [2022 Digital Democracy Report](https://www.solonian-institute.com/digitaldemocracyreport)
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
+
+## Architecture overview
+![PolicySynthOverview](https://github.com/CitizensFoundation/policy-synth/assets/43699/97df0164-8edd-422f-953a-2e16a404724f)
 
 
 
