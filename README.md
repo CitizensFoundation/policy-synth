@@ -38,7 +38,8 @@ For the real-world application of our platform, a series of expert and mass citi
 ## Architecture overview
 ![PolicySynthArch](https://github.com/CitizensFoundation/policy-synth/assets/43699/c53193e3-3fb5-4b6a-a82a-308465bf22bd)
 
-
+## Draft Developer Guide
+[Draft Policy Synth Developer Guide](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU)
 
 
 
