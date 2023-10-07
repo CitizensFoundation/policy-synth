@@ -51,26 +51,6 @@ type AboutThisResult = {
   regions: string[];
 };
 
-type SerpOrganicResult = {
-  position: number;
-  title: string;
-  link: string;
-  date: string;
-  eloRating?: number;
-  displayed_link: string;
-  snippet: string;
-  sitelinks: {
-    inline: SiteLink[];
-  };
-  rich_snippet: RichSnippet;
-  about_this_result: AboutThisResult;
-  about_page_link: string;
-  cached_page_link: string;
-  related_pages_link: string;
-};
-
-type SerpOrganicResults = SerpOrganicResult[];
-
 interface IEnginePairWiseVoteResults {
   wonItemIndex: number | undefined;
   lostItemIndex: number | undefined;
