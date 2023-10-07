@@ -36,7 +36,7 @@ For the real-world application of our platform, a series of expert and mass citi
 - **End of October 2023**: First full iteration of the policy ideas agents
 
 ## Architecture overview
-![Policy Synth v 37](https://github.com/CitizensFoundation/policy-synth/assets/43699/7163e319-16c7-4818-885d-f56668f40efd)
+![Policy Synth v 39](https://github.com/CitizensFoundation/policy-synth/assets/43699/e806e058-b41d-4e4a-b274-2437a1a36ac9)
 
 ## Draft Developer Guide
 [Draft Policy Synth Developer Guide](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU)
