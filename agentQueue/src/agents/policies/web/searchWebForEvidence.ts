@@ -1,6 +1,4 @@
 import { BaseProcessor } from "../../baseProcessor.js";
-import type { BaseResponse, GoogleParameters } from "serpapi";
-import { getJson as serpApiGetJson } from "serpapi";
 import { IEngineConstants } from "../../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";

@@ -9,7 +9,48 @@ import fetch from "node-fetch";
 //@ts-ignore
 global.fetch = fetch;
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-const externalSolutions = [
+const externalSolutionsElectionViolence = [
+    {
+        description: "Invest in Early Warning Response Systems (EWRS) - tools which use data and research findings to predict instances of violence – with an emphasis on rapidly delivering intelligence about threats to elections groups working at the local level.",
+    },
+    {
+        description: "Invest in de-escalation training for election officials to equip them with strategies to prepare for and effectively respond to potentially violent incidents.",
+    },
+    {
+        description: "Explore how changes to law - such as better protections for the personal identifying information of election officials and judges, or introducing stiffer penalties for threats targeting public servants – could prevent acts of violence.",
+    },
+    {
+        description: "Invest in building stronger relationships among elected officials and law enforcement to allow law enforcement to better anticipate, prepare for, and respond to violent threats and actions. ",
+    },
+    {
+        description: "Invest in longitudinal data collection about violent threats, attitudes, political beliefs that justify violence, and other data related to violence to better understand the risk of violence and make better predictions. Collecting data about violent acts alone is insufficient.",
+    },
+    {
+        description: "Fund a multidisciplinary research collaborative to develop and test effective messaging strategies, borrowing from successful campaigns in other domains, and designed to combat the spread of anti-democratic ideas.",
+    },
+    {
+        description: "Fund efforts to proactively respond to and counter online hate speech that fuels violence.",
+    },
+    {
+        description: "Support more transparent, resilient, and bipartisan election administration practices that build public confidence in electoral procedures and outcomes.",
+    },
+    {
+        description: "Invest in civic engagement projects that get citizens more involved in elections, helping to educate and build trust in the electoral process.",
+    },
+    {
+        description: "Explore how to engage with social media companies in developing and implementing solutions to stop the spread of misinformation on their platforms which fuels election violence.",
+    },
+    {
+        description: "dvocate for Congress to take a leading role in combating violent threats and acts against election officials.",
+    },
+    {
+        description: "enter local communities – in particular, communities of color and other groups who have historically been targeted by political violence – in grantmaking decisions around election violence",
+    },
+    {
+        description: "Provide sustained funding that allows groups to work on election violence issues continuously across election cycles. ",
+    }
+];
+const externalSolutionsMisuseOfLegalSystem = [
     {
         description: "Encourage organizations and bodies with disciplinary authority to take swift action against groups, attorneys, and law firms who have advanced malicious litigation.",
     },
@@ -78,10 +119,12 @@ export class AnalyseExternalSolutions extends BaseProcessor {
         return result;
     }
     async analyze() {
-        const subProblemIndex = 1;
-        const startPopulationIndex = 14;
+        const externalSolutions = externalSolutionsElectionViolence;
+        const minimumPercent = 0; // 70
+        const subProblemIndex = 5;
+        const startPopulationIndex = 15;
         const analysisResults = [];
-        const numberOfPopulations = 15; //this.numberOfPopulations(subProblemIndex);
+        const numberOfPopulations = 16; //this.numberOfPopulations(subProblemIndex);
         for (let populationIndex = startPopulationIndex; populationIndex < numberOfPopulations; populationIndex++) {
             const externalSolutionLimit = externalSolutions.length;
             const externalSolutionPromises = Array.from({ length: externalSolutionLimit }, async (_, externalSolutionIndex) => {
@@ -99,7 +142,7 @@ export class AnalyseExternalSolutions extends BaseProcessor {
                     const solutionResults = await this.compareSolutionToExternal(solution.description, externalSolutions[externalSolutionIndex].description);
                     const percent = solutionResults.solutionCoversPercentOfKeyRequirements;
                     this.logger.debug(`Percent match: ${percent}`);
-                    if (percent >= 70) {
+                    if (percent >= minimumPercent) {
                         matches.topSolutionMatches.push({
                             index: solutionIndex,
                             title: solution.title,

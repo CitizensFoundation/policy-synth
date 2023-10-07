@@ -65,7 +65,6 @@ type SerpOrganicResult = {
   rich_snippet: RichSnippet;
   about_this_result: AboutThisResult;
   about_page_link: string;
-  about_page_serpapi_link: string;
   cached_page_link: string;
   related_pages_link: string;
 };
