@@ -1,7 +1,7 @@
-import { BaseWorker } from "../workers/baseWorker.js";
 import ioredis from "ioredis";
+import { Base } from "../base.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class BaseAgent extends BaseWorker {
+export class BaseAgent extends Base {
     memory;
     job;
     getRedisKey(groupId) {

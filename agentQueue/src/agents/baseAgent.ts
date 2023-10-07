@@ -1,10 +1,10 @@
 import { Job } from "bullmq";
-import { BaseWorker } from "../workers/baseWorker.js";
 import ioredis from "ioredis";
+import { Base } from "../base.js";
 
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
-export abstract class BaseAgent extends BaseWorker {
+export abstract class BaseAgent extends Base {
   memory!: IEngineMemoryData;
   job!: Job;
 
