@@ -9,7 +9,7 @@ Policy Synth aims to help governments and citizens make better decisions togethe
 </h2>
 
 ## Policy Synth Overview Diagram
-![Policy Synth v 40](https://github.com/CitizensFoundation/policy-synth/assets/43699/75b5c4d0-49c1-494f-940d-1fb2ed580fa1)
+![Policy Synth v 32 (1)](https://github.com/CitizensFoundation/policy-synth/assets/43699/57c54058-c8d0-4728-ac75-79fe67e6ec38)
 
 ## Top-Rated Citizen Engagement Platforms
 Policy Synth utilizes "Your Priorities", a platform we've been refining since 2008. It's recognized as the world's leading citizen engagement tool.
@@ -19,7 +19,7 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
 ## Architecture overview
-![Policy Synth v 39](https://github.com/CitizensFoundation/policy-synth/assets/43699/e806e058-b41d-4e4a-b274-2437a1a36ac9)
+![Policy Synth v 40](https://github.com/CitizensFoundation/policy-synth/assets/43699/c329c826-9138-4a17-81c2-04854abea25c)
 
 ## Draft Developer Guide
 [Draft Policy Synth Developer Guide](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU)
