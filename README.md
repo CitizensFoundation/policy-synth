@@ -19,7 +19,7 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
 ## Architecture overview
-![Policy Synth v 41](https://github.com/CitizensFoundation/policy-synth/assets/43699/b848d09b-8ca6-4edd-8af5-723f0ba8ae2c)
+![Policy Synth v 42](https://github.com/CitizensFoundation/policy-synth/assets/43699/20fbfb4e-0c90-4496-94b8-4448d40cae6d)
 
 ## Draft Developer Guide
 [Draft Policy Synth Developer Guide](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU)
