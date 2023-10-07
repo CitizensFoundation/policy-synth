@@ -19,6 +19,9 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Top ranking in the [2022 Digital Democracy Report](https://www.solonian-institute.com/digitaldemocracyreport)
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
+## Architecture overview
+![Policy Synth v 39](https://github.com/CitizensFoundation/policy-synth/assets/43699/e806e058-b41d-4e4a-b274-2437a1a36ac9)
+
 ## First test run
 The first test run is entirely automated, except for the problem statement provided by us. All sub-problems, entities, and solutions—complete with pros and cons—are generated using GPT-4 and GPT-3.5. These models run highly specialized agents that are, at the moment, very basic and therefore reliable, and should not be confused with ongoing, and exciting, LLM autonomous agent experiments. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.
 
@@ -33,15 +36,10 @@ For the real-world application of our platform, a series of expert and mass citi
 - **In Progress**: First iteration of the policy ideas agents
 
 ## Future Timeline
-- **End of October 2023**: First full iteration of the policy ideas agents
-
-## Architecture overview
-![Policy Synth v 39](https://github.com/CitizensFoundation/policy-synth/assets/43699/e806e058-b41d-4e4a-b274-2437a1a36ac9)
+- **End of November 2023**: First full iteration of the policy ideas agents
 
 ## Draft Developer Guide
 [Draft Policy Synth Developer Guide](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU)
-
-
 
 
 
