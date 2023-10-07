@@ -1,20 +1,28 @@
 # Policy Synth
-<img src="https://github.com/CitizensFoundation/collective-policy-synth/assets/43699/40c74912-7465-4505-8497-4d0819d167d6" width="360" height="203">
 
 ## Bringing together the best of collective and artificial intelligence
 
-## Information
-Our project embodies a unique effort to intertwine human insights and artificial intelligence to grapple with complex policy dilemmas. We are in the process of building a state-of-the-art platform where policymakers, citizens, and AI can engage in a collective discourse. This collaborative interaction is expected to not only expedite decision-making processes but also augment their quality, paving the way for more inventive and efficacious policy resolutions.
+Policy Synth aims to help governments and citizens make better decisions together by seamlessly integrating collective and artificial intelligence. Utilizing our top-rated citizen engagement solutions, over 30 GPT-4 agent types, and advanced genetic algorithms, Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse. This collaborative interaction is anticipated to expedite decision-making processes and also enhance their quality, thereby paving the way for more innovative and effective policy solutions.
 
-# [Live test results](https://policy-synth.ai/projects/1/)
+<h2 align="center">
+  <a href="https://policy-synth.ai/projects/1/"><strong>Policy Synth Live: Democracy in Distress</strong></a><br>
+</h2>
 
-### Figma Design
-- [Figma Prototype Design](https://www.figma.com/file/ekIKXfT3tL8Ab7MoLSnjnN/Collective-Policy-Synth-V10)
+## Policy Synth Overview Diagram
 
-## Prototype Design
-The first test run is entirely automated except for the problem statement provided by us. All sub problems, entities and solutions with pros & cons are generated using GPT-4 & GPT-3.5 running highly specilized agents. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.
+![Policy Synth v 31](https://github.com/CitizensFoundation/policy-synth/assets/43699/447921ba-d9fa-4035-9790-b108b0d1f107)
 
-We're also experimenting with genetic algorithms to foster a co-evolution of solutions between AI and citizens. We use large language models to implement random mutations and crossover, creating a vibrant and diverse pool of potential policy solutions. Fitness ranking is performed by both humans and AI, ensuring a balanced and robust evaluation of the generated options.
+## Top-Rated Citizen Engagement Platforms
+Policy Synth utilizes "Your Priorities", a platform we've been refining since 2008. It's recognized as the world's leading citizen engagement tool.
+
+- Rated #1 on PeoplePowered: [Platform ratings](https://www.peoplepowered.org/platform-ratings)
+- Top ranking in the [2022 Digital Democracy Report](https://www.solonian-institute.com/digitaldemocracyreport)
+- Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
+
+## First test run
+The first test run is entirely automated, except for the problem statement provided by us. All sub-problems, entities, and solutions—complete with pros and cons—are generated using GPT-4 and GPT-3.5. These models run highly specialized agents that are, at the moment, very basic and therefore reliable, and should not be confused with ongoing, and exciting, LLM autonomous agent experiments. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.
+
+We're also experimenting with genetic algorithms to foster a co-evolution of solutions between AI and citizens. We use large language models to implement random mutations and crossover, creating a vibrant and diverse pool of potential policy solutions. Fitness ranking is performed by both humans and AI, with the human ranking weighting higher.
 
 To further enrich our evolving solution space, we introduce fresh random immigration through solutions acquired via web searches. This process infuses new ideas and perspectives into our evolving policy generation, enhancing its capacity to tackle a wide range of issues.
 
@@ -25,10 +33,13 @@ For the real-world application of our platform, a series of expert and mass citi
 - **In Progress**: First iteration of the policy ideas agents
 
 ## Future Timeline
-- **End of September 2023**: First full iteration of the policy ideas agents
+- **End of October 2023**: First full iteration of the policy ideas agents
 
-![Policy Synth v 31](https://github.com/CitizensFoundation/policy-synth/assets/43699/447921ba-d9fa-4035-9790-b108b0d1f107)
+## Architecture overview
+![PolicySynthArch](https://github.com/CitizensFoundation/policy-synth/assets/43699/c53193e3-3fb5-4b6a-a82a-308465bf22bd)
 
+## Draft Developer Guide
+[Draft Policy Synth Developer Guide](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU)
 
 
 

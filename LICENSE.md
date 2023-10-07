@@ -4,7 +4,7 @@ Policy Synth
 
 Everything in this repo is under AGPL-3.0 license unless otherwise specified.
 
-Copyright (c) 2023 Robert Bjarnason & Citizens Foundation Iceland. All rights reserved.
+Copyright (c) 2023 Robert Bjarnason, Citizens Foundation Iceland (Íbúar ses) & Citizens Foundation America. All rights reserved.
 
 = Developed in 2023 by
 - Robert Bjarnason, robert@citizens.is
