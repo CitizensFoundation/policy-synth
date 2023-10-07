@@ -1,9 +1,8 @@
 import { BaseProcessor } from "../../baseProcessor.js";
-import type { BaseResponse, GoogleParameters } from "serpapi";
-import { getJson as serpApiGetJson } from "serpapi";
 import { IEngineConstants } from "../../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "./bingSearchApi.js";
+import { GoogleSearchApi } from "./googleSearchApi.js";
 
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -13,89 +12,16 @@ export class SearchWebProcessor extends BaseProcessor {
   seenUrls!: Map<string, Set<string>>;
 
   async callSearchApi(query: string): Promise<IEngineSearchResultItem[]> {
-    if (process.env.AZURE_BING_SEARCH_KEY) {
+    if (process.env.GOOGLE_SEARCH_API_KEY &&
+        process.env.GOOGLE_SEARCH_API_CX_ID) {
+        const googleSearchApi = new GoogleSearchApi();
+        return await googleSearchApi.search(query);
+    } else if (process.env.AZURE_BING_SEARCH_KEY) {
       const bingSearchApi = new BingSearchApi();
       return await bingSearchApi.search(query);
-    } else if (process.env.SERP_API_KEY) {
-      const searchResults = await this.serpApiSearch(query);
-      const outResults: IEngineSearchResultItem[] = [];
-      for (let i = 0; i < searchResults.organic_results.length; i++) {
-        outResults.push({
-          originalPosition: searchResults.organic_results[i].position,
-          title: searchResults.organic_results[i].title,
-          url: searchResults.organic_results[i].link,
-          description: searchResults.organic_results[i].snippet,
-          date: searchResults.organic_results[i].date,
-        });
-      }
-      return outResults;
     } else {
       this.logger.error("Missing search API key");
       throw new Error("Missing search API key");
-    }
-  }
-
-  async serpApiSearch(q: string): Promise<BaseResponse<GoogleParameters>> {
-    const redisKey = `s_web_v3:${q}`;
-
-    const searchData: string | null = await redis.get(redisKey);
-
-    if (
-      searchData &&
-      searchData != null &&
-      searchData.length > 30 &&
-      searchData.indexOf("throttle") === -1 &&
-      searchData.indexOf("Throttle") === -1
-    ) {
-      this.logger.debug(`Using cached search data for ${q} ${searchData}`);
-      return JSON.parse(searchData);
-    } else {
-      let retry = true;
-      const maxRetries = IEngineConstants.mainSearchRetryCount;
-      let retryCount = 0;
-
-      const params = {
-        q,
-        hl: "en",
-        gl: "us",
-        api_key: process.env.SERP_API_KEY,
-      } satisfies GoogleParameters;
-
-      let response;
-
-      this.logger.debug(`Search Params: ${JSON.stringify(params, null, 2)}`);
-
-      while (retry && retryCount < maxRetries) {
-        try {
-          response = await serpApiGetJson("google", params);
-          retry = false;
-          this.logger.info("Got search data from SerpApi");
-        } catch (e) {
-          this.logger.error(`Failed to get search data for ${q}`);
-          this.logger.error(e);
-          if (retryCount < maxRetries) {
-            retry = false;
-            throw e;
-          } else {
-            await new Promise((resolve) =>
-              setTimeout(resolve, 5000 + retryCount * 5000)
-            );
-            retryCount++;
-          }
-        }
-      }
-
-      if (response) {
-        await redis.set(redisKey, JSON.stringify(response));
-        this.logger.debug(JSON.stringify(response, null, 2));
-
-        this.logger.debug(`Returning search data`);
-
-        return response;
-      } else {
-        this.logger.error(`Failed to get search data for ${q}`);
-        throw new Error(`Failed to get search data for ${q}`);
-      }
     }
   }
 
