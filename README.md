@@ -5,7 +5,7 @@
 Policy Synth aims to help governments and citizens make better decisions together by seamlessly integrating collective and artificial intelligence. Utilizing our top-rated citizen engagement solutions, over 30 GPT-4 agent types, and advanced genetic algorithms, Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse. This collaborative interaction is anticipated to expedite decision-making processes and also enhance their quality, thereby paving the way for more innovative and effective policy solutions.
 
 <h2 align="center">
-  <a href="https://policy-synth.ai/projects/1/"><strong>Policy Synth Live Results: Democracy in Distress</strong></a><br>
+  <a href="https://policy-synth.ai/projects/1/"><strong>Live Test Results: Democracy in Distress</strong></a><br>
 </h2>
 
 ## Policy Synth Overview Diagram
@@ -19,7 +19,7 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
 ## Architecture Overview
-![Policy Synth v 42](https://github.com/CitizensFoundation/policy-synth/assets/43699/20fbfb4e-0c90-4496-94b8-4448d40cae6d)
+![Policy Synth v 42a](https://github.com/CitizensFoundation/policy-synth/assets/43699/b7e1f10a-7438-4827-a576-b48ec5a672e6)
 
 ## Draft Developer Guide
 [Draft Policy Synth Developer Guide](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU)
