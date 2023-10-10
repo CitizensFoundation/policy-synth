@@ -280,7 +280,12 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                             ? "File downloaded successfully."
                             : "File download failed.");
                         await this.uploadImageToS3(process.env.S3_BUCKET_NAME, imageFilePath, s3ImagePath);
-                        newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
+                        if (process.env.DISABLE_CLOUDFLARE_IMAGE_PROXY) {
+                            newImageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3ImagePath}`;
+                        }
+                        else {
+                            newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
+                        }
                         solution.imageUrl = newImageUrl;
                         this.logger.debug(`New Image URL: ${newImageUrl}`);
                     }
