@@ -50,7 +50,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
     const messages: BaseChatMessage[] = [
       new SystemChatMessage(
         `
-            As an AI expert, your role involves the of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
+            As an AI expert, your role involves the analysis of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
             1. Output a list of 21 root causes of the stated problem as sub problems.
