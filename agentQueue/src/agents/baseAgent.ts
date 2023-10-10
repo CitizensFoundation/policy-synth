@@ -35,6 +35,13 @@ export abstract class BaseAgent extends Base {
   }
 
   defaultStages = {
+    "create-root-causes-search-queries": {},
+    "web-search-root-causes": {},
+    "web-get-root-causes-pages": {},
+    "rank-web-root-causes": {},
+    "rate-web-root-causes": {},
+    "web-get-refined-root-causes": {},
+    "get-metadata-for-top-root-causes": {},
     "create-sub-problems": {},
     "rank-sub-problems": {},
     "create-entities": {},

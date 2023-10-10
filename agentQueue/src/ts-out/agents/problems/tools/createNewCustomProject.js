@@ -4,13 +4,13 @@ const projectId = process.argv[2];
 const force = process.argv[3];
 if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
+    const problemStatement = ``;
     const currentProject = await redis.get(`st_mem:${projectId}:id`);
     if (currentProject && !force) {
         console.error("Project already exists, use force as second parameter to overwrite");
         process.exit(1);
     }
     else if (!currentProject || (currentProject && force)) {
-        const problemStatement = ``;
         const project = {
             redisKey: redisKey,
             groupId: parseInt(projectId),
@@ -19,6 +19,14 @@ if (projectId) {
             stage: "create-sub-problems",
             currentStage: "create-sub-problems",
             stages: {
+                "create-root-causes-search-queries": {},
+                "web-search-root-causes": {},
+                "web-get-root-causes-pages": {},
+                "rank-web-root-causes": {},
+                "rate-web-root-causes": {},
+                "web-get-refined-root-causes": {},
+                "get-metadata-for-top-root-causes": {},
+                "create-problem-statement-image": {},
                 "create-sub-problems": {},
                 "rank-sub-problems": {},
                 "policies-seed": {},
@@ -33,7 +41,6 @@ if (projectId) {
                 "rate-solutions": {},
                 "rank-search-results": {},
                 "web-get-pages": {},
-                "create-problem-statement-image": {},
                 "create-seed-solutions": {},
                 "create-pros-cons": {},
                 "create-solution-images": {},

@@ -11,7 +11,6 @@ import { CreateSolutionImagesProcessor } from "./create/createImages.js";
 import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
-import { TopicMapSolutionsProcessor } from "./group/old/topicMapSolutions.js";
 import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
 
 export class AgentSolutions extends BaseAgent {
@@ -112,13 +111,6 @@ export class AgentSolutions extends BaseAgent {
         );
         await rateSolutionsProcessor.process();
         break;
-      case "topic-map-solutions":
-        const topicMapSolutionsProcessor = new TopicMapSolutionsProcessor(
-          this.job,
-          this.memory
-        );
-        await topicMapSolutionsProcessor.process();
-          break;
       case "group-solutions":
         const groupSolutionsProcessor = new GroupSolutionsProcessor(
           this.job,

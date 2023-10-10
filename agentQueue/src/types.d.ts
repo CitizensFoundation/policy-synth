@@ -171,7 +171,18 @@ interface IEEngineSearchResultData {
   pages: IEEngineSearchResultPage[];
 }
 
+interface PSRootCause {
+// TBD
+}
+
 type IEngineStageTypes =
+  | "create-root-causes-search-queries" // createEvidenceSearchQueries.ts -> src/agents/problems/create/createRootCausesSearchQueries.ts
+  | "web-search-root-causes" // searchWebForEvidence.ts
+  | "web-get-root-causes-pages" // getEvidenceWebPages.ts
+  | "rank-web-root-causes" // rankWebEvidence.ts
+  | "rate-web-root-causes" // rateWebEvidence.ts
+  | "web-get-refined-root-causes" // getRefinedEvidence.ts
+  | "get-metadata-for-top-root-causes" // getMetadataForTopWebEvidence.ts
   | "create-sub-problems"
   | "create-entities"
   | "create-search-queries"
@@ -200,13 +211,16 @@ type IEngineStageTypes =
   | "analyse-external-solutions"
   | "policies-create-images"
   | "policies-seed"
+
   | "create-evidence-search-queries"
   | "web-search-evidence"
   | "web-get-evidence-pages"
   | "rank-web-evidence"
   | "rate-web-evidence"
   | "web-get-refined-evidence"
-  | "get-metadata-for-top-evidence";
+  | "get-metadata-for-top-evidence"
+
+  ;
 
 interface IEngineUserFeedback {
   feedbackType: string;
