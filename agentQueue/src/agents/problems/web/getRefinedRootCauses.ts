@@ -1,0 +1,336 @@
+import { Page } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import { IEngineConstants } from "../../../constants.js";
+
+import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import ioredis from "ioredis";
+import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
+import { RootCauseExamplePrompts } from "./rootCauseExamplePrompts.js";
+import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
+import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
+import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
+
+const redis = new ioredis.default(
+  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+);
+
+//@ts-ignore
+puppeteer.use(StealthPlugin());
+
+export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcessor {
+  renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string) {
+    return [
+      new SystemChatMessage(
+        `You are an expert in analyzing root causes for a particular problem statement:
+
+        Important Instructions:
+        1. Examine the "<text context>" and analyze the evidence on how it relates to the specified problem statement.
+        2. Always rank JSON string[] output in importance to problem statement.
+        3. Output scores in the ranges of 0-100.
+        4. Keep all texts clear and simple.
+        5. Each root cause description should fully describe the root cause in one paragraph.
+        6. rootCauseRelevanceToProblemStatement should outline how the evidence found in the text is relevant to the problem statement.
+        7. Instead of referring to "The text" refer to "The website".
+        8. Always output your results in the following JSON format:
+         [
+            {
+              rootCauseDescription: string;
+              rootCauseTitle: string;
+              whyRootCauseIsImportant: string;
+              rootCauseRelevanceToProblemStatement: string;
+              rootCauseRelevanceToTypeScore?: number;
+              rootCauseRelevanceScore?: number;
+              rootCauseQualityScore?: number;
+              rootCauseConfidenceScore?: number;
+            }
+          ]
+        `
+      ),
+      new HumanChatMessage(
+        `
+        ${this.renderProblemStatement()}
+
+        Root Cause Type: ${type}
+
+        <text context>
+        ${text}
+        </text context>
+
+        Let's think step by step.
+
+        JSON Output:
+        `
+      ),
+    ];
+  }
+
+  async getRootCauseTextAnalysis(type: PSRootCauseWebPageTypes, text: string) {
+    try {
+      const { totalTokenCount, promptTokenCount } =
+        await this.getRootCauseTokenCount(text, type);
+
+      this.logger.debug(
+        `Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(
+          promptTokenCount
+        )}`
+      );
+
+      let textAnalysis: PSRefinedRootCause[];
+
+      if (
+        IEngineConstants.getRefinedRootCausesModel.tokenLimit < totalTokenCount
+      ) {
+        const maxTokenLengthForChunk =
+          IEngineConstants.getRefinedRootCausesModel.tokenLimit -
+          promptTokenCount.totalCount -
+          64;
+
+        this.logger.debug(
+          `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
+        );
+
+        const splitText = await this.splitText(
+          text,
+          maxTokenLengthForChunk,
+          undefined
+        );
+
+        this.logger.debug(`Got ${splitText.length} splitTexts`);
+
+        for (let t = 0; t < splitText.length; t++) {
+          const currentText = splitText[t];
+
+          let nextAnalysis = await this.getRefinedRootCauseTextAIAnalysis(
+            type,
+            currentText
+          );
+
+          if (nextAnalysis) {
+            for (let rootCause of nextAnalysis) {
+              this.memory.subProblems.push({
+                title: rootCause.rootCauseTitle,
+                description: rootCause.rootCauseDescription,
+                whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                fromSearchType: type,
+                solutions: {
+                  populations: [],
+                },
+              });
+            }
+          } else {
+            this.logger.error(
+              `Error getting AI analysis for text ${currentText}`
+            );
+          }
+        }
+      } else {
+        textAnalysis = await this.getRefinedRootCauseTextAIAnalysis(type, text);
+        for (let rootCause of textAnalysis) {
+          this.memory.subProblems.push({
+            title: rootCause.rootCauseTitle,
+            description: rootCause.rootCauseDescription,
+            whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+            fromSearchType: type,
+            solutions: {
+              populations: [],
+            },
+          });
+        }
+        this.logger.debug(
+          `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+        );
+      }
+
+      return textAnalysis!;
+    } catch (error) {
+      this.logger.error(`Error in getTextAnalysis: ${error}`);
+      throw error;
+    }
+  }
+
+  async getRefinedRootCauseTextAIAnalysis(
+    type: PSRootCauseWebPageTypes,
+    text: string
+  ) {
+    this.logger.info("Get Refined Root Cause AI Analysis");
+    const messages = this.renderRootCauseScanningPrompt(type, text);
+
+    const analysis = (await this.callLLM(
+      "web-get-refined-root-causes",
+      IEngineConstants.getRefinedEvidenceModel,
+      messages,
+      true,
+      true
+    )) as PSRefinedRootCause[];
+
+    return analysis;
+  }
+
+  mergeRefinedAnalysisData(
+    data1: PSRefinedRootCause,
+    data2: PSRefinedRootCause
+  ): PSRefinedRootCause {
+    return {
+      rootCauseTitle: data1.rootCauseTitle,
+      rootCauseDescription: data1.rootCauseDescription,
+      whyRootCauseIsImportant: data1.whyRootCauseIsImportant,
+      rootCauseRelevanceToProblemStatement:
+        data1.rootCauseRelevanceToProblemStatement,
+      rootCauseRelevanceToProblemStatementScore:
+        data1.rootCauseRelevanceToProblemStatementScore,
+      rootCauseRelevanceToTypeScore: data1.rootCauseRelevanceToTypeScore,
+      rootCauseQualityScore: data1.rootCauseQualityScore,
+      rootCauseConfidenceScore: data1.rootCauseConfidenceScore,
+      hasBeenRefined: true,
+    };
+  }
+
+  async processPageText(
+    text: string,
+    subProblemIndex: number | undefined,
+    url: string,
+    type:
+      | IEngineWebPageTypes
+      | PSEvidenceWebPageTypes
+      | PSRootCauseWebPageTypes,
+    entityIndex: number | undefined,
+    policy: PSPolicy | undefined = undefined
+  ) {
+    this.logger.debug(
+      `Processing page text ${text.slice(
+        0,
+        150
+      )} for ${url} for ${type} search results`
+    );
+
+    try {
+      const refinedAnalysis = (await this.getRootCauseTextAnalysis(
+        type as PSRootCauseWebPageTypes,
+        text
+      )) as unknown as PSRefinedRootCause[];
+
+      // TODO: fix any type
+      return refinedAnalysis as any;
+    } catch (e: any) {
+      this.logger.error(`Error in processPageText`);
+      this.logger.error(e.stack || e);
+      throw e;
+    }
+  }
+
+  async getAndProcessRootCausePage(
+    url: string,
+    browserPage: Page,
+    type: PSRootCauseWebPageTypes
+  ) {
+    if (url.toLowerCase().endsWith(".pdf")) {
+      await this.getAndProcessPdf(-1, url, type, undefined, undefined);
+    } else {
+      await this.getAndProcessHtml(
+        -1,
+        url,
+        browserPage,
+        type,
+        undefined,
+        undefined
+      );
+    }
+
+    return true;
+  }
+
+  async refineWebRootCauses(page: Page) {
+    const limit = 10;
+
+    try {
+      for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
+        const searchType = IEngineConstants.simplifyEvidenceType(rootCauseType);
+        const results =
+          await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
+            this.memory.groupId,
+            searchType,
+            limit
+          );
+
+        this.logger.debug(
+          `Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`
+        );
+
+        if (results.data.Get["RootCauseWebPage"].length === 0) {
+          this.logger.error(`No results for ${searchType}`);
+          continue;
+        }
+
+        let pageCounter = 0;
+        for (const retrievedObject of results.data.Get["RootCauseWebPage"]) {
+          const webPage = retrievedObject as PSRootCauseRawWebPageData;
+          const id = webPage._additional!.id!;
+
+          this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
+          this.logger.debug(
+            `All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`
+          );
+
+          // TODO: need to store vectorStoreId some other way (see getMetaDataForTopWebRootCauses.processPageText)
+          // policy.vectorStoreId = id;
+
+          await this.getAndProcessRootCausePage(
+            webPage.url,
+            page,
+            searchType as PSRootCauseWebPageTypes
+          );
+
+          this.logger.info(`(+${pageCounter++}) - ${id} - Updated`);
+        }
+      }
+    } catch (error: any) {
+      this.logger.error(error.stack || error);
+      throw error;
+    }
+  }
+
+  async getAllPages() {
+    const browser = await puppeteer.launch({ headless: "new" });
+    this.logger.debug("Launching browser");
+
+    const browserPage = await browser.newPage();
+    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+
+    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+
+    try {
+      await this.refineWebRootCauses(browserPage);
+      this.logger.debug("Finished refining root causes");
+    } catch (error: any) {
+      this.logger.error(error.stack || error);
+      throw error;
+    }
+
+    await this.saveMemory();
+
+    await browser.close();
+
+    this.logger.info("Browser closed");
+  }
+
+  async process() {
+    this.logger.info("Refined Root Causes Web Pages Processor");
+    //super.process();
+
+    this.chat = new ChatOpenAI({
+      temperature: IEngineConstants.getRefinedRootCausesModel.temperature,
+      maxTokens: IEngineConstants.getRefinedRootCausesModel.maxOutputTokens,
+      modelName: IEngineConstants.getRefinedRootCausesModel.name,
+      verbose: IEngineConstants.getRefinedRootCausesModel.verbose,
+    });
+
+    await this.getAllPages();
+
+    this.logger.info(`Refined ${this.totalPagesSave} pages`);
+    this.logger.info("Refine Root Causes Web Pages Processor Complete");
+  }
+}

@@ -29,7 +29,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true
+    verbose: true,
   };
 
   static policiesSeedModel: IEngineBaseAIModelConstants = {
@@ -41,7 +41,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
   };
 
   static analyseExternalSolutionsModel: IEngineBaseAIModelConstants = {
@@ -53,7 +53,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
   };
 
   static createEntitiesModel: IEngineBaseAIModelConstants = {
@@ -65,13 +65,12 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true
+    verbose: true,
   };
 
   static topicMapSolutionsModel = {
-    inTokenCostsUSD: adaInTokenPrice
-  }
-
+    inTokenCostsUSD: adaInTokenPrice,
+  };
 
   static createSolutionImagesModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
@@ -82,7 +81,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
   };
 
   static createSearchQueriesModel: IEngineBaseAIModelConstants = {
@@ -97,10 +96,21 @@ export class IEngineConstants {
     verbose: true,
   };
 
-
   static createEvidenceSearchQueriesModel: IEngineBaseAIModelConstants = {
     name: "gpt-4",
     temperature: 0.5,
+    maxOutputTokens: 1024,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+  };
+
+  static createRootCauseSearchQueriesModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: 8192,
     inTokenCostUSD: gpt4InTokenPrice,
@@ -203,7 +213,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
   };
 
   static rateWebEvidenceModel: IEngineBaseAIModelConstants = {
@@ -215,7 +225,19 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
+  };
+
+  static rateWebRootCausesModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
   };
 
   static rankWebEvidenceModel: IEngineBaseAIModelConstants = {
@@ -227,7 +249,19 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
+  };
+
+  static rankWebRootCausesModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
   };
 
   static getRefinedEvidenceModel: IEngineBaseAIModelConstants = {
@@ -239,7 +273,19 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
+  };
+
+  static getRefinedRootCausesModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4",
+    temperature: 0.0,
+    maxOutputTokens: 1750,
+    tokenLimit: 8192,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
   };
 
   static reapSolutionsModel: IEngineBaseAIModelConstants = {
@@ -251,7 +297,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
   };
 
   static groupSolutionsModel: IEngineBaseAIModelConstants = {
@@ -263,7 +309,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
   };
 
   static rateSolutionsModel: IEngineBaseAIModelConstants = {
@@ -275,7 +321,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
   };
 
   static createSolutionsModel: IEngineBaseAIModelConstants = {
@@ -361,6 +407,8 @@ export class IEngineConstants {
 
   static maxTopEvidenceQueriesToSearchPerType = 4;
 
+  static maxTopRootCauseQueriesToSearchPerType = 10;
+
   static mainSearchRetryCount = 40;
 
   static maxDalleRetryCount = 7;
@@ -370,6 +418,8 @@ export class IEngineConstants {
   static maxWebPagesToGetByTopSearchPosition = 10;
 
   static maxEvidenceWebPagesToGetByTopSearchPosition = 10;
+
+  static maxRootCauseWebPagesToGetByTopSearchPosition = 10;
 
   static maxBingSearchResults = 10;
 
@@ -399,12 +449,12 @@ export class IEngineConstants {
         useRandomEntitySearchQueries: 0.45,
       },
       webSolutions: {
-        top: 0.20,
+        top: 0.2,
         topThree: 0.45,
         topSeven: 0.25,
-        all: 0.10
+        all: 0.1,
       },
-      notUsingTopSearchQueries: 0.50,
+      notUsingTopSearchQueries: 0.5,
       vectorSearchAcrossAllProblems: 0.01,
     },
   };
@@ -422,7 +472,7 @@ export class IEngineConstants {
       createEntities: true,
       createSolutions: true,
       createProsCons: true,
-      policiesSeed: true
+      policiesSeed: true,
     },
   };
 
@@ -433,8 +483,8 @@ export class IEngineConstants {
 
     // Population split
     keepElitePercent: 0.1,
-    randomImmigrationPercent: 0.40,
-    mutationOffspringPercent: 0.40,
+    randomImmigrationPercent: 0.4,
+    mutationOffspringPercent: 0.4,
     crossoverPercent: 0.1,
 
     // General mutation rate split
@@ -451,8 +501,7 @@ export class IEngineConstants {
   static minimumNumberOfPairwiseVotesForPopulation = 8;
 
   static maxNumberOfPairwiseRankingPrompts =
-    IEngineConstants.evolution.populationSize *
-    IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
+    IEngineConstants.evolution.populationSize * IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
 
   static maxTopSolutionsToCreatePolicies = 3;
 
@@ -460,35 +509,49 @@ export class IEngineConstants {
 
   static maxEvidenceToUseForRatingEvidence = 5;
 
+  static maxRootCausesToUseForRatingRootCauses = 5;
+
   static policyEvidenceFieldTypes: string[] = [
-    'allPossiblePositiveEvidenceIdentifiedInTextContext',
-    'allPossibleNegativeEvidenceIdentifiedInTextContext',
-    'allPossibleNeutralEvidenceIdentifiedInTextContext',
-    'allPossibleEconomicEvidenceIdentifiedInTextContext',
-    'allPossibleScientificEvidenceIdentifiedInTextContext',
-    'allPossibleCulturalEvidenceIdentifiedInTextContext',
-    'allPossibleEnvironmentalEvidenceIdentifiedInTextContext',
-    'allPossibleLegalEvidenceIdentifiedInTextContext',
-    'allPossibleTechnologicalEvidenceIdentifiedInTextContext',
-    'allPossibleGeopoliticalEvidenceIdentifiedInTextContext',
-    'allPossibleCaseStudiesIdentifiedInTextContext',
-    'allPossibleStakeholderOpinionsIdentifiedInTextContext',
-    'allPossibleExpertOpinionsIdentifiedInTextContext',
-    'allPossiblePublicOpinionsIdentifiedInTextContext',
-    'allPossibleHistoricalContextIdentifiedInTextContext',
-    'allPossibleEthicalConsiderationsIdentifiedInTextContext',
-    'allPossibleLongTermImpactIdentifiedInTextContext',
-    'allPossibleShortTermImpactIdentifiedInTextContext',
-    'allPossibleLocalPerspectiveIdentifiedInTextContext',
-    'allPossibleGlobalPerspectiveIdentifiedInTextContext',
-    'allPossibleCostAnalysisIdentifiedInTextContext',
-    'allPossibleImplementationFeasibilityIdentifiedInTextContext'
+    "allPossiblePositiveEvidenceIdentifiedInTextContext",
+    "allPossibleNegativeEvidenceIdentifiedInTextContext",
+    "allPossibleNeutralEvidenceIdentifiedInTextContext",
+    "allPossibleEconomicEvidenceIdentifiedInTextContext",
+    "allPossibleScientificEvidenceIdentifiedInTextContext",
+    "allPossibleCulturalEvidenceIdentifiedInTextContext",
+    "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
+    "allPossibleLegalEvidenceIdentifiedInTextContext",
+    "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
+    "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
+    "allPossibleCaseStudiesIdentifiedInTextContext",
+    "allPossibleStakeholderOpinionsIdentifiedInTextContext",
+    "allPossibleExpertOpinionsIdentifiedInTextContext",
+    "allPossiblePublicOpinionsIdentifiedInTextContext",
+    "allPossibleHistoricalContextIdentifiedInTextContext",
+    "allPossibleEthicalConsiderationsIdentifiedInTextContext",
+    "allPossibleLongTermImpactIdentifiedInTextContext",
+    "allPossibleShortTermImpactIdentifiedInTextContext",
+    "allPossibleLocalPerspectiveIdentifiedInTextContext",
+    "allPossibleGlobalPerspectiveIdentifiedInTextContext",
+    "allPossibleCostAnalysisIdentifiedInTextContext",
+    "allPossibleImplementationFeasibilityIdentifiedInTextContext",
+  ];
+
+  static rootCauseFieldTypes: string[] = [
+    "allPossibleHistoricalRootCausesIdentifiedInTextContext",
+    "allPossibleEconomicRootCausesIdentifiedInTextContext",
+    "allPossibleScientificRootCausesIdentifiedInTextContext",
+    "allPossibleCulturalRootCausesIdentifiedInTextContext",
+    "allPossibleSocialRootCausesIdentifiedInTextContext",
+    "allPossibleEnvironmentalRootCausesIdentifiedInTextContext",
+    "allPossibleLegalRootCausesIdentifiedInTextContext",
+    "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
+    "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
+    "allPossibleEthicalRootCausesIdentifiedInTextContext",
+    "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
   ];
 
   static simplifyEvidenceType(evidenceType: string) {
-    let type = evidenceType
-      .replace(/allPossible/g, "")
-      .replace(/IdentifiedInTextContext/g, "");
+    let type = evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
 
     type = type.charAt(0).toLowerCase() + type.slice(1);
     return type;

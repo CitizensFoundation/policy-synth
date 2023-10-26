@@ -236,16 +236,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
   }
 
   mergeAnalysisData(
-    data1: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData,
-    data2: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData
-  ): IEngineWebPageAnalysisData | PSEvidenceRawWebPageData {
+    data1: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData,
+    data2: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData,
+  ): IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData {
     data1 = data1 as IEngineWebPageAnalysisData;
     data2 = data2 as IEngineWebPageAnalysisData;
     return {
-      mostRelevantParagraphs: [
-        ...(data1.mostRelevantParagraphs || []),
-        ...(data2.mostRelevantParagraphs || []),
-      ],
+      mostRelevantParagraphs: [...(data1.mostRelevantParagraphs || []), ...(data2.mostRelevantParagraphs || [])],
       solutionsIdentifiedInTextContext: [
         ...(data1.solutionsIdentifiedInTextContext || []),
         ...(data2.solutionsIdentifiedInTextContext || []),
@@ -436,10 +433,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
-  ) {
+  ): Promise<void | PSRefinedRootCause[]> {
     this.logger.debug(
       `Processing page text ${text.slice(
         0,
@@ -501,7 +498,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
   async getAndProcessPdf(
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -596,7 +593,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -686,8 +683,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
-    entityIndex: number | undefined
+    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,    entityIndex: number | undefined
   ) {
     if (onlyCheckWhatNeedsToBeScanned) {
       const hasPage = await this.webPageVectorStore.webPageExist(
