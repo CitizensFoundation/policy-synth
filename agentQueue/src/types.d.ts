@@ -67,6 +67,8 @@ interface IEngineProblemStatement {
   description: string;
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
+  rootCauseSearchQueries?: PSRootCauseSearchQueries;
+  rootCauseSearchResults?: PSRootCauseSearchResults;
   haveScannedWeb?: boolean;
   imagePrompt?: string;
   imageUrl?: string;
@@ -79,9 +81,10 @@ interface IEngineSubProblem {
   imageUrl?: string;
   imagePrompt?: string;
   whyIsSubProblemImportant: string;
-  entities: IEngineAffectedEntity[];
-  searchQueries: IEngineSearchQueries;
-  searchResults: IEngineSearchResults;
+  fromSearchType?: PSRootCauseWebPageTypes;
+  entities?: IEngineAffectedEntity[];
+  searchQueries?: IEngineSearchQueries;
+  searchResults?: IEngineSearchResults;
   customSearchUrls?: string[];
   haveScannedWeb?: boolean;
   eloRating?: number;
@@ -123,8 +126,7 @@ interface IEngineSimilarityGroup {
   index: number;
   isFirst?: boolean;
   totalCount?: number;
-};
-
+}
 
 interface IEngineSolution {
   id: string;
@@ -150,7 +152,7 @@ interface IEngineSolution {
     mutationRate?: IEngineMutationRates;
     seedUrls?: string[];
     gen?: number;
-  }
+  };
 }
 
 interface IEngineProCon {
@@ -171,18 +173,14 @@ interface IEEngineSearchResultData {
   pages: IEEngineSearchResultPage[];
 }
 
-interface PSRootCause {
-// TBD
-}
-
 type IEngineStageTypes =
-  | "create-root-causes-search-queries" // createEvidenceSearchQueries.ts -> src/agents/problems/create/createRootCausesSearchQueries.ts
-  | "web-search-root-causes" // searchWebForEvidence.ts
-  | "web-get-root-causes-pages" // getEvidenceWebPages.ts
-  | "rank-web-root-causes" // rankWebEvidence.ts
-  | "rate-web-root-causes" // rateWebEvidence.ts
-  | "web-get-refined-root-causes" // getRefinedEvidence.ts
-  | "get-metadata-for-top-root-causes" // getMetadataForTopWebEvidence.ts
+  | "create-root-causes-search-queries" // createRootCausesSearchQueries.ts
+  | "web-search-root-causes" // searchWebForRootCauses.ts
+  | "web-get-root-causes-pages" // getRootCausesWebPages.ts
+  | "rank-web-root-causes" // rankWebRootCauses.ts
+  | "rate-web-root-causes" // rateWebRootCauses.ts
+  | "web-get-refined-root-causes" // getRefinedRootCauses.ts
+  | "get-metadata-for-top-root-causes" // getMetadataForTopWebRootCauses.ts
   | "create-sub-problems"
   | "create-entities"
   | "create-search-queries"
@@ -211,16 +209,13 @@ type IEngineStageTypes =
   | "analyse-external-solutions"
   | "policies-create-images"
   | "policies-seed"
-
   | "create-evidence-search-queries"
   | "web-search-evidence"
   | "web-get-evidence-pages"
   | "rank-web-evidence"
   | "rate-web-evidence"
   | "web-get-refined-evidence"
-  | "get-metadata-for-top-evidence"
-
-  ;
+  | "get-metadata-for-top-evidence";
 
 interface IEngineUserFeedback {
   feedbackType: string;
@@ -301,7 +296,16 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
   currentStage: IEngineStageTypes;
   stages: Record<IEngineStageTypes, IEngineInnovationStagesData>;
   problemStatement: IEngineProblemStatement;
+  // rootCauseSearchQueries?: PSRootCauseSearchQueries;
+  // rootCauseSearchResults?: PSRootCauseSearchResults;
+  // rootCauseSearchQueries: Record<
+  //   PSRootCauseWebPageTypes,
+  //   IEngineSearchQueries[]
+  // >;
+  // rootCauseSearchResults: Record<PSRootCauseWebPageTypes, SearchResultItem>;
+  //rootCauseAnalysis?: Record<PSRootCauseWebPageTypes, PSRootCause[]>;
   customInstructions: {
+    createRootCause?: string;
     createSubProblems?: string;
     rankSubProblems?: string;
     createSolutions?: string;
@@ -366,9 +370,11 @@ interface IEngineSolutionForGroupCheck extends IEngineSolutionForReapCheck {
 
 interface IEngineWebPageGraphQlSingleResult {
   class?: string | undefined;
-  vectorWeights?: {
-      [key: string]: unknown;
-  } | undefined;
+  vectorWeights?:
+    | {
+        [key: string]: unknown;
+      }
+    | undefined;
   properties?: object | undefined;
   id?: string | undefined;
   creationTimeUnix?: number | undefined;
@@ -376,7 +382,7 @@ interface IEngineWebPageGraphQlSingleResult {
   vector?: number[] | undefined;
   additional?: {
     id?: string | undefined;
-  }
+  };
 }
 
 interface IEngineRateLimits {
