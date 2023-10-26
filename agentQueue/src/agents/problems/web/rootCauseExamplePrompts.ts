@@ -162,7 +162,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "Low levels of adult literacy could be costing the U.S. as much as $2.2 trillion a year",
       "rootCauseRelevanceToProblemStatement": "Relevant to the problem statement as it highlights the economic implications of low literacy levels.",
       "allPossibleEconomicRootCausesIdentifiedInContext": [
         "Income levels are strongly related to literacy skills.",
@@ -221,7 +220,6 @@ export class RootCauseExamplePrompts {
     
     JSON Output:
     {
-        "summary": "The website discusses cognitive factors affecting reading comprehension, including background knowledge, vocabulary, fluency, active reading, and critical thinking.",
         "rootCauseRelevanceToProblemStatement": "The website provides relevant information about factors that affect reading comprehension, which is crucial in addressing the literacy gap.",
         "allPossibleScientificRootCausesIdentifiedInTextContext": [
             "Ineffective assessment and feedback mechanisms",
@@ -264,7 +262,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "The website discusses the interaction of linguistic, cultural, and social factors on the literacy development and academic achievement of Puerto Rican elementary school students in the context of the United States, particularly in New York City.",
       "rootCauseRelevanceToProblemStatement": "TThe website is relevant to the problem statement as it addresses the literacy gap and its potential root causes, specifically focusing on cultural factors.",
       "allPossibleCulturalRootCausesIdentifiedInTextContext": [
         "Degree of bilingualism",
@@ -322,7 +319,6 @@ export class RootCauseExamplePrompts {
 
   JSON Output:
   {
-    "summary": "The text discusses the strong correlation between socioeconomic status (SES) and literacy levels in children. It highlights how SES can influence literacy and how literacy, in turn, can influence SES.",
     "rootCauseRelevanceToProblemStatement": "The text is highly relevant to the problem statement as it directly addresses the root causes of the literacy gap, which include differences in resources and opportunities available to students.",
     "allPossibleSocialRootCausesIdentifiedInContext": [
       "Socioeconomic status (SES) influences literacy levels", 
@@ -386,7 +382,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "Environmental inequality and disparities in school readiness: The role of neurotoxic lead",
       "rootCauseRelevanceToProblemStatement": "The text discusses the role of environmental factors, particularly neurotoxic lead exposure, in contributing to disparities in school readiness, which is directly related to the literacy gap.",
       "allPossibleEnvironmentalRootCausesIdentifiedInContext": [
         "Exposure to neurotoxic lead",
@@ -436,7 +431,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "The website mentions historical anti-literacy laws in the United States that affected slaves and people of color.",
       "rootCauseRelevanceToProblemStatement": "These anti-literacy laws historically hindered the access to education for people of color, contributing to the literacy gap.",
       "allPossibleLegalRootCausesIdentifiedInContext": [
         "Anti-literacy laws in slave states",
@@ -516,7 +510,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "The use of digital technology, particularly screens and hypertexts, may have negative effects on reading and comprehension.",
       "rootCauseRelevanceToProblemStatement": "This is relevant to the literacy gap as it discusses the potential impact of digital technology on reading, which could contribute to lower reading proficiency.",
       "allPossibleTechnologicalRootCausesIdentifiedInContext": [
         "Influence of digital screens on reading",
@@ -567,7 +560,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "The website highlights the issue of geopolitical illiteracy and its impact on national security and global understanding.",
       "rootCauseRelevanceToProblemStatement": "The website is relevant to the problem statement as it discusses the importance of geopolitical literacy and its potential impact on the literacy gap.",
       "allPossibleGeopoliticalRootCausesIdentifiedInContext": [
         "Lack of access to comprehensive and balanced geopolitical education",
@@ -610,7 +602,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "The root causes for the literacy gap are related to the underutilization of reading science by educators and the failure of the education establishment to address the reading gap effectively.",
       "rootCauseRelevanceToProblemStatement": "The text directly addresses the root causes of the literacy gap, which is one of the main problems mentioned in the problem statement.",
       "allPossibleEthicalRootCausesIdentifiedInContext": [
         "Underutilization of reading science by educators", 
@@ -646,7 +637,6 @@ export class RootCauseExamplePrompts {
 
     JSON Output:
     {
-      "summary": "The website discusses a case study of an outperforming urban high school that has successfully narrowed the achievement gap for underrepresented youth in the United States.",
       "rootCauseRelevanceToProblemStatement": "The website is directly related to the problem statement, as it explores the practices and factors contributing to the narrowing of the achievement gap, which is a root cause of the literacy gap.",
       "allPossibleRootCausesCaseStudiesIdentifiedInContext": [
         "Resource allocation",

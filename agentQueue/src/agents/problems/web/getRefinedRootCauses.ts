@@ -27,26 +27,25 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         `You are an expert in analyzing root causes for a particular problem statement:
 
         Important Instructions:
-        1. Examine the "<text context>" and analyze the evidence on how it relates to the specified problem statement.
-        2. Always rank JSON string[] output in importance to problem statement.
-        3. Output scores in the ranges of 0-100.
-        4. Keep all texts clear and simple.
-        5. Each root cause description should fully describe the root cause in one paragraph.
-        6. rootCauseRelevanceToProblemStatement should outline how the evidence found in the text is relevant to the problem statement.
-        7. Instead of referring to "The text" refer to "The website".
-        8. Always output your results in the following JSON format:
+        1. Examine the "<text context>" and analyze it for root causes that relate to the specified problem statement and root cause type.
+        2. Always output your results in the following JSON format:
          [
             {
               rootCauseDescription: string;
               rootCauseTitle: string;
               whyRootCauseIsImportant: string;
               rootCauseRelevanceToProblemStatement: string;
-              rootCauseRelevanceToTypeScore?: number;
-              rootCauseRelevanceScore?: number;
-              rootCauseQualityScore?: number;
-              rootCauseConfidenceScore?: number;
+              rootCauseRelevanceToTypeScore: number;
+              rootCauseRelevanceScore: number;
+              rootCauseQualityScore: number;
+              rootCauseConfidenceScore: number;
             }
           ]
+        3. rootCauseDescription should describe each root cause in one clear sentence maximum 25 words, never more, and don't include any other information or solutions.
+        4. Never use acronyms in rootCauseDescription even if they are used in the text context
+        5. Never use the words "is a root cause" in the rootCauseDescription
+        6. The rootCauseRelevanceToProblemStatement should outline how the evidence found in the text is relevant to the problem statement.
+        7. Output scores in the ranges of 0-100.
         `
       ),
       new HumanChatMessage(
