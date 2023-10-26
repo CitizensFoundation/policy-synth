@@ -174,13 +174,13 @@ interface IEEngineSearchResultData {
 }
 
 type IEngineStageTypes =
-  | "create-root-causes-search-queries" // createRootCausesSearchQueries.ts
-  | "web-search-root-causes" // searchWebForRootCauses.ts
-  | "web-get-root-causes-pages" // getRootCausesWebPages.ts
-  | "rank-web-root-causes" // rankWebRootCauses.ts
-  | "rate-web-root-causes" // rateWebRootCauses.ts
-  | "web-get-refined-root-causes" // getRefinedRootCauses.ts
-  | "get-metadata-for-top-root-causes" // getMetadataForTopWebRootCauses.ts
+  | "create-root-causes-search-queries"
+  | "web-search-root-causes"
+  | "web-get-root-causes-pages"
+  | "rank-web-root-causes"
+  | "rate-web-root-causes"
+  | "web-get-refined-root-causes"
+  | "get-metadata-for-top-root-causes"
   | "create-sub-problems"
   | "create-entities"
   | "create-search-queries"
@@ -209,13 +209,16 @@ type IEngineStageTypes =
   | "analyse-external-solutions"
   | "policies-create-images"
   | "policies-seed"
+
   | "create-evidence-search-queries"
   | "web-search-evidence"
   | "web-get-evidence-pages"
   | "rank-web-evidence"
   | "rate-web-evidence"
   | "web-get-refined-evidence"
-  | "get-metadata-for-top-evidence";
+  | "get-metadata-for-top-evidence"
+
+  ;
 
 interface IEngineUserFeedback {
   feedbackType: string;
@@ -296,14 +299,6 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
   currentStage: IEngineStageTypes;
   stages: Record<IEngineStageTypes, IEngineInnovationStagesData>;
   problemStatement: IEngineProblemStatement;
-  // rootCauseSearchQueries?: PSRootCauseSearchQueries;
-  // rootCauseSearchResults?: PSRootCauseSearchResults;
-  // rootCauseSearchQueries: Record<
-  //   PSRootCauseWebPageTypes,
-  //   IEngineSearchQueries[]
-  // >;
-  // rootCauseSearchResults: Record<PSRootCauseWebPageTypes, SearchResultItem>;
-  //rootCauseAnalysis?: Record<PSRootCauseWebPageTypes, PSRootCause[]>;
   customInstructions: {
     createRootCause?: string;
     createSubProblems?: string;
@@ -370,11 +365,9 @@ interface IEngineSolutionForGroupCheck extends IEngineSolutionForReapCheck {
 
 interface IEngineWebPageGraphQlSingleResult {
   class?: string | undefined;
-  vectorWeights?:
-    | {
-        [key: string]: unknown;
-      }
-    | undefined;
+  vectorWeights?: {
+      [key: string]: unknown;
+  } | undefined;
   properties?: object | undefined;
   id?: string | undefined;
   creationTimeUnix?: number | undefined;
