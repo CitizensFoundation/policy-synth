@@ -118,6 +118,21 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
                 solutions: {
                   populations: [],
                 },
+                entities: [],
+                searchQueries: {
+                  general: [],
+                  scientific: [],
+                  news: [],
+                  openData: [],
+                },
+                searchResults: {
+                  pages: {
+                    general: [],
+                    scientific: [],
+                    news: [],
+                    openData: [],
+                  },
+                },
               });
             }
           } else {
@@ -136,6 +151,21 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
             fromSearchType: type,
             solutions: {
               populations: [],
+            },
+            entities: [],
+            searchQueries: {
+              general: [],
+              scientific: [],
+              news: [],
+              openData: [],
+            },
+            searchResults: {
+              pages: {
+                general: [],
+                scientific: [],
+                news: [],
+                openData: [],
+              },
             },
           });
         }
