@@ -67,6 +67,8 @@ interface IEngineProblemStatement {
   description: string;
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
+  rootCauseSearchQueries?: PSRootCauseSearchQueries;
+  rootCauseSearchResults?: PSRootCauseSearchResults;
   haveScannedWeb?: boolean;
   imagePrompt?: string;
   imageUrl?: string;
@@ -79,6 +81,7 @@ interface IEngineSubProblem {
   imageUrl?: string;
   imagePrompt?: string;
   whyIsSubProblemImportant: string;
+  fromSearchType?: PSRootCauseWebPageTypes;
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
@@ -123,8 +126,7 @@ interface IEngineSimilarityGroup {
   index: number;
   isFirst?: boolean;
   totalCount?: number;
-};
-
+}
 
 interface IEngineSolution {
   id: string;
@@ -150,7 +152,7 @@ interface IEngineSolution {
     mutationRate?: IEngineMutationRates;
     seedUrls?: string[];
     gen?: number;
-  }
+  };
 }
 
 interface IEngineProCon {
@@ -171,18 +173,14 @@ interface IEEngineSearchResultData {
   pages: IEEngineSearchResultPage[];
 }
 
-interface PSRootCause {
-// TBD
-}
-
 type IEngineStageTypes =
-  | "create-root-causes-search-queries" // createEvidenceSearchQueries.ts -> src/agents/problems/create/createRootCausesSearchQueries.ts
-  | "web-search-root-causes" // searchWebForEvidence.ts
-  | "web-get-root-causes-pages" // getEvidenceWebPages.ts
-  | "rank-web-root-causes" // rankWebEvidence.ts
-  | "rate-web-root-causes" // rateWebEvidence.ts
-  | "web-get-refined-root-causes" // getRefinedEvidence.ts
-  | "get-metadata-for-top-root-causes" // getMetadataForTopWebEvidence.ts
+  | "create-root-causes-search-queries"
+  | "web-search-root-causes"
+  | "web-get-root-causes-pages"
+  | "rank-web-root-causes"
+  | "rate-web-root-causes"
+  | "web-get-refined-root-causes"
+  | "get-metadata-for-top-root-causes"
   | "create-sub-problems"
   | "create-entities"
   | "create-search-queries"
@@ -302,6 +300,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
   stages: Record<IEngineStageTypes, IEngineInnovationStagesData>;
   problemStatement: IEngineProblemStatement;
   customInstructions: {
+    createRootCause?: string;
     createSubProblems?: string;
     rankSubProblems?: string;
     createSolutions?: string;
@@ -376,7 +375,7 @@ interface IEngineWebPageGraphQlSingleResult {
   vector?: number[] | undefined;
   additional?: {
     id?: string | undefined;
-  }
+  };
 }
 
 interface IEngineRateLimits {

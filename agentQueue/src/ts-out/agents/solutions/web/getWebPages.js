@@ -189,10 +189,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         data1 = data1;
         data2 = data2;
         return {
-            mostRelevantParagraphs: [
-                ...(data1.mostRelevantParagraphs || []),
-                ...(data2.mostRelevantParagraphs || []),
-            ],
+            mostRelevantParagraphs: [...(data1.mostRelevantParagraphs || []), ...(data2.mostRelevantParagraphs || [])],
             solutionsIdentifiedInTextContext: [
                 ...(data1.solutionsIdentifiedInTextContext || []),
                 ...(data2.solutionsIdentifiedInTextContext || []),
