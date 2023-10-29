@@ -16,12 +16,12 @@ export class RateWebRootCausesProcessor extends BaseProcessor {
   ) {
     return [
       new SystemChatMessage(`
-        You are an expert in rating root causes for a problem statement on multiple attributes.
+        You are an expert in rating websites with root causes for a problem statement, on multiple attributes.
 
         Instructions:
-        1. Rate how well the root cause does with a score from 0-100, on the score attributes provided in the JSON format below.
+        1. Rate the website on how well on the importance of the root causes with a score from 0-100, on the score attributes provided in the JSON format below.
 
-        Always output your ratings in the following JSON format:
+        Always output one set of raitings for the whole website and all the root causes given and return your ratings in the following JSON format:
         {
           rootCauseRelevanceToProblemStatementScore,
           rootCauseRelevanceToTypeScore,
@@ -36,10 +36,10 @@ export class RateWebRootCausesProcessor extends BaseProcessor {
         Root Cause type:
         ${this.simplifyRootCauseType(rootCauseType)}
 
-        Root Cause Source URL:
+        Website Source URL:
         ${rawWebData.url}
 
-        Root Causes to Rate:
+        Root Causes found on the website:
         ${JSON.stringify(rootCausesToRank.slice(0, IEngineConstants.maxRootCausesToUseForRatingRootCauses), null, 2)}
 
         Your ratings in JSON format:
@@ -52,7 +52,7 @@ export class RateWebRootCausesProcessor extends BaseProcessor {
       for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
         let offset = 0;
         const limit = 100;
-        const searchType = IEngineConstants.simplifyEvidenceType(rootCauseType);
+        const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
         while (true) {
           const results = await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(
             this.memory.groupId,
@@ -72,13 +72,14 @@ export class RateWebRootCausesProcessor extends BaseProcessor {
             const fieldKey = rootCauseType as keyof PSRootCauseRawWebPageData;
             if (webPage[fieldKey] && Array.isArray(webPage[fieldKey]) && (webPage[fieldKey] as string[]).length > 0) {
               const rootCausesToRank = webPage[fieldKey] as string[];
+              this.logger.debug(`${id} - Root causes to rate (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
               let ratedRootCauses = await this.callLLM(
                 "rate-web-root-causes",
                 IEngineConstants.rateWebRootCausesModel,
                 await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey),
               );
               await this.rootCauseWebPageVectorStore.updateScores(id, ratedRootCauses, true);
-              this.logger.debug(`${id} - Evident ratings (${rootCauseType}):\n${JSON.stringify(ratedRootCauses, null, 2)}`);
+              this.logger.debug(`${id} - Root Causes ratings (${rootCauseType}):\n${JSON.stringify(ratedRootCauses, null, 2)}`);
             }
             this.logger.info(`(+${offset + pageCounter++}) - ${id} - Updated`);
           }

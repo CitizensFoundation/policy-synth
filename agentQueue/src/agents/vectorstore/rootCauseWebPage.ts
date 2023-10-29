@@ -7,7 +7,7 @@ import fs from "fs/promises";
 
 export class RootCauseWebPageVectorStore extends Base {
   static fieldsToExtract =
-    "searchType groupId relevanceToProblemStatement \
+    "searchType groupId rootCauseRelevanceToProblemStatement \
     allPossibleHistoricalRootCausesIdentifiedInTextContext\
     allPossibleEconomicRootCausesIdentifiedInTextContext\
     allPossibleScientificRootCausesIdentifiedInTextContext\
@@ -18,7 +18,15 @@ export class RootCauseWebPageVectorStore extends Base {
     allPossibleTechnologicalRootCausesIdentifiedInTextContext\
     allPossibleGeopoliticalRootCausesIdentifiedInTextContext\
     allPossibleEthicalRootCausesIdentifiedInTextContext\
-    allPossibleRootCausesCaseStudiesIdentifiedInTextContext";
+    allPossibleRootCausesCaseStudiesIdentifiedInTextContext\
+    rootCauseRelevanceToProblemStatementScore\
+    rootCauseRelevanceToTypeScore\
+    rootCauseQualityScore\
+    rootCauseConfidenceScore\
+    totalScore\
+    url\
+    _additional { id, distance }"
+    ;
   //@ts-ignore
   static client: WeaviateClient = weaviate.client({
     scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
@@ -187,10 +195,11 @@ export class RootCauseWebPageVectorStore extends Base {
         .withId(id)
         .withClassName("RootCauseWebPage")
         .withProperties({
-          qualityScore: scores.rootCauseQualityScore,
-          relevanceScore: scores.rootCauseRelevanceToProblemStatementScore,
-          confidenceScore: scores.rootCauseConfidenceScore,
-          relevanceToTypeScore: scores.rootCauseRelevanceToRootCauseTypeScore,
+          rootCauseQualityScore: scores.rootCauseQualityScore,
+          rootCauseRelevanceToProblemStatementScore: scores.rootCauseRelevanceToProblemStatementScore,
+          rootCauseConfidenceScore: scores.rootCauseConfidenceScore,
+          rootCauseRelevanceToRootCauseTypeScore: scores.rootCauseRelevanceToRootCauseTypeScore,
+          totalScore: scores.rootCauseConfidenceScore + scores.rootCauseQualityScore + scores.rootCauseRelevanceToProblemStatementScore,
         })
         .do()
         .then((res) => {
@@ -325,6 +334,7 @@ export class RootCauseWebPageVectorStore extends Base {
     offset = 0,
     rootCauseCountLimit: number | undefined = 0,
   ): Promise<PSRootCauseWebPageGraphQlResults> {
+    this.logger.info(`getWebPagesForProcessing -- Group_Id: ${groupId}, searchType: ${searchType}.`)
     let where: any[] | undefined = undefined;
     where = [
       {
@@ -398,7 +408,7 @@ export class RootCauseWebPageVectorStore extends Base {
           operands: where,
         })
         .withFields(
-          "searchType relevanceToProblemStatement url \
+          "searchType rootCauseRelevanceToProblemStatement url \
           _additional { distance }",
         )
         .do();
@@ -448,7 +458,7 @@ export class RootCauseWebPageVectorStore extends Base {
           operands: where,
         })
         .withFields(
-          "searchType relevanceToProblemStatement url \
+          "searchType rootCauseRelevanceToProblemStatement url \
           _additional { distance }",
         )
         .do();

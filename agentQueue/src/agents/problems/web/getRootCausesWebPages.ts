@@ -17,7 +17,7 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 
-const onlyCheckWhatNeedsToBeScanned = false;
+const onlyCheckWhatNeedsToBeScanned = true;
 class RootCauseTypeLookup {
   private static rootCauseTypeMapping: Record<PSRootCauseWebPageTypes, keyof PSRootCauseRawWebPageData> = {
     historicalRootCause: "allPossibleHistoricalRootCausesIdentifiedInTextContext",
@@ -269,14 +269,26 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
   }
 
   async getAndProcessRootCausePage(url: string, browserPage: Page, type: PSRootCauseWebPageTypes) {
+    if (url == "https://www.oecd.org/pisa/PISA%202018%20Insights%20and%20Interpretations%20FINAL%20PDF.pdf") {
+      this.logger.info("Skipping the current url:" + url);
+      return true;
+    }
+    let hasPage = undefined;
     if (onlyCheckWhatNeedsToBeScanned) {
-      const hasPage = await this.rootCauseWebPageVectorStore.webPageExist(this.memory.groupId, url, type);
-      if (hasPage) {
-        this.logger.warn(`Already have scanned ${type} / ${url}`);
-      } else {
-        this.logger.warn(`Need to scan ${type} / ${url}`);
+      try { 
+        this.logger.info('Checking if a page exists ' + url);
+        hasPage = await this.rootCauseWebPageVectorStore.webPageExist(this.memory.groupId, url, type); 
+        if (hasPage) {
+          this.logger.warn(`Already have scanned ${type} / ${url}`);
+        } else {
+          this.logger.warn(`Need to scan ${type} / ${url}`);
+        } 
+      } catch(e:any) {
+        this.logger.error("Error with try in getAndProcessRootCausePage");
+        this.logger.error(e);
       }
-    } else {
+    } 
+    if (!hasPage) {
       if (url.toLowerCase().endsWith(".pdf")) {
         await this.getAndProcessPdf(undefined, url, type, undefined);
       } else {
@@ -296,7 +308,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
     for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
       const urlsToGet = problemStatement.rootCauseSearchResults![searchResultType];
-
       if (urlsToGet) {
         for (let i = 0; i < urlsToGet.length; i++) {
           await this.getAndProcessRootCausePage(urlsToGet[i].url, newPage, searchResultType);

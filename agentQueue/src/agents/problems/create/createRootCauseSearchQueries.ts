@@ -99,6 +99,10 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
   }
   async createRootCauseSearchQueries() {
     const problemStatement = this.memory.problemStatement;
+    if (!problemStatement.rootCauseSearchQueries) {
+      //@ts-ignore
+      problemStatement.rootCauseSearchQueries = {};
+    }
     for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
       if (!problemStatement.rootCauseSearchQueries![searchResultType]) {
         this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
