@@ -53,14 +53,14 @@ const setupProjectTwo = (memory) => {
     3. Keep in mind while you decide that the sub problems, in this case, are especially important to philanthropic organizations, civil society organizations, community-based organizations, and legal advocacy groups.
   `;
     memory.subProblemClientColors = [
-        '#ee782d',
-        '#0b60b9',
-        '#face2d',
-        '#50c363',
-        '#ADD8E6',
-        '#cf1103',
-        '#7F00FF',
-        '#3f5fce', // Blue (This is a medium, somewhat light blue, not sea green)
+        "#ee782d",
+        "#0b60b9",
+        "#face2d",
+        "#50c363",
+        "#ADD8E6",
+        "#cf1103",
+        "#7F00FF",
+        "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
     ];
     memory.customInstructions.subProblemColors = [
         "orange",
@@ -136,14 +136,97 @@ const setupProjectThree = (memory) => {
     3. Keep in mind while you decide that the sub problems, in this case, are especially important to philanthropic organizations, civil society organizations, community-based organizations, and legal advocacy groups.
   `;
     memory.subProblemClientColors = [
-        '#ee782d',
-        '#0b60b9',
-        '#face2d',
-        '#50c363',
-        '#ADD8E6',
-        '#cf1103',
-        '#7F00FF',
-        '#3f5fce', // Blue (This is a medium, somewhat light blue, not sea green)
+        "#ee782d",
+        "#0b60b9",
+        "#face2d",
+        "#50c363",
+        "#ADD8E6",
+        "#cf1103",
+        "#7F00FF",
+        "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
+    ];
+    memory.customInstructions.subProblemColors = [
+        "orange",
+        "blue",
+        "yellow",
+        "green",
+        "light blue",
+        "red",
+        "violet",
+        "sea Green",
+        "saddle Brown",
+        "chocolate",
+        "fire Brick",
+        "orange Red",
+        "yellow Green",
+        "gold",
+        "dark Khaki",
+        "dark Magenta",
+        "dark Violet",
+        "wheat",
+        "forest Green",
+        "tan",
+        "gray",
+        "transparent",
+    ];
+    memory.customInstructions.createSolutions = `
+  1. Never create solution components in the form of frameworks or holistic approaches
+  2. Solution components should include only one core idea
+  3. Remember that the main facilitator for implementation will be international philanthropic organizations working alongside civil society organizations, community-based organizations, and legal advocacy groups.
+  4. The solution component description should clearly articulate what action the international philanthropic organization needs to take in order to implement the solution.
+  5. The solution component description should clearly articulate how the solution component addresses an aspect of the problem.
+  6. The solution title should indicate the intended outcomes and impacts of implementing the solution.
+`;
+    memory.customInstructions.rankSolutions = `
+    1. Solution components will be implemented by international philanthropic organizations in partnership with civil society organizations, community-based organizations, and legal advocacy groups.
+  `;
+    memory.customInstructions.rateSolutionsJsonFormat = `
+    {
+      highPriorityRatings: {
+        howImportantToProblem,
+        howInnovative,
+        howPractical,
+        howEthical,
+        howComplex,
+      },
+      otherRatings: {
+        benefitsForCitizens,
+        benefitsForGovernments,
+        benefitsForCivilSociety,
+        benefitsForPrivateSector,
+        benefitsForTheClimate,
+        benefitsForEcology,
+      }
+    }
+  `;
+    memory.customInstructions.reapSolutions = `
+    1. Solution components should not include more than one core idea.
+    2. Solution components can have more than one implementation detail ideas.
+    3. If the solution components has two core ideas that are hard to implement without each other then the solution component can be included.
+    4. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
+    5. Core ideas are distinct concepts or strategies that are central to the solution component.
+  `;
+};
+const setupProjectFour = (memory) => {
+    if (!memory.customInstructions) {
+        memory.customInstructions = {};
+    }
+    // console.log("Project 4 running")
+    memory.problemStatement.description = `In 2022, only 54% of our 4th graders in Boston, and 63% of 4th graders nationally, achieved basic reading proficiency on the National Assessment of Educational Progress (NAEP). These drastic gaps in reading achievement are due in part to differences in resources and opportunities available to students. While there has been a new national reckoning regarding evidence-based literacy practices and some school districts are changing  curricula, we know that we can serve our students better and make change happen faster.`;
+    memory.customInstructions.rankSubProblems = `
+    1. Assess how important the sub problems are as sub problems to the main problem statement.
+    2. We are not looking for solutions, only well defined sub problems.
+    3. Keep in mind while you decide that the sub problems, in this case, are especially important to parents, students, teachers, policymakers, and other education stakeholders.
+  `;
+    memory.subProblemClientColors = [
+        "#ee782d",
+        "#0b60b9",
+        "#face2d",
+        "#50c363",
+        "#ADD8E6",
+        "#cf1103",
+        "#7F00FF",
+        "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
     ];
     memory.customInstructions.subProblemColors = [
         "orange",
@@ -220,6 +303,9 @@ if (projectId) {
     }
     else if (projectId == "3") {
         setupProjectThree(memory);
+    }
+    else if (projectId == "4") {
+        setupProjectFour(memory);
     }
     await redis.set(redisKey, JSON.stringify(memory));
     console.log("After saving");

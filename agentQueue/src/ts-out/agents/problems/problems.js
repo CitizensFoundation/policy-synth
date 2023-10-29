@@ -9,6 +9,12 @@ import { RankSearchResultsProcessor } from "./ranking/rankSearchResults.js";
 import { RankSubProblemsProcessor } from "./ranking/rankSubProblems.js";
 import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
 import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
+import { CreateRootCausesSearchQueriesProcessor } from "./create/createRootCauseSearchQueries.js";
+import { GetRootCausesWebPagesProcessor } from "./web/getRootCausesWebPages.js";
+import { RankWebRootCausesProcessor } from "./ranking/rankWebRootCauses.js";
+import { RateWebRootCausesProcessor } from "./ranking/rateWebRootCauses.js";
+import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js";
+import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
 export class AgentProblems extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -36,7 +42,7 @@ export class AgentProblems extends BaseAgent {
                         scientific: [],
                         news: [],
                         openData: [],
-                    }
+                    },
                 },
             },
             subProblems: [],
@@ -55,6 +61,34 @@ export class AgentProblems extends BaseAgent {
     }
     async process() {
         switch (this.memory.currentStage) {
+            case "create-root-causes-search-queries":
+                const createRootCausesSearchQueriesProcessor = new CreateRootCausesSearchQueriesProcessor(this.job, this.memory);
+                await createRootCausesSearchQueriesProcessor.process();
+                break;
+            case "web-search-root-causes":
+                const searchWebForRootCausesProcessor = new SearchWebForRootCausesProcessor(this.job, this.memory);
+                await searchWebForRootCausesProcessor.process();
+                break;
+            case "web-get-root-causes-pages":
+                const getRootCausesWebpagesProcessor = new GetRootCausesWebPagesProcessor(this.job, this.memory);
+                await getRootCausesWebpagesProcessor.process();
+                break;
+            case "rank-web-root-causes":
+                const rankWebRootCausesProcessor = new RankWebRootCausesProcessor(this.job, this.memory);
+                await rankWebRootCausesProcessor.process();
+                break;
+            case "rate-web-root-causes":
+                const rateWebRootCausesProcessor = new RateWebRootCausesProcessor(this.job, this.memory);
+                await rateWebRootCausesProcessor.process();
+                break;
+            case "web-get-refined-root-causes":
+                const webGetRefinedRootCausesProcessor = new GetRefinedRootCausesProcessor(this.job, this.memory);
+                await webGetRefinedRootCausesProcessor.process();
+                break;
+            // case "get-metadata-for-top-root-causes":=
+            //   const getMetadataForTopRootCauses = new GetMetaDataForTopWebRootCausesProcessor(this.job, this.memory);
+            //   await getMetadataForTopRootCauses.process();
+            //   break;
             case "create-sub-problems":
                 await this.processSubProblems();
                 break;

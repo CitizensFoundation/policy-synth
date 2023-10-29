@@ -38,6 +38,7 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
         this.KFactors[subProblemIndex] = {};
         this.eloRatings[subProblemIndex] = {};
         for (let i = 0; i < this.allItems[subProblemIndex].length; i++) {
+            //this.logger.debug(`Current number of Prompts looped ${i}`);
             for (let j = i + 1; j < this.allItems[subProblemIndex].length; j++) {
                 this.prompts[subProblemIndex].push([i, j]);
             }
@@ -45,9 +46,20 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
             this.numComparisons[subProblemIndex][i] = 0; // Initialize number of comparisons
             this.KFactors[subProblemIndex][i] = this.K_FACTOR_INITIAL; // Initialize K-factor
         }
-        while (this.prompts[subProblemIndex].length > this.maxNumberOfPrompts) {
-            const randomIndex = Math.floor(Math.random() * this.prompts[subProblemIndex].length);
-            this.prompts[subProblemIndex].splice(randomIndex, 1);
+        this.logger.debug(`Before randomizing MaxPrompts`);
+        const tempPrompts = [];
+        const numToRemove = this.prompts[subProblemIndex].length - this.maxNumberOfPrompts;
+        if (numToRemove > 0) {
+            this.logger.info(`Current length: ${this.prompts[subProblemIndex].length}`);
+            const randomIndices = new Set();
+            while (randomIndices.size < this.maxNumberOfPrompts) {
+                const randomIndex = Math.floor(Math.random() * this.prompts[subProblemIndex].length);
+                randomIndices.add(randomIndex);
+            }
+            for (const index of randomIndices) {
+                tempPrompts.push(this.prompts[subProblemIndex][index]);
+            }
+            this.prompts[subProblemIndex] = tempPrompts;
         }
     }
     async getResultsFromLLM(subProblemIndex, stageName, modelConstant, messages, itemOneIndex, itemTwoIndex) {
