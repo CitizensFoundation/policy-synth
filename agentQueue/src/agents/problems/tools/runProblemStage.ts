@@ -14,6 +14,13 @@ if (projectId) {
   const output = await redis.get(redisKey);
 
   const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+  
+  //memory.currentStage = "create-root-causes-search-queries"
+  //memory.currentStage = "web-search-root-causes"
+  //memory.currentStage = "web-get-root-causes-pages"
+  //memory.currentStage = "rank-web-root-causes"
+  //memory.currentStage = "rate-web-root-causes"
+  //memory.currentStage = "web-get-refined-root-causes"
 
   //memory.currentStage = "create-problem-statement-image";
   //memory.currentStage = "create-sub-problems";

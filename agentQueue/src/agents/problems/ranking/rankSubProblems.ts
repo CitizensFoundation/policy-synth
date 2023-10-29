@@ -80,8 +80,14 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
       modelName: IEngineConstants.subProblemsRankingsModel.name,
       verbose: IEngineConstants.subProblemsRankingsModel.verbose,
     });
+    
+    let maxPrompts;
 
-    this.setupRankingPrompts(-1, this.memory.subProblems);
+    if (this.memory.subProblems.length > 100) {
+      maxPrompts = this.memory.subProblems.length*IEngineConstants.subProblemsRankingMinNumberOfMatches;
+    }
+    this.setupRankingPrompts(-1, this.memory.subProblems, maxPrompts);
+    
     await this.performPairwiseRanking(-1);
 
     this.logger.debug(`Sub problems before ranking: ${JSON.stringify(this.memory.subProblems)}`);

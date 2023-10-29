@@ -1,34 +1,33 @@
 export class RootCauseExamplePrompts {
-  static render(categoryType: PSRootCauseWebPageTypes) {
-    switch (categoryType) {
-      case "historicalRootCause":
-        return RootCauseExamplePrompts.renderHistoricalRootCause();
-      case "economicRootCause":
-        return RootCauseExamplePrompts.renderEconomicRootCause();
-      case "scientificRootCause":
-        return RootCauseExamplePrompts.renderScientificRootCause();
-      case "culturalRootCause":
-        return RootCauseExamplePrompts.renderCulturalRootCause();
-      case "socialRootCause":
-        return RootCauseExamplePrompts.renderSocialRootCause();
-      case "environmentalRootCause":
-        return RootCauseExamplePrompts.renderEnvironmentalRootCause();
-      case "legalRootCause":
-        return RootCauseExamplePrompts.renderLegalRootCause();
-      case "technologicalRootCause":
-        return RootCauseExamplePrompts.renderTechnologicalRootCause();
-      case "geopoliticalRootCause":
-        return RootCauseExamplePrompts.renderGeopoliticalRootCause();
-      case "ethicalRootCause":
-        return RootCauseExamplePrompts.renderEthicalRootCause();
-      case "caseStudies":
-        return RootCauseExamplePrompts.renderCaseStudies();
-      default:
-        throw new Error("Unknown root cause type");
+    static render(categoryType) {
+        switch (categoryType) {
+            case "historicalRootCause":
+                return RootCauseExamplePrompts.renderHistoricalRootCause();
+            case "economicRootCause":
+                return RootCauseExamplePrompts.renderEconomicRootCause();
+            case "scientificRootCause":
+                return RootCauseExamplePrompts.renderScientificRootCause();
+            case "culturalRootCause":
+                return RootCauseExamplePrompts.renderCulturalRootCause();
+            case "socialRootCause":
+                return RootCauseExamplePrompts.renderSocialRootCause();
+            case "environmentalRootCause":
+                return RootCauseExamplePrompts.renderEnvironmentalRootCause();
+            case "legalRootCause":
+                return RootCauseExamplePrompts.renderLegalRootCause();
+            case "technologicalRootCause":
+                return RootCauseExamplePrompts.renderTechnologicalRootCause();
+            case "geopoliticalRootCause":
+                return RootCauseExamplePrompts.renderGeopoliticalRootCause();
+            case "ethicalRootCause":
+                return RootCauseExamplePrompts.renderEthicalRootCause();
+            case "caseStudies":
+                return RootCauseExamplePrompts.renderCaseStudies();
+            default:
+                throw new Error("Unknown root cause type");
+        }
     }
-  }
-
-  static prompt = `
+    static prompt = `
   Please analyze the text below to find the root causes for the provided problem statement. Only provide analysis from the text that is directly related to the problem statement and its root causes.  The root causes should relate to the root cause category: historicalRootCause
 
   Output as JSON in this format [ { rootCauseRelevanceToProblemStatement, allPossibleHistoricalRootCausesIdentifiedInTextContext } ]. Only output the JSON object and nothing else. You should refer to "the website" instead of "the text". rootCauseRelevanceToProblemStatement should be a one-sentence explanation.
@@ -43,9 +42,8 @@ export class RootCauseExamplePrompts {
 
   Your JSON output:
   `;
-
-  static renderHistoricalRootCause() {
-    return `
+    static renderHistoricalRootCause() {
+        return `
     Literacy By Any Means Necessary: The History of Anti-Literacy Laws in the U.S
     Written by Carliss Maddox
     January 12, 2022
@@ -112,10 +110,9 @@ export class RootCauseExamplePrompts {
         ]
     }
   `;
-  }
-
-  static renderEconomicRootCause() {
-    return `
+    }
+    static renderEconomicRootCause() {
+        return `
     Low Literacy Levels Among U.S. Adults Could Be Costing The Economy $2.2 Trillion A Year
     Michael T. Nietzel
     Senior Contributor
@@ -170,10 +167,9 @@ export class RootCauseExamplePrompts {
       ]    
     }
   `;
-  }
-
-  static renderScientificRootCause() {
-    return `
+    }
+    static renderScientificRootCause() {
+        return `
     Cognitive Factors That Affect Reading Comprehension
     Education | K-12
     By Lucy Hart
@@ -228,10 +224,9 @@ export class RootCauseExamplePrompts {
         ]
     }
   `;
-  }
-
-  static renderCulturalRootCause() {
-    return `
+    }
+    static renderCulturalRootCause() {
+        return `
     Linguistic, social, and cultural factors influencing literacy development and academic achievement of Puerto Rican students in elementary school
     Aramina Vega Ferrer, Fordham University
 
@@ -270,10 +265,9 @@ export class RootCauseExamplePrompts {
       ]
     }
   `;
-  }
-
-  static renderSocialRootCause() {
-    return `
+    }
+    static renderSocialRootCause() {
+        return `
     The Relationship between Socioeconomic Status and Literacy: How Literacy is Influenced by and Influences SES
     January 5, 2023 MJEResearch
     By Maren Blanchard
@@ -326,10 +320,9 @@ export class RootCauseExamplePrompts {
       "Low literacy levels can disadvantage individuals in the job market",
     ]
   } `;
-  }
-
-  static renderEnvironmentalRootCause() {
-    return `
+    }
+    static renderEnvironmentalRootCause() {
+        return `
     Environmental inequality and disparities in school readiness: The role of neurotoxic lead
     Jared N. Schachner, Geoffrey T. Wodtke
     First published: 12 June 2023
@@ -391,10 +384,9 @@ export class RootCauseExamplePrompts {
     }
 
   `;
-  }
-
-  static renderLegalRootCause() {
-    return `
+    }
+    static renderLegalRootCause() {
+        return `
     Anti-literacy laws in the United States
 
     Anti-literacy laws in many slave states before and during the American Civil War affected slaves, freedmen, and in some cases 
@@ -440,10 +432,9 @@ export class RootCauseExamplePrompts {
     }
 
   `;
-  }
-
-  static renderTechnologicalRootCause() {
-    return `
+    }
+    static renderTechnologicalRootCause() {
+        return `
     The Effects of Digital Technology on Reading
     Does reading on a screen interfere with in-depth learning? Yes!
     Posted January 15, 2017
@@ -518,10 +509,9 @@ export class RootCauseExamplePrompts {
       ]
     }
   `;
-  }
-
-  static renderGeopoliticalRootCause() {
-    return `
+    }
+    static renderGeopoliticalRootCause() {
+        return `
     GEOPOLITICAL ILLITERACY AND PUBLIC DIPLOMACY
     Mar 2, 2020 by Vivian S. Walker
     
@@ -568,10 +558,9 @@ export class RootCauseExamplePrompts {
       ]
     }
   `;
-  }
-
-  static renderEthicalRootCause() {
-    return `
+    }
+    static renderEthicalRootCause() {
+        return `
     The Ignored Science That Could Help Close the Achievement Gap
     There’s a body of research on cognitive reading processes, so why isn’t it being utilized?
     By Hayley Glatter
@@ -610,10 +599,9 @@ export class RootCauseExamplePrompts {
       ]
     } 
     `;
-  }
-
-  static renderCaseStudies() {
-    return `
+    }
+    static renderCaseStudies() {
+        return `
     Narrowing the Achievement Gap: A Case Study of One Outperforming Urban School Making A Difference
     Garner, Dionne M.
     ProQuest LLC, Ed.D. Dissertation, University of Southern California
@@ -645,5 +633,5 @@ export class RootCauseExamplePrompts {
       ]
     }
   `;
-  }
+    }
 }

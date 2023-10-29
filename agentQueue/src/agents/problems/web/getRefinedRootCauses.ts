@@ -34,7 +34,6 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
               rootCauseDescription: string;
               rootCauseTitle: string;
               whyRootCauseIsImportant: string;
-              rootCauseRelevanceToProblemStatement: string;
               rootCauseRelevanceToTypeScore: number;
               rootCauseRelevanceScore: number;
               rootCauseQualityScore: number;
@@ -44,8 +43,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         3. rootCauseDescription should describe each root cause in one clear sentence maximum 25 words, never more, and don't include any other information or solutions.
         4. Never use acronyms in rootCauseDescription even if they are used in the text context
         5. Never use the words "is a root cause" in the rootCauseDescription
-        6. The rootCauseRelevanceToProblemStatement should outline how the evidence found in the text is relevant to the problem statement.
-        7. Output scores in the ranges of 0-100.
+        6. Output scores in the ranges of 0-100.
         `
       ),
       new HumanChatMessage(
@@ -109,6 +107,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
           if (nextAnalysis) {
             for (let rootCause of nextAnalysis) {
+              this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
               this.memory.subProblems.push({
                 title: rootCause.rootCauseTitle,
                 description: rootCause.rootCauseDescription,
@@ -143,6 +142,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
       } else {
         textAnalysis = await this.getRefinedRootCauseTextAIAnalysis(type, text);
         for (let rootCause of textAnalysis) {
+          this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
           this.memory.subProblems.push({
             title: rootCause.rootCauseTitle,
             description: rootCause.rootCauseDescription,
@@ -172,6 +172,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
           `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
         );
       }
+      await this.saveMemory();
 
       return textAnalysis!;
     } catch (error) {
@@ -272,11 +273,11 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
   }
 
   async refineWebRootCauses(page: Page) {
-    const limit = 10;
+    const limit = 25;
 
     try {
       for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
-        const searchType = IEngineConstants.simplifyEvidenceType(rootCauseType);
+        const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
         const results =
           await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
             this.memory.groupId,
@@ -299,19 +300,22 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
           const id = webPage._additional!.id!;
 
           this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
-          this.logger.debug(
-            `All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`
-          );
+          if(webPage.totalScore && webPage.totalScore > 0) {
+            this.logger.debug(
+              `All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`
+            );
 
-          // TODO: need to store vectorStoreId some other way (see getMetaDataForTopWebRootCauses.processPageText)
-          // policy.vectorStoreId = id;
+            // TODO: need to store vectorStoreId some other way (see getMetaDataForTopWebRootCauses.processPageText)
+            // policy.vectorStoreId = id;
 
-          await this.getAndProcessRootCausePage(
-            webPage.url,
-            page,
-            searchType as PSRootCauseWebPageTypes
-          );
-
+            await this.getAndProcessRootCausePage(
+              webPage.url,
+              page,
+              searchType as PSRootCauseWebPageTypes
+            );
+          } else {
+            this.logger.info("Skipping the current WebPage as it has a score of 0/null");
+          }
           this.logger.info(`(+${pageCounter++}) - ${id} - Updated`);
         }
       }

@@ -10,14 +10,14 @@ const adaInTokenPrice = 0.0001;
 
 const gpt35kOutTokenPrice = 0.002 / 1000;
 
-const gpt35_16k_TPM = 750000;
+const gpt35_16k_TPM = 1000000;
 const gpt35_16k_RPM = 10000;
 
-const gpt35_TPM = 180000;
-const gpt35_RPM = 3500;
+const gpt35_TPM = 750000;
+const gpt35_RPM = 10000;
 
-const gpt4_TPM = 40000;
-const gpt4_RPM = 200;
+const gpt4_TPM = 150000;
+const gpt4_RPM = 10000;
 
 export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
@@ -117,7 +117,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false,
+    verbose: true,
   };
 
   static searchQueryRankingsModel: IEngineBaseAIModelConstants = {
@@ -153,7 +153,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true,
+    verbose: false,
   };
 
   static entitiesRankingsModel: IEngineBaseAIModelConstants = {
@@ -433,7 +433,9 @@ export class IEngineConstants {
 
   static numberOfSearchTypes = 4;
 
-  static webPageNavTimeout = 60 * 1000;
+  static webPageNavTimeout = 10 * 1000;
+
+  static subProblemsRankingMinNumberOfMatches = 10;
 
   static currentUserAgent =
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
@@ -556,4 +558,16 @@ export class IEngineConstants {
     type = type.charAt(0).toLowerCase() + type.slice(1);
     return type;
   }
+
+  static simplifyRootCauseType(rootCauseType: string) {
+    let type = rootCauseType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
+
+    type = type.charAt(0).toLowerCase() + type.slice(1);
+    
+    if (type != "rootCausesCaseStudies") {
+      type = type.slice(0,-1)
+    }
+    return type;
+  }
+
 }

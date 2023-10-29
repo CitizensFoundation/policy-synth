@@ -36,7 +36,7 @@ export class RankWebRootCausesProcessor extends BaseProcessor {
       for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
         let offset = 0;
         const limit = 100;
-        const searchType = IEngineConstants.simplifyEvidenceType(rootCauseType);
+        const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
         while (true) {
           const results = await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(
             this.memory.groupId,
