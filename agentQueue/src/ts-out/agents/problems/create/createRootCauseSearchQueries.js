@@ -26,9 +26,8 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
         5. You will be provided with a search query type, use this to guide your creation
         6. Create 10 high quality search queries
         7. All search queries should be focused on finding root causes for the problem.
-        8. Never output in markdown format.
-        9. Provide an output in the following JSON string array: [ searchQuery ]
-        10. Never explain, just output JSON.
+        8. List the search queries in a JSON string array
+        9. Never explain, just output JSON.
 ​
         Let's think step by step.
 ​
@@ -52,8 +51,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
         4. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
         5. You will be provided with a search query type, use this to guide your refinement
         7. All search queries should be focused on finding root causes for the problem.
-        8. Never output in markdown format.
-        9. Provide an output in the following JSON string array: 9. Provide an output in the following JSON string array: ["","",""]
+        8. List the search queries in a JSON string array
 ​
         Let's think step by step.
 ​
@@ -79,8 +77,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
         3. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
         4. You will be provided with a search query type, use this to guide your ranking
         5. All search queries should be focused on finding root causes for the problem.
-        6. Never output in markdown format.
-        7. Provide an output in the following JSON string array: ["","",""]
+        6. List the search queries in a JSON string array
 ​
         Let's think step by step.
         `),
@@ -103,7 +100,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
             problemStatement.rootCauseSearchQueries = {};
         }
         for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-            if (!problemStatement.rootCauseSearchQueries[searchResultType]) {
+            if (true || !problemStatement.rootCauseSearchQueries[searchResultType]) {
                 this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
                 // create search queries for each type
                 let searchResults = await this.callLLM("create-root-causes-search-queries", IEngineConstants.createRootCauseSearchQueriesModel, await this.renderCreatePrompt(searchResultType));

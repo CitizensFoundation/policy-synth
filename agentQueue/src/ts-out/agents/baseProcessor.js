@@ -204,8 +204,8 @@ export class BaseProcessor extends Base {
                     await this.checkRateLimits(modelConstants, estimatedTokensToAdd);
                     await this.updateRateLimits(modelConstants, tokensIn.totalCount);
                     //TODO: Get JSON param to work when that option can be tested in the playground
-                    response = await this.chat.call(messages, { response_format: { "type": "json_object" } });
-                    //response = await this.chat.call(messages);
+                    //response = await this.chat.call(messages, {response_format: {"type": "json_object"}});
+                    response = await this.chat.call(messages);
                     if (response) {
                         //this.logger.debug("Got response from LLM");
                         const tokensIn = await this.chat.getNumTokensFromMessages(messages);
@@ -242,15 +242,15 @@ export class BaseProcessor extends Base {
                         if (parseJson) {
                             let parsedJson;
                             try {
-                                parsedJson = JSON.parse(response.text.trim());
+                                parsedJson = response.text.trim().replace(/```json/g, "");
+                                parsedJson = parsedJson.replace(/```/g, "");
+                                parsedJson = JSON.parse(parsedJson);
                             }
                             catch (error) {
                                 this.logger.warn(`Error parsing JSON ${response.text.trim()}`);
                                 try {
                                     this.logger.info(`Trying to fix JSON`);
                                     let repaired = jsonrepair(response.text.trim());
-                                    repaired = repaired.replace(/json```/g, "");
-                                    repaired = repaired.replace(/```/g, "");
                                     parsedJson = JSON.parse(repaired);
                                     this.logger.info("Fixed JSON");
                                 }
