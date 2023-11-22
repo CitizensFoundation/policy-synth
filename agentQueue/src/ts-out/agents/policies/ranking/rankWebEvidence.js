@@ -1,13 +1,13 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export class RankWebEvidenceProcessor extends BaseProcessor {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     async renderProblemPrompt(subProblemIndex, policy, evidenceToRank, evidenceType) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         You are an expert in filtering and ranking policy evidence.
 
         1. Filter out irrelevant policy evidence.
@@ -16,7 +16,7 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
         4. Always and only output a JSON String Array: [ policyEvidence ].
 
         Let's think step by step.`),
-            new HumanChatMessage(`
+            new HumanMessage(`
         Evidence type: ${evidenceType}
 
         Policy proposal:

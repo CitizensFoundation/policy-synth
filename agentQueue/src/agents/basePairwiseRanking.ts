@@ -1,4 +1,4 @@
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { BaseProcessor } from "./baseProcessor.js";
 import { IEngineConstants } from "../constants.js";
 
@@ -113,7 +113,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
     subProblemIndex: number,
     stageName: IEngineStageTypes,
     modelConstant: IEngineBaseAIModelConstants,
-    messages: (HumanChatMessage | SystemChatMessage)[],
+    messages: (HumanMessage | SystemMessage)[],
     itemOneIndex: number,
     itemTwoIndex: number
   ) {

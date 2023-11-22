@@ -11,7 +11,7 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
 import { BaseProcessor } from "../../baseProcessor.js";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { isWithinTokenLimit } from "gpt-tokenizer";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
@@ -25,7 +25,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     totalPagesSave = 0;
     renderScanningPrompt(problemStatement, text, subProblemIndex) {
         return [
-            new SystemChatMessage(`Your are an AI expert in analyzing textual data:
+            new SystemMessage(`Your are an AI expert in analyzing textual data:
 
         Important Instructions:
         1. Examine the "Text context" and determine how it relates to the problem statement and any specified sub-problems.
@@ -151,7 +151,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
           ]
         }
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         Problem Statement:
         ${problemStatement.description}
 
@@ -171,7 +171,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     async getTokenCount(text, subProblemIndex) {
         const emptyMessages = this.renderScanningPrompt(this.memory.problemStatement, "", subProblemIndex);
         const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanChatMessage(text);
+        const textForTokenCount = new HumanMessage(text);
         const textTokenCount = await this.chat.getNumTokensFromMessages([
             textForTokenCount,
         ]);

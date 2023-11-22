@@ -3,7 +3,7 @@ import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
@@ -48,7 +48,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
     return [
       // Update with our own problem statement from GPT
-      new SystemChatMessage(
+      new SystemMessage(
         `
         Your are an expert in analyzing textual data:
 
@@ -71,7 +71,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         `,
       ),
       // Only add what is required here
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatement()}
 
@@ -90,7 +90,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
     const promptTokenCount = await this.chat!.getNumTokensFromMessages(emptyMessages);
 
-    const textForTokenCount = new HumanChatMessage(text);
+    const textForTokenCount = new HumanMessage(text);
 
     const textTokenCount = await this.chat!.getNumTokensFromMessages([textForTokenCount]);
 
@@ -275,19 +275,19 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     }
     let hasPage = undefined;
     if (onlyCheckWhatNeedsToBeScanned) {
-      try { 
+      try {
         this.logger.info('Checking if a page exists ' + url);
-        hasPage = await this.rootCauseWebPageVectorStore.webPageExist(this.memory.groupId, url, type); 
+        hasPage = await this.rootCauseWebPageVectorStore.webPageExist(this.memory.groupId, url, type);
         if (hasPage) {
           this.logger.warn(`Already have scanned ${type} / ${url}`);
         } else {
           this.logger.warn(`Need to scan ${type} / ${url}`);
-        } 
+        }
       } catch(e:any) {
         this.logger.error("Error with try in getAndProcessRootCausePage");
         this.logger.error(e);
       }
-    } 
+    }
     if (!hasPage) {
       if (url.toLowerCase().endsWith(".pdf")) {
         await this.getAndProcessPdf(undefined, url, type, undefined);

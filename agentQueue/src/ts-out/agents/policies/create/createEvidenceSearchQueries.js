@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
     static evidenceWebPageTypesArray = [
@@ -33,7 +33,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
     }
     async renderCreatePrompt(subProblemIndex, policy, searchResultType) {
         return [
-            new SystemChatMessage(`Adhere to the following guidelines:
+            new SystemMessage(`Adhere to the following guidelines:
         1. You generate high quality search queries based on a Problem statement and Policy Proposal.
         2. Always focus your search queries on the policy proposal and it's core ideas.
         3. Use your knowledge and experience to create the best possible search queries.
@@ -48,7 +48,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
         Let's think step by step.
 
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
          ${this.renderSubProblem(subProblemIndex, true)}
 
          Policy Proposal:
@@ -62,7 +62,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
     }
     async renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResultsToRefine) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in refining search queries based on a Problem statement and Policy Proposal.
         2. Always focus your search queries on the policy proposal and it's core ideas.
@@ -76,7 +76,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
         Let's think step by step.
 
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
          Policy Proposal:
@@ -93,7 +93,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
     }
     async renderRankPrompt(subProblemIndex, policy, searchResultType, searchResultsToRank) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in ranking the most important search queries based on a Problem statement and Policy Proposal.
         2. Use your knowledge and experience to rank the search queries.
@@ -105,7 +105,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
 
         Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
          Policy Proposal:

@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
@@ -20,7 +20,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     alreadyCreatedSolutions: string | undefined = undefined
   ) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an expert, your task is to refine innovative solution components proposed for problems and associated sub-problems.
 
@@ -44,7 +44,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
@@ -69,7 +69,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
   }
 
   renderCreateSystemMessage() {
-    return new SystemChatMessage(
+    return new SystemMessage(
       `
       As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities.
 
@@ -106,7 +106,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
   ) {
     const messages = [
       this.renderCreateSystemMessage(),
-      new HumanChatMessage(
+      new HumanMessage(
         `
             ${this.renderProblemStatementSubProblemsAndEntities(
               subProblemIndex
@@ -151,7 +151,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     this.logger.debug(`News Context: ${newsTextContext}`);
     const messages = [
       this.renderCreateSystemMessage(),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
@@ -529,7 +529,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
   async countTokensForString(text: string) {
     const tokenCountData = await this.chat!.getNumTokensFromMessages([
-      new HumanChatMessage(text),
+      new HumanMessage(text),
     ]);
     return tokenCountData.totalCount;
   }

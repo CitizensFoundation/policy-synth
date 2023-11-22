@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class CreateProsConsProcessor extends BaseProcessor {
     renderCurrentSolution(solution) {
@@ -16,7 +16,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
     }
     async renderRefinePrompt(prosOrCons, results, subProblemIndex, solution) {
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an AI expert, it's your responsibility to refine the given ${prosOrCons} pertaining to solution components to problems.
 
         Instructions:
@@ -28,7 +28,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
         5. The ${prosOrCons} should be outputed as an JSON array: [ "...", "..." ].
         6. Follow a step-by-step approach in your thought process.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
         ${this.renderCurrentSolution(solution)}
@@ -44,7 +44,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
     async renderCreatePrompt(prosOrCons, subProblemIndex, solution) {
         const prosconsSingle = prosOrCons.slice(0, -1);
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solution components, keeping the problem provided in mind.
 
         Important Instructions:
@@ -58,7 +58,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
         7. Never output the index number of the ${prosOrCons} in the text.
         8. Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
          ${this.renderSubProblem(subProblemIndex, true)}
 
          ${this.renderCurrentSolution(solution)}

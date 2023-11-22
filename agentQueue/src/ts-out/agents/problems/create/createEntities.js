@@ -1,11 +1,11 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class CreateEntitiesProcessor extends BaseProcessor {
     async renderRefinePrompt(subProblemIndex, results) {
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an AI expert, you're tasked with refining entities affected by complex problem statements and subproblems. Entities can include individuals, groups, systems, the planet, or even inanimate objects.
 
         Instructions:
@@ -21,7 +21,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
         9. Always output in exactly this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
         10. Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
          ${this.renderProblemStatement()}
 
          ${this.renderSubProblem(subProblemIndex)}
@@ -36,7 +36,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
     }
     async renderCreatePrompt(subProblemIndex) {
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an AI expert, your task is to identify entities affected by complex problem statements and subproblems. Entities can range from individuals, groups, systems, to the planet, or even inanimate objects.
 
         Instructions:
@@ -92,7 +92,7 @@ export class CreateEntitiesProcessor extends BaseProcessor {
             }
         ]
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
          ${this.renderProblemStatement()}
 
          ${this.renderSubProblem(subProblemIndex)}

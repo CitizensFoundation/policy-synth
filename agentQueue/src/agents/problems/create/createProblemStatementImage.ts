@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { Configuration, ImagesResponse, OpenAIApi } from "openai";
 import { AxiosResponse } from "axios";
@@ -13,7 +13,7 @@ import { CreateSolutionImagesProcessor } from "../../solutions/create/createImag
 export class CreateProblemStatementImageProcessor extends CreateSolutionImagesProcessor {
   override async renderCreatePrompt(subProblemIndex: number = 0) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in generating visual Dalle-2 prompts from a problem statement.
 
@@ -35,7 +35,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
 
         While detail and creativity are crucial, keep your prompts concise. Limit your prompts to one or two essential details for the model to generate images quickly and accurately.`
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          Problem:
          ${this.renderProblemStatement()}

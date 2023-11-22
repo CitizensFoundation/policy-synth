@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 
@@ -8,7 +8,7 @@ export class RankWebRootCausesProcessor extends BaseProcessor {
   rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
   async renderProblemPrompt(rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData) {
     return [
-      new SystemChatMessage(`
+      new SystemMessage(`
         You are an expert in filtering and ranking root causes of a particular problem.
 
         1. Filter out irrelevant root causes.
@@ -17,9 +17,9 @@ export class RankWebRootCausesProcessor extends BaseProcessor {
         4. Always and only output a JSON String Array: [ rootCause ].
 
         Let's think step by step.`),
-      new HumanChatMessage(`
+      new HumanMessage(`
         ${this.renderProblemStatement()}
-        
+
         Root Cause type: ${rootCauseType}
 
         Root Causes to filter and rank:

@@ -2,23 +2,23 @@ import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   AIChatMessage,
-  BaseChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
+  BaseMessage,
+  HumanMessage,
+  SystemMessage,
 } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 const USE_SHORT_DESCRIPTIONS = true;
 export class CreateSubProblemsProcessor extends BaseProcessor {
   async renderRefinePrompt(results: IEngineSubProblem[]) {
-    const messages: BaseChatMessage[] = [
-      new SystemChatMessage(
+    const messages: BaseMessage[] = [
+      new SystemMessage(
         `
             As an AI expert, your role involves the analysis and refinement of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
             1. Review the sub problems and output a list of refined sub problems frame as root causes.
-            2. Output a short title, ${USE_SHORT_DESCRIPTIONS ? "short one" : "two or three"} sentence description and two or three sentence explanation of why the root cause is important.            
+            2. Output a short title, ${USE_SHORT_DESCRIPTIONS ? "short one" : "two or three"} sentence description and two or three sentence explanation of why the root cause is important.
             3. Use your extensive knowledge to enrich the details about the root cause but never introduce solutions.
             4. Root causes should describe a hypothesis about why a problem is occurring.
             5. Elaborate on the impact of these root causes, if necessary, to provide better context.
@@ -29,7 +29,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             10. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
             11. Let's think step by step.`
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
            Problem Statement:
            "${this.memory.problemStatement.description}"
@@ -47,14 +47,14 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
 
   async renderCreatePrompt() {
     //TODO: Human review and improvements of those GPT-4 generated few-shots
-    const messages: BaseChatMessage[] = [
-      new SystemChatMessage(
+    const messages: BaseMessage[] = [
+      new SystemMessage(
         `
             As an AI expert, your role involves the analysis of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
             1. Output a list of 21 root causes of the stated problem as sub problems.
-            2. Output a short title, ${USE_SHORT_DESCRIPTIONS ? "short one" : "two or three"} sentence description and two or three sentence explanation of why the root cause is important.            
+            2. Output a short title, ${USE_SHORT_DESCRIPTIONS ? "short one" : "two or three"} sentence description and two or three sentence explanation of why the root cause is important.
             3. Use your extensive knowledge to enrich the details about the root cause but never introduce solutions.
             4. Root causes should describe a hypothesis about why a problem is occurring.
             5. Elaborate on the impact of these root causes, if necessary, to provide better context.
@@ -66,7 +66,7 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             11. Let's think step by step.
             `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
            Problem Statement:
            "${this.memory.problemStatement.description}"

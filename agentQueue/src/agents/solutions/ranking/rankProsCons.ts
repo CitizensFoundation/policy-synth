@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
@@ -33,7 +33,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     }
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI expert, your role involves analyzing ${
           additionalData.prosOrCons
@@ -52,7 +52,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
         3. Never explain your reasoning.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(additionalData.subProblemIndex, true)}
 

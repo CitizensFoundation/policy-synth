@@ -1,5 +1,5 @@
-import { ChatOpenAI } from "langchain/chat_models";
-import { SystemChatMessage, HumanChatMessage } from "langchain/schema";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { SystemMessage, HumanMessage } from "langchain/schema";
 import { Configuration, OpenAIApi } from "openai";
 import path from "path";
 import fs from "fs";
@@ -13,7 +13,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
     injectText?: string
   ) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in generating Dall-E 2 prompts from titles and descriptions of policy components.
 
@@ -39,7 +39,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
         While detail and creativity are crucial, keep your prompts concise. Limit your prompts to one or two essential details for the model to generate images quickly and accurately.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          Solution component:
          ${policy.title}

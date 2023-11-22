@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 const DISABLE_LLM_FOR_DEBUG = false;
@@ -8,7 +8,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     webPageVectorStore = new WebPageVectorStore();
     async renderRefinePrompt(results, generalTextContext, scientificTextContext, openDataTextContext, newsTextContext, subProblemIndex, alreadyCreatedSolutions = undefined) {
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an expert, your task is to refine innovative solution components proposed for problems and associated sub-problems.
 
         Instructions:
@@ -28,7 +28,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         Always output your solution components in the following JSON format: [ { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption } ].
         Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
         ${alreadyCreatedSolutions
@@ -47,7 +47,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         return messages;
     }
     renderCreateSystemMessage() {
-        return new SystemChatMessage(`
+        return new SystemMessage(`
       As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities.
 
       Instructions:
@@ -76,7 +76,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     renderCreateForTestTokens(subProblemIndex, alreadyCreatedSolutions = undefined) {
         const messages = [
             this.renderCreateSystemMessage(),
-            new HumanChatMessage(`
+            new HumanMessage(`
             ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
             General Context from search:
@@ -106,7 +106,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         this.logger.debug(`News Context: ${newsTextContext}`);
         const messages = [
             this.renderCreateSystemMessage(),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
         Contexts for new solution components:
@@ -276,7 +276,7 @@ export class CreateSolutionsProcessor extends BaseProcessor {
     }
     async countTokensForString(text) {
         const tokenCountData = await this.chat.getNumTokensFromMessages([
-            new HumanChatMessage(text),
+            new HumanMessage(text),
         ]);
         return tokenCountData.totalCount;
     }

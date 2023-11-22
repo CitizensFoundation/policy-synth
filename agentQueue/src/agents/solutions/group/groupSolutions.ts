@@ -1,12 +1,12 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class GroupSolutionsProcessor extends BaseProcessor {
   async renderGroupPrompt(solutionsToGroup: IEngineSolutionForGroupCheck[]) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in in grouping solution components containing exactly the same core ideas together.
 
@@ -21,7 +21,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `${JSON.stringify(solutionsToGroup, null, 2)}
 
         Output JSON Array:

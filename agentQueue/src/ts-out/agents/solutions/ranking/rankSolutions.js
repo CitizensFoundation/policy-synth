@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
@@ -9,7 +9,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
         const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemChatMessage(`You're an expert in evaluating solution components to problems.
+            new SystemMessage(`You're an expert in evaluating solution components to problems.
 
          Instructions:
          1. Analyze a problem and two solution components, labeled "Solution Component One" and "Solution Component Two"
@@ -24,7 +24,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
          Always output your decision as "One", "Two" or "Neither. No explanation is necessary.
          Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
         Solution Components to assess:

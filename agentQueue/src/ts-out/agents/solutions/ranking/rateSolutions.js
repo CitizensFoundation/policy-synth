@@ -1,11 +1,11 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class RateSolutionsProcessor extends BaseProcessor {
     async renderRatePrompt(subProblemIndex, solution) {
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
          You are an expert in rating solution components to problems on multiple attributes.
 
          Instructions:
@@ -17,7 +17,7 @@ export class RateSolutionsProcessor extends BaseProcessor {
 
         Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
         Solution Component to rate:

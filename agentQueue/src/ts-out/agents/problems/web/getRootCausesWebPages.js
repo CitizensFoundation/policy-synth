@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
@@ -39,7 +39,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         }
         return [
             // Update with our own problem statement from GPT
-            new SystemChatMessage(`
+            new SystemMessage(`
         Your are an expert in analyzing textual data:
 
         Important Instructions:
@@ -60,7 +60,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         ${RootCauseExamplePrompts.render(type)}
         `),
             // Only add what is required here
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
 
         Web page type: ${type}
@@ -75,7 +75,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     async getRootCauseTokenCount(text, type) {
         const emptyMessages = this.renderRootCauseScanningPrompt(type, "");
         const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanChatMessage(text);
+        const textForTokenCount = new HumanMessage(text);
         const textTokenCount = await this.chat.getNumTokensFromMessages([textForTokenCount]);
         const totalTokenCount = promptTokenCount.totalCount + textTokenCount.totalCount + IEngineConstants.getPageAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };

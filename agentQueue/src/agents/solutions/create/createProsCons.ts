@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class CreateProsConsProcessor extends BaseProcessor {
@@ -23,7 +23,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
     solution: IEngineSolution
   ) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI expert, it's your responsibility to refine the given ${prosOrCons} pertaining to solution components to problems.
 
@@ -37,7 +37,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
         6. Follow a step-by-step approach in your thought process.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(subProblemIndex, true)}
 
@@ -61,7 +61,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
     const prosconsSingle = prosOrCons.slice(0, -1);
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solution components, keeping the problem provided in mind.
 
@@ -77,7 +77,7 @@ export class CreateProsConsProcessor extends BaseProcessor {
         8. Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          ${this.renderSubProblem(subProblemIndex, true)}
 

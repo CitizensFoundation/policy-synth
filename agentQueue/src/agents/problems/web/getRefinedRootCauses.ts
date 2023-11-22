@@ -3,7 +3,7 @@ import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
@@ -23,7 +23,7 @@ puppeteer.use(StealthPlugin());
 export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcessor {
   renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `You are an expert in analyzing root causes for a particular problem statement:
 
         Important Instructions:
@@ -46,7 +46,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         6. Output scores in the ranges of 0-100.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatement()}
 

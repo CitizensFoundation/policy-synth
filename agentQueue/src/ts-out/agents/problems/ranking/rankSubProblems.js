@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
@@ -10,7 +10,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[subProblemIndex][itemOneIndex];
         const itemTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         You are an AI expert trained to analyse complex problem statements and associated sub-problems to determine their relevance.
 
         Instructions:
@@ -26,7 +26,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
 
         Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
 
         Sub-Problems for Consideration:
