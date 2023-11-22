@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
@@ -32,7 +32,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         You are an AI expert trained to rank search queries based on their relevance to complex problem statements, sub-problems and affected entities.
 
         Instructions:
@@ -42,7 +42,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemDetail(additionalData)}
 
         Search Queries to Rank:

@@ -1,15 +1,15 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class ReapSolutionsProcessor extends BaseProcessor {
     async renderReapPrompt(solution) {
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         You are an expert in assessing if a solution component fits given requirements.
         Always output either true or false in a JSON Object: { solutionFitsRequirements }
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         Solution component to assess:
         ${solution.title}
         ${solution.description}

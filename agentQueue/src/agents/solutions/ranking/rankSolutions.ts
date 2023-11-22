@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
@@ -20,7 +20,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
     ] as IEngineSolution;
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `You're an expert in evaluating solution components to problems.
 
          Instructions:
@@ -39,7 +39,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
          Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(subProblemIndex, true)}
 

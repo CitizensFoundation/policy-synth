@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
@@ -13,7 +13,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
     subProblemIndex: number | null
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in filtering and ranking solution components.
 
@@ -24,7 +24,7 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
 
         Let's think step by step. Never explain your actions.`
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${subProblemIndex === null ? this.renderProblemStatement() : ""}
 

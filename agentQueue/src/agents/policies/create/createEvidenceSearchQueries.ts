@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 
@@ -49,7 +49,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
     searchResultType: PSEvidenceWebPageTypes
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `Adhere to the following guidelines:
         1. You generate high quality search queries based on a Problem statement and Policy Proposal.
         2. Always focus your search queries on the policy proposal and it's core ideas.
@@ -66,7 +66,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
 
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          ${this.renderSubProblem(subProblemIndex, true)}
 
@@ -88,7 +88,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
     searchResultsToRefine: string[]
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         Adhere to the following guidelines:
         1. You are an expert in refining search queries based on a Problem statement and Policy Proposal.
@@ -104,7 +104,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
 
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(subProblemIndex, true)}
 
@@ -129,7 +129,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
     searchResultsToRank: string[]
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         Adhere to the following guidelines:
         1. You are an expert in ranking the most important search queries based on a Problem statement and Policy Proposal.
@@ -143,7 +143,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(subProblemIndex, true)}
 

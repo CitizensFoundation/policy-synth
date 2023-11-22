@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export class RateWebRootCausesProcessor extends BaseProcessor {
@@ -10,7 +10,7 @@ export class RateWebRootCausesProcessor extends BaseProcessor {
     }
     async renderProblemPrompt(rawWebData, rootCausesToRank, rootCauseType) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         You are an expert in rating websites with root causes for a problem statement, on multiple attributes.
 
         Instructions:
@@ -25,7 +25,7 @@ export class RateWebRootCausesProcessor extends BaseProcessor {
         }
 
        Let's think step by step.`),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
 
         Root Cause type:

@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
@@ -49,7 +49,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             throw new Error(`No corresponding property found for type: ${type}`);
         }
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         Your are an expert in analyzing textual data:
 
         Important Instructions:
@@ -79,7 +79,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         Text context:
         ${EvidenceExamplePrompts.render(type)}
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex)}
 
         Policy Proposal:
@@ -98,7 +98,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     async getEvidenceTokenCount(text, subProblemIndex, policy, type) {
         const emptyMessages = this.renderEvidenceScanningPrompt(subProblemIndex, policy, type, "");
         const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanChatMessage(text);
+        const textForTokenCount = new HumanMessage(text);
         const textTokenCount = await this.chat.getNumTokensFromMessages([
             textForTokenCount,
         ]);

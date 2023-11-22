@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
@@ -51,7 +51,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
     let itemTwoDescription = itemTwo.description;
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `You are an expert in assessing relevance of search results.
 
          Instructions:
@@ -59,7 +59,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
          Output your decision as either "One", "Two" or "Neither". No explanation is required.
          Let's think step by step.`
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `${this.renderProblemDetail()}
 
          Search Type: ${this.searchResultType}

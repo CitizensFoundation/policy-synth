@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
 //TODO: Pentalty for similar ideas in the ranking somehow
@@ -17,7 +17,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     }
     renderRecombinationPrompt(parentA, parentB, subProblemIndex) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an AI genetic algorithm expert, your task is to create a new solution component from two parent solution components: "Solution Component Parent A" and "Solution Component Parent B".
 
         Instructions:
@@ -36,7 +36,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Always output your merged solution component in the following JSON format: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not add any new JSON properties.
         Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
         Solution Component Parent A:
@@ -52,7 +52,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     renderMutatePrompt(individual, subProblemIndex, mutateRate) {
         this.logger.debug(`Mutate rate: ${mutateRate}`);
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an AI expert specializing in genetic algorithms, your task is to mutate the following solution component.
 
         Instructions:
@@ -69,7 +69,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Always format your mutated solution component in the following JSON structure: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not introduce any new JSON properties.
         Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
         Solution component to mutate:

@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
@@ -23,7 +23,7 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
     let itemTwoEffects = this.renderEntityPosNegReasons(itemTwo);
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an AI expert specializing in analyzing complex problem statements, sub-problems, and ranking affected entities.
 
@@ -36,7 +36,7 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
         5. Output your decision as either "One", "Two" or "Neither". An explanation is not required.
         6. Let's think step by step.`
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          ${this.renderProblemStatement()}
 

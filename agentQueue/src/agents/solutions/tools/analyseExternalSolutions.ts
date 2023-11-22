@@ -2,7 +2,7 @@ import { IEngineConstants } from "../../../constants.js";
 import { BaseProcessor } from "../../baseProcessor.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import path from "path";
 
@@ -121,12 +121,12 @@ export class AnalyseExternalSolutions extends BaseProcessor {
 
   async renderAnalysisPrompt(solutionDescription: string, requirement: string) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         1. You are an expert in analyzing how well a solution matches a requirement
         2. Always and only output the following JSON format: { solutionCoversPercentOfKeyRequirements }        `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         Requirement:
         ${requirement}

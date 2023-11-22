@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
@@ -53,7 +53,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     const itemTwo = this.allItems![index]![itemTwoIndex] as string;
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an AI expert trained to rank search queries based on their relevance to complex problem statements, sub-problems and affected entities.
 
@@ -65,7 +65,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         5. Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemDetail(additionalData)}
 

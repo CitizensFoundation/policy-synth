@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { Configuration, ImagesResponse, OpenAIApi } from "openai";
 import { AxiosResponse } from "axios";
@@ -222,7 +222,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
 
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in generating Dall-E 2 prompts from titles and descriptions of solution components.
 
@@ -248,7 +248,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         While detail and creativity are crucial, keep your prompts concise. Limit your prompts to one or two essential details for the model to generate images quickly and accurately.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          Solution component:
          ${solution.title}

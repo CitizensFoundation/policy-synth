@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 
@@ -27,7 +27,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
 
   async renderProblemPrompt(problem: string) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert trained to analyse complex problem statements and create search queries to find solution components to those problems.
 
@@ -36,7 +36,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
         2. Always focus your search queries on the problem statement.
         ${this.renderCommonPromptSection()}    `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          Problem Statement:
          ${problem}
@@ -49,7 +49,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
 
   async renderEntityPrompt(problem: string, entity: IEngineAffectedEntity) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert trained to analyse complex problem statements for affected entities and create search queries to find solution components for the affected entity.
 
@@ -58,7 +58,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
         2. Always focus your search queries on the Affected Entity not the problem statement.
         ${this.renderCommonPromptSection()}       `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          Problem Statement:
          ${problem}

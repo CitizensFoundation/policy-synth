@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
 import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
@@ -11,7 +11,7 @@ puppeteer.use(StealthPlugin());
 export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcessor {
     renderRootCauseScanningPrompt(type, text) {
         return [
-            new SystemChatMessage(`You are an expert in analyzing root causes for a particular problem statement:
+            new SystemMessage(`You are an expert in analyzing root causes for a particular problem statement:
 
         Important Instructions:
         1. Examine the "<text context>" and analyze it for root causes that relate to the specified problem statement and root cause type.
@@ -32,7 +32,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         5. Never use the words "is a root cause" in the rootCauseDescription
         6. Output scores in the ranges of 0-100.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
 
         Root Cause Type: ${type}

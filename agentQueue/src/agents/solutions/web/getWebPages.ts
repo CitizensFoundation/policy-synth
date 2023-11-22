@@ -18,7 +18,7 @@ import { BaseProcessor } from "../../baseProcessor.js";
 
 import weaviate, { WeaviateClient } from "weaviate-ts-client";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
@@ -48,7 +48,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex?: number
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `Your are an AI expert in analyzing textual data:
 
         Important Instructions:
@@ -176,7 +176,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         }
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         Problem Statement:
         ${problemStatement.description}
@@ -209,7 +209,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
       emptyMessages
     );
 
-    const textForTokenCount = new HumanChatMessage(text);
+    const textForTokenCount = new HumanMessage(text);
 
     const textTokenCount = await this.chat!.getNumTokensFromMessages([
       textForTokenCount,

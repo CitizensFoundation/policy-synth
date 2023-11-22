@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
@@ -31,7 +31,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     subProblemIndex: number
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI genetic algorithm expert, your task is to create a new solution component from two parent solution components: "Solution Component Parent A" and "Solution Component Parent B".
 
@@ -54,7 +54,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
@@ -78,7 +78,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     this.logger.debug(`Mutate rate: ${mutateRate}`);
 
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI expert specializing in genetic algorithms, your task is to mutate the following solution component.
 
@@ -99,7 +99,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 

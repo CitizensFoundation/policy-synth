@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
@@ -15,7 +15,7 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
     evidenceType: keyof PSEvidenceRawWebPageData
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in filtering and ranking policy evidence.
 
@@ -26,7 +26,7 @@ export class RankWebEvidenceProcessor extends BaseProcessor {
 
         Let's think step by step.`
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         Evidence type: ${evidenceType}
 
