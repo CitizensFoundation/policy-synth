@@ -11,7 +11,7 @@ Policy Synth aims to help governments and citizens make better decisions togethe
 ## Policy Synth Overview Diagram
 ![Policy Synth v 43](https://github.com/CitizensFoundation/policy-synth/assets/43699/6956d011-4899-4d5e-ab59-b75556982f44)
 
-## Top-Rated Citizen Engagement Platforms
+## Top-Rated Community Engagement Platforms
 Policy Synth utilizes "Your Priorities", a platform we've been refining since 2008. It's recognized as the world's leading citizen engagement tool.
 
 - Rated #1 on PeoplePowered: [Platform ratings](https://www.peoplepowered.org/platform-ratings)
