@@ -24,7 +24,9 @@ export class RateWebRootCausesProcessor extends BaseProcessor {
           rootCauseQualityScore
         }
 
-       Let's think step by step.`),
+        Never explain only output JSON.
+
+        Let's think step by step.`),
             new HumanMessage(`
         ${this.renderProblemStatement()}
 

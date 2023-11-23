@@ -233,7 +233,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false,
+    verbose: true,
   };
 
   static rankWebEvidenceModel: IEngineBaseAIModelConstants = {
@@ -257,7 +257,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false,
+    verbose: true,
   };
 
   static getRefinedEvidenceModel: IEngineBaseAIModelConstants = {
