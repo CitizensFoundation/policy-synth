@@ -100,7 +100,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
             problemStatement.rootCauseSearchQueries = {};
         }
         for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-            if (true || !problemStatement.rootCauseSearchQueries[searchResultType]) {
+            if (!problemStatement.rootCauseSearchQueries[searchResultType]) {
                 this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
                 // create search queries for each type
                 let searchResults = await this.callLLM("create-root-causes-search-queries", IEngineConstants.createRootCauseSearchQueriesModel, await this.renderCreatePrompt(searchResultType));
