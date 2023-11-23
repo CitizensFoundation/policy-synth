@@ -403,7 +403,11 @@ export class IEngineConstants {
 
   static maxTopEvidenceQueriesToSearchPerType = 4;
 
-  static maxTopRootCauseQueriesToSearchPerType = 10;
+  static maxTopRootCauseQueriesToSearchPerType = 5;
+
+  static maxRootCauseWebPagesToGetByTopSearchPosition = 5;
+
+  static maxRootCausesToUseForRatingRootCauses = 5;
 
   static mainSearchRetryCount = 40;
 
@@ -414,8 +418,6 @@ export class IEngineConstants {
   static maxWebPagesToGetByTopSearchPosition = 10;
 
   static maxEvidenceWebPagesToGetByTopSearchPosition = 10;
-
-  static maxRootCauseWebPagesToGetByTopSearchPosition = 10;
 
   static maxBingSearchResults = 10;
 
@@ -506,8 +508,6 @@ export class IEngineConstants {
   static maxTopPoliciesToProcess = 1;
 
   static maxEvidenceToUseForRatingEvidence = 5;
-
-  static maxRootCausesToUseForRatingRootCauses = 5;
 
   static policyEvidenceFieldTypes: string[] = [
     "allPossiblePositiveEvidenceIdentifiedInTextContext",

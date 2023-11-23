@@ -10,10 +10,10 @@ export class RankWebRootCausesProcessor extends BaseProcessor {
             new SystemMessage(`
         You are an expert in filtering and ranking root causes of a particular problem.
 
-        1. Filter out irrelevant root causes.
+        1. Filter out irrelevant root causes and solutions to the problem.
         2. Filter out duplicates or near duplicates.
         3. Rank the root causes array by importance to the problem statement.
-        4. Always and only output a JSON String Array: [ rootCause ].
+        4. Always and only output a JSON String Array.
 
         Let's think step by step.`),
             new HumanMessage(`
