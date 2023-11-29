@@ -4,6 +4,9 @@ const gpt4OutTokenPrice = 0.03 / 1000;
 const gpt35_16kInTokenPrice = 0.001 / 1000;
 const gpt35_16kOutTokenPrice = 0.002 / 1000;
 
+// The total limit is 128k but we'll use the first 70k
+const gpt4TotalTokenLimit = 70000;
+
 const adaInTokenPrice = 0.0001;
 
 const gpt35_16k_TPM = 1000000;
@@ -19,8 +22,8 @@ export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
-    maxOutputTokens: 4500,
-    tokenLimit: 8192,
+    maxOutputTokens: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -32,7 +35,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 4096,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -44,7 +47,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 256,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -56,7 +59,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 2048,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -72,7 +75,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 256,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -84,7 +87,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -96,7 +99,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -108,7 +111,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -120,7 +123,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -132,7 +135,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -144,7 +147,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -156,7 +159,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -168,7 +171,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -180,7 +183,7 @@ export class IEngineConstants {
     name: "gpt-3.5-turbo-1106",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt35_16kInTokenPrice,
     outTokenCostUSD: gpt35_16kOutTokenPrice,
     limitTPM: gpt35_TPM,
@@ -204,12 +207,24 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
     verbose: false,
+  };
+
+  static reduceSubProblemsModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.1,
+    maxOutputTokens: 4096,
+    tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: true
   };
 
   static rateWebEvidenceModel: IEngineBaseAIModelConstants = {
@@ -228,7 +243,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -240,7 +255,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -252,7 +267,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -263,8 +278,8 @@ export class IEngineConstants {
   static getRefinedEvidenceModel: IEngineBaseAIModelConstants = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
-    maxOutputTokens: 1750,
-    tokenLimit: 8192,
+    maxOutputTokens: 2048,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -275,20 +290,20 @@ export class IEngineConstants {
   static getRefinedRootCausesModel: IEngineBaseAIModelConstants = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
-    maxOutputTokens: 1750,
-    tokenLimit: 8192,
+    maxOutputTokens: 2048,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false,
+    verbose: true,
   };
 
   static reapSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 128,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -300,7 +315,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -312,7 +327,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -324,7 +339,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1200,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -336,7 +351,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1200,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -348,7 +363,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 2048,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -360,7 +375,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -372,7 +387,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -408,6 +423,8 @@ export class IEngineConstants {
   static maxRootCauseWebPagesToGetByTopSearchPosition = 5;
 
   static maxRootCausesToUseForRatingRootCauses = 5;
+
+  static topWebPagesToGetForRefineRootCausesScan = 10;
 
   static mainSearchRetryCount = 40;
 

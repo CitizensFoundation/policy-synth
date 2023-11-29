@@ -33,6 +33,7 @@ if (projectId) {
                 "policies-create-images": {},
                 "create-entities": {},
                 "rank-entities": {},
+                "reduce-sub-problems": {},
                 "create-search-queries": {},
                 "create-sub-problem-images": {},
                 "rank-search-queries": {},

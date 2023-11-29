@@ -415,6 +415,96 @@ const setupProjectFive = (memory: IEngineInnovationMemoryData) => {
 };
 
 
+const setupProjectSix = (memory: IEngineInnovationMemoryData) => {
+  if (!memory.customInstructions) {
+    memory.customInstructions = {} as any;
+  }
+  // console.log("Project 6 running")
+  memory.problemStatement.description = "In modern democracies, government policymaking processes are increasingly struggling to keep pace with the rapidly evolving dynamics of society. This struggle is evident in the delayed implementation of policies, a growing misalignment between governmental actions and public needs, and a general inflexibility in adapting to swift societal changes. As the pace of change in society continues to accelerate, these challenges within the policymaking framework are becoming more evident, highlighting a significant concern about their current effectiveness and future readiness";
+
+  memory.customInstructions.rankSubProblems = `
+    1. Assess how important the sub problems are as sub problems to the main problem statement.
+    2. We are not looking for solutions, only well defined sub problems.
+    3. Keep in mind while you decide that the sub problems, in this case, are especially important to civil soecity and policymakers.
+  `;
+
+  memory.subProblemClientColors = [
+    "#ee782d", // Orange (This is not a typical orange, but more of a dark, burnt orange)
+    "#0b60b9", // Blue (This is a strong, medium-dark blue)
+    "#face2d", // Yellow (This is a bright, somewhat orange-ish yellow)
+    "#50c363", // Green (This is a medium, somewhat light green)
+    "#ADD8E6", // Light blue
+    "#cf1103", // Red (This is a dark, slightly brownish red)
+    "#7F00FF", // Violet
+    "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
+  ];
+
+  memory.customInstructions.subProblemColors = [
+    "orange",
+    "blue",
+    "yellow",
+    "green",
+    "light blue",
+    "red",
+    "violet",
+    "sea Green",
+    "saddle Brown",
+    "chocolate",
+    "fire Brick",
+    "orange Red",
+    "yellow Green",
+    "gold",
+    "dark Khaki",
+    "dark Magenta",
+    "dark Violet",
+    "wheat",
+    "forest Green",
+    "tan",
+    "gray",
+    "transparent",
+  ];
+
+  memory.customInstructions.createSolutions = `
+  1. Never create solution components in the form of frameworks or holistic approaches
+  2. Solution components should include only one core idea
+  3. Remember that the main facilitator for implementation will be international philanthropic organizations working alongside civil society organizations, community-based organizations, and legal advocacy groups.
+  4. The solution component description should clearly articulate what action the international philanthropic organization needs to take in order to implement the solution.
+  5. The solution component description should clearly articulate how the solution component addresses an aspect of the problem.
+  6. The solution title should indicate the intended outcomes and impacts of implementing the solution.
+`;
+
+  memory.customInstructions.rankSolutions = `
+    1. Solution components will be implemented by international philanthropic organizations in partnership with civil society organizations, community-based organizations, and legal advocacy groups.
+  `;
+
+  memory.customInstructions.rateSolutionsJsonFormat = `
+    {
+      highPriorityRatings: {
+        howImportantToProblem,
+        howInnovative,
+        howPractical,
+        howEthical,
+        howComplex,
+      },
+      otherRatings: {
+        benefitsForCitizens,
+        benefitsForGovernments,
+        benefitsForCivilSociety,
+        benefitsForPolicitians,
+        benefitsForPrivateSector,
+      }
+    }
+  `;
+
+  memory.customInstructions.reapSolutions = `
+    1. Solution components should not include more than one core idea.
+    2. Solution components can have more than one implementation detail ideas.
+    3. If the solution components has two core ideas that are hard to implement without each other then the solution component can be included.
+    4. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
+    5. Core ideas are distinct concepts or strategies that are central to the solution component.
+  `;
+};
+
 const projectId = process.argv[2];
 if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
@@ -432,6 +522,8 @@ if (projectId) {
     setupProjectFour(memory);
   } else if (projectId == "5") {
     setupProjectFive(memory);
+  } else if (projectId == "6") {
+    setupProjectSix(memory);
   }
 
   await redis.set(redisKey, JSON.stringify(memory));

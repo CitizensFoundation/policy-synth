@@ -15,6 +15,7 @@ import { RankWebRootCausesProcessor } from "./ranking/rankWebRootCauses.js";
 import { RateWebRootCausesProcessor } from "./ranking/rateWebRootCauses.js";
 import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js";
 import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
+import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
 export class AgentProblems extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -123,6 +124,10 @@ export class AgentProblems extends BaseAgent {
             case "rank-sub-problems":
                 const rankSubProblemsProcessor = new RankSubProblemsProcessor(this.job, this.memory);
                 await rankSubProblemsProcessor.process();
+                break;
+            case "reduce-sub-problems":
+                const reduceSubProblemsProcessor = new ReduceSubProblemsProcessor(this.job, this.memory);
+                await reduceSubProblemsProcessor.process();
                 break;
             default:
                 console.log("No stage matched");
