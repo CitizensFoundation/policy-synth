@@ -182,6 +182,7 @@ type IEngineStageTypes =
   | "web-get-refined-root-causes"
   | "get-metadata-for-top-root-causes"
   | "create-sub-problems"
+  | "reduce-sub-problems"
   | "create-entities"
   | "create-search-queries"
   | "create-pros-cons"
@@ -311,6 +312,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     secondaryColors?: string[];
   };
   subProblems: IEngineSubProblem[];
+  allSubProblems?: IEngineSubProblem[];
   subProblemClientColors?: string[];
   currentStageData?:
     | IEEngineSearchResultData

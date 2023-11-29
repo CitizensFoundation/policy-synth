@@ -19,8 +19,9 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             7. Do not suggest tasks or actions; your task is to explain the problems.
             8. A root cause should not be described as a lack of understanding of the problem.
             9. Do not provide output in markdown format.
-            10. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            11. Let's think step by step.`),
+            10. Never explain only output JSON.
+            12. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
+            13. Let's think step by step.`),
             new HumanMessage(`
            Problem Statement:
            "${this.memory.problemStatement.description}"
@@ -49,8 +50,9 @@ export class CreateSubProblemsProcessor extends BaseProcessor {
             7. Do not suggest tasks or actions; your task is to explain the problems.
             8. A root cause should not be described as a lack of understanding of the problem.
             9. Do not provide output in markdown format.
-            10. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
-            11. Let's think step by step.
+            10. Never explain only output JSON.
+            11. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
+            12. Let's think step by step.
             `),
             new HumanMessage(`
            Problem Statement:

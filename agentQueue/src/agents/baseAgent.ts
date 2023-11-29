@@ -44,6 +44,7 @@ export abstract class BaseAgent extends Base {
     "get-metadata-for-top-root-causes": {},
     "create-sub-problems": {},
     "rank-sub-problems": {},
+    "reduce-sub-problems": {},
     "create-entities": {},
     "rank-entities": {},
     "create-search-queries": {},

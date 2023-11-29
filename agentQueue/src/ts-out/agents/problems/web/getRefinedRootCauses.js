@@ -177,7 +177,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         return true;
     }
     async refineWebRootCauses(page) {
-        const limit = 25;
+        const limit = IEngineConstants.topWebPagesToGetForRefineRootCausesScan;
         try {
             for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
                 const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
