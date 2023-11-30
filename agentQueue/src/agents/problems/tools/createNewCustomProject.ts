@@ -43,6 +43,7 @@ if (projectId) {
         "rank-entities": {},
         "reduce-sub-problems": {},
         "create-search-queries": {},
+        "rank-root-causes-search-queries": {},
         "create-sub-problem-images": {},
         "rank-search-queries": {},
         "web-search": {},
