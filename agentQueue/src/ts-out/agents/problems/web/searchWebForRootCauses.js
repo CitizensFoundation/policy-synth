@@ -3,6 +3,7 @@ import ioredis from "ioredis";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const FORCE_RESEARCH = false;
 export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
     searchCounter = 0;
     async searchWeb() {
@@ -22,7 +23,7 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
                 await new Promise((resolve) => setTimeout(resolve, 15 * 60 * 1000));
                 this.searchCounter = 300;
             }
-            if (true || !problemStatement.rootCauseSearchResults[searchResultType]) {
+            if (FORCE_RESEARCH || !problemStatement.rootCauseSearchResults[searchResultType]) {
                 let queriesToSearch = problemStatement.rootCauseSearchQueries[searchResultType].slice(0, IEngineConstants.maxTopRootCauseQueriesToSearchPerType);
                 this.logger.debug(`Searching for root cause type ${searchResultType} with queries ${JSON.stringify(queriesToSearch, null, 2)}`);
                 const results = await this.getQueryResults(queriesToSearch, `rootCause_${searchResultType}`);

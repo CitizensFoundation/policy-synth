@@ -51,7 +51,7 @@
     "metascraper-url": "^5.36.0",
     "node-fetch": "^3.3.2",
     "nodemon": "^2.0.22",
-    "openai": "^3.3.0",
+    "openai": "^4.20.1",
     "pdf-parse": "^1.1.1",
     "pdf2json": "^3.0.4",
     "pdfjs-dist": "^3.8.162",

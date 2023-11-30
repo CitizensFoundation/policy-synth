@@ -2,7 +2,7 @@ import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
-import { Configuration, ImagesResponse, OpenAIApi } from "openai";
+import { OpenAI } from "openai";
 import { AxiosResponse } from "axios";
 import axios from "axios";
 import AWS from "aws-sdk";
@@ -235,13 +235,13 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         4. Do not include quotes in your prompt.
         5. Never output prompts involving chess or chess pieces.
         6. Never output prompts involving asking for text to be written out, like on a document.
-        7. Follow the Dall-E 2 Prompt Guide in your work.
-        8. Output only your Dall-E 2 prompt, nothing else.
+        7. Follow the Dall-E 3 Prompt Guide in your work.
+        8. Output only your Dall-E 3 prompt, nothing else. No explanations are needed.
         9. Let's think step by step.
         ${injectText ? injectText : ""}
 
-        Dall-E 2 Prompt Guide:
-        For successful Dall-E 2 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
+        Dall-E 3 Prompt Guide:
+        For successful Dall-E 3 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
 
         Use adjectives and adverbs for richer prompts. Instead of “a car,” specify it as “a shiny red sports car on a winding road,” to portray color, style, and setting.
 
@@ -263,11 +263,11 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
   }
 
   async getImageUrlFromPrompt(prompt: string) {
-    const configuration = new Configuration({
+    const configuration = {
       apiKey: process.env.OPENAI_API_KEY,
-    });
-    4;
-    const client = new OpenAIApi(configuration);
+    };
+
+    const client = new OpenAI(configuration);
 
     let retryCount = 0;
     let retrying = true; // Initialize as true
@@ -275,9 +275,12 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
 
     while (retrying && retryCount < IEngineConstants.maxDalleRetryCount) {
       try {
-        result = await client.createImage({
+        result = await client.images.generate({
+          model: "dall-e-3",
           prompt,
-          size: "512x512",
+          n:1,
+          quality: "standard",
+          size: "1792x1024",
         });
         if (result) {
           retrying = false; // Only change retrying to false if there is a result.

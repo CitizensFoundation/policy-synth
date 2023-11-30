@@ -18,6 +18,7 @@ import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
 import { GetMetaDataForTopWebRootCausesProcessor } from "./web/getMetaDataForTopWebRootCauses.js";
 import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
 import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
+import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
 
 export class AgentProblems extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -140,6 +141,13 @@ export class AgentProblems extends BaseAgent {
           this.memory
         );
         await createSearchQueriesProcessor.process();
+        break;
+      case "rank-root-causes-search-results":
+        const rankSearchResults = new RankRootCausesSearchResultsProcessor(
+          this.job,
+          this.memory
+        );
+        await rankSearchResults.process();
         break;
       case "rank-root-causes-search-queries":
         const rankRootCausesSearchQueries =

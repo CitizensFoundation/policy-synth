@@ -2,7 +2,6 @@ import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
-import { Configuration, ImagesResponse, OpenAIApi } from "openai";
 import { AxiosResponse } from "axios";
 import axios from "axios";
 import AWS from "aws-sdk";
@@ -26,12 +25,12 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
         4. Do not include quotes in your prompt.
         5. Never output prompts involving chess or chess pieces.
         6. Never output prompts involving asking for text to be written out, like on a document.
-        7. Follow the Dalle-2 Prompt Guide in your work.
-        8. Output only your Dalle-2 prompt, nothing else.
+        7. Follow the Dalle-3 Prompt Guide in your work.
+        8. Output only your Dalle-3 prompt, nothing else.
         9. Let's think step by step.
 
-        Dalle-2 Prompt Guide:
-        For successful Dall-E 2 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
+        Dalle-3 Prompt Guide:
+        For successful Dall-E 3 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
 
         Use adjectives and adverbs for richer prompts. Instead of “a car,” specify it as “a shiny red sports car on a winding road,” to portray color, style, and setting.
 

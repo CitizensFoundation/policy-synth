@@ -17,6 +17,7 @@ import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js
 import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
 import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
 import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
+import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
 export class AgentProblems extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -109,6 +110,10 @@ export class AgentProblems extends BaseAgent {
             case "create-search-queries":
                 const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(this.job, this.memory);
                 await createSearchQueriesProcessor.process();
+                break;
+            case "rank-root-causes-search-results":
+                const rankSearchResults = new RankRootCausesSearchResultsProcessor(this.job, this.memory);
+                await rankSearchResults.process();
                 break;
             case "rank-root-causes-search-queries":
                 const rankRootCausesSearchQueries = new RankRootCausesSearchQueriesProcessor(this.job, this.memory);

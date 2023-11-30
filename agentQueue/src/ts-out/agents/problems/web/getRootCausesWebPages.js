@@ -183,9 +183,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             _additional: data1._additional || data2._additional,
         };
     }
-    get maxWebPagesToGetByTopSearchPosition() {
-        return IEngineConstants.maxRootCauseWebPagesToGetByTopSearchPosition;
-    }
     async processPageText(text, subProblemIndex = undefined, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results`);
         try {
@@ -216,9 +213,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             this.logger.error(`Error in processPageText`);
             this.logger.error(e.stack || e);
         }
-    }
-    get maxTopWebPagesToGet() {
-        return IEngineConstants.maxTopWebPagesToGet;
     }
     async getAndProcessRootCausePage(url, browserPage, type) {
         if (url == "https://www.oecd.org/pisa/PISA%202018%20Insights%20and%20Interpretations%20FINAL%20PDF.pdf") {
@@ -259,8 +253,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
         await newPage.setUserAgent(IEngineConstants.currentUserAgent);
         for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-            const urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
+            let urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
             if (urlsToGet) {
+                urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length * IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
                 for (let i = 0; i < urlsToGet.length; i++) {
                     await this.getAndProcessRootCausePage(urlsToGet[i].url, newPage, searchResultType);
                 }

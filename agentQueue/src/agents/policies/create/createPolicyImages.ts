@@ -1,6 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { SystemMessage, HumanMessage } from "langchain/schema";
-import { Configuration, OpenAIApi } from "openai";
 import path from "path";
 import fs from "fs";
 import { IEngineConstants } from "../../../constants.js";

@@ -2,7 +2,6 @@ import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
-import { Configuration, ImagesResponse, OpenAIApi } from "openai";
 import { AxiosResponse } from "axios";
 import axios from "axios";
 import AWS from "aws-sdk";

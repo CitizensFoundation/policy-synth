@@ -6,8 +6,6 @@ import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 import { RankRootCausesSearchQueriesProcessor } from "./rankRootCausesSearchQueries.js";
 
 export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQueriesProcessor {
-
-
   async voteOnPromptPair(
     index: number,
     promptPair: number[]
@@ -15,8 +13,8 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![itemOneIndex] as string;
-    const itemTwo = this.allItems![index]![itemTwoIndex] as string;
+    const itemOne = this.allItems![index]![itemOneIndex] as IEngineSearchResultItem;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as IEngineSearchResultItem;
 
     const messages = [
       new SystemMessage(
@@ -39,10 +37,14 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
         Root Causes Search Results to Rank:
 
         Search Results One:
-        ${itemOne}
+        ${itemOne.title}
+        ${itemOne.description}
+        ${itemOne.url}
 
         Search Results Two:
-        ${itemTwo}
+        ${itemTwo.title}
+        ${itemTwo.description}
+        ${itemTwo.url}
 
         The Most Relevant Search Results Is:
        `
@@ -61,7 +63,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
 
   async process() {
     this.logger.info("Rank Root Causes Search Results Processor");
-    super.process();
+    //super.process();
 
     this.chat = new ChatOpenAI({
       temperature: IEngineConstants.searchResultsRankingsModel.temperature,
@@ -73,28 +75,37 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
     for (const searchQueryType of this.rootCauseTypes) {
       this.logger.info(`Ranking search results for ${searchQueryType}`);
       let queriesToRank =
-        this.memory.problemStatement.rootCauseSearchQueries![
+        this.memory.problemStatement.rootCauseSearchResults![
           searchQueryType as PSRootCauseWebPageTypes
         ];
       const index = -1;
+
+      const seenUrls = new Set();
+      queriesToRank = queriesToRank.filter(item => {
+        if (seenUrls.has(item.url)) {
+          return false;
+        }
+        seenUrls.add(item.url);
+        return true;
+      });
 
       this.setupRankingPrompts(index, queriesToRank);
 
       await this.performPairwiseRanking(index);
 
       this.logger.info(
-        `Ranking before: ${JSON.stringify(queriesToRank, null, 2)}`
+        `Ranking before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`
       );
 
-      this.memory.problemStatement.rootCauseSearchQueries![
+      this.memory.problemStatement.rootCauseSearchResults![
         searchQueryType as PSRootCauseWebPageTypes
-      ] = this.getOrderedListOfItems(index) as string[];
+      ] = this.getOrderedListOfItems(index) as IEngineSearchResultItem[];
 
       this.logger.info(
         `Ranking after: ${JSON.stringify(
-          this.memory.problemStatement.rootCauseSearchQueries![
+          this.memory.problemStatement.rootCauseSearchResults![
             searchQueryType as PSRootCauseWebPageTypes
-          ],
+          ].map(item => item.title),
           null,
           2
         )}`

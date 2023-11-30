@@ -177,7 +177,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         ]);
         const totalTokenCount = promptTokenCount.totalCount +
             textTokenCount.totalCount +
-            IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+            IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
     getAllTextForTokenCheck(text, subProblemIndex) {
@@ -263,7 +263,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     async getAIAnalysis(text, subProblemIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt(this.memory.problemStatement, text, subProblemIndex);
-        const analysis = (await this.callLLM("web-get-pages", IEngineConstants.getPageAnalysisModel, messages, true, true));
+        const analysis = (await this.callLLM("web-get-pages", IEngineConstants.getSolutionsPagesAnalysisModel, messages, true, true));
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex) {
@@ -271,8 +271,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
             const { totalTokenCount, promptTokenCount } = await this.getTokenCount(text, subProblemIndex);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
-            if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit -
+            if (IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit < totalTokenCount) {
+                const maxTokenLengthForChunk = IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit -
                     promptTokenCount.totalCount -
                     128;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
@@ -547,17 +547,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
                 true;
         }
     }
-    get maxWebPagesToGetByTopSearchPosition() {
-        return IEngineConstants.maxWebPagesToGetByTopSearchPosition;
-    }
-    get maxTopWebPagesToGet() {
-        return IEngineConstants.maxTopWebPagesToGet;
-    }
     getUrlsToFetch(allPages) {
         let outArray = [];
-        outArray = outArray.concat(allPages.filter((page) => page.originalPosition <=
-            this.maxWebPagesToGetByTopSearchPosition));
-        outArray = outArray.concat(allPages.slice(0, this.maxTopWebPagesToGet));
+        outArray = allPages.slice(0, Math.floor(allPages.length * IEngineConstants.maxPercentOfSolutionsWebPagesToGet));
         // Map to URLs and remove duplicates
         const urlsToGet = Array.from(outArray
             .map((p) => p.url)
@@ -597,10 +589,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
         browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
         await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
-        //await this.processSubProblems(browser);
-        //await this.saveMemory();
-        //await this.getAllCustomSearchUrls(browserPage);
-        //await this.saveMemory();
+        await this.processSubProblems(browser);
+        await this.saveMemory();
+        await this.getAllCustomSearchUrls(browserPage);
+        await this.saveMemory();
         const searchQueryTypes = [
             "general",
             "scientific",
@@ -625,10 +617,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
         this.logger.info("Get Web Pages Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.getPageAnalysisModel.temperature,
-            maxTokens: IEngineConstants.getPageAnalysisModel.maxOutputTokens,
-            modelName: IEngineConstants.getPageAnalysisModel.name,
-            verbose: IEngineConstants.getPageAnalysisModel.verbose,
+            temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
+            maxTokens: IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+            modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
+            verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
         });
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);

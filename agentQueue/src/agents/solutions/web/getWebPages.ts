@@ -218,7 +218,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     const totalTokenCount =
       promptTokenCount.totalCount +
       textTokenCount.totalCount +
-      IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+      IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -342,7 +342,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
     const analysis = (await this.callLLM(
       "web-get-pages",
-      IEngineConstants.getPageAnalysisModel,
+      IEngineConstants.getSolutionsPagesAnalysisModel,
       messages,
       true,
       true
@@ -366,9 +366,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
       let textAnalysis: IEngineWebPageAnalysisData;
 
-      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+      if (IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          IEngineConstants.getPageAnalysisModel.tokenLimit -
+          IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit -
           promptTokenCount.totalCount -
           128;
 
@@ -823,28 +823,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
   }
 
-  get maxWebPagesToGetByTopSearchPosition() {
-    return IEngineConstants.maxWebPagesToGetByTopSearchPosition;
-  }
-
-  get maxTopWebPagesToGet() {
-    return IEngineConstants.maxTopWebPagesToGet;
-  }
-
   getUrlsToFetch(allPages: IEngineSearchResultItem[]): string[] {
     let outArray: IEngineSearchResultItem[] = [];
 
-    outArray = outArray.concat(
-      allPages.filter(
-        (page) =>
-          page.originalPosition <=
-          this.maxWebPagesToGetByTopSearchPosition
-      )
-    );
-
-    outArray = outArray.concat(
-      allPages.slice(0, this.maxTopWebPagesToGet)
-    );
+    outArray = allPages.slice(0, Math.floor(allPages.length * IEngineConstants.maxPercentOfSolutionsWebPagesToGet));
 
     // Map to URLs and remove duplicates
     const urlsToGet: string[] = Array.from(
@@ -931,13 +913,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-    //await this.processSubProblems(browser);
+    await this.processSubProblems(browser);
 
-    //await this.saveMemory();
+    await this.saveMemory();
 
-    //await this.getAllCustomSearchUrls(browserPage);
+    await this.getAllCustomSearchUrls(browserPage);
 
-    //await this.saveMemory();
+    await this.saveMemory();
 
     const searchQueryTypes = [
       "general",
@@ -976,10 +958,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.getPageAnalysisModel.temperature,
-      maxTokens: IEngineConstants.getPageAnalysisModel.maxOutputTokens,
-      modelName: IEngineConstants.getPageAnalysisModel.name,
-      verbose: IEngineConstants.getPageAnalysisModel.verbose,
+      temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
+      maxTokens: IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+      modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
+      verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
     });
 
     await this.getAllPages();

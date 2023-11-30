@@ -26,10 +26,14 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
         Root Causes Search Results to Rank:
 
         Search Results One:
-        ${itemOne}
+        ${itemOne.title}
+        ${itemOne.description}
+        ${itemOne.url}
 
         Search Results Two:
-        ${itemTwo}
+        ${itemTwo.title}
+        ${itemTwo.description}
+        ${itemTwo.url}
 
         The Most Relevant Search Results Is:
        `),
@@ -38,7 +42,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
     }
     async process() {
         this.logger.info("Rank Root Causes Search Results Processor");
-        super.process();
+        //super.process();
         this.chat = new ChatOpenAI({
             temperature: IEngineConstants.searchResultsRankingsModel.temperature,
             maxTokens: IEngineConstants.searchResultsRankingsModel.maxOutputTokens,
@@ -47,13 +51,21 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
         });
         for (const searchQueryType of this.rootCauseTypes) {
             this.logger.info(`Ranking search results for ${searchQueryType}`);
-            let queriesToRank = this.memory.problemStatement.rootCauseSearchQueries[searchQueryType];
+            let queriesToRank = this.memory.problemStatement.rootCauseSearchResults[searchQueryType];
             const index = -1;
+            const seenUrls = new Set();
+            queriesToRank = queriesToRank.filter(item => {
+                if (seenUrls.has(item.url)) {
+                    return false;
+                }
+                seenUrls.add(item.url);
+                return true;
+            });
             this.setupRankingPrompts(index, queriesToRank);
             await this.performPairwiseRanking(index);
-            this.logger.info(`Ranking before: ${JSON.stringify(queriesToRank, null, 2)}`);
-            this.memory.problemStatement.rootCauseSearchQueries[searchQueryType] = this.getOrderedListOfItems(index);
-            this.logger.info(`Ranking after: ${JSON.stringify(this.memory.problemStatement.rootCauseSearchQueries[searchQueryType], null, 2)}`);
+            this.logger.info(`Ranking before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`);
+            this.memory.problemStatement.rootCauseSearchResults[searchQueryType] = this.getOrderedListOfItems(index);
+            this.logger.info(`Ranking after: ${JSON.stringify(this.memory.problemStatement.rootCauseSearchResults[searchQueryType].map(item => item.title), null, 2)}`);
         }
         await this.saveMemory();
         this.logger.info("Rank Root Causes Search Results Processor: Done");
