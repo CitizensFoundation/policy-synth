@@ -220,10 +220,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     };
   }
 
-  get maxWebPagesToGetByTopSearchPosition() {
-    return IEngineConstants.maxRootCauseWebPagesToGetByTopSearchPosition;
-  }
-
   async processPageText(
     text: string,
     subProblemIndex: undefined = undefined,
@@ -262,10 +258,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
       this.logger.error(`Error in processPageText`);
       this.logger.error(e.stack || e);
     }
-  }
-
-  get maxTopWebPagesToGet() {
-    return IEngineConstants.maxTopWebPagesToGet;
   }
 
   async getAndProcessRootCausePage(url: string, browserPage: Page, type: PSRootCauseWebPageTypes) {
@@ -307,8 +299,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     await newPage.setUserAgent(IEngineConstants.currentUserAgent);
 
     for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-      const urlsToGet = problemStatement.rootCauseSearchResults![searchResultType];
+      let urlsToGet = problemStatement.rootCauseSearchResults![searchResultType];
       if (urlsToGet) {
+        urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length * IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
         for (let i = 0; i < urlsToGet.length; i++) {
           await this.getAndProcessRootCausePage(urlsToGet[i].url, newPage, searchResultType);
         }

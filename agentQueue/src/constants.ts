@@ -203,6 +203,18 @@ export class IEngineConstants {
     verbose: false,
   };
 
+  static getSolutionsPagesAnalysisModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 3048,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+  };
+
   static rankWebSolutionsModel: IEngineBaseAIModelConstants = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
@@ -219,7 +231,7 @@ export class IEngineConstants {
     name: "gpt-4-1106-preview",
     temperature: 0.1,
     maxOutputTokens: 4096,
-    tokenLimit: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -414,13 +426,13 @@ export class IEngineConstants {
 
   static maxTopEntitiesToRender = 3;
 
-  static maxTopQueriesToSearchPerType = 4;
+  static maxTopQueriesToSearchPerType = 5;
 
   static maxTopEvidenceQueriesToSearchPerType = 4;
 
   static maxTopRootCauseQueriesToSearchPerType = 5;
 
-  static maxRootCauseWebPagesToGetByTopSearchPosition = 5;
+  static maxRootCausePercentOfSearchResultWebPagesToGet = 0.65;
 
   static maxRootCausesToUseForRatingRootCauses = 5;
 
@@ -430,11 +442,7 @@ export class IEngineConstants {
 
   static maxDalleRetryCount = 7;
 
-  static maxTopWebPagesToGet = 10;
-
-  static maxWebPagesToGetByTopSearchPosition = 10;
-
-  static maxEvidenceWebPagesToGetByTopSearchPosition = 10;
+  static maxTopWebPagesToGet = 5;
 
   static maxBingSearchResults = 10;
 
@@ -453,7 +461,7 @@ export class IEngineConstants {
   static subProblemsRankingMinNumberOfMatches = 10;
 
   static currentUserAgent =
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
 
   static topItemsToKeepForTopicClusterPruning = 5;
 
@@ -477,6 +485,8 @@ export class IEngineConstants {
   };
 
   static maxTopSearchQueriesForSolutionCreation = 8;
+
+  static maxPercentOfSolutionsWebPagesToGet = 0.65;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 14,

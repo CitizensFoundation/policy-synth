@@ -9,7 +9,8 @@ if (projectId) {
     const memory = JSON.parse(output);
     //memory.currentStage = "create-root-causes-search-queries"
     //memory.currentStage = "rank-root-causes-search-queries"
-    memory.currentStage = "web-search-root-causes";
+    //memory.currentStage = "web-search-root-causes"
+    memory.currentStage = "rank-root-causes-search-results";
     //memory.currentStage = "web-get-root-causes-pages"
     //memory.currentStage = "rank-web-root-causes"
     //memory.currentStage = "rate-web-root-causes"

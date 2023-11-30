@@ -390,10 +390,6 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     };
   }
 
-  get maxWebPagesToGetByTopSearchPosition() {
-    return IEngineConstants.maxEvidenceWebPagesToGetByTopSearchPosition;
-  }
-
   async processPageText(
     text: string,
     subProblemIndex: number | undefined,

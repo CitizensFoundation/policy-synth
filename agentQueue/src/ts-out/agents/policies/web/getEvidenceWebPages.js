@@ -273,9 +273,6 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             _additional: data1._additional || data2._additional, // Assuming you want data from data1 when available. Adjust as needed.
         };
     }
-    get maxWebPagesToGetByTopSearchPosition() {
-        return IEngineConstants.maxEvidenceWebPagesToGetByTopSearchPosition;
-    }
     async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
         try {
