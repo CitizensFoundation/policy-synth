@@ -22,8 +22,9 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
                 await new Promise((resolve) => setTimeout(resolve, 15 * 60 * 1000));
                 this.searchCounter = 300;
             }
-            if (!problemStatement.rootCauseSearchResults[searchResultType]) {
+            if (true || !problemStatement.rootCauseSearchResults[searchResultType]) {
                 let queriesToSearch = problemStatement.rootCauseSearchQueries[searchResultType].slice(0, IEngineConstants.maxTopRootCauseQueriesToSearchPerType);
+                this.logger.debug(`Searching for root cause type ${searchResultType} with queries ${JSON.stringify(queriesToSearch, null, 2)}`);
                 const results = await this.getQueryResults(queriesToSearch, `rootCause_${searchResultType}`);
                 this.searchCounter += IEngineConstants.maxTopEvidenceQueriesToSearchPerType;
                 problemStatement.rootCauseSearchResults[searchResultType] = results.searchResults;

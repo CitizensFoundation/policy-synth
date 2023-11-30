@@ -17,6 +17,7 @@ import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js
 import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
 import { GetMetaDataForTopWebRootCausesProcessor } from "./web/getMetaDataForTopWebRootCauses.js";
 import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
+import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
 
 export class AgentProblems extends BaseAgent {
   declare memory: IEngineInnovationMemoryData;
@@ -65,7 +66,10 @@ export class AgentProblems extends BaseAgent {
   }
 
   async processSubProblems() {
-    const subProblemsProcessor = new CreateSubProblemsProcessor(this.job, this.memory);
+    const subProblemsProcessor = new CreateSubProblemsProcessor(
+      this.job,
+      this.memory
+    );
 
     await subProblemsProcessor.process();
   }
@@ -73,27 +77,37 @@ export class AgentProblems extends BaseAgent {
   async process() {
     switch (this.memory.currentStage) {
       case "create-root-causes-search-queries":
-        const createRootCausesSearchQueriesProcessor = new CreateRootCausesSearchQueriesProcessor(this.job, this.memory);
+        const createRootCausesSearchQueriesProcessor =
+          new CreateRootCausesSearchQueriesProcessor(this.job, this.memory);
         await createRootCausesSearchQueriesProcessor.process();
         break;
       case "web-search-root-causes":
-        const searchWebForRootCausesProcessor = new SearchWebForRootCausesProcessor(this.job, this.memory);
+        const searchWebForRootCausesProcessor =
+          new SearchWebForRootCausesProcessor(this.job, this.memory);
         await searchWebForRootCausesProcessor.process();
         break;
       case "web-get-root-causes-pages":
-        const getRootCausesWebpagesProcessor = new GetRootCausesWebPagesProcessor(this.job, this.memory);
+        const getRootCausesWebpagesProcessor =
+          new GetRootCausesWebPagesProcessor(this.job, this.memory);
         await getRootCausesWebpagesProcessor.process();
         break;
       case "rank-web-root-causes":
-        const rankWebRootCausesProcessor = new RankWebRootCausesProcessor(this.job, this.memory);
+        const rankWebRootCausesProcessor = new RankWebRootCausesProcessor(
+          this.job,
+          this.memory
+        );
         await rankWebRootCausesProcessor.process();
         break;
       case "rate-web-root-causes":
-        const rateWebRootCausesProcessor = new RateWebRootCausesProcessor(this.job, this.memory);
+        const rateWebRootCausesProcessor = new RateWebRootCausesProcessor(
+          this.job,
+          this.memory
+        );
         await rateWebRootCausesProcessor.process();
         break;
       case "web-get-refined-root-causes":
-        const webGetRefinedRootCausesProcessor = new GetRefinedRootCausesProcessor(this.job, this.memory);
+        const webGetRefinedRootCausesProcessor =
+          new GetRefinedRootCausesProcessor(this.job, this.memory);
         await webGetRefinedRootCausesProcessor.process();
         break;
       // case "get-metadata-for-top-root-causes":=
@@ -104,39 +118,67 @@ export class AgentProblems extends BaseAgent {
         await this.processSubProblems();
         break;
       case "create-entities":
-        const createEntitiesProcessor = new CreateEntitiesProcessor(this.job, this.memory);
+        const createEntitiesProcessor = new CreateEntitiesProcessor(
+          this.job,
+          this.memory
+        );
         await createEntitiesProcessor.process();
         break;
       case "create-sub-problem-images":
-        const createSubProblemImagesProcessor = new CreateSubProblemImagesProcessor(this.job, this.memory);
+        const createSubProblemImagesProcessor =
+          new CreateSubProblemImagesProcessor(this.job, this.memory);
         await createSubProblemImagesProcessor.process();
         break;
       case "create-problem-statement-image":
-        const createProblemStatementImageProcessor = new CreateProblemStatementImageProcessor(this.job, this.memory);
+        const createProblemStatementImageProcessor =
+          new CreateProblemStatementImageProcessor(this.job, this.memory);
         await createProblemStatementImageProcessor.process();
         break;
       case "create-search-queries":
-        const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(this.job, this.memory);
+        const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(
+          this.job,
+          this.memory
+        );
         await createSearchQueriesProcessor.process();
         break;
+      case "rank-root-causes-search-queries":
+        const rankRootCausesSearchQueries =
+          new RankRootCausesSearchQueriesProcessor(this.job, this.memory);
+        await rankRootCausesSearchQueries.process();
+        break;
       case "rank-entities":
-        const rankEntitiesProcessor = new RankEntitiesProcessor(this.job, this.memory);
+        const rankEntitiesProcessor = new RankEntitiesProcessor(
+          this.job,
+          this.memory
+        );
         await rankEntitiesProcessor.process();
         break;
       case "rank-search-queries":
-        const rankSearchQueriesProcessor = new RankSearchQueriesProcessor(this.job, this.memory);
+        const rankSearchQueriesProcessor = new RankSearchQueriesProcessor(
+          this.job,
+          this.memory
+        );
         await rankSearchQueriesProcessor.process();
         break;
       case "rank-search-results":
-        const rankSearchResultsProcessor = new RankSearchResultsProcessor(this.job, this.memory);
+        const rankSearchResultsProcessor = new RankSearchResultsProcessor(
+          this.job,
+          this.memory
+        );
         await rankSearchResultsProcessor.process();
         break;
       case "rank-sub-problems":
-        const rankSubProblemsProcessor = new RankSubProblemsProcessor(this.job, this.memory);
+        const rankSubProblemsProcessor = new RankSubProblemsProcessor(
+          this.job,
+          this.memory
+        );
         await rankSubProblemsProcessor.process();
         break;
       case "reduce-sub-problems":
-        const reduceSubProblemsProcessor = new ReduceSubProblemsProcessor(this.job, this.memory);
+        const reduceSubProblemsProcessor = new ReduceSubProblemsProcessor(
+          this.job,
+          this.memory
+        );
         await reduceSubProblemsProcessor.process();
         break;
       default:
@@ -154,7 +196,7 @@ const agent = new Worker(
     await agent.process();
     return job.data;
   },
-  { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") },
+  { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") }
 );
 
 process.on("SIGINT", async () => {

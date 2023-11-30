@@ -40,6 +40,7 @@ export class BaseAgent extends Base {
         "create-entities": {},
         "rank-entities": {},
         "create-search-queries": {},
+        "rank-root-causes-search-queries": {},
         "create-sub-problem-images": {},
         "rank-search-queries": {},
         "web-search": {},

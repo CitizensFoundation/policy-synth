@@ -176,6 +176,7 @@ interface IEEngineSearchResultData {
 type IEngineStageTypes =
   | "create-root-causes-search-queries"
   | "web-search-root-causes"
+  | "rank-root-causes-search-queries"
   | "web-get-root-causes-pages"
   | "rank-web-root-causes"
   | "rate-web-root-causes"
