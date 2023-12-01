@@ -279,7 +279,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
           model: "dall-e-3",
           prompt,
           n:1,
-          quality: "standard",
+          quality: "hd",
           size: "1792x1024",
         });
         if (result) {
@@ -299,7 +299,8 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     }
 
     if (result) {
-      const imageURL = result.data.data[0].url;
+      this.logger.debug(`Result: ${JSON.stringify(result)}`);
+      const imageURL = result.data[0].url;
       if (!imageURL) throw new Error("Error getting generated image");
       return imageURL;
     } else {

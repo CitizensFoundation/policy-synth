@@ -117,7 +117,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
                     promptTokenCount.totalCount -
                     512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
-                const splitText = await this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
+                const splitText = this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];

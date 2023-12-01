@@ -181,7 +181,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
         );
 
-        const splitText = await this.splitText(
+        const splitText = this.splitText(
           text,
           maxTokenLengthForChunk,
           subProblemIndex

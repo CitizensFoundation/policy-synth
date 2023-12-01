@@ -236,7 +236,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true
+    verbose: false
   };
 
   static rateWebEvidenceModel: IEngineBaseAIModelConstants = {
@@ -260,7 +260,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true,
+    verbose: false
   };
 
   static rankWebEvidenceModel: IEngineBaseAIModelConstants = {
@@ -284,7 +284,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true,
+    verbose: false,
   };
 
   static getRefinedEvidenceModel: IEngineBaseAIModelConstants = {
@@ -302,13 +302,13 @@ export class IEngineConstants {
   static getRefinedRootCausesModel: IEngineBaseAIModelConstants = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
-    maxOutputTokens: 2048,
+    maxOutputTokens: 3048,
     tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true,
+    verbose: false
   };
 
   static reapSolutionsModel: IEngineBaseAIModelConstants = {

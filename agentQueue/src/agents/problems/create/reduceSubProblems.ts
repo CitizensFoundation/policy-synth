@@ -46,6 +46,7 @@ export class ReduceSubProblemsProcessor extends BaseProcessor {
       delete (sp as any).searchQueries;
       delete (sp as any).searchResults;
       delete (sp as any).eloRating;
+      delete (sp as any).fromUrl;
     });
     const reducedSubProblems = (await this.callLLM(
       "reduce-sub-problems",
