@@ -82,6 +82,7 @@ interface IEngineSubProblem {
   imagePrompt?: string;
   whyIsSubProblemImportant: string;
   fromSearchType?: PSRootCauseWebPageTypes;
+  fromUrl?: string;
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;

@@ -22,8 +22,6 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 
-import { isWithinTokenLimit } from "gpt-tokenizer";
-
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 import ioredis from "ioredis";
@@ -262,21 +260,28 @@ export class GetWebPagesProcessor extends BaseProcessor {
     };
   }
 
-  async splitText(
+  isWithinTokenLimit(allText: string, maxChunkTokenCount: number): boolean {
+    const words = allText.split(/\s+/);
+    const estimatedTokenCount = words.length * 1.35;
+
+    return estimatedTokenCount <= maxChunkTokenCount;
+  }
+
+  splitText(
     fullText: string,
     maxChunkTokenCount: number,
     subProblemIndex: number | undefined
-  ): Promise<string[]> {
+  ): string[] {
     const chunks: string[] = [];
     const elements = fullText.split("\n");
     let currentChunk = "";
 
-    const addElementToChunk = async (element: string) => {
+    const addElementToChunk = (element: string) => {
       const potentialChunk =
         (currentChunk !== "" ? currentChunk + "\n" : "") + element;
 
       if (
-        !isWithinTokenLimit(
+        !this.isWithinTokenLimit(
           this.getAllTextForTokenCheck(potentialChunk, subProblemIndex),
           maxChunkTokenCount
         )
@@ -292,7 +297,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             // If the element is a sentence, split it by words
             const words = element.split(" ");
             for (let word of words) {
-              await addElementToChunk(word);
+              addElementToChunk(word);
             }
           } else {
             // If the element is a single word that exceeds maxChunkTokenCount, add it as is
@@ -307,7 +312,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     for (let element of elements) {
       // Before adding an element to a chunk, check its size
       if (
-        !isWithinTokenLimit(
+        !this.isWithinTokenLimit(
           this.getAllTextForTokenCheck(element, subProblemIndex),
           maxChunkTokenCount
         )
@@ -315,10 +320,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
         // If the element is too large, split it by sentences
         const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
         for (let sentence of sentences) {
-          await addElementToChunk(sentence);
+          addElementToChunk(sentence);
         }
       } else {
-        await addElementToChunk(element);
+        addElementToChunk(element);
       }
     }
 
@@ -376,7 +381,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
         );
 
-        const splitText = await this.splitText(
+        const splitText = this.splitText(
           text,
           maxTokenLengthForChunk,
           subProblemIndex
@@ -542,9 +547,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
         }
 
         if (pdfBuffer) {
-          this.logger.debug(pdfBuffer.toString().slice(0, 100));
+          //this.logger.debug(pdfBuffer.toString().slice(0, 100));
           try {
-            new PdfReader({}).parseBuffer(
+            new PdfReader({debug: false, verbose: false}).parseBuffer(
               pdfBuffer,
               async (err: any, item: any) => {
                 if (err) {
@@ -553,11 +558,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
                   resolve();
                 } else if (!item) {
                   finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-                  this.logger.debug(
+                  /*this.logger.debug(
                     `Got final PDF text: ${
                       finalText ? finalText.slice(0, 100) : ""
                     }`
-                  );
+                  );*/
                   await this.processPageText(
                     finalText,
                     subProblemIndex,

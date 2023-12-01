@@ -36,6 +36,7 @@ export class ReduceSubProblemsProcessor extends BaseProcessor {
             delete sp.searchQueries;
             delete sp.searchResults;
             delete sp.eloRating;
+            delete sp.fromUrl;
         });
         const reducedSubProblems = (await this.callLLM("reduce-sub-problems", IEngineConstants.reduceSubProblemsModel, await this.renderSelectPrompt(this.memory.problemStatement.description, subProblemsToConsider)));
         // Go through all the reducedSubProblems and add the eloRating at 0

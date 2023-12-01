@@ -88,7 +88,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
                 const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit - promptTokenCount.totalCount - 512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
-                const splitText = await this.splitText(text, maxTokenLengthForChunk, undefined);
+                const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];

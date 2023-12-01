@@ -112,7 +112,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
         this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
 
-        const splitText = await this.splitText(text, maxTokenLengthForChunk, undefined);
+        const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
 
         this.logger.debug(`Got ${splitText.length} splitTexts`);
 

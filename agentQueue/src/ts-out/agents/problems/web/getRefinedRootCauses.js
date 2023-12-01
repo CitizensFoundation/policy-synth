@@ -47,7 +47,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         `),
         ];
     }
-    async getRootCauseTextAnalysis(type, text) {
+    async getRootCauseRefinedTextAnalysis(type, text, url) {
         try {
             const { totalTokenCount, promptTokenCount } = await this.getRootCauseTokenCount(text, type);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
@@ -57,38 +57,44 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
                     promptTokenCount.totalCount -
                     64;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
-                const splitText = await this.splitText(text, maxTokenLengthForChunk, undefined);
+                const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];
                     let nextAnalysis = await this.getRefinedRootCauseTextAIAnalysis(type, currentText);
                     if (nextAnalysis) {
                         for (let rootCause of nextAnalysis) {
-                            this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`);
-                            this.memory.subProblems.push({
-                                title: rootCause.rootCauseTitle,
-                                description: rootCause.rootCauseDescription,
-                                whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
-                                fromSearchType: type,
-                                solutions: {
-                                    populations: [],
-                                },
-                                entities: [],
-                                searchQueries: {
-                                    general: [],
-                                    scientific: [],
-                                    news: [],
-                                    openData: [],
-                                },
-                                searchResults: {
-                                    pages: {
+                            //this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
+                            if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
+                                this.memory.subProblems.push({
+                                    title: rootCause.rootCauseTitle,
+                                    description: rootCause.rootCauseDescription,
+                                    whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                                    fromSearchType: type,
+                                    fromUrl: url,
+                                    solutions: {
+                                        populations: [],
+                                    },
+                                    entities: [],
+                                    searchQueries: {
                                         general: [],
                                         scientific: [],
                                         news: [],
                                         openData: [],
                                     },
-                                },
-                            });
+                                    searchResults: {
+                                        pages: {
+                                            general: [],
+                                            scientific: [],
+                                            news: [],
+                                            openData: [],
+                                        },
+                                    },
+                                });
+                            }
+                            else {
+                                this.logger.warn(`No title or description found for ${JSON.stringify(rootCause, null, 2)}`);
+                            }
                         }
                     }
                     else {
@@ -99,33 +105,43 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
             else {
                 textAnalysis = await this.getRefinedRootCauseTextAIAnalysis(type, text);
                 for (let rootCause of textAnalysis) {
-                    this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`);
-                    this.memory.subProblems.push({
-                        title: rootCause.rootCauseTitle,
-                        description: rootCause.rootCauseDescription,
-                        whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
-                        fromSearchType: type,
-                        solutions: {
-                            populations: [],
-                        },
-                        entities: [],
-                        searchQueries: {
-                            general: [],
-                            scientific: [],
-                            news: [],
-                            openData: [],
-                        },
-                        searchResults: {
-                            pages: {
+                    //this.logger.debug(
+                    //  `Root Cause: ${JSON.stringify(rootCause, null, 2)}`
+                    //);
+                    if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
+                        this.memory.subProblems.push({
+                            title: rootCause.rootCauseTitle,
+                            description: rootCause.rootCauseDescription,
+                            whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                            fromSearchType: type,
+                            fromUrl: url,
+                            solutions: {
+                                populations: [],
+                            },
+                            entities: [],
+                            searchQueries: {
                                 general: [],
                                 scientific: [],
                                 news: [],
                                 openData: [],
                             },
-                        },
-                    });
+                            searchResults: {
+                                pages: {
+                                    general: [],
+                                    scientific: [],
+                                    news: [],
+                                    openData: [],
+                                },
+                            },
+                        });
+                    }
+                    else {
+                        this.logger.warn(`No title or description found for ${JSON.stringify(rootCause, null, 2)}`);
+                    }
                 }
-                this.logger.debug(`Text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
+                //this.logger.debug(
+                //  `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+                //);
             }
             await this.saveMemory();
             return textAnalysis;
@@ -155,9 +171,9 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         };
     }
     async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
-        this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results`);
+        this.logger.debug(`Processing ${url} for ${type}`);
         try {
-            const refinedAnalysis = (await this.getRootCauseTextAnalysis(type, text));
+            const refinedAnalysis = (await this.getRootCauseRefinedTextAnalysis(type, text, url));
             // TODO: fix any type
             return refinedAnalysis;
         }
@@ -178,8 +194,11 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     }
     async refineWebRootCauses(page) {
         const limit = IEngineConstants.topWebPagesToGetForRefineRootCausesScan;
+        let typeCount = 0;
+        this.memory.subProblems = [];
         try {
             for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
+                typeCount++;
                 const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
                 const results = await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(this.memory.groupId, searchType, limit);
                 this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
@@ -201,7 +220,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
                     else {
                         this.logger.info("Skipping the current WebPage as it has a score of 0/null");
                     }
-                    this.logger.info(`(+${pageCounter++}) - ${id} - Updated`);
+                    this.logger.info(`(+${pageCounter++}) - ${rootCauseType} - ${typeCount} - Updated`);
                 }
             }
         }
