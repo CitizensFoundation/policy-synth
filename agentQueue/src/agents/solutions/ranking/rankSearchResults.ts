@@ -55,7 +55,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
         `You are an expert in assessing relevance of search results.
 
          Instructions:
-         Assess search results "One" and "Two" for problem relevance, especially regarding indicated solutions.
+         Assess search results "One" and "Two" for problem relevance while searching for solutions to the problem.
          Output your decision as either "One", "Two" or "Neither". No explanation is required.
          Let's think step by step.`
       ),
@@ -69,10 +69,12 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
          One:
          ${itemOneTitle}
          ${itemOneDescription}
+         ${itemOne.url}
 
          Two:
          ${itemTwoTitle}
          ${itemTwoDescription}
+         ${itemTwo.url}
 
          The most relevant search result is: `
       ),
