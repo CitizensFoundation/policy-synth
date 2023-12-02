@@ -14,7 +14,7 @@ if (projectId) {
   const output = await redis.get(redisKey);
 
   const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
-  //memory.currentStage = "web-search";
+  memory.currentStage = "web-search";
   //memory.currentStage = "web-get-pages";
   //memory.currentStage = "rank-web-solutions";
   //memory.currentStage = "create-seed-solutions";
@@ -26,7 +26,7 @@ if (projectId) {
   //memory.currentStage = "evolve-create-population";
   //memory.currentStage = "evolve-reap-population";
   //memory.currentStage = "create-pros-cons";
-  memory.currentStage = "rank-pros-cons";
+  //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rate-solutions";
   //memory.currentStage = "rank-solutions";
   //memory.currentStage = "group-solutions";

@@ -18,12 +18,19 @@ export class GoogleSearchApi extends Base {
       if (results && results.length > 0) {
         for (let i = 0; i < results.length; i++) {
           const date = results[i].pagemap?.metatags?.[0]?.date;
+          let isoDate;
+          try {
+            isoDate = new Date(date).toISOString();
+          } catch (error) {
+            isoDate = "";
+            console.error(`Error converting date ${date} to ISO string:`,error);
+          }
           const entry = {
             originalPosition: i + 1,
             title: results[i].title,
             url: results[i].link,
             description: results[i].snippet,
-            date: date ? new Date(date).toISOString() : "",
+            date: isoDate,
           }
           outResults.push(entry);
           console.log(JSON.stringify(entry, null, 2))

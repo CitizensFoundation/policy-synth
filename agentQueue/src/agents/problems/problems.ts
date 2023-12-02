@@ -5,7 +5,7 @@ import { CreateEntitiesProcessor } from "./create/createEntities.js";
 import { CreateSearchQueriesProcessor } from "./create/createSearchQueries.js";
 import { RankEntitiesProcessor } from "./ranking/rankEntities.js";
 import { RankSearchQueriesProcessor } from "./ranking/rankSearchQueries.js";
-import { RankSearchResultsProcessor } from "./ranking/rankSearchResults.js";
+import { RankSearchResultsProcessor } from "../solutions/ranking/rankSearchResults.js";
 import { RankSubProblemsProcessor } from "./ranking/rankSubProblems.js";
 import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
 import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
@@ -167,13 +167,6 @@ export class AgentProblems extends BaseAgent {
           this.memory
         );
         await rankSearchQueriesProcessor.process();
-        break;
-      case "rank-search-results":
-        const rankSearchResultsProcessor = new RankSearchResultsProcessor(
-          this.job,
-          this.memory
-        );
-        await rankSearchResultsProcessor.process();
         break;
       case "rank-sub-problems":
         const rankSubProblemsProcessor = new RankSubProblemsProcessor(
