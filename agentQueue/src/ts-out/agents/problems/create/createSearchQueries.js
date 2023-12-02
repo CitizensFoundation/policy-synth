@@ -19,6 +19,7 @@ export class CreateSearchQueriesProcessor extends BaseProcessor {
       9. Provide an output in the following JSON format:
         { general: [ queries ], scientific: [ queries ], openData: [ queries ], news: [ queries ] }.
       10. Ensure a methodical, step-by-step approach to create the best possible search queries.
+      11. Never offer explanations, just output JSON.
     `;
     }
     async renderProblemPrompt(problem) {
