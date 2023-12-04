@@ -7,7 +7,8 @@ if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
     const output = await redis.get(redisKey);
     const memory = JSON.parse(output);
-    memory.currentStage = "web-search";
+    //memory.currentStage = "web-search";
+    memory.currentStage = "rank-search-results";
     //memory.currentStage = "web-get-pages";
     //memory.currentStage = "rank-web-solutions";
     //memory.currentStage = "create-seed-solutions";
