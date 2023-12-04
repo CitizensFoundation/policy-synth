@@ -183,7 +183,7 @@ export class IEngineConstants {
     static getSolutionsPagesAnalysisModel = {
         name: "gpt-4-1106-preview",
         temperature: 0.0,
-        maxOutputTokens: 3048,
+        maxOutputTokens: 4000,
         tokenLimit: gpt4TotalTokenLimit,
         inTokenCostUSD: gpt4InTokenPrice,
         outTokenCostUSD: gpt4OutTokenPrice,
@@ -415,7 +415,7 @@ export class IEngineConstants {
         },
     };
     static maxTopSearchQueriesForSolutionCreation = 8;
-    static maxPercentOfSolutionsWebPagesToGet = 0.65;
+    static maxPercentOfSolutionsWebPagesToGet = 0.50;
     static limits = {
         webPageVectorResultsForNewSolutions: 14,
         useRandomTopFromVectorSearchResults: 14,
