@@ -9,8 +9,8 @@ if (projectId) {
     const memory = JSON.parse(output);
     //memory.currentStage = "web-search";
     //memory.currentStage = "rank-search-results";
-    memory.currentStage = "web-get-pages";
-    //memory.currentStage = "rank-web-solutions";
+    //memory.currentStage = "web-get-pages";
+    memory.currentStage = "rank-web-solutions";
     //memory.currentStage = "create-seed-solutions";
     //memory.currentStage = "create-pros-cons";
     //memory.currentStage = "rank-pros-cons";
