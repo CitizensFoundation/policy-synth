@@ -7,15 +7,14 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
     webPageVectorStore = new WebPageVectorStore();
     async renderProblemPrompt(solutionsToRank, subProblemIndex) {
         return [
-            new SystemMessage(`
-        You are an expert in filtering and ranking solution components.
+            new SystemMessage(`You are an expert in filtering and ranking solutions to problems.
 
-        1. Remove irrelevant and inactionable solution components.
-        2. Eliminate duplicates or near duplicates.
-        3. Rank solutions by importance and practicality.
-        4. Always and only output a JSON string Array: [ solution ].
+         1. Rank solutions by importance to problem.
+         2. Remove irrelevant and in-actionable solutions.
+         3. Eliminate duplicates or near duplicates.
+         4. Always and only output a JSON string Array: [ "" ].
 
-        Let's think step by step. Never explain your actions.`),
+         Let's think step by step. Never explain your actions.`),
             new HumanMessage(`
         ${subProblemIndex === null ? this.renderProblemStatement() : ""}
 
@@ -23,10 +22,10 @@ export class RankWebSolutionsProcessor extends BaseProcessor {
                 ? this.renderSubProblem(subProblemIndex, true)
                 : ""}
 
-        Solution components to filter and rank:
+        Solutions to filter and rank:
         ${JSON.stringify(solutionsToRank, null, 2)}
 
-        Filtered and ranked solution components as a JSON string array:
+        Filtered and ranked solutions as a JSON string array:
        `),
         ];
     }
