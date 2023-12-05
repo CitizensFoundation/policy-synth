@@ -392,7 +392,7 @@ export class IEngineConstants {
     static minSleepBeforeBrowserRequest = 50;
     static maxAdditionalRandomSleepBeforeBrowserRequest = 100;
     static numberOfSearchTypes = 4;
-    static webPageNavTimeout = 10 * 1000;
+    static webPageNavTimeout = 30 * 1000;
     static subProblemsRankingMinNumberOfMatches = 10;
     static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
     static topItemsToKeepForTopicClusterPruning = 5;
@@ -415,7 +415,7 @@ export class IEngineConstants {
         },
     };
     static maxTopSearchQueriesForSolutionCreation = 8;
-    static maxPercentOfSolutionsWebPagesToGet = 0.50;
+    static maxPercentOfSolutionsWebPagesToGet = 0.25;
     static limits = {
         webPageVectorResultsForNewSolutions: 14,
         useRandomTopFromVectorSearchResults: 14,

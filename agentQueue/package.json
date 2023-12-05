@@ -59,7 +59,7 @@
     "puppeteer": "^19.11.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "weaviate-ts-client": "^1.4.0",
+    "weaviate-ts-client": "^2.0.0",
     "winston": "^3.9.0"
   }
 }

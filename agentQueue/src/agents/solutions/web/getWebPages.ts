@@ -54,7 +54,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         1. Examine the "Text context" and determine how it relates to the problem statement and any specified sub problem.
         2. Identify solutions in the "Text Context" and add them in the 'solutionsIdentifiedInTextContext' JSON array.
         3. If the solutions are for a specific audience, always include a reference to that audience in the text of the solution, do not have the audience as a separate field
-        4. Always output your results in this JSON format: [ { solutionsIdentifiedInTextContext: [ "" ], summary, relevanceToProblem,  contacts: [ "" ] } ] format, with no additional explanation.
+        4. Always output your results in this JSON format: { solutionsIdentifiedInTextContext: [ "" ], summary, relevanceToProblem,  contacts: [ "" ] } format, with no additional explanation.
         5. Think step-by-step.
         6. It is very important for society that you find the best solutions to those problems
         `
@@ -385,6 +385,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         textAnalysis.groupId = this.memory.groupId;
         textAnalysis.communityId = this.memory.communityId;
         textAnalysis.domainId = this.memory.domainId;
+        textAnalysis.mostRelevantParagraphs = [];
 
         if (
           Array.isArray(textAnalysis.contacts) &&
@@ -405,6 +406,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         );
 
         try {
+          this.logger.info(`Posting web page for url ${url}`)
           await this.webPageVectorStore.postWebPage(textAnalysis);
           this.totalPagesSave += 1;
           this.logger.info(`Total ${this.totalPagesSave} saved pages`);

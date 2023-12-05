@@ -456,7 +456,7 @@ export class IEngineConstants {
 
   static numberOfSearchTypes = 4;
 
-  static webPageNavTimeout = 10 * 1000;
+  static webPageNavTimeout = 30 * 1000;
 
   static subProblemsRankingMinNumberOfMatches = 10;
 
@@ -486,7 +486,7 @@ export class IEngineConstants {
 
   static maxTopSearchQueriesForSolutionCreation = 8;
 
-  static maxPercentOfSolutionsWebPagesToGet = 0.50;
+  static maxPercentOfSolutionsWebPagesToGet = 0.25;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 14,
