@@ -74,6 +74,7 @@ export class WebPageVectorStore extends Base {
         return res;
     }
     async postWebPage(webPageAnalysis) {
+        this.logger.info(`Weaviate: Saving web page ${JSON.stringify(webPageAnalysis, null, 2)}`);
         return new Promise((resolve, reject) => {
             WebPageVectorStore.client.data
                 .creator()

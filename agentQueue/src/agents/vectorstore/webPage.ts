@@ -83,6 +83,7 @@ export class WebPageVectorStore extends Base {
   }
 
   async postWebPage(webPageAnalysis: IEngineWebPageAnalysisData) {
+    this.logger.info(`Weaviate: Saving web page ${JSON.stringify(webPageAnalysis, null, 2)}`)
     return new Promise((resolve, reject) => {
       WebPageVectorStore.client.data
         .creator()
