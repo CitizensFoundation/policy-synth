@@ -7,7 +7,7 @@ if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
     const output = await redis.get(redisKey);
     const memory = JSON.parse(output);
-    memory.currentStage = "create-root-causes-search-queries";
+    //memory.currentStage = "create-root-causes-search-queries"
     //memory.currentStage = "rank-root-causes-search-queries"
     //memory.currentStage = "web-search-root-causes"
     //memory.currentStage = "rank-root-causes-search-results"
@@ -15,7 +15,7 @@ if (projectId) {
     //memory.currentStage = "rank-web-root-causes"
     //memory.currentStage = "rate-web-root-causes"
     //memory.currentStage = "web-get-refined-root-causes"
-    //memory.currentStage = "create-problem-statement-image";
+    memory.currentStage = "create-problem-statement-image";
     //memory.currentStage = "create-sub-problems";
     //memory.currentStage = "rank-sub-problems";
     //memory.currentStage = "reduce-sub-problems";

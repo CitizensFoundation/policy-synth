@@ -180,14 +180,14 @@ export class IEngineConstants {
   };
 
   static prosConsRankingsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-3.5-turbo-1106",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
-    inTokenCostUSD: gpt35_16kInTokenPrice,
-    outTokenCostUSD: gpt35_16kOutTokenPrice,
-    limitTPM: gpt35_TPM,
-    limitRPM: gpt35_RPM,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
     verbose: false,
   };
 
@@ -469,18 +469,18 @@ export class IEngineConstants {
     createSolutions: {
       searchQueries: {
         useMainProblemSearchQueries: 0.01,
-        useOtherSubProblemSearchQueries: 0.09,
-        useSubProblemSearchQueries: 0.45,
-        useRandomEntitySearchQueries: 0.45,
+        useOtherSubProblemSearchQueries: 0.01,
+        useSubProblemSearchQueries: 0.38,
+        useRandomEntitySearchQueries: 0.58,
       },
       webSolutions: {
-        top: 0.2,
-        topThree: 0.45,
-        topSeven: 0.25,
-        all: 0.1,
+        top: 0.05,
+        topThree: 0.25,
+        topSeven: 0.50,
+        all: 0.20,
       },
-      notUsingTopSearchQueries: 0.5,
-      vectorSearchAcrossAllProblems: 0.01,
+      notUsingTopSearchQueries: 0.1,
+      vectorSearchAcrossAllProblems: 0.001,
     },
   };
 

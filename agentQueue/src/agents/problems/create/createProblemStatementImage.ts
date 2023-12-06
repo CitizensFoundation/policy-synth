@@ -17,7 +17,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
         You are an expert in generating visual Dalle-3 prompts from a problem statement.
 
         Important Instructions:
-        1. Always end all prompts with "Simple but Hyperrealistic Image. No text or labels."
+        1. Always end all prompts with "Professional vibrant vector art illustration with no text or labels."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of two or three sentences.
         4. Do not include quotes in your prompt.
