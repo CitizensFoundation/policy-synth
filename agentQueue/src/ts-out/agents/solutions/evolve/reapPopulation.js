@@ -5,10 +5,11 @@ import { IEngineConstants } from "../../../constants.js";
 export class ReapSolutionsProcessor extends BaseProcessor {
     async renderReapPrompt(solution) {
         const messages = [
-            new SystemMessage(`
-        You are an expert in assessing if a solution component fits given requirements.
-        Always output either true or false in a JSON Object: { solutionFitsRequirements }
-        `),
+            new SystemMessage(`You are an expert in assessing if a solution component fits given requirements.
+         Do not output markdown.
+         Offer no explanations.
+         Output either true or false as JSON Object: { solutionFitsRequirements }
+         `),
             new HumanMessage(`
         Solution component to assess:
         ${solution.title}

@@ -156,7 +156,7 @@ export class IEngineConstants {
         outTokenCostUSD: gpt4OutTokenPrice,
         limitTPM: gpt4_TPM,
         limitRPM: gpt4_RPM,
-        verbose: true,
+        verbose: false
     };
     static prosConsRankingsModel = {
         name: "gpt-4-1106-preview",
@@ -435,17 +435,17 @@ export class IEngineConstants {
         // Population split
         keepElitePercent: 0.1,
         randomImmigrationPercent: 0.4,
-        mutationOffspringPercent: 0.4,
-        crossoverPercent: 0.1,
+        mutationOffspringPercent: 0.35,
+        crossoverPercent: 0.15,
         // General mutation rate split
-        lowMutationRate: 0.4,
-        mediumMutationRate: 0.4,
+        lowMutationRate: 0.5,
+        mediumMutationRate: 0.3,
         highMutationRate: 0.2,
         selectParentTournamentSize: 7,
-        crossoverMutationPercent: 0.1,
+        crossoverMutationPercent: 0.05,
     };
     static maxPercentOfEloMatched = 0.75;
-    static minimumNumberOfPairwiseVotesForPopulation = 8;
+    static minimumNumberOfPairwiseVotesForPopulation = 10;
     static maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize * IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
     static maxTopSolutionsToCreatePolicies = 3;
     static maxTopPoliciesToProcess = 1;

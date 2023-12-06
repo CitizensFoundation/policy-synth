@@ -7,10 +7,11 @@ export class ReapSolutionsProcessor extends BaseProcessor {
   async renderReapPrompt(solution: IEngineSolution) {
     const messages = [
       new SystemMessage(
-        `
-        You are an expert in assessing if a solution component fits given requirements.
-        Always output either true or false in a JSON Object: { solutionFitsRequirements }
-        `
+        `You are an expert in assessing if a solution component fits given requirements.
+         Do not output markdown.
+         Offer no explanations.
+         Output either true or false as JSON Object: { solutionFitsRequirements }
+         `
       ),
       new HumanMessage(
         `

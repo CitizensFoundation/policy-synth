@@ -17,6 +17,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
         4. Never group more than 14 solution components together.
         5. Not all solution components need to be grouped.
         6. Never group the same solution component in more than one group.
+        7. Never explain anything, just output JSON.
 
         Let's think step by step.
         `
