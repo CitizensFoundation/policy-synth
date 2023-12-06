@@ -168,33 +168,24 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
     async renderCreatePrompt(subProblemIndex, solution, injectText) {
         const messages = [
             new SystemMessage(`
-        You are an expert in generating Dall-E 2 prompts from titles and descriptions of solution components.
+        You are an expert in generating Dall-E 3 prompts from titles and descriptions of solution components.
 
         Important Instructions:
-        1. Always end all prompts with "Simple professional geometric illustration using hues of ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text."
+        1. Always end all prompts with "Simple vector art illustration using these colors: ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text or labels."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one to two sentences, never more.
         4. Do not include quotes in your prompt.
         5. Never output prompts involving chess or chess pieces.
         6. Never output prompts involving asking for text to be written out, like on a document.
-        7. Follow the Dall-E 3 Prompt Guide in your work.
-        8. Output only your Dall-E 3 prompt, nothing else. No explanations are needed.
+        7. No explanations are needed only output the prompt.
         9. Let's think step by step.
-        ${injectText ? injectText : ""}
-
-        Dall-E 3 Prompt Guide:
-        For successful Dall-E 3 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
-
-        Use adjectives and adverbs for richer prompts. Instead of “a car,” specify it as “a shiny red sports car on a winding road,” to portray color, style, and setting.
-
-        While detail and creativity are crucial, keep your prompts concise. Limit your prompts to one or two essential details for the model to generate images quickly and accurately.
-        `),
+        ${injectText ? injectText : ""}`),
             new HumanMessage(`
          Solution component:
          ${solution.title}
          ${solution.description}
 
-         Generate and output the Dall-E 2 image prompt below:
+         Generate and output the Dall-E 3 image prompt below:
          `),
         ];
         return messages;

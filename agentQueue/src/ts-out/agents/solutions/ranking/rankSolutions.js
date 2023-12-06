@@ -9,12 +9,11 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
         const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemMessage(`You're an expert in evaluating solution components to problems.
+            new SystemMessage(`You're an expert in evaluating and ranking solution components to problems.
 
          Instructions:
          1. Analyze a problem and two solution components, labeled "Solution Component One" and "Solution Component Two"
          2. Determine which is more important and practical.
-         3. Consider the provided ratings for each component also in your decision.
          ${this.memory.customInstructions.rankSolutions
                 ? `
            Important Instructions: ${this.memory.customInstructions.rankSolutions}
@@ -33,10 +32,17 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         ${solutionOne.title}
         ${solutionOne.description}
 
-        ${solutionOne.ratings
+        ${solutionOne.pros
                 ? `
-        Solution Component One Ratings:
-        ${JSON.stringify(solutionOne.ratings, null, 2)}
+        Top Pro for Solution Component One:
+        ${solutionOne.pros[0].description}
+        `
+                : ""}
+
+        ${solutionOne.cons
+                ? `
+        Top Con for Solution Component One:
+        ${solutionOne.cons[0].description}
         `
                 : ""}
 
@@ -44,10 +50,17 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         ${solutionTwo.title}
         ${solutionTwo.description}
 
-        ${solutionTwo.ratings
+        ${solutionTwo.pros
                 ? `
-        Solution Component Two Ratings:
-        ${JSON.stringify(solutionTwo.ratings, null, 2)}
+        Top Pro for Solution Component Two:
+        ${solutionTwo.pros[0].description}
+        `
+                : ""}
+
+        ${solutionTwo.cons
+                ? `
+        Top Con for Solution Component Two:
+        ${solutionTwo.cons[0].description}
         `
                 : ""}
 
