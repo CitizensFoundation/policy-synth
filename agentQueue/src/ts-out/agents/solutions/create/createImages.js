@@ -171,7 +171,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
         You are an expert in generating Dall-E 3 prompts from titles and descriptions of solution components.
 
         Important Instructions:
-        1. Always end all prompts with "Simple vector art illustration using these colors: ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text or labels."
+        1. Always end all prompts with "Simple and vibrant vector art illustration using these colors: ${this.getSubProblemColor(subProblemIndex)} and highlights ${this.randomSecondaryColor}. No text or labels."
         2. Be visual and detailed in your prompts.
         3. Keep the prompt length to maximum of one to two sentences, never more.
         4. Do not include quotes in your prompt.
@@ -268,6 +268,7 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
                     else {
                         const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
                         await this.downloadImage(imageUrl, imageFilePath);
+                        gotImage = true;
                     }
                     if (gotImage) {
                         this.logger.debug(fs.existsSync(imageFilePath)
