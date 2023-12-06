@@ -21,16 +21,17 @@ export class CreateSolutionsProcessor extends BaseProcessor {
   ) {
     const messages = [
       new SystemMessage(
-        `
-        As an expert, your task is to refine innovative solution components proposed for problems and associated sub-problems.
+        `As an expert, your task is to refine innovative solution components proposed for problems and associated sub-problems.
 
         Instructions:
         1. Review and refine the solution components previously generated, do not create new solution components.
-        2. Solution Components should be actionable, innovative and equitable.
+        2. Solution Components should be simple, actionable, innovative and equitable. Do not make them more complex though.
         3. Limit solution component descriptions to a maximum of six sentences.
-        4. Do not replicate solution components listed under 'Already Created Solution Components'.
-        5. Refer to the relevant entities in your solution components, if mentioned.
-        6. Ensure your output is not in markdown format.
+        4. The title and description should be accessible and free of technical jargon.
+        5. Do not replicate solution components listed under 'Already Created Solution Components'.
+        6. Refer to the relevant entities in your solution components, if mentioned.
+        7. Ensure your output is not in markdown format.
+        8. Only output JSON and offer no explanations.
         ${
           this.memory.customInstructions.createSolutions
             ? `
@@ -70,21 +71,17 @@ export class CreateSolutionsProcessor extends BaseProcessor {
 
   renderCreateSystemMessage() {
     return new SystemMessage(
-      `
-      As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities.
+      `As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities.
 
       Instructions:
-      1. Solution Components should be actionable, innovative and equitable.
-      2. Solution Components should be specific, not just improving this or enhancing that.
-      3. Generate four solution components, presented in JSON format.
+      1. Generate four simple solution components inspired by the General, Scientific, Open Data and News Contexts
+      2. Solution components should be specific, not just improving this or enhancing that.
+      3. Solution components should be actionable, innovative and equitable.
       4. Each solution component should include a short title, description, mainBenefitOfSolutionComponent and mainObstacleToSolutionComponentAdoption.
-      5. Limit the description of each solution component to six sentences maximum.
+      5. Limit the description of each solution component to six sentences maximum and the description should be accessible and free of technical jargon.
       6. Never re-create solution components listed under 'Already Created Solution Components'.
       7. The General, Scientific, Open Data and News Contexts should always inform and inspire your solution components.
-      8. The General, Scientific, Open Data and News Contexts sometimes include potential solution components alreay that should inspire your solution components directly.
-      9. Be creative in using the Contexts as inspiration for your solution components.
-      10. Do not refer to the Contexts in your solution components, as the contexts won't be visible to the user.
-      11. Do not use markdown format in your output.
+      8. Do not refer to the Contexts in your solution components, as the contexts won't be visible to the user.
       ${
         this.memory.customInstructions.createSolutions
           ? `
@@ -112,13 +109,13 @@ export class CreateSolutionsProcessor extends BaseProcessor {
               subProblemIndex
             )}
 
-            General Context from search:
+            General Context:
 
-            Scientific Context from search:
+            Scientific Context:
 
-            Open Data Context from search:
+            Open Data Context:
 
-            News Context from search:
+            News Context:
 
             ${
               alreadyCreatedSolutions
@@ -156,16 +153,16 @@ export class CreateSolutionsProcessor extends BaseProcessor {
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
         Contexts for new solution components:
-        General Context from search:
+        General Context:
         ${generalTextContext}
 
-        Scientific Context from search:
+        Scientific Context:
         ${scientificTextContext}
 
-        Open Data Context from search:
+        Open Data Context:
         ${openDataTextContext}
 
-        News Context from search:
+        News Context:
         ${newsTextContext}
 
         ${

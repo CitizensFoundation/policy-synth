@@ -29,12 +29,14 @@ export class CreateProsConsProcessor extends BaseProcessor {
 
         Instructions:
 
-        1. Make the ${prosOrCons} concise, consistent, and succinct.
+        1. Make the ${prosOrCons} clear, consistent, and succinct.
         2. Expand on the ${prosOrCons} by considering the problem, if needed.
         3. Ensure the refined ${prosOrCons} are relevant and directly applicable.
         4. Output should be in JSON format only, not markdown.
         5. The ${prosOrCons} should be outputed as an JSON array: [ "...", "..." ].
-        6. Follow a step-by-step approach in your thought process.
+        6. Reorder the points based on importance to the problem
+        7. Never offer explanations.
+        8. Follow a step-by-step approach in your thought process.
         `
       ),
       new HumanMessage(
@@ -67,14 +69,15 @@ export class CreateProsConsProcessor extends BaseProcessor {
 
         Important Instructions:
 
-        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below.
+        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
         2. Each ${prosconsSingle} should be directly applicable to the solution.
         3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
         4. The ${prosOrCons} must be in line with the context given by the problem.
         5. Output should be in JSON format only, not markdown format.
         6. The ${prosOrCons} should be outputted as an JSON array: [ "...", "..." ].
         7. Never output the index number of the ${prosOrCons} in the text.
-        8. Let's think step by step.
+        8. Never offer explanations.
+        9. Let's think step by step.
         `
       ),
       new HumanMessage(

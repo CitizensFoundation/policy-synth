@@ -15,7 +15,7 @@ if (projectId) {
 
   const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
 
-  memory.currentStage = "create-root-causes-search-queries"
+  //memory.currentStage = "create-root-causes-search-queries"
   //memory.currentStage = "rank-root-causes-search-queries"
   //memory.currentStage = "web-search-root-causes"
   //memory.currentStage = "rank-root-causes-search-results"
@@ -24,7 +24,7 @@ if (projectId) {
   //memory.currentStage = "rate-web-root-causes"
   //memory.currentStage = "web-get-refined-root-causes"
 
-  //memory.currentStage = "create-problem-statement-image";
+  memory.currentStage = "create-problem-statement-image";
   //memory.currentStage = "create-sub-problems";
   //memory.currentStage = "rank-sub-problems";
   //memory.currentStage = "reduce-sub-problems";

@@ -9,6 +9,9 @@ import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
 
+
+const recreateImagesNeeded = true;
+
 export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
   async renderCreatePrompt(subProblemIndex: number) {
     const messages = [
@@ -17,7 +20,7 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
         You are an expert in generating visual Dalle-3 prompts from a problem statement.
 
         Important Instructions:
-        1. Always end all prompts with "Simple hyperrealistic illustration using hues of ${this.getSubProblemColor(
+        1. Always end all prompts with "Simple vector art illustration using these colors: ${this.getSubProblemColor(
           subProblemIndex
         )} and ${this.randomSecondaryColor}. No text or labels."
         2. Be highly visual, creative and detailed in your prompts.
@@ -47,7 +50,7 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
     for (let s = 0; s < this.memory.subProblems.length; s++) {
       this.currentSubProblemIndex = s;
 
-      if (!this.memory.subProblems[s].imageUrl) {
+      if (recreateImagesNeeded || !this.memory.subProblems[s].imageUrl) {
         let imagePrompt = (await this.callLLM(
           "create-sub-problem-images",
           IEngineConstants.createSolutionImagesModel,
