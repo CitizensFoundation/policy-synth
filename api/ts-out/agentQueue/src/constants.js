@@ -156,7 +156,7 @@ export class IEngineConstants {
         outTokenCostUSD: gpt4OutTokenPrice,
         limitTPM: gpt4_TPM,
         limitRPM: gpt4_RPM,
-        verbose: false,
+        verbose: true,
     };
     static prosConsRankingsModel = {
         name: "gpt-4-1106-preview",
