@@ -7,6 +7,8 @@ import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCaus
 
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
+const FORCE_RESEARCH = false;
+
 export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
   searchCounter = 0;
   async searchWeb() {
@@ -27,11 +29,13 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
         this.searchCounter = 300;
       }
 
-      if (!problemStatement.rootCauseSearchResults![searchResultType]) {
+      if (FORCE_RESEARCH || !problemStatement.rootCauseSearchResults![searchResultType]) {
         let queriesToSearch = problemStatement.rootCauseSearchQueries![searchResultType].slice(
           0,
           IEngineConstants.maxTopRootCauseQueriesToSearchPerType,
         );
+
+        this.logger.debug(`Searching for root cause type ${searchResultType} with queries ${JSON.stringify(queriesToSearch, null, 2)}`)
 
         const results = await this.getQueryResults(queriesToSearch, `rootCause_${searchResultType}`);
 

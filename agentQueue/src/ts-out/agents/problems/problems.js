@@ -5,7 +5,6 @@ import { CreateEntitiesProcessor } from "./create/createEntities.js";
 import { CreateSearchQueriesProcessor } from "./create/createSearchQueries.js";
 import { RankEntitiesProcessor } from "./ranking/rankEntities.js";
 import { RankSearchQueriesProcessor } from "./ranking/rankSearchQueries.js";
-import { RankSearchResultsProcessor } from "./ranking/rankSearchResults.js";
 import { RankSubProblemsProcessor } from "./ranking/rankSubProblems.js";
 import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
 import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
@@ -15,6 +14,9 @@ import { RankWebRootCausesProcessor } from "./ranking/rankWebRootCauses.js";
 import { RateWebRootCausesProcessor } from "./ranking/rateWebRootCauses.js";
 import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js";
 import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
+import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
+import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
+import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
 export class AgentProblems extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -108,6 +110,14 @@ export class AgentProblems extends BaseAgent {
                 const createSearchQueriesProcessor = new CreateSearchQueriesProcessor(this.job, this.memory);
                 await createSearchQueriesProcessor.process();
                 break;
+            case "rank-root-causes-search-results":
+                const rankSearchResults = new RankRootCausesSearchResultsProcessor(this.job, this.memory);
+                await rankSearchResults.process();
+                break;
+            case "rank-root-causes-search-queries":
+                const rankRootCausesSearchQueries = new RankRootCausesSearchQueriesProcessor(this.job, this.memory);
+                await rankRootCausesSearchQueries.process();
+                break;
             case "rank-entities":
                 const rankEntitiesProcessor = new RankEntitiesProcessor(this.job, this.memory);
                 await rankEntitiesProcessor.process();
@@ -116,13 +126,13 @@ export class AgentProblems extends BaseAgent {
                 const rankSearchQueriesProcessor = new RankSearchQueriesProcessor(this.job, this.memory);
                 await rankSearchQueriesProcessor.process();
                 break;
-            case "rank-search-results":
-                const rankSearchResultsProcessor = new RankSearchResultsProcessor(this.job, this.memory);
-                await rankSearchResultsProcessor.process();
-                break;
             case "rank-sub-problems":
                 const rankSubProblemsProcessor = new RankSubProblemsProcessor(this.job, this.memory);
                 await rankSubProblemsProcessor.process();
+                break;
+            case "reduce-sub-problems":
+                const reduceSubProblemsProcessor = new ReduceSubProblemsProcessor(this.job, this.memory);
+                await reduceSubProblemsProcessor.process();
                 break;
             default:
                 console.log("No stage matched");

@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
@@ -18,7 +18,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
     const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as IEngineSubProblem;
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an AI expert trained to analyse complex problem statements and associated sub-problems to determine their relevance.
 
@@ -38,7 +38,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatement()}
 
@@ -80,14 +80,14 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
       modelName: IEngineConstants.subProblemsRankingsModel.name,
       verbose: IEngineConstants.subProblemsRankingsModel.verbose,
     });
-    
+
     let maxPrompts;
 
     if (this.memory.subProblems.length > 100) {
       maxPrompts = this.memory.subProblems.length*IEngineConstants.subProblemsRankingMinNumberOfMatches;
     }
     this.setupRankingPrompts(-1, this.memory.subProblems, maxPrompts);
-    
+
     await this.performPairwiseRanking(-1);
 
     this.logger.debug(`Sub problems before ranking: ${JSON.stringify(this.memory.subProblems)}`);

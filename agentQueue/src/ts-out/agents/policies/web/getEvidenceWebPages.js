@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
@@ -49,7 +49,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             throw new Error(`No corresponding property found for type: ${type}`);
         }
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         Your are an expert in analyzing textual data:
 
         Important Instructions:
@@ -79,7 +79,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         Text context:
         ${EvidenceExamplePrompts.render(type)}
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex)}
 
         Policy Proposal:
@@ -98,7 +98,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     async getEvidenceTokenCount(text, subProblemIndex, policy, type) {
         const emptyMessages = this.renderEvidenceScanningPrompt(subProblemIndex, policy, type, "");
         const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanChatMessage(text);
+        const textForTokenCount = new HumanMessage(text);
         const textTokenCount = await this.chat.getNumTokensFromMessages([
             textForTokenCount,
         ]);
@@ -117,7 +117,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
                     promptTokenCount.totalCount -
                     512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
-                const splitText = await this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
+                const splitText = this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];
@@ -272,9 +272,6 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             domainId: data1.domainId,
             _additional: data1._additional || data2._additional, // Assuming you want data from data1 when available. Adjust as needed.
         };
-    }
-    get maxWebPagesToGetByTopSearchPosition() {
-        return IEngineConstants.maxEvidenceWebPagesToGetByTopSearchPosition;
     }
     async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);

@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
@@ -11,7 +11,7 @@ puppeteer.use(StealthPlugin());
 export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
     renderEvidenceScanningPrompt(subProblemIndex, policy, type, text) {
         return [
-            new SystemChatMessage(`You are an expert in analyzing policy evidence:
+            new SystemMessage(`You are an expert in analyzing policy evidence:
 
         Important Instructions:
         1. Examine the "<text context>" and analyze the evidence on how it relates to the problem and the specified policy proposal.
@@ -39,7 +39,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
           relevanceScore: number;
           qualityScore: number;
         }`),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
         Policy Proposal:
@@ -68,7 +68,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
                     promptTokenCount.totalCount -
                     64;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
-                const splitText = await this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
+                const splitText = this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];

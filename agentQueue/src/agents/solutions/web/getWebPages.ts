@@ -18,11 +18,9 @@ import { BaseProcessor } from "../../baseProcessor.js";
 
 import weaviate, { WeaviateClient } from "weaviate-ts-client";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
-
-import { isWithinTokenLimit } from "gpt-tokenizer";
 
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
@@ -45,138 +43,23 @@ export class GetWebPagesProcessor extends BaseProcessor {
   renderScanningPrompt(
     problemStatement: IEngineProblemStatement,
     text: string,
-    subProblemIndex?: number
+    subProblemIndex?: number,
+    entityIndex?: number
   ) {
     return [
-      new SystemChatMessage(
-        `Your are an AI expert in analyzing textual data:
+      new SystemMessage(
+       `Your are an AI expert in analyzing text for practical solutions to difficult problems:
 
         Important Instructions:
-        1. Examine the "Text context" and determine how it relates to the problem statement and any specified sub-problems.
-        2. Identify any solutions in the "Text Context" and include them in the 'solutionsIdentifiedInTextContext' JSON array.
-        3. Include any paragraphs with potential solutions to the problem statement and sub problem from the "Text Context" in the 'mostRelevantParagraphs' JSON array.
-        4. Only use solutions found within the "Text Context" - do not create your own solutions.
-        5. Never store citations or references in the 'mostRelevantParagraphs' array.
-        6. Add any contacts you find in the "Text Context" to the 'contacts' JSON array.
-        7. Never output in markdown format.
-        8. Never include references as part of the 'mostRelevantParagraphs' array.
-        9. Always output your results in the JSON format with no additional explanation.
-        10. Think step-by-step.
-
-        Examples:
-
-        Problem Statement:
-        Obesity in children in many countries is increasing.
-
-        Text context:
-        Childhood Overweight & Obesity
-        Print
-        Childhood obesity is a serious health problem in the United States where 1 in 5 children and adolescents are affected. Some groups of children are more affected than others, but all children are at risk of gaining weight that is higher than what is considered healthy.
-
-        Obesity is complex. Many factors can contribute to excess weight gain including behavior, genetics and taking certain medications. But societal and community factors also matter: child care and school environments, neighborhood design, access to healthy, affordable foods and beverages, and access to safe and convenient places for physical activity affect our ability to make healthy choices.
-
-        Every child deserves a healthy start in life. Learn what parents and caregivers can to do help prevent obesity at home, how healthcare systems can help families prevent and manage childhood obesity, and what strategies communities can use to support a healthy, active lifestyle for all.
-
-        Childhood Obesity Facts
-        How many children in the United States have obesity?
-
-        Defining Childhood Overweight & Obesity
-        How is childhood obesity measured?
-
-        Causes and Consequences
-        What contributes to childhood obesity? What are the health risks?
-
-        Clinical Guidelines
-        Resources for clinicians and healthcare providers on childhood obesity. Also see CDC’s Clinical Growth Charts.
-
-        Child and Teen BMI Calculator
-        Use this calculator for children aged 2 through 19 years old.
-
-        JSON Output:
-        [
-          {
-            "summary": "Childhood obesity in the United States, affecting 1 in 5 children, is thoroughly examined in the given discourse. It articulates obesity as a multifaceted problem with numerous contributors such as behavior, genetics, medication, and societal and community influences. The importance of the roles parents, caregivers, healthcare systems, and communities play in both preventing and managing childhood obesity is emphasized within the discussion.",
-            "relevanceToProblem": "Direct correlation to the problem statement is seen in the discourse's exploration of childhood obesity, its roots, and potential mitigations.",
-            "mostRelevantParagraphs": [
-              "Childhood obesity is a serious health problem in the United States where 1 in 5 children and adolescents are affected. Some groups of children are more affected than others, but all children are at risk of gaining weight that is higher than what is considered healthy.",
-              "Obesity is complex. Many factors can contribute to excess weight gain including behavior, genetics and taking certain medications. But societal and community factors also matter: child care and school environments, neighborhood design, access to healthy, affordable foods and beverages, and access to safe and convenient places for physical activity affect our ability to make healthy choices.",
-              "Every child deserves a healthy start in life. Learn what parents and caregivers can to do help prevent obesity at home, how healthcare systems can help families prevent and manage childhood obesity, and what strategies communities can use to support a healthy, active lifestyle for all.",
-            ],
-            "solutionsIdentifiedInTextContext": [
-              "Parents and caregivers can help prevent obesity at home",
-              "Healthcare systems can help families prevent and manage childhood obesity",
-              "Communities can use strategies to support a healthy, active lifestyle for all"
-            ],
-            contacts: []
-          }
-        ]
-
-        Problem Statement:
-        Prototype robotic prosthetic leg batteries are not lasting long enough.
-
-        Sub Problem:
-        Larger batteries are too heavy.
-
-        Text context:
-        Predicting the impact of formation protocols on
-        battery lifetime immediately after manufacturing
-        Andrew Weng1,*, Peyman Mohtat1
-        , Peter M. Attia2
-        , Valentin Sulzer1
-        , Suhak Lee1
-        , Greg
-        Less3
-        , and Anna Stefanopoulou1
-        1Department of Mechanical Engineering, University of Michigan, Ann Arbor, MI 48109, USA
-        2Department of Materials Science and Engineering, Stanford University, Stanford, CA 94305, USA
-        3University of Michigan Battery Lab, Ann Arbor, MI 48105, USA
-        *
-        Lead Contact and Corresponding Author (asweng@umich.edu)
-        Summary
-        Increasing the speed of battery formation can significantly lower lithium-ion battery manufacturing costs. However, adopting
-        faster formation protocols in practical manufacturing settings is challenging due to a lack of inexpensive, rapid diagnostic
-        signals that can inform possible impacts to long-term battery lifetime. This work identifies the cell resistance measured at low
-        states of charge as an early-life diagnostic feature for screening new formation protocols. We show that this signal correlates to
-        cycle life and improves the accuracy of data-driven battery lifetime prediction models. The signal is obtainable at the end of
-        the manufacturing line, takes seconds to acquire, and does not require specialized test equipment. We explore a physical
-        connection between this resistance signal and the quantity of lithium consumed during formation, suggesting that the signal
-        may be broadly applicable for evaluating any manufacturing process change that could impact the total lithium consumed
-        during formation.
-
-        3 Conclusion
-        In this work, we demonstrated that low-SOC resistance (RLS) correlates to cycle life across two different battery
-        formation protocols. As a predictive feature, RLS provided higher prediction accuracy compared to conventional
-        measures of formation quality such as Coulombic efficiency as well as state-of-the art predictive features based
-        on changes in discharge voltage curves. RLS is measurable at the end of the manufacturing line using ordinary
-        battery test equipment and can be measured within seconds. Changes in RLS are attributed to differences in the
-        amount of lithium consumed to the SEI during formation, where a decrease in RLS indicates that more lithium is
-        consumed. For more information: Robert Bjarnason with email robert@citizens.is
-
-        References
-        1
-        Australian Trade and Investment Commission, The Lithium-Ion Battery Value Chain: New Economy Opportunities
-        for Australia, tech. rep. (2018), p. 56.
-        2
-        Benchmark Minerals Intelligence, EV Battery arms race enters new gear with 115 megafactories, Europe sees
-        most rapid growth, 2019.
-
-        JSON Output:
-        {
-          "summary": "Faster formation protocols bear potential to augment the lifetime of lithium-ion batteries. Notably, cell resistance, especially at low states of charge, emerges as a predictive feature for battery lifespan. It's indicative of the amount of lithium utilized during formation, serving as a yardstick for assessing alterations in the manufacturing process that might impact battery life.",
-          "relevanceToProblem": "The discussion around the influence of formation protocols on battery lifespan is directly pertinent to the challenge of ensuring the batteries in prototype robotic prosthetic legs last longer.",
-          "mostRelevantParagraphs": [
-            "In this work, we demonstrated that low-SOC resistance (RLS) correlates to cycle life across two different battery formation protocols. As a predictive feature, RLS provided higher prediction accuracy compared to conventional measures of formation quality such as Coulombic efficiency as well as state-of-the art predictive features based on changes in discharge voltage curves. RLS is measurable at the end of the manufacturing line using ordinary battery test equipment and can be measured within seconds. Changes in RLS are attributed to differences in the amount of lithium consumed to the SEI during formation, where a decrease in RLS indicates that more lithium is consumed."
-          ],
-          "solutionsIdentifiedInTextContext": [
-            "Adopting faster formation protocols and using the cell resistance measured at low states of charge as an early-life diagnostic feature for screening new formation protocols."
-          ],
-          "contacts": [
-            "Robert Bjarnason, robert@citizens.is"
-          ]
-        }
+        1. Examine the "Text context" and determine how it relates to the problem statement and any specified sub problem.
+        2. Identify solutions in the "Text Context" and add them in the 'solutionsIdentifiedInTextContext' JSON array.
+        3. If the solutions are for a specific audience, always include a reference to that audience in the text of the solution, do not have the audience as a separate field
+        4. Always output your results in this JSON format: { solutionsIdentifiedInTextContext: [ "" ], summary, relevanceToProblem,  contacts: [ "" ] } format, with no additional explanation.
+        5. Think step-by-step.
+        6. It is very important for society that you find the best solutions to those problems
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         Problem Statement:
         ${problemStatement.description}
@@ -185,6 +68,14 @@ export class GetWebPagesProcessor extends BaseProcessor {
           subProblemIndex !== undefined
             ? `
                 ${this.renderSubProblem(subProblemIndex)}
+              `
+            : ``
+        }
+
+        ${
+          entityIndex !== undefined && subProblemIndex !== undefined
+            ? `
+                ${this.renderEntity(subProblemIndex, entityIndex)}
               `
             : ``
         }
@@ -209,7 +100,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
       emptyMessages
     );
 
-    const textForTokenCount = new HumanChatMessage(text);
+    const textForTokenCount = new HumanMessage(text);
 
     const textTokenCount = await this.chat!.getNumTokensFromMessages([
       textForTokenCount,
@@ -218,7 +109,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     const totalTokenCount =
       promptTokenCount.totalCount +
       textTokenCount.totalCount +
-      IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+      IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -236,13 +127,25 @@ export class GetWebPagesProcessor extends BaseProcessor {
   }
 
   mergeAnalysisData(
-    data1: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData,
-    data2: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData,
-  ): IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData {
+    data1:
+      | IEngineWebPageAnalysisData
+      | PSEvidenceRawWebPageData
+      | PSRootCauseRawWebPageData,
+    data2:
+      | IEngineWebPageAnalysisData
+      | PSEvidenceRawWebPageData
+      | PSRootCauseRawWebPageData
+  ):
+    | IEngineWebPageAnalysisData
+    | PSEvidenceRawWebPageData
+    | PSRootCauseRawWebPageData {
     data1 = data1 as IEngineWebPageAnalysisData;
     data2 = data2 as IEngineWebPageAnalysisData;
     return {
-      mostRelevantParagraphs: [...(data1.mostRelevantParagraphs || []), ...(data2.mostRelevantParagraphs || [])],
+      mostRelevantParagraphs: [
+        ...(data1.mostRelevantParagraphs || []),
+        ...(data2.mostRelevantParagraphs || []),
+      ],
       solutionsIdentifiedInTextContext: [
         ...(data1.solutionsIdentifiedInTextContext || []),
         ...(data2.solutionsIdentifiedInTextContext || []),
@@ -262,21 +165,28 @@ export class GetWebPagesProcessor extends BaseProcessor {
     };
   }
 
-  async splitText(
+  isWithinTokenLimit(allText: string, maxChunkTokenCount: number): boolean {
+    const words = allText.split(/\s+/);
+    const estimatedTokenCount = words.length * 1.35;
+
+    return estimatedTokenCount <= maxChunkTokenCount;
+  }
+
+  splitText(
     fullText: string,
     maxChunkTokenCount: number,
     subProblemIndex: number | undefined
-  ): Promise<string[]> {
+  ): string[] {
     const chunks: string[] = [];
     const elements = fullText.split("\n");
     let currentChunk = "";
 
-    const addElementToChunk = async (element: string) => {
+    const addElementToChunk = (element: string) => {
       const potentialChunk =
         (currentChunk !== "" ? currentChunk + "\n" : "") + element;
 
       if (
-        !isWithinTokenLimit(
+        !this.isWithinTokenLimit(
           this.getAllTextForTokenCheck(potentialChunk, subProblemIndex),
           maxChunkTokenCount
         )
@@ -292,7 +202,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             // If the element is a sentence, split it by words
             const words = element.split(" ");
             for (let word of words) {
-              await addElementToChunk(word);
+              addElementToChunk(word);
             }
           } else {
             // If the element is a single word that exceeds maxChunkTokenCount, add it as is
@@ -307,7 +217,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     for (let element of elements) {
       // Before adding an element to a chunk, check its size
       if (
-        !isWithinTokenLimit(
+        !this.isWithinTokenLimit(
           this.getAllTextForTokenCheck(element, subProblemIndex),
           maxChunkTokenCount
         )
@@ -315,10 +225,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
         // If the element is too large, split it by sentences
         const sentences = element.match(/[^.!?]+[.!?]+/g) || [element];
         for (let sentence of sentences) {
-          await addElementToChunk(sentence);
+          addElementToChunk(sentence);
         }
       } else {
-        await addElementToChunk(element);
+        addElementToChunk(element);
       }
     }
 
@@ -332,17 +242,22 @@ export class GetWebPagesProcessor extends BaseProcessor {
     return chunks;
   }
 
-  async getAIAnalysis(text: string, subProblemIndex?: number) {
+  async getAIAnalysis(
+    text: string,
+    subProblemIndex?: number,
+    entityIndex?: number
+  ) {
     this.logger.info("Get AI Analysis");
     const messages = this.renderScanningPrompt(
       this.memory.problemStatement,
       text,
-      subProblemIndex
+      subProblemIndex,
+      entityIndex
     );
 
     const analysis = (await this.callLLM(
       "web-get-pages",
-      IEngineConstants.getPageAnalysisModel,
+      IEngineConstants.getSolutionsPagesAnalysisModel,
       messages,
       true,
       true
@@ -351,7 +266,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
     return analysis;
   }
 
-  async getTextAnalysis(text: string, subProblemIndex?: number) {
+  async getTextAnalysis(
+    text: string,
+    subProblemIndex?: number,
+    entityIndex?: number
+  ) {
     try {
       const { totalTokenCount, promptTokenCount } = await this.getTokenCount(
         text,
@@ -366,9 +285,12 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
       let textAnalysis: IEngineWebPageAnalysisData;
 
-      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+      if (
+        IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit <
+        totalTokenCount
+      ) {
         const maxTokenLengthForChunk =
-          IEngineConstants.getPageAnalysisModel.tokenLimit -
+          IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit -
           promptTokenCount.totalCount -
           128;
 
@@ -376,7 +298,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
         );
 
-        const splitText = await this.splitText(
+        const splitText = this.splitText(
           text,
           maxTokenLengthForChunk,
           subProblemIndex
@@ -389,7 +311,8 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
           let nextAnalysis = await this.getAIAnalysis(
             currentText,
-            subProblemIndex
+            subProblemIndex,
+            entityIndex
           );
 
           if (nextAnalysis) {
@@ -433,7 +356,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
+    type:
+      | IEngineWebPageTypes
+      | PSEvidenceWebPageTypes
+      | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ): Promise<void | PSRefinedRootCause[]> {
@@ -445,7 +371,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
     );
 
     try {
-      const textAnalysis = await this.getTextAnalysis(text, subProblemIndex);
+      const textAnalysis = await this.getTextAnalysis(
+        text,
+        subProblemIndex,
+        entityIndex
+      );
 
       if (textAnalysis) {
         textAnalysis.url = url;
@@ -455,6 +385,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         textAnalysis.groupId = this.memory.groupId;
         textAnalysis.communityId = this.memory.communityId;
         textAnalysis.domainId = this.memory.domainId;
+        textAnalysis.mostRelevantParagraphs = [];
 
         if (
           Array.isArray(textAnalysis.contacts) &&
@@ -475,6 +406,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         );
 
         try {
+          this.logger.info(`Posting web page for url ${url}`)
           await this.webPageVectorStore.postWebPage(textAnalysis);
           this.totalPagesSave += 1;
           this.logger.info(`Total ${this.totalPagesSave} saved pages`);
@@ -498,7 +430,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
   async getAndProcessPdf(
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
+    type:
+      | IEngineWebPageTypes
+      | PSEvidenceWebPageTypes
+      | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -542,9 +477,9 @@ export class GetWebPagesProcessor extends BaseProcessor {
         }
 
         if (pdfBuffer) {
-          this.logger.debug(pdfBuffer.toString().slice(0, 100));
+          //this.logger.debug(pdfBuffer.toString().slice(0, 100));
           try {
-            new PdfReader({}).parseBuffer(
+            new PdfReader({ debug: false, verbose: false }).parseBuffer(
               pdfBuffer,
               async (err: any, item: any) => {
                 if (err) {
@@ -553,11 +488,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
                   resolve();
                 } else if (!item) {
                   finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-                  this.logger.debug(
+                  /*this.logger.debug(
                     `Got final PDF text: ${
                       finalText ? finalText.slice(0, 100) : ""
                     }`
-                  );
+                  );*/
                   await this.processPageText(
                     finalText,
                     subProblemIndex,
@@ -593,7 +528,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
+    type:
+      | IEngineWebPageTypes
+      | PSEvidenceWebPageTypes
+      | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -683,7 +621,11 @@ export class GetWebPagesProcessor extends BaseProcessor {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,    entityIndex: number | undefined
+    type:
+      | IEngineWebPageTypes
+      | PSEvidenceWebPageTypes
+      | PSRootCauseWebPageTypes,
+    entityIndex: number | undefined
   ) {
     if (onlyCheckWhatNeedsToBeScanned) {
       const hasPage = await this.webPageVectorStore.webPageExist(
@@ -711,7 +653,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
           url,
           browserPage,
           type,
-          entityIndex,
+          entityIndex
         );
       }
     }
@@ -823,27 +765,14 @@ export class GetWebPagesProcessor extends BaseProcessor {
     }
   }
 
-  get maxWebPagesToGetByTopSearchPosition() {
-    return IEngineConstants.maxWebPagesToGetByTopSearchPosition;
-  }
-
-  get maxTopWebPagesToGet() {
-    return IEngineConstants.maxTopWebPagesToGet;
-  }
-
   getUrlsToFetch(allPages: IEngineSearchResultItem[]): string[] {
     let outArray: IEngineSearchResultItem[] = [];
 
-    outArray = outArray.concat(
-      allPages.filter(
-        (page) =>
-          page.originalPosition <=
-          this.maxWebPagesToGetByTopSearchPosition
+    outArray = allPages.slice(
+      0,
+      Math.floor(
+        allPages.length * IEngineConstants.maxPercentOfSolutionsWebPagesToGet
       )
-    );
-
-    outArray = outArray.concat(
-      allPages.slice(0, this.maxTopWebPagesToGet)
     );
 
     // Map to URLs and remove duplicates
@@ -904,7 +833,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
     ) {
       const customUrls =
         this.memory.subProblems[subProblemIndex].customSearchUrls;
-      if (customUrls) {
+      if (customUrls && customUrls.length > 0) {
         for (let i = 0; i < customUrls.length; i++) {
           this.logger.debug(`Getting custom URL ${customUrls[i]}`);
           await this.getAndProcessPage(
@@ -931,13 +860,13 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-    //await this.processSubProblems(browser);
+    await this.processSubProblems(browser);
 
-    //await this.saveMemory();
+    await this.saveMemory();
 
-    //await this.getAllCustomSearchUrls(browserPage);
+    await this.getAllCustomSearchUrls(browserPage);
 
-    //await this.saveMemory();
+    await this.saveMemory();
 
     const searchQueryTypes = [
       "general",
@@ -975,11 +904,14 @@ export class GetWebPagesProcessor extends BaseProcessor {
     this.logger.info("Get Web Pages Processor");
     super.process();
 
+    this.totalPagesSave = 0;
+
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.getPageAnalysisModel.temperature,
-      maxTokens: IEngineConstants.getPageAnalysisModel.maxOutputTokens,
-      modelName: IEngineConstants.getPageAnalysisModel.name,
-      verbose: IEngineConstants.getPageAnalysisModel.verbose,
+      temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
+      maxTokens:
+        IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+      modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
+      verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
     });
 
     await this.getAllPages();

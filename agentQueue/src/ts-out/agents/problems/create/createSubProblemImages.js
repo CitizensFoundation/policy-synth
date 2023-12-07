@@ -1,37 +1,30 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
+const recreateImagesNeeded = true;
 export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
     async renderCreatePrompt(subProblemIndex) {
         const messages = [
-            new SystemChatMessage(`
-        You are an expert in generating visual Dalle-2 prompts from a problem statement.
+            new SystemMessage(`
+        You are an expert in generating visual Dalle-3 prompts from a problem statement.
 
         Important Instructions:
-        1. Always end all prompts with "Simple professional geometric illustration using hues of ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text."
-        2. Be visual and detailed in your prompts.
-        3. Keep the prompt length to maximum of one or two sentences.
+        1. Always end all prompts with "Simple vector art illustration using these colors: ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. No text or labels."
+        2. Be highly visual, creative and detailed in your prompts.
+        3. Keep the prompt length to maximum of two or three sentences.
         4. Do not include quotes in your prompt.
         5. Never output prompts involving chess or chess pieces.
         6. Never output prompts involving asking for text to be written out, like on a document.
-        7. Follow the Dalle-2 Prompt Guide in your work.
-        8. Output only your Dalle-2 prompt, nothing else.
-        9. Let's think step by step.
-
-        Dalle-2 Prompt Guide:
-        For successful Dall-E 2 prompts, detail is key. Instead of general descriptions like "a cat," make it specific such as “a gray tabby cat on a sunny windowsill.” Detailed prompts yield more accurate images.
-
-        Use adjectives and adverbs for richer prompts. Instead of “a car,” specify it as “a shiny red sports car on a winding road,” to portray color, style, and setting.
-
-        While detail and creativity are crucial, keep your prompts concise. Limit your prompts to one or two essential details for the model to generate images quickly and accurately.`),
-            new HumanChatMessage(`
+        7. Output only your Dalle-3 prompt, nothing else.
+        8. Let's think step by step.`),
+            new HumanMessage(`
          Problem:
          ${this.renderSubProblem(subProblemIndex)}
 
-         Generate and output the Dall-E 2 image prompt below:
+         Generate and output the Dalle 3 image prompt below:
          `),
         ];
         return messages;
@@ -40,7 +33,7 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
         this.currentSubProblemIndex = 0;
         for (let s = 0; s < this.memory.subProblems.length; s++) {
             this.currentSubProblemIndex = s;
-            if (!this.memory.subProblems[s].imageUrl) {
+            if (recreateImagesNeeded || !this.memory.subProblems[s].imageUrl) {
                 let imagePrompt = (await this.callLLM("create-sub-problem-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(s), false));
                 this.memory.subProblems[s].imagePrompt = imagePrompt;
                 this.logger.debug(`subProblemIndex ${s}`);

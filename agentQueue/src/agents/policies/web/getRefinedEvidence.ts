@@ -3,7 +3,7 @@ import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
@@ -28,7 +28,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
     text: string
   ) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `You are an expert in analyzing policy evidence:
 
         Important Instructions:
@@ -58,7 +58,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
           qualityScore: number;
         }`
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(subProblemIndex, true)}
 
@@ -108,7 +108,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
         );
 
-        const splitText = await this.splitText(
+        const splitText = this.splitText(
           text,
           maxTokenLengthForChunk,
           subProblemIndex

@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
     static rootCauseWebPageTypesArray = [
@@ -18,7 +18,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
     ];
     async renderCreatePrompt(searchResultType) {
         return [
-            new SystemChatMessage(`Adhere to the following guidelines:
+            new SystemMessage(`Adhere to the following guidelines:
         1. You generate high quality search queries for identifying root causes based on a Problem Statement.
         2. Always focus your search queries on the problem statement and its core ideas.
         3. Use your knowledge and experience to create the best possible search queries.
@@ -26,14 +26,13 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
         5. You will be provided with a search query type, use this to guide your creation
         6. Create 10 high quality search queries
         7. All search queries should be focused on finding root causes for the problem.
-        8. Never output in markdown format.
-        9. Provide an output in the following JSON string array: [ searchQuery ]
-        10. Never explain, just output JSON.
+        8. List the search queries in a JSON string array
+        9. Never explain, just output JSON.
 ​
         Let's think step by step.
 ​
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
          ${this.renderProblemStatement()}
 ​
          Search Query Type: ${searchResultType}
@@ -44,7 +43,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
     }
     async renderRefinePrompt(searchResultType, searchResultsToRefine) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in refining search queries for identifying root causes based on a Problem Statement.
         2. Always focus your search queries on the problem statement and its core ideas.
@@ -52,13 +51,12 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
         4. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
         5. You will be provided with a search query type, use this to guide your refinement
         7. All search queries should be focused on finding root causes for the problem.
-        8. Never output in markdown format.
-        9. Provide an output in the following JSON string array: [ searchQuery ]
+        8. List the search queries in a JSON string array
 ​
         Let's think step by step.
 ​
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
 ​
          Search Query Type: ${searchResultType}
@@ -72,19 +70,18 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProcessor {
     }
     async renderRankPrompt(searchResultType, searchResultsToRank) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in ranking the most important search queries for identifying root causes based on a Problem Statement.
         2. Use your knowledge and experience to rank the search queries.
         3. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
         4. You will be provided with a search query type, use this to guide your ranking
         5. All search queries should be focused on finding root causes for the problem.
-        6. Never output in markdown format.
-        7. Provide an output in the following JSON string array: [ searchQuery ]
+        6. List the search queries in a JSON string array
 ​
         Let's think step by step.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
 ​
          Search Query Type: ${searchResultType}

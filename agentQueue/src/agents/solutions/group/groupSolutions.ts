@@ -1,27 +1,23 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class GroupSolutionsProcessor extends BaseProcessor {
   async renderGroupPrompt(solutionsToGroup: IEngineSolutionForGroupCheck[]) {
     const messages = [
-      new SystemChatMessage(
-        `
-        You are an expert in in grouping solution components containing exactly the same core ideas together.
+      new SystemMessage(
+        `You are an expert in in grouping solution components containing exactly the same core ideas together.
 
         Instructions:
-        1. You will receive an array of solution components, each having an index and title, formatted in JSON: [ { index, title } ]
-        2. You are to output a list of lists. Each sub-list should contain indexes and titles of solution components containing exactly the same core ideas: [ [ { index, title } ] ]
-        3. Solution Components should only be grouped if they share exactly the same core ideas.
-        4. Never group more than 14 solution components together.
-        5. Not all solution components need to be grouped.
-        6. Never group the same solution component in more than one group.
-
-        Let's think step by step.
+        1. You will receive an array of solution components.
+        2. You are to output a list of lists. Each sub-list should contain indexes and titles of solution components: [ [ { index, title } ] ]
+        3. Never group the same solution component in more than one group.
+        4. Never group similar solution components together, only ones that the contain exactly the same core ideas.
+        5. Never explain anything, just output JSON.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `${JSON.stringify(solutionsToGroup, null, 2)}
 
         Output JSON Array:
@@ -40,6 +36,7 @@ export class GroupSolutionsProcessor extends BaseProcessor {
       (solution, index) => ({
         index: index,
         title: solution.title,
+        description: solution.description
       })
     );
 

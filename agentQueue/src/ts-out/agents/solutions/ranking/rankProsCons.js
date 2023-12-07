@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
@@ -16,7 +16,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
             proConSingle = "Con";
         }
         const messages = [
-            new SystemChatMessage(`
+            new SystemMessage(`
         As an AI expert, your role involves analyzing ${additionalData.prosOrCons} associated with solution components to problems and decide on which ${additionalData.prosOrCons} is more important.
 
         Instructions:
@@ -25,7 +25,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
         2. Analyze and compare the ${additionalData.prosOrCons} based on their relevance and importance to the solution component and choose which is more important and output your decision as either "One", "Two" or "Neither".
         3. Never explain your reasoning.
         `),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderSubProblem(additionalData.subProblemIndex, true)}
 
         ${additionalData.solution}

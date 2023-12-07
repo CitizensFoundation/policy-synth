@@ -82,6 +82,7 @@ interface IEngineSubProblem {
   imagePrompt?: string;
   whyIsSubProblemImportant: string;
   fromSearchType?: PSRootCauseWebPageTypes;
+  fromUrl?: string;
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
@@ -175,13 +176,16 @@ interface IEEngineSearchResultData {
 
 type IEngineStageTypes =
   | "create-root-causes-search-queries"
+  | "rank-root-causes-search-queries"
   | "web-search-root-causes"
+  | "rank-root-causes-search-results"
   | "web-get-root-causes-pages"
   | "rank-web-root-causes"
   | "rate-web-root-causes"
   | "web-get-refined-root-causes"
   | "get-metadata-for-top-root-causes"
   | "create-sub-problems"
+  | "reduce-sub-problems"
   | "create-entities"
   | "create-search-queries"
   | "create-pros-cons"
@@ -311,6 +315,7 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     secondaryColors?: string[];
   };
   subProblems: IEngineSubProblem[];
+  allSubProblems?: IEngineSubProblem[];
   subProblemClientColors?: string[];
   currentStageData?:
     | IEEngineSearchResultData

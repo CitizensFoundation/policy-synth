@@ -3,7 +3,7 @@ import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
@@ -73,7 +73,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     }
 
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         Your are an expert in analyzing textual data:
 
@@ -105,7 +105,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         ${EvidenceExamplePrompts.render(type)}
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(subProblemIndex)}
 
@@ -135,7 +135,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
       emptyMessages
     );
 
-    const textForTokenCount = new HumanChatMessage(text);
+    const textForTokenCount = new HumanMessage(text);
 
     const textTokenCount = await this.chat!.getNumTokensFromMessages([
       textForTokenCount,
@@ -181,7 +181,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
         );
 
-        const splitText = await this.splitText(
+        const splitText = this.splitText(
           text,
           maxTokenLengthForChunk,
           subProblemIndex
@@ -388,10 +388,6 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
       domainId: data1.domainId,
       _additional: data1._additional || data2._additional, // Assuming you want data from data1 when available. Adjust as needed.
     };
-  }
-
-  get maxWebPagesToGetByTopSearchPosition() {
-    return IEngineConstants.maxEvidenceWebPagesToGetByTopSearchPosition;
   }
 
   async processPageText(

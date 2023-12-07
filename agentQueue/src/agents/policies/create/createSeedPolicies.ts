@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class CreateSeedPoliciesProcessor extends BaseProcessor {
@@ -32,7 +32,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
 
   async renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in creating concrete policy proposal from a solution.
 
@@ -51,7 +51,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          ${this.renderSubProblem(subProblemIndex, true)}
 
@@ -71,7 +71,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
     policyProposalsToRefine: PSPolicy[]
   ) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in refining concrete policy proposals for  solution components.
 
@@ -89,7 +89,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          ${this.renderSubProblem(subProblemIndex, true)}
 
@@ -112,7 +112,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
     policyProposalsToChooseFrom: PSPolicy[]
   ) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         You are an expert in choose the best concrete policy proposals for solution components.
 
@@ -127,7 +127,7 @@ export class CreateSeedPoliciesProcessor extends BaseProcessor {
 
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          ${this.renderSubProblem(subProblemIndex, true)}
 

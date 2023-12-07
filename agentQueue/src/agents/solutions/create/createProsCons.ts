@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 
 export class CreateProsConsProcessor extends BaseProcessor {
@@ -23,21 +23,23 @@ export class CreateProsConsProcessor extends BaseProcessor {
     solution: IEngineSolution
   ) {
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI expert, it's your responsibility to refine the given ${prosOrCons} pertaining to solution components to problems.
 
         Instructions:
 
-        1. Make the ${prosOrCons} concise, consistent, and succinct.
+        1. Make the ${prosOrCons} clear, consistent, and succinct.
         2. Expand on the ${prosOrCons} by considering the problem, if needed.
         3. Ensure the refined ${prosOrCons} are relevant and directly applicable.
         4. Output should be in JSON format only, not markdown.
         5. The ${prosOrCons} should be outputed as an JSON array: [ "...", "..." ].
-        6. Follow a step-by-step approach in your thought process.
+        6. Reorder the points based on importance to the problem
+        7. Never offer explanations.
+        8. Follow a step-by-step approach in your thought process.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderSubProblem(subProblemIndex, true)}
 
@@ -61,23 +63,24 @@ export class CreateProsConsProcessor extends BaseProcessor {
     const prosconsSingle = prosOrCons.slice(0, -1);
 
     const messages = [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solution components, keeping the problem provided in mind.
 
         Important Instructions:
 
-        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below.
+        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
         2. Each ${prosconsSingle} should be directly applicable to the solution.
         3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
         4. The ${prosOrCons} must be in line with the context given by the problem.
         5. Output should be in JSON format only, not markdown format.
         6. The ${prosOrCons} should be outputted as an JSON array: [ "...", "..." ].
         7. Never output the index number of the ${prosOrCons} in the text.
-        8. Let's think step by step.
+        8. Never offer explanations.
+        9. Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
          ${this.renderSubProblem(subProblemIndex, true)}
 
