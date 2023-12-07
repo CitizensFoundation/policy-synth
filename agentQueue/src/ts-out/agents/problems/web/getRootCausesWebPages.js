@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
@@ -39,7 +39,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         }
         return [
             // Update with our own problem statement from GPT
-            new SystemChatMessage(`
+            new SystemMessage(`
         Your are an expert in analyzing textual data:
 
         Important Instructions:
@@ -60,7 +60,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         ${RootCauseExamplePrompts.render(type)}
         `),
             // Only add what is required here
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
 
         Web page type: ${type}
@@ -75,7 +75,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     async getRootCauseTokenCount(text, type) {
         const emptyMessages = this.renderRootCauseScanningPrompt(type, "");
         const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanChatMessage(text);
+        const textForTokenCount = new HumanMessage(text);
         const textTokenCount = await this.chat.getNumTokensFromMessages([textForTokenCount]);
         const totalTokenCount = promptTokenCount.totalCount + textTokenCount.totalCount + IEngineConstants.getPageAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
@@ -88,7 +88,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
                 const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit - promptTokenCount.totalCount - 512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
-                const splitText = await this.splitText(text, maxTokenLengthForChunk, undefined);
+                const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];
@@ -183,9 +183,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             _additional: data1._additional || data2._additional,
         };
     }
-    get maxWebPagesToGetByTopSearchPosition() {
-        return IEngineConstants.maxRootCauseWebPagesToGetByTopSearchPosition;
-    }
     async processPageText(text, subProblemIndex = undefined, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results`);
         try {
@@ -216,9 +213,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             this.logger.error(`Error in processPageText`);
             this.logger.error(e.stack || e);
         }
-    }
-    get maxTopWebPagesToGet() {
-        return IEngineConstants.maxTopWebPagesToGet;
     }
     async getAndProcessRootCausePage(url, browserPage, type) {
         if (url == "https://www.oecd.org/pisa/PISA%202018%20Insights%20and%20Interpretations%20FINAL%20PDF.pdf") {
@@ -259,8 +253,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
         await newPage.setUserAgent(IEngineConstants.currentUserAgent);
         for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-            const urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
+            let urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
             if (urlsToGet) {
+                urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length * IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
                 for (let i = 0; i < urlsToGet.length; i++) {
                     await this.getAndProcessRootCausePage(urlsToGet[i].url, newPage, searchResultType);
                 }

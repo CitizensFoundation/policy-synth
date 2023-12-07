@@ -3,7 +3,7 @@ import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
@@ -23,7 +23,7 @@ puppeteer.use(StealthPlugin());
 export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcessor {
   renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string) {
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `You are an expert in analyzing root causes for a particular problem statement:
 
         Important Instructions:
@@ -46,7 +46,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
         6. Output scores in the ranges of 0-100.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatement()}
 
@@ -64,7 +64,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     ];
   }
 
-  async getRootCauseTextAnalysis(type: PSRootCauseWebPageTypes, text: string) {
+  async getRootCauseRefinedTextAnalysis(type: PSRootCauseWebPageTypes, text: string, url: string) {
     try {
       const { totalTokenCount, promptTokenCount } =
         await this.getRootCauseTokenCount(text, type);
@@ -89,7 +89,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
         );
 
-        const splitText = await this.splitText(
+        const splitText = this.splitText(
           text,
           maxTokenLengthForChunk,
           undefined
@@ -107,31 +107,42 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
           if (nextAnalysis) {
             for (let rootCause of nextAnalysis) {
-              this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
-              this.memory.subProblems.push({
-                title: rootCause.rootCauseTitle,
-                description: rootCause.rootCauseDescription,
-                whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
-                fromSearchType: type,
-                solutions: {
-                  populations: [],
-                },
-                entities: [],
-                searchQueries: {
-                  general: [],
-                  scientific: [],
-                  news: [],
-                  openData: [],
-                },
-                searchResults: {
-                  pages: {
+              //this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
+              if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
+                this.memory.subProblems.push({
+                  title: rootCause.rootCauseTitle,
+                  description: rootCause.rootCauseDescription,
+                  whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                  fromSearchType: type,
+                  fromUrl: url,
+                  solutions: {
+                    populations: [],
+                  },
+                  entities: [],
+                  searchQueries: {
                     general: [],
                     scientific: [],
                     news: [],
                     openData: [],
                   },
-                },
-              });
+                  searchResults: {
+                    pages: {
+                      general: [],
+                      scientific: [],
+                      news: [],
+                      openData: [],
+                    },
+                  },
+                });
+              } else {
+                this.logger.warn(
+                  `No title or description found for ${JSON.stringify(
+                    rootCause,
+                    null,
+                    2
+                  )}`
+                );
+              }
             }
           } else {
             this.logger.error(
@@ -142,35 +153,48 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
       } else {
         textAnalysis = await this.getRefinedRootCauseTextAIAnalysis(type, text);
         for (let rootCause of textAnalysis) {
-          this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
-          this.memory.subProblems.push({
-            title: rootCause.rootCauseTitle,
-            description: rootCause.rootCauseDescription,
-            whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
-            fromSearchType: type,
-            solutions: {
-              populations: [],
-            },
-            entities: [],
-            searchQueries: {
-              general: [],
-              scientific: [],
-              news: [],
-              openData: [],
-            },
-            searchResults: {
-              pages: {
+          //this.logger.debug(
+          //  `Root Cause: ${JSON.stringify(rootCause, null, 2)}`
+          //);
+          if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
+            this.memory.subProblems.push({
+              title: rootCause.rootCauseTitle,
+              description: rootCause.rootCauseDescription,
+              whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+              fromSearchType: type,
+              fromUrl: url,
+              solutions: {
+                populations: [],
+              },
+              entities: [],
+              searchQueries: {
                 general: [],
                 scientific: [],
                 news: [],
                 openData: [],
               },
-            },
-          });
+              searchResults: {
+                pages: {
+                  general: [],
+                  scientific: [],
+                  news: [],
+                  openData: [],
+                },
+              },
+            });
+          } else {
+            this.logger.warn(
+              `No title or description found for ${JSON.stringify(
+                rootCause,
+                null,
+                2
+              )}`
+            );
+          }
         }
-        this.logger.debug(
-          `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
-        );
+        //this.logger.debug(
+        //  `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+        //);
       }
       await this.saveMemory();
 
@@ -230,16 +254,14 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     policy: PSPolicy | undefined = undefined
   ) {
     this.logger.debug(
-      `Processing page text ${text.slice(
-        0,
-        150
-      )} for ${url} for ${type} search results`
+      `Processing ${url} for ${type}`
     );
 
     try {
-      const refinedAnalysis = (await this.getRootCauseTextAnalysis(
+      const refinedAnalysis = (await this.getRootCauseRefinedTextAnalysis(
         type as PSRootCauseWebPageTypes,
-        text
+        text,
+        url
       )) as unknown as PSRefinedRootCause[];
 
       // TODO: fix any type
@@ -273,11 +295,17 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
   }
 
   async refineWebRootCauses(page: Page) {
-    const limit = 25;
+    const limit = IEngineConstants.topWebPagesToGetForRefineRootCausesScan;
+
+    let typeCount = 0;
+
+    this.memory.subProblems = [];
 
     try {
       for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
-        const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
+        typeCount++;
+        const searchType =
+          IEngineConstants.simplifyRootCauseType(rootCauseType);
         const results =
           await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
             this.memory.groupId,
@@ -300,7 +328,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
           const id = webPage._additional!.id!;
 
           this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
-          if(webPage.totalScore && webPage.totalScore > 0) {
+          if (webPage.totalScore && webPage.totalScore > 0) {
             this.logger.debug(
               `All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`
             );
@@ -314,9 +342,13 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
               searchType as PSRootCauseWebPageTypes
             );
           } else {
-            this.logger.info("Skipping the current WebPage as it has a score of 0/null");
+            this.logger.info(
+              "Skipping the current WebPage as it has a score of 0/null"
+            );
           }
-          this.logger.info(`(+${pageCounter++}) - ${id} - Updated`);
+          this.logger.info(
+            `(+${pageCounter++}) - ${rootCauseType} - ${typeCount} - Updated`
+          );
         }
       }
     } catch (error: any) {

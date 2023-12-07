@@ -38,7 +38,7 @@
     "html-to-text": "^9.0.5",
     "ioredis": "^5.3.2",
     "jsonrepair": "^3.2.0",
-    "langchain": "^0.0.102",
+    "langchain": "^0.0.196",
     "metascraper": "^5.36.0",
     "metascraper-author": "^5.36.0",
     "metascraper-clearbit": "^5.37.0",
@@ -51,7 +51,7 @@
     "metascraper-url": "^5.36.0",
     "node-fetch": "^3.3.2",
     "nodemon": "^2.0.22",
-    "openai": "^3.3.0",
+    "openai": "^4.20.1",
     "pdf-parse": "^1.1.1",
     "pdf2json": "^3.0.4",
     "pdfjs-dist": "^3.8.162",
@@ -59,7 +59,7 @@
     "puppeteer": "^19.11.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "weaviate-ts-client": "^1.4.0",
+    "weaviate-ts-client": "^2.0.0",
     "winston": "^3.9.0"
   }
 }

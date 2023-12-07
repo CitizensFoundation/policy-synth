@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export class RateWebEvidenceProcessor extends BaseProcessor {
@@ -10,7 +10,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
     }
     async renderProblemPrompt(subProblemIndex, policy, rawWebData, evidenceToRank, evidenceType) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         You are an expert in rating evidence for policy proposals on multiple attributes.
 
         Instructions:
@@ -25,7 +25,7 @@ export class RateWebEvidenceProcessor extends BaseProcessor {
         }
 
        Let's think step by step.`),
-            new HumanChatMessage(`
+            new HumanMessage(`
         Problem:
         ${this.renderSubProblemSimple(subProblemIndex)}
 

@@ -1,24 +1,24 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export class RankWebRootCausesProcessor extends BaseProcessor {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     async renderProblemPrompt(rootCausesToRank, rootCauseType) {
         return [
-            new SystemChatMessage(`
+            new SystemMessage(`
         You are an expert in filtering and ranking root causes of a particular problem.
 
-        1. Filter out irrelevant root causes.
+        1. Filter out irrelevant root causes and solutions to the problem.
         2. Filter out duplicates or near duplicates.
         3. Rank the root causes array by importance to the problem statement.
-        4. Always and only output a JSON String Array: [ rootCause ].
+        4. Always and only output a JSON String Array and never explain only output JSON.
 
         Let's think step by step.`),
-            new HumanChatMessage(`
+            new HumanMessage(`
         ${this.renderProblemStatement()}
-        
+
         Root Cause type: ${rootCauseType}
 
         Root Causes to filter and rank:

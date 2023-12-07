@@ -1,6 +1,6 @@
 import { BaseProcessor } from "../../baseProcessor.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../../constants.js";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
@@ -31,9 +31,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     subProblemIndex: number
   ) {
     return [
-      new SystemChatMessage(
-        `
-        As an AI genetic algorithm expert, your task is to create a new solution component from two parent solution components: "Solution Component Parent A" and "Solution Component Parent B".
+      new SystemMessage(
+        `As an AI genetic algorithm expert, your task is to create a new solution component from two parent solution components: "Solution Component Parent A" and "Solution Component Parent B".
 
         Instructions:
         1. Use one best attribute from "Parent A" and one best attribute from "Parent B" to create a new solution component with one core idea. Be very creative here do not just take one idea from Parent A and one idea from Parent B, make something unique and innovative.
@@ -42,7 +41,10 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         4. If the combined solution has more than two unique core ideas remove all but two of the core ideas in the solution component, if the ideas are closely related then do not filter them out.
         5. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
         6. Core ideas are distinct concepts or strategies that are central to the solution component.
-        7. Do not refer to "the merged solution component" in your output, the solution component should be presented as a standalone solution component.        ${
+        7. Do not refer to "the merged solution component" in your output, the solution component should be presented as a standalone solution component.
+        8. Solution should be actionable and the text accessible.
+
+        ${
           this.memory.customInstructions.createSolutions
             ? `
           Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
@@ -54,7 +56,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
@@ -78,7 +80,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     this.logger.debug(`Mutate rate: ${mutateRate}`);
 
     return [
-      new SystemChatMessage(
+      new SystemMessage(
         `
         As an AI expert specializing in genetic algorithms, your task is to mutate the following solution component.
 
@@ -87,6 +89,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         2. Mutation can involve introducing new attributes, modifying existing ones, or removing less important ones.
         3. Ensure the mutation is creative, meaningful, and continues to offer a viable solution component to part of the presented problem.
         4. Avoid referring to your output as "the merged solution component" or "the mutated solution component". Instead, present it as a standalone solution component.
+        5. Solution should be actionable and the text accessible.
         ${
           this.memory.customInstructions.createSolutions
             ? `
@@ -99,7 +102,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Let's think step by step.
         `
       ),
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
 
@@ -246,7 +249,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     for (let solution of newSolutions) {
       solution.family = {
         seedUrls,
-        gen: this.getNumberOfGenerations(subProblemIndex)
+        gen: this.getNumberOfGenerations(subProblemIndex),
       };
     }
 
@@ -339,7 +342,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             this.getNumberOfGenerations(subProblemIndex) - 1
           }:${this.getIndexOfParent(parent, previousPopulation)}`,
           mutationRate: mutateRate,
-          gen: this.getNumberOfGenerations(subProblemIndex)
+          gen: this.getNumberOfGenerations(subProblemIndex),
         };
         this.logger.debug(`Mutant: ${JSON.stringify(mutant, null, 2)}`);
         newPopulation.push(mutant);
@@ -389,7 +392,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
           this.getNumberOfGenerations(subProblemIndex) - 1
         }:${this.getIndexOfParent(parentB, previousPopulation)}`,
         mutationRate,
-        gen: this.getNumberOfGenerations(subProblemIndex)
+        gen: this.getNumberOfGenerations(subProblemIndex),
       };
 
       this.logger.debug(`Offspring: ${JSON.stringify(offspring, null, 2)}`);

@@ -3,7 +3,7 @@ import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../../constants.js";
 
-import { HumanChatMessage, SystemChatMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import ioredis from "ioredis";
@@ -48,7 +48,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
     return [
       // Update with our own problem statement from GPT
-      new SystemChatMessage(
+      new SystemMessage(
         `
         Your are an expert in analyzing textual data:
 
@@ -71,7 +71,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         `,
       ),
       // Only add what is required here
-      new HumanChatMessage(
+      new HumanMessage(
         `
         ${this.renderProblemStatement()}
 
@@ -90,7 +90,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
     const promptTokenCount = await this.chat!.getNumTokensFromMessages(emptyMessages);
 
-    const textForTokenCount = new HumanChatMessage(text);
+    const textForTokenCount = new HumanMessage(text);
 
     const textTokenCount = await this.chat!.getNumTokensFromMessages([textForTokenCount]);
 
@@ -112,7 +112,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
         this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
 
-        const splitText = await this.splitText(text, maxTokenLengthForChunk, undefined);
+        const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
 
         this.logger.debug(`Got ${splitText.length} splitTexts`);
 
@@ -220,10 +220,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     };
   }
 
-  get maxWebPagesToGetByTopSearchPosition() {
-    return IEngineConstants.maxRootCauseWebPagesToGetByTopSearchPosition;
-  }
-
   async processPageText(
     text: string,
     subProblemIndex: undefined = undefined,
@@ -264,10 +260,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     }
   }
 
-  get maxTopWebPagesToGet() {
-    return IEngineConstants.maxTopWebPagesToGet;
-  }
-
   async getAndProcessRootCausePage(url: string, browserPage: Page, type: PSRootCauseWebPageTypes) {
     if (url == "https://www.oecd.org/pisa/PISA%202018%20Insights%20and%20Interpretations%20FINAL%20PDF.pdf") {
       this.logger.info("Skipping the current url:" + url);
@@ -275,19 +267,19 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     }
     let hasPage = undefined;
     if (onlyCheckWhatNeedsToBeScanned) {
-      try { 
+      try {
         this.logger.info('Checking if a page exists ' + url);
-        hasPage = await this.rootCauseWebPageVectorStore.webPageExist(this.memory.groupId, url, type); 
+        hasPage = await this.rootCauseWebPageVectorStore.webPageExist(this.memory.groupId, url, type);
         if (hasPage) {
           this.logger.warn(`Already have scanned ${type} / ${url}`);
         } else {
           this.logger.warn(`Need to scan ${type} / ${url}`);
-        } 
+        }
       } catch(e:any) {
         this.logger.error("Error with try in getAndProcessRootCausePage");
         this.logger.error(e);
       }
-    } 
+    }
     if (!hasPage) {
       if (url.toLowerCase().endsWith(".pdf")) {
         await this.getAndProcessPdf(undefined, url, type, undefined);
@@ -307,8 +299,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     await newPage.setUserAgent(IEngineConstants.currentUserAgent);
 
     for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-      const urlsToGet = problemStatement.rootCauseSearchResults![searchResultType];
+      let urlsToGet = problemStatement.rootCauseSearchResults![searchResultType];
       if (urlsToGet) {
+        urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length * IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
         for (let i = 0; i < urlsToGet.length; i++) {
           await this.getAndProcessRootCausePage(urlsToGet[i].url, newPage, searchResultType);
         }

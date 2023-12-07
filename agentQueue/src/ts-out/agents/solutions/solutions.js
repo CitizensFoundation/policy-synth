@@ -12,6 +12,7 @@ import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
 import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
 import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
+import { RankSearchResultsProcessor } from "./ranking/rankSearchResults.js";
 export class AgentSolutions extends BaseAgent {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -93,6 +94,10 @@ export class AgentSolutions extends BaseAgent {
             case "web-search":
                 const searchWebProcessor = new SearchWebProcessor(this.job, this.memory);
                 await searchWebProcessor.process();
+                break;
+            case "rank-search-results":
+                const rankSearchResultsProcessor = new RankSearchResultsProcessor(this.job, this.memory);
+                await rankSearchResultsProcessor.process();
                 break;
             case "evolve-create-population":
                 const createPopulationProcessor = new EvolvePopulationProcessor(this.job, this.memory);

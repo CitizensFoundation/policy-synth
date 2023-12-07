@@ -1,10 +1,10 @@
 import { Job } from "bullmq";
 import { Base } from "../base.js";
 import {
-  AIChatMessage,
-  BaseChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
+  BaseMessage,
+  ChatMessage,
+  HumanMessage,
+  SystemMessage,
 } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { IEngineConstants } from "../constants.js";
@@ -276,7 +276,7 @@ export abstract class BaseProcessor extends Base {
   async callLLM(
     stage: IEngineStageTypes,
     modelConstants: IEngineBaseAIModelConstants,
-    messages: BaseChatMessage[],
+    messages: BaseMessage[],
     parseJson = true,
     limitedRetries = false,
     tokenOutEstimate = 120
@@ -297,6 +297,8 @@ export abstract class BaseProcessor extends Base {
           await this.checkRateLimits(modelConstants, estimatedTokensToAdd);
           await this.updateRateLimits(modelConstants, tokensIn.totalCount);
 
+          //TODO: Get JSON param to work when that option can be tested in the playground
+          //response = await this.chat.call(messages, {response_format: {"type": "json_object"}});
           response = await this.chat.call(messages);
 
           if (response) {
@@ -342,12 +344,14 @@ export abstract class BaseProcessor extends Base {
             if (parseJson) {
               let parsedJson;
               try {
-                parsedJson = JSON.parse(response.text.trim());
+                parsedJson = response.text.trim().replace(/```json/g, "");
+                parsedJson = parsedJson.replace(/```/g, "");
+                parsedJson = JSON.parse(parsedJson);
               } catch (error) {
                 this.logger.warn(`Error parsing JSON ${response.text.trim()}`);
                 try {
                   this.logger.info(`Trying to fix JSON`);
-                  const repaired = jsonrepair(response.text.trim());
+                  let repaired = jsonrepair(response.text.trim());
                   parsedJson = JSON.parse(repaired);
                   this.logger.info("Fixed JSON")
                 } catch (error) {

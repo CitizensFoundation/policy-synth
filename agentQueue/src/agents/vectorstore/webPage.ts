@@ -83,6 +83,9 @@ export class WebPageVectorStore extends Base {
   }
 
   async postWebPage(webPageAnalysis: IEngineWebPageAnalysisData) {
+    this.logger.info(
+      `Weaviate: Saving web page ${JSON.stringify(webPageAnalysis, null, 2)}`
+    );
     return new Promise((resolve, reject) => {
       WebPageVectorStore.client.data
         .creator()
@@ -121,8 +124,7 @@ export class WebPageVectorStore extends Base {
     });
   }
 
-  async updateWebSolutions(id: string, webSolutions: string[],
-    quiet = false) {
+  async updateWebSolutions(id: string, webSolutions: string[], quiet = false) {
     return new Promise((resolve, reject) => {
       WebPageVectorStore.client.data
         .merger()
@@ -181,7 +183,7 @@ export class WebPageVectorStore extends Base {
       },
     ];
 
-    if (subProblemIndex!==undefined && subProblemIndex!==null) {
+    if (subProblemIndex !== undefined && subProblemIndex !== null) {
       where.push({
         path: ["subProblemIndex"],
         operator: "Equal",
@@ -217,7 +219,7 @@ export class WebPageVectorStore extends Base {
       });
     }
 
-    if (solutionCountLimit!==undefined) {
+    if (solutionCountLimit !== undefined) {
       where.push({
         path: ["len(solutionsIdentifiedInTextContext)"],
         operator: "GreaterThan",
@@ -229,19 +231,19 @@ export class WebPageVectorStore extends Base {
 
     try {
       query = WebPageVectorStore.client.graphql
-      .get()
-      .withClassName("WebPage")
-      .withLimit(limit)
-      .withOffset(offset)
-      .withWhere({
-        operator: "And",
-        operands: where,
-      })
-      .withFields(
-        "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
+        .get()
+        .withClassName("WebPage")
+        .withLimit(limit)
+        .withOffset(offset)
+        .withWhere({
+          operator: "And",
+          operands: where,
+        })
+        .withFields(
+          "searchType groupId entityIndex subProblemIndex summary relevanceToProblem \
       solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities contacts \
       _additional { distance, id }"
-      );
+        );
 
       return await query.do();
     } catch (err) {
@@ -370,7 +372,6 @@ export class WebPageVectorStore extends Base {
     searchType: IEngineWebPageTypes | undefined,
     filterOutEmptySolutions = true
   ): Promise<IEngineWebPageGraphQlResults> {
-    //TODO: Fix any here
     const where: any[] = [];
 
     if (groupId) {
@@ -405,28 +406,46 @@ export class WebPageVectorStore extends Base {
       });
     }
 
-    let results;
+    const retryDelays = [5000, 10000, 30000]; // Delays for retry attempts (5s, 10s, 30s)
+    let attempt = 0;
 
-    try {
-      results = await WebPageVectorStore.client.graphql
-        .get()
-        .withClassName("WebPage")
-        .withNearText({ concepts: [query] })
-        .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
-        .withWhere({
-          operator: "And",
-          operands: where,
-        })
-        .withFields(
-          "searchType subProblemIndex summary relevanceToProblem \
-          solutionsIdentifiedInTextContext url mostRelevantParagraphs tags entities \
-          _additional { distance }"
-        )
-        .do();
-    } catch (err) {
-      throw err;
-    }
+    const doSearch = async (): Promise<IEngineWebPageGraphQlResults> => {
+      try {
+        const results = await WebPageVectorStore.client.graphql
+          .get()
+          .withClassName("WebPage")
+          .withNearText({ concepts: [query] })
+          .withLimit(
+            IEngineConstants.limits.webPageVectorResultsForNewSolutions
+          )
+          .withWhere({
+            operator: "And",
+            operands: where,
+          })
+          .withFields(
+            "searchType subProblemIndex entityIndex summary relevanceToProblem \
+            solutionsIdentifiedInTextContext url mostRelevantParagraphs \
+            _additional { distance }"
+          )
+          .do();
+        return results as IEngineWebPageGraphQlResults;
+      } catch (err) {
+        console.error(err);
+        if (attempt < retryDelays.length) {
+          console.log(
+            `Error searching web pages, retrying in ${retryDelays[attempt]}ms`
+          );
+          await new Promise((resolve) =>
+            setTimeout(resolve, retryDelays[attempt])
+          );
+          attempt++;
+          return doSearch();
+        } else {
+          throw err;
+        }
+      }
+    };
 
-    return results as IEngineWebPageGraphQlResults;
+    return doSearch();
   }
 }
