@@ -408,6 +408,10 @@ export class CreateSolutionImagesProcessor extends BaseProcessor {
             } else {
               this.logger.error("Error getting image");
             }
+          } else {
+            this.logger.debug(
+              `Image URL already exists: ${solution.imageUrl}`
+            );
           }
 
           await this.saveMemory();
