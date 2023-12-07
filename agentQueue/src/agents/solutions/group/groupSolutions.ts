@@ -7,19 +7,17 @@ export class GroupSolutionsProcessor extends BaseProcessor {
   async renderGroupPrompt(solutionsToGroup: IEngineSolutionForGroupCheck[]) {
     const messages = [
       new SystemMessage(
-        `
-        You are an expert in in grouping solution components containing exactly the same core ideas together.
+        `You are an expert in in grouping solution components containing exactly the same core ideas together, do not group them if they are just similar.
 
         Instructions:
-        1. You will receive an array of solution components, each having an index and title, formatted in JSON: [ { index, title } ]
+        1. You will receive an array of solution components, each having an index, title and description
         2. You are to output a list of lists. Each sub-list should contain indexes and titles of solution components containing exactly the same core ideas: [ [ { index, title } ] ]
         3. Solution Components should only be grouped if they share exactly the same core ideas.
-        4. Never group more than 14 solution components together.
+        4. Never group more than 14 solution components
         5. Not all solution components need to be grouped.
         6. Never group the same solution component in more than one group.
-        7. Never explain anything, just output JSON.
-
-        Let's think step by step.
+        7. Never group similar solution components together, only ones that the contain exactly the same core ideas.
+        8. Never explain anything, just output JSON.
         `
       ),
       new HumanMessage(
@@ -41,10 +39,13 @@ export class GroupSolutionsProcessor extends BaseProcessor {
       (solution, index) => ({
         index: index,
         title: solution.title,
+        description: solution.description
       })
     );
 
     this.logger.debug(`Solution Components going into LLM ${solutionsToGroup.length}`);
+
+    this.logger.debug(JSON.stringify(solutionsToGroup, null, 2));
 
     const groupedIndexes: Array<Array<IEngineSolutionForGroupCheck>> = await this.callLLM(
       "group-solutions",

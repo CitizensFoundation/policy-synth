@@ -1,7 +1,8 @@
 import { Queue, Job, QueueEvents } from "bullmq";
 import ioredis from "ioredis";
 
-const myQueue = new Queue("agent-innovation");
+const myQueue = new Queue("agent-solutions");
+
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
