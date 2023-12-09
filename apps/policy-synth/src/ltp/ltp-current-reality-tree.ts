@@ -1,10 +1,70 @@
 import { PropertyValueMap, css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import { dia, shapes, highlighters, V } from 'jointjs';
+import { dia, shapes, util, highlighters, V } from 'jointjs';
 
 import { CpsStageBase } from '../cps-stage-base.js';
 import { IEngineConstants } from '../constants.js';
 type Cell = dia.Element | dia.Link;
+
+class MyShape extends dia.Element {
+  defaults() {
+    return {
+      ...super.defaults,
+      type: 'myShapeGroup.MyShape',
+      size: { width: 100, height: 30 },
+      position: { x: 10, y: 10 },
+      attrs: {
+        body: {
+          cx: 'calc(0.5*w)',
+          cy: 'calc(0.5*h)',
+          rx: 'calc(0.5*w)',
+          ry: 'calc(0.5*h)',
+          strokeWidth: 2,
+          stroke: '#333333',
+          fill: '#FFFFFF',
+        },
+        label: {
+          textVerticalAnchor: 'middle',
+          textAnchor: 'middle',
+          x: 'calc(0.5*w)',
+          y: 'calc(0.5*h)',
+          fontSize: 14,
+          fill: '#333333',
+        },
+      },
+    };
+  }
+
+  markup = [
+    {
+      tagName: 'ellipse',
+      selector: 'body',
+    },
+    {
+      tagName: 'text',
+      selector: 'label',
+    },
+  ];
+}
+
+const MyShapeView: dia.ElementView = dia.ElementView.extend({
+  // Make sure that all super class presentation attributes are preserved
+
+  presentationAttributes: dia.ElementView.addPresentationAttributes({
+    // mapping the model attributes to flag labels
+    faded: 'flag:opacity',
+  }),
+
+  confirmUpdate(flags: any, ...args: any) {
+    //@ts-ignore
+    dia.ElementView.prototype.confirmUpdate.call(this, flags, ...args);
+    if (this.hasFlag(flags, 'flag:opacity')) this.toggleFade();
+  },
+
+  toggleFade() {
+    this.el.style.opacity = this.model.get('faded') ? 0.5 : 1;
+  },
+});
 
 @customElement('ltp-current-reality-tree')
 export class LtpCurrentRealityTree extends CpsStageBase {
@@ -84,6 +144,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     window.appGlobals.activity(`CRT - close`);
   }
 
+  jointNamespace = {};
+
   private initializeJointJS(): void {
     const paperContainer = this.shadowRoot?.getElementById(
       'paper-container'
@@ -94,11 +156,11 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       return;
     }
 
-    this.graph = new dia.Graph({}, { cellNamespace: shapes });
+    this.graph = new dia.Graph({}, { cellNamespace: this.jointNamespace });
     this.paper = new dia.Paper({
       el: paperContainer,
       model: this.graph,
-      cellViewNamespace: shapes,
+      cellViewNamespace: this.jointNamespace,
       width: '100%',
       height: '100%',
       gridSize: 10,
@@ -107,20 +169,19 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       sorting: dia.Paper.sorting.APPROX,
       background: { color: '#F3F7F6' },
       clickThreshold: 10,
-     defaultConnector: {
-      name: 'rounded',
-      // Add attributes for the arrowheads to point upwards
-
-    },
-    defaultRouter: {
-      name: 'orthogonal',
-      args: {
-        // Make sure the links go from bottom to top
-        startDirections: ['bottom'],
-        endDirections: ['top']
-      }
-    }
-  });
+      defaultConnector: {
+        name: 'rounded',
+        // Add attributes for the arrowheads to point upwards
+      },
+      defaultRouter: {
+        name: 'orthogonal',
+        args: {
+          // Make sure the links go from bottom to top
+          startDirections: ['bottom'],
+          endDirections: ['top'],
+        },
+      },
+    });
 
     this.paper.on('element:pointerclick', elementView => {
       this.selectElement((elementView as any).model as dia.Element);
@@ -150,26 +211,31 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       `)
     );
 
+    Object.assign(this.jointNamespace, {
+      myShapeGroup: {
+        MyShape,
+        MyShapeView,
+      },
+      standard: {
+        Rectangle: shapes.standard.Rectangle,
+      },
+    });
+
     this.paper.unfreeze();
   }
 
   private createElement(node: LtpCurrentRealityTreeDataNode): dia.Element {
-    const el = new shapes.standard.Rectangle({
-      position: { x: Math.random() * 600, y: Math.random() * 400 }, // Random positioning for demonstration; replace with your layout logic
-      size: { width: 100, height: 60 },
+    //@ts-ignore
+    const el = new MyShape({
+     // position: { x: Math.random() * 600, y: Math.random() * 400 },
+      label: node.cause,
+      text: node.cause,
       attrs: {
-        label: {
-          text: node.cause,
-          fontFamily: 'sans-serif',
-        },
-        body: {
-          fill: node.isRootCause ? '#ffcccc' : '#ccccff',
-          stroke: '#666',
-        },
+        //cause: node.cause,
       },
-      z: 2,
+      type: 'html.CauseElement',
     });
-    this.graph.addCell(el);
+    el.addTo(this.graph);
     return el;
   }
 
@@ -260,15 +326,15 @@ export class LtpCurrentRealityTree extends CpsStageBase {
           d: 'M 10 -5 L 0 0 L 10 5 z',
           // Make sure the marker is at the start of the path (bottom of the source)
           'ref-x': 0.5,
-          'ref-y': 0
-        }
+          'ref-y': 0,
+        },
       },
       z: 1,
       router: {
         name: 'orthogonal',
         args: {
           startDirections: ['top'],
-          endDirections: ['bottom']
+          endDirections: ['bottom'],
         },
       },
       connector: { name: 'rounded' },
@@ -277,7 +343,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.graph.addCell(l);
     return l;
   }
-
 
   private selectElement(el: dia.Element | null): void {
     debugger;
@@ -326,16 +391,32 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     const getSubtreeWidth = (node: LtpCurrentRealityTreeDataNode): number => {
       let width = nodeWidth;
       if (node.andChildren) {
-        width = Math.max(width, node.andChildren.reduce((acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing, 0) - horizontalSpacing);
+        width = Math.max(
+          width,
+          node.andChildren.reduce(
+            (acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing,
+            0
+          ) - horizontalSpacing
+        );
       }
       if (node.orChildren) {
-        width = Math.max(width, node.orChildren.reduce((acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing, 0) - horizontalSpacing);
+        width = Math.max(
+          width,
+          node.orChildren.reduce(
+            (acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing,
+            0
+          ) - horizontalSpacing
+        );
       }
       return width;
     };
 
     // Recursive function to layout nodes, this will align parents above their children
-    const layoutNodes = (nodes: LtpCurrentRealityTreeDataNode[], x: number, y: number) => {
+    const layoutNodes = (
+      nodes: LtpCurrentRealityTreeDataNode[],
+      x: number,
+      y: number
+    ) => {
       let xOffset = x;
       nodes.forEach(node => {
         const subtreeWidth = getSubtreeWidth(node);
@@ -353,12 +434,15 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     };
 
     // Calculate initial x offset to center the tree
-    const totalWidth = this.crtData.nodes.reduce((acc, node) => acc + getSubtreeWidth(node) + horizontalSpacing, -horizontalSpacing);
+    const totalWidth = this.crtData.nodes.reduce(
+      (acc, node) => acc + getSubtreeWidth(node) + horizontalSpacing,
+      -horizontalSpacing
+    );
     console.error(this.paper.options);
     //TODO: Figure this out better
     const initialXOffset = (800 - totalWidth) / 2;
 
-//    const initialXOffset = ((this.paper.options as any).width - totalWidth) / 2;
+    //    const initialXOffset = ((this.paper.options as any).width - totalWidth) / 2;
 
     // Start the layout process
     if (this.crtData && this.crtData.nodes) {
@@ -367,7 +451,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     this.paper.unfreeze(); // Unfreeze the paper to render the layout
   }
-
 
   static get styles() {
     return [
