@@ -121,10 +121,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       },
     });
 
-    this.paper.on('element:pointerclick', (elementView) => {
-      this.selectElement((elementView as any).model as dia.Element)
-    }
-    );
+    this.paper.on('element:pointerclick', elementView => {
+      this.selectElement((elementView as any).model as dia.Element);
+    });
 
     this.paper.on('blank:pointerclick', () => this.selectElement(null));
 
@@ -178,11 +177,11 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.graph.clear();
     this.elements = {};
 
-    console.log('Updating graph with CRT data:', crtData);  // Log the entire data being processed
+    console.log('Updating graph with CRT data:', crtData); // Log the entire data being processed
 
     // Function to recursively create elements/nodes
     const createNodes = (nodeData: LtpCurrentRealityTreeDataNode) => {
-      console.log('Creating node for:', nodeData.id);  // Log the ID of the node being processed
+      console.log('Creating node for:', nodeData.id); // Log the ID of the node being processed
 
       const el = this.createElement(nodeData);
       this.elements[nodeData.id] = el;
@@ -205,15 +204,20 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     crtData.nodes.forEach(createNodes);
 
     // Create links for all 'andChildren' and 'orChildren'
-    const createLinks = (source: dia.Element, children: LtpCurrentRealityTreeDataNode[]) => {
+    const createLinks = (
+      source: dia.Element,
+      children: LtpCurrentRealityTreeDataNode[]
+    ) => {
       children.forEach(childNode => {
         const targetElement = this.elements[childNode.id];
         if (!targetElement) {
-          console.error(`Target element not found for node ID: ${childNode.id}`);
+          console.error(
+            `Target element not found for node ID: ${childNode.id}`
+          );
           return;
         }
 
-        console.log('Creating link from', source.id, 'to', childNode.id);  // Log the source and target IDs
+        console.log('Creating link from', source.id, 'to', childNode.id); // Log the source and target IDs
         this.createLink(source, targetElement);
 
         // Recursively create links for nested children
@@ -225,7 +229,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         }
       });
     };
-
 
     crtData.nodes.forEach(node => {
       const sourceElement = this.elements[node.id];
@@ -307,48 +310,49 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     const nodeHeight = 60;
     const verticalSpacing = 100;
     const horizontalSpacing = 20; // You might want to adjust this dynamically based on the tree width
-
-    // Function to layout a single node, aligning it above its children
-    const layoutSingleNode = (nodeId: string, x: number, y: number) => {
-      const element = this.elements[nodeId];
-      if (element) {
-        element.position(x, y);
-      }
-    };
+    const topPadding = 50; // Padding at the top of the container
 
     // Function to get the width of a subtree rooted at a given node
     const getSubtreeWidth = (node: LtpCurrentRealityTreeDataNode): number => {
-      if (!node.andChildren && !node.orChildren) {
-        return nodeWidth; // Base case: if no children, the width is just the node's width
+      let width = nodeWidth;
+      if (node.andChildren) {
+        width = Math.max(width, node.andChildren.reduce((acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing, 0) - horizontalSpacing);
       }
-      let width = 0;
-      const allChildren = [...(node.andChildren || []), ...(node.orChildren || [])];
-      allChildren.forEach((child) => {
-        width += getSubtreeWidth(child) + horizontalSpacing; // Recursive call
-      });
-      return width - horizontalSpacing; // Subtract extra spacing added after the last child
+      if (node.orChildren) {
+        width = Math.max(width, node.orChildren.reduce((acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing, 0) - horizontalSpacing);
+      }
+      return width;
     };
 
     // Recursive function to layout nodes, this will align parents above their children
-    const layoutNodes = (nodes: LtpCurrentRealityTreeDataNode[], y: number) => {
-      let x = 0;
-      nodes.forEach((node) => {
+    const layoutNodes = (nodes: LtpCurrentRealityTreeDataNode[], x: number, y: number) => {
+      let xOffset = x;
+      nodes.forEach(node => {
         const subtreeWidth = getSubtreeWidth(node);
-        const centerX = x + subtreeWidth / 2 - nodeWidth / 2; // Center of the subtree
-        layoutSingleNode(node.id, centerX, y);
+        const nodeCenterX = xOffset + subtreeWidth / 2;
+        this.elements[node.id].position(nodeCenterX - nodeWidth / 2, y);
+
         if (node.andChildren) {
-          layoutNodes(node.andChildren, y + verticalSpacing); // Recursive call for children
+          layoutNodes(node.andChildren, xOffset, y + verticalSpacing);
         }
         if (node.orChildren) {
-          layoutNodes(node.orChildren, y + verticalSpacing); // Recursive call for children
+          layoutNodes(node.orChildren, xOffset, y + verticalSpacing);
         }
-        x += subtreeWidth + horizontalSpacing; // Move x to the right for the next subtree
+        xOffset += subtreeWidth + horizontalSpacing;
       });
     };
 
+    // Calculate initial x offset to center the tree
+    const totalWidth = this.crtData.nodes.reduce((acc, node) => acc + getSubtreeWidth(node) + horizontalSpacing, -horizontalSpacing);
+    console.error(this.paper.options);
+    //TODO: Figure this out better
+    const initialXOffset = (800 - totalWidth) / 2;
+
+//    const initialXOffset = ((this.paper.options as any).width - totalWidth) / 2;
+
     // Start the layout process
     if (this.crtData && this.crtData.nodes) {
-      layoutNodes(this.crtData.nodes, 0); // Start from y=0 for the top level nodes
+      layoutNodes(this.crtData.nodes, initialXOffset, topPadding); // Start from the centered x position and top padding
     }
 
     this.paper.unfreeze(); // Unfreeze the paper to render the layout
