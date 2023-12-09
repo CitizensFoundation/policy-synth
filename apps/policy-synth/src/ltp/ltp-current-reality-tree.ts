@@ -146,100 +146,102 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.paper.unfreeze();
   }
 
+  private createElement(node: LtpCurrentRealityTreeDataNode): dia.Element {
+    const el = new shapes.standard.Rectangle({
+      position: { x: Math.random() * 600, y: Math.random() * 400 }, // Random positioning for demonstration; replace with your layout logic
+      size: { width: 100, height: 60 },
+      attrs: {
+        label: {
+          text: node.cause,
+          fontFamily: 'sans-serif',
+        },
+        body: {
+          fill: node.isRootCause ? '#ffcccc' : '#ccccff',
+          stroke: '#666',
+        },
+      },
+      z: 2,
+    });
+    this.graph.addCell(el);
+    return el;
+  }
+
   private updateGraphWithCRTData(crtData: LtpCurrentRealityTreeData): void {
     // Clear the existing graph elements
     this.graph.clear();
     this.elements = {};
 
-    // Function to create an element/node
-    const createElement = (
-      node: LtpCurrentRealityTreeDataNode
-    ): dia.Element => {
-      const el = new shapes.standard.Rectangle({
-        position: { x: Math.random() * 600, y: Math.random() * 400 }, // Random positioning for demonstration; replace with your layout logic
-        size: { width: 100, height: 60 },
-        attrs: {
-          label: {
-            text: node.cause,
-            fontFamily: 'sans-serif',
-          },
-          body: {
-            fill: node.isRootCause ? '#ffcccc' : '#ccccff',
-            stroke: '#666',
-          },
-        },
-        z: 2,
-      });
-      this.graph.addCell(el);
-      return el;
-    };
+    // Function to recursively create elements/nodes
+    const createNodes = (nodeData: LtpCurrentRealityTreeDataNode) => {
+      const el = this.createElement(nodeData);
+      this.elements[nodeData.id] = el;
 
-    // Function to create a link/edge
-    const createLink = (source: dia.Element, target: dia.Element): dia.Link => {
-      if (!source || !target) {
-        console.error(`source or target is null ${source} ${target}`);
-        return;
+      if (nodeData.andChildren) {
+        nodeData.andChildren.forEach(createNodes);
       }
-      const l = new shapes.standard.Link({
-        source: { id: source.id },
-        target: { id: target.id },
-        attrs: {
-          line: {
-            stroke: '#333333',
-            strokeWidth: 2,
-            targetMarker: {
-              type: 'path',
-              d: 'M 10 -5 0 0 10 5 z',
-            },
-          },
-        },
-        z: 1,
-      });
-      this.graph.addCell(l);
-      return l;
+      if (nodeData.orChildren) {
+        nodeData.orChildren.forEach(createNodes);
+      }
     };
 
-    // Create elements for all nodes
-    crtData.nodes.forEach(node => {
-      this.elements[node.id] = createElement(node);
-    });
+    // Create all elements/nodes
+    crtData.nodes.forEach(createNodes);
 
     // Create links for all 'andChildren' and 'orChildren'
+    const createLinks = (source: dia.Element, children: LtpCurrentRealityTreeDataNode[]) => {
+      children.forEach(childNode => {
+        const targetElement = this.elements[childNode.id];
+        if (!targetElement) {
+          console.error(`Target element not found for node ID: ${childNode.id}`);
+          return;
+        }
+        this.createLink(source, targetElement);
+      });
+    };
+
     crtData.nodes.forEach(node => {
       const sourceElement = this.elements[node.id];
-      if (!sourceElement) {
-        console.error(`Source element not found for node ID: ${node.id}`);
-        return;
-      }
-
-
-      const createLinks = (children: LtpCurrentRealityTreeDataNode[]) => {
-        children.forEach(childNode => {
-          console.log(`Creating link: Source ID - ${node.id}, Target ID - ${childNode.id}`);
-          console.log(`Source exists: ${this.elements[node.id] !== undefined}`);
-          console.log(`Target exists: ${this.elements[childNode.id] !== undefined}`);
-           const targetElement = this.elements[childNode.id];
-          if (!targetElement) {
-            console.error(`Target element not found for node ID: ${childNode.id}`);
-            return;
-          }
-          createLink(sourceElement, targetElement);
-        });
-      };
-
       if (node.andChildren) {
-        createLinks(node.andChildren);
+        createLinks(sourceElement, node.andChildren);
       }
       if (node.orChildren) {
-        createLinks(node.orChildren);
+        createLinks(sourceElement, node.orChildren);
       }
     });
+  }
 
+  // Function to create a link/edge
+  private createLink = (source: dia.Element, target: dia.Element): dia.Link => {
+    if (!source || !target) {
+      console.error(`source or target is null ${source} ${target}`);
+      return;
+    }
+    const l = new shapes.standard.Link({
+      source: { id: source.id },
+      target: { id: target.id },
+      attrs: {
+        line: {
+          stroke: '#333333',
+          strokeWidth: 2,
+          targetMarker: {
+            type: 'path',
+            d: 'M 10 -5 0 0 10 5 z',
+          },
+        },
+      },
+      z: 1,
+    });
     this.paper.on('element:pointerclick', elementView =>
       this.selectElement((elementView as any).model as dia.Element)
     );
     this.paper.on('blank:pointerclick', () => this.selectElement(null));
-  }
+
+    this.graph.addCell(l);
+    return l;
+
+  };
+
+
 
   private selectElement(el: dia.Element | null): void {
     // Deselect the current selection if any
