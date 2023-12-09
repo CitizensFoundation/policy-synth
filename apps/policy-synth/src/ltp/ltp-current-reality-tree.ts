@@ -107,19 +107,20 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       sorting: dia.Paper.sorting.APPROX,
       background: { color: '#F3F7F6' },
       clickThreshold: 10,
-      defaultConnector: {
-        name: 'rounded',
-      },
-      defaultRouter: {
-        name: 'orthogonal',
-        args: {
-          step: 10,
-          endDirections: ['top'],
-          startDirections: ['bottom'],
-          padding: { bottom: 20 },
-        },
-      },
-    });
+     defaultConnector: {
+      name: 'rounded',
+      // Add attributes for the arrowheads to point upwards
+
+    },
+    defaultRouter: {
+      name: 'orthogonal',
+      args: {
+        // Make sure the links go from bottom to top
+        startDirections: ['bottom'],
+        endDirections: ['top']
+      }
+    }
+  });
 
     this.paper.on('element:pointerclick', elementView => {
       this.selectElement((elementView as any).model as dia.Element);
@@ -244,30 +245,39 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   // Function to create a link/edge
-  private createLink = (source: dia.Element, target: dia.Element): dia.Link => {
+  private createLink(source: dia.Element, target: dia.Element): dia.Link {
     if (!source || !target) {
       console.error(`source or target is null ${source} ${target}`);
       return;
     }
     const l = new shapes.standard.Link({
-      source: { id: source.id },
-      target: { id: target.id },
+      source: { id: target.id },
+      target: { id: source.id },
       attrs: {
-        line: {
-          stroke: '#333333',
-          strokeWidth: 2,
-          targetMarker: {
-            type: 'path',
-            d: 'M 10 -5 0 0 10 5 z',
-          },
-        },
+        '.connection': { stroke: '#333333', 'stroke-width': 2 },
+        '.marker-target': {
+          fill: '#333333',
+          d: 'M 10 -5 L 0 0 L 10 5 z',
+          // Make sure the marker is at the start of the path (bottom of the source)
+          'ref-x': 0.5,
+          'ref-y': 0
+        }
       },
       z: 1,
+      router: {
+        name: 'orthogonal',
+        args: {
+          startDirections: ['top'],
+          endDirections: ['bottom']
+        },
+      },
+      connector: { name: 'rounded' },
     });
 
     this.graph.addCell(l);
     return l;
-  };
+  }
+
 
   private selectElement(el: dia.Element | null): void {
     debugger;
@@ -308,9 +318,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private layoutGraph(): void {
     const nodeWidth = 100;
     const nodeHeight = 60;
-    const verticalSpacing = 100;
-    const horizontalSpacing = 20; // You might want to adjust this dynamically based on the tree width
-    const topPadding = 50; // Padding at the top of the container
+    const verticalSpacing = 120;
+    const horizontalSpacing = 40; // You might want to adjust this dynamically based on the tree width
+    const topPadding = 60; // Padding at the top of the container
 
     // Function to get the width of a subtree rooted at a given node
     const getSubtreeWidth = (node: LtpCurrentRealityTreeDataNode): number => {
