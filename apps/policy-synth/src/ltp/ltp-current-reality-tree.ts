@@ -14,8 +14,8 @@ class MyShapeView extends dia.ElementView {
 
     // Create a foreignObject with a set size and style
     const foreignObject = V('foreignObject', {
-      width: 130,
-      height: 48,
+      width: 165,
+      height: 76,
       style: 'overflow: visible; display: block;',
     }).node;
 
@@ -27,13 +27,12 @@ class MyShapeView extends dia.ElementView {
       const div = document.createElement('div');
       div.setAttribute('class', 'html-element');
       div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      div.style.width = '120px';
-      div.style.height = '30px';
-      div.style.color = '#fff';
-      div.style.padding = '8px';
-      div.style.background = '#111'; // Added background for visibility
-      div.innerHTML = `<div class="causeText">${this.model.attributes.label}</div>`;
+      div.style.width = '150px';
+      div.style.height = '60px';
+      div.className = 'causeContainer';
+      div.innerHTML = `<lpt-current-reality-tree-node nodeId="${this.model.attributes.nodewId}"></lpt-current-reality-tree-node>`;
 
+      <div class="causeText">${}</div>
       // Append the div to the foreignObject
       foreignObject.appendChild(div);
 
@@ -46,16 +45,13 @@ class MyShapeView extends dia.ElementView {
   }
 }
 
-
-
 class MyShape extends shapes.devs.Model {
   defaults() {
     return util.deepSupplement(
       {
         type: 'html.MyShape',
         attrs: {},
-        markup:
-          '<div>okokoko</div>',
+        markup: '<div>okokoko</div>',
       },
       shapes.devs.Model.prototype.defaults
     );
@@ -89,19 +85,23 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         nodes: [
           {
             id: '1',
-            cause: 'Cause 1',
+            cause: 'Fuel is not getting into the engine',
             andChildren: [
               {
                 id: '1.1',
-                cause: 'Cause 1.1',
+                cause: 'There is water in the fuel line',
                 andChildren: [
                   {
                     id: '1.1.1',
-                    cause: 'Cause 1.1.1',
+                    cause: 'The car is in the swimming pool',
                   },
                   {
                     id: '1.1.2',
                     cause: 'Cause 1.1.2',
+                  },
+                  {
+                    id: '1.1.3',
+                    cause: 'Cause 1.1.3',
                   },
                 ],
               },
@@ -122,6 +122,20 @@ export class LtpCurrentRealityTree extends CpsStageBase {
               {
                 id: '2.2',
                 cause: 'Cause 2.2',
+              },
+            ],
+          },
+          {
+            id: '3',
+            cause: 'Cause 3',
+            orChildren: [
+              {
+                id: '3.1',
+                cause: 'Cause 3.1',
+              },
+              {
+                id: '3.2',
+                cause: 'Cause 3.2',
               },
             ],
           },
@@ -381,9 +395,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   private layoutGraph(): void {
-    const nodeWidth = 100;
-    const nodeHeight = 60;
-    const verticalSpacing = 120;
+    const nodeWidth = 150;
+    const nodeHeight = 50;
+    const verticalSpacing = 130;
     const horizontalSpacing = 40; // You might want to adjust this dynamically based on the tree width
     const topPadding = 60; // Padding at the top of the container
 
@@ -440,7 +454,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     );
     console.error(this.paper.options);
     //TODO: Figure this out better
-    const initialXOffset = (800 - totalWidth) / 2;
+    const initialXOffset = (1600 - totalWidth) / 2;
 
     //    const initialXOffset = ((this.paper.options as any).width - totalWidth) / 2;
 
@@ -456,10 +470,22 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     return [
       super.styles,
       css`
+        .causeText {
+          font-size: 12px;
+          color: var(--md-sys-color-on-primary-container);
+        }
+
+        .causeContainer {
+          color: var(--md-sys-color-on-primary-container);
+          background-color: var(--md-sys-color-primary-container);
+          border-radius: 8px;
+          padding: 8px;
+        }
+
         /* Define your component styles here */
         .jointJSCanvas {
           height: 800px !important;
-          width: 1200px !important;
+          width: 1600px !important;
           /* styles for the JointJS canvas */
         }
       `,
