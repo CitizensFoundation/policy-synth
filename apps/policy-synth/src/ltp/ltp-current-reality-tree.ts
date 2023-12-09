@@ -3,8 +3,9 @@ import { property, customElement } from 'lit/decorators.js';
 import { dia, shapes, util, highlighters, V } from 'jointjs';
 
 import { CpsStageBase } from '../cps-stage-base.js';
-import { IEngineConstants } from '../constants.js';
-import { set } from 'lodash';
+
+import './ltp-current-reality-tree-node.js';
+
 type Cell = dia.Element | dia.Link;
 
 class MyShapeView extends dia.ElementView {
@@ -30,9 +31,13 @@ class MyShapeView extends dia.ElementView {
       div.style.width = '150px';
       div.style.height = '60px';
       div.className = 'causeContainer';
-      div.innerHTML = `<lpt-current-reality-tree-node nodeId="${this.model.attributes.nodewId}"></lpt-current-reality-tree-node>`;
+      div.innerHTML = `<ltp-current-reality-tree-node
+        class="causeText"
+        nodeId="${this.model.attributes.nodeId}"
+        causeDescription="${this.model.attributes.label}"
+      >
+      </ltp-current-reality-tree-node>`;
 
-      <div class="causeText">${}</div>
       // Append the div to the foreignObject
       foreignObject.appendChild(div);
 
