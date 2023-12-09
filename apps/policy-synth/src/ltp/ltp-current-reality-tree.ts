@@ -236,6 +236,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         createLinks(sourceElement, node.orChildren);
       }
     });
+
+    this.layoutGraph();
   }
 
   // Function to create a link/edge
@@ -301,26 +303,57 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   private layoutGraph(): void {
-    // Implement a simple layout algorithm or use a JointJS layout plugin
-    // This is a placeholder for layout logic; you'll need to implement this according to your needs
-    const padding = 10; // Adjust padding as needed
-    let x = padding,
-      y = padding;
+    const nodeWidth = 100;
+    const nodeHeight = 60;
+    const verticalSpacing = 100;
+    const horizontalSpacing = 20; // You might want to adjust this dynamically based on the tree width
 
-    for (const key in this.elements) {
-      if (this.elements.hasOwnProperty(key)) {
-        const el = this.elements[key];
-        el.position(x, y);
-        x += el.size().width + padding; // Adjust position calculations as needed
-        if (x + el.size().width + padding > this.paper.options.width) {
-          x = padding;
-          y += el.size().height + padding;
-        }
+    // Function to layout a single node, aligning it above its children
+    const layoutSingleNode = (nodeId: string, x: number, y: number) => {
+      const element = this.elements[nodeId];
+      if (element) {
+        element.position(x, y);
       }
+    };
+
+    // Function to get the width of a subtree rooted at a given node
+    const getSubtreeWidth = (node: LtpCurrentRealityTreeDataNode): number => {
+      if (!node.andChildren && !node.orChildren) {
+        return nodeWidth; // Base case: if no children, the width is just the node's width
+      }
+      let width = 0;
+      const allChildren = [...(node.andChildren || []), ...(node.orChildren || [])];
+      allChildren.forEach((child) => {
+        width += getSubtreeWidth(child) + horizontalSpacing; // Recursive call
+      });
+      return width - horizontalSpacing; // Subtract extra spacing added after the last child
+    };
+
+    // Recursive function to layout nodes, this will align parents above their children
+    const layoutNodes = (nodes: LtpCurrentRealityTreeDataNode[], y: number) => {
+      let x = 0;
+      nodes.forEach((node) => {
+        const subtreeWidth = getSubtreeWidth(node);
+        const centerX = x + subtreeWidth / 2 - nodeWidth / 2; // Center of the subtree
+        layoutSingleNode(node.id, centerX, y);
+        if (node.andChildren) {
+          layoutNodes(node.andChildren, y + verticalSpacing); // Recursive call for children
+        }
+        if (node.orChildren) {
+          layoutNodes(node.orChildren, y + verticalSpacing); // Recursive call for children
+        }
+        x += subtreeWidth + horizontalSpacing; // Move x to the right for the next subtree
+      });
+    };
+
+    // Start the layout process
+    if (this.crtData && this.crtData.nodes) {
+      layoutNodes(this.crtData.nodes, 0); // Start from y=0 for the top level nodes
     }
 
     this.paper.unfreeze(); // Unfreeze the paper to render the layout
   }
+
 
   static get styles() {
     return [
