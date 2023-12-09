@@ -32,8 +32,7 @@ class MyShapeView extends dia.ElementView {
       div.style.color = '#fff';
       div.style.padding = '8px';
       div.style.background = '#111'; // Added background for visibility
-      debugger;
-      div.innerHTML = `<div class="causeText">${(this.el as any).attribute.label}</div>`;
+      div.innerHTML = `<div class="causeText">${this.model.attributes.label}</div>`;
 
       // Append the div to the foreignObject
       foreignObject.appendChild(div);
