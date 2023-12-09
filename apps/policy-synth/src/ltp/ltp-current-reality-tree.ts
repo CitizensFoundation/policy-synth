@@ -111,15 +111,22 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         name: 'rounded',
       },
       defaultRouter: {
-        name: 'manhattan',
+        name: 'orthogonal',
         args: {
           step: 10,
-          endDirections: ['bottom'],
-          startDirections: ['top'],
+          endDirections: ['top'],
+          startDirections: ['bottom'],
           padding: { bottom: 20 },
         },
       },
     });
+
+    this.paper.on('element:pointerclick', (elementView) => {
+      this.selectElement((elementView as any).model as dia.Element)
+    }
+    );
+
+    this.paper.on('blank:pointerclick', () => this.selectElement(null));
 
     // Initialize SVG styles for the paper
     V(paperContainer as any).prepend(
@@ -171,16 +178,26 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.graph.clear();
     this.elements = {};
 
+    console.log('Updating graph with CRT data:', crtData);  // Log the entire data being processed
+
     // Function to recursively create elements/nodes
     const createNodes = (nodeData: LtpCurrentRealityTreeDataNode) => {
+      console.log('Creating node for:', nodeData.id);  // Log the ID of the node being processed
+
       const el = this.createElement(nodeData);
       this.elements[nodeData.id] = el;
 
+      const processChildren = (children: LtpCurrentRealityTreeDataNode[]) => {
+        children.forEach(childNode => {
+          createNodes(childNode); // Recursive call
+        });
+      };
+
       if (nodeData.andChildren) {
-        nodeData.andChildren.forEach(createNodes);
+        processChildren(nodeData.andChildren);
       }
       if (nodeData.orChildren) {
-        nodeData.orChildren.forEach(createNodes);
+        processChildren(nodeData.orChildren);
       }
     };
 
@@ -195,9 +212,20 @@ export class LtpCurrentRealityTree extends CpsStageBase {
           console.error(`Target element not found for node ID: ${childNode.id}`);
           return;
         }
+
+        console.log('Creating link from', source.id, 'to', childNode.id);  // Log the source and target IDs
         this.createLink(source, targetElement);
+
+        // Recursively create links for nested children
+        if (childNode.andChildren) {
+          createLinks(targetElement, childNode.andChildren);
+        }
+        if (childNode.orChildren) {
+          createLinks(targetElement, childNode.orChildren);
+        }
       });
     };
+
 
     crtData.nodes.forEach(node => {
       const sourceElement = this.elements[node.id];
@@ -231,19 +259,13 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       },
       z: 1,
     });
-    this.paper.on('element:pointerclick', elementView =>
-      this.selectElement((elementView as any).model as dia.Element)
-    );
-    this.paper.on('blank:pointerclick', () => this.selectElement(null));
 
     this.graph.addCell(l);
     return l;
-
   };
 
-
-
   private selectElement(el: dia.Element | null): void {
+    debugger;
     // Deselect the current selection if any
     if (this.selection) {
       this.unhighlightCell(this.selection);
