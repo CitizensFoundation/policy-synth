@@ -17,8 +17,8 @@ if (projectId) {
         "create-pros-cons",
         "rank-pros-cons",
         "rank-solutions",
-        "group-solutions",
-        "create-solution-images"
+        "create-solution-images",
+        "group-solutions"
     ];
     const runStages = async (startStage = stages[0]) => {
         const startIndex = stages.indexOf(startStage);

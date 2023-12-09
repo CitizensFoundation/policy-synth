@@ -30,8 +30,8 @@ if (projectId) {
   //memory.currentStage = "create-pros-cons";
   //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rank-solutions";
-  memory.currentStage = "group-solutions";
-  //memory.currentStage = "create-solution-images";
+  //memory.currentStage = "group-solutions";
+  memory.currentStage = "create-solution-images";
 
   await redis.set(redisKey, JSON.stringify(memory));
 

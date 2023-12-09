@@ -24,8 +24,8 @@ if (projectId) {
     "create-pros-cons",
     "rank-pros-cons",
     "rank-solutions",
-    "group-solutions",
-    "create-solution-images"
+    "create-solution-images",
+    "group-solutions"
   ] as unknown as IEngineStageTypes;
 
   const runStages = async (startStage = stages[0]) => {

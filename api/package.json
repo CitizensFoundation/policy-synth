@@ -26,12 +26,13 @@
   "dependencies": {
     "@types/axios": "^0.14.0",
     "@types/express-session": "^1.17.3",
+    "@types/uuid": "^9.0.7",
     "axios": "^1.4.0",
     "colors": "^1.4.0",
     "connect-redis": "^7.1.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
-    "openai": "^3.3.0",
+    "openai": "^4.20.1",
     "pg": "^8.5.1",
     "pg-hstore": "^2.3.3",
     "pgvector": "^0.1.4",
@@ -40,6 +41,7 @@
     "sequelize": "^6.32.1",
     "sequelize-cli": "^6.2.0",
     "socket.io": "^4.0.0",
+    "uuid": "^9.0.1",
     "weaviate-ts-client": "^1.5.0",
     "winston": "^3.10.0"
   }

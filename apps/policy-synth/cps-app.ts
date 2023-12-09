@@ -52,6 +52,9 @@ import './src/cps-sub-problems.js';
 import './src/cps-entities.js';
 import './src/cps-solutions.js';
 import './src/ps-policies.js';
+
+import './src/ltp/ltp-current-reality-tree.js';
+
 import { IEngineConstants } from './src/constants.js';
 import { YpFormattingHelpers } from './src/@yrpri/common/YpFormattingHelpers.js';
 import { CpsSolutions } from './src/cps-solutions.js';
@@ -358,6 +361,12 @@ export class CpsApp extends YpBaseElement {
         },
       },
       {
+        path: '/crt/:projectId/',
+        render: params => {
+          return this.renderCrtPage();
+        },
+      },
+      {
         path: '/policies/:projectId',
         render: params => {
           this.setupCurrentProjectFromRoute(
@@ -476,6 +485,12 @@ export class CpsApp extends YpBaseElement {
       },
     }
   );
+
+  renderCrtPage() {
+    return html`
+      <ltp-current-reality-tree></ltp-current-reality-tree>
+    `;
+  }
 
   renderWebResearchPage() {
     return this.renderContentOrLoader(html`
