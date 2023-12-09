@@ -292,7 +292,7 @@ export class IEngineConstants {
     };
     static groupSolutionsModel = {
         name: "gpt-4-1106-preview",
-        temperature: 0.1,
+        temperature: 0.0,
         maxOutputTokens: 4095,
         tokenLimit: gpt4TotalTokenLimit,
         inTokenCostUSD: gpt4InTokenPrice,
@@ -395,7 +395,7 @@ export class IEngineConstants {
     static webPageNavTimeout = 30 * 1000;
     static subProblemsRankingMinNumberOfMatches = 10;
     static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
-    static topItemsToKeepForTopicClusterPruning = 5;
+    static topItemsToKeepForTopicClusterPruning = 3;
     static chances = {
         createSolutions: {
             searchQueries: {

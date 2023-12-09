@@ -5,14 +5,16 @@ import { IEngineConstants } from "../../../constants.js";
 export class GroupSolutionsProcessor extends BaseProcessor {
     async renderGroupPrompt(solutionsToGroup) {
         const messages = [
-            new SystemMessage(`You are an expert in in grouping solution components containing exactly the same core ideas together.
+            new SystemMessage(`You are an expert in in grouping solution components containing exactly the same core ideas.
 
         Instructions:
-        1. You will receive an array of solution components.
-        2. You are to output a list of lists. Each sub-list should contain indexes and titles of solution components: [ [ { index, title } ] ]
+        1. You will receive an array of solution components to review and group.
+        2. You are to output a list of lists. Each sub-list should contain indexes of the solution components that share the same core ideas: [ [ { index: 123 } ] ]
         3. Never group the same solution component in more than one group.
-        4. Never group similar solution components together, only ones that the contain exactly the same core ideas.
+        3. It is very important that you only group together solutions that the contain exactly the same core ideas.
+        4. Never group similar solution components together, they need to share the same core ideas.
         5. Never explain anything, just output JSON.
+        6. Let's think step by step.
         `),
             new HumanMessage(`${JSON.stringify(solutionsToGroup, null, 2)}
 

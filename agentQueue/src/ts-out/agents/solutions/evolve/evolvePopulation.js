@@ -344,10 +344,13 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         // Prune each group and store in a set for faster lookup
         const prunedSolutionSet = new Set();
         for (const group of groups.values()) {
-            const prunedGroup = group.slice(0, IEngineConstants.topItemsToKeepForTopicClusterPruning);
-            for (const solution of prunedGroup) {
-                prunedSolutionSet.add(solution);
-            }
+            // Keep top items by the defined constant
+            const topItems = group.slice(0, IEngineConstants.topItemsToKeepForTopicClusterPruning);
+            // Add top items to the pruned set
+            topItems.forEach(solution => prunedSolutionSet.add(solution));
+            // Additionally, add solutions with eloRating > 1000 to the pruned set
+            group.filter(solution => solution.eloRating > 1000)
+                .forEach(solution => prunedSolutionSet.add(solution));
         }
         // Build final list of solutions in original order
         const outSolutions = solutions.filter((solution) => !solution.similarityGroup || prunedSolutionSet.has(solution));
