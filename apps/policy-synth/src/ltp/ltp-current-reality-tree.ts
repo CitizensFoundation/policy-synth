@@ -4,67 +4,66 @@ import { dia, shapes, util, highlighters, V } from 'jointjs';
 
 import { CpsStageBase } from '../cps-stage-base.js';
 import { IEngineConstants } from '../constants.js';
+import { set } from 'lodash';
 type Cell = dia.Element | dia.Link;
 
-class MyShape extends dia.Element {
-  defaults() {
-    return {
-      ...super.defaults,
-      type: 'myShapeGroup.MyShape',
-      size: { width: 100, height: 30 },
-      position: { x: 10, y: 10 },
-      attrs: {
-        body: {
-          cx: 'calc(0.5*w)',
-          cy: 'calc(0.5*h)',
-          rx: 'calc(0.5*w)',
-          ry: 'calc(0.5*h)',
-          strokeWidth: 2,
-          stroke: '#333333',
-          fill: '#FFFFFF',
-        },
-        label: {
-          textVerticalAnchor: 'middle',
-          textAnchor: 'middle',
-          x: 'calc(0.5*w)',
-          y: 'calc(0.5*h)',
-          fontSize: 14,
-          fill: '#333333',
-        },
-      },
-    };
-  }
+class MyShapeView extends dia.ElementView {
+  render() {
+    super.render();
+    const htmlMarkup = this.model.get('markup');
 
-  markup = [
-    {
-      tagName: 'ellipse',
-      selector: 'body',
-    },
-    {
-      tagName: 'text',
-      selector: 'label',
-    },
-  ];
+    // Create a foreignObject with a set size and style
+    const foreignObject = V('foreignObject', {
+      width: 130,
+      height: 48,
+      style: 'overflow: visible; display: block;',
+    }).node;
+
+    // Append the foreignObject to this.el
+    V(this.el).append(foreignObject);
+
+    // Defer the addition of the inner div with the HTML content
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.setAttribute('class', 'html-element');
+      div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      div.style.width = '120px';
+      div.style.height = '30px';
+      div.style.color = '#fff';
+      div.style.padding = '8px';
+      div.style.background = '#111'; // Added background for visibility
+      debugger;
+      div.innerHTML = `<div class="causeText">${(this.el as any).attribute.label}</div>`;
+
+      // Append the div to the foreignObject
+      foreignObject.appendChild(div);
+
+      // Force layout recalculation and repaint
+      foreignObject.getBoundingClientRect();
+    }, 0); // A timeout of 0 ms defers the execution until the browser has finished other processing
+
+    this.update();
+    return this;
+  }
 }
 
-const MyShapeView: dia.ElementView = dia.ElementView.extend({
-  // Make sure that all super class presentation attributes are preserved
 
-  presentationAttributes: dia.ElementView.addPresentationAttributes({
-    // mapping the model attributes to flag labels
-    faded: 'flag:opacity',
-  }),
 
-  confirmUpdate(flags: any, ...args: any) {
-    //@ts-ignore
-    dia.ElementView.prototype.confirmUpdate.call(this, flags, ...args);
-    if (this.hasFlag(flags, 'flag:opacity')) this.toggleFade();
-  },
+class MyShape extends shapes.devs.Model {
+  defaults() {
+    return util.deepSupplement(
+      {
+        type: 'html.MyShape',
+        attrs: {},
+        markup:
+          '<div>okokoko</div>',
+      },
+      shapes.devs.Model.prototype.defaults
+    );
+  }
 
-  toggleFade() {
-    this.el.style.opacity = this.model.get('faded') ? 0.5 : 1;
-  },
-});
+  view = MyShapeView;
+}
 
 @customElement('ltp-current-reality-tree')
 export class LtpCurrentRealityTree extends CpsStageBase {
@@ -158,6 +157,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     this.graph = new dia.Graph({}, { cellNamespace: this.jointNamespace });
     this.paper = new dia.Paper({
+      //@ts-ignore
+      elementView: () => MyShapeView,
       el: paperContainer,
       model: this.graph,
       cellViewNamespace: this.jointNamespace,
@@ -227,13 +228,13 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private createElement(node: LtpCurrentRealityTreeDataNode): dia.Element {
     //@ts-ignore
     const el = new MyShape({
-     // position: { x: Math.random() * 600, y: Math.random() * 400 },
+      // position: { x: Math.random() * 600, y: Math.random() * 400 },
       label: node.cause,
       text: node.cause,
       attrs: {
         //cause: node.cause,
       },
-      type: 'html.CauseElement',
+      type: 'html.Element',
     });
     el.addTo(this.graph);
     return el;
