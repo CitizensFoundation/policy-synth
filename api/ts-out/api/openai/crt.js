@@ -10,27 +10,39 @@ export const renderSystemPrompt = (causeToExmine = undefined) => {
 
     We will work step by step and down the Current Reality Tree until we find the root cause of the "Undesireable Effect".
 
-    A root cause is the fundamental, underlying reason for a problem or issue within a system or process. It's the deepest cause in a chain of causes-and-effects that leads to an issue, and resolving it typically prevents the problem from recurring.
-
-    ${causeToExmine != undefined ? `
+    ${causeToExmine != undefined
+        ? `
       Please output 7 direct causes of the cause we are examining.
-    ` : `
-      Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas. It's unlikely those will be the actual root caues.
+    `
+        : `
+      Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas.
     `}
 
     Please output each direct cause in JSON without any explanation:
       { directCauseDescription, isDirectCause<bool>, isLikelyARootCauseOfUDE<bool>, confidenceLevel<int> }
+
+    The directCauseDescription JSON should never be more than 9 words long.
+
+    ${causeToExmine != undefined
+        ? `
+    For the isLikelyARootCauseOfUDE JSON field, please output true if cause we are examining is very likely the root cause of the "Undesireable Effect", otherwise output false.
+    And keep this in mind: A root cause is the fundamental, underlying reason for a problem or issue within a system or process. It's the deepest cause in a chain of causes-and-effects that leads to an issue, and resolving it typically prevents the problem from recurring.
+  `
+        : `
+    Always keep the isLikelyARootCauseOfUDE to false for now as this is the first level of direct causes.
+  `}
   `;
     return prompt;
 };
 export const renderUserPrompt = (currentRealityTree, causeToExmine = undefined, parentNodes = undefined) => {
     return `Context: ${currentRealityTree.context}
           Undesirable Effect: ${currentRealityTree.undesirableEffects[0]}
-          Possible Raw Unclassified Causes: ${currentRealityTree.rawPossibleCauses || "None found, please figure it out yourself."}
+          Possible Raw Unclassified Causes: ${currentRealityTree.rawPossibleCauses ||
+        "None found, please figure it out yourself."}
 
           ${parentNodes
         ? parentNodes.reverse().map((node, index) => `
-            ${index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`} Cause:
+            ${index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`}:
             ${node.cause}
 
           `)
@@ -76,8 +88,12 @@ currentNodeId, parentNodes = []) => {
             return getParentNodes(nodes, node.id, parentNodes);
         }
         // Recursively check in andChildren and orChildren
-        const andChildrenResult = node.andChildren ? getParentNodes(node.andChildren, currentNodeId, parentNodes) : undefined;
-        const orChildrenResult = node.orChildren ? getParentNodes(node.orChildren, currentNodeId, parentNodes) : undefined;
+        const andChildrenResult = node.andChildren
+            ? getParentNodes(node.andChildren, currentNodeId, parentNodes)
+            : undefined;
+        const orChildrenResult = node.orChildren
+            ? getParentNodes(node.orChildren, currentNodeId, parentNodes)
+            : undefined;
         if (andChildrenResult || orChildrenResult) {
             // If either returns a result, we found the parent node
             if (!parentNodes.includes(node)) {

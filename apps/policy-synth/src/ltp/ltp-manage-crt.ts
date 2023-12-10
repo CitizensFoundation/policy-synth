@@ -117,7 +117,7 @@ export class LtpManageCrt extends CpsStageBase {
         }
 
         md-tabs, crt-tab, configure-tab {
-          width: 1920px;
+          width: 100%;
         }
       `,
     ];
@@ -157,6 +157,7 @@ export class LtpManageCrt extends CpsStageBase {
 
     this.isCreatingCrt = false;
     this.activeTabIndex = 1;
+    (this.$$("#tabBar") as MdTabs).activeTabIndex = 1;
   }
 
   renderConfiguration() {
@@ -226,6 +227,14 @@ export class LtpManageCrt extends CpsStageBase {
         >
           <md-icon slot="icon">account_tree</md-icon>
           Current Reality Tree
+        </md-primary-tab>
+        <md-primary-tab
+          id="crt-tab"
+          aria-controls="crt-panel"
+          ?disabled="${!this.crt}"
+        >
+          <md-icon slot="icon">mindfulness</md-icon>
+          ${this.t('Logic Validation')}
         </md-primary-tab>
       </md-tabs>
 

@@ -51,6 +51,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           background-color: var(--md-sys-color-primary-container);
           padding: 8px;
           height: 100%;
+          width: 100%;
         }
 
         .causeTextContainer {
@@ -101,9 +102,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
       nodes
     });
 
-    setTimeout(() => {
-      this.isCreatingCauses = false;
-    }, 3000);
+    this.isCreatingCauses = false;
   }
 
   render() {
