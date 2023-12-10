@@ -517,7 +517,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
         /* Define your component styles here */
         .jointJSCanvas {
-          height: 1000px !important;
+          height: 10000px !important;
           width: 1920px !important;
           /* styles for the JointJS canvas */
         }
