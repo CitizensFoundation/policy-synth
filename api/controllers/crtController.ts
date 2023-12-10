@@ -25,16 +25,18 @@ export class CurrentRealityTreeController {
     this.initializeRoutes();
   }
 
-  public initializeRoutes() {
+  public async initializeRoutes() {
     this.router.get(this.path + "/:id", this.getTree);
     this.router.post(
-      this.path + "/:id/createDirectCauses",
+      this.path,
       this.createTree
     );
     this.router.post(
-      this.path + "/:id/identifyDirectCauses",
-      this.identifyDirectCauses
+      this.path + "/:id/createDirectCauses",
+      this.createDirectCauses
     );
+
+    await redisClient.connect();
   }
 
   getTree = async (req: express.Request, res: express.Response) => {
@@ -86,7 +88,8 @@ export class CurrentRealityTreeController {
   };
 
   createTree = async (req: express.Request, res: express.Response) => {
-    const treeId = req.params.id;
+    //TODO: Create new ids automatically
+    const treeId = 1;//req.params.id;
     const {
       context,
       rawPossibleCauses,
@@ -100,7 +103,8 @@ export class CurrentRealityTreeController {
     try {
       const treeData = await redisClient.get(`crt:${treeId}`);
       if (treeData) {
-        return res.status(400).send({ message: "Tree already exists" });
+        //TODO: Uncomment this
+        //return res.status(400).send({ message: "Tree already exists" });
       }
 
       const newTree: LtpCurrentRealityTreeData = {
@@ -123,20 +127,23 @@ export class CurrentRealityTreeController {
     }
   };
 
-  identifyDirectCauses = async (req: express.Request, res: express.Response) => {
+  createDirectCauses = async (req: express.Request, res: express.Response) => {
     const treeId = req.params.id;
     const parentNodeId = req.body.parentNodeId;
 
     try {
       const treeData = await redisClient.get(`crt:${treeId}`);
       if (!treeData) {
+        console.error("Tree not found")
         return res.sendStatus(404);
       }
 
       const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
 
       const parentNode = this.findNode(currentTree.nodes, parentNodeId);
+
       if (!parentNode) {
+        console.error("Parent node not found")
         return res.sendStatus(404);
       }
 

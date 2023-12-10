@@ -5,17 +5,29 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
 
 import { CpsStageBase } from '../cps-stage-base.js';
+import { LtpServerApi } from './LtpServerApi.js';
+import { LtpCurrentRealityTree } from './ltp-current-reality-tree.js';
 
 @customElement('ltp-current-reality-tree-node')
 export class LtpCurrentRealityTreeNode extends CpsStageBase {
   @property({ type: String })
   nodeId: string;
 
+  @property({ type: Boolean })
+  isRootCause!: boolean;
+
   @property({ type: String })
   causeDescription: string;
 
   @property({ type: Boolean })
   isCreatingCauses = false;
+
+  api: LtpServerApi;
+
+  constructor() {
+    super();
+    this.api = new LtpServerApi();
+  }
 
   async connectedCallback() {
     super.connectedCallback();
@@ -65,8 +77,16 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
     ];
   }
 
-  createDirectCauses() {
+  async createDirectCauses() {
     this.isCreatingCauses = true;
+
+    const nodes = await this.api.createDirectCauses(this.nodeId);
+
+    this.fire("add-nodes", {
+      parentNodeId: this.nodeId,
+      nodes
+    });
+
     setTimeout(() => {
       this.isCreatingCauses = false;
     }, 3000);
@@ -78,14 +98,24 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         <div class="layout horizontal">
           <div class="causeText">${this.causeDescription}</div>
         </div>
-        <md-icon-button class="deleteButton"><md-icon>delete</md-icon></md-icon-button>
+        <md-icon-button class="deleteButton"
+          ><md-icon>delete</md-icon></md-icon-button
+        >
         <div class="layout horizontal center-justify createOptionsButtons">
-          ${this.isCreatingCauses ? html`
-          <md-circular-progress indeterminate></md-circular-progress>
-          `: html`
-            <md-icon-button class="createOptionsButton" @click="${this.createDirectCauses}"><md-icon>format_list_bulleted_add</md-icon></md-icon-button>
-            <md-icon-button class="createOptionsButton"><md-icon>add_circle</md-icon></md-icon-button>
-          `}
+          ${this.isCreatingCauses
+            ? html`
+                <md-circular-progress indeterminate></md-circular-progress>
+              `
+            : html`
+                <md-icon-button
+                  class="createOptionsButton"
+                  @click="${this.createDirectCauses}"
+                  ><md-icon>format_list_bulleted_add</md-icon></md-icon-button
+                >
+                <md-icon-button class="createOptionsButton"
+                  ><md-icon>add_circle</md-icon></md-icon-button
+                >
+              `}
         </div>
       </div>
     `;
