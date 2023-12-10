@@ -50,6 +50,17 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           color: var(--md-sys-color-on-primary-container);
           background-color: var(--md-sys-color-primary-container);
           padding: 8px;
+          height: 100%;
+        }
+
+        .causeTextContainer {
+          height: 100%;
+        }
+
+
+        .causeText[root-cause] {
+          color: var(--md-sys-color-on-tertiary);
+          background-color: var(--md-sys-color-tertiary);
         }
 
         .createOptionsButtons {
@@ -61,6 +72,9 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           right: 0;
           padding-left: 8px;
           padding-right: 8px;
+        }
+
+        .createOptionsButtons[root-cause] {
         }
 
         .deleteButton {
@@ -94,14 +108,14 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
 
   render() {
     return html`
-      <div class="layout vertical">
-        <div class="layout horizontal">
-          <div class="causeText">${this.causeDescription}</div>
+      <div class="layout vertical mainContainer" ?root-cause="${this.isRootCause}">
+        <div class="layout horizontal causeTextContainer">
+          <div class="causeText" ?root-cause="${this.isRootCause}">${this.causeDescription}</div>
         </div>
         <md-icon-button class="deleteButton"
           ><md-icon>delete</md-icon></md-icon-button
         >
-        <div class="layout horizontal center-justify createOptionsButtons">
+        <div class="layout horizontal center-justify createOptionsButtons" ?root-cause="${this.isRootCause}">
           ${this.isCreatingCauses
             ? html`
                 <md-circular-progress indeterminate></md-circular-progress>

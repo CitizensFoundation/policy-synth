@@ -10,14 +10,16 @@ const config = {
 
 export const renderSystemPrompt = (causeToExmine: LtpCurrentRealityTreeDataNode | undefined = undefined) => {
   const prompt = `
-    You are a helpful Logical Thinking Process assistant. We're working on Current Reality Trees.
+    You are a helpful Logical Thinking Process assistant. We're working on a Current Reality Tree.
 
-    We will work step by step and down the Current Reality Tree, now we are
+    We will work step by step and down the Current Reality Tree until we find the root cause of the "Undesireable Effect".
+
+    A root cause is the fundamental, underlying reason for a problem or issue within a system or process. It's the deepest cause in a chain of causes-and-effects that leads to an issue, and resolving it typically prevents the problem from recurring.
 
     ${ causeToExmine!=undefined ? `
       Please output 7 direct causes of the cause we are examining.
     `: `
-      Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas.
+      Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas. It's unlikely those will be the actual root caues.
     `}
 
     Please output each direct cause in JSON without any explanation:
@@ -38,9 +40,9 @@ export const renderUserPrompt = (
 
           ${
             parentNodes
-              ? parentNodes.map(
+              ? parentNodes.reverse().map(
                   (node, index) => `
-            ${index === 0 ? `Direct` : `Intermediate`} Cause:
+            ${index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`} Cause:
             ${node.cause}
 
           `
@@ -90,34 +92,36 @@ export const convertToNodes = (
 };
 
 export const getParentNodes = (
-  crt: LtpCurrentRealityTreeData,
-  currentparentNode: LtpCurrentRealityTreeDataNode
+  nodes: LtpCurrentRealityTreeDataNode[], // Pass in crt.nodes here
+  currentNodeId: string,
+  parentNodes: LtpCurrentRealityTreeDataNode[] = []
 ): LtpCurrentRealityTreeDataNode[] | undefined => {
-  [];
-  let parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = [];
-  let currentNode = currentparentNode;
-  while (currentNode) {
-    parentNodes.push(currentNode);
-    currentNode = crt.nodes.find((node) => {
-      return (
-        node.andChildren?.find(
-          (child: LtpCurrentRealityTreeDataNode) => child.id === currentNode.id
-        ) ||
-        node.orChildren?.find(
-          (child: LtpCurrentRealityTreeDataNode) => child.id === currentNode.id
-        )
-      );
-    })!;
+
+  for (const node of nodes) {
+    // Check if the current node is a direct child of this node
+    const isDirectChild = node.andChildren?.some((child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId) ||
+                          node.orChildren?.some((child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId);
+
+    if (isDirectChild) {
+      parentNodes.push(node);
+      // Call recursively with the parent node's ID
+      return getParentNodes(nodes, node.id, parentNodes);
+    }
+
+    // Recursively check in andChildren and orChildren
+    const andChildrenResult = node.andChildren ? getParentNodes(node.andChildren, currentNodeId, parentNodes) : undefined;
+    const orChildrenResult = node.orChildren ? getParentNodes(node.orChildren, currentNodeId, parentNodes) : undefined;
+
+    if (andChildrenResult || orChildrenResult) {
+      // If either returns a result, we found the parent node
+      if (!parentNodes.includes(node)) {
+        parentNodes.push(node);
+      }
+      return parentNodes;
+    }
   }
 
-  if (parentNodes.length < 2) {
-    parentNodes = undefined;
-  } else {
-    // Slice away the currentparentNode from the parentNodes
-    parentNodes = parentNodes.slice(1);
-  }
-
-  return parentNodes;
+  return parentNodes.length === 0 ? undefined : parentNodes;
 };
 
 export const identifyCauses = async (
@@ -127,7 +131,7 @@ export const identifyCauses = async (
   let parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined;
 
   if (currentparentNode) {
-    parentNodes = getParentNodes(crt, currentparentNode);
+    parentNodes = getParentNodes(crt.nodes, currentparentNode.id);
   }
 
   const openai = new OpenAI(config);
