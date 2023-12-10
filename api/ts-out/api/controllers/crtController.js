@@ -21,10 +21,11 @@ export class CurrentRealityTreeController {
     constructor() {
         this.initializeRoutes();
     }
-    initializeRoutes() {
+    async initializeRoutes() {
         this.router.get(this.path + "/:id", this.getTree);
-        this.router.post(this.path + "/:id/createDirectCauses", this.createTree);
-        this.router.post(this.path + "/:id/identifyDirectCauses", this.identifyDirectCauses);
+        this.router.post(this.path, this.createTree);
+        this.router.post(this.path + "/:id/createDirectCauses", this.createDirectCauses);
+        await redisClient.connect();
     }
     getTree = async (req, res) => {
         const treeId = req.params.id;
@@ -69,12 +70,14 @@ export class CurrentRealityTreeController {
         }
     };
     createTree = async (req, res) => {
-        const treeId = req.params.id;
+        //TODO: Create new ids automatically
+        const treeId = 1; //req.params.id;
         const { context, rawPossibleCauses, undesirableEffects, } = req.body;
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
             if (treeData) {
-                return res.status(400).send({ message: "Tree already exists" });
+                //TODO: Uncomment this
+                //return res.status(400).send({ message: "Tree already exists" });
             }
             const newTree = {
                 context,
@@ -92,17 +95,19 @@ export class CurrentRealityTreeController {
             return res.sendStatus(500);
         }
     };
-    identifyDirectCauses = async (req, res) => {
+    createDirectCauses = async (req, res) => {
         const treeId = req.params.id;
         const parentNodeId = req.body.parentNodeId;
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
             if (!treeData) {
+                console.error("Tree not found");
                 return res.sendStatus(404);
             }
             const currentTree = JSON.parse(treeData);
             const parentNode = this.findNode(currentTree.nodes, parentNodeId);
             if (!parentNode) {
+                console.error("Parent node not found");
                 return res.sendStatus(404);
             }
             const directCausesNodes = await identifyCauses(currentTree, parentNode);

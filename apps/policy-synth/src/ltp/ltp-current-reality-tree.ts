@@ -5,8 +5,11 @@ import { dia, shapes, util, highlighters, V } from 'jointjs';
 import { CpsStageBase } from '../cps-stage-base.js';
 
 import './ltp-current-reality-tree-node.js';
+import { LtpServerApi } from './LtpServerApi.js';
 
 type Cell = dia.Element | dia.Link;
+
+const TESTING = false;
 
 class MyShapeView extends dia.ElementView {
   render() {
@@ -30,9 +33,12 @@ class MyShapeView extends dia.ElementView {
       div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
       div.style.width = '185px';
       div.style.height = '107px';
-      div.className = 'causeContainer';
+      div.className = `causeContainer ${
+        this.model.attributes.isRootCause ? 'rootCauseContainer' : ''
+      }`;
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
+        isRootCause="${this.model.attributes.isRootCause}"
         causeDescription="${this.model.attributes.label}"
       >
       </ltp-current-reality-tree-node>`;
@@ -64,8 +70,6 @@ class MyShape extends shapes.devs.Model {
   view = MyShapeView;
 }
 
-const TESTING = true;
-
 @customElement('ltp-current-reality-tree')
 export class LtpCurrentRealityTree extends CpsStageBase {
   @property({ type: Object }) crtData?: LtpCurrentRealityTreeData;
@@ -74,83 +78,28 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private elements: { [key: string]: dia.Element } = {};
   private selection: dia.Element | null = null;
 
+  api: LtpServerApi;
+
+  constructor() {
+    super();
+    this.api = new LtpServerApi();
+  }
+
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`CRT - open`);
+
+    this.addEventListener('add-nodes', this.addNodesEvent as EventListener);
+  }
+
+  addNodesEvent(event: CustomEvent<any>) {
+    this.addNodes(event.detail.parentNodeId, event.detail.nodes);
   }
 
   protected firstUpdated(
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
     this.initializeJointJS();
-    if (TESTING) {
-      setTimeout(() => {
-        this.crtData = {
-          context: 'Context',
-          rawPossibleCauses: 'Raw Root Causes',
-          undesirableEffects: ['Undesirable Effect 1', 'Undesirable Effect 2'],
-          nodes: [
-            {
-              id: '1',
-              cause: 'Fuel is not getting into the engine',
-              andChildren: [
-                {
-                  id: '1.1',
-                  cause: 'There is water in the fuel line',
-                  andChildren: [
-                    {
-                      id: '1.1.1',
-                      cause: 'The car is in the swimming pool',
-                    },
-                    {
-                      id: '1.1.2',
-                      cause: 'Cause 1.1.2',
-                    },
-                    {
-                      id: '1.1.3',
-                      cause: 'Cause 1.1.3',
-                    },
-                  ],
-                },
-                {
-                  id: '1.2',
-                  cause: 'Cause 1.2',
-                },
-              ],
-            },
-            {
-              id: '2',
-              cause: 'Cause 2',
-              orChildren: [
-                {
-                  id: '2.1',
-                  cause: 'Cause 2.1',
-                },
-                {
-                  id: '2.2',
-                  cause: 'Cause 2.2',
-                },
-              ],
-            },
-            {
-              id: '3',
-              cause: 'Cause 3',
-              orChildren: [
-                {
-                  id: '3.1',
-                  cause: 'Cause 3.1',
-                },
-                {
-                  id: '3.2',
-                  cause: 'Cause 3.2',
-                },
-              ],
-            },
-          ],
-        };
-      }, 1000);
-
-    }
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -253,6 +202,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       // position: { x: Math.random() * 600, y: Math.random() * 400 },
       label: node.cause,
       text: node.cause,
+      nodeId: node.id,
+      isRootCause: node.isRootCause,
       attrs: {
         //cause: node.cause,
       },
@@ -267,7 +218,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.graph.clear();
     this.elements = {};
 
-    console.log('Updating graph with CRT data:', crtData); // Log the entire data being processed
+    console.error(
+      'Updating graph with CRT data:',
+      JSON.stringify(crtData, null, 2)
+    ); // Log the entire data being processed
 
     // Function to recursively create elements/nodes
     const createNodes = (nodeData: LtpCurrentRealityTreeDataNode) => {
@@ -343,7 +297,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       source: { id: target.id },
       target: { id: source.id },
       attrs: {
-        '.connection': { stroke: 'var(--md-sys-color-on-surface)', 'stroke-width': 2 },
+        '.connection': {
+          stroke: 'var(--md-sys-color-on-surface)',
+          'stroke-width': 2,
+        },
         '.marker-target': {
           fill: 'var(--md-sys-color-on-surface)',
           d: 'M 10 -5 L 0 0 L 10 5 z',
@@ -401,6 +358,71 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     if (view) {
       highlighters.addClass.remove(view, 'selection');
     }
+  }
+
+  addNodes(parentNodeId: string, nodes: LtpCurrentRealityTreeDataNode[]): void {
+    if (!Array.isArray(nodes) || nodes.length === 0) {
+      console.error('No nodes provided to add');
+      return;
+    }
+
+    const findAndUpdateParentNode = (
+      nodeDataArray: LtpCurrentRealityTreeDataNode[],
+      parentNodeId: string
+    ) => {
+      for (const nodeData of nodeDataArray) {
+        if (nodeData.id === parentNodeId) {
+          // Found the parent node, update its andChildren
+          nodeData.andChildren = nodeData.andChildren || [];
+          nodeData.andChildren.push(...nodes);
+          return true;
+        }
+        // Recursively search in andChildren and orChildren
+        if (
+          nodeData.andChildren &&
+          findAndUpdateParentNode(nodeData.andChildren, parentNodeId)
+        )
+          return true;
+        if (
+          nodeData.orChildren &&
+          findAndUpdateParentNode(nodeData.orChildren, parentNodeId)
+        )
+          return true;
+      }
+      return false;
+    };
+
+    // Start the search from the root nodes
+    if (!findAndUpdateParentNode(this.crtData.nodes, parentNodeId)) {
+      console.error(`Parent node with ID ${parentNodeId} not found in crtData`);
+      return;
+    }
+
+    const parentNode = this.elements[parentNodeId];
+
+    if (!parentNode) {
+      console.error(`Parent node with ID ${parentNodeId} not found`);
+      return;
+    }
+
+    nodes.forEach(node => {
+      node.andChildren = [];
+      node.orChildren = [];
+      const newNode = this.createElement(node);
+      this.elements[node.id] = newNode;
+
+      // Create a link from the parent node to the new node
+      this.createLink(parentNode, newNode);
+    });
+
+    // Refresh the paper to reflect the new nodes
+    this.layoutGraph();
+
+    // wait for two seconds
+    setTimeout(() => {
+      // then unfreeze the paper
+      this.layoutGraph();
+    }, 2000);
   }
 
   private layoutGraph(): void {
@@ -486,6 +508,13 @@ export class LtpCurrentRealityTree extends CpsStageBase {
           padding: 0;
         }
 
+        .rootCauseContainer {
+          color: var(--md-sys-color-on-primary);
+          background-color: var(--md-sys-color-primary);
+          border-radius: 8px;
+          padding: 0;
+        }
+
         /* Define your component styles here */
         .jointJSCanvas {
           height: 1000px !important;
@@ -497,14 +526,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   render() {
-    return html`
-      <div class="layout vertical">
-        <div class="title">${this.t('Current Reality Tree')}</div>
-        <div class="contextInput"></div>
-        <div class="rawRootCausesInput"></div>
-        <!-- This is where the JointJS paper should be attached -->
-        <div class="jointJSCanvas" id="paper-container"></div>
-      </div>
-    `;
+    return html` <div class="jointJSCanvas" id="paper-container"></div> `;
   }
 }

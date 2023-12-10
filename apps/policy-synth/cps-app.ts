@@ -53,7 +53,7 @@ import './src/cps-entities.js';
 import './src/cps-solutions.js';
 import './src/ps-policies.js';
 
-import './src/ltp/ltp-current-reality-tree.js';
+import './src/ltp/ltp-manage-crt.js';
 
 import { IEngineConstants } from './src/constants.js';
 import { YpFormattingHelpers } from './src/@yrpri/common/YpFormattingHelpers.js';
@@ -488,7 +488,7 @@ export class CpsApp extends YpBaseElement {
 
   renderCrtPage() {
     return html`
-      <ltp-current-reality-tree></ltp-current-reality-tree>
+      <ltp-manage-crt></ltp-manage-crt>
     `;
   }
 

@@ -12,7 +12,7 @@ export class LtpServerApi extends YpServerApi {
     )) as unknown as CrtResponse;
   }
 
-  public createTree(crt: LtpCurrentRealityTreeData): any {
+  public createTree(crt: LtpCurrentRealityTreeData): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
       this.baseUrlPath + `/crt`,
       {
@@ -20,17 +20,19 @@ export class LtpServerApi extends YpServerApi {
         body: JSON.stringify(crt),
       },
       false
-    );
+    ) as Promise<LtpCurrentRealityTreeDataNode[]>;
   }
 
-  public createDirectCauses(parentNodeId: string): any {
+  public createDirectCauses(parentNodeId: string): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/${parentNodeId}/createDirectCauses`,
+      this.baseUrlPath + `/crt/1/createDirectCauses`,
       {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify({
+          parentNodeId
+        }),
       },
       false
-    );
+    ) as Promise<LtpCurrentRealityTreeDataNode[]>;
   }
 }
