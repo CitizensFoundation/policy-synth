@@ -15,8 +15,8 @@ class MyShapeView extends dia.ElementView {
 
     // Create a foreignObject with a set size and style
     const foreignObject = V('foreignObject', {
-      width: 165,
-      height: 76,
+      width: 185,
+      height: 107,
       style: 'overflow: visible; display: block;',
     }).node;
 
@@ -28,11 +28,10 @@ class MyShapeView extends dia.ElementView {
       const div = document.createElement('div');
       div.setAttribute('class', 'html-element');
       div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      div.style.width = '150px';
-      div.style.height = '60px';
+      div.style.width = '185px';
+      div.style.height = '107px';
       div.className = 'causeContainer';
       div.innerHTML = `<ltp-current-reality-tree-node
-        class="causeText"
         nodeId="${this.model.attributes.nodeId}"
         causeDescription="${this.model.attributes.label}"
       >
@@ -56,7 +55,7 @@ class MyShape extends shapes.devs.Model {
       {
         type: 'html.MyShape',
         attrs: {},
-        markup: '<div>okokoko</div>',
+        markup: '<div></div>',
       },
       shapes.devs.Model.prototype.defaults
     );
@@ -64,6 +63,8 @@ class MyShape extends shapes.devs.Model {
 
   view = MyShapeView;
 }
+
+const TESTING = true;
 
 @customElement('ltp-current-reality-tree')
 export class LtpCurrentRealityTree extends CpsStageBase {
@@ -82,71 +83,74 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
     this.initializeJointJS();
-    setTimeout(() => {
-      this.crtData = {
-        context: 'Context',
-        rawPossibleCauses: 'Raw Root Causes',
-        undesirableEffects: ['Undesirable Effect 1', 'Undesirable Effect 2'],
-        nodes: [
-          {
-            id: '1',
-            cause: 'Fuel is not getting into the engine',
-            andChildren: [
-              {
-                id: '1.1',
-                cause: 'There is water in the fuel line',
-                andChildren: [
-                  {
-                    id: '1.1.1',
-                    cause: 'The car is in the swimming pool',
-                  },
-                  {
-                    id: '1.1.2',
-                    cause: 'Cause 1.1.2',
-                  },
-                  {
-                    id: '1.1.3',
-                    cause: 'Cause 1.1.3',
-                  },
-                ],
-              },
-              {
-                id: '1.2',
-                cause: 'Cause 1.2',
-              },
-            ],
-          },
-          {
-            id: '2',
-            cause: 'Cause 2',
-            orChildren: [
-              {
-                id: '2.1',
-                cause: 'Cause 2.1',
-              },
-              {
-                id: '2.2',
-                cause: 'Cause 2.2',
-              },
-            ],
-          },
-          {
-            id: '3',
-            cause: 'Cause 3',
-            orChildren: [
-              {
-                id: '3.1',
-                cause: 'Cause 3.1',
-              },
-              {
-                id: '3.2',
-                cause: 'Cause 3.2',
-              },
-            ],
-          },
-        ],
-      };
-    }, 1000);
+    if (TESTING) {
+      setTimeout(() => {
+        this.crtData = {
+          context: 'Context',
+          rawPossibleCauses: 'Raw Root Causes',
+          undesirableEffects: ['Undesirable Effect 1', 'Undesirable Effect 2'],
+          nodes: [
+            {
+              id: '1',
+              cause: 'Fuel is not getting into the engine',
+              andChildren: [
+                {
+                  id: '1.1',
+                  cause: 'There is water in the fuel line',
+                  andChildren: [
+                    {
+                      id: '1.1.1',
+                      cause: 'The car is in the swimming pool',
+                    },
+                    {
+                      id: '1.1.2',
+                      cause: 'Cause 1.1.2',
+                    },
+                    {
+                      id: '1.1.3',
+                      cause: 'Cause 1.1.3',
+                    },
+                  ],
+                },
+                {
+                  id: '1.2',
+                  cause: 'Cause 1.2',
+                },
+              ],
+            },
+            {
+              id: '2',
+              cause: 'Cause 2',
+              orChildren: [
+                {
+                  id: '2.1',
+                  cause: 'Cause 2.1',
+                },
+                {
+                  id: '2.2',
+                  cause: 'Cause 2.2',
+                },
+              ],
+            },
+            {
+              id: '3',
+              cause: 'Cause 3',
+              orChildren: [
+                {
+                  id: '3.1',
+                  cause: 'Cause 3.1',
+                },
+                {
+                  id: '3.2',
+                  cause: 'Cause 3.2',
+                },
+              ],
+            },
+          ],
+        };
+      }, 1000);
+
+    }
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -186,7 +190,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       async: true,
       frozen: true,
       sorting: dia.Paper.sorting.APPROX,
-      background: { color: '#F3F7F6' },
+      background: { color: 'var(--md-sys-color-surface)' },
       clickThreshold: 10,
       defaultConnector: {
         name: 'rounded',
@@ -214,10 +218,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         type: 'text/css',
       }).text(`
         .joint-element .selection {
-            stroke: #ff4468;
+            stroke: var(--md-sys-color-surface);
         }
         .joint-link .selection {
-            stroke: #ff4468;
+            stroke: var(--md-sys-color-surface);
             stroke-dasharray: 5;
             stroke-dashoffset: 10;
             animation: dash 0.5s infinite linear;
@@ -339,9 +343,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       source: { id: target.id },
       target: { id: source.id },
       attrs: {
-        '.connection': { stroke: '#333333', 'stroke-width': 2 },
+        '.connection': { stroke: 'var(--md-sys-color-on-surface)', 'stroke-width': 2 },
         '.marker-target': {
-          fill: '#333333',
+          fill: 'var(--md-sys-color-on-surface)',
           d: 'M 10 -5 L 0 0 L 10 5 z',
           // Make sure the marker is at the start of the path (bottom of the source)
           'ref-x': 0.5,
@@ -400,10 +404,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   private layoutGraph(): void {
-    const nodeWidth = 150;
+    const nodeWidth = 180;
     const nodeHeight = 50;
-    const verticalSpacing = 130;
-    const horizontalSpacing = 40; // You might want to adjust this dynamically based on the tree width
+    const verticalSpacing = 150;
+    const horizontalSpacing = 45; // You might want to adjust this dynamically based on the tree width
     const topPadding = 60; // Padding at the top of the container
 
     // Function to get the width of a subtree rooted at a given node
@@ -459,7 +463,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     );
     console.error(this.paper.options);
     //TODO: Figure this out better
-    const initialXOffset = (1600 - totalWidth) / 2;
+    const initialXOffset = (1900 - totalWidth) / 2;
 
     //    const initialXOffset = ((this.paper.options as any).width - totalWidth) / 2;
 
@@ -475,22 +479,17 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     return [
       super.styles,
       css`
-        .causeText {
-          font-size: 12px;
-          color: var(--md-sys-color-on-primary-container);
-        }
-
         .causeContainer {
-          color: var(--md-sys-color-on-primary-container);
-          background-color: var(--md-sys-color-primary-container);
+          color: var(--md-sys-color-on-secondary-container);
+          background-color: var(--md-sys-color-secondary-container);
           border-radius: 8px;
-          padding: 8px;
+          padding: 0;
         }
 
         /* Define your component styles here */
         .jointJSCanvas {
-          height: 800px !important;
-          width: 1600px !important;
+          height: 1000px !important;
+          width: 1920px !important;
           /* styles for the JointJS canvas */
         }
       `,
