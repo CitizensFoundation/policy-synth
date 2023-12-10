@@ -8,22 +8,39 @@ const config = {
   apiKey: process.env.OPENAI_KEY,
 };
 
-export const renderSystemPrompt = (causeToExmine: LtpCurrentRealityTreeDataNode | undefined = undefined) => {
+export const renderSystemPrompt = (
+  causeToExmine: LtpCurrentRealityTreeDataNode | undefined = undefined
+) => {
   const prompt = `
     You are a helpful Logical Thinking Process assistant. We're working on a Current Reality Tree.
 
     We will work step by step and down the Current Reality Tree until we find the root cause of the "Undesireable Effect".
 
-    A root cause is the fundamental, underlying reason for a problem or issue within a system or process. It's the deepest cause in a chain of causes-and-effects that leads to an issue, and resolving it typically prevents the problem from recurring.
-
-    ${ causeToExmine!=undefined ? `
+    ${
+      causeToExmine != undefined
+        ? `
       Please output 7 direct causes of the cause we are examining.
-    `: `
-      Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas. It's unlikely those will be the actual root caues.
-    `}
+    `
+        : `
+      Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas.
+    `
+    }
 
     Please output each direct cause in JSON without any explanation:
       { directCauseDescription, isDirectCause<bool>, isLikelyARootCauseOfUDE<bool>, confidenceLevel<int> }
+
+    The directCauseDescription JSON should never be more than 9 words long.
+
+    ${
+      causeToExmine != undefined
+        ? `
+    For the isLikelyARootCauseOfUDE JSON field, please output true if cause we are examining is very likely the root cause of the "Undesireable Effect", otherwise output false.
+    And keep this in mind: A root cause is the fundamental, underlying reason for a problem or issue within a system or process. It's the deepest cause in a chain of causes-and-effects that leads to an issue, and resolving it typically prevents the problem from recurring.
+  `
+        : `
+    Always keep the isLikelyARootCauseOfUDE to false for now as this is the first level of direct causes.
+  `
+    }
   `;
 
   return prompt;
@@ -36,13 +53,18 @@ export const renderUserPrompt = (
 ) => {
   return `Context: ${currentRealityTree.context}
           Undesirable Effect: ${currentRealityTree.undesirableEffects[0]}
-          Possible Raw Unclassified Causes: ${currentRealityTree.rawPossibleCauses || "None found, please figure it out yourself."}
+          Possible Raw Unclassified Causes: ${
+            currentRealityTree.rawPossibleCauses ||
+            "None found, please figure it out yourself."
+          }
 
           ${
             parentNodes
               ? parentNodes.reverse().map(
                   (node, index) => `
-            ${index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`} Cause:
+            ${
+              index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`
+            }:
             ${node.cause}
 
           `
@@ -96,11 +118,15 @@ export const getParentNodes = (
   currentNodeId: string,
   parentNodes: LtpCurrentRealityTreeDataNode[] = []
 ): LtpCurrentRealityTreeDataNode[] | undefined => {
-
   for (const node of nodes) {
     // Check if the current node is a direct child of this node
-    const isDirectChild = node.andChildren?.some((child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId) ||
-                          node.orChildren?.some((child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId);
+    const isDirectChild =
+      node.andChildren?.some(
+        (child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId
+      ) ||
+      node.orChildren?.some(
+        (child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId
+      );
 
     if (isDirectChild) {
       parentNodes.push(node);
@@ -109,8 +135,12 @@ export const getParentNodes = (
     }
 
     // Recursively check in andChildren and orChildren
-    const andChildrenResult = node.andChildren ? getParentNodes(node.andChildren, currentNodeId, parentNodes) : undefined;
-    const orChildrenResult = node.orChildren ? getParentNodes(node.orChildren, currentNodeId, parentNodes) : undefined;
+    const andChildrenResult = node.andChildren
+      ? getParentNodes(node.andChildren, currentNodeId, parentNodes)
+      : undefined;
+    const orChildrenResult = node.orChildren
+      ? getParentNodes(node.orChildren, currentNodeId, parentNodes)
+      : undefined;
 
     if (andChildrenResult || orChildrenResult) {
       // If either returns a result, we found the parent node
@@ -136,14 +166,20 @@ export const identifyCauses = async (
 
   const openai = new OpenAI(config);
   if (DEBUGGING) {
-    console.log("DEBGUGGING: currentparentNode", JSON.stringify(currentparentNode, null, 2));
-    console.log("DEBGUGGING: parentNodes", JSON.stringify(parentNodes, null, 2));
+    console.log(
+      "DEBGUGGING: currentparentNode",
+      JSON.stringify(currentparentNode, null, 2)
+    );
+    console.log(
+      "DEBGUGGING: parentNodes",
+      JSON.stringify(parentNodes, null, 2)
+    );
     console.log("DEBUGGING: crt", JSON.stringify(crt, null, 2));
-    console.log("=====================")
-    console.log(renderSystemPrompt(currentparentNode))
-    console.log("---------------------")
-    console.log(renderUserPrompt(crt, currentparentNode, parentNodes))
-    console.log("=====================")
+    console.log("=====================");
+    console.log(renderSystemPrompt(currentparentNode));
+    console.log("---------------------");
+    console.log(renderUserPrompt(crt, currentparentNode, parentNodes));
+    console.log("=====================");
   }
   const response = await openai.chat.completions.create({
     model: "gpt-4-1106-preview",
@@ -167,7 +203,10 @@ export const identifyCauses = async (
   const parsedMessage: CrtPromptJson[] = JSON.parse(rawMessage);
 
   if (DEBUGGING) {
-    console.log("DEBUGGING: parsedMessage", JSON.stringify(parsedMessage, null, 2));
+    console.log(
+      "DEBUGGING: parsedMessage",
+      JSON.stringify(parsedMessage, null, 2)
+    );
   }
 
   const topCauses = filterTopCauses(parsedMessage);
