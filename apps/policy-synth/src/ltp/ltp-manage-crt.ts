@@ -142,7 +142,7 @@ export class LtpManageCrt extends CpsStageBase {
       nodes: [],
     };
 
-    if (TESTING) {
+    if (TESTING && (this.$$('#context') as MdOutlinedTextField).value=="") {
       crtSeed.context = 'We are a software company with a product we have as as service';
       crtSeed.undesirableEffects = ['End users are unhappy with the service'];
       crtSeed.rawPossibleCauses = `

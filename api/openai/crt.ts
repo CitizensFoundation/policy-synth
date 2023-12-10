@@ -19,7 +19,7 @@ export const renderSystemPrompt = (
     ${
       causeToExmine != undefined
         ? `
-      Please output 7 direct causes of the cause we are examining.
+      Please output 7 direct causes of the cause presented in the "Cause to Examine" below.
     `
         : `
       Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas.
@@ -29,14 +29,17 @@ export const renderSystemPrompt = (
     Please output each direct cause in JSON without any explanation:
       { directCauseDescription, isDirectCause<bool>, isLikelyARootCauseOfUDE<bool>, confidenceLevel<int> }
 
-    The directCauseDescription JSON should never be more than 9 words long.
+    The directCauseDescription JSON should never be more than 11 words long.
 
     ${
       causeToExmine != undefined
         ? `
     For the isLikelyARootCauseOfUDE JSON field, please output true if cause we are examining is very likely the root cause of the "Undesireable Effect", otherwise output false.
-    And keep this in mind: A root cause is the fundamental, underlying reason for a problem or issue within a system or process. It's the deepest cause in a chain of causes-and-effects that leads to an issue, and resolving it typically prevents the problem from recurring.
-  `
+
+    For the isDirectCause JSON field, please output true if the cause we are examining is a direct cause of the "Undesireable Effect", otherwise output false. Use logic.
+
+    `
+
         : `
     Always keep the isLikelyARootCauseOfUDE to false for now as this is the first level of direct causes.
   `
