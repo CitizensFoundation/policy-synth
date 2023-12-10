@@ -38,7 +38,7 @@ class MyShapeView extends dia.ElementView {
       }`;
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
-        isRootCause="${this.model.attributes.isRootCause}"
+        ${this.model.attributes.isRootCause ? 'isRootCause="true"' : ''}
         causeDescription="${this.model.attributes.label}"
       >
       </ltp-current-reality-tree-node>`;
@@ -509,8 +509,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         }
 
         .rootCauseContainer {
-          color: var(--md-sys-color-on-primary);
-          background-color: var(--md-sys-color-primary);
+          color: var(--md-sys-color-on-primary-container);
+          background-color: var(--md-sys-color-primary-container);
           border-radius: 8px;
           padding: 0;
         }
