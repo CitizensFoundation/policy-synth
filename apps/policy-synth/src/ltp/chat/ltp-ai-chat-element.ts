@@ -284,7 +284,7 @@ export class LtpAiChatElement extends YpBaseElement {
       nodes,
     });
 
-    this.fire("close-dialog");
+    this.fire("close-add-cause-dialog");
 
     this.isCreatingCauses = false;
   }
