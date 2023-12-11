@@ -43,6 +43,8 @@ export const renderSystemPrompt = (currentRealityTree, parentNode) => {
 
     You can use markdown to format the feedback in a single line, but not the refinedCauses. The feedback should always be output as string.
 
+    Please be helpful to the user if he/she is asking for clarifications. The CRT process is complicated.
+
     You must never offer explainations outside the JSON, only output JSON.
   `;
     return prompt;

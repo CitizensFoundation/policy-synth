@@ -164,6 +164,11 @@ export class LtpManageCrt extends CpsStageBase {
         md-linear-progress {
           width: 600px;
         }
+
+        .darkModeButton {
+          margin-right: 8px;
+          margin-left: 8px;
+        }
       `,
     ];
   }
@@ -212,8 +217,15 @@ export class LtpManageCrt extends CpsStageBase {
     window.appGlobals.activity('Crt - toggle darkmode');
   }
 
+  randomizeTheme() {
+    // Create a random hex color
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    // Set the theme color
+    this.fire('yp-theme-color', `#${randomColor}`);
+  }
+
   renderThemeToggle() {
-    return html`<div class="layout vertical center-center themeToggle">
+    return html`<div class="layout horizontal center-center themeToggle">
       ${!this.themeDarkMode
         ? html`
             <md-outlined-icon-button
@@ -229,6 +241,12 @@ export class LtpManageCrt extends CpsStageBase {
               ><md-icon>light_mode</md-icon></md-outlined-icon-button
             >
           `}
+
+          <md-outlined-icon-button
+              class="darkModeButton"
+              @click="${this.randomizeTheme}"
+              ><md-icon>shuffle</md-icon></md-outlined-icon-button
+            >
     </div> `;
   }
 
