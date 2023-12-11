@@ -156,6 +156,7 @@
     "lodash-es": "^4.17.21",
     "marked": "^4.2.12",
     "pwa-helpers": "^0.9.1",
+    "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-copy": "^3.4.0",
     "sanitize-html": "^2.10.0",
     "share-menu": "^5.0.0-rc.4",
