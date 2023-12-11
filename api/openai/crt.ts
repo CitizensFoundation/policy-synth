@@ -9,7 +9,8 @@ const config = {
 };
 
 export const renderSystemPrompt = (
-  causeToExmine: LtpCurrentRealityTreeDataNode | undefined = undefined
+  causeToExmine: LtpCurrentRealityTreeDataNode | undefined = undefined,
+  parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined
 ) => {
   const prompt = `
     You are a helpful Logical Thinking Process assistant. We're working on a Current Reality Tree.
@@ -19,7 +20,7 @@ export const renderSystemPrompt = (
     ${
       causeToExmine != undefined
         ? `
-      Please output 7 direct causes of the cause presented in the "Cause to Examine" below.
+      Please output 7 direct causes of the cause presented in the "Cause to Examine" below. The causes must be direct causes of the "Cause to Examine" not results of it.
     `
         : `
       Please output 7 direct causes of the "Undesireable Effect" and analyse the "Possible Raw Unclassified Causes" for ideas.
@@ -31,15 +32,20 @@ export const renderSystemPrompt = (
 
     The directCauseDescription JSON should never be more than 11 words long.
 
+
+    ${
+      parentNodes != undefined
+        ? `Direct and possible intermediate causes of the "Cause to Examine" are included below for your reference but you still need to focus your creation of direct causes on the "Cause to Examine" only.`
+        : ``
+    }
+
     ${
       causeToExmine != undefined
         ? `
-    For the isLikelyARootCauseOfUDE JSON field, please output true if cause we are examining is very likely the root cause of the "Undesireable Effect", otherwise output false.
+    For the isDirectCause JSON field, please output true if the cause we are examining is a direct cause of the "Cause to Examine", otherwise output false. Use the logic of cause and effect.
 
-    For the isDirectCause JSON field, please output true if the cause we are examining is a direct cause of the "Undesireable Effect", otherwise output false. Use logic.
-
+    For the isLikelyARootCauseOfUDE JSON field, please output true if "Cause to Examine" is possibly the key root cause of the "Undesireable Effect (UDE)" and it's chain of causes, a possible end of the chain, otherwise output false.
     `
-
         : `
     Always keep the isLikelyARootCauseOfUDE to false for now as this is the first level of direct causes.
   `
@@ -55,11 +61,17 @@ export const renderUserPrompt = (
   parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined
 ) => {
   return `Context: ${currentRealityTree.context}
-          Undesirable Effect: ${currentRealityTree.undesirableEffects[0]}
-          Possible Raw Unclassified Causes: ${
-            currentRealityTree.rawPossibleCauses ||
-            "None found, please figure it out yourself."
-          }
+          Undesirable Effect (UDE): ${currentRealityTree.undesirableEffects[0]}
+          ${causeToExmine===undefined ? `
+            Possible Raw Unclassified Causes: ${
+              currentRealityTree.rawPossibleCauses ||
+              "None found, please figure it out yourself."
+            }
+          ` : ''}
+
+          ${ parentNodes && parentNodes.length > 1 ? `
+            Chain of causes and effects leading to the root cause we are searching for step by step:
+          ` : ``}
 
           ${
             parentNodes
@@ -179,7 +191,7 @@ export const identifyCauses = async (
     );
     console.log("DEBUGGING: crt", JSON.stringify(crt, null, 2));
     console.log("=====================");
-    console.log(renderSystemPrompt(currentparentNode));
+    console.log(renderSystemPrompt(currentparentNode, parentNodes));
     console.log("---------------------");
     console.log(renderUserPrompt(crt, currentparentNode, parentNodes));
     console.log("=====================");
@@ -187,7 +199,7 @@ export const identifyCauses = async (
   const response = await openai.chat.completions.create({
     model: "gpt-4-1106-preview",
     messages: [
-      { role: "system", content: renderSystemPrompt(currentparentNode) },
+      { role: "system", content: renderSystemPrompt(currentparentNode, parentNodes) },
       {
         role: "user",
         content: renderUserPrompt(crt, currentparentNode, parentNodes),
