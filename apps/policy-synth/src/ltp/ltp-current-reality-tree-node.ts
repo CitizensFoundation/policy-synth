@@ -58,7 +58,6 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           height: 100%;
         }
 
-
         .causeText[root-cause] {
           color: var(--md-sys-color-on-tertiary);
           background-color: var(--md-sys-color-tertiary);
@@ -97,9 +96,9 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
 
     const nodes = await this.api.createDirectCauses(this.nodeId);
 
-    this.fire("add-nodes", {
+    this.fire('add-nodes', {
       parentNodeId: this.nodeId,
-      nodes
+      nodes,
     });
 
     this.isCreatingCauses = false;
@@ -107,14 +106,22 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
 
   render() {
     return html`
-      <div class="layout vertical mainContainer" ?root-cause="${this.isRootCause}">
+      <div
+        class="layout vertical mainContainer"
+        ?root-cause="${this.isRootCause}"
+      >
         <div class="layout horizontal causeTextContainer">
-          <div class="causeText" ?root-cause="${this.isRootCause}">${this.causeDescription}</div>
+          <div class="causeText" ?root-cause="${this.isRootCause}">
+            ${this.causeDescription}
+          </div>
         </div>
         <md-icon-button class="deleteButton"
           ><md-icon>delete</md-icon></md-icon-button
         >
-        <div class="layout horizontal center-justify createOptionsButtons" ?root-cause="${this.isRootCause}">
+        <div
+          class="layout horizontal center-justify createOptionsButtons"
+          ?root-cause="${this.isRootCause}"
+        >
           ${this.isCreatingCauses
             ? html`
                 <md-circular-progress indeterminate></md-circular-progress>
@@ -125,7 +132,12 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
                   @click="${this.createDirectCauses}"
                   ><md-icon>format_list_bulleted_add</md-icon></md-icon-button
                 >
-                <md-icon-button class="createOptionsButton"
+                <md-icon-button
+                  class="createOptionsButton"
+                  @click="${() =>
+                    this.fire('open-add-cause-dialog', {
+                      parentNodeId: this.nodeId,
+                    })}"
                   ><md-icon>add_circle</md-icon></md-icon-button
                 >
               `}

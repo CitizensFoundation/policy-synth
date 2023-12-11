@@ -90,6 +90,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     window.appGlobals.activity(`CRT - open`);
 
     this.addEventListener('add-nodes', this.addNodesEvent as EventListener);
+    this.addGlobalListener('add-nodes', this.addNodesEvent.bind(this) as EventListener);
   }
 
   addNodesEvent(event: CustomEvent<any>) {

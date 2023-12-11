@@ -28,3 +28,26 @@ interface CrtResponse {
   crt: LtpCurrentRealityTreeData;
 }
 
+interface LtpAiChatWsMessage {
+  sender: string;
+  type: 'hello_message' | 'moderation_error' | 'start' | 'message' | 'end' | 'stream' | 'error' | 'info' | 'thinking' | 'start_followup' | 'end_followup' | 'stream_followup';
+  message: string;
+  rawMessage?: string;
+  refinedCausesSuggestions?: string[];
+}
+
+interface LtpSimplifiedChatLog {
+  sender: string;
+  message: string;
+}
+
+interface LtpChatBotCrtMessage {
+  message: string;
+  rawMessage: string;
+  refinedCausesSuggestions?: string[];
+}
+
+interface CrtRefinedCausesReply {
+  feedback: string;
+  refinedCauses: string[];
+}
