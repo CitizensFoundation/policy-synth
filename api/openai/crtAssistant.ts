@@ -49,6 +49,8 @@ export const renderSystemPrompt = (
 
     In the feedback offer a short paragraph to explain the context of LTP and Current Reality Trees, if relevant.
 
+    You can use markdown to format the feedback in a single line, but not the refinedCauses. The feedback should always be output as string.
+
     You must never offer explainations outside the JSON, only output JSON.
   `;
 

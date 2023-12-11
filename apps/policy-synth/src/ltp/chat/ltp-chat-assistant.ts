@@ -174,8 +174,9 @@ export class LtpChatAssistant extends YpBaseElement {
   ) {
     this.infoMessage = message;
     data.refinedCausesSuggestions = refinedCausesSuggestions || [];
-    data.rawMessage = rawMessage;
+    data.rawMessage = data.rawMessage || rawMessage;
     this.chatLog = [...this.chatLog, data];
+    debugger;
 
     this.requestUpdate();
 
