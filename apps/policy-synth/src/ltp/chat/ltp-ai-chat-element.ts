@@ -284,6 +284,8 @@ export class LtpAiChatElement extends YpBaseElement {
       nodes,
     });
 
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     this.fire("close-add-cause-dialog");
 
     this.isCreatingCauses = false;

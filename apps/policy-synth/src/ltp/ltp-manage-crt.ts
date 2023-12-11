@@ -4,7 +4,7 @@ import { property, customElement } from 'lit/decorators.js';
 import { cache } from 'lit/directives/cache.js';
 
 import '@material/web/iconbutton/icon-button.js';
-import '@material/web/progress/circular-progress.js';
+import '@material/web/progress/linear-progress.js';
 import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/textfield/outlined-text-field.js';
@@ -109,7 +109,6 @@ export class LtpManageCrt extends CpsStageBase {
         }
 
         md-circular-progress {
-          --md-circular-progress-size: 28px;
           margin-bottom: 6px;
         }
 
@@ -160,6 +159,10 @@ export class LtpManageCrt extends CpsStageBase {
           max-height: 300px;
           width: 100%;
           height: 100%;
+        }
+
+        md-linear-progress {
+          width: 600px;
         }
       `,
     ];
@@ -262,9 +265,9 @@ export class LtpManageCrt extends CpsStageBase {
                 <div class="layout horizontal center-center">
                   ${this.isCreatingCrt
                     ? html`
-                        <md-circular-progress
+                        <md-linear-progress
                           indeterminate
-                        ></md-circular-progress>
+                        ></md-linear-progress>
                       `
                     : html`
                         <md-filled-button @click="${this.createTree}"
@@ -283,9 +286,14 @@ export class LtpManageCrt extends CpsStageBase {
   }
 
   openAddCauseDialog(event: CustomEvent) {
+    console.error(`openAddCauseDialog ${event.detail.parentNodeId}`);
     const parentNodeId = event.detail.parentNodeId;
     // Get the node from the tree
     const node = this.crt?.nodes.find((node) => node.id === parentNodeId);
+    if (!node) {
+      console.error(`Could not find node ${parentNodeId}`);
+      return;
+    }
     this.nodeToAddCauseTo = node;
     (this.$$('#addCauseDialog') as MdDialog).show();
   }
