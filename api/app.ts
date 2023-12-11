@@ -70,6 +70,13 @@ export class App {
     );
 
     this.app.use(
+      "/crt*",
+      express.static(
+        path.join(__dirname, "../../apps/policy-synth/dist")
+      )
+    );
+
+    this.app.use(
       "/webResearch*",
       express.static(
         path.join(__dirname, "../../apps/policy-synth/dist")
