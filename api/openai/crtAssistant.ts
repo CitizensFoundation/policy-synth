@@ -51,7 +51,7 @@ export const renderSystemPrompt = (
 
     You can use markdown to format the feedback in a single line, but not the refinedCauses. The feedback should always be output as string.
 
-    Please be helpful to the user if he/she is asking for clarifications. The CRT process is complicated.
+    Please be helpful to the user if he/she is asking for clarifications, the CRT process is sometimes complicated.
 
     You must never offer explainations outside the JSON, only output JSON.
   `;
