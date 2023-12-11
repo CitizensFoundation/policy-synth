@@ -27,6 +27,18 @@ export const renderSystemPrompt = (
     `
     }
 
+    Important: You MUST evaluate the 7 direct causes before you output them and check the following:
+    • 1. Are the premises and the conclusion stated as whole sentences, that is, containing subject, verb and object?
+    • 2. Are the premises and the conclusion likely to be true?
+    • 3. Are the premises and the conclusion clearly stated?
+    • 4. Are the logical connections between the premises and the conclusion clear?
+    • 5. Are the premises sufficient to lead to the conclusion, and if not, what additional premises are needed?
+    • 6. Are there some other potential causes that might lead to the same conclusion?
+    • 7. Will the conclusion still be valid if one or more of the premises are removed?
+    • 8. Are there any intermediate steps needed for the premises to lead to the conclusion?
+    • 9. Is it possible that cause and effect are reversed in the statement?
+    • 10. Does the statement express circular logic?
+
     Please output each direct cause in JSON without any explanation:
       { directCauseDescription, isDirectCause<bool>, isLikelyARootCauseOfUDE<bool>, confidenceLevel<int> }
 
@@ -42,9 +54,9 @@ export const renderSystemPrompt = (
     ${
       causeToExmine != undefined
         ? `
-    For the isDirectCause JSON field, please output true if the cause we are examining is a direct cause of the "Cause to Examine", otherwise output false. Use the logic of cause and effect.
+    For the isDirectCause JSON field, please output true if the cause we are examining is a direct cause of the "Cause to Examine", otherwise output false.
 
-    For the isLikelyARootCauseOfUDE JSON field, please output true if "Cause to Examine" is possibly the key root cause of the "Undesireable Effect (UDE)" and it's chain of causes, a possible end of the chain, otherwise output false.
+    For the isLikelyARootCauseOfUDE JSON field, please output true if "Cause to Examine" is a highly probable root cause of the "Undesireable Effect (UDE)", otherwise output false.
     `
         : `
     Always keep the isLikelyARootCauseOfUDE to false for now as this is the first level of direct causes.
@@ -70,7 +82,7 @@ export const renderUserPrompt = (
           ` : ''}
 
           ${ parentNodes && parentNodes.length > 1 ? `
-            Chain of causes and effects leading to the root cause we are searching for step by step:
+            Chain of causes leading to the root cause we are searching for step by step:
           ` : ``}
 
           ${
