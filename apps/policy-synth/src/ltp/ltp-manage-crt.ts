@@ -108,10 +108,11 @@ export class LtpManageCrt extends CpsStageBase {
         }
 
         .crtUDEDescription {
-          font-size: 16px;
-          margin: 16px;
+          font-size: 18px;
+          margin: 32px;
           margin-bottom: 0;
-          padding: 16px;
+          padding: 24px;
+          border-radius: 12px;
           background-color: var(--md-sys-color-primary);
           color: var(--md-sys-color-on-primary);
         }
