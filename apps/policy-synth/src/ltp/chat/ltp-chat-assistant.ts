@@ -505,7 +505,6 @@ export class LtpChatAssistant extends YpBaseElement {
     return html`
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
-          ${JSON.stringify(this.chatLog)}
           <ltp-ai-chat-element
             class="bot-chat-element"
             .detectedLanguage="${this.language}"
