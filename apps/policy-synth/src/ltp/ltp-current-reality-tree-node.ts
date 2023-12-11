@@ -96,7 +96,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
 
     const nodes = await this.api.createDirectCauses(this.nodeId);
 
-    this.fire('add-nodes', {
+    this.fireGlobal('add-nodes', {
       parentNodeId: this.nodeId,
       nodes,
     });
