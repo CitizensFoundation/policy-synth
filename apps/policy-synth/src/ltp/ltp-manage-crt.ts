@@ -288,10 +288,33 @@ export class LtpManageCrt extends CpsStageBase {
   openAddCauseDialog(event: CustomEvent) {
     console.error(`openAddCauseDialog ${event.detail.parentNodeId}`);
     const parentNodeId = event.detail.parentNodeId;
-    // Get the node from the tree
-    const node = this.crt?.nodes.find((node) => node.id === parentNodeId);
+    // Get the node from the tree recursively
+    const findNodeRecursively = (nodes: LtpCurrentRealityTreeDataNode[], nodeId: string): LtpCurrentRealityTreeDataNode | undefined => {
+      for (const node of nodes) {
+        if (node.id === nodeId) {
+          return node;
+        }
+        if (node.andChildren) {
+          const foundNode = findNodeRecursively(node.andChildren, nodeId);
+          if (foundNode) {
+            return foundNode;
+          }
+        }
+        if (node.orChildren) {
+          const foundNode = findNodeRecursively(node.orChildren, nodeId);
+          if (foundNode) {
+            return foundNode;
+          }
+        }
+      }
+      return undefined;
+    };
+
+    // Find the node recursively
+    const node = findNodeRecursively(this.crt?.nodes || [], parentNodeId);
     if (!node) {
       console.error(`Could not find node ${parentNodeId}`);
+      console.error(JSON.stringify(this.crt, null, 2));
       return;
     }
     this.nodeToAddCauseTo = node;
