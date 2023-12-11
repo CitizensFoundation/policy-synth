@@ -367,6 +367,18 @@ export class CpsApp extends YpBaseElement {
         },
       },
       {
+        path: '/crt/:projectId',
+        render: params => {
+          return this.renderCrtPage();
+        },
+      },
+      {
+        path: '/crt',
+        render: params => {
+          return this.renderCrtPage();
+        },
+      },
+      {
         path: '/policies/:projectId',
         render: params => {
           this.setupCurrentProjectFromRoute(
