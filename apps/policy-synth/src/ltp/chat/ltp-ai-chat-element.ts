@@ -181,6 +181,7 @@ export class LtpAiChatElement extends YpBaseElement {
           margin-top: 8px;
           margin-left: 36px;
           margin-right: 36px;
+          margin-bottom: 22px;
           padding: 8px;
           border-radius: 12px;
           background-color: var(--md-sys-color-tertiary-container);

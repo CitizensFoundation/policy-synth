@@ -130,7 +130,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
                 <md-icon-button
                   class="createOptionsButton"
                   @click="${this.createDirectCauses}"
-                  ><md-icon>format_list_bulleted_add</md-icon></md-icon-button
+                  ><md-icon>prompt_suggestion</md-icon></md-icon-button
                 >
                 <md-icon-button
                   class="createOptionsButton"
@@ -138,7 +138,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
                     this.fire('open-add-cause-dialog', {
                       parentNodeId: this.nodeId,
                     })}"
-                  ><md-icon>add_circle</md-icon></md-icon-button
+                  ><md-icon>person_edit</md-icon></md-icon-button
                 >
               `}
         </div>
