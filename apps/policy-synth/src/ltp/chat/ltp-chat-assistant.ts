@@ -98,6 +98,7 @@ export class LtpChatAssistant extends YpBaseElement {
   connectedCallback() {
     super.connectedCallback();
     this.defaultInfoMessage += `**${this.nodeToAddCauseTo.cause}**`;
+    console.error(this.defaultInfoMessage);
 
     if (USE_WS) {
       const urlParts = window.location.href.split('/');
