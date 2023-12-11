@@ -66,6 +66,8 @@ export class LtpServerApi extends YpServerApi {
     // Filter out all chatMessages with type==thinking
     chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking');
 
+    debugger;
+
     const simplifiedChatLog = chatLog.map(chatMessage => {
       return {
         sender: chatMessage.sender == 'bot' ? 'assistant' : 'user',
