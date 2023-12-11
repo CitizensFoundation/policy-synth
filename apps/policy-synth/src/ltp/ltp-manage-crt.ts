@@ -347,6 +347,7 @@ export class LtpManageCrt extends CpsStageBase {
   renderAddCauseDialog() {
     return html`
       <md-dialog id="addCauseDialog" style="max-width: 800px;max-height: 600px;" @closed="${this.closeAddCauseDialog}">
+        <div slot="headline">${this.nodeToAddCauseTo?.cause}</div>
         <div slot="content" class="chatContainer">
           ${this.nodeToAddCauseTo
             ? html`
