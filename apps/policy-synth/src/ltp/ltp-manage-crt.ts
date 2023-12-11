@@ -8,6 +8,8 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/textfield/outlined-text-field.js';
+import '@material/web/iconbutton/outlined-icon-button.js';
+
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
 
 import '@material/web/button/filled-button.js';
@@ -117,8 +119,14 @@ export class LtpManageCrt extends CpsStageBase {
           color: var(--md-sys-color-on-primary);
         }
 
-        md-tabs, crt-tab, configure-tab {
+        md-tabs,
+        crt-tab,
+        configure-tab {
           width: 100%;
+        }
+
+        .themeToggle {
+          margin-top: 32px;
         }
       `,
     ];
@@ -132,7 +140,8 @@ export class LtpManageCrt extends CpsStageBase {
     this.isCreatingCrt = true;
 
     const crtSeed: LtpCurrentRealityTreeData = {
-      description: (this.$$('#description') as MdOutlinedTextField)?.value ?? '',
+      description:
+        (this.$$('#description') as MdOutlinedTextField)?.value ?? '',
       context: (this.$$('#context') as MdOutlinedTextField).value ?? '',
       rawPossibleCauses:
         (this.$$('#rawPossibleCauses') as MdOutlinedTextField).value ?? '',
@@ -143,8 +152,9 @@ export class LtpManageCrt extends CpsStageBase {
       nodes: [],
     };
 
-    if (TESTING && (this.$$('#context') as MdOutlinedTextField).value=="") {
-      crtSeed.context = 'We are a software company with a product we have as as service';
+    if (TESTING && (this.$$('#context') as MdOutlinedTextField).value == '') {
+      crtSeed.context =
+        'We are a software company with a product we have as as service';
       crtSeed.undesirableEffects = ['End users are unhappy with the service'];
       crtSeed.rawPossibleCauses = `
         Incidents take a long time to resolve.
@@ -158,7 +168,32 @@ export class LtpManageCrt extends CpsStageBase {
 
     this.isCreatingCrt = false;
     this.activeTabIndex = 1;
-    (this.$$("#tabBar") as MdTabs).activeTabIndex = 1;
+    (this.$$('#tabBar') as MdTabs).activeTabIndex = 1;
+  }
+
+  toggleDarkMode() {
+    this.fire('yp-theme-dark-mode', !this.themeDarkMode);
+    window.appGlobals.activity('Crt - toggle darkmode');
+  }
+
+  renderThemeToggle() {
+    return html`<div class="layout vertical center-center themeToggle">
+      ${!this.themeDarkMode
+        ? html`
+            <md-outlined-icon-button
+              class="darkModeButton"
+              @click="${this.toggleDarkMode}"
+              ><md-icon>dark_mode</md-icon></md-outlined-icon-button
+            >
+          `
+        : html`
+            <md-outlined-icon-button
+              class="darkModeButton"
+              @click="${this.toggleDarkMode}"
+              ><md-icon>light_mode</md-icon></md-outlined-icon-button
+            >
+          `}
+    </div> `;
   }
 
   renderConfiguration() {
@@ -189,7 +224,6 @@ export class LtpManageCrt extends CpsStageBase {
             ></md-outlined-text-field>
           </div>
 
-
           ${!this.crt
             ? html`
                 <div class="layout horizontal center-center">
@@ -209,6 +243,7 @@ export class LtpManageCrt extends CpsStageBase {
                 </div>
               `
             : nothing}
+          ${this.renderThemeToggle()}
         </div>
       </div>
     `;
@@ -239,26 +274,25 @@ export class LtpManageCrt extends CpsStageBase {
         </md-primary-tab>
       </md-tabs>
 
-      ${this.activeTabIndex === 0
-        ? html`
-            <div
-              id="configure-panel"
-              role="tabpanel"
-              aria-labelledby="configure-tab"
-            >
-              ${this.renderConfiguration()}
-            </div>
-          `
-        : cache(html`
-            <div id="crt-panel" role="tabpanel" aria-labelledby="crt-tab">
-              <div class="layout vertical center-center">
-                <div class="crtUDEDescription">${this.crt?.undesirableEffects[0]}</div>
-              </div>
-              <ltp-current-reality-tree
-                .crtData="${this.crt}"
-              ></ltp-current-reality-tree>
-            </div>
-          `)}
+      <div
+        ?hidden="${this.activeTabIndex !== 0}"
+        id="configure-panel"
+        role="tabpanel"
+        aria-labelledby="configure-tab"
+      >
+        ${this.renderConfiguration()}
+      </div>
+
+      <div id="crt-panel" role="tabpanel" aria-labelledby="crt-tab" ?hidden="${this.activeTabIndex !== 1}">
+        <div class="layout vertical center-center">
+          <div class="crtUDEDescription">
+            ${this.crt?.undesirableEffects[0]}
+          </div>
+        </div>
+        <ltp-current-reality-tree
+          .crtData="${this.crt}"
+        ></ltp-current-reality-tree>
+      </div>
     `;
   }
 }

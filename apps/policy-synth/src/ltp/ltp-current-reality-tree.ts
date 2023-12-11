@@ -504,7 +504,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         .causeContainer {
           color: var(--md-sys-color-on-secondary-container);
           background-color: var(--md-sys-color-secondary-container);
-          border-radius: 8px;
+          border-radius: 16px;
           padding: 0;
         }
 
