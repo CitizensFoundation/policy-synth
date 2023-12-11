@@ -43,7 +43,7 @@ export const renderSystemPrompt = (
     Please output JSON without any explanation:
       { feedback: string, refinedCauses: string[] }
 
-    Each of the refinedCauses JSON should never be more than 11 words long.
+    Each of the refinedCauses JSON should never be more than 11 words long and should not end with a period.
 
     Always return refinedCauses if the user asks for them even if the user doesn't provide a valid cause him/herself.
 
