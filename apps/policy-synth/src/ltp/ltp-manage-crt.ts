@@ -9,6 +9,8 @@ import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
+import '@material/web/button/filled-tonal-button.js';
+import '@material/web/dialog/dialog.js';
 
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
 
@@ -21,6 +23,9 @@ import { CpsStageBase } from '../cps-stage-base.js';
 import './ltp-current-reality-tree.js';
 import './LtpServerApi.js';
 import { LtpServerApi } from './LtpServerApi.js';
+
+import './chat/ltp-chat-assistant.js';
+import { MdDialog } from '@material/web/dialog/dialog.js';
 
 const TESTING = true;
 
@@ -37,6 +42,9 @@ export class LtpManageCrt extends CpsStageBase {
 
   api: LtpServerApi;
 
+  @property({ type: Object })
+  nodeToAddCauseTo: LtpCurrentRealityTreeDataNode | undefined;
+
   constructor() {
     super();
     this.api = new LtpServerApi();
@@ -44,6 +52,15 @@ export class LtpManageCrt extends CpsStageBase {
 
   async connectedCallback() {
     super.connectedCallback();
+    this.addEventListener(
+      'open-add-cause-dialog',
+      this.openAddCauseDialog as EventListenerOrEventListenerObject
+    );
+
+    this.addEventListener(
+      'close-add-cause-dialog',
+      this.closeAddCauseDialog as EventListenerOrEventListenerObject
+    );
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -52,6 +69,15 @@ export class LtpManageCrt extends CpsStageBase {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
+    this.removeEventListener(
+      'open-add-cause-dialog',
+      this.openAddCauseDialog as EventListenerOrEventListenerObject
+    );
+    this.removeEventListener(
+      'close-add-cause-dialog',
+      this.closeAddCauseDialog as EventListenerOrEventListenerObject
+    );
+
   }
 
   static get styles() {
@@ -127,6 +153,13 @@ export class LtpManageCrt extends CpsStageBase {
 
         .themeToggle {
           margin-top: 32px;
+        }
+
+        ltp-chat-assistant {
+          height: 300px;
+          max-height: 300px;
+          width: 100%;
+          height: 100%;
         }
       `,
     ];
@@ -249,8 +282,41 @@ export class LtpManageCrt extends CpsStageBase {
     `;
   }
 
+  openAddCauseDialog(event: CustomEvent) {
+    const parentNodeId = event.detail.parentNodeId;
+    // Get the node from the tree
+    const node = this.crt?.nodes.find((node) => node.id === parentNodeId);
+    this.nodeToAddCauseTo = node;
+    (this.$$('#addCauseDialog') as MdDialog).show();
+  }
+
+  closeAddCauseDialog() {
+    (this.$$('#addCauseDialog') as MdDialog).close();
+    this.nodeToAddCauseTo = undefined;
+  }
+
+  renderAddCauseDialog() {
+    return html`
+      <md-dialog id="addCauseDialog" style="max-width: 800px;max-height: 600px;">
+        <div slot="content" class="chatContainer">
+          ${this.nodeToAddCauseTo
+            ? html`
+                <ltp-chat-assistant
+                  .nodeToAddCauseTo="${this.nodeToAddCauseTo}"
+                  method="dialog"
+                  @close="${this.closeAddCauseDialog}"
+                >
+                </ltp-chat-assistant>
+              `
+            : nothing}
+        </div>
+      </md-dialog>
+    `;
+  }
+
   render() {
     return html`
+      ${this.renderAddCauseDialog()}
       <md-tabs id="tabBar" @change="${this.tabChanged}">
         <md-primary-tab id="configure-tab" aria-controls="configure-panel">
           <md-icon slot="icon">psychology</md-icon>
@@ -283,7 +349,12 @@ export class LtpManageCrt extends CpsStageBase {
         ${this.renderConfiguration()}
       </div>
 
-      <div id="crt-panel" role="tabpanel" aria-labelledby="crt-tab" ?hidden="${this.activeTabIndex !== 1}">
+      <div
+        id="crt-panel"
+        role="tabpanel"
+        aria-labelledby="crt-tab"
+        ?hidden="${this.activeTabIndex !== 1}"
+      >
         <div class="layout vertical center-center">
           <div class="crtUDEDescription">
             ${this.crt?.undesirableEffects[0]}

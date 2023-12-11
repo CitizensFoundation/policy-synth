@@ -1,6 +1,8 @@
 import express from "express";
 import { createClient } from "redis";
-import { identifyCauses } from "../openai/crt.js";
+import { identifyCauses } from "../openai/crtCreateNodes.js";
+import { getRefinedCauses } from "../openai/crtAssistant.js";
+import { v4 as uuidv4 } from "uuid";
 
 let redisClient: any;
 
@@ -35,9 +37,94 @@ export class CurrentRealityTreeController {
       this.path + "/:id/createDirectCauses",
       this.createDirectCauses
     );
+    this.router.post(
+      this.path + "/:id/addDirectCauses",
+      this.addDirectCauses
+    );
+
+    this.router.post(
+      this.path + "/:id/getRefinedCauses",
+      this.getRefinedCauses
+    );
 
     await redisClient.connect();
   }
+
+  getRefinedCauses = async (req: express.Request, res: express.Response) => {
+    const treeId = req.params.id;
+    const { crtNodeId, chatLog }: { crtNodeId: string; chatLog: LtpSimplifiedChatLog[] } = req.body;
+
+    try {
+
+      const treeData = await redisClient.get(`crt:${treeId}`);
+      if (!treeData) {
+        console.error("Tree not found");
+        return res.sendStatus(404);
+      }
+
+      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      const parentNode = this.findNode(currentTree.nodes, crtNodeId);
+
+      if (!parentNode) {
+        console.error("Parent node not found");
+        return res.sendStatus(404);
+      }
+
+      const response = await getRefinedCauses(currentTree, parentNode, chatLog);
+
+      return res.send(response);
+    } catch (err) {
+      console.error(err);
+      return res.sendStatus(500);
+    }
+  };
+
+  addDirectCauses = async (req: express.Request, res: express.Response) => {
+    const treeId = req.params.id;
+    const parentNodeId = req.body.parentNodeId;
+    const causeStrings: string[] = req.body.causes;
+
+    try {
+      const treeData = await redisClient.get(`crt:${treeId}`);
+      if (!treeData) {
+        console.error("Tree not found");
+        return res.sendStatus(404);
+      }
+
+      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      const parentNode = this.findNode(currentTree.nodes, parentNodeId);
+
+      if (!parentNode) {
+        console.error("Parent node not found");
+        return res.sendStatus(404);
+      }
+
+      // Convert cause strings to LtpCurrentRealityTreeDataNode objects
+      const newNodes = causeStrings.map(cause => ({
+        id: uuidv4(),
+        cause: cause,
+        andChildren: [],
+        orChildren: [],
+        isRootCause: false,
+        isLogicValidated: false
+      }));
+
+      // Add the new nodes to the parent node's children
+      if (!parentNode.andChildren) {
+        parentNode.andChildren = [];
+      }
+      parentNode.andChildren.push(...newNodes);
+
+      await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+
+      console.log("Added new nodes to tree")
+
+      return res.send(newNodes);
+    } catch (err) {
+      console.error(err);
+      return res.sendStatus(500);
+    }
+  };
 
   getTree = async (req: express.Request, res: express.Response) => {
     const treeId = req.params.id;
@@ -181,3 +268,5 @@ export class CurrentRealityTreeController {
     return null;
   };
 }
+
+
