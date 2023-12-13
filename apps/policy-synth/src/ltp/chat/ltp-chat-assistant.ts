@@ -97,7 +97,7 @@ export class LtpChatAssistant extends YpBaseElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.defaultInfoMessage += `**${this.nodeToAddCauseTo.cause}**`;
+    this.defaultInfoMessage += `**${this.nodeToAddCauseTo.description}**`;
     console.error(this.defaultInfoMessage);
 
     if (USE_WS) {

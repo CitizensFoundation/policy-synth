@@ -18,8 +18,8 @@ class MyShapeView extends dia.ElementView {
 
     // Create a foreignObject with a set size and style
     const foreignObject = V('foreignObject', {
-      width: 185,
-      height: 107,
+      width: this.model.attributes.nodeType === "ude" ? 185 : 185,
+      height: this.model.attributes.nodeType === "ude" ? 135 : 107,
       style: 'overflow: visible; display: block;',
     }).node;
 
@@ -31,13 +31,16 @@ class MyShapeView extends dia.ElementView {
       const div = document.createElement('div');
       div.setAttribute('class', 'html-element');
       div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      div.style.width = '185px';
-      div.style.height = '107px';
+      div.style.width = this.model.attributes.nodeType === "ude" ? '185px' : '185px';
+      div.style.height = this.model.attributes.nodeType === "ude" ? '135px' : '107px';
       div.className = `causeContainer ${
         this.model.attributes.isRootCause ? 'rootCauseContainer' : ''
+      } ${
+        this.model.attributes.nodeType=="ude" ? 'udeContainer' : ''
       }`;
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
+        nodeType="${this.model.attributes.nodeType}"
         ${this.model.attributes.isRootCause ? 'isRootCause="true"' : ''}
         causeDescription="${this.model.attributes.label}"
       >
@@ -201,12 +204,13 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     //@ts-ignore
     const el = new MyShape({
       // position: { x: Math.random() * 600, y: Math.random() * 400 },
-      label: node.cause,
-      text: node.cause,
+      label: node.description,
+      text: node.description,
       nodeId: node.id,
+      nodeType: node.type,
       isRootCause: node.isRootCause,
       attrs: {
-        //cause: node.cause,
+        //cause: node.description,
       },
       type: 'html.Element',
     });
@@ -512,6 +516,13 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         .rootCauseContainer {
           color: var(--md-sys-color-on-primary-container);
           background-color: var(--md-sys-color-primary-container);
+          border-radius: 8px;
+          padding: 0;
+        }
+
+        .udeContainer {
+          color: var(--md-sys-color-on-tertiary-container);
+          background-color: var(--md-sys-color-tertiary-container);
           border-radius: 8px;
           padding: 0;
         }

@@ -47,11 +47,11 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
       css`
         .causeText {
           font-size: 14px;
-          color: var(--md-sys-color-on-primary-container);
-          background-color: var(--md-sys-color-primary-container);
           padding: 8px;
           height: 100%;
           width: 100%;
+          max-height: 70px;
+          overflow-y: auto;
         }
 
         .causeTextContainer {
@@ -59,8 +59,6 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         }
 
         .causeText[root-cause] {
-          color: var(--md-sys-color-on-tertiary);
-          background-color: var(--md-sys-color-tertiary);
         }
 
         .createOptionsButtons {

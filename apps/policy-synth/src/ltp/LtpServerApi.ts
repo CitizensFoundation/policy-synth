@@ -25,6 +25,21 @@ export class LtpServerApi extends YpServerApi {
     ) as Promise<LtpCurrentRealityTreeDataNode[]>;
   }
 
+  public reviewConfiguration(
+    crt: LtpCurrentRealityTreeData
+  ): Promise<string> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `/crt/reviewConfiguration`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(crt),
+      },
+      false,
+      undefined,
+      true
+    ) as Promise<string>;
+  }
+
   public createDirectCauses(
     parentNodeId: string
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
