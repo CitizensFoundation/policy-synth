@@ -19,6 +19,9 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
   @property({ type: String })
   crtNodeType: CrtNodeType;
 
+  @property({ type: String })
+  crtId: string;
+
   @property({ type: Boolean })
   isRootCause = false;
 
@@ -122,7 +125,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
   async createDirectCauses() {
     this.isCreatingCauses = true;
 
-    const nodes = await this.api.createDirectCauses(this.nodeId);
+    const nodes = await this.api.createDirectCauses(this.crtId, this.nodeId);
 
     this.fireGlobal('add-nodes', {
       parentNodeId: this.nodeId,

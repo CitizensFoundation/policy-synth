@@ -2,17 +2,24 @@ declare module 'vectorizer';
 
 type CrtNodeType = 'ude' | 'directCause' | 'intermediateCause' | 'rootCause';
 
+interface CrtDebugData  {
+  systemPromptUsedForGeneration?: string;
+  firstUserMessageUserForGeneration?: string;
+}
+
 interface LtpCurrentRealityTreeDataNode {
   id: string;
   description: string;
   type: CrtNodeType;
   isRootCause?: boolean;
   isLogicValidated?: boolean;
+  debug?: CrtDebugData;
   andChildren?: LtpCurrentRealityTreeNode[];
   orChildren?: LtpCurrentRealityTreeNode[];
 }
 
 interface LtpCurrentRealityTreeData {
+  id: string;
   description?: string;
   context: string;
   undesirableEffects: string[];
@@ -37,6 +44,7 @@ interface LtpAiChatWsMessage {
   message: string;
   rawMessage?: string;
   refinedCausesSuggestions?: string[];
+  debug?: CrtDebugData;
 }
 
 interface LtpSimplifiedChatLog {
@@ -48,6 +56,7 @@ interface LtpChatBotCrtMessage {
   message: string;
   rawMessage: string;
   refinedCausesSuggestions?: string[];
+  debug?: CrtDebugData;
 }
 
 interface CrtRefinedCausesReply {

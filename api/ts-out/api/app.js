@@ -8,6 +8,7 @@ import RedisStore from "connect-redis";
 import session from "express-session";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 // Initialize client.
@@ -45,6 +46,20 @@ export class App {
     }
     initializeMiddlewares() {
         this.app.use(bodyParser.json());
+        const staticHomeHTMLPath = path.join(__dirname, "../../staticHomeHTML");
+        if (fs.existsSync(staticHomeHTMLPath)) {
+            console.log("Serving static home HTML");
+            const filePath = path.join(staticHomeHTMLPath, "index.html");
+            // Check if the index.html file exists
+            if (fs.existsSync(filePath)) {
+                this.app.get("/", (req, res) => {
+                    res.sendFile(filePath);
+                });
+            }
+            else {
+                console.error("index.html does not exist");
+            }
+        }
         this.app.use(express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
         this.app.use("/projects*", express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
         this.app.use("/crt*", express.static(path.join(__dirname, "../../apps/policy-synth/dist")));

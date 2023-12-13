@@ -151,6 +151,7 @@ export class CurrentRealityTreeController {
                 context,
                 undesirableEffects,
                 nodes: [],
+                id: "n/a",
             };
             const review = await getConfigurationReview(treeToTest);
             return res.send(review);
@@ -161,14 +162,12 @@ export class CurrentRealityTreeController {
         }
     };
     createTree = async (req, res) => {
-        //TODO: Create new ids automatically
-        const treeId = 1; //req.params.id;
+        const treeId = uuidv4();
         const { context, undesirableEffects, } = req.body;
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
             if (treeData) {
-                //TODO: Uncomment this
-                //return res.status(400).send({ message: "Tree already exists" });
+                return res.status(400).send({ message: "Tree already exists" });
             }
             const directNodes = undesirableEffects.flatMap((ue) => ue.split("\n")
                 .map(effect => effect.trim()) // Trim each effect
@@ -181,12 +180,13 @@ export class CurrentRealityTreeController {
                 orChildren: [],
             })));
             const newTree = {
+                id: treeId,
                 context,
                 undesirableEffects,
-                nodes: directNodes,
+                nodes: directNodes
             };
             await redisClient.set(`crt:${treeId}`, JSON.stringify(newTree));
-            return res.send(newTree.nodes);
+            return res.send(newTree);
         }
         catch (err) {
             console.error(err);

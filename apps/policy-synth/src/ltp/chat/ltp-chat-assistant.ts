@@ -32,6 +32,8 @@ import { last } from 'lodash';
 
 const USE_WS = false;
 
+const PROMPT_DEBUG = true;
+
 @customElement('ltp-chat-assistant')
 export class LtpChatAssistant extends YpBaseElement {
   @property({ type: Array })
@@ -39,6 +41,9 @@ export class LtpChatAssistant extends YpBaseElement {
 
   @property({ type: String })
   infoMessage: string;
+
+  @property({ type: Object })
+  crtData!: LtpCurrentRealityTreeData;
 
   @property({ type: Object })
   nodeToAddCauseTo!: LtpCurrentRealityTreeDataNode;
@@ -95,10 +100,34 @@ export class LtpChatAssistant extends YpBaseElement {
     this.chatWindow.setAttribute('style', 'height:' + vH + 'px;');
   }
 
+  handleCtrlPKeyPress(event: KeyboardEvent) {
+    if (event.ctrlKey && event.key === 'p') {
+      this.copyLatestDebugInfoToClipboard();
+      event.preventDefault();
+    }
+  }
+
+  copyLatestDebugInfoToClipboard() {
+    const latestChatMessage = this.chatLog[this.chatLog.length - 1];
+    if (latestChatMessage && latestChatMessage.debug) {
+      const systemPrompt = latestChatMessage.debug.systemPromptUsedForGeneration || '';
+      const firstUserPrompt = latestChatMessage.debug.firstUserMessageUserForGeneration || '';
+      const debugInfo = `${systemPrompt}\n\n-------------------------\n\n${firstUserPrompt}`;
+
+      navigator.clipboard.writeText(debugInfo)
+        .then(() => console.log('Debug info copied to clipboard!'))
+        .catch(err => console.error('Failed to copy debug info:', err));
+    }
+  }
+
   connectedCallback() {
     super.connectedCallback();
     this.defaultInfoMessage += `**${this.nodeToAddCauseTo.description}**`;
     console.error(this.defaultInfoMessage);
+
+    if (PROMPT_DEBUG) {
+      document.addEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
+    }
 
     if (USE_WS) {
       const urlParts = window.location.href.split('/');
@@ -136,6 +165,10 @@ export class LtpChatAssistant extends YpBaseElement {
   disconnectedCallback(): void {
 //    this.ws.close();
     super.disconnectedCallback();
+
+    if (PROMPT_DEBUG) {
+      document.removeEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
+    }
   }
 
   async onMessage(event: MessageEvent) {
@@ -295,6 +328,7 @@ export class LtpChatAssistant extends YpBaseElement {
       type: 'message',
       refinedCausesSuggestions: response.refinedCausesSuggestions,
       rawMessage: response.rawMessage,
+      debug: response.debug
     });
   }
 
@@ -521,6 +555,7 @@ export class LtpChatAssistant extends YpBaseElement {
                 class="${chatElement.sender}-chat-element"
                 .detectedLanguage="${this.language}"
                 .message="${chatElement.message}"
+                .crtId="${this.crtData.id}"
                 .parentNodeId="${this.nodeToAddCauseTo.id}"
                 .type="${chatElement.type}"
                 .refinedCausesSuggestions="${chatElement.refinedCausesSuggestions}"

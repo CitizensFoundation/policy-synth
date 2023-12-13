@@ -27,6 +27,9 @@ export class LtpAiChatElement extends YpBaseElement {
   @property({ type: String })
   parentNodeId!: string;
 
+  @property({ type: String })
+  crtId!: string;
+
   @property({ type: Number })
   clusterId: number;
 
@@ -276,6 +279,7 @@ export class LtpAiChatElement extends YpBaseElement {
     this.isCreatingCauses = true;
 
     const nodes = await this.api.addDirectCauses(
+      this.crtId,
       this.parentNodeId,
       selectedCauses
     );

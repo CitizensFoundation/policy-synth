@@ -79,21 +79,28 @@ export const renderUserPrompt = (
   return `Context: ${currentRealityTree.context}
           Undesirable Effect (UDE): ${currentUDE}
 
-          ${ parentNodes && parentNodes.length > 1 ? `
+          ${
+            parentNodes && parentNodes.length > 1
+              ? `
             Chain of causes leading to the root cause we are searching for step by step:
-          ` : ``}
+          `
+              : ``
+          }
 
           ${
             parentNodes
-              ? parentNodes.slice(1).reverse().map(
-                  (node, index) => `
+              ? parentNodes
+                  .slice(1)
+                  .reverse()
+                  .map(
+                    (node, index) => `
             ${
               index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`
             }:
             ${node.description}
 
           `
-                )
+                  )
               : ""
           }
 
@@ -127,7 +134,8 @@ export const filterTopCauses = (
 
 export const convertToNodes = (
   topCauses: CrtPromptJson[],
-  nodeType: CrtNodeType
+  nodeType: CrtNodeType,
+  debug: CrtDebugData | undefined = undefined
 ): LtpCurrentRealityTreeDataNode[] => {
   return topCauses.map((cause) => {
     return {
@@ -136,7 +144,8 @@ export const convertToNodes = (
       type: nodeType,
       isRootCause: cause.isLikelyARootCauseOfUDE,
       isLogicValidated: false,
-    }  as LtpCurrentRealityTreeDataNode;
+      debug,
+    } as LtpCurrentRealityTreeDataNode;
   });
 };
 
@@ -195,8 +204,8 @@ export const identifyCauses = async (
   let nodeType: CrtNodeType;
 
   if (!currentparentNode) {
-    nodeType = "ude"
-  } else if (currentparentNode.type=="ude") {
+    nodeType = "ude";
+  } else if (currentparentNode.type == "ude") {
     nodeType = "directCause";
   } else {
     nodeType = "intermediateCause";
@@ -217,16 +226,26 @@ export const identifyCauses = async (
     console.log("=====================");
     console.log(renderSystemPrompt(currentparentNode, parentNodes));
     console.log("---------------------");
-    console.log(renderUserPrompt(crt, currentUDE, currentparentNode, parentNodes));
+    console.log(
+      renderUserPrompt(crt, currentUDE, currentparentNode, parentNodes)
+    );
     console.log("=====================");
   }
   const response = await openai.chat.completions.create({
     model: "gpt-4-1106-preview",
     messages: [
-      { role: "system", content: renderSystemPrompt(currentparentNode, parentNodes) },
+      {
+        role: "system",
+        content: renderSystemPrompt(currentparentNode, parentNodes),
+      },
       {
         role: "user",
-        content: renderUserPrompt(crt, currentUDE, currentparentNode, parentNodes),
+        content: renderUserPrompt(
+          crt,
+          currentUDE,
+          currentparentNode,
+          parentNodes
+        ),
       },
     ],
     max_tokens: 2048,
@@ -249,7 +268,24 @@ export const identifyCauses = async (
   }
 
   const topCauses = filterTopCauses(parsedMessage);
-  const nodes = convertToNodes(topCauses, nodeType);
+  let debug: CrtDebugData | undefined = undefined;
+
+  if (DEBUGGING) {
+    debug = {
+      systemPromptUsedForGeneration: renderSystemPrompt(
+        currentparentNode,
+        parentNodes
+      ),
+      firstUserMessageUserForGeneration: renderUserPrompt(
+        crt,
+        currentUDE,
+        currentparentNode,
+        parentNodes
+      ),
+    };
+  }
+
+  const nodes = convertToNodes(topCauses, nodeType, debug);
 
   if (DEBUGGING) {
     console.log("DEBUGGING: final nodes", JSON.stringify(nodes, null, 2));
