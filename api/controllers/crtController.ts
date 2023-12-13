@@ -119,7 +119,7 @@ export class CurrentRealityTreeController {
           ({
             id: uuidv4(),
             description: cause,
-            type: parentNode.type == "ude" ? "direct" : "intermediate",
+            type: parentNode.type == "ude" ? "directCause" : "intermediateCause",
             andChildren: [] as LtpCurrentRealityTreeDataNode[],
             orChildren: [] as LtpCurrentRealityTreeDataNode[],
             isRootCause: false,

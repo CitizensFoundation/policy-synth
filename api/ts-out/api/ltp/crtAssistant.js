@@ -64,10 +64,10 @@ export const getRefinedCauses = async (crt, parentNode, currentUDE, chatLog, par
         nodeType = "ude";
     }
     else if (parentNode.type == "ude") {
-        nodeType = "direct";
+        nodeType = "directCause";
     }
     else {
-        nodeType = "intermediate";
+        nodeType = "intermediateCause";
     }
     let messages = chatLog.map((message) => {
         return {

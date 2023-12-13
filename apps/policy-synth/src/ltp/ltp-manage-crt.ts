@@ -273,7 +273,7 @@ export class LtpManageCrt extends CpsStageBase {
     if (this.isCreatingCrt || this.isReviewingCrt)
       return html`<md-linear-progress indeterminate></md-linear-progress>`;
 
-    if (this.AIConfigReview) {
+    if (TESTING || this.AIConfigReview) {
       return html`
         <md-outlined-button @click="${this.reviewTreeConfiguration}"
           >${this.t('Review CRT again')}<md-icon slot="icon"

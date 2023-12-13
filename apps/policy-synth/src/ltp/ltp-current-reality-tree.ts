@@ -40,7 +40,7 @@ class MyShapeView extends dia.ElementView {
       }`;
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
-        nodeType="${this.model.attributes.nodeType}"
+        crtNodeType="${this.model.attributes.nodeType}"
         ${this.model.attributes.isRootCause ? 'isRootCause="true"' : ''}
         causeDescription="${this.model.attributes.label}"
       >
@@ -197,10 +197,32 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       },
     });
 
+    this.updatePaperSize();
     this.paper.unfreeze();
+    this.updatePaperSize();
+  }
+
+  private updatePaperSize(): void {
+    if (!this.paper) {
+      console.warn('Paper not initialized');
+      return;
+    }
+
+    // Get the bounding box of the diagram
+    const bbox = this.paper.getContentBBox();
+
+    // Check if bbox is valid
+    if (!bbox || bbox.width === 0 || bbox.height === 0) {
+      console.warn('Invalid content bounding box');
+      return;
+    }
+
+    // Set the dimensions of the paper to the size of the diagram
+    //this.paper.setDimensions(bbox.width, 15000);
   }
 
   private createElement(node: LtpCurrentRealityTreeDataNode): dia.Element {
+    debugger;
     //@ts-ignore
     const el = new MyShape({
       // position: { x: Math.random() * 600, y: Math.random() * 400 },
@@ -431,9 +453,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   private layoutGraph(): void {
-    const nodeWidth = 180;
+    const nodeWidth = 185;
     const nodeHeight = 50;
-    const verticalSpacing = 150;
+    const verticalSpacing = 170;
     const horizontalSpacing = 45; // You might want to adjust this dynamically based on the tree width
     const topPadding = 60; // Padding at the top of the container
 
@@ -499,7 +521,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       layoutNodes(this.crtData.nodes, initialXOffset, topPadding); // Start from the centered x position and top padding
     }
 
+    this.updatePaperSize();
     this.paper.unfreeze(); // Unfreeze the paper to render the layout
+    this.updatePaperSize();
   }
 
   static get styles() {
@@ -529,8 +553,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
         /* Define your component styles here */
         .jointJSCanvas {
-          height: 10000px !important;
           width: 1920px !important;
+          height: 25000px !important;
+          overflow-x: auto !important;
+          overflow-y: auto !important;
           /* styles for the JointJS canvas */
         }
       `,

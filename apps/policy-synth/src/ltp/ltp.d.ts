@@ -1,6 +1,6 @@
 declare module 'vectorizer';
 
-type CrtNodeType = 'ude' | 'direct' | 'intermediate' | 'root';
+type CrtNodeType = 'ude' | 'directCause' | 'intermediateCause' | 'rootCause';
 
 interface LtpCurrentRealityTreeDataNode {
   id: string;

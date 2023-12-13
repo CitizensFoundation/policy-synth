@@ -81,7 +81,7 @@ export class CurrentRealityTreeController {
             const newNodes = causeStrings.map((cause) => ({
                 id: uuidv4(),
                 description: cause,
-                type: parentNode.type == "ude" ? "direct" : "intermediate",
+                type: parentNode.type == "ude" ? "directCause" : "intermediateCause",
                 andChildren: [],
                 orChildren: [],
                 isRootCause: false,

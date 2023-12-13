@@ -195,9 +195,9 @@ export const identifyCauses = async (
   if (!currentparentNode) {
     nodeType = "ude"
   } else if (currentparentNode.type=="ude") {
-    nodeType = "direct";
+    nodeType = "directCause";
   } else {
-    nodeType = "intermediate";
+    nodeType = "intermediateCause";
   }
 
   const openai = new OpenAI(config);

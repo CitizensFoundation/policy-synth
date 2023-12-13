@@ -90,9 +90,9 @@ export const getRefinedCauses = async (
   if (!parentNode) {
     nodeType = "ude"
   } else if (parentNode.type=="ude") {
-    nodeType = "direct";
+    nodeType = "directCause";
   } else {
-    nodeType = "intermediate";
+    nodeType = "intermediateCause";
   }
 
   let messages: any[] = chatLog.map((message: LtpSimplifiedChatLog) => {
