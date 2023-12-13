@@ -13,6 +13,9 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
   @property({ type: String })
   nodeId: string;
 
+  @property({ type: String })
+  crtNodeType: CrtNodeType;
+
   @property({ type: Boolean })
   isRootCause!: boolean;
 
@@ -54,6 +57,10 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           overflow-y: auto;
         }
 
+        .causeText[is-ude] {
+          max-height: 75px;
+        }
+
         .causeTextContainer {
           height: 100%;
         }
@@ -75,10 +82,24 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         .createOptionsButtons[root-cause] {
         }
 
-        .deleteButton {
+        .menuButton {
           position: absolute;
           bottom: 0;
-          left: 0;
+          right: 0;
+        }
+
+        .typeIconCore {
+          position: absolute;
+          bottom: 8px;
+          left: 8px;
+        }
+
+        .typeIcon {
+          color: var(--md-sys-color-primary);
+        }
+
+        .typeIconUde {
+          color: var(--md-sys-color-tertiary);
         }
 
         md-circular-progress {
@@ -102,6 +123,31 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
     this.isCreatingCauses = false;
   }
 
+  get crtTypeIconClass() {
+    switch (this.crtNodeType) {
+      case 'ude':
+        return 'typeIconUde';
+      default:
+        console.error('crtNodeType', this.crtNodeType);
+        return 'typeIcon'
+      }
+  }
+
+  get crtTypeIcon() {
+    switch (this.crtNodeType) {
+      case 'ude':
+        return 'bug_report';
+      case 'directCause':
+        return 'arrow_upward';
+      case 'intermediateCause':
+        return 'unfold_more';
+      case 'rootCause':
+        return 'flag';
+      default:
+        return 'more_vert'
+      }
+  }
+
   render() {
     return html`
       <div
@@ -109,12 +155,13 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         ?root-cause="${this.isRootCause}"
       >
         <div class="layout horizontal causeTextContainer">
-          <div class="causeText" ?root-cause="${this.isRootCause}">
+          <div class="causeText" ?is-ude="${this.crtNodeType==="ude"}" ?root-cause="${this.isRootCause}">
             ${this.causeDescription}
           </div>
         </div>
-        <md-icon-button class="deleteButton"
-          ><md-icon>delete</md-icon></md-icon-button
+        <md-icon class="typeIconCore ${this.crtTypeIconClass}">${this.crtTypeIcon}</md-icon>
+        <md-icon-button class="menuButton"
+          ><md-icon>more_vert</md-icon></md-icon-button
         >
         <div
           class="layout horizontal center-justify createOptionsButtons"
