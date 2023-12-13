@@ -41,7 +41,7 @@ class MyShapeView extends dia.ElementView {
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
         crtNodeType="${this.model.attributes.nodeType}"
-        ${this.model.attributes.isRootCause ? 'isRootCause="true"' : ''}
+        ${this.model.attributes.isRootCause ? 'isRootCause=1' : ''}
         causeDescription="${this.model.attributes.label}"
       >
       </ltp-current-reality-tree-node>`;
