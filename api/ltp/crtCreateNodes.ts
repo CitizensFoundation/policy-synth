@@ -131,10 +131,10 @@ export const convertToNodes = (
     return {
       id: uuidv4(),
       description: cause.directCauseDescription,
-      type: cause.type,
+      type: nodeType,
       isRootCause: cause.isLikelyARootCauseOfUDE,
       isLogicValidated: false,
-    };
+    }  as LtpCurrentRealityTreeDataNode;
   });
 };
 

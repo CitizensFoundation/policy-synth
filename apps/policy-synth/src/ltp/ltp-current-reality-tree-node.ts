@@ -3,10 +3,13 @@ import { property, customElement } from 'lit/decorators.js';
 
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
+import '@material/web/menu/menu.js';
+import '@material/web/menu/menu-item.js';
 
 import { CpsStageBase } from '../cps-stage-base.js';
 import { LtpServerApi } from './LtpServerApi.js';
 import { LtpCurrentRealityTree } from './ltp-current-reality-tree.js';
+import { MdMenu } from '@material/web/menu/menu.js';
 
 @customElement('ltp-current-reality-tree-node')
 export class LtpCurrentRealityTreeNode extends CpsStageBase {
@@ -86,6 +89,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           position: absolute;
           bottom: 0;
           right: 0;
+          z-index: 1000;
         }
 
         .typeIconCore {
@@ -105,6 +109,11 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         md-circular-progress {
           --md-circular-progress-size: 28px;
           margin-bottom: 6px;
+        }
+
+        md-menu {
+          --md-menu-z-index: 1000;
+          z-index: 1000;
         }
       `,
     ];
@@ -129,8 +138,13 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         return 'typeIconUde';
       default:
         console.error('crtNodeType', this.crtNodeType);
-        return 'typeIcon'
-      }
+        return 'typeIcon';
+    }
+  }
+
+  toggleMenu() {
+    const menu = this.shadowRoot?.getElementById('menu') as MdMenu;
+    menu.open = !menu.open;
   }
 
   get crtTypeIcon() {
@@ -144,8 +158,8 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
       case 'rootCause':
         return 'flag';
       default:
-        return 'more_vert'
-      }
+        return 'more_vert';
+    }
   }
 
   render() {
@@ -155,14 +169,34 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         ?root-cause="${this.isRootCause}"
       >
         <div class="layout horizontal causeTextContainer">
-          <div class="causeText" ?is-ude="${this.crtNodeType==="ude"}" ?root-cause="${this.isRootCause}">
+          <div
+            class="causeText"
+            ?is-ude="${this.crtNodeType === 'ude'}"
+            ?root-cause="${this.isRootCause}"
+          >
             ${this.causeDescription}
           </div>
         </div>
-        <md-icon class="typeIconCore ${this.crtTypeIconClass}">${this.crtTypeIcon}</md-icon>
-        <md-icon-button class="menuButton"
-          ><md-icon>more_vert</md-icon></md-icon-button
-        >
+
+        <md-icon class="typeIconCore ${this.crtTypeIconClass}"
+          >${this.crtTypeIcon}</md-icon>
+
+        <div class="menuButton">
+          <span style="position: relative">
+            <md-icon-button @click="${this.toggleMenu}"
+              ><md-icon>more_vert</md-icon></md-icon-button
+            >
+            <md-menu id="menu" anchor="button">
+              <md-menu-item id="1" disabled>
+                <div slot="headline">Edit</div>
+              </md-menu-item>
+              <md-menu-item id="2" disabled>
+                <div slot="headline">Delete</div>
+              </md-menu-item>
+            </md-menu>
+          </span>
+        </div>
+
         <div
           class="layout horizontal center-justify createOptionsButtons"
           ?root-cause="${this.isRootCause}"
