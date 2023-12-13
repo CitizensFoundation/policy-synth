@@ -328,7 +328,7 @@ export class LtpChatAssistant extends YpBaseElement {
         .chat-window {
           display: flex;
           flex-direction: column;
-          height: 490px;
+          height: 75vh;
           width: 100%;
           max-width: 1200px;
           margin: 0 auto;
@@ -366,7 +366,7 @@ export class LtpChatAssistant extends YpBaseElement {
 
         @media (max-width: 600px) {
           .chat-window {
-            height: 300px;
+            height: 100%;
           }
 
           .you-chat-element {
