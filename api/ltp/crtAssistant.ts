@@ -140,13 +140,20 @@ export const getRefinedCauses = async (
     );
   }
 
-  const returnMessage: LtpChatBotCrtMessage = {
+  let returnMessage: LtpChatBotCrtMessage = {
     message: parsedMessage.feedback,
     rawMessage: rawMessage,
     refinedCausesSuggestions: parsedMessage.refinedCauses,
   };
 
   if (DEBUGGING) {
+    returnMessage = {...returnMessage, ...{
+      debug: {
+        systemPromptUsedForGeneration: renderSystemPrompt(crt, parentNode, currentUDE, parentNodes),
+        firstUserMessageUserForGeneration: messages[1].content
+      }
+    }}
+
     console.log(
       "DEBUGGING: final nodes",
       JSON.stringify(returnMessage, null, 2)

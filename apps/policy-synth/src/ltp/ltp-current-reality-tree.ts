@@ -40,6 +40,7 @@ class MyShapeView extends dia.ElementView {
       }`;
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
+        crtId="${this.model.attributes.crtId}"
         crtNodeType="${this.model.attributes.nodeType}"
         ${this.model.attributes.isRootCause ? 'isRootCause=1' : ''}
         causeDescription="${this.model.attributes.label}"
@@ -229,6 +230,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       text: node.description,
       nodeId: node.id,
       nodeType: node.type,
+      crtId: this.crtData?.id,
       isRootCause: node.isRootCause,
       attrs: {
         //cause: node.description,

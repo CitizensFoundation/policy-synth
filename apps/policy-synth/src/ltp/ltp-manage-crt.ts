@@ -32,11 +32,17 @@ const TESTING = false;
 
 @customElement('ltp-manage-crt')
 export class LtpManageCrt extends CpsStageBase {
+  @property({ type: String })
+  currentTreeId: string | undefined;
+
   @property({ type: Object })
   crt: LtpCurrentRealityTreeData | undefined;
 
   @property({ type: Boolean })
   isCreatingCrt = false;
+
+  @property({ type: Boolean })
+  isFetchingCrt = false;
 
   @property({ type: Number })
   activeTabIndex = 0;
@@ -68,6 +74,37 @@ export class LtpManageCrt extends CpsStageBase {
       'close-add-cause-dialog',
       this.closeAddCauseDialog as EventListenerOrEventListenerObject
     );
+
+    if (this.currentTreeId) {
+      this.fetchCurrentTree();
+    }
+  }
+
+  updatePath() {
+    if (this.crt && this.crt.id) {
+      window.history.pushState({}, '', `/crt/${this.crt.id}`);
+    } else {
+      console.error('Could not fetch current tree: ' + this.currentTreeId);
+    }
+  }
+
+  async fetchCurrentTree() {
+    this.isFetchingCrt = true;
+
+    this.crt = await this.api.getCrt(this.currentTreeId);
+
+    this.isFetchingCrt = false;
+
+    this.updatePath();
+
+    await this.updateComplete;
+
+    (this.$$('#context') as MdOutlinedTextField).value = this.crt.context;
+    (this.$$('#undesirableEffects') as MdOutlinedTextField).value =
+      this.crt.undesirableEffects.join('\n');
+
+    this.activeTabIndex = 1;
+    (this.$$('#tabBar') as MdTabs).activeTabIndex = 1;
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -136,7 +173,8 @@ export class LtpManageCrt extends CpsStageBase {
           margin-top: 32px;
         }
 
-        md-filled-button, md-outlined-button {
+        md-filled-button,
+        md-outlined-button {
           margin-top: 12px;
           margin-left: 8px;
           margin-right: 8px;
@@ -199,6 +237,15 @@ export class LtpManageCrt extends CpsStageBase {
     this.activeTabIndex = (this.$$('#tabBar') as MdTabs).activeTabIndex;
   }
 
+  clearForNew() {
+    this.crt = undefined;
+    this.currentTreeId = undefined;
+    this.AIConfigReview = undefined;
+    (this.$$('#context') as MdOutlinedTextField).value = '';
+    (this.$$('#undesirableEffects') as MdOutlinedTextField).value = '';
+    window.history.pushState({}, '', `/crt`);
+  }
+
   get crtInputData() {
     return {
       description:
@@ -235,9 +282,9 @@ export class LtpManageCrt extends CpsStageBase {
       crtSeed.undesirableEffects = ['End users are unhappy with the service'];
     }
 
-    crtSeed.nodes = await this.api.createTree(crtSeed);
-
-    this.crt = crtSeed;
+    this.crt = await this.api.createTree(crtSeed);
+    this.currentTreeId = this.crt.id;
+    this.updatePath();
 
     this.isCreatingCrt = false;
     this.activeTabIndex = 1;
@@ -259,12 +306,14 @@ export class LtpManageCrt extends CpsStageBase {
   renderAIConfigReview() {
     return html`
       <div class="aiConfigReview">
-        ${this.AIConfigReview ? html`
-          ${resolveMarkdown(this.AIConfigReview, {
-            includeImages: true,
-            includeCodeBlockClassNames: true,
-          })}
-        ` : nothing}
+        ${this.AIConfigReview
+          ? html`
+              ${resolveMarkdown(this.AIConfigReview, {
+                includeImages: true,
+                includeCodeBlockClassNames: true,
+              })}
+            `
+          : nothing}
       </div>
     `;
   }
@@ -346,7 +395,15 @@ export class LtpManageCrt extends CpsStageBase {
           ${this.AIConfigReview ? this.renderAIConfigReview() : nothing}
 
           <div class="layout horizontal center-center">
-            ${!this.crt ? this.renderReviewAndSubmit() : nothing}
+            ${!this.crt
+              ? this.renderReviewAndSubmit()
+              : html`
+                  <md-outlined-button @click="${this.clearForNew}"
+                    >${this.t('Create New Tree')}<md-icon slot="icon"
+                      >rate_review</md-icon
+                    ></md-outlined-button
+                  >
+                `}
           </div>
 
           ${this.renderThemeToggle()}
@@ -413,6 +470,7 @@ export class LtpManageCrt extends CpsStageBase {
                 <ltp-chat-assistant
                   .nodeToAddCauseTo="${this.nodeToAddCauseTo}"
                   method="dialog"
+                  .crtData="${this.crt}"
                   @close="${this.closeAddCauseDialog}"
                 >
                 </ltp-chat-assistant>
@@ -424,50 +482,54 @@ export class LtpManageCrt extends CpsStageBase {
   }
 
   render() {
-    return html`
-      ${this.renderAddCauseDialog()}
-      <md-tabs id="tabBar" @change="${this.tabChanged}">
-        <md-primary-tab id="configure-tab" aria-controls="configure-panel">
-          <md-icon slot="icon">psychology</md-icon>
-          ${this.t('Configuration')}
-        </md-primary-tab>
-        <md-primary-tab
-          id="crt-tab"
-          aria-controls="crt-panel"
-          ?disabled="${!this.crt}"
-        >
-          <md-icon slot="icon">account_tree</md-icon>
-          Current Reality Tree
-        </md-primary-tab>
-        <md-primary-tab
-          id="crt-tab"
-          aria-controls="crt-panel"
-          ?disabled="${!this.crt}"
-        >
-          <md-icon slot="icon">mindfulness</md-icon>
-          ${this.t('Logic Validation')}
-        </md-primary-tab>
-      </md-tabs>
+    if (this.isFetchingCrt) {
+      html`<md-linear-progress indeterminate></md-linear-progress>`;
+    } else {
+      return cache(html`
+        ${this.renderAddCauseDialog()}
+        <md-tabs id="tabBar" @change="${this.tabChanged}">
+          <md-primary-tab id="configure-tab" aria-controls="configure-panel">
+            <md-icon slot="icon">psychology</md-icon>
+            ${this.t('Configuration')}
+          </md-primary-tab>
+          <md-primary-tab
+            id="crt-tab"
+            aria-controls="crt-panel"
+            ?disabled="${!this.crt}"
+          >
+            <md-icon slot="icon">account_tree</md-icon>
+            Current Reality Tree
+          </md-primary-tab>
+          <md-primary-tab
+            id="crt-tab"
+            aria-controls="crt-panel"
+            ?disabled="${!this.crt}"
+          >
+            <md-icon slot="icon">mindfulness</md-icon>
+            ${this.t('Logic Validation')}
+          </md-primary-tab>
+        </md-tabs>
 
-      <div
-        ?hidden="${this.activeTabIndex !== 0}"
-        id="configure-panel"
-        role="tabpanel"
-        aria-labelledby="configure-tab"
-      >
-        ${this.renderConfiguration()}
-      </div>
+        <div
+          ?hidden="${this.activeTabIndex !== 0}"
+          id="configure-panel"
+          role="tabpanel"
+          aria-labelledby="configure-tab"
+        >
+          ${this.renderConfiguration()}
+        </div>
 
-      <div
-        id="crt-panel"
-        role="tabpanel"
-        aria-labelledby="crt-tab"
-        ?hidden="${this.activeTabIndex !== 1}"
-      >
-        <ltp-current-reality-tree
-          .crtData="${this.crt}"
-        ></ltp-current-reality-tree>
-      </div>
-    `;
+        <div
+          id="crt-panel"
+          role="tabpanel"
+          aria-labelledby="crt-tab"
+          ?hidden="${this.activeTabIndex !== 1}"
+        >
+          <ltp-current-reality-tree
+            .crtData="${this.crt}"
+          ></ltp-current-reality-tree>
+        </div>
+      `);
+    }
   }
 }

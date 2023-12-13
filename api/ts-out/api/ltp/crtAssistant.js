@@ -105,12 +105,18 @@ export const getRefinedCauses = async (crt, parentNode, currentUDE, chatLog, par
     if (DEBUGGING) {
         console.log("DEBUGGING: parsedMessage", JSON.stringify(parsedMessage, null, 2));
     }
-    const returnMessage = {
+    let returnMessage = {
         message: parsedMessage.feedback,
         rawMessage: rawMessage,
         refinedCausesSuggestions: parsedMessage.refinedCauses,
     };
     if (DEBUGGING) {
+        returnMessage = { ...returnMessage, ...{
+                debug: {
+                    systemPromptUsedForGeneration: renderSystemPrompt(crt, parentNode, currentUDE, parentNodes),
+                    firstUserMessageUserForGeneration: messages[1].content
+                }
+            } };
         console.log("DEBUGGING: final nodes", JSON.stringify(returnMessage, null, 2));
     }
     return returnMessage;

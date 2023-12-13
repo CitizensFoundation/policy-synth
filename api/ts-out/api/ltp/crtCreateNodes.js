@@ -58,12 +58,17 @@ export const renderUserPrompt = (currentRealityTree, currentUDE, causeToExmine =
     return `Context: ${currentRealityTree.context}
           Undesirable Effect (UDE): ${currentUDE}
 
-          ${parentNodes && parentNodes.length > 1 ? `
+          ${parentNodes && parentNodes.length > 1
+        ? `
             Chain of causes leading to the root cause we are searching for step by step:
-          ` : ``}
+          `
+        : ``}
 
           ${parentNodes
-        ? parentNodes.slice(1).reverse().map((node, index) => `
+        ? parentNodes
+            .slice(1)
+            .reverse()
+            .map((node, index) => `
             ${index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`}:
             ${node.description}
 
@@ -88,7 +93,7 @@ export const filterTopCauses = (parsedMessages) => {
     const top3Messages = sortedMessages.slice(0, 3);
     return top3Messages;
 };
-export const convertToNodes = (topCauses, nodeType) => {
+export const convertToNodes = (topCauses, nodeType, debug = undefined) => {
     return topCauses.map((cause) => {
         return {
             id: uuidv4(),
@@ -96,6 +101,7 @@ export const convertToNodes = (topCauses, nodeType) => {
             type: nodeType,
             isRootCause: cause.isLikelyARootCauseOfUDE,
             isLogicValidated: false,
+            debug,
         };
     });
 };
@@ -156,7 +162,10 @@ export const identifyCauses = async (crt, currentUDE, currentparentNode = undefi
     const response = await openai.chat.completions.create({
         model: "gpt-4-1106-preview",
         messages: [
-            { role: "system", content: renderSystemPrompt(currentparentNode, parentNodes) },
+            {
+                role: "system",
+                content: renderSystemPrompt(currentparentNode, parentNodes),
+            },
             {
                 role: "user",
                 content: renderUserPrompt(crt, currentUDE, currentparentNode, parentNodes),
@@ -176,7 +185,14 @@ export const identifyCauses = async (crt, currentUDE, currentparentNode = undefi
         console.log("DEBUGGING: parsedMessage", JSON.stringify(parsedMessage, null, 2));
     }
     const topCauses = filterTopCauses(parsedMessage);
-    const nodes = convertToNodes(topCauses, nodeType);
+    let debug = undefined;
+    if (DEBUGGING) {
+        debug = {
+            systemPromptUsedForGeneration: renderSystemPrompt(currentparentNode, parentNodes),
+            firstUserMessageUserForGeneration: renderUserPrompt(crt, currentUDE, currentparentNode, parentNodes),
+        };
+    }
+    const nodes = convertToNodes(topCauses, nodeType, debug);
     if (DEBUGGING) {
         console.log("DEBUGGING: final nodes", JSON.stringify(nodes, null, 2));
     }

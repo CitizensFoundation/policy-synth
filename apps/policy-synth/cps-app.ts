@@ -361,15 +361,15 @@ export class CpsApp extends YpBaseElement {
         },
       },
       {
-        path: '/crt/:projectId/',
+        path: '/crt/:treeId/',
         render: params => {
-          return this.renderCrtPage();
+          return this.renderCrtPage(params.treeId);
         },
       },
       {
-        path: '/crt/:projectId',
+        path: '/crt/:treeId',
         render: params => {
-          return this.renderCrtPage();
+          return this.renderCrtPage(params.treeId);
         },
       },
       {
@@ -504,9 +504,9 @@ export class CpsApp extends YpBaseElement {
     }
   );
 
-  renderCrtPage() {
+  renderCrtPage(treeId: string | undefined = undefined) {
     return html`
-      <ltp-manage-crt></ltp-manage-crt>
+      <ltp-manage-crt .currentTreeId="${treeId}"></ltp-manage-crt>
     `;
   }
 

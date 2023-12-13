@@ -6,15 +6,15 @@ export class LtpServerApi extends YpServerApi {
     this.baseUrlPath = urlPath;
   }
 
-  public async getCrt(id: string): Promise<CrtResponse> {
+  public async getCrt(id: string): Promise<LtpCurrentRealityTreeData> {
     return (await this.fetchWrapper(
       this.baseUrlPath + `/crt/${id}`
-    )) as unknown as CrtResponse;
+    )) as unknown as LtpCurrentRealityTreeData;
   }
 
   public createTree(
     crt: LtpCurrentRealityTreeData
-  ): Promise<LtpCurrentRealityTreeDataNode[]> {
+  ): Promise<LtpCurrentRealityTreeData> {
     return this.fetchWrapper(
       this.baseUrlPath + `/crt`,
       {
@@ -22,7 +22,7 @@ export class LtpServerApi extends YpServerApi {
         body: JSON.stringify(crt),
       },
       false
-    ) as Promise<LtpCurrentRealityTreeDataNode[]>;
+    ) as Promise<LtpCurrentRealityTreeData>;
   }
 
   public reviewConfiguration(
@@ -41,10 +41,11 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public createDirectCauses(
+    treeId: string,
     parentNodeId: string
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/1/createDirectCauses`,
+      this.baseUrlPath + `/crt/${treeId}/createDirectCauses`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -56,11 +57,12 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public addDirectCauses(
+    treeId: string,
     parentNodeId: string,
     causes: string[]
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/1/addDirectCauses`,
+      this.baseUrlPath + `/crt/${treeId}/addDirectCauses`,
       {
         method: 'POST',
         body: JSON.stringify({

@@ -210,6 +210,7 @@ export class CurrentRealityTreeController {
         context,
         undesirableEffects,
         nodes: [],
+        id: "n/a",
       };
 
       const review = await getConfigurationReview(treeToTest);
@@ -222,8 +223,7 @@ export class CurrentRealityTreeController {
   };
 
   createTree = async (req: express.Request, res: express.Response) => {
-    //TODO: Create new ids automatically
-    const treeId = 1; //req.params.id;
+    const treeId = uuidv4();
     const {
       context,
       undesirableEffects,
@@ -235,8 +235,7 @@ export class CurrentRealityTreeController {
     try {
       const treeData = await redisClient.get(`crt:${treeId}`);
       if (treeData) {
-        //TODO: Uncomment this
-        //return res.status(400).send({ message: "Tree already exists" });
+        return res.status(400).send({ message: "Tree already exists" });
       }
 
       const directNodes = undesirableEffects.flatMap((ue) =>
@@ -253,14 +252,15 @@ export class CurrentRealityTreeController {
       );
 
       const newTree: LtpCurrentRealityTreeData = {
+        id: treeId,
         context,
         undesirableEffects,
-        nodes: directNodes,
+        nodes: directNodes
       };
 
       await redisClient.set(`crt:${treeId}`, JSON.stringify(newTree));
 
-      return res.send(newTree.nodes);
+      return res.send(newTree);
     } catch (err) {
       console.error(err);
       return res.sendStatus(500);
@@ -312,7 +312,7 @@ export class CurrentRealityTreeController {
     }
   };
 
-  findNearestUde = (
+  private findNearestUde = (
     nodes: LtpCurrentRealityTreeDataNode[],
     nodeId: string
   ): LtpCurrentRealityTreeDataNode | null => {
@@ -334,7 +334,7 @@ export class CurrentRealityTreeController {
     return null;
   };
 
-  findParentNode = (
+  private findParentNode = (
     nodes: LtpCurrentRealityTreeDataNode[],
     childId: string
   ): LtpCurrentRealityTreeDataNode | null => {
@@ -361,7 +361,7 @@ export class CurrentRealityTreeController {
     return null;
   };
 
-  isParentNode = (node: LtpCurrentRealityTreeDataNode, childId: string): boolean => {
+  private isParentNode = (node: LtpCurrentRealityTreeDataNode, childId: string): boolean => {
     // Check in 'andChildren'
     if (node.andChildren && node.andChildren.some(child => child.id === childId)) {
       return true;
@@ -374,7 +374,7 @@ export class CurrentRealityTreeController {
     return false;
   };
 
-  findNode = (
+  private findNode = (
     nodes: LtpCurrentRealityTreeDataNode[],
     id: string
   ): LtpCurrentRealityTreeDataNode | null => {
