@@ -2,6 +2,7 @@ import { PropertyValueMap, css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
 import { cache } from 'lit/directives/cache.js';
+import { resolveMarkdown } from './chat/litMarkdown.js';
 
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/linear-progress.js';
@@ -40,6 +41,12 @@ export class LtpManageCrt extends CpsStageBase {
   @property({ type: Number })
   activeTabIndex = 0;
 
+  @property({ type: String })
+  AIConfigReview: string | undefined;
+
+  @property({ type: Boolean })
+  isReviewingCrt = false;
+
   api: LtpServerApi;
 
   @property({ type: Object })
@@ -77,7 +84,6 @@ export class LtpManageCrt extends CpsStageBase {
       'close-add-cause-dialog',
       this.closeAddCauseDialog as EventListenerOrEventListenerObject
     );
-
   }
 
   static get styles() {
@@ -130,8 +136,24 @@ export class LtpManageCrt extends CpsStageBase {
           margin-top: 32px;
         }
 
-        md-filled-button {
+        md-filled-button, md-outlined-button {
           margin-top: 12px;
+          margin-left: 8px;
+          margin-right: 8px;
+        }
+
+        .aiConfigReview {
+          margin-left: 8px;
+          margin-right: 8px;
+          padding: 16px;
+          margin-top: 0px;
+          margin-bottom: 8px;
+          border-radius: 12px;
+          max-width: 560px;
+          max-height: 425px;
+          overflow-y: scroll;
+          background-color: var(--md-sys-color-primary-container);
+          color: var(--md-sys-color-on-primary-container);
         }
 
         .crtUDEDescription {
@@ -177,30 +199,40 @@ export class LtpManageCrt extends CpsStageBase {
     this.activeTabIndex = (this.$$('#tabBar') as MdTabs).activeTabIndex;
   }
 
-  async createTree() {
-    this.isCreatingCrt = true;
-
-    const crtSeed: LtpCurrentRealityTreeData = {
+  get crtInputData() {
+    return {
       description:
         (this.$$('#description') as MdOutlinedTextField)?.value ?? '',
       context: (this.$$('#context') as MdOutlinedTextField).value ?? '',
-      rawPossibleCauses:
-        (this.$$('#rawPossibleCauses') as MdOutlinedTextField).value ?? '',
       undesirableEffects:
         (this.$$('#undesirableEffects') as MdOutlinedTextField).value.split(
           '\n'
         ) ?? [],
       nodes: [],
-    };
+    } as LtpCurrentRealityTreeData;
+  }
+
+  async reviewTreeConfiguration() {
+    this.isReviewingCrt = true;
+
+    this.AIConfigReview = await this.api.reviewConfiguration(this.crtInputData);
+
+    console.error(this.AIConfigReview);
+
+    this.isReviewingCrt = false;
+
+    await this.updateComplete;
+  }
+
+  async createTree() {
+    this.isCreatingCrt = true;
+
+    const crtSeed = this.crtInputData;
 
     if (TESTING && (this.$$('#context') as MdOutlinedTextField).value == '') {
       crtSeed.context =
         'We are a software company with a product we have as as service';
       crtSeed.undesirableEffects = ['End users are unhappy with the service'];
-      crtSeed.rawPossibleCauses = `
-        Incidents take a long time to resolve.
-        There are lots of repeated incidents.
-        `;
     }
 
     crtSeed.nodes = await this.api.createTree(crtSeed);
@@ -224,6 +256,47 @@ export class LtpManageCrt extends CpsStageBase {
     this.fire('yp-theme-color', `#${randomColor}`);
   }
 
+  renderAIConfigReview() {
+    return html`
+      <div class="aiConfigReview">
+        ${this.AIConfigReview ? html`
+          ${resolveMarkdown(this.AIConfigReview, {
+            includeImages: true,
+            includeCodeBlockClassNames: true,
+          })}
+        ` : nothing}
+      </div>
+    `;
+  }
+
+  renderReviewAndSubmit() {
+    if (this.isCreatingCrt || this.isReviewingCrt)
+      return html`<md-linear-progress indeterminate></md-linear-progress>`;
+
+    if (this.AIConfigReview) {
+      return html`
+        <md-outlined-button @click="${this.reviewTreeConfiguration}"
+          >${this.t('Review CRT again')}<md-icon slot="icon"
+            >rate_review</md-icon
+          ></md-outlined-button
+        >
+        <md-filled-button @click="${this.createTree}"
+          >${this.t('Create CRT')}<md-icon slot="icon"
+            >send</md-icon
+          ></md-filled-button
+        >
+      `;
+    } else {
+      return html`
+        <md-filled-button @click="${this.reviewTreeConfiguration}"
+          >${this.t('Review CRT')}<md-icon slot="icon"
+            >rate_review</md-icon
+          ></md-filled-button
+        >
+      `;
+    }
+  }
+
   renderThemeToggle() {
     return html`<div class="layout horizontal center-center themeToggle">
       ${!this.themeDarkMode
@@ -242,11 +315,11 @@ export class LtpManageCrt extends CpsStageBase {
             >
           `}
 
-          <md-outlined-icon-button
-              class="darkModeButton"
-              @click="${this.randomizeTheme}"
-              ><md-icon>shuffle</md-icon></md-outlined-icon-button
-            >
+      <md-outlined-icon-button
+        class="darkModeButton"
+        @click="${this.randomizeTheme}"
+        ><md-icon>shuffle</md-icon></md-outlined-icon-button
+      >
     </div> `;
   }
 
@@ -270,33 +343,12 @@ export class LtpManageCrt extends CpsStageBase {
             ></md-outlined-text-field>
           </div>
 
-          <div>
-            <md-outlined-text-field
-              type="textarea"
-              label="Raw Possible Causes"
-              id="rawPossibleCauses"
-            ></md-outlined-text-field>
+          ${this.AIConfigReview ? this.renderAIConfigReview() : nothing}
+
+          <div class="layout horizontal center-center">
+            ${!this.crt ? this.renderReviewAndSubmit() : nothing}
           </div>
 
-          ${!this.crt
-            ? html`
-                <div class="layout horizontal center-center">
-                  ${this.isCreatingCrt
-                    ? html`
-                        <md-linear-progress
-                          indeterminate
-                        ></md-linear-progress>
-                      `
-                    : html`
-                        <md-filled-button @click="${this.createTree}"
-                          >${this.t('Create CRT')}<md-icon slot="icon"
-                            >send</md-icon
-                          ></md-filled-button
-                        >
-                      `}
-                </div>
-              `
-            : nothing}
           ${this.renderThemeToggle()}
         </div>
       </div>
@@ -307,7 +359,10 @@ export class LtpManageCrt extends CpsStageBase {
     console.error(`openAddCauseDialog ${event.detail.parentNodeId}`);
     const parentNodeId = event.detail.parentNodeId;
     // Get the node from the tree recursively
-    const findNodeRecursively = (nodes: LtpCurrentRealityTreeDataNode[], nodeId: string): LtpCurrentRealityTreeDataNode | undefined => {
+    const findNodeRecursively = (
+      nodes: LtpCurrentRealityTreeDataNode[],
+      nodeId: string
+    ): LtpCurrentRealityTreeDataNode | undefined => {
       for (const node of nodes) {
         if (node.id === nodeId) {
           return node;
@@ -346,8 +401,12 @@ export class LtpManageCrt extends CpsStageBase {
 
   renderAddCauseDialog() {
     return html`
-      <md-dialog id="addCauseDialog" style="max-width: 800px;max-height: 600px;" @closed="${this.closeAddCauseDialog}">
-        <div slot="headline">${this.nodeToAddCauseTo?.cause}</div>
+      <md-dialog
+        id="addCauseDialog"
+        style="max-width: 800px;max-height: 600px;"
+        @closed="${this.closeAddCauseDialog}"
+      >
+        <div slot="headline">${this.nodeToAddCauseTo?.description}</div>
         <div slot="content" class="chatContainer">
           ${this.nodeToAddCauseTo
             ? html`
@@ -405,11 +464,6 @@ export class LtpManageCrt extends CpsStageBase {
         aria-labelledby="crt-tab"
         ?hidden="${this.activeTabIndex !== 1}"
       >
-        <div class="layout vertical center-center">
-          <div class="crtUDEDescription">
-            ${this.crt?.undesirableEffects[0]}
-          </div>
-        </div>
         <ltp-current-reality-tree
           .crtData="${this.crt}"
         ></ltp-current-reality-tree>

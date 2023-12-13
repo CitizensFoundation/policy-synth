@@ -1,8 +1,11 @@
 declare module 'vectorizer';
 
+type CrtNodeType = 'ude' | 'direct' | 'intermediate' | 'root';
+
 interface LtpCurrentRealityTreeDataNode {
   id: string;
-  cause: string;
+  description: string;
+  type: CrtNodeType;
   isRootCause?: boolean;
   isLogicValidated?: boolean;
   andChildren?: LtpCurrentRealityTreeNode[];
@@ -12,7 +15,6 @@ interface LtpCurrentRealityTreeDataNode {
 interface LtpCurrentRealityTreeData {
   description?: string;
   context: string;
-  rawPossibleCauses: string;
   undesirableEffects: string[];
   nodes: LtpCurrentRealityTreeNode[];
 }
@@ -20,6 +22,7 @@ interface LtpCurrentRealityTreeData {
 interface CrtPromptJson {
   directCauseDescription: string;
   isDirectCause: boolean;
+  type: CrtNodeType;
   isLikelyARootCauseOfUDE: boolean;
   confidenceLevel: number;
 }

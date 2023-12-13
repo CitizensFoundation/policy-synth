@@ -1,8 +1,9 @@
 import express from "express";
 import { createClient } from "redis";
-import { identifyCauses } from "../openai/crtCreateNodes.js";
-import { getRefinedCauses } from "../openai/crtAssistant.js";
+import { identifyCauses } from "../ltp/crtCreateNodes.js";
+import { getRefinedCauses } from "../ltp/crtAssistant.js";
 import { v4 as uuidv4 } from "uuid";
+import { getConfigurationReview } from "../ltp/crtConfigReview.js";
 
 let redisClient: any;
 
@@ -29,22 +30,21 @@ export class CurrentRealityTreeController {
 
   public async initializeRoutes() {
     this.router.get(this.path + "/:id", this.getTree);
-    this.router.post(
-      this.path,
-      this.createTree
-    );
+    this.router.post(this.path, this.createTree);
     this.router.post(
       this.path + "/:id/createDirectCauses",
       this.createDirectCauses
     );
-    this.router.post(
-      this.path + "/:id/addDirectCauses",
-      this.addDirectCauses
-    );
+    this.router.post(this.path + "/:id/addDirectCauses", this.addDirectCauses);
 
     this.router.post(
       this.path + "/:id/getRefinedCauses",
       this.getRefinedCauses
+    );
+
+    this.router.put(
+      this.path + "/reviewConfiguration",
+      this.reviewTreeConfiguration
     );
 
     await redisClient.connect();
@@ -52,10 +52,12 @@ export class CurrentRealityTreeController {
 
   getRefinedCauses = async (req: express.Request, res: express.Response) => {
     const treeId = req.params.id;
-    const { crtNodeId, chatLog }: { crtNodeId: string; chatLog: LtpSimplifiedChatLog[] } = req.body;
+    const {
+      crtNodeId,
+      chatLog,
+    }: { crtNodeId: string; chatLog: LtpSimplifiedChatLog[] } = req.body;
 
     try {
-
       const treeData = await redisClient.get(`crt:${treeId}`);
       if (!treeData) {
         console.error("Tree not found");
@@ -70,7 +72,19 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const response = await getRefinedCauses(currentTree, parentNode, chatLog);
+      const nearestUdeNode = this.findNearestUde(currentTree, parentNode.id);
+
+      if (!nearestUdeNode) {
+        console.error("Nearest UDE node not found");
+        return res.sendStatus(404);
+      }
+
+      const response = await getRefinedCauses(
+        currentTree,
+        parentNode,
+        nearestUdeNode.description,
+        chatLog
+      );
 
       return res.send(response);
     } catch (err) {
@@ -100,14 +114,18 @@ export class CurrentRealityTreeController {
       }
 
       // Convert cause strings to LtpCurrentRealityTreeDataNode objects
-      const newNodes = causeStrings.map(cause => ({
-        id: uuidv4(),
-        cause: cause,
-        andChildren: [],
-        orChildren: [],
-        isRootCause: false,
-        isLogicValidated: false
-      }));
+      const newNodes = causeStrings.map(
+        (cause) =>
+          ({
+            id: uuidv4(),
+            description: cause,
+            type: parentNode.type == "ude" ? "direct" : "intermediate",
+            andChildren: [] as LtpCurrentRealityTreeDataNode[],
+            orChildren: [] as LtpCurrentRealityTreeDataNode[],
+            isRootCause: false,
+            isLogicValidated: false,
+          } as LtpCurrentRealityTreeDataNode)
+      );
 
       // Add the new nodes to the parent node's children
       if (!parentNode.andChildren) {
@@ -117,7 +135,7 @@ export class CurrentRealityTreeController {
 
       await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
 
-      console.log("Added new nodes to tree")
+      console.log("Added new nodes to tree");
 
       return res.send(newNodes);
     } catch (err) {
@@ -174,16 +192,42 @@ export class CurrentRealityTreeController {
     }
   };
 
-  createTree = async (req: express.Request, res: express.Response) => {
-    //TODO: Create new ids automatically
-    const treeId = 1;//req.params.id;
+  reviewTreeConfiguration = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     const {
       context,
-      rawPossibleCauses,
       undesirableEffects,
     }: {
       context: string;
-      rawPossibleCauses: string;
+      undesirableEffects: string[];
+    } = req.body;
+
+    try {
+      const treeToTest: LtpCurrentRealityTreeData = {
+        context,
+        undesirableEffects,
+        nodes: [],
+      };
+
+      const review = await getConfigurationReview(treeToTest);
+
+      return res.send(review);
+    } catch (err) {
+      console.error(err);
+      return res.sendStatus(500);
+    }
+  };
+
+  createTree = async (req: express.Request, res: express.Response) => {
+    //TODO: Create new ids automatically
+    const treeId = 1; //req.params.id;
+    const {
+      context,
+      undesirableEffects,
+    }: {
+      context: string;
       undesirableEffects: string[];
     } = req.body;
 
@@ -194,16 +238,24 @@ export class CurrentRealityTreeController {
         //return res.status(400).send({ message: "Tree already exists" });
       }
 
+      const directNodes = undesirableEffects.flatMap((ue) =>
+        ue.split("\n")
+         .map(effect => effect.trim()) // Trim each effect
+         .filter(effect => effect !== "") // Filter out empty strings
+         .map(effect => ({
+            id: uuidv4(),
+            description: effect,
+            type: "ude",
+            andChildren: [],
+            orChildren: [],
+          } as LtpCurrentRealityTreeDataNode))
+      );
+
       const newTree: LtpCurrentRealityTreeData = {
         context,
-        rawPossibleCauses,
         undesirableEffects,
-        nodes: [],
+        nodes: directNodes,
       };
-
-      const directCausesNodes = await identifyCauses(newTree);
-
-      newTree.nodes = directCausesNodes;
 
       await redisClient.set(`crt:${treeId}`, JSON.stringify(newTree));
 
@@ -221,7 +273,7 @@ export class CurrentRealityTreeController {
     try {
       const treeData = await redisClient.get(`crt:${treeId}`);
       if (!treeData) {
-        console.error("Tree not found")
+        console.error("Tree not found");
         return res.sendStatus(404);
       }
 
@@ -230,11 +282,23 @@ export class CurrentRealityTreeController {
       const parentNode = this.findNode(currentTree.nodes, parentNodeId);
 
       if (!parentNode) {
-        console.error("Parent node not found")
+        console.error("Parent node not found");
         return res.sendStatus(404);
       }
 
-      const directCausesNodes = await identifyCauses(currentTree, parentNode);
+      const nearestUdeNode = this.findNearestUde(currentTree, parentNodeId);
+
+      if (!nearestUdeNode) {
+        console.error("Nearest UDE node not found");
+        return res.sendStatus(404);
+      }
+
+      // Passing the description of the nearest UDE node to identifyCauses
+      const directCausesNodes = await identifyCauses(
+        currentTree,
+        nearestUdeNode.description,
+        parentNode
+      );
 
       parentNode.andChildren = directCausesNodes;
 
@@ -245,6 +309,38 @@ export class CurrentRealityTreeController {
       console.error(err);
       return res.sendStatus(500);
     }
+  };
+
+  findNearestUde = (
+    currentTree: LtpCurrentRealityTreeData,
+    nodeId: string
+  ): LtpCurrentRealityTreeDataNode | null => {
+    let currentNode = this.findNode(currentTree.nodes, nodeId);
+    while (currentNode && currentNode.type !== "ude") {
+      currentNode = this.findParentNode(currentTree.nodes, currentNode.id);
+    }
+    return currentNode;
+  };
+
+  findParentNode = (
+    nodes: LtpCurrentRealityTreeDataNode[],
+    childId: string
+  ): LtpCurrentRealityTreeDataNode | null => {
+    for (const node of nodes) {
+      if (
+        node.andChildren &&
+        node.andChildren.some((child) => child.id === childId)
+      ) {
+        return node;
+      }
+      if (
+        node.orChildren &&
+        node.orChildren.some((child) => child.id === childId)
+      ) {
+        return node;
+      }
+    }
+    return null;
   };
 
   // Helper method to recursively find a node by id
@@ -268,5 +364,3 @@ export class CurrentRealityTreeController {
     return null;
   };
 }
-
-

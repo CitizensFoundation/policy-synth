@@ -10,18 +10,37 @@ const config = {
 
 export const renderSystemPrompt = (
   currentRealityTree: LtpCurrentRealityTreeData,
-  parentNode: LtpCurrentRealityTreeDataNode
+  parentNode: LtpCurrentRealityTreeDataNode,
+  currentUDE: string,
+  parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined
 ) => {
+
+  const parentIsUDE = parentNode.type === "ude";
+
   const prompt = `
     You are a helpful Logical Thinking Process assistant.
 
     Context: ${currentRealityTree.context}
 
-    Undesirable Effect (UDE): ${currentRealityTree.undesirableEffects[0]}
+    Undesirable Effect (UDE): ${currentUDE}
 
-    We're working on analysing Current Reality Tree direct cause for this cause above: ${parentNode.cause}
+    ${
+      parentNodes
+        ? parentNodes.slice(1).reverse().map(
+            (node, index) => `
+      ${
+        index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`
+      }:
+      ${node.description}
 
-    The user will submit his idea for a direct cause to: ${parentNode.cause} you will analyze it and give him feedback.
+    `
+          )
+        : ""
+    }
+
+    We're working on analysing Current Reality Tree direct cause and immediate for this ${parentIsUDE ? 'UDE' : 'cause'}: ${parentNode.description}
+
+    The user will submit his idea for a direct cause to: ${parentNode.description} you will analyze it and give him feedback.
 
     You have access to the whole chat history of the user.
 
@@ -36,7 +55,7 @@ export const renderSystemPrompt = (
     • 8. Is it possible that cause and effect are reversed in the statement?
     • 9. Does the statement express circular logic?
 
-    In addition to refining the users direct cause, if it is viable at all, you will also return a total of 3 direct causes for: ${parentNode.cause}, including the users refined direct cause, if it is viable.
+    In addition to refining the users direct cause, if it is viable at all, you will also return a total of 3 direct causes for: ${parentNode.description}, including the users refined direct cause, if it is viable.
 
     If the user is asking for clarification on previous conversation then decide if you want to send more refined direct causes back but you can also send just [] back if needed for the refinedCauses, but only if the user is asking for clarifications.
 
@@ -62,8 +81,20 @@ export const renderSystemPrompt = (
 export const getRefinedCauses = async (
   crt: LtpCurrentRealityTreeData,
   parentNode: LtpCurrentRealityTreeDataNode,
-  chatLog: LtpSimplifiedChatLog[]
+  currentUDE: string,
+  chatLog: LtpSimplifiedChatLog[],
+  parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined
 ) => {
+  let nodeType: CrtNodeType;
+
+  if (!parentNode) {
+    nodeType = "ude"
+  } else if (parentNode.type=="ude") {
+    nodeType = "direct";
+  } else {
+    nodeType = "intermediate";
+  }
+
   let messages: any[] = chatLog.map((message: LtpSimplifiedChatLog) => {
     return {
       role: message.sender,
@@ -73,7 +104,7 @@ export const getRefinedCauses = async (
 
   const systemMessage = {
     role: "system",
-    content: renderSystemPrompt(crt, parentNode),
+    content: renderSystemPrompt(crt, parentNode, currentUDE, parentNodes),
   };
 
   messages.unshift(systemMessage);
@@ -82,7 +113,7 @@ export const getRefinedCauses = async (
   if (DEBUGGING) {
     console.log("DEBUGGING: crt", JSON.stringify(crt, null, 2));
     console.log("=====================");
-    console.log(renderSystemPrompt(crt, parentNode));
+    console.log(renderSystemPrompt(crt, parentNode, currentUDE, parentNodes));
     console.log("---------------------");
     console.log(JSON.stringify(messages, null, 2));
     console.log("=====================");

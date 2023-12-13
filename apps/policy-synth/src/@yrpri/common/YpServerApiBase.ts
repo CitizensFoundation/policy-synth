@@ -8,19 +8,19 @@ export class YpServerApiBase extends YpCodeBase {
 
     switch (type) {
       case 'domain':
-          transformedApiType = 'domains';
+        transformedApiType = 'domains';
         break;
       case 'community':
-          transformedApiType = 'communities';
+        transformedApiType = 'communities';
         break;
       case 'group':
-          transformedApiType = 'groups';
+        transformedApiType = 'groups';
         break;
       case 'post':
-          transformedApiType = 'posts';
+        transformedApiType = 'posts';
         break;
       case 'user':
-          transformedApiType = 'users';
+        transformedApiType = 'users';
         break;
       default:
         transformedApiType = '';
@@ -34,9 +34,9 @@ export class YpServerApiBase extends YpCodeBase {
     url: string,
     options: RequestInit = {},
     showUserError = true,
-    errorId: string | undefined = undefined
+    errorId: string | undefined = undefined,
+    skipJsonParse = false
   ) {
-
     if (!options.headers) {
       options.headers = {
         'Content-Type': 'application/json',
@@ -48,23 +48,33 @@ export class YpServerApiBase extends YpCodeBase {
       //options.headers['X-CSRF-Token'] = window.csrfToken;
     }
 
-    if (!navigator.onLine && options.method==="POST" && window.fetch!==undefined) {
+    if (
+      !navigator.onLine &&
+      options.method === 'POST' &&
+      window.fetch !== undefined
+    ) {
       window.appGlobals.offline.sendWhenOnlineNext({
         body: options.body,
         method: options.method,
         //@ts-ignore
         headers: options.headers,
         params: {},
-        url: url
+        url: url,
       });
-      throw new Error("offlineSendLater");
-    } else if (!navigator.onLine && ["POST","PUT","DELETE"].indexOf(options.method!) > -1) {
+      throw new Error('offlineSendLater');
+    } else if (
+      !navigator.onLine &&
+      ['POST', 'PUT', 'DELETE'].indexOf(options.method!) > -1
+    ) {
       this.showToast(this.t('youAreOfflineCantSend'));
-      throw new Error("offlineSendLater");
+      throw new Error('offlineSendLater');
+    } else if (skipJsonParse) {
+      const response = await fetch(url, options);
+      return response.text();
     } else {
       const response = await fetch(url, options);
       return this.handleResponse(response, showUserError, errorId);
-      }
+    }
   }
 
   //TODO: Handle 401
@@ -119,7 +129,7 @@ export class YpServerApiBase extends YpCodeBase {
           });
         }
       }
-      if (responseJson!==null) {
+      if (responseJson !== null) {
         return responseJson;
       } else {
         return true;

@@ -70,17 +70,12 @@ export const renderSystemPrompt = (
 
 export const renderUserPrompt = (
   currentRealityTree: LtpCurrentRealityTreeData,
+  currentUDE: string,
   causeToExmine: LtpCurrentRealityTreeDataNode | undefined = undefined,
   parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined
 ) => {
   return `Context: ${currentRealityTree.context}
-          Undesirable Effect (UDE): ${currentRealityTree.undesirableEffects[0]}
-          ${causeToExmine===undefined ? `
-            Possible Raw Unclassified Causes: ${
-              currentRealityTree.rawPossibleCauses ||
-              "None found, please figure it out yourself."
-            }
-          ` : ''}
+          Undesirable Effect (UDE): ${currentUDE}
 
           ${ parentNodes && parentNodes.length > 1 ? `
             Chain of causes leading to the root cause we are searching for step by step:
@@ -93,7 +88,7 @@ export const renderUserPrompt = (
             ${
               index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`
             }:
-            ${node.cause}
+            ${node.description}
 
           `
                 )
@@ -103,7 +98,7 @@ export const renderUserPrompt = (
           ${
             causeToExmine
               ? `
-            Cause to Examine: ${causeToExmine.cause}
+            Cause to Examine: ${causeToExmine.description}
 
             Output the possible Direct Causes of the cause we are examining here in JSON:
           `
@@ -129,12 +124,14 @@ export const filterTopCauses = (
 };
 
 export const convertToNodes = (
-  topCauses: CrtPromptJson[]
+  topCauses: CrtPromptJson[],
+  nodeType: CrtNodeType
 ): LtpCurrentRealityTreeDataNode[] => {
   return topCauses.map((cause) => {
     return {
       id: uuidv4(),
-      cause: cause.directCauseDescription,
+      description: cause.directCauseDescription,
+      type: cause.type,
       isRootCause: cause.isLikelyARootCauseOfUDE,
       isLogicValidated: false,
     };
@@ -184,6 +181,7 @@ export const getParentNodes = (
 
 export const identifyCauses = async (
   crt: LtpCurrentRealityTreeData,
+  currentUDE: string,
   currentparentNode: LtpCurrentRealityTreeDataNode | undefined = undefined
 ) => {
   let parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined;
@@ -192,7 +190,18 @@ export const identifyCauses = async (
     parentNodes = getParentNodes(crt.nodes, currentparentNode.id);
   }
 
+  let nodeType: CrtNodeType;
+
+  if (!currentparentNode) {
+    nodeType = "ude"
+  } else if (currentparentNode.type=="ude") {
+    nodeType = "direct";
+  } else {
+    nodeType = "intermediate";
+  }
+
   const openai = new OpenAI(config);
+
   if (DEBUGGING) {
     console.log(
       "DEBGUGGING: currentparentNode",
@@ -206,7 +215,7 @@ export const identifyCauses = async (
     console.log("=====================");
     console.log(renderSystemPrompt(currentparentNode, parentNodes));
     console.log("---------------------");
-    console.log(renderUserPrompt(crt, currentparentNode, parentNodes));
+    console.log(renderUserPrompt(crt, currentUDE, currentparentNode, parentNodes));
     console.log("=====================");
   }
   const response = await openai.chat.completions.create({
@@ -215,7 +224,7 @@ export const identifyCauses = async (
       { role: "system", content: renderSystemPrompt(currentparentNode, parentNodes) },
       {
         role: "user",
-        content: renderUserPrompt(crt, currentparentNode, parentNodes),
+        content: renderUserPrompt(crt, currentUDE, currentparentNode, parentNodes),
       },
     ],
     max_tokens: 2048,
@@ -238,7 +247,7 @@ export const identifyCauses = async (
   }
 
   const topCauses = filterTopCauses(parsedMessage);
-  const nodes = convertToNodes(topCauses);
+  const nodes = convertToNodes(topCauses, nodeType);
 
   if (DEBUGGING) {
     console.log("DEBUGGING: final nodes", JSON.stringify(nodes, null, 2));
