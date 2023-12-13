@@ -222,7 +222,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   private createElement(node: LtpCurrentRealityTreeDataNode): dia.Element {
-    debugger;
     //@ts-ignore
     const el = new MyShape({
       // position: { x: Math.random() * 600, y: Math.random() * 400 },

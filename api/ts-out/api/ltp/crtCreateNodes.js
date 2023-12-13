@@ -92,7 +92,7 @@ export const convertToNodes = (topCauses, nodeType) => {
         return {
             id: uuidv4(),
             description: cause.directCauseDescription,
-            type: cause.type,
+            type: nodeType,
             isRootCause: cause.isLikelyARootCauseOfUDE,
             isLogicValidated: false,
         };
