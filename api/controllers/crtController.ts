@@ -72,10 +72,11 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const nearestUdeNode = this.findNearestUde(currentTree, parentNode.id);
+      const nearestUdeNode = this.findNearestUde(currentTree.nodes, parentNode.id);
 
       if (!nearestUdeNode) {
-        console.error("Nearest UDE node not found");
+        console.error("Nearest UDE node not found for: "+crtNodeId);
+        console.log(JSON.stringify(currentTree, null, 2));
         return res.sendStatus(404);
       }
 
@@ -271,7 +272,7 @@ export class CurrentRealityTreeController {
     const parentNodeId = req.body.parentNodeId;
 
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
+      let treeData = await redisClient.get(`crt:${treeId}`);
       if (!treeData) {
         console.error("Tree not found");
         return res.sendStatus(404);
@@ -286,7 +287,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const nearestUdeNode = this.findNearestUde(currentTree, parentNodeId);
+      const nearestUdeNode = this.findNearestUde(currentTree.nodes, parentNodeId);
 
       if (!nearestUdeNode) {
         console.error("Nearest UDE node not found");
@@ -312,55 +313,94 @@ export class CurrentRealityTreeController {
   };
 
   findNearestUde = (
-    currentTree: LtpCurrentRealityTreeData,
+    nodes: LtpCurrentRealityTreeDataNode[],
     nodeId: string
   ): LtpCurrentRealityTreeDataNode | null => {
-    let currentNode = this.findNode(currentTree.nodes, nodeId);
-    while (currentNode && currentNode.type !== "ude") {
-      currentNode = this.findParentNode(currentTree.nodes, currentNode.id);
+    console.log(`Finding nearest UDE for node ID: ${nodeId}`);
+    let currentNode = this.findNode(nodes, nodeId);
+
+    while (currentNode) {
+      console.log(`Current node ID: ${currentNode.id}, type: ${currentNode.type}`);
+      if (currentNode.type === "ude") {
+        console.log(`Found UDE node: ${currentNode.id}`);
+        return currentNode;
+      }
+
+      currentNode = this.findParentNode(nodes, currentNode.id);
     }
-    return currentNode;
+
+    console.log(`No UDE node found for node ID: ${nodeId}`);
+    console.log(JSON.stringify(nodes, null, 2));
+    return null;
   };
 
   findParentNode = (
     nodes: LtpCurrentRealityTreeDataNode[],
     childId: string
   ): LtpCurrentRealityTreeDataNode | null => {
+    console.log(`Finding parent for child ID: ${childId}`);
     for (const node of nodes) {
-      if (
-        node.andChildren &&
-        node.andChildren.some((child) => child.id === childId)
-      ) {
+      console.log(`Checking if node ID: ${node.id} is parent of ${childId}`);
+      if (this.isParentNode(node, childId)) {
+        console.log(`Found parent ID: ${node.id} for child ID: ${childId}`);
         return node;
       }
-      if (
-        node.orChildren &&
-        node.orChildren.some((child) => child.id === childId)
-      ) {
-        return node;
+
+      // Check if any children have the node as a child
+      const foundParentInAndChildren = node.andChildren ? this.findParentNode(node.andChildren, childId) : null;
+      if (foundParentInAndChildren) {
+        return foundParentInAndChildren;
+      }
+
+      const foundParentInOrChildren = node.orChildren ? this.findParentNode(node.orChildren, childId) : null;
+      if (foundParentInOrChildren) {
+        return foundParentInOrChildren;
       }
     }
+    console.log(`No parent found for child ID: ${childId}`);
     return null;
   };
 
-  // Helper method to recursively find a node by id
+  isParentNode = (node: LtpCurrentRealityTreeDataNode, childId: string): boolean => {
+    // Check in 'andChildren'
+    if (node.andChildren && node.andChildren.some(child => child.id === childId)) {
+      return true;
+    }
+    // Check in 'orChildren'
+    if (node.orChildren && node.orChildren.some(child => child.id === childId)) {
+      return true;
+    }
+    // Not found in this node's direct children
+    return false;
+  };
+
   findNode = (
     nodes: LtpCurrentRealityTreeDataNode[],
     id: string
   ): LtpCurrentRealityTreeDataNode | null => {
     for (const node of nodes) {
+      console.log(`Checking node ID: ${node.id}`);
       if (node.id === id) {
+        console.log(`Node found with ID: ${id}`);
         return node;
       }
       if (node.andChildren) {
         const foundInAndChildren = this.findNode(node.andChildren, id);
-        if (foundInAndChildren) return foundInAndChildren;
+        if (foundInAndChildren) {
+          console.log(`Node found in 'andChildren' with ID: ${id}`);
+          return foundInAndChildren;
+        }
       }
       if (node.orChildren) {
         const foundInOrChildren = this.findNode(node.orChildren, id);
-        if (foundInOrChildren) return foundInOrChildren;
+        if (foundInOrChildren) {
+          console.log(`Node found in 'orChildren' with ID: ${id}`);
+          return foundInOrChildren;
+        }
       }
     }
+    console.log(`No node found with ID: ${id}`);
     return null;
   };
+
 }

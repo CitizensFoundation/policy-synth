@@ -43,7 +43,7 @@ export const renderSystemPrompt = (causeToExmine = undefined, parentNodes = unde
         ? `
     For the isDirectCause JSON field, please output true if the cause we are examining is a direct cause of the "Cause to Examine", otherwise output false.
 
-    For the isLikelyARootCauseOfUDE JSON field, please output true if "Cause to Examine" is a highly probable root cause of the "Undesireable Effect (UDE)", otherwise output false.
+    For the isLikelyARootCauseOfUDE JSON field, please output true if "Cause to Examine" is likely the root cause of the "Undesireable Effect (UDE)", otherwise output false.
     `
         : `
     Always keep the isLikelyARootCauseOfUDE to false for now as this is the first level of direct causes.
@@ -54,6 +54,7 @@ export const renderSystemPrompt = (causeToExmine = undefined, parentNodes = unde
     return prompt;
 };
 export const renderUserPrompt = (currentRealityTree, currentUDE, causeToExmine = undefined, parentNodes = undefined) => {
+    // add all but the first node to selectedParentNodes
     return `Context: ${currentRealityTree.context}
           Undesirable Effect (UDE): ${currentUDE}
 
@@ -62,7 +63,7 @@ export const renderUserPrompt = (currentRealityTree, currentUDE, causeToExmine =
           ` : ``}
 
           ${parentNodes
-        ? parentNodes.reverse().map((node, index) => `
+        ? parentNodes.slice(1).reverse().map((node, index) => `
             ${index === 0 ? `Direct cause of UDE` : `Intermediate cause of UDE`}:
             ${node.description}
 

@@ -20,7 +20,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
   crtNodeType: CrtNodeType;
 
   @property({ type: Boolean })
-  isRootCause!: boolean;
+  isRootCause = false;
 
   @property({ type: String })
   causeDescription: string;
@@ -148,17 +148,22 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
   }
 
   get crtTypeIcon() {
-    switch (this.crtNodeType) {
-      case 'ude':
-        return 'bug_report';
-      case 'directCause':
-        return 'arrow_upward';
-      case 'intermediateCause':
-        return 'unfold_more';
-      case 'rootCause':
-        return 'flag';
-      default:
-        return 'more_vert';
+    console.error(this.isRootCause);
+    if (this.isRootCause) {
+      return 'flag';
+    } else {
+      switch (this.crtNodeType) {
+        case 'ude':
+          return 'bug_report';
+        case 'directCause':
+          return 'arrow_upward';
+        case 'intermediateCause':
+          return 'link';
+        case 'rootCause':
+          return 'flag';
+        default:
+          return 'more_vert';
+      }
     }
   }
 

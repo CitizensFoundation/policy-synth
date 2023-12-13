@@ -176,7 +176,6 @@ export class LtpChatAssistant extends YpBaseElement {
     data.refinedCausesSuggestions = refinedCausesSuggestions || [];
     data.rawMessage = data.rawMessage || rawMessage;
     this.chatLog = [...this.chatLog, data];
-    debugger;
 
     this.requestUpdate();
 
@@ -472,7 +471,6 @@ export class LtpChatAssistant extends YpBaseElement {
   toggleDarkMode() {
     this.themeDarkMode = !this.themeDarkMode;
     this.fire('theme-dark-mode', this.themeDarkMode);
-    debugger;
     this.requestUpdate();
   }
 
