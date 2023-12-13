@@ -28,7 +28,7 @@ import { LtpServerApi } from './LtpServerApi.js';
 import './chat/ltp-chat-assistant.js';
 import { MdDialog } from '@material/web/dialog/dialog.js';
 
-const TESTING = true;
+const TESTING = false;
 
 @customElement('ltp-manage-crt')
 export class LtpManageCrt extends CpsStageBase {
