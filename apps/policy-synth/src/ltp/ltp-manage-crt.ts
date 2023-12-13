@@ -177,8 +177,8 @@ export class LtpManageCrt extends CpsStageBase {
         }
 
         ltp-chat-assistant {
-          height: 300px;
-          max-height: 300px;
+          height: 100%;
+          max-height: 100%;
           width: 100%;
           height: 100%;
         }
@@ -403,7 +403,7 @@ export class LtpManageCrt extends CpsStageBase {
     return html`
       <md-dialog
         id="addCauseDialog"
-        style="max-width: 800px;max-height: 600px;"
+        style="max-width: 800px;max-height: 90vh;"
         @closed="${this.closeAddCauseDialog}"
       >
         <div slot="headline">${this.nodeToAddCauseTo?.description}</div>
