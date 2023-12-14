@@ -328,8 +328,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private applyDirectedGraphLayout(): void {
     layout.DirectedGraph.layout(this.graph, {
       setLinkVertices: true,
-      align: 'DR',
-      ranker: 'tight-tree',
+      align: 'UR',
+      ranker: 'longest-path',
       rankDir: 'BT', // Adjust as needed
       marginX: 50,
       marginY: 50,
