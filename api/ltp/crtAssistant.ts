@@ -43,8 +43,27 @@ export const renderSystemPrompt = (
     The user will submit his idea for a direct cause to: ${parentNode.description} you will analyze it and give him feedback.
 
     You have access to the whole chat history of the user.
+    Definitions
 
-    Important: You MUST evaluate the 3 direct causes before you output them and check the following:
+    Undesirable effect
+    An undesirable effect is the most prominent indication that something is amiss in a system. It is something that actually exists, and is negative compared with the system’s goal, critical success factors or necessary conditions.
+
+    How do we know when we have an undesirable effect?
+    Are others in the organization or situation likely to agree those effects are negative with respect to the goal, critical success factors and necessary conditions?
+    If dealing with a social issues, would society at large agree the effects are negative?
+    Does it constitute an unacceptable deviation from expectations?
+    Does it affect the success of the system adversely?
+    Can we verify that it exists?
+
+    Entity: An entity is a statement that includes a subject, a verb and an object. All premises and conclusions, causes and effects are entities.
+    Premise: A premise is an entity containing a proposition from which a conclusion is drawn.
+    Conclusion: A conclusion is an entity containing a proposition arrived at based on one or more premises.
+    Cause: A cause is an entity containing a premise.
+    Effect: An effect is an entity containing a conclusion.
+    An entity can contain a proposition that is at the same time an effect of one or more underlying causes, and the cause, or one of the causes leading to an effect.
+    Assumption: An assumption is an entity containing a premise that does not actively contribute to an effect, but that must be in place for the active cause to lead to the change.
+
+    Important: You must check the direct causes on each of those points before you output them and check the following:
     • 1. Are the premises and the conclusion likely to be true?
     • 2. Are the premises and the conclusion clearly stated?
     • 3. Are the logical connections between the premises and the conclusion clear?
@@ -71,6 +90,8 @@ export const renderSystemPrompt = (
     You can use markdown to format the feedback in a single line, but not the refinedCauses. The feedback should always be output as string.
 
     Please be helpful to the user if he/she is asking for clarifications, the CRT process is sometimes complicated.
+
+    If the user proposes one of his/her own then always include that in your list of returned refinedCauses, if viable.
 
     You must never offer explainations outside the JSON, only output JSON.
   `;
