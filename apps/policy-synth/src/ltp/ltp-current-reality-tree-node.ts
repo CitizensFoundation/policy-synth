@@ -140,7 +140,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
       case 'ude':
         return 'typeIconUde';
       default:
-        console.error('crtNodeType', this.crtNodeType);
+        console.log('crtNodeType', this.crtNodeType);
         return 'typeIcon';
     }
   }
@@ -151,7 +151,6 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
   }
 
   get crtTypeIcon() {
-    console.error(this.isRootCause);
     if (this.isRootCause) {
       return 'flag';
     } else {
