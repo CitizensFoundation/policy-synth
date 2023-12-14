@@ -222,6 +222,149 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
   jointNamespace = {};
 
+  private highlightBranch(element: dia.Element): void {
+    // First, fade all nodes by adding the fadeAway class
+    this.graph.getElements().forEach(el => {
+      const view = el.findView(this.paper);
+      if (view) {
+        view.el.classList.add('fadeAway');
+      }
+    });
+
+    // Assuming crtData is always updated with the full tree data
+    const parents = this.getParentNodes(this.crtData.nodes, element.attributes.nodeId);
+
+    if (parents) {
+      // Remove the fade class from the element being highlighted
+      const view = element.findView(this.paper);
+      if (view) {
+        view.el.classList.remove('fadeAway');
+      }
+
+      // Remove fade from the nodes in the parents array
+      parents.forEach(node => {
+        const element = this.elements[node.id];
+        if (!element) {
+          return;
+        }
+        const view = element.findView(this.paper);
+        if (view) {
+          view.el.classList.remove('fadeAway');
+        }
+      });
+    }
+  }
+
+  getParentNodes = (
+    nodes: LtpCurrentRealityTreeDataNode[], // Pass in crt.nodes here
+    currentNodeId: string,
+    parentNodes: LtpCurrentRealityTreeDataNode[] = []
+  ): LtpCurrentRealityTreeDataNode[] | undefined => {
+    for (const node of nodes) {
+      // Check if the current node is a direct child of this node
+      const isDirectChild =
+        node.andChildren?.some(
+          (child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId
+        ) ||
+        node.orChildren?.some(
+          (child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId
+        );
+
+      if (isDirectChild) {
+        parentNodes.push(node);
+        // Call recursively with the parent node's ID
+        return this.getParentNodes(nodes, node.id, parentNodes);
+      }
+
+      // Recursively check in andChildren and orChildren
+      const andChildrenResult = node.andChildren
+        ? this.getParentNodes(node.andChildren, currentNodeId, parentNodes)
+        : undefined;
+      const orChildrenResult = node.orChildren
+        ? this.getParentNodes(node.orChildren, currentNodeId, parentNodes)
+        : undefined;
+
+      if (andChildrenResult || orChildrenResult) {
+        // If either returns a result, we found the parent node
+        if (!parentNodes.includes(node)) {
+          parentNodes.push(node);
+        }
+        return parentNodes;
+      }
+    }
+
+    return parentNodes.length === 0 ? undefined : parentNodes;
+  };
+
+  private findParentNode = (
+    nodes: LtpCurrentRealityTreeDataNode[],
+    childId: string
+  ): LtpCurrentRealityTreeDataNode | null => {
+    console.log(`Finding parent for child ID: ${childId}`);
+    for (const node of nodes) {
+      console.log(`Checking if node ID: ${node.id} is parent of ${childId}`);
+      if (this.isParentNode(node, childId)) {
+        console.log(`Found parent ID: ${node.id} for child ID: ${childId}`);
+        return node;
+      }
+
+      // Check if any children have the node as a child
+      const foundParentInAndChildren = node.andChildren ? this.findParentNode(node.andChildren, childId) : null;
+      if (foundParentInAndChildren) {
+        return foundParentInAndChildren;
+      }
+
+      const foundParentInOrChildren = node.orChildren ? this.findParentNode(node.orChildren, childId) : null;
+      if (foundParentInOrChildren) {
+        return foundParentInOrChildren;
+      }
+    }
+    console.log(`No parent found for child ID: ${childId}`);
+    return null;
+  };
+
+  private isParentNode = (node: LtpCurrentRealityTreeDataNode, childId: string): boolean => {
+    // Check in 'andChildren'
+    if (node.andChildren && node.andChildren.some(child => child.id === childId)) {
+      return true;
+    }
+    // Check in 'orChildren'
+    if (node.orChildren && node.orChildren.some(child => child.id === childId)) {
+      return true;
+    }
+    // Not found in this node's direct children
+    return false;
+  };
+
+  private findNode = (
+    nodes: LtpCurrentRealityTreeDataNode[],
+    id: string
+  ): LtpCurrentRealityTreeDataNode | null => {
+    for (const node of nodes) {
+      console.log(`Checking node ID: ${node.id}`);
+      if (node.id === id) {
+        console.log(`Node found with ID: ${id}`);
+        return node;
+      }
+      if (node.andChildren) {
+        const foundInAndChildren = this.findNode(node.andChildren, id);
+        if (foundInAndChildren) {
+          console.log(`Node found in 'andChildren' with ID: ${id}`);
+          return foundInAndChildren;
+        }
+      }
+      if (node.orChildren) {
+        const foundInOrChildren = this.findNode(node.orChildren, id);
+        if (foundInOrChildren) {
+          console.log(`Node found in 'orChildren' with ID: ${id}`);
+          return foundInOrChildren;
+        }
+      }
+    }
+    console.log(`No node found with ID: ${id}`);
+    return null;
+  };
+
   private async initializeJointJS(): Promise<void> {
     const paperContainer = this.shadowRoot?.getElementById(
       'paper-container'
@@ -283,9 +426,11 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       if (evt.shiftKey) {
         // Handle zoom out with Shift key held down
         this.handleNodeDoubleClick(element, true);  // Passing true for zooming out
-      } else {
+      } if (evt.shiftKey && evt.ctrlKey) {
         // Handle zoom in if Shift key is not held down
         this.handleNodeDoubleClick(element);
+      } else {
+        this.highlightBranch(element);
       }
     });
 
@@ -764,6 +909,23 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         .lastButton {
           margin-right: 16px;
         }
+
+        @keyframes fadeAwayAnimation {
+          0% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.1;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+
+        .fadeAway {
+          animation: fadeAwayAnimation 5.5s;
+        }
+
       `,
     ];
   }
