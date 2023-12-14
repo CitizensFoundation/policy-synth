@@ -1,6 +1,7 @@
 import { PropertyValueMap, css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import { dia, shapes, util, highlighters, V } from 'jointjs';
+import { dia, shapes, util, highlighters, V, layout } from 'jointjs';
+import dagre from 'dagre';
 
 import { CpsStageBase } from '../cps-stage-base.js';
 
@@ -18,8 +19,8 @@ class MyShapeView extends dia.ElementView {
 
     // Create a foreignObject with a set size and style
     const foreignObject = V('foreignObject', {
-      width: this.model.attributes.nodeType === "ude" ? 185 : 185,
-      height: this.model.attributes.nodeType === "ude" ? 135 : 107,
+      width: this.model.attributes.nodeType === 'ude' ? 185 : 185,
+      height: this.model.attributes.nodeType === 'ude' ? 135 : 107,
       style: 'overflow: visible; display: block;',
     }).node;
 
@@ -31,13 +32,13 @@ class MyShapeView extends dia.ElementView {
       const div = document.createElement('div');
       div.setAttribute('class', 'html-element');
       div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      div.style.width = this.model.attributes.nodeType === "ude" ? '185px' : '185px';
-      div.style.height = this.model.attributes.nodeType === "ude" ? '135px' : '107px';
+      div.style.width =
+        this.model.attributes.nodeType === 'ude' ? '185px' : '185px';
+      div.style.height =
+        this.model.attributes.nodeType === 'ude' ? '135px' : '107px';
       div.className = `causeContainer ${
         this.model.attributes.isRootCause ? 'rootCauseContainer' : ''
-      } ${
-        this.model.attributes.nodeType=="ude" ? 'udeContainer' : ''
-      }`;
+      } ${this.model.attributes.nodeType == 'ude' ? 'udeContainer' : ''}`;
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
         crtId="${this.model.attributes.crtId}"
@@ -81,6 +82,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private paper: dia.Paper;
   private elements: { [key: string]: dia.Element } = {};
   private selection: dia.Element | null = null;
+  private panning = false;
+  private lastClientX = 0;
+  private lastClientY = 0;
 
   api: LtpServerApi;
 
@@ -94,7 +98,24 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     window.appGlobals.activity(`CRT - open`);
 
     this.addEventListener('add-nodes', this.addNodesEvent as EventListener);
-    this.addGlobalListener('add-nodes', this.addNodesEvent.bind(this) as EventListener);
+    this.addGlobalListener(
+      'add-nodes',
+      this.addNodesEvent.bind(this) as EventListener
+    );
+  }
+
+  private zoomIn(): void {
+    const currentScale = this.paper.scale();
+    this.paper.scale(currentScale.sx * 1.1, currentScale.sy * 1.1);
+  }
+
+  private zoomOut(): void {
+    const currentScale = this.paper.scale();
+    this.paper.scale(currentScale.sx * 0.9, currentScale.sy * 0.9);
+  }
+
+  private resetZoom(): void {
+    this.paper.scale(1, 1);
   }
 
   addNodesEvent(event: CustomEvent<any>) {
@@ -105,6 +126,15 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
     this.initializeJointJS();
+    this.paper.el.addEventListener('wheel', (event) => {
+      if (event.deltaY < 0) {
+        this.zoomIn();
+      } else {
+        this.zoomOut();
+      }
+      // Prevent the default scroll behavior
+      event.preventDefault();
+    });
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -121,7 +151,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
   jointNamespace = {};
 
-  private initializeJointJS(): void {
+  private async initializeJointJS(): Promise<void> {
     const paperContainer = this.shadowRoot?.getElementById(
       'paper-container'
     ) as HTMLElement;
@@ -141,6 +171,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       width: '100%',
       height: '100%',
       gridSize: 10,
+      panning: {
+        enabled: false,           // Initially disabled
+        modifiers: 'mouseMiddle', // Enable panning with the middle mouse button
+      },
       async: true,
       frozen: true,
       sorting: dia.Paper.sorting.APPROX,
@@ -198,8 +232,80 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       },
     });
 
-    this.updatePaperSize();
     this.paper.unfreeze();
+    this.updatePaperSize();
+
+    await this.updateComplete;
+
+    const paperEl = this.paper.el;
+
+  paperEl.addEventListener('mousedown', (event: MouseEvent) => {
+    // Middle mouse button is pressed
+    if (event.button === 1) {
+      this.panning = true;
+      this.lastClientX = event.clientX;
+      this.lastClientY = event.clientY;
+      paperEl.style.cursor = 'move'; // Optional: Change the cursor to a move icon
+      event.preventDefault(); // Prevent any default behavior
+    }
+  });
+
+  paperEl.addEventListener('mousemove', (event: MouseEvent) => {
+    if (this.panning) {
+      const dx = event.clientX - this.lastClientX;
+      const dy = event.clientY - this.lastClientY;
+
+      this.lastClientX = event.clientX;
+      this.lastClientY = event.clientY;
+
+      // Manually apply the translation to the paper's viewport
+      const currentTranslate = this.paper.translate();
+      this.paper.translate(currentTranslate.tx + dx, currentTranslate.ty + dy);
+    }
+  });
+
+  // Listen for mouse up on the paper element itself
+  paperEl.addEventListener('mouseup', (event: MouseEvent) => {
+    if (this.panning && event.button === 1) {
+      this.panning = false;
+      paperEl.style.cursor = 'default'; // Reset the cursor
+    }
+  });
+
+  // Optionally, listen for the mouse leaving the paper area to also cancel panning
+  paperEl.addEventListener('mouseleave', (event: MouseEvent) => {
+    if (this.panning) {
+      this.panning = false;
+      paperEl.style.cursor = 'default'; // Reset the cursor
+    }
+  });
+
+  }
+
+  private applyDirectedGraphLayout(): void {
+    layout.DirectedGraph.layout(this.graph, {
+      setLinkVertices: true,
+      align: 'DR',
+      ranker: 'tight-tree',
+      rankDir: 'BT', // Adjust as needed
+      marginX: 50,
+      marginY: 20,
+      nodeSep: 120,
+      edgeSep: 120,
+      rankSep: 120,
+    });
+
+    // Additional manual adjustments if needed
+    this.graph.getElements().forEach(element => {
+      // Adjust positions manually if necessary
+    });
+
+    // Translate the graph to ensure consistency in positioning
+    const bbox = this.graph.getBBox();
+    const diffX = 100 - bbox.x - bbox.width / 2;
+    const diffY = 100 - bbox.y - bbox.height / 2;
+    this.graph.translate(diffX, diffY);
+
     this.updatePaperSize();
   }
 
@@ -209,17 +315,18 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       return;
     }
 
-    // Get the bounding box of the diagram
-    const bbox = this.paper.getContentBBox();
-
-    // Check if bbox is valid
-    if (!bbox || bbox.width === 0 || bbox.height === 0) {
-      console.warn('Invalid content bounding box');
-      return;
-    }
-
-    // Set the dimensions of the paper to the size of the diagram
-    //this.paper.setDimensions(bbox.width, 15000);
+    // Automatically adjust the viewport to fit all the content
+    this.paper.transformToFitContent({
+      padding: 15,
+      minScaleX: 0.1,
+      minScaleY: 0.1,
+      maxScaleX: 2,
+      maxScaleY: 2,
+      preserveAspectRatio: true,
+      contentArea: this.graph.getBBox(),
+      verticalAlign: 'top',
+      horizontalAlign: 'middle',
+    });
   }
 
   private createElement(node: LtpCurrentRealityTreeDataNode): dia.Element {
@@ -312,7 +419,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       }
     });
 
-    this.layoutGraph();
+    setTimeout(() => {
+      this.applyDirectedGraphLayout();
+    }, 1500);
   }
 
   // Function to create a link/edge
@@ -443,88 +552,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       this.createLink(parentNode, newNode);
     });
 
-    // Refresh the paper to reflect the new nodes
-    this.layoutGraph();
-
-    // wait for two seconds
-    setTimeout(() => {
-      // then unfreeze the paper
-      this.layoutGraph();
-    }, 2000);
-  }
-
-  private layoutGraph(): void {
-    const nodeWidth = 185;
-    const nodeHeight = 50;
-    const verticalSpacing = 170;
-    const horizontalSpacing = 45; // You might want to adjust this dynamically based on the tree width
-    const topPadding = 60; // Padding at the top of the container
-
-    // Function to get the width of a subtree rooted at a given node
-    const getSubtreeWidth = (node: LtpCurrentRealityTreeDataNode): number => {
-      let width = nodeWidth;
-      if (node.andChildren) {
-        width = Math.max(
-          width,
-          node.andChildren.reduce(
-            (acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing,
-            0
-          ) - horizontalSpacing
-        );
-      }
-      if (node.orChildren) {
-        width = Math.max(
-          width,
-          node.orChildren.reduce(
-            (acc, child) => acc + getSubtreeWidth(child) + horizontalSpacing,
-            0
-          ) - horizontalSpacing
-        );
-      }
-      return width;
-    };
-
-    // Recursive function to layout nodes, this will align parents above their children
-    const layoutNodes = (
-      nodes: LtpCurrentRealityTreeDataNode[],
-      x: number,
-      y: number
-    ) => {
-      let xOffset = x;
-      nodes.forEach(node => {
-        const subtreeWidth = getSubtreeWidth(node);
-        const nodeCenterX = xOffset + subtreeWidth / 2;
-        this.elements[node.id].position(nodeCenterX - nodeWidth / 2, y);
-
-        if (node.andChildren) {
-          layoutNodes(node.andChildren, xOffset, y + verticalSpacing);
-        }
-        if (node.orChildren) {
-          layoutNodes(node.orChildren, xOffset, y + verticalSpacing);
-        }
-        xOffset += subtreeWidth + horizontalSpacing;
-      });
-    };
-
-    // Calculate initial x offset to center the tree
-    const totalWidth = this.crtData.nodes.reduce(
-      (acc, node) => acc + getSubtreeWidth(node) + horizontalSpacing,
-      -horizontalSpacing
-    );
-    console.error(this.paper.options);
-    //TODO: Figure this out better
-    const initialXOffset = (1900 - totalWidth) / 2;
-
-    //    const initialXOffset = ((this.paper.options as any).width - totalWidth) / 2;
-
-    // Start the layout process
-    if (this.crtData && this.crtData.nodes) {
-      layoutNodes(this.crtData.nodes, initialXOffset, topPadding); // Start from the centered x position and top padding
-    }
-
-    this.updatePaperSize();
-    this.paper.unfreeze(); // Unfreeze the paper to render the layout
-    this.updatePaperSize();
+    this.applyDirectedGraphLayout();
   }
 
   static get styles() {
@@ -554,8 +582,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
         /* Define your component styles here */
         .jointJSCanvas {
-          width: 1920px !important;
-          height: 25000px !important;
+          width: 100vw !important;
+          height: 100vh !important;
           overflow-x: auto !important;
           overflow-y: auto !important;
           /* styles for the JointJS canvas */
@@ -565,6 +593,12 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   render() {
-    return html` <div class="jointJSCanvas" id="paper-container"></div> `;
+    return html`
+       <div class="zoom-controls">
+      <button @click="${this.zoomIn}">Zoom In</button>
+      <button @click="${this.zoomOut}">Zoom Out</button>
+      <button @click="${this.resetZoom}">Reset Zoom</button>
+    </div>
+      <div class="jointJSCanvas" id="paper-container"></div> `;
   }
 }

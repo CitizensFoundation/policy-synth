@@ -1,4 +1,5 @@
 declare module 'vectorizer';
+declare module 'dagre';
 
 type CrtNodeType = 'ude' | 'directCause' | 'intermediateCause' | 'rootCause';
 
