@@ -186,7 +186,8 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         </div>
 
         <md-icon class="typeIconCore ${this.crtTypeIconClass}"
-          >${this.crtTypeIcon}</md-icon>
+          >${this.crtTypeIcon}</md-icon
+        >
 
         <div class="menuButton">
           <span style="position: relative">
