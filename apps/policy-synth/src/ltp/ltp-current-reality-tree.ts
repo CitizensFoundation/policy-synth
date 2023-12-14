@@ -388,7 +388,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     const desiredTy = paperCenterY - bboxCenterY * currentScale;
 
     // Translate the paper by the calculated amount
-    this.paper.translate(desiredTx, desiredTy);
+    this.paper.translate(desiredTx-(107/2), desiredTy-(185/2));
   }
 
   private updatePaperSize(): void {
