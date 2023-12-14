@@ -21,7 +21,9 @@ else {
 export class CurrentRealityTreeController {
     path = "/api/crt";
     router = express.Router();
-    constructor() {
+    wsClients = new Map();
+    constructor(wsClients) {
+        this.wsClients = wsClients;
         this.initializeRoutes();
     }
     async initializeRoutes() {
@@ -145,7 +147,7 @@ export class CurrentRealityTreeController {
         }
     };
     reviewTreeConfiguration = async (req, res) => {
-        const { context, undesirableEffects, } = req.body;
+        const { context, undesirableEffects, wsClientId, } = req.body;
         try {
             const treeToTest = {
                 context,
@@ -153,8 +155,8 @@ export class CurrentRealityTreeController {
                 nodes: [],
                 id: "n/a",
             };
-            const review = await getConfigurationReview(treeToTest);
-            return res.send(review);
+            await getConfigurationReview(treeToTest, wsClientId, this.wsClients);
+            return res.sendStatus(200);
         }
         catch (err) {
             console.error(err);
@@ -169,10 +171,11 @@ export class CurrentRealityTreeController {
             if (treeData) {
                 return res.status(400).send({ message: "Tree already exists" });
             }
-            const directNodes = undesirableEffects.flatMap((ue) => ue.split("\n")
-                .map(effect => effect.trim()) // Trim each effect
-                .filter(effect => effect !== "") // Filter out empty strings
-                .map(effect => ({
+            const directNodes = undesirableEffects.flatMap((ue) => ue
+                .split("\n")
+                .map((effect) => effect.trim()) // Trim each effect
+                .filter((effect) => effect !== "") // Filter out empty strings
+                .map((effect) => ({
                 id: uuidv4(),
                 description: effect,
                 type: "ude",
@@ -183,7 +186,7 @@ export class CurrentRealityTreeController {
                 id: treeId,
                 context,
                 undesirableEffects,
-                nodes: directNodes
+                nodes: directNodes,
             };
             await redisClient.set(`crt:${treeId}`, JSON.stringify(newTree));
             return res.send(newTree);
@@ -248,11 +251,15 @@ export class CurrentRealityTreeController {
                 return node;
             }
             // Check if any children have the node as a child
-            const foundParentInAndChildren = node.andChildren ? this.findParentNode(node.andChildren, childId) : null;
+            const foundParentInAndChildren = node.andChildren
+                ? this.findParentNode(node.andChildren, childId)
+                : null;
             if (foundParentInAndChildren) {
                 return foundParentInAndChildren;
             }
-            const foundParentInOrChildren = node.orChildren ? this.findParentNode(node.orChildren, childId) : null;
+            const foundParentInOrChildren = node.orChildren
+                ? this.findParentNode(node.orChildren, childId)
+                : null;
             if (foundParentInOrChildren) {
                 return foundParentInOrChildren;
             }
@@ -262,11 +269,13 @@ export class CurrentRealityTreeController {
     };
     isParentNode = (node, childId) => {
         // Check in 'andChildren'
-        if (node.andChildren && node.andChildren.some(child => child.id === childId)) {
+        if (node.andChildren &&
+            node.andChildren.some((child) => child.id === childId)) {
             return true;
         }
         // Check in 'orChildren'
-        if (node.orChildren && node.orChildren.some(child => child.id === childId)) {
+        if (node.orChildren &&
+            node.orChildren.some((child) => child.id === childId)) {
             return true;
         }
         // Not found in this node's direct children

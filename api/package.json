@@ -27,6 +27,7 @@
     "@types/axios": "^0.14.0",
     "@types/express-session": "^1.17.3",
     "@types/uuid": "^9.0.7",
+    "@types/ws": "^8.5.10",
     "axios": "^1.4.0",
     "colors": "^1.4.0",
     "connect-redis": "^7.1.0",
@@ -43,6 +44,7 @@
     "socket.io": "^4.0.0",
     "uuid": "^9.0.1",
     "weaviate-ts-client": "^1.5.0",
-    "winston": "^3.10.0"
+    "winston": "^3.10.0",
+    "ws": "^8.15.1"
   }
 }

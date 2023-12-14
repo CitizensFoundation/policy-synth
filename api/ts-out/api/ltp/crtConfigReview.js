@@ -26,7 +26,7 @@ export const renderSystemPrompt = () => {
 `;
     return prompt;
 };
-export const getConfigurationReview = async (crt) => {
+export const getConfigurationReview = async (crt, clientId, wsClients) => {
     const messages = [
         {
             role: "system",
@@ -46,17 +46,23 @@ export const getConfigurationReview = async (crt) => {
         console.log(renderUserPrompt(crt));
         console.log("=====================");
     }
-    const response = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
         model: "gpt-4-1106-preview",
         messages,
         max_tokens: 2048,
         temperature: 0.7,
+        stream: true
     });
-    let rawMessage = response.choices[0].message.content;
-    rawMessage = rawMessage.trim().replace(/```markdown/g, "");
-    rawMessage = rawMessage.replace(/```/g, "");
-    if (DEBUGGING) {
-        console.log("DEBUGGING: raw message", rawMessage);
+    if (wsClients.get(clientId)) {
+        for await (const part of stream) {
+            wsClients.get(clientId)?.send(JSON.stringify({ type: "part", text: part.choices[0].delta.content }));
+            console.log(part.choices[0].delta);
+        }
+        wsClients.get(clientId)?.send(JSON.stringify({ type: "end" }));
     }
-    return rawMessage;
+    else {
+        console.error(`WS Client ${clientId} not found`);
+        // TODO: Implement this when available
+        //stream.cancel();
+    }
 };

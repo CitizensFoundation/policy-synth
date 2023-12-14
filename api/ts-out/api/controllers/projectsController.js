@@ -22,10 +22,12 @@ export class ProjectsController {
     path = "/api/projects";
     router = express.Router();
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-    constructor() {
-        this.intializeRoutes();
+    wsClients = new Map();
+    constructor(wsClients) {
+        this.wsClients = wsClients;
+        this.initializeRoutes();
     }
-    async intializeRoutes() {
+    async initializeRoutes() {
         this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
         this.router.get(this.path + "/:id", this.getProject);
         this.router.get(this.path + "/:id/:subProblemIndex/middle/solutions", this.getMiddleSolutions);

@@ -4,6 +4,7 @@ import { identifyCauses } from "../ltp/crtCreateNodes.js";
 import { getRefinedCauses } from "../ltp/crtAssistant.js";
 import { v4 as uuidv4 } from "uuid";
 import { getConfigurationReview } from "../ltp/crtConfigReview.js";
+import WebSocket from "ws";
 
 let redisClient: any;
 
@@ -23,8 +24,10 @@ if (process.env.REDIS_URL) {
 export class CurrentRealityTreeController {
   public path = "/api/crt";
   public router = express.Router();
+  public wsClients = new Map<string, WebSocket>();
 
-  constructor() {
+  constructor(wsClients: Map<string, WebSocket>) {
+    this.wsClients = wsClients;
     this.initializeRoutes();
   }
 
@@ -72,10 +75,13 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const nearestUdeNode = this.findNearestUde(currentTree.nodes, parentNode.id);
+      const nearestUdeNode = this.findNearestUde(
+        currentTree.nodes,
+        parentNode.id
+      );
 
       if (!nearestUdeNode) {
-        console.error("Nearest UDE node not found for: "+crtNodeId);
+        console.error("Nearest UDE node not found for: " + crtNodeId);
         console.log(JSON.stringify(currentTree, null, 2));
         return res.sendStatus(404);
       }
@@ -120,7 +126,8 @@ export class CurrentRealityTreeController {
           ({
             id: uuidv4(),
             description: cause,
-            type: parentNode.type == "ude" ? "directCause" : "intermediateCause",
+            type:
+              parentNode.type == "ude" ? "directCause" : "intermediateCause",
             andChildren: [] as LtpCurrentRealityTreeDataNode[],
             orChildren: [] as LtpCurrentRealityTreeDataNode[],
             isRootCause: false,
@@ -200,9 +207,11 @@ export class CurrentRealityTreeController {
     const {
       context,
       undesirableEffects,
+      wsClientId,
     }: {
       context: string;
       undesirableEffects: string[];
+      wsClientId: string;
     } = req.body;
 
     try {
@@ -213,9 +222,9 @@ export class CurrentRealityTreeController {
         id: "n/a",
       };
 
-      const review = await getConfigurationReview(treeToTest);
+      await getConfigurationReview(treeToTest, wsClientId, this.wsClients);
 
-      return res.send(review);
+      return res.sendStatus(200);
     } catch (err) {
       console.error(err);
       return res.sendStatus(500);
@@ -239,23 +248,27 @@ export class CurrentRealityTreeController {
       }
 
       const directNodes = undesirableEffects.flatMap((ue) =>
-        ue.split("\n")
-         .map(effect => effect.trim()) // Trim each effect
-         .filter(effect => effect !== "") // Filter out empty strings
-         .map(effect => ({
-            id: uuidv4(),
-            description: effect,
-            type: "ude",
-            andChildren: [],
-            orChildren: [],
-          } as LtpCurrentRealityTreeDataNode))
+        ue
+          .split("\n")
+          .map((effect) => effect.trim()) // Trim each effect
+          .filter((effect) => effect !== "") // Filter out empty strings
+          .map(
+            (effect) =>
+              ({
+                id: uuidv4(),
+                description: effect,
+                type: "ude",
+                andChildren: [],
+                orChildren: [],
+              } as LtpCurrentRealityTreeDataNode)
+          )
       );
 
       const newTree: LtpCurrentRealityTreeData = {
         id: treeId,
         context,
         undesirableEffects,
-        nodes: directNodes
+        nodes: directNodes,
       };
 
       await redisClient.set(`crt:${treeId}`, JSON.stringify(newTree));
@@ -287,7 +300,10 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const nearestUdeNode = this.findNearestUde(currentTree.nodes, parentNodeId);
+      const nearestUdeNode = this.findNearestUde(
+        currentTree.nodes,
+        parentNodeId
+      );
 
       if (!nearestUdeNode) {
         console.error("Nearest UDE node not found");
@@ -320,7 +336,9 @@ export class CurrentRealityTreeController {
     let currentNode = this.findNode(nodes, nodeId);
 
     while (currentNode) {
-      console.log(`Current node ID: ${currentNode.id}, type: ${currentNode.type}`);
+      console.log(
+        `Current node ID: ${currentNode.id}, type: ${currentNode.type}`
+      );
       if (currentNode.type === "ude") {
         console.log(`Found UDE node: ${currentNode.id}`);
         return currentNode;
@@ -347,12 +365,16 @@ export class CurrentRealityTreeController {
       }
 
       // Check if any children have the node as a child
-      const foundParentInAndChildren = node.andChildren ? this.findParentNode(node.andChildren, childId) : null;
+      const foundParentInAndChildren = node.andChildren
+        ? this.findParentNode(node.andChildren, childId)
+        : null;
       if (foundParentInAndChildren) {
         return foundParentInAndChildren;
       }
 
-      const foundParentInOrChildren = node.orChildren ? this.findParentNode(node.orChildren, childId) : null;
+      const foundParentInOrChildren = node.orChildren
+        ? this.findParentNode(node.orChildren, childId)
+        : null;
       if (foundParentInOrChildren) {
         return foundParentInOrChildren;
       }
@@ -361,13 +383,22 @@ export class CurrentRealityTreeController {
     return null;
   };
 
-  private isParentNode = (node: LtpCurrentRealityTreeDataNode, childId: string): boolean => {
+  private isParentNode = (
+    node: LtpCurrentRealityTreeDataNode,
+    childId: string
+  ): boolean => {
     // Check in 'andChildren'
-    if (node.andChildren && node.andChildren.some(child => child.id === childId)) {
+    if (
+      node.andChildren &&
+      node.andChildren.some((child) => child.id === childId)
+    ) {
       return true;
     }
     // Check in 'orChildren'
-    if (node.orChildren && node.orChildren.some(child => child.id === childId)) {
+    if (
+      node.orChildren &&
+      node.orChildren.some((child) => child.id === childId)
+    ) {
       return true;
     }
     // Not found in this node's direct children
@@ -402,5 +433,4 @@ export class CurrentRealityTreeController {
     console.log(`No node found with ID: ${id}`);
     return null;
   };
-
 }
