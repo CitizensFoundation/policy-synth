@@ -196,6 +196,30 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     window.appGlobals.activity(`CRT - close`);
   }
 
+  private handleNodeDoubleClick(element: dia.Element, zoomOut: boolean = false): void {
+    const bbox = element.getBBox();
+
+    if (zoomOut) {
+      const centerX = (bbox.x + bbox.width / 2) * this.paper.scale().sx;
+      const centerY = (bbox.y + bbox.height / 2) * this.paper.scale().sy;
+      const currentScale = this.paper.scale().sx; // Assuming sx and sy are the same
+
+      // Depending on your needs, adjust the zoom-out factor, this example halves the scale
+      const zoomFactor = 1 / 4;
+      const newScale = Math.max(this.paper.options.zoom.min, currentScale * zoomFactor);
+
+      // Zoom out, centered on the clicked node
+      this.zoom(newScale, centerX, centerY);
+    } else {
+      // Existing logic for zooming in
+      const centerX = bbox.x + bbox.width / 2;
+      const centerY = bbox.y + bbox.height / 2;
+
+      // Zoom in to 2x scale, centered on the double-clicked node
+      this.zoom(2, centerX, centerY);
+    }
+  }
+
   jointNamespace = {};
 
   private async initializeJointJS(): Promise<void> {
@@ -250,10 +274,24 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     });
 
     this.paper.on('element:pointerclick', elementView => {
-      this.selectElement((elementView as any).model as dia.Element);
+      debugger;
+//      this.selectElement((elementView as any).model as dia.Element);
     });
 
-    this.paper.on('blank:pointerclick', () => this.selectElement(null));
+    this.paper.on('element:pointerdblclick', (cellView: dia.ElementView, evt: dia.Event) => {
+      const element = cellView.model as dia.Element;
+      if (evt.shiftKey) {
+        // Handle zoom out with Shift key held down
+        this.handleNodeDoubleClick(element, true);  // Passing true for zooming out
+      } else {
+        // Handle zoom in if Shift key is not held down
+        this.handleNodeDoubleClick(element);
+      }
+    });
+
+    this.paper.on('blank:pointerclick', (elementView, evt) => {
+      //this.updatePaperSize();
+    });
 
     // Initialize SVG styles for the paper
     V(paperContainer as any).prepend(
@@ -407,7 +445,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     // Automatically adjust the viewport to fit all the content
     this.paper.transformToFitContent({
-      padding: 68,
+      padding: 78,
       minScaleX: 0.2,
       minScaleY: 0.2,
       maxScaleX: 1.1,
