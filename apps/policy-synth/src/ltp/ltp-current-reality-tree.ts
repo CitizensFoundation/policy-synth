@@ -108,6 +108,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       'add-nodes',
       this.addNodesEvent.bind(this) as EventListener
     );
+
+    window.addEventListener('resize', () => {
+      this.updatePaperSize();
+    });
   }
 
   private zoom(factor: number, x: number, y: number): void {
