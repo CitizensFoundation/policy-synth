@@ -403,7 +403,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     // Automatically adjust the viewport to fit all the content
     this.paper.transformToFitContent({
-      padding: 16,
+      padding: 68,
       minScaleX: 0.2,
       minScaleY: 0.2,
       maxScaleX: 1.1,
@@ -733,16 +733,16 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     switch (direction) {
       case 'left':
-        dx = 10;
+        dx = 25;
         break;
       case 'right':
-        dx = -10;
+        dx = -25;
         break;
       case 'up':
-        dy = 10;
+        dy = 25;
         break;
       case 'down':
-        dy = -10;
+        dy = -25;
         break;
     }
 
