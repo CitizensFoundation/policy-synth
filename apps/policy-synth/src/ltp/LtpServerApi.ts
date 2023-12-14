@@ -75,7 +75,7 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public sendGetRefinedCauseQuery(
-    crtTreeId: number,
+    crtTreeId: string,
     crtNodeId: string,
     chatLog: LtpAiChatWsMessage[]
   ): Promise<LtpChatBotCrtMessage> {
