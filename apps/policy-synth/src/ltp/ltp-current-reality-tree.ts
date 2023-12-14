@@ -3,6 +3,11 @@ import { property, customElement } from 'lit/decorators.js';
 import { dia, shapes, util, highlighters, V, layout } from 'jointjs';
 import dagre from 'dagre';
 
+import '@material/web/iconbutton/filled-icon-button.js';
+import '@material/web/iconbutton/filled-tonal-icon-button.js';
+import '@material/web/iconbutton/icon-button.js';
+import '@material/web/iconbutton/outlined-icon-button.js';
+
 import { CpsStageBase } from '../cps-stage-base.js';
 
 import './ltp-current-reality-tree-node.js';
@@ -140,7 +145,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private resetZoom(): void {
     // Reset the origin before resetting the scale
     this.paper.scale(1, 1);
-    this.updatePaperSize();
   }
 
   protected firstUpdated(
@@ -388,7 +392,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     const desiredTy = paperCenterY - bboxCenterY * currentScale;
 
     // Translate the paper by the calculated amount
-    this.paper.translate(desiredTx-(107/2), desiredTy-(185/2));
+    this.paper.translate(desiredTx - 107 / 2, desiredTy - 185 / 2);
   }
 
   private updatePaperSize(): void {
@@ -674,16 +678,110 @@ export class LtpCurrentRealityTree extends CpsStageBase {
           overflow-y: auto !important;
           /* styles for the JointJS canvas */
         }
+
+        .controlPanel {
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          margin: 0 0;
+          width: 100%;
+          position: absolute;
+          top: 64px;
+          left: 0;
+          width: 100%;
+          height: 56px;
+          padding: 0;
+          padding-top: 4px;
+          opacity: 1;
+          background: transparent;
+          color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .controlPanelContainer {
+          margin: 0 0;
+          position: absolute;
+          top: 64px;
+          left: 0;
+          width: 100%;
+          height: 62px;
+          padding: 0;
+          opacity: 0.5;
+          background: var(--md-sys-color-surface-variant);
+        }
+
+        md-filled-tonal-icon-button {
+          margin-left: 8px;
+          margin-right: 8px;
+        }
+
+        .firstButton {
+          margin-left: 16px;
+        }
+
+        .lastButton {
+          margin-right: 16px;
+        }
       `,
     ];
   }
 
+  pan(direction: string): void {
+    const currentTranslate = this.paper.translate();
+    let dx = 0;
+    let dy = 0;
+
+    switch (direction) {
+      case 'left':
+        dx = 10;
+        break;
+      case 'right':
+        dx = -10;
+        break;
+      case 'up':
+        dy = 10;
+        break;
+      case 'down':
+        dy = -10;
+        break;
+    }
+
+    this.paper.translate(currentTranslate.tx + dx, currentTranslate.ty + dy);
+  }
+
   render() {
     return html`
-      <div class="zoom-controls">
-        <button @click="${this.zoomIn}">Zoom In</button>
-        <button @click="${this.zoomOut}">Zoom Out</button>
-        <button @click="${this.resetZoom}">Reset Zoom</button>
+      <div class="controlPanelContainer"></div>
+      <div class="controlPanel">
+        <md-filled-tonal-icon-button @click="${this.zoomIn}" class="firstButton"
+          ><md-icon>zoom_in</md-icon></md-filled-tonal-icon-button
+        >
+        <md-filled-tonal-icon-button @click="${this.zoomOut}"
+          ><md-icon>zoom_out</md-icon></md-filled-tonal-icon-button
+        >
+        <md-filled-tonal-icon-button @click="${this.resetZoom}"
+          ><md-icon>center_focus_strong</md-icon></md-filled-tonal-icon-button
+        >
+        <md-filled-tonal-icon-button @click="${this.updatePaperSize}"
+          ><md-icon>zoom_out_map</md-icon></md-filled-tonal-icon-button
+        >
+
+        <div class="flex"></div>
+        <md-icon-button @click="${()=>this.pan('left')}"
+          ><md-icon>arrow_back</md-icon></md-icon-button
+        >
+
+        <md-icon-button @click="${()=>this.pan('up')}"
+          ><md-icon>arrow_upward</md-icon></md-icon-button
+        >
+
+        <md-icon-button @click="${()=>this.pan('down')}"
+          ><md-icon>arrow_downward</md-icon></md-icon-button
+        >
+
+        <md-icon-button @click="${()=>this.pan('right')}" class="lastButton"
+          ><md-icon>arrow_forward</md-icon></md-icon-button
+        >
       </div>
       <div class="jointJSCanvas" id="paper-container"></div>
     `;
