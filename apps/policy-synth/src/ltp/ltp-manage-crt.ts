@@ -363,7 +363,7 @@ export class LtpManageCrt extends CpsStageBase {
     return html`
         <md-outlined-button
           @click="${this.reviewTreeConfiguration}"
-          ?hidden="${!this.AIConfigReview}"
+          ?hidden="${!this.AIConfigReview || this.crt!=undefined}"
           >${this.t('Review CRT again')}<md-icon slot="icon"
             >rate_review</md-icon
           ></md-outlined-button

@@ -291,9 +291,9 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      let currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
 
-      const parentNode = this.findNode(currentTree.nodes, parentNodeId);
+      let parentNode = this.findNode(currentTree.nodes, parentNodeId);
 
       if (!parentNode) {
         console.error("Parent node not found");
@@ -316,6 +316,12 @@ export class CurrentRealityTreeController {
         nearestUdeNode.description,
         parentNode
       );
+
+      treeData = await redisClient.get(`crt:${treeId}`);
+
+      currentTree = JSON.parse(treeData);
+
+      parentNode = this.findNode(currentTree.nodes, parentNodeId)!;
 
       parentNode.andChildren = directCausesNodes;
 

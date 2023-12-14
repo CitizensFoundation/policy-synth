@@ -56,7 +56,7 @@ export const getConfigurationReview = async (crt, clientId, wsClients) => {
     if (wsClients.get(clientId)) {
         for await (const part of stream) {
             wsClients.get(clientId)?.send(JSON.stringify({ type: "part", text: part.choices[0].delta.content }));
-            console.log(part.choices[0].delta);
+            //console.log(part.choices[0].delta);
         }
         wsClients.get(clientId)?.send(JSON.stringify({ type: "end" }));
     }

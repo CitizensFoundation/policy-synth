@@ -205,8 +205,8 @@ export class CurrentRealityTreeController {
                 console.error("Tree not found");
                 return res.sendStatus(404);
             }
-            const currentTree = JSON.parse(treeData);
-            const parentNode = this.findNode(currentTree.nodes, parentNodeId);
+            let currentTree = JSON.parse(treeData);
+            let parentNode = this.findNode(currentTree.nodes, parentNodeId);
             if (!parentNode) {
                 console.error("Parent node not found");
                 return res.sendStatus(404);
@@ -218,6 +218,9 @@ export class CurrentRealityTreeController {
             }
             // Passing the description of the nearest UDE node to identifyCauses
             const directCausesNodes = await identifyCauses(currentTree, nearestUdeNode.description, parentNode);
+            treeData = await redisClient.get(`crt:${treeId}`);
+            currentTree = JSON.parse(treeData);
+            parentNode = this.findNode(currentTree.nodes, parentNodeId);
             parentNode.andChildren = directCausesNodes;
             await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
             return res.send(directCausesNodes);
