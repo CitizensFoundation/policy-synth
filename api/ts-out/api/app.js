@@ -2,13 +2,14 @@ import express from "express";
 import bodyParser from "body-parser";
 import * as path from "path";
 import { createServer } from "http";
-import { Server } from "socket.io";
 import { createClient } from "redis";
 import RedisStore from "connect-redis";
 import session from "express-session";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fs from 'fs';
+import { v4 as uuidv4 } from "uuid";
+import { WebSocketServer } from 'ws';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 // Initialize client.
@@ -34,13 +35,32 @@ let redisStore = new RedisStore({
 });
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {});
 export class App {
     app;
     port;
+    ws;
+    wsClients = new Map();
     constructor(controllers, port) {
         this.app = app;
         this.port = parseInt(process.env.PORT || "8000");
+        this.ws = new WebSocketServer({ server: httpServer });
+        this.ws.on('connection', (ws) => {
+            console.log(`Connection established`);
+            const clientId = uuidv4();
+            this.wsClients.set(clientId, ws);
+            ws.send(JSON.stringify({ clientId }));
+            ws.on('message', (message) => {
+                // Process incoming messages
+            });
+            ws.on('close', () => {
+                this.wsClients.delete(clientId);
+                console.log(`Connection closed for client ${clientId}`);
+            });
+            ws.on('error', () => {
+                this.wsClients.delete(clientId);
+                console.log(`Connection error for client ${clientId}`);
+            });
+        });
         this.initializeMiddlewares();
         this.initializeControllers(controllers);
     }
@@ -89,7 +109,8 @@ export class App {
         }
     }
     initializeControllers(controllers) {
-        controllers.forEach((controller) => {
+        controllers.forEach((ControllerClass) => {
+            const controller = new ControllerClass(this.wsClients);
             this.app.use("/", controller.router);
         });
     }

@@ -26,13 +26,18 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public reviewConfiguration(
+    wsClientId: string,
     crt: LtpCurrentRealityTreeData
   ): Promise<string> {
     return this.fetchWrapper(
       this.baseUrlPath + `/crt/reviewConfiguration`,
       {
         method: 'PUT',
-        body: JSON.stringify(crt),
+        body: JSON.stringify({
+          context: crt.context,
+          undesirableEffects: crt.undesirableEffects,
+          wsClientId,
+        }),
       },
       false,
       undefined,
@@ -67,7 +72,7 @@ export class LtpServerApi extends YpServerApi {
         method: 'POST',
         body: JSON.stringify({
           parentNodeId,
-          causes
+          causes,
         }),
       },
       false
@@ -79,7 +84,6 @@ export class LtpServerApi extends YpServerApi {
     crtNodeId: string,
     chatLog: LtpAiChatWsMessage[]
   ): Promise<LtpChatBotCrtMessage> {
-
     // Filter out all chatMessages with type==thinking
     chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking');
 

@@ -27,6 +27,7 @@ import { LtpServerApi } from './LtpServerApi.js';
 
 import './chat/ltp-chat-assistant.js';
 import { MdDialog } from '@material/web/dialog/dialog.js';
+import { LtpStreamingAIResponse } from './LtpStreamingAIResponse.js';
 
 const TESTING = false;
 
@@ -57,6 +58,8 @@ export class LtpManageCrt extends CpsStageBase {
 
   @property({ type: Object })
   nodeToAddCauseTo: LtpCurrentRealityTreeDataNode | undefined;
+  wsMessageListener: (event: any) => void;
+  currentStreaminReponse: LtpStreamingAIResponse;
 
   constructor() {
     super();
@@ -175,21 +178,20 @@ export class LtpManageCrt extends CpsStageBase {
 
         md-filled-button,
         md-outlined-button {
-          margin-top: 12px;
+          margin-top: 8px;
           margin-left: 8px;
           margin-right: 8px;
+          margin-bottom: 8px;
         }
 
         .aiConfigReview {
           margin-left: 8px;
           margin-right: 8px;
           padding: 16px;
-          margin-top: 0px;
+          margin-top: 8px;
           margin-bottom: 8px;
           border-radius: 12px;
           max-width: 560px;
-          max-height: 425px;
-          overflow-y: scroll;
           background-color: var(--md-sys-color-primary-container);
           color: var(--md-sys-color-on-primary-container);
         }
@@ -229,6 +231,14 @@ export class LtpManageCrt extends CpsStageBase {
           margin-right: 8px;
           margin-left: 8px;
         }
+
+        .topDiv {
+          margin-bottom: 256px;
+        }
+
+        [hidden] {
+          display: none !important;
+        }
       `,
     ];
   }
@@ -262,13 +272,44 @@ export class LtpManageCrt extends CpsStageBase {
   async reviewTreeConfiguration() {
     this.isReviewingCrt = true;
 
-    this.AIConfigReview = await this.api.reviewConfiguration(this.crtInputData);
+    if (this.currentStreaminReponse) {
+      this.currentStreaminReponse.close();
+    }
 
-    console.error(this.AIConfigReview);
+    if (this.wsMessageListener) {
+      this.removeEventListener('wsMessage', this.wsMessageListener);
+    }
 
-    this.isReviewingCrt = false;
+    this.AIConfigReview = undefined;
 
-    await this.updateComplete;
+    this.currentStreaminReponse = new LtpStreamingAIResponse(this);
+
+    try {
+      const wsClientId = await this.currentStreaminReponse.connect();
+      this.AIConfigReview = '';
+      console.log('Connected with clientId:', wsClientId);
+
+      this.wsMessageListener = (event: any) => {
+        const { data } = event.detail;
+        if (data.type === 'part' && data.text) {
+          this.AIConfigReview += data.text;
+        } else if (data.type === 'end') {
+          this.removeEventListener('wsMessage', this.wsMessageListener);
+          this.wsMessageListener = undefined;
+          this.currentStreaminReponse  = undefined;
+          this.isReviewingCrt = false;
+        }
+      };
+
+      this.addEventListener('wsMessage', this.wsMessageListener);
+
+      await this.api.reviewConfiguration(wsClientId, this.crtInputData);
+
+      // Proceed with your logic
+    } catch (error) {
+      console.error('WebSocket connection failed:', error);
+      this.removeEventListener('wsMessage', this.wsMessageListener);
+    }
   }
 
   async createTree() {
@@ -305,7 +346,7 @@ export class LtpManageCrt extends CpsStageBase {
 
   renderAIConfigReview() {
     return html`
-      <div class="aiConfigReview">
+      <div class="aiConfigReview" id="aiConfigReview">
         ${this.AIConfigReview
           ? html`
               ${resolveMarkdown(this.AIConfigReview, {
@@ -319,31 +360,23 @@ export class LtpManageCrt extends CpsStageBase {
   }
 
   renderReviewAndSubmit() {
-    if (this.isCreatingCrt || this.isReviewingCrt)
-      return html`<md-linear-progress indeterminate></md-linear-progress>`;
-
-    if (TESTING || this.AIConfigReview) {
-      return html`
-        <md-outlined-button @click="${this.reviewTreeConfiguration}"
+    return html`
+        <md-outlined-button
+          @click="${this.reviewTreeConfiguration}"
+          ?hidden="${!this.AIConfigReview}"
           >${this.t('Review CRT again')}<md-icon slot="icon"
             >rate_review</md-icon
           ></md-outlined-button
         >
-        <md-filled-button @click="${this.createTree}"
-          >${this.t('Create CRT')}<md-icon slot="icon"
-            >send</md-icon
-          ></md-filled-button
-        >
-      `;
-    } else {
-      return html`
-        <md-filled-button @click="${this.reviewTreeConfiguration}"
+        <md-filled-button
+          @click="${this.reviewTreeConfiguration}"
+          ?hidden="${this.AIConfigReview!=undefined || this.crt!=undefined}"
+          ?disabled="${this.isReviewingCrt}"
           >${this.t('Review CRT')}<md-icon slot="icon"
             >rate_review</md-icon
           ></md-filled-button
         >
       `;
-    }
   }
 
   renderThemeToggle() {
@@ -374,7 +407,9 @@ export class LtpManageCrt extends CpsStageBase {
 
   renderConfiguration() {
     return html`
-      <div class="layout vertical center-center">
+      <div class="layout vertical center-center topDiv">
+        ${this.renderThemeToggle()}
+
         <div class="formContainer">
           <div>
             <md-outlined-text-field
@@ -392,21 +427,31 @@ export class LtpManageCrt extends CpsStageBase {
             ></md-outlined-text-field>
           </div>
 
-          ${this.AIConfigReview ? this.renderAIConfigReview() : nothing}
-
           <div class="layout horizontal center-center">
-            ${!this.crt
-              ? this.renderReviewAndSubmit()
-              : html`
-                  <md-outlined-button @click="${this.clearForNew}"
-                    >${this.t('Create New Tree')}<md-icon slot="icon"
-                      >rate_review</md-icon
-                    ></md-outlined-button
-                  >
-                `}
+            <md-outlined-button
+              @click="${this.clearForNew}"
+              ?hidden="${!this.crt}"
+              >${this.t('Create New Tree')}<md-icon slot="icon"
+                >rate_review</md-icon
+              ></md-outlined-button
+            >
+
+            ${this.renderReviewAndSubmit()}
+
+            <md-filled-button
+              @click="${this.createTree}"
+              ?hidden="${!this.AIConfigReview || this.crt!=undefined}"
+              ?disabled="${this.isReviewingCrt}"
+              >${this.t('Create CRT')}<md-icon slot="icon"
+                >send</md-icon
+              ></md-filled-button
+            >
           </div>
 
-          ${this.renderThemeToggle()}
+          ${(this.isReviewingCrt && !this.AIConfigReview)
+            ? html`<md-linear-progress indeterminate></md-linear-progress>`
+            : nothing}
+          ${this.AIConfigReview ? this.renderAIConfigReview() : nothing}
         </div>
       </div>
     `;

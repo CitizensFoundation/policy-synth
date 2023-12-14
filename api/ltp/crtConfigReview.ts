@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import { hrtime } from "process";
 import { v4 as uuidv4 } from "uuid";
+import WebSocket from "ws";
 
 const DEBUGGING = true;
 
@@ -36,7 +37,9 @@ export const renderSystemPrompt = () => {
 };
 
 export const getConfigurationReview = async (
-  crt: LtpCurrentRealityTreeData
+  crt: LtpCurrentRealityTreeData,
+  clientId: string,
+  wsClients: Map<string, WebSocket>
 ) => {
   const messages: any[] = [
     {
@@ -59,19 +62,23 @@ export const getConfigurationReview = async (
     console.log("=====================");
   }
 
-  const response = await openai.chat.completions.create({
+  const stream = await openai.chat.completions.create({
     model: "gpt-4-1106-preview",
     messages,
     max_tokens: 2048,
     temperature: 0.7,
+    stream: true
   });
 
-  let rawMessage = response.choices[0].message.content!;
-  rawMessage = rawMessage.trim().replace(/```markdown/g, "");
-  rawMessage = rawMessage.replace(/```/g, "");
-
-  if (DEBUGGING) {
-    console.log("DEBUGGING: raw message", rawMessage);
+  if (wsClients.get(clientId)) {
+    for await (const part of stream) {
+      wsClients.get(clientId)?.send(JSON.stringify({ type: "part", text: part.choices[0].delta.content }));
+      console.log(part.choices[0].delta);
+    }
+    wsClients.get(clientId)?.send(JSON.stringify({ type: "end" }));
+  } else {
+    console.error(`WS Client ${clientId} not found`);
+    // TODO: Implement this when available
+    //stream.cancel();
   }
-  return rawMessage;
 };

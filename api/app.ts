@@ -10,7 +10,8 @@ import session from "express-session";
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import fs from 'fs';
-
+import { v4 as uuidv4 } from "uuid";
+import WebSocket, { WebSocketServer } from 'ws'
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -41,15 +42,37 @@ const app = express();
 
 const httpServer = createServer(app);
 
-const io = new Server(httpServer, {});
-
 export class App {
   public app: express.Application;
   public port: number;
+  public ws: WebSocketServer;
+  public wsClients = new Map<string, WebSocket>();
 
   constructor(controllers: Array<any>, port: number) {
     this.app = app;
     this.port = parseInt(process.env.PORT || "8000");
+    this.ws = new WebSocketServer({ server: httpServer });
+
+    this.ws.on('connection', (ws: WebSocket) => {
+      console.log(`Connection established`)
+      const clientId = uuidv4();
+      this.wsClients.set(clientId, ws);
+      ws.send(JSON.stringify({ clientId }));
+
+      ws.on('message', (message) => {
+        // Process incoming messages
+      });
+
+      ws.on('close', () => {
+        this.wsClients.delete(clientId);
+        console.log(`Connection closed for client ${clientId}`);
+      });
+
+      ws.on('error', () => {
+        this.wsClients.delete(clientId);
+        console.log(`Connection error for client ${clientId}`);
+      });
+    });
 
     this.initializeMiddlewares();
     this.initializeControllers(controllers);
@@ -142,7 +165,8 @@ export class App {
   }
 
   private initializeControllers(controllers: Array<any>) {
-    controllers.forEach((controller) => {
+    controllers.forEach((ControllerClass) => {
+      const controller = new ControllerClass(this.wsClients);
       this.app.use("/", controller.router);
     });
   }

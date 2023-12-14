@@ -17,10 +17,12 @@ else {
 export class AnalyticsController {
     path = "/api/analytics";
     router = express.Router();
-    constructor() {
-        this.intializeRoutes();
+    wsClients = new Map();
+    constructor(wsClients) {
+        this.wsClients = wsClients;
+        this.initializeRoutes();
     }
-    intializeRoutes() {
+    initializeRoutes() {
         this.router.post(this.path + "/createActivityFromApp", this.createActivityFromApp);
     }
     createActivityFromApp = async (req, res) => {

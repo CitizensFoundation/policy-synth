@@ -10,6 +10,7 @@ import {
 import { RedisClientType } from "@redis/client";
 import { EvidenceWebPageVectorStore } from "../../agentQueue/src/agents/vectorstore/evidenceWebPage.js";
 import { IEngineConstants } from "../../agentQueue/src/constants.js";
+import WebSocket from "ws";
 
 let redisClient: any;
 
@@ -32,11 +33,14 @@ export class ProjectsController {
   public path = "/api/projects";
   public router = express.Router();
   private evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-  constructor() {
-    this.intializeRoutes();
+  public wsClients = new Map<string, WebSocket>();
+
+  constructor(wsClients: Map<string, WebSocket>) {
+    this.wsClients = wsClients;
+    this.initializeRoutes();
   }
 
-  public async intializeRoutes() {
+  public async initializeRoutes() {
     this.router.get(this.path + "/:id/:forceBackupReloadId", this.getProject);
     this.router.get(this.path + "/:id", this.getProject);
     this.router.get(

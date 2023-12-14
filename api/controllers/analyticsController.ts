@@ -1,6 +1,7 @@
 import express from "express";
 import { models } from "../models/index.js";
 import { createClient } from "redis";
+import WebSocket from "ws";
 
 let redisClient: any;
 
@@ -20,12 +21,14 @@ if (process.env.REDIS_URL) {
 export class AnalyticsController {
   public path = "/api/analytics";
   public router = express.Router();
+  public wsClients = new Map<string, WebSocket>();
 
-  constructor() {
-    this.intializeRoutes();
+  constructor(wsClients: Map<string, WebSocket>) {
+    this.wsClients = wsClients;
+    this.initializeRoutes();
   }
 
-  public intializeRoutes() {
+  public initializeRoutes() {
     this.router.post(
       this.path + "/createActivityFromApp",
       this.createActivityFromApp
