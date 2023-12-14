@@ -317,7 +317,7 @@ export class LtpChatAssistant extends YpBaseElement {
     });
 
     const response = await this.api.sendGetRefinedCauseQuery(
-      1,
+      this.crtData.id,
       this.nodeToAddCauseTo.id,
       this.chatLog
     );
