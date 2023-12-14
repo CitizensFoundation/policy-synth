@@ -223,10 +223,15 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   jointNamespace = {};
 
   private highlightBranch(element: dia.Element): void {
-    // First, fade all nodes by adding the fadeAway class
+    // Fade all nodes by adding the fadeAway class
     this.graph.getElements().forEach(el => {
       const view = el.findView(this.paper);
       if (view) {
+        // Toggle the class off and on to restart the animation
+        view.el.classList.remove('fadeAway');
+        // Force a reflow
+        void view.el.getBoundingClientRect();
+        // Re-add the fadeAway class to restart the animation
         view.el.classList.add('fadeAway');
       }
     });
@@ -914,7 +919,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
           0% {
             opacity: 1;
           }
-          50% {
+          8% {
             opacity: 0.1;
           }
           100% {
@@ -923,7 +928,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         }
 
         .fadeAway {
-          animation: fadeAwayAnimation 5.5s;
+          animation: fadeAwayAnimation 12.5s;
         }
 
       `,
