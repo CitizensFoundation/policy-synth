@@ -104,22 +104,47 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     );
   }
 
+  private zoom(factor: number, x: number, y: number): void {
+    const paperRect = this.paper.getComputedSize(); // Get the dimensions of the paper
+    const oldScale = this.paper.scale().sx; // Assume sx and sy are the same, or calculate separately if not
+    const newScale = factor * oldScale; // Calculate the new scale based on the zoom factor
+
+    const oldSize = {
+      width: paperRect.width / oldScale,
+      height: paperRect.height / oldScale,
+    };
+
+    const newSize = {
+      width: paperRect.width / newScale,
+      height: paperRect.height / newScale,
+    };
+
+    // Calculate the new origin
+    const origin = this.paper.translate();
+    const newOrigin = {
+      x: origin.tx - (x / oldScale - oldSize.width / 2) * (newScale - oldScale),
+      y:
+        origin.ty - (y / oldScale - oldSize.height / 2) * (newScale - oldScale),
+    };
+
+    this.paper.translate(newOrigin.x, newOrigin.y);
+    this.paper.scale(newScale, newScale); // Apply the new scale
+  }
+
   private zoomIn(): void {
-    const currentScale = this.paper.scale();
-    this.paper.scale(currentScale.sx * 1.1, currentScale.sy * 1.1);
+    const center = this.paper.getComputedSize(); // or another way to get center
+    this.zoom(1.1, center.width / 2, center.height / 2);
   }
 
   private zoomOut(): void {
-    const currentScale = this.paper.scale();
-    this.paper.scale(currentScale.sx * 0.9, currentScale.sy * 0.9);
+    const center = this.paper.getComputedSize(); // or another way to get center
+    this.zoom(0.9, center.width / 2, center.height / 2);
   }
 
   private resetZoom(): void {
+    // Reset the origin before resetting the scale
     this.paper.scale(1, 1);
-  }
-
-  addNodesEvent(event: CustomEvent<any>) {
-    this.addNodes(event.detail.parentNodeId, event.detail.nodes);
+    this.updatePaperSize();
   }
 
   protected firstUpdated(
@@ -127,14 +152,21 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   ): void {
     this.initializeJointJS();
     this.paper.el.addEventListener('wheel', (event) => {
+      event.preventDefault(); // Prevent the default scroll behavior
+
+      const x = event.offsetX;
+      const y = event.offsetY;
+
       if (event.deltaY < 0) {
-        this.zoomIn();
+        this.zoom(1.1, x, y); // Zoom in factor (e.g., 10%)
       } else {
-        this.zoomOut();
+        this.zoom(0.9, x, y); // Zoom out factor (e.g., 10%)
       }
-      // Prevent the default scroll behavior
-      event.preventDefault();
     });
+  }
+
+  addNodesEvent(event: CustomEvent<any>) {
+    this.addNodes(event.detail.parentNodeId, event.detail.nodes);
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -172,8 +204,16 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       height: '100%',
       gridSize: 10,
       panning: {
-        enabled: false,           // Initially disabled
+        enabled: false, // Initially disabled
         modifiers: 'mouseMiddle', // Enable panning with the middle mouse button
+      },
+      zoom: {
+        enabled: true, // Initially disabled
+        mousewheel: false, // Enable mouse wheel zooming
+        wheelEnabled: true, // Enable touchpad pinch zooming
+        max: 2, // Set max zoom level
+        min: 0.2, // Set min zoom level
+        step: 0.2, // Set zoom step increment
       },
       async: true,
       frozen: true,
@@ -239,47 +279,49 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     const paperEl = this.paper.el;
 
-  paperEl.addEventListener('mousedown', (event: MouseEvent) => {
-    // Middle mouse button is pressed
-    if (event.button === 1) {
-      this.panning = true;
-      this.lastClientX = event.clientX;
-      this.lastClientY = event.clientY;
-      paperEl.style.cursor = 'move'; // Optional: Change the cursor to a move icon
-      event.preventDefault(); // Prevent any default behavior
-    }
-  });
+    paperEl.addEventListener('mousedown', (event: MouseEvent) => {
+      // Middle mouse button is pressed
+      if (event.button === 1) {
+        this.panning = true;
+        this.lastClientX = event.clientX;
+        this.lastClientY = event.clientY;
+        paperEl.style.cursor = 'move'; // Optional: Change the cursor to a move icon
+        event.preventDefault(); // Prevent any default behavior
+      }
+    });
 
-  paperEl.addEventListener('mousemove', (event: MouseEvent) => {
-    if (this.panning) {
-      const dx = event.clientX - this.lastClientX;
-      const dy = event.clientY - this.lastClientY;
+    paperEl.addEventListener('mousemove', (event: MouseEvent) => {
+      if (this.panning) {
+        const dx = event.clientX - this.lastClientX;
+        const dy = event.clientY - this.lastClientY;
 
-      this.lastClientX = event.clientX;
-      this.lastClientY = event.clientY;
+        this.lastClientX = event.clientX;
+        this.lastClientY = event.clientY;
 
-      // Manually apply the translation to the paper's viewport
-      const currentTranslate = this.paper.translate();
-      this.paper.translate(currentTranslate.tx + dx, currentTranslate.ty + dy);
-    }
-  });
+        // Manually apply the translation to the paper's viewport
+        const currentTranslate = this.paper.translate();
+        this.paper.translate(
+          currentTranslate.tx + dx,
+          currentTranslate.ty + dy
+        );
+      }
+    });
 
-  // Listen for mouse up on the paper element itself
-  paperEl.addEventListener('mouseup', (event: MouseEvent) => {
-    if (this.panning && event.button === 1) {
-      this.panning = false;
-      paperEl.style.cursor = 'default'; // Reset the cursor
-    }
-  });
+    // Listen for mouse up on the paper element itself
+    paperEl.addEventListener('mouseup', (event: MouseEvent) => {
+      if (this.panning && event.button === 1) {
+        this.panning = false;
+        paperEl.style.cursor = 'default'; // Reset the cursor
+      }
+    });
 
-  // Optionally, listen for the mouse leaving the paper area to also cancel panning
-  paperEl.addEventListener('mouseleave', (event: MouseEvent) => {
-    if (this.panning) {
-      this.panning = false;
-      paperEl.style.cursor = 'default'; // Reset the cursor
-    }
-  });
-
+    // Optionally, listen for the mouse leaving the paper area to also cancel panning
+    paperEl.addEventListener('mouseleave', (event: MouseEvent) => {
+      if (this.panning) {
+        this.panning = false;
+        paperEl.style.cursor = 'default'; // Reset the cursor
+      }
+    });
   }
 
   private applyDirectedGraphLayout(): void {
@@ -289,7 +331,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       ranker: 'tight-tree',
       rankDir: 'BT', // Adjust as needed
       marginX: 50,
-      marginY: 20,
+      marginY: 50,
       nodeSep: 120,
       edgeSep: 120,
       rankSep: 120,
@@ -317,9 +359,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     // Automatically adjust the viewport to fit all the content
     this.paper.transformToFitContent({
-      padding: 15,
-      minScaleX: 0.1,
-      minScaleY: 0.1,
+      padding: 16,
+      minScaleX: 0.2,
+      minScaleY: 0.2,
       maxScaleX: 2,
       maxScaleY: 2,
       preserveAspectRatio: true,
@@ -421,7 +463,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     setTimeout(() => {
       this.applyDirectedGraphLayout();
-    }, 1500);
+    });
   }
 
   // Function to create a link/edge
@@ -594,11 +636,12 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
   render() {
     return html`
-       <div class="zoom-controls">
-      <button @click="${this.zoomIn}">Zoom In</button>
-      <button @click="${this.zoomOut}">Zoom Out</button>
-      <button @click="${this.resetZoom}">Reset Zoom</button>
-    </div>
-      <div class="jointJSCanvas" id="paper-container"></div> `;
+      <div class="zoom-controls">
+        <button @click="${this.zoomIn}">Zoom In</button>
+        <button @click="${this.zoomOut}">Zoom Out</button>
+        <button @click="${this.resetZoom}">Reset Zoom</button>
+      </div>
+      <div class="jointJSCanvas" id="paper-container"></div>
+    `;
   }
 }
