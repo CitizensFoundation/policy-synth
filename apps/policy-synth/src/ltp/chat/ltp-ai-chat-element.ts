@@ -171,8 +171,12 @@ export class LtpAiChatElement extends YpBaseElement {
         }
 
         .labelText {
-          padding-top: 14px;
+          padding-left: 6px;
           width: 100%;
+        }
+
+        label {
+          padding: 4px;
         }
 
         md-filled-button {
