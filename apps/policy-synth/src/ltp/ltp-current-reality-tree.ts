@@ -85,6 +85,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private panning = false;
   private lastClientX = 0;
   private lastClientY = 0;
+  private debounce: number | undefined;
 
   api: LtpServerApi;
 
@@ -105,30 +106,22 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   }
 
   private zoom(factor: number, x: number, y: number): void {
-    const paperRect = this.paper.getComputedSize(); // Get the dimensions of the paper
-    const oldScale = this.paper.scale().sx; // Assume sx and sy are the same, or calculate separately if not
-    const newScale = factor * oldScale; // Calculate the new scale based on the zoom factor
+    // Get the current scale and calculate the new scale based on the zoom factor
+    const currentScale = this.paper.scale().sx; // sx and sy should be the same
+    const newScale = currentScale * factor;
 
-    const oldSize = {
-      width: paperRect.width / oldScale,
-      height: paperRect.height / oldScale,
-    };
+    // Calculate the new position for the origin
+    const paperRect = this.paper.getComputedSize(); // Get dimensions of the paper
+    const centerX = x - paperRect.width / 2;
+    const centerY = y - paperRect.height / 2;
 
-    const newSize = {
-      width: paperRect.width / newScale,
-      height: paperRect.height / newScale,
-    };
+    const beta = factor - 1;
+    const offsetX = (centerX * beta) / factor;
+    const offsetY = (centerY * beta) / factor;
 
-    // Calculate the new origin
-    const origin = this.paper.translate();
-    const newOrigin = {
-      x: origin.tx - (x / oldScale - oldSize.width / 2) * (newScale - oldScale),
-      y:
-        origin.ty - (y / oldScale - oldSize.height / 2) * (newScale - oldScale),
-    };
-
-    this.paper.translate(newOrigin.x, newOrigin.y);
-    this.paper.scale(newScale, newScale); // Apply the new scale
+    // Apply the scaling and translation adjustments
+    this.paper.translate(this.paper.translate().tx - offsetX, this.paper.translate().ty - offsetY);
+    this.paper.scale(newScale, newScale);
   }
 
   private zoomIn(): void {
@@ -152,16 +145,24 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   ): void {
     this.initializeJointJS();
     this.paper.el.addEventListener('wheel', (event) => {
-      event.preventDefault(); // Prevent the default scroll behavior
-
-      const x = event.offsetX;
-      const y = event.offsetY;
-
-      if (event.deltaY < 0) {
-        this.zoom(1.1, x, y); // Zoom in factor (e.g., 10%)
-      } else {
-        this.zoom(0.9, x, y); // Zoom out factor (e.g., 10%)
+      if (!event.shiftKey) {
+        return; // Only zoom if the Shift key is held down
       }
+
+      event.preventDefault(); // Prevent default scrolling behavior
+
+      // Clear the previous timeout if it exists
+      if (this.debounce) {
+        clearTimeout(this.debounce);
+      }
+
+      // Set a new timeout for the zoom function
+      this.debounce = window.setTimeout(() => {
+        const localPoint = this.paper.clientToLocalPoint({ x: event.offsetX, y: event.offsetY });
+        const newScale = event.deltaY < 0 ? 1.05 : 0.95; // Smaller factors for smoother zoom
+
+        this.zoom(newScale, localPoint.x, localPoint.y);
+      }, 5); // Debounce zoom calls to every 50ms
     });
   }
 
@@ -362,8 +363,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       padding: 16,
       minScaleX: 0.2,
       minScaleY: 0.2,
-      maxScaleX: 2,
-      maxScaleY: 2,
+      maxScaleX: 1.1,
+      maxScaleY: 1.1,
       preserveAspectRatio: true,
       contentArea: this.graph.getBBox(),
       verticalAlign: 'top',
@@ -625,7 +626,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         /* Define your component styles here */
         .jointJSCanvas {
           width: 100vw !important;
-          height: 100vh !important;
+            height: calc(100vh - 90px) !important;
           overflow-x: auto !important;
           overflow-y: auto !important;
           /* styles for the JointJS canvas */
