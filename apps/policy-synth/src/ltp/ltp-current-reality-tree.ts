@@ -120,7 +120,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     const offsetY = (centerY * beta) / factor;
 
     // Apply the scaling and translation adjustments
-    this.paper.translate(this.paper.translate().tx - offsetX, this.paper.translate().ty - offsetY);
+    this.paper.translate(
+      this.paper.translate().tx - offsetX,
+      this.paper.translate().ty - offsetY
+    );
     this.paper.scale(newScale, newScale);
   }
 
@@ -144,7 +147,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
     this.initializeJointJS();
-    this.paper.el.addEventListener('wheel', (event) => {
+    this.paper.el.addEventListener('wheel', event => {
       if (!event.shiftKey) {
         return; // Only zoom if the Shift key is held down
       }
@@ -158,7 +161,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
       // Set a new timeout for the zoom function
       this.debounce = window.setTimeout(() => {
-        const localPoint = this.paper.clientToLocalPoint({ x: event.offsetX, y: event.offsetY });
+        const localPoint = this.paper.clientToLocalPoint({
+          x: event.offsetX,
+          y: event.offsetY,
+        });
         const newScale = event.deltaY < 0 ? 1.05 : 0.95; // Smaller factors for smoother zoom
 
         this.zoom(newScale, localPoint.x, localPoint.y);
@@ -349,7 +355,40 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     const diffY = 100 - bbox.y - bbox.height / 2;
     this.graph.translate(diffX, diffY);
 
-    this.updatePaperSize();
+    //this.updatePaperSize();
+  }
+
+  private centerParentNodeOnScreen(parentNodeId: string): void {
+    const parentNode = this.elements[parentNodeId];
+    if (!parentNode) {
+      console.error(`Parent node with ID ${parentNodeId} not found.`);
+      return;
+    }
+
+    // First, we need to get the current scale so that we can account for it in our calculations
+    const currentScale = this.paper.scale().sx; // Assuming uniform scaling for simplicity; sx and sy are the same
+
+    // Fetch the bounding box of the parent node (which includes sub-elements like labels)
+    const parentNodeBBox = parentNode.getBBox();
+
+    // Compute the dimensions of the paper's visible area
+    const paperSize = this.paper.getComputedSize();
+
+    // Calculate the center of the parent node's bounding box in the coordinates of the current viewport
+    const bboxCenterX = parentNodeBBox.x + parentNodeBBox.width / 2;
+    const bboxCenterY = parentNodeBBox.y + parentNodeBBox.height / 2;
+
+    // Calculate the center of the paper's visible area
+    const paperCenterX = paperSize.width / 2;
+    const paperCenterY = paperSize.height / 2;
+
+    // Calculate the desired translation to put the center of the bounding box in the center of the paper
+    // We need to account for the current scale because the translation is in unscaled coordinates
+    const desiredTx = paperCenterX - bboxCenterX * currentScale;
+    const desiredTy = paperCenterY - bboxCenterY * currentScale;
+
+    // Translate the paper by the calculated amount
+    this.paper.translate(desiredTx, desiredTy);
   }
 
   private updatePaperSize(): void {
@@ -464,6 +503,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     setTimeout(() => {
       this.applyDirectedGraphLayout();
+      this.updatePaperSize();
     });
   }
 
@@ -596,6 +636,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     });
 
     this.applyDirectedGraphLayout();
+    setTimeout(() => {
+      this.centerParentNodeOnScreen(parentNodeId);
+    }, 10);
   }
 
   static get styles() {
@@ -626,7 +669,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         /* Define your component styles here */
         .jointJSCanvas {
           width: 100vw !important;
-            height: calc(100vh - 90px) !important;
+          height: calc(100vh - 90px) !important;
           overflow-x: auto !important;
           overflow-y: auto !important;
           /* styles for the JointJS canvas */
