@@ -104,7 +104,7 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   handleCtrlPKeyPress(event: KeyboardEvent) {
-    if (event.ctrlKey && event.key === 'p') {
+    if ((event.ctrlKey || event.metaKey) && event.altKey && event.key === 'c') {
       this.copyLatestDebugInfoToClipboard();
       event.preventDefault();
     }
@@ -275,9 +275,11 @@ export class LtpChatAssistant extends YpBaseElement {
         break;
       case 'end':
         lastElement.stopJsonLoading();
+        this.chatLog[this.chatLog.length - 1].debug = data.debug;
         this.sendButton.disabled = false;
         this.sendButton.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
+        debugger;
         break;
       case 'message':
         if (lastElement) {
