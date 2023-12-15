@@ -190,7 +190,7 @@ export class CpsApp extends YpBaseElement {
     window.appUser = new CpsAppUser(window.aoiServerApi);
 
     // Set this.themeDarkMode from localStorage or otherwise to true
-    const savedDarkMode = localStorage.getItem('md3-aoi-dark-mode');
+    const savedDarkMode = localStorage.getItem('md3-ps-dark-mode');
     if (savedDarkMode) {
       this.themeDarkMode = true;
     } else {
@@ -198,7 +198,7 @@ export class CpsApp extends YpBaseElement {
     }
 
     const savedHighContrastMode = localStorage.getItem(
-      'md3-aoi-high-contrast-mode'
+      'md3-ps-high-contrast-mode'
     );
     if (savedHighContrastMode) {
       this.themeHighContrast = true;
@@ -546,10 +546,12 @@ export class CpsApp extends YpBaseElement {
     super.connectedCallback();
     this._setupEventListeners();
 
-    const savedColor = localStorage.getItem('md3-yrpri-promotion-color');
+    const savedColor = localStorage.getItem('md3-ps-theme-color');
     if (savedColor) {
       this.fireGlobal('yp-theme-color', savedColor);
     }
+
+    this.setupTheme();
   }
 
   openTempPassword() {
@@ -651,6 +653,9 @@ export class CpsApp extends YpBaseElement {
 
   themeChanged(target: HTMLElement | undefined = undefined) {
     let themeCss = {} as any;
+
+    // Save this.themeColor to locale storage
+    localStorage.setItem('md3-ps-theme-color', this.themeColor);
 
     const isDark =
       this.themeDarkMode === undefined
@@ -1155,10 +1160,10 @@ export class CpsApp extends YpBaseElement {
     this.themeDarkMode = !this.themeDarkMode;
     if (this.themeDarkMode) {
       window.appGlobals.activity('Settings - dark mode');
-      localStorage.setItem('md3-aoi-dark-mode', 'true');
+      localStorage.setItem('md3-ps-dark-mode', 'true');
     } else {
       window.appGlobals.activity('Settings - light mode');
-      localStorage.removeItem('md3-aoi-dark-mode');
+      localStorage.removeItem('md3-ps-dark-mode');
     }
     this.themeChanged();
   }
@@ -1167,11 +1172,40 @@ export class CpsApp extends YpBaseElement {
     this.themeHighContrast = !this.themeHighContrast;
     if (this.themeHighContrast) {
       window.appGlobals.activity('Settings - high contrast mode');
-      localStorage.setItem('md3-aoi-high-contrast-mode', 'true');
+      localStorage.setItem('md3-ps-high-contrast-mode', 'true');
     } else {
       window.appGlobals.activity('Settings - non high contrast mode');
-      localStorage.removeItem('md3-aoi-high-contrast-mode');
+      localStorage.removeItem('md3-ps-high-contrast-mode');
     }
+    this.themeChanged();
+  }
+
+  setupTheme() {
+    // Read dark mode and theme from localestore and set this.themeDarkMode and this.themeColor and change the theme
+    const savedDarkMode = localStorage.getItem('md3-ps-dark-mode');
+    if (savedDarkMode) {
+      this.themeDarkMode = true;
+    } else {
+      this.themeDarkMode = false;
+    }
+
+    const savedHighContrastMode = localStorage.getItem(
+      'md3-ps-high-contrast-mode'
+    );
+
+    if (savedHighContrastMode) {
+      this.themeHighContrast = true;
+    } else {
+      this.themeHighContrast = false;
+    }
+
+    const savedThemeColor = localStorage.getItem('md3-ps-theme-color');
+    if (savedThemeColor) {
+      this.themeColor = savedThemeColor;
+    }
+
+    this.fire('yp-theme-dark-mode', this.themeDarkMode);
+
     this.themeChanged();
   }
 
