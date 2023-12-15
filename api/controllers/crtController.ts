@@ -54,6 +54,7 @@ export class CurrentRealityTreeController {
   }
 
   getRefinedCauses = async (req: express.Request, res: express.Response) => {
+    console.log("getRefinedCauses");
     const treeId = req.params.id;
     const {
       crtNodeId,

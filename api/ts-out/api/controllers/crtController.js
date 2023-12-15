@@ -36,6 +36,7 @@ export class CurrentRealityTreeController {
         await redisClient.connect();
     }
     getRefinedCauses = async (req, res) => {
+        console.log("getRefinedCauses");
         const treeId = req.params.id;
         const { crtNodeId, chatLog, wsClientId } = req.body;
         try {

@@ -253,6 +253,7 @@ export class LtpAiChatElement extends YpBaseElement {
           display: flex;
           align-items: center;
           margin-bottom: 0; // Reduced margin for a tighter layout
+          padding: 8px;
         }
 
         .refinedSuggestions label.assumption:first-of-type {
