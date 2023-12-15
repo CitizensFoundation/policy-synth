@@ -10,7 +10,7 @@ export const renderFirstUserPrompt = (currentUserMessage, currentRealityTree, pa
         userSuggestion = "User suggested direct cause of UDE: ";
     }
     else {
-        userSuggestion = "User suggested itntermediate or root cause of the cause above: ";
+        userSuggestion = "User suggested intermediate or root cause of the cause above: ";
     }
     userSuggestion += currentUserMessage;
     if (parentNodes) {

@@ -23,7 +23,7 @@ export const renderFirstUserPrompt = (
   if (!parentNodes) {
     userSuggestion = "User suggested direct cause of UDE: ";
   } else {
-    userSuggestion = "User suggested itntermediate or root cause of the cause above: ";
+    userSuggestion = "User suggested intermediate or root cause of the cause above: ";
   }
 
   userSuggestion += currentUserMessage;
