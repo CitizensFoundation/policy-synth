@@ -192,6 +192,7 @@ export class LtpManageCrt extends CpsStageBase {
           margin-bottom: 8px;
           border-radius: 12px;
           max-width: 560px;
+          font-size: 14px;
           background-color: var(--md-sys-color-primary-container);
           color: var(--md-sys-color-on-primary-container);
         }
