@@ -38,7 +38,7 @@ export class CurrentRealityTreeController {
     getRefinedCauses = async (req, res) => {
         console.log("getRefinedCauses");
         const treeId = req.params.id;
-        const { crtNodeId, chatLog, wsClientId } = req.body;
+        const { crtNodeId, chatLog, wsClientId, } = req.body;
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
             if (!treeData) {
@@ -57,7 +57,9 @@ export class CurrentRealityTreeController {
                 console.log(JSON.stringify(currentTree, null, 2));
                 return res.sendStatus(404);
             }
-            await getRefinedCauses(currentTree, wsClientId, this.wsClients, parentNode, nearestUdeNode.description, chatLog);
+            await getRefinedCauses(currentTree, wsClientId, this.wsClients, parentNode, nearestUdeNode.description, chatLog, parentNode.type == "ude"
+                ? undefined
+                : this.getParentNodes(currentTree.nodes, parentNode.id));
             return res.sendStatus(200);
         }
         catch (err) {
@@ -86,7 +88,11 @@ export class CurrentRealityTreeController {
             const newNodes = causeStrings.map((cause) => ({
                 id: uuidv4(),
                 description: cause,
-                type: nodeType == "assumption" ? "assumption" : parentNode.type == "ude" ? "directCause" : "intermediateCause",
+                type: nodeType == "assumption"
+                    ? "assumption"
+                    : parentNode.type == "ude"
+                        ? "directCause"
+                        : "intermediateCause",
                 andChildren: [],
                 orChildren: [],
                 isRootCause: false,
@@ -231,6 +237,15 @@ export class CurrentRealityTreeController {
             console.error(err);
             return res.sendStatus(500);
         }
+    };
+    getParentNodes = (nodes, childId) => {
+        let parentNode = this.findParentNode(nodes, childId);
+        const parentNodes = [];
+        while (parentNode) {
+            parentNodes.push(parentNode);
+            parentNode = this.findParentNode(nodes, parentNode.id);
+        }
+        return parentNodes;
     };
     findNearestUde = (nodes, nodeId) => {
         console.log(`Finding nearest UDE for node ID: ${nodeId}`);

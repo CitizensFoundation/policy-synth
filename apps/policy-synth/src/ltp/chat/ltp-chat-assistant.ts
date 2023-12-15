@@ -279,7 +279,6 @@ export class LtpChatAssistant extends YpBaseElement {
         this.sendButton.disabled = false;
         this.sendButton.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
-        debugger;
         break;
       case 'message':
         if (lastElement) {
