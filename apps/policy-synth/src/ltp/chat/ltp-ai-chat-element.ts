@@ -10,9 +10,10 @@ import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/progress/circular-progress.js';
-
+import { jsonrepair } from 'jsonrepair';
 import '../../@yrpri/common/yp-image.js';
 import { LtpServerApi } from '../LtpServerApi';
+import { json } from 'stream/consumers';
 
 @customElement('ltp-ai-chat-element')
 export class LtpAiChatElement extends YpBaseElement {
@@ -90,6 +91,10 @@ export class LtpAiChatElement extends YpBaseElement {
     super.disconnectedCallback();
   }
 
+  stopJsonLoading() {
+    this.jsonLoading = false;
+  }
+
   handleJsonLoadingStart = () => {
     console.log('JSON loading start event triggered');
     this.jsonLoading = true;
@@ -103,9 +108,28 @@ export class LtpAiChatElement extends YpBaseElement {
       jsonContent
     );
     this.jsonLoading = false;
-    debugger;
-    this.requestUpdate(); // If needed to trigger a re-render
-    // Process jsonContent as needed
+    let jsonContentParsed;
+    try {
+      jsonContentParsed = JSON.parse(jsonContent.jsonContent);
+    } catch (e) {
+      console.error('Error parsing JSON content:', e);
+      try {
+        jsonContentParsed = JSON.parse(jsonrepair(jsonContent.jsonContent));
+      } catch (e) {
+        console.error('Error parsing JSON content again:', e);
+      }
+    }
+
+    if (jsonContentParsed) {
+      if (jsonContentParsed.refinedCauses) {
+        this.refinedCausesSuggestions = jsonContentParsed.refinedCauses;
+      }
+      if (jsonContentParsed.refinedAssumptions) {
+        this.refinedAssumptionSuggestions =
+          jsonContentParsed.refinedAssumptions;
+      }
+      debugger;
+    }
   };
 
   static get styles() {
@@ -214,6 +238,13 @@ export class LtpAiChatElement extends YpBaseElement {
         .labelText {
           padding-left: 6px;
           width: 100%;
+        }
+
+        md-circular-progress {
+          --md-circular-progress-size: 32px;
+          width: 32px;
+          height: 32px;
+          margin-top: 8px;
         }
 
         label {
@@ -361,7 +392,11 @@ export class LtpAiChatElement extends YpBaseElement {
       this.refinedCausesSuggestions.length > 0
     ) {
       return html`
-        <div class="causesHeader">${this.t("Possible Causes with Effect")}</div>
+        <div class="layout horiztonal center-center">
+          <div class="causesHeader">
+            ${this.t('Possible Causes with Effect')}
+          </div>
+        </div>
         <div
           class="layout vertical refinedCausesSuggestions wrap"
           role="group"
@@ -397,7 +432,11 @@ export class LtpAiChatElement extends YpBaseElement {
       this.refinedAssumptionSuggestions.length > 0
     ) {
       return html`
-        <div class="causesHeader">${this.t("Possible Assumptions without an Effect")}</div>
+        <div class="layout horiztonal center-center">
+          <div class="causesHeader">
+            ${this.t('Possible Assumptions without an Effect')}
+          </div>
+        </div>
         <div
           class="layout vertical refinedCausesSuggestions wrap"
           role="group"
@@ -416,7 +455,7 @@ export class LtpAiChatElement extends YpBaseElement {
           )}
 
           <div class="layout horizontal center-center">
-            <md-filled-button  @click="${() => this.addSelected('assumption')}">
+            <md-filled-button @click="${() => this.addSelected('assumption')}">
               ${this.t('Add selected assumptions')}
             </md-filled-button>
           </div>
@@ -445,16 +484,17 @@ export class LtpAiChatElement extends YpBaseElement {
                 includeImages: true,
                 includeCodeBlockClassNames: true,
                 handleJsonBlocks: true,
-                targetElement: this
+                targetElement: this,
               })}
               ${this.jsonLoading
-                ? html`<md-circular-progress
-                    intermittent active
-                  ></md-circular-progress>`
+                ? html`<div class="layout horizontal center-center">
+                    <md-circular-progress indeterminate></md-circular-progress>
+                  </div>`
                 : nothing}
             </div>
           </div>
           ${this.renderRefinedCausesSuggestions()}
+          ${this.renderRefinedAssumptionsSuggestions()}
         </div>
         ${this.followUpQuestions && this.followUpQuestions.length > 0
           ? html`
