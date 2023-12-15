@@ -33,8 +33,58 @@ export class CurrentRealityTreeController {
         this.router.post(this.path + "/:id/addDirectCauses", this.addDirectCauses);
         this.router.post(this.path + "/:id/getRefinedCauses", this.getRefinedCauses);
         this.router.put(this.path + "/reviewConfiguration", this.reviewTreeConfiguration);
+        this.router.delete(this.path + '/:id', this.deleteNode);
+        this.router.put(this.path + '/:id', this.updateNode);
         await redisClient.connect();
     }
+    updateNode = async (req, res) => {
+        const treeId = req.params.id;
+        const updatedNode = req.body;
+        try {
+            const treeData = await redisClient.get(`crt:${treeId}`);
+            if (!treeData) {
+                return res.sendStatus(404);
+            }
+            const currentTree = JSON.parse(treeData);
+            // Update the node in the tree
+            const nodeToUpdate = this.findNode(currentTree.nodes, updatedNode.id);
+            if (!nodeToUpdate) {
+                return res.status(404).send({ message: "Node not found" });
+            }
+            Object.assign(nodeToUpdate, updatedNode);
+            await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+            return res.sendStatus(200);
+        }
+        catch (err) {
+            console.error(err);
+            return res.sendStatus(500);
+        }
+    };
+    deleteNode = async (req, res) => {
+        const treeId = req.params.id;
+        const nodeId = req.body.nodeId;
+        try {
+            const treeData = await redisClient.get(`crt:${treeId}`);
+            if (!treeData) {
+                return res.sendStatus(404);
+            }
+            const currentTree = JSON.parse(treeData);
+            // Find the parent of the node to be deleted
+            const parentNode = this.findParentNode(currentTree.nodes, nodeId);
+            if (!parentNode) {
+                return res.status(404).send({ message: "Parent node not found" });
+            }
+            // Remove the node from the parent's children
+            parentNode.andChildren = parentNode.andChildren?.filter(child => child.id !== nodeId);
+            parentNode.orChildren = parentNode.orChildren?.filter(child => child.id !== nodeId);
+            await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+            return res.sendStatus(200);
+        }
+        catch (err) {
+            console.error(err);
+            return res.sendStatus(500);
+        }
+    };
     getRefinedCauses = async (req, res) => {
         console.log("getRefinedCauses");
         const treeId = req.params.id;
