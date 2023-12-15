@@ -120,6 +120,7 @@ export const getRefinedCauses = async (
   chatLog: LtpSimplifiedChatLog[],
   parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined
 ) => {
+  console.log("getRefinedCauses model called");
   let nodeType: CrtNodeType;
 
   if (!parentNode) {
@@ -165,7 +166,7 @@ export const getRefinedCauses = async (
     wsClients.get(clientId)?.send(JSON.stringify({ sender:'bot', type: "start" }));
     for await (const part of stream) {
       wsClients.get(clientId)?.send(JSON.stringify({ sender:'bot', type: "stream", message: part.choices[0].delta.content }));
-      //console.log(part.choices[0].delta);
+      console.log(part.choices[0].delta);
     }
     wsClients.get(clientId)?.send(JSON.stringify({ sender:'bot', type: "end", debug: {
       systemPromptUsedForGeneration: renderSystemPrompt(crt, parentNode, currentUDE, parentNodes),

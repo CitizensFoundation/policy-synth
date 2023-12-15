@@ -91,6 +91,7 @@ export const renderSystemPrompt = (currentRealityTree, parentNode, currentUDE, p
     return prompt;
 };
 export const getRefinedCauses = async (crt, clientId, wsClients, parentNode, currentUDE, chatLog, parentNodes = undefined) => {
+    console.log("getRefinedCauses model called");
     let nodeType;
     if (!parentNode) {
         nodeType = "ude";
@@ -132,7 +133,7 @@ export const getRefinedCauses = async (crt, clientId, wsClients, parentNode, cur
         wsClients.get(clientId)?.send(JSON.stringify({ sender: 'bot', type: "start" }));
         for await (const part of stream) {
             wsClients.get(clientId)?.send(JSON.stringify({ sender: 'bot', type: "stream", message: part.choices[0].delta.content }));
-            //console.log(part.choices[0].delta);
+            console.log(part.choices[0].delta);
         }
         wsClients.get(clientId)?.send(JSON.stringify({ sender: 'bot', type: "end", debug: {
                 systemPromptUsedForGeneration: renderSystemPrompt(crt, parentNode, currentUDE, parentNodes),
