@@ -64,3 +64,8 @@ interface CrtRefinedCausesReply {
   feedback: string;
   refinedCauses: string[];
 }
+
+interface CrtEditNodeInfo {
+  nodeId: string;
+  element: LtpCurrentRealityTreeNode;
+}

@@ -50,7 +50,7 @@ export const getConfigurationReview = async (crt, clientId, wsClients) => {
         model: "gpt-4-1106-preview",
         messages,
         max_tokens: 2048,
-        temperature: 0.7,
+        temperature: 0.4,
         stream: true
     });
     if (wsClients.get(clientId)) {

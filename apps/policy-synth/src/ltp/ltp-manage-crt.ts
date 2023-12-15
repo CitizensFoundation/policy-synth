@@ -12,6 +12,7 @@ import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/button/filled-tonal-button.js';
 import '@material/web/dialog/dialog.js';
+import '@material/web/button/text-button.js';
 
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
 
@@ -44,6 +45,15 @@ export class LtpManageCrt extends CpsStageBase {
 
   @property({ type: Boolean })
   isFetchingCrt = false;
+
+  @property({ type: Object })
+  nodeToEditInfo: CrtEditNodeInfo | undefined;
+
+  @property({ type: Object })
+  nodeToEdit: LtpCurrentRealityTreeDataNode | undefined;
+
+  @property({ type: Boolean })
+  showDeleteConfirmation = false;
 
   @property({ type: Number })
   activeTabIndex = 0;
@@ -81,6 +91,187 @@ export class LtpManageCrt extends CpsStageBase {
     if (this.currentTreeId) {
       this.fetchCurrentTree();
     }
+
+    this.addEventListener(
+      'edit-node',
+      this.openEditNodeDialog as EventListenerOrEventListenerObject
+    );
+  }
+
+  openEditNodeDialog(event: CustomEvent) {
+    this.nodeToEditInfo = event.detail;
+
+    this.nodeToEdit = this.findNodeRecursively(
+      this.crt?.nodes || [],
+      this.nodeToEditInfo.nodeId
+    );
+    if (!this.nodeToEdit) {
+      console.error(`Could not find node ${this.nodeToEditInfo.nodeId}`);
+      console.error(JSON.stringify(this.crt, null, 2));
+      return;
+    }
+
+    (this.$$('#editNodeDialog') as MdDialog).show();
+  }
+
+  closeEditNodeDialog() {
+    (this.$$('#editNodeDialog') as MdDialog).close();
+    this.nodeToEdit = undefined;
+  }
+
+  async handleSaveEditNode() {
+    const updatedDescription = (
+      this.$$('#nodeDescription') as MdOutlinedTextField
+    ).value;
+
+    if (this.nodeToEdit) {
+      this.nodeToEdit.description = updatedDescription;
+
+      if (this.currentTreeId) {
+        try {
+          await this.api.updateNode(this.currentTreeId, this.nodeToEdit);
+
+          // Update the node in the crt object
+          const nodeToUpdate = this.findNodeRecursively(
+            this.crt?.nodes || [],
+            this.nodeToEdit.id
+          );
+          if (nodeToUpdate) {
+            nodeToUpdate.description = updatedDescription;
+          }
+
+          this.closeEditNodeDialog();
+          //TODO: Do this with less brute force, actually update the element
+          this.crt = { ...this.crt };
+        } catch (error) {
+          console.error('Error updating node:', error);
+        }
+      }
+    }
+  }
+
+  handleDeleteNode() {
+    this.showDeleteConfirmation = true;
+  }
+
+  removeNodeRecursively(
+    nodes: LtpCurrentRealityTreeDataNode[],
+    nodeId: string
+  ) {
+    const index = nodes.findIndex(node => node.id === nodeId);
+    if (index !== -1) {
+      nodes.splice(index, 1);
+      return;
+    }
+    nodes.forEach(node => {
+      if (node.andChildren) {
+        this.removeNodeRecursively(node.andChildren, nodeId);
+      }
+      if (node.orChildren) {
+        this.removeNodeRecursively(node.orChildren, nodeId);
+      }
+    });
+  }
+
+  async confirmDeleteNode() {
+    if (this.nodeToEdit && this.currentTreeId) {
+      try {
+        await this.api.deleteNode(this.currentTreeId, this.nodeToEdit.id);
+
+        // Remove the node from the crt object
+        this.removeNodeRecursively(this.crt?.nodes || [], this.nodeToEdit.id);
+        this.closeEditNodeDialog();
+        this.crt = { ...this.crt };
+      } catch (error) {
+        console.error('Error deleting node:', error);
+      } finally {
+        this.closeDeleteConfirmationDialog();
+      }
+    }
+  }
+
+  createDirectCauses() {
+    if (this.nodeToEditInfo) {
+      this.nodeToEditInfo.element.createDirectCauses();
+    }
+
+    this.closeEditNodeDialog();
+  }
+  closeDeleteConfirmationDialog() {
+    this.showDeleteConfirmation = false;
+  }
+
+  renderDeleteConfirmationDialog() {
+    return html`
+      <md-dialog
+        id="deleteConfirmationDialog"
+        ?open="${this.showDeleteConfirmation}"
+        @closed="${() => (this.showDeleteConfirmation = false)}"
+      >
+        <div slot="headline">Confirm Deletion</div>
+        <div slot="content">Are you sure you want to delete this node?</div>
+        <div slot="actions">
+          <md-text-button @click="${this.closeDeleteConfirmationDialog}">
+            Cancel
+          </md-text-button>
+          <md-text-button @click="${this.confirmDeleteNode}">
+            Delete
+          </md-text-button>
+        </div>
+      </md-dialog>
+    `;
+  }
+
+  renderEditNodeDialog() {
+    return html`
+      <md-dialog
+        id="editNodeDialog"
+        style="max-width: 800px;max-height: 90vh;"
+        @closed="${this.closeEditNodeDialog}"
+      >
+        <div slot="headline">Edit Node</div>
+        <div
+          slot="content"
+          id="editNodeForm"
+          class="layout vertical center-center"
+        >
+          <md-outlined-text-field
+            label="Description"
+            .value="${this.nodeToEdit?.description || ''}"
+            id="nodeDescription"
+          ></md-outlined-text-field>
+          <md-icon-button
+            class="createOptionsButton"
+            @click="${this.createDirectCauses}"
+            ><md-icon>prompt_suggestion</md-icon></md-icon-button
+          >
+        </div>
+        <div slot="actions">
+          <md-text-button
+            @click="${this.handleDeleteNode}"
+            form="editNodeForm"
+            class="deleteButton"
+          >
+            Delete
+          </md-text-button>
+          <div class="flex"></div>
+          <md-text-button
+            @click="${this.closeEditNodeDialog}"
+            form="editNodeForm"
+            value="cancel"
+          >
+            Cancel
+          </md-text-button>
+          <md-text-button
+            @click="${this.handleSaveEditNode}"
+            form="editNodeForm"
+            value="ok"
+          >
+            Save
+          </md-text-button>
+        </div>
+      </md-dialog>
+    `;
   }
 
   updatePath() {
@@ -149,9 +340,7 @@ export class LtpManageCrt extends CpsStageBase {
         }
 
         .deleteButton {
-          position: absolute;
-          bottom: 0;
-          left: 0;
+          --md-sys-color-primary: var(--md-sys-color-error);
         }
 
         md-circular-progress {
@@ -297,7 +486,7 @@ export class LtpManageCrt extends CpsStageBase {
         } else if (data.type === 'end') {
           this.removeEventListener('wsMessage', this.wsMessageListener);
           this.wsMessageListener = undefined;
-          this.currentStreaminReponse  = undefined;
+          this.currentStreaminReponse = undefined;
           this.isReviewingCrt = false;
         }
       };
@@ -369,22 +558,22 @@ export class LtpManageCrt extends CpsStageBase {
 
   renderReviewAndSubmit() {
     return html`
-        <md-outlined-button
-          @click="${this.reviewTreeConfiguration}"
-          ?hidden="${!this.AIConfigReview || this.crt!=undefined}"
-          >${this.t('Review CRT again')}<md-icon slot="icon"
-            >rate_review</md-icon
-          ></md-outlined-button
-        >
-        <md-filled-button
-          @click="${this.reviewTreeConfiguration}"
-          ?hidden="${this.AIConfigReview!=undefined || this.crt!=undefined}"
-          ?disabled="${this.isReviewingCrt}"
-          >${this.t('Review CRT')}<md-icon slot="icon"
-            >rate_review</md-icon
-          ></md-filled-button
-        >
-      `;
+      <md-outlined-button
+        @click="${this.reviewTreeConfiguration}"
+        ?hidden="${!this.AIConfigReview || this.crt != undefined}"
+        >${this.t('Review CRT again')}<md-icon slot="icon"
+          >rate_review</md-icon
+        ></md-outlined-button
+      >
+      <md-filled-button
+        @click="${this.reviewTreeConfiguration}"
+        ?hidden="${this.AIConfigReview != undefined || this.crt != undefined}"
+        ?disabled="${this.isReviewingCrt}"
+        >${this.t('Review CRT')}<md-icon slot="icon"
+          >rate_review</md-icon
+        ></md-filled-button
+      >
+    `;
   }
 
   renderThemeToggle() {
@@ -448,7 +637,7 @@ export class LtpManageCrt extends CpsStageBase {
 
             <md-filled-button
               @click="${this.createTree}"
-              ?hidden="${!this.AIConfigReview || this.crt!=undefined}"
+              ?hidden="${!this.AIConfigReview || this.crt != undefined}"
               ?disabled="${this.isReviewingCrt}"
               >${this.t('Create CRT')}<md-icon slot="icon"
                 >send</md-icon
@@ -456,7 +645,7 @@ export class LtpManageCrt extends CpsStageBase {
             >
           </div>
 
-          ${(this.isReviewingCrt && !this.AIConfigReview)
+          ${this.isReviewingCrt && !this.AIConfigReview
             ? html`<md-linear-progress indeterminate></md-linear-progress>`
             : nothing}
           ${this.AIConfigReview ? this.renderAIConfigReview() : nothing}
@@ -465,36 +654,37 @@ export class LtpManageCrt extends CpsStageBase {
     `;
   }
 
+  findNodeRecursively = (
+    nodes: LtpCurrentRealityTreeDataNode[],
+    nodeId: string
+  ): LtpCurrentRealityTreeDataNode | undefined => {
+    for (const node of nodes) {
+      if (node.id === nodeId) {
+        return node;
+      }
+      if (node.andChildren) {
+        const foundNode = this.findNodeRecursively(node.andChildren, nodeId);
+        if (foundNode) {
+          return foundNode;
+        }
+      }
+      if (node.orChildren) {
+        const foundNode = this.findNodeRecursively(node.orChildren, nodeId);
+        if (foundNode) {
+          return foundNode;
+        }
+      }
+    }
+    return undefined;
+  };
+
   openAddCauseDialog(event: CustomEvent) {
     console.error(`openAddCauseDialog ${event.detail.parentNodeId}`);
     const parentNodeId = event.detail.parentNodeId;
     // Get the node from the tree recursively
-    const findNodeRecursively = (
-      nodes: LtpCurrentRealityTreeDataNode[],
-      nodeId: string
-    ): LtpCurrentRealityTreeDataNode | undefined => {
-      for (const node of nodes) {
-        if (node.id === nodeId) {
-          return node;
-        }
-        if (node.andChildren) {
-          const foundNode = findNodeRecursively(node.andChildren, nodeId);
-          if (foundNode) {
-            return foundNode;
-          }
-        }
-        if (node.orChildren) {
-          const foundNode = findNodeRecursively(node.orChildren, nodeId);
-          if (foundNode) {
-            return foundNode;
-          }
-        }
-      }
-      return undefined;
-    };
 
     // Find the node recursively
-    const node = findNodeRecursively(this.crt?.nodes || [], parentNodeId);
+    const node = this.findNodeRecursively(this.crt?.nodes || [], parentNodeId);
     if (!node) {
       console.error(`Could not find node ${parentNodeId}`);
       console.error(JSON.stringify(this.crt, null, 2));
@@ -539,7 +729,8 @@ export class LtpManageCrt extends CpsStageBase {
       html`<md-linear-progress indeterminate></md-linear-progress>`;
     } else {
       return cache(html`
-        ${this.renderAddCauseDialog()}
+        ${this.renderAddCauseDialog()} ${this.renderEditNodeDialog()}
+        ${this.renderDeleteConfirmationDialog()}
         <md-tabs id="tabBar" @change="${this.tabChanged}">
           <md-primary-tab id="configure-tab" aria-controls="configure-panel">
             <md-icon slot="icon">psychology</md-icon>

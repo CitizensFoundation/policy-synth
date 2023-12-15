@@ -108,4 +108,32 @@ export class LtpServerApi extends YpServerApi {
       false
     ) as Promise<LtpChatBotCrtMessage>;
   }
+
+  public updateNode(
+    treeId: string,
+    updatedNode: LtpCurrentRealityTreeDataNode
+  ): Promise<void> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `/crt/${treeId}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updatedNode),
+      },
+      false
+    ) as Promise<void>;
+  }
+
+  public deleteNode(
+    treeId: string,
+    nodeId: string
+  ): Promise<void> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `/crt/${treeId}`,
+      {
+        method: 'DELETE',
+        body: JSON.stringify({ nodeId }),
+      },
+      false
+    ) as Promise<void>;
+  }
 }
