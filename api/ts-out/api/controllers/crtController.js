@@ -37,7 +37,7 @@ export class CurrentRealityTreeController {
     }
     getRefinedCauses = async (req, res) => {
         const treeId = req.params.id;
-        const { crtNodeId, chatLog, } = req.body;
+        const { crtNodeId, chatLog, wsClientId } = req.body;
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
             if (!treeData) {
@@ -56,8 +56,8 @@ export class CurrentRealityTreeController {
                 console.log(JSON.stringify(currentTree, null, 2));
                 return res.sendStatus(404);
             }
-            const response = await getRefinedCauses(currentTree, parentNode, nearestUdeNode.description, chatLog);
-            return res.send(response);
+            await getRefinedCauses(currentTree, wsClientId, this.wsClients, parentNode, nearestUdeNode.description, chatLog);
+            return res.sendStatus(200);
         }
         catch (err) {
             console.error(err);
@@ -67,6 +67,7 @@ export class CurrentRealityTreeController {
     addDirectCauses = async (req, res) => {
         const treeId = req.params.id;
         const parentNodeId = req.body.parentNodeId;
+        const nodeType = req.body.type;
         const causeStrings = req.body.causes;
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
@@ -84,7 +85,7 @@ export class CurrentRealityTreeController {
             const newNodes = causeStrings.map((cause) => ({
                 id: uuidv4(),
                 description: cause,
-                type: parentNode.type == "ude" ? "directCause" : "intermediateCause",
+                type: nodeType == "assumption" ? "assumption" : parentNode.type == "ude" ? "directCause" : "intermediateCause",
                 andChildren: [],
                 orChildren: [],
                 isRootCause: false,

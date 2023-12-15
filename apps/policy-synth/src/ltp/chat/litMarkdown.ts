@@ -3,6 +3,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 import { marked } from 'marked';
 import sanitizeHTML from 'sanitize-html';
+import { YpBaseElement } from '../../@yrpri/common/yp-base-element';
 marked.setOptions({
   // Enable table support
   gfm: true,
@@ -19,7 +20,45 @@ export class MarkdownDirective extends AsyncDirective {
     includeCodeBlockClassNames: false,
     loadingHTML: '<p>Loading...</p>',
     skipSanitization: false,
+    handleJsonBlocks: false,
+    targetElement: undefined as YpBaseElement | undefined
   };
+
+  inJsonBlock = false;
+
+  hasCompletedJsonParsing = false;
+
+  handleJsonBlocks(rawMarkdown: string, targetElement: YpBaseElement) {
+    const startJsonBlockRegex = /```json/g;
+    let startIndex, endIndex;
+    startIndex = rawMarkdown.indexOf("```json");
+
+    if (!this.inJsonBlock) {
+
+      if (startIndex !== -1) {
+        this.inJsonBlock = true;
+        targetElement.fire('jsonLoadingStart');
+        rawMarkdown = rawMarkdown.substring(startIndex);
+      }
+    } else if (this.inJsonBlock) {
+      endIndex = rawMarkdown.indexOf('```', startIndex + 6);
+      if (endIndex !== -1) {
+        let jsonContent = rawMarkdown.substring(startIndex+6, endIndex).trim();
+        this.hasCompletedJsonParsing = true;
+        if (!this.hasCompletedJsonParsing) {
+          targetElement.fire('jsonLoadingEnd', { jsonContent });
+        }
+        rawMarkdown = rawMarkdown.substring(endIndex + 3);
+      } else {
+        // If the end of the JSON block is not found, process the entire chunk as JSON.
+        targetElement.fire('jsonPartialContent', { jsonContent: rawMarkdown.substring(6).trim() });
+        rawMarkdown = ""; // Since we're still in a JSON block, set to empty string to wait for more content.
+      }
+    }
+
+    return rawMarkdown;
+  }
+
 
   private sanitizeHTMLWithOptions(rawHTML: string, options: Options): string {
     return rawHTML;
@@ -60,6 +99,10 @@ export class MarkdownDirective extends AsyncDirective {
       MarkdownDirective.defaultOptions,
       options ?? {}
     );
+
+    if (options.handleJsonBlocks && options.targetElement && rawMarkdown) {
+      rawMarkdown = this.handleJsonBlocks(rawMarkdown, options.targetElement);
+    }
 
     rawMarkdown = this.closeCodeBlockIfNeeded(rawMarkdown);
     //rawMarkdown = this.removeCitations(rawMarkdown);

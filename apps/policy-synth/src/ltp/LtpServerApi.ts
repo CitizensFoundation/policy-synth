@@ -64,7 +64,8 @@ export class LtpServerApi extends YpServerApi {
   public addDirectCauses(
     treeId: string,
     parentNodeId: string,
-    causes: string[]
+    causes: string[],
+    type: CrtNodeType
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
       this.baseUrlPath + `/crt/${treeId}/addDirectCauses`,
@@ -73,6 +74,7 @@ export class LtpServerApi extends YpServerApi {
         body: JSON.stringify({
           parentNodeId,
           causes,
+          type
         }),
       },
       false
@@ -82,7 +84,8 @@ export class LtpServerApi extends YpServerApi {
   public sendGetRefinedCauseQuery(
     crtTreeId: string,
     crtNodeId: string,
-    chatLog: LtpAiChatWsMessage[]
+    chatLog: LtpAiChatWsMessage[],
+    wsClientId: string
   ): Promise<LtpChatBotCrtMessage> {
     // Filter out all chatMessages with type==thinking
     chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking');
@@ -100,7 +103,7 @@ export class LtpServerApi extends YpServerApi {
       this.baseUrlPath + `/crt/${crtTreeId}/getRefinedCauses`,
       {
         method: 'POST',
-        body: JSON.stringify({ crtNodeId, chatLog: simplifiedChatLog }),
+        body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog }),
       },
       false
     ) as Promise<LtpChatBotCrtMessage>;

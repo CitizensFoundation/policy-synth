@@ -42,6 +42,9 @@ export class LtpChatAssistant extends YpBaseElement {
   @property({ type: String })
   infoMessage: string;
 
+  @property({ type: String })
+  wsClientId!: string;
+
   @property({ type: Object })
   crtData!: LtpCurrentRealityTreeData;
 
@@ -110,11 +113,14 @@ export class LtpChatAssistant extends YpBaseElement {
   copyLatestDebugInfoToClipboard() {
     const latestChatMessage = this.chatLog[this.chatLog.length - 1];
     if (latestChatMessage && latestChatMessage.debug) {
-      const systemPrompt = latestChatMessage.debug.systemPromptUsedForGeneration || '';
-      const firstUserPrompt = latestChatMessage.debug.firstUserMessageUserForGeneration || '';
+      const systemPrompt =
+        latestChatMessage.debug.systemPromptUsedForGeneration || '';
+      const firstUserPrompt =
+        latestChatMessage.debug.firstUserMessageUserForGeneration || '';
       const debugInfo = `${systemPrompt}\n\n-------------------------\n\n${firstUserPrompt}`;
 
-      navigator.clipboard.writeText(debugInfo)
+      navigator.clipboard
+        .writeText(debugInfo)
         .then(() => console.log('Debug info copied to clipboard!'))
         .catch(err => console.error('Failed to copy debug info:', err));
     }
@@ -129,30 +135,35 @@ export class LtpChatAssistant extends YpBaseElement {
       document.addEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
     }
 
-    if (USE_WS) {
-      const urlParts = window.location.href.split('/');
-      this.clusterId = parseInt(urlParts[urlParts.length - 3]);
-      super.connectedCallback();
-      this.communityId = parseInt(urlParts[urlParts.length - 2]);
-      this.language = urlParts[urlParts.length - 1];
+    let wsEndpoint;
 
-      if (
-        window.location.href.indexOf('localhost') > -1 ||
-        window.location.href.indexOf('192.1.168') > -1
-      ) {
-        this.wsEndpoint = `ws://localhost:9000/chat/${this.clusterId}/${this.communityId}/${this.language}`;
-      } else {
-        this.wsEndpoint = `wss://sp4.betrireykjavik.is:443/chat/${this.clusterId}/${this.communityId}/${this.language}`;
-      }
-
-      this.ws = new WebSocket(this.wsEndpoint);
-
-      this.ws.onmessage = this.onMessage.bind(this);
-      this.ws.onopen = this.onWsOpen.bind(this);
+    if (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '192.1.168'
+    ) {
+      wsEndpoint = `ws://${window.location.hostname}:8000`;
+    } else {
+      wsEndpoint = `wss://${window.location.hostname}:443`;
     }
+
+    this.ws = new WebSocket(wsEndpoint);
+
+    this.ws.onmessage = this.onMessage.bind(this);
+    this.ws.onopen = this.onWsOpen.bind(this);
+    this.ws.onerror = error => {
+      console.error('WebSocket Error ' + error);
+    };
   }
 
-  onWsOpen(): void {
+  onWsOpen() {
+    // Assuming the server sends the clientId immediately after connection
+    this.ws.onmessage = messageEvent => {
+      const data = JSON.parse(messageEvent.data);
+      if (data.clientId) {
+        this.wsClientId = data.clientId;
+        this.ws.onmessage = this.onMessage.bind(this); // Reset the onmessage handler
+      }
+    };
     this.reset();
   }
 
@@ -163,17 +174,20 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   disconnectedCallback(): void {
-//    this.ws.close();
+    //    this.ws.close();
     super.disconnectedCallback();
 
     if (PROMPT_DEBUG) {
-      document.removeEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
+      document.removeEventListener(
+        'keydown',
+        this.handleCtrlPKeyPress.bind(this)
+      );
     }
   }
 
   async onMessage(event: MessageEvent) {
     const data: LtpAiChatWsMessage = JSON.parse(event.data);
-    //console.error(event.data);
+    console.error(event.data);
 
     switch (data.sender) {
       case 'bot':
@@ -203,7 +217,7 @@ export class LtpChatAssistant extends YpBaseElement {
     changeButtonDisabledState: boolean | undefined = undefined,
     changeButtonLabelTo: string | undefined = undefined,
     refinedCausesSuggestions: string[] | undefined = undefined,
-    rawMessage: string | undefined = undefined,
+    rawMessage: string | undefined = undefined
   ) {
     this.infoMessage = message;
     data.refinedCausesSuggestions = refinedCausesSuggestions || [];
@@ -229,7 +243,7 @@ export class LtpChatAssistant extends YpBaseElement {
         break;
       case 'thinking':
         if (lastElement) {
-          lastElement.active = true ;
+          lastElement.active = true;
         }
         this.addToChatLogWithMessage(data, this.t('Thinking...'));
         break;
@@ -266,7 +280,13 @@ export class LtpChatAssistant extends YpBaseElement {
         if (lastElement) {
           lastElement.active = false;
         }
-        this.addToChatLogWithMessage(data, data.message, undefined, undefined, data.refinedCausesSuggestions);
+        this.addToChatLogWithMessage(
+          data,
+          data.message,
+          undefined,
+          undefined,
+          data.refinedCausesSuggestions
+        );
         this.chatLog[this.chatLog.length - 1].refinedCausesSuggestions =
           data.refinedCausesSuggestions;
         this.sendButton.disabled = false;
@@ -275,13 +295,15 @@ export class LtpChatAssistant extends YpBaseElement {
         this.requestUpdate();
         break;
       case 'stream':
-        //@ts-ignore
-        this.infoMessage = this.t('typing');
-        this.chatLog[this.chatLog.length - 1].message =
-          this.chatLog[this.chatLog.length - 1].message + data.message;
-        //console.error(this.chatLog[this.chatLog.length - 1].message)
-        this.requestUpdate();
-        break;
+        if (data.message) {
+          //@ts-ignore
+          this.infoMessage = this.t('typing');
+          this.chatLog[this.chatLog.length - 1].message =
+            this.chatLog[this.chatLog.length - 1].message + data.message;
+          //console.error(this.chatLog[this.chatLog.length - 1].message)
+          this.requestUpdate();
+          break;
+        }
     }
 
     this.scrollDown();
@@ -313,23 +335,15 @@ export class LtpChatAssistant extends YpBaseElement {
     this.addChatBotElement({
       sender: 'bot',
       type: 'thinking',
-      message: ''
+      message: '',
     });
 
-    const response = await this.api.sendGetRefinedCauseQuery(
+    await this.api.sendGetRefinedCauseQuery(
       this.crtData.id,
       this.nodeToAddCauseTo.id,
-      this.chatLog
+      this.chatLog,
+      this.wsClientId
     );
-
-    this.addChatBotElement({
-      message: response.message,
-      sender: 'bot',
-      type: 'message',
-      refinedCausesSuggestions: response.refinedCausesSuggestions,
-      rawMessage: response.rawMessage,
-      debug: response.debug
-    });
   }
 
   static get styles() {
