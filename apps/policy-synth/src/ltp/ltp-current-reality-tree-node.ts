@@ -163,6 +163,8 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           return 'link';
         case 'rootCause':
           return 'flag';
+        case 'assumption':
+          return 'question_mark';
         default:
           return 'more_vert';
       }
