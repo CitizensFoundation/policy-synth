@@ -1,4 +1,3 @@
-
 import { html, css, nothing, TemplateResult } from 'lit';
 import { property, customElement, query } from 'lit/decorators.js';
 import 'urlpattern-polyfill';
@@ -506,7 +505,10 @@ export class CpsApp extends YpBaseElement {
 
   renderCrtPage(treeId: string | undefined = undefined) {
     return html`
-      <ltp-manage-crt .currentTreeId="${treeId}"></ltp-manage-crt>
+      <ltp-manage-crt
+        .themeDarkMode="${this.themeDarkMode}"
+        ="${treeId}"
+      ></ltp-manage-crt>
     `;
   }
 
@@ -1722,7 +1724,9 @@ export class CpsApp extends YpBaseElement {
   renderTempLoginDialog() {
     return html`<md-dialog
       id="tempPasswordDialog"
-      @cancel="${(e: any)=>{e.preventDefault();}}"
+      @cancel="${(e: any) => {
+        e.preventDefault();
+      }}"
     >
       <div slot="headline" class="postHeader layout vertical center-center">
         ${this.t('Please Enter Password')}
