@@ -506,6 +506,7 @@ export class CpsApp extends YpBaseElement {
   renderCrtPage(treeId: string | undefined = undefined) {
     return html`
       <ltp-manage-crt
+        .currentTreeId="${treeId}"
         .themeDarkMode="${this.themeDarkMode}"
         ="${treeId}"
       ></ltp-manage-crt>
