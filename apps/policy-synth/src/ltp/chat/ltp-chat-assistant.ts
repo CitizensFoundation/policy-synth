@@ -5,6 +5,7 @@ import {
   virtualizerRef,
 } from '@lit-labs/virtualizer/virtualize.js';
 
+
 import { Layouts } from '../../flexbox-literals/classes';
 import { YpBaseElement } from '../../@yrpri/common/yp-base-element';
 
@@ -272,6 +273,7 @@ export class LtpChatAssistant extends YpBaseElement {
         this.addToChatLogWithMessage(data, data.message, false, this.t('Send'));
         break;
       case 'end':
+        lastElement.stopJsonLoading();
         this.sendButton.disabled = false;
         this.sendButton.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
@@ -572,7 +574,6 @@ export class LtpChatAssistant extends YpBaseElement {
                 .crtId="${this.crtData.id}"
                 .parentNodeId="${this.nodeToAddCauseTo.id}"
                 .type="${chatElement.type}"
-                .refinedCausesSuggestions="${chatElement.refinedCausesSuggestions}"
                 .sender="${chatElement.sender}"
               ></ltp-ai-chat-element>
             `

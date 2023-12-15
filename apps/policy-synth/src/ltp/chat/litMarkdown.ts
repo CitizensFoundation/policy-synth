@@ -43,16 +43,16 @@ export class MarkdownDirective extends AsyncDirective {
     } else if (this.inJsonBlock) {
       endIndex = rawMarkdown.indexOf('```', startIndex + 6);
       if (endIndex !== -1) {
-        let jsonContent = rawMarkdown.substring(startIndex+6, endIndex).trim();
-        this.hasCompletedJsonParsing = true;
+        let jsonContent = rawMarkdown.substring(startIndex+7, endIndex).trim();
         if (!this.hasCompletedJsonParsing) {
           targetElement.fire('jsonLoadingEnd', { jsonContent });
         }
-        rawMarkdown = rawMarkdown.substring(endIndex + 3);
+        this.hasCompletedJsonParsing = true;
+        rawMarkdown = rawMarkdown.substring(0, startIndex);
       } else {
         // If the end of the JSON block is not found, process the entire chunk as JSON.
         targetElement.fire('jsonPartialContent', { jsonContent: rawMarkdown.substring(6).trim() });
-        rawMarkdown = ""; // Since we're still in a JSON block, set to empty string to wait for more content.
+        rawMarkdown = rawMarkdown.substring(0, startIndex);
       }
     }
 
@@ -104,8 +104,14 @@ export class MarkdownDirective extends AsyncDirective {
       rawMarkdown = this.handleJsonBlocks(rawMarkdown, options.targetElement);
     }
 
-    rawMarkdown = this.closeCodeBlockIfNeeded(rawMarkdown);
+    if (rawMarkdown) {
+      rawMarkdown = this.closeCodeBlockIfNeeded(rawMarkdown);
+    }
     //rawMarkdown = this.removeCitations(rawMarkdown);
+
+    if (!rawMarkdown) {
+      rawMarkdown = '';
+    }
 
     new Promise<string>((resolve, reject) => {
       marked.parse(rawMarkdown, (error: any, result: any) => {
