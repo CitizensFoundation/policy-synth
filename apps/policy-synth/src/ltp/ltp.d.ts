@@ -1,7 +1,7 @@
 declare module 'vectorizer';
 declare module 'dagre';
 
-type CrtNodeType = 'ude' | 'directCause' | 'intermediateCause' | 'rootCause';
+type CrtNodeType = 'ude' | 'directCause' | 'assumption' | 'intermediateCause' | 'rootCause';
 
 interface CrtDebugData  {
   systemPromptUsedForGeneration?: string;

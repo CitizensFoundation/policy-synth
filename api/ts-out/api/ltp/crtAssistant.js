@@ -20,11 +20,12 @@ export const renderSystemPrompt = (currentRealityTree, parentNode, currentUDE, p
     `)
         : ""}
 
-    We're working on analysing Current Reality Tree direct cause and immediate for this ${parentIsUDE ? 'UDE' : 'cause'}: ${parentNode.description}
+    We're working on analysing Current Reality Tree direct and immediate cause.
 
-    The user will submit his idea for a direct cause to: ${parentNode.description} you will analyze it and give him feedback.
+    The user will submit his idea for a direct and immediate cause for: ${parentNode.description} you will analyze it and give him/her feedback.
 
     You have access to the whole chat history of the user.
+
     Definitions
 
     Undesirable effect
@@ -45,7 +46,7 @@ export const renderSystemPrompt = (currentRealityTree, parentNode, currentUDE, p
     An entity can contain a proposition that is at the same time an effect of one or more underlying causes, and the cause, or one of the causes leading to an effect.
     Assumption: An assumption is an entity containing a premise that does not actively contribute to an effect, but that must be in place for the active cause to lead to the change.
 
-    Important: You must check the direct causes on each of those points before you output them and check the following:
+    Important: You must check the causes and assumptions on each of those points before you output them:
     • 1. Are the premises and the conclusion likely to be true?
     • 2. Are the premises and the conclusion clearly stated?
     • 3. Are the logical connections between the premises and the conclusion clear?
@@ -56,30 +57,40 @@ export const renderSystemPrompt = (currentRealityTree, parentNode, currentUDE, p
     • 8. Is it possible that cause and effect are reversed in the statement?
     • 9. Does the statement express circular logic?
 
-    In addition to refining the users direct cause, if it is viable at all, you will also return a total of 3 direct causes for: ${parentNode.description}, including the users refined direct cause, if it is viable.
+    Always output in Markdown format, but skip the \`\`\`markdown. First output the feedback to the user then a JSON, without any explanation afterwards:
 
-    If the user is asking for clarification on previous conversation then decide if you want to send more refined direct causes back but you can also send just [] back if needed for the refinedCauses, but only if the user is asking for clarifications.
+    Example output:
+    <start>
+    Your explaination in markdown.
 
-    Please output JSON without any explanation:
-      { feedback: string, refinedCauses: string[] }
+    \`\`\`json
+    { refinedCauses: string[], refinedAssumptions: string[] }
+    \`\`\`
+    <end>
 
-    Each of the refinedCauses JSON should never be more than 11 words long and should not end with a period.
+    If the user is asking for clarification on previous conversation then decide if you want to send more refined direct causes back but you can also send just [] back if needed for the refinedCauses and refinedAssumptions, but only if the user is asking for clarifications.
 
-    Always return refinedCauses if the user asks for them even if the user doesn't provide a valid cause him/herself.
+    The first refinedCause and the first assumptions should be what the user suggested, then output a further 3 options for refinedCauses and 3 options for refinedAssumptions.
+
+    Each of the refinedCauses and assumptions in the JSON part should never be more than 11 words long and should not end with a period.
+
+    Always return refinedCauses and assumptions if the user asks for them even if the user doesn't provide a valid cause him/herself.
 
     In the feedback offer a short paragraph to explain the context of LTP and Current Reality Trees, if relevant.
 
-    You can use markdown to format the feedback in a single line, but not the refinedCauses. The feedback should always be output as string.
-
     Please be helpful to the user if he/she is asking for clarifications, the CRT process is sometimes complicated.
 
-    If the user proposes one of his/her own then always include that in your list of returned refinedCauses, if viable.
+    If the user asks for variations then use all 4 variations of the user's suggestion for the refinedCauses and refinedAssumptions JSON outputs
 
-    You must never offer explainations outside the JSON, only output JSON.
+    Always output the refinedCauses and refinedAssumptions in the JSON not in the markdown part.
+
+    You must never output ANY text after the JSON part.
+
+    You MUST always include the suggestion from the user if viable.
   `;
     return prompt;
 };
-export const getRefinedCauses = async (crt, parentNode, currentUDE, chatLog, parentNodes = undefined) => {
+export const getRefinedCauses = async (crt, clientId, wsClients, parentNode, currentUDE, chatLog, parentNodes = undefined) => {
     let nodeType;
     if (!parentNode) {
         nodeType = "ude";
@@ -110,35 +121,27 @@ export const getRefinedCauses = async (crt, parentNode, currentUDE, chatLog, par
         console.log(JSON.stringify(messages, null, 2));
         console.log("=====================");
     }
-    const response = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
         model: "gpt-4-1106-preview",
         messages,
         max_tokens: 4000,
         temperature: 0.7,
+        stream: true
     });
-    let rawMessage = response.choices[0].message.content;
-    if (DEBUGGING) {
-        console.log("DEBUGGING: rawMessage", rawMessage);
+    if (wsClients.get(clientId)) {
+        wsClients.get(clientId)?.send(JSON.stringify({ sender: 'bot', type: "start" }));
+        for await (const part of stream) {
+            wsClients.get(clientId)?.send(JSON.stringify({ sender: 'bot', type: "stream", message: part.choices[0].delta.content }));
+            //console.log(part.choices[0].delta);
+        }
+        wsClients.get(clientId)?.send(JSON.stringify({ sender: 'bot', type: "end", debug: {
+                systemPromptUsedForGeneration: renderSystemPrompt(crt, parentNode, currentUDE, parentNodes),
+                firstUserMessageUserForGeneration: messages[1].content
+            } }));
     }
-    rawMessage = rawMessage.trim().replace(/```json/g, "");
-    rawMessage = rawMessage.replace(/```/g, "");
-    const parsedMessage = JSON.parse(rawMessage);
-    if (DEBUGGING) {
-        console.log("DEBUGGING: parsedMessage", JSON.stringify(parsedMessage, null, 2));
+    else {
+        console.error(`WS Client ${clientId} not found`);
+        // TODO: Implement this when available
+        //stream.cancel();
     }
-    let returnMessage = {
-        message: parsedMessage.feedback,
-        rawMessage: rawMessage,
-        refinedCausesSuggestions: parsedMessage.refinedCauses,
-    };
-    if (DEBUGGING) {
-        returnMessage = { ...returnMessage, ...{
-                debug: {
-                    systemPromptUsedForGeneration: renderSystemPrompt(crt, parentNode, currentUDE, parentNodes),
-                    firstUserMessageUserForGeneration: messages[1].content
-                }
-            } };
-        console.log("DEBUGGING: final nodes", JSON.stringify(returnMessage, null, 2));
-    }
-    return returnMessage;
 };
