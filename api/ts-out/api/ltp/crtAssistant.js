@@ -9,10 +9,22 @@ export const renderFirstUserPrompt = (currentUserMessage, currentRealityTree, pa
     if (!parentNodes) {
         userSuggestion = "User suggested direct cause of UDE: ";
     }
-    else if (parentIsUDE) {
-        userSuggestion = "User suggested itntermediate cause of the cause above: ";
+    else {
+        userSuggestion = "User suggested itntermediate or root cause of the cause above: ";
     }
     userSuggestion += currentUserMessage;
+    if (parentNodes) {
+        const test = parentNodes.map(node => {
+            return node.type;
+        });
+        console.log(JSON.stringify(test, null, 2));
+    }
+    if (parentNodes) {
+        parentNodes = parentNodes.filter((node) => {
+            return node.type !== "ude";
+        });
+    }
+    parentNodes?.unshift(parentNode);
     const prompt = `
     Context: ${currentRealityTree.context}
 
@@ -20,12 +32,11 @@ export const renderFirstUserPrompt = (currentUserMessage, currentRealityTree, pa
 
     ${parentNodes
         ? parentNodes
-            .slice(1)
             .reverse()
             .map((node, index) => `
       ${index === 0
             ? `Direct cause of UDE`
-            : `Intermediate cause of cause above`}:`)
+            : `Intermediate cause of cause above`}: ${node.description}`)
         : ""}
 
     ${userSuggestion}
@@ -170,7 +181,7 @@ export const getRefinedCauses = async (crt, clientId, wsClients, parentNode, cur
                 type: "stream",
                 message: part.choices[0].delta.content,
             }));
-            console.log(part.choices[0].delta);
+            //console.log(part.choices[0].delta);
         }
         wsClients.get(clientId)?.send(JSON.stringify({
             sender: "bot",

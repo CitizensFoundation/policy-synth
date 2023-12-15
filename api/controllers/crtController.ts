@@ -59,8 +59,12 @@ export class CurrentRealityTreeController {
     const {
       crtNodeId,
       chatLog,
-      wsClientId
-    }: { crtNodeId: string; chatLog: LtpSimplifiedChatLog[], wsClientId: string } = req.body;
+      wsClientId,
+    }: {
+      crtNodeId: string;
+      chatLog: LtpSimplifiedChatLog[];
+      wsClientId: string;
+    } = req.body;
 
     try {
       const treeData = await redisClient.get(`crt:${treeId}`);
@@ -94,7 +98,10 @@ export class CurrentRealityTreeController {
         this.wsClients,
         parentNode,
         nearestUdeNode.description,
-        chatLog
+        chatLog,
+        parentNode.type == "ude"
+          ? undefined
+          : this.getParentNodes(currentTree.nodes, parentNode.id)
       );
 
       return res.sendStatus(200);
@@ -132,7 +139,11 @@ export class CurrentRealityTreeController {
             id: uuidv4(),
             description: cause,
             type:
-            nodeType=="assumption" ? "assumption" : parentNode.type == "ude" ? "directCause" : "intermediateCause",
+              nodeType == "assumption"
+                ? "assumption"
+                : parentNode.type == "ude"
+                ? "directCause"
+                : "intermediateCause",
             andChildren: [] as LtpCurrentRealityTreeDataNode[],
             orChildren: [] as LtpCurrentRealityTreeDataNode[],
             isRootCause: false,
@@ -337,6 +348,19 @@ export class CurrentRealityTreeController {
       console.error(err);
       return res.sendStatus(500);
     }
+  };
+
+  private getParentNodes = (
+    nodes: LtpCurrentRealityTreeDataNode[],
+    childId: string
+  ): LtpCurrentRealityTreeDataNode[] => {
+    let parentNode = this.findParentNode(nodes, childId);
+    const parentNodes = [];
+    while (parentNode) {
+      parentNodes.push(parentNode);
+      parentNode = this.findParentNode(nodes, parentNode.id);
+    }
+    return parentNodes;
   };
 
   private findNearestUde = (

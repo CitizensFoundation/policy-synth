@@ -928,7 +928,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         }
 
         .fadeAway {
-          animation: fadeAwayAnimation 12.5s;
+          animation: fadeAwayAnimation 60.5s;
         }
 
       `,
