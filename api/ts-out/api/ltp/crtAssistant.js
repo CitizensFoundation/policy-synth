@@ -70,7 +70,7 @@ export const renderSystemPrompt = (currentRealityTree, parentNode, currentUDE, p
 
     If the user is asking for clarification on previous conversation then decide if you want to send more refined direct causes back but you can also send just [] back if needed for the refinedCauses and refinedAssumptions, but only if the user is asking for clarifications.
 
-    The first refinedCause and the first assumptions should be what the user suggested, then output a further 3 options for refinedCauses and 3 options for refinedAssumptions.
+    The first refinedCause and the first assumptions should be what the user suggested, then output a further 2 options for refinedCauses and 2 options for refinedAssumptions.
 
     Each of the refinedCauses and assumptions in the JSON part should never be more than 11 words long and should not end with a period.
 
@@ -80,7 +80,7 @@ export const renderSystemPrompt = (currentRealityTree, parentNode, currentUDE, p
 
     Please be helpful to the user if he/she is asking for clarifications, the CRT process is sometimes complicated.
 
-    If the user asks for variations then use all 4 variations of the user's suggestion for the refinedCauses and refinedAssumptions JSON outputs
+    If the user asks for variations then use all 3 variations of the user's suggestion for the refinedCauses and refinedAssumptions JSON outputs
 
     Always output the refinedCauses and refinedAssumptions in the JSON not in the markdown part.
 
