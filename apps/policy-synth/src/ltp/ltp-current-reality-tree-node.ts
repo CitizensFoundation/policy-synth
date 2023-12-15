@@ -88,11 +88,11 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
         .createOptionsButtons[root-cause] {
         }
 
-        .menuButton {
+        .editButton {
           position: absolute;
           bottom: 0;
           right: 0;
-          z-index: 1000;
+          z-index: 1500;
         }
 
         .typeIconCore {
@@ -133,6 +133,13 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
     });
 
     this.isCreatingCauses = false;
+  }
+
+  editNode() {
+    this.fire('edit-node', {
+      nodeId: this.nodeId,
+      element: this
+    });
   }
 
   get crtTypeIconClass() {
@@ -191,21 +198,9 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           >${this.crtTypeIcon}</md-icon
         >
 
-        <div class="menuButton">
-          <span style="position: relative">
-            <md-icon-button @click="${this.toggleMenu}"
-              ><md-icon>more_vert</md-icon></md-icon-button
-            >
-            <md-menu id="menu" anchor="button">
-              <md-menu-item id="1" disabled>
-                <div slot="headline">Edit</div>
-              </md-menu-item>
-              <md-menu-item id="2" disabled>
-                <div slot="headline">Delete</div>
-              </md-menu-item>
-            </md-menu>
-          </span>
-        </div>
+        <md-icon-button class="editButton" @click="${this.editNode}"
+          ><md-icon>edit</md-icon></md-icon-button
+        >
 
         <div
           class="layout horizontal center-justify createOptionsButtons"
@@ -218,16 +213,11 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
             : html`
                 <md-icon-button
                   class="createOptionsButton"
-                  @click="${this.createDirectCauses}"
-                  ><md-icon>prompt_suggestion</md-icon></md-icon-button
-                >
-                <md-icon-button
-                  class="createOptionsButton"
                   @click="${() =>
                     this.fire('open-add-cause-dialog', {
                       parentNodeId: this.nodeId,
                     })}"
-                  ><md-icon>person_edit</md-icon></md-icon-button
+                  ><md-icon>add</md-icon></md-icon-button
                 >
               `}
         </div>

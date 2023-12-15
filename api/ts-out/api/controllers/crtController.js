@@ -40,6 +40,7 @@ export class CurrentRealityTreeController {
     updateNode = async (req, res) => {
         const treeId = req.params.id;
         const updatedNode = req.body;
+        console.log(`Updating node ID: ${updatedNode.id}`);
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
             if (!treeData) {
@@ -63,6 +64,7 @@ export class CurrentRealityTreeController {
     deleteNode = async (req, res) => {
         const treeId = req.params.id;
         const nodeId = req.body.nodeId;
+        console.log(`Deleting node ID: ${nodeId}`);
         try {
             const treeData = await redisClient.get(`crt:${treeId}`);
             if (!treeData) {
