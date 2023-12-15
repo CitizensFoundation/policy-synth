@@ -9,6 +9,8 @@ import '@material/web/checkbox/checkbox.js';
 
 import '@material/web/button/outlined-button.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/textfield/filled-text-field.js';
+
 import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
 import '../../@yrpri/common/yp-image.js';
@@ -247,10 +249,33 @@ export class LtpAiChatElement extends YpBaseElement {
           margin-top: 8px;
         }
 
-        label {
-          padding: 4px;
+        .refinedSuggestions label {
+          display: flex;
+          align-items: center;
+          margin-bottom: 0; // Reduced margin for a tighter layout
         }
 
+        .refinedSuggestions label.assumption:first-of-type {
+          margin-top: 8px; // Extra margin for the first assumption
+        }
+
+        .labelText {
+          margin-left: 4px; // Adjust as needed
+        }
+
+        .refinedContainer {
+          padding-left: 36px;
+        }
+
+        .directCause {
+          background-color: var(--md-sys-color-secondary-container);
+          color: var(--md-sys-color-on-secondary-container);
+        }
+
+        .assumption {
+          background-color: var(--md-sys-color-tertiary-container);
+          color: var(--md-sys-color-on-tertiary-container);
+        }
         md-filled-button {
           max-width: 250px;
           margin-top: 16px;
@@ -394,7 +419,6 @@ export class LtpAiChatElement extends YpBaseElement {
     this.isCreatingCauses = false;
   }
 
-
   get isError() {
     return this.type == 'error' || this.type == 'moderation_error';
   }
@@ -411,26 +435,38 @@ export class LtpAiChatElement extends YpBaseElement {
     const combinedSuggestions = [
       ...(this.refinedCausesSuggestions || []).map(suggestion => ({
         text: suggestion,
-        type: 'directCause'
+        type: 'directCause',
       })),
       ...(this.refinedAssumptionSuggestions || []).map(suggestion => ({
         text: suggestion,
-        type: 'assumption'
-      }))
+        type: 'assumption',
+      })),
     ];
 
     if (combinedSuggestions.length > 0) {
       return html`
-        <div class="layout vertical refinedSuggestions wrap" role="group" aria-label="Refined suggestions">
+        <div
+          class="layout vertical refinedSuggestions wrap"
+          role="group"
+          aria-label="Refined suggestions"
+        >
           ${combinedSuggestions.map(
             ({ text, type }) => html`
-              <label class="layout horizontal">
-                <md-checkbox aria-label="${text}" data-type="${type}" touch-target="wrapper"></md-checkbox>
+              <label
+                class="layout horizontal refinedContainer ${type ===
+                'directCause'
+                  ? 'directCause'
+                  : 'assumption'}"
+              >
+                <md-checkbox
+                  aria-label="${text}"
+                  data-type="${type}"
+                  touch-target="wrapper"
+                ></md-checkbox>
                 <div class="labelText">${text}</div>
               </label>
             `
           )}
-
           <div class="layout horizontal center-center">
             <md-filled-button @click="${() => this.addSelected()}">
               ${this.t('Add selected')}

@@ -5,7 +5,6 @@ import {
   virtualizerRef,
 } from '@lit-labs/virtualizer/virtualize.js';
 
-
 import { Layouts } from '../../flexbox-literals/classes';
 import { YpBaseElement } from '../../@yrpri/common/yp-base-element';
 
@@ -253,6 +252,8 @@ export class LtpChatAssistant extends YpBaseElement {
           lastElement.active = false;
         }
         this.addToChatLogWithMessage(data, this.t('Thinking...'));
+        if (!this.chatLog[this.chatLog.length - 1].message)
+          this.chatLog[this.chatLog.length - 1].message = '';
         break;
       case 'start_followup':
         lastElement.followUpQuestionsRaw = '';
@@ -297,7 +298,7 @@ export class LtpChatAssistant extends YpBaseElement {
         this.requestUpdate();
         break;
       case 'stream':
-        if (data.message) {
+        if (data.message && data.message != 'undefined') {
           //@ts-ignore
           this.infoMessage = this.t('typing');
           this.chatLog[this.chatLog.length - 1].message =
