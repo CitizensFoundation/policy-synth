@@ -14,6 +14,7 @@ import { jsonrepair } from 'jsonrepair';
 import '../../@yrpri/common/yp-image.js';
 import { LtpServerApi } from '../LtpServerApi';
 import { json } from 'stream/consumers';
+import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 
 @customElement('ltp-ai-chat-element')
 export class LtpAiChatElement extends YpBaseElement {
@@ -128,7 +129,6 @@ export class LtpAiChatElement extends YpBaseElement {
         this.refinedAssumptionSuggestions =
           jsonContentParsed.refinedAssumptions;
       }
-      debugger;
     }
   };
 
@@ -337,30 +337,50 @@ export class LtpAiChatElement extends YpBaseElement {
     ];
   }
 
-  async addSelected(type: CrtNodeType) {
-    // Get all checkbox elements
+  async addSelected() {
+    // Get all checked checkbox elements
     const checkboxes = this.shadowRoot.querySelectorAll('md-checkbox');
 
-    // Array to hold selected causes
+    // Arrays to hold selected causes and assumptions
     const selectedCauses: string[] = [];
+    const selectedAssumptions: string[] = [];
 
-    // Iterate over each checkbox to check if it is selected
+    // Iterate over each checked checkbox
     checkboxes.forEach(checkbox => {
       if (checkbox.checked) {
-        // Get the label (cause) associated with the checkbox
-        const cause = checkbox.getAttribute('aria-label');
-        selectedCauses.push(cause);
+        const item = checkbox.getAttribute('aria-label');
+        const type = (checkbox as MdCheckbox).dataset.type;
+
+        if (type === 'directCause') {
+          selectedCauses.push(item);
+        } else if (type === 'assumption') {
+          selectedAssumptions.push(item);
+        }
       }
     });
 
     this.isCreatingCauses = true;
 
-    const nodes = await this.api.addDirectCauses(
-      this.crtId,
-      this.parentNodeId,
-      selectedCauses,
-      type
-    );
+    // Add causes and assumptions using separate API calls
+    let nodes: LtpCurrentRealityTreeDataNode[] = [];
+    if (selectedCauses.length) {
+      const causesNodes = await this.api.addDirectCauses(
+        this.crtId,
+        this.parentNodeId,
+        selectedCauses,
+        'directCause'
+      );
+      nodes = nodes.concat(causesNodes);
+    }
+    if (selectedAssumptions.length) {
+      const assumptionsNodes = await this.api.addDirectCauses(
+        this.crtId,
+        this.parentNodeId,
+        selectedAssumptions,
+        'assumption'
+      );
+      nodes = nodes.concat(assumptionsNodes);
+    }
 
     this.fireGlobal('add-nodes', {
       parentNodeId: this.parentNodeId,
@@ -374,6 +394,7 @@ export class LtpAiChatElement extends YpBaseElement {
     this.isCreatingCauses = false;
   }
 
+
   get isError() {
     return this.type == 'error' || this.type == 'moderation_error';
   }
@@ -386,77 +407,33 @@ export class LtpAiChatElement extends YpBaseElement {
     return html` <md-icon class="robotIcon">person</md-icon> `;
   }
 
-  renderRefinedCausesSuggestions() {
-    if (
-      this.refinedCausesSuggestions &&
-      this.refinedCausesSuggestions.length > 0
-    ) {
+  renderRefinedSuggestions() {
+    const combinedSuggestions = [
+      ...(this.refinedCausesSuggestions || []).map(suggestion => ({
+        text: suggestion,
+        type: 'directCause'
+      })),
+      ...(this.refinedAssumptionSuggestions || []).map(suggestion => ({
+        text: suggestion,
+        type: 'assumption'
+      }))
+    ];
+
+    if (combinedSuggestions.length > 0) {
       return html`
-        <div class="layout horiztonal center-center">
-          <div class="causesHeader">
-            ${this.t('Possible Causes with Effect')}
-          </div>
-        </div>
-        <div
-          class="layout vertical refinedCausesSuggestions wrap"
-          role="group"
-          aria-label="Refined causes suggestions"
-        >
-          ${this.refinedCausesSuggestions.map(
-            suggestion => html`
+        <div class="layout vertical refinedSuggestions wrap" role="group" aria-label="Refined suggestions">
+          ${combinedSuggestions.map(
+            ({ text, type }) => html`
               <label class="layout horizontal">
-                <md-checkbox
-                  aria-label="${suggestion}"
-                  touch-target="wrapper"
-                ></md-checkbox>
-                <div class="labelText">${suggestion}</div>
+                <md-checkbox aria-label="${text}" data-type="${type}" touch-target="wrapper"></md-checkbox>
+                <div class="labelText">${text}</div>
               </label>
             `
           )}
 
           <div class="layout horizontal center-center">
-            <md-filled-button @click="${() => this.addSelected('directCause')}">
-              ${this.t('Add selected causes')}
-            </md-filled-button>
-          </div>
-        </div>
-      `;
-    } else {
-      return nothing;
-    }
-  }
-
-  renderRefinedAssumptionsSuggestions() {
-    if (
-      this.refinedAssumptionSuggestions &&
-      this.refinedAssumptionSuggestions.length > 0
-    ) {
-      return html`
-        <div class="layout horiztonal center-center">
-          <div class="causesHeader">
-            ${this.t('Possible Assumptions without an Effect')}
-          </div>
-        </div>
-        <div
-          class="layout vertical refinedCausesSuggestions wrap"
-          role="group"
-          aria-label="Refined assumptions suggestions"
-        >
-          ${this.refinedAssumptionSuggestions.map(
-            suggestion => html`
-              <label class="layout horizontal">
-                <md-checkbox
-                  aria-label="${suggestion}"
-                  touch-target="wrapper"
-                ></md-checkbox>
-                <div class="labelText">${suggestion}</div>
-              </label>
-            `
-          )}
-
-          <div class="layout horizontal center-center">
-            <md-filled-button @click="${() => this.addSelected('assumption')}">
-              ${this.t('Add selected assumptions')}
+            <md-filled-button @click="${() => this.addSelected()}">
+              ${this.t('Add selected')}
             </md-filled-button>
           </div>
         </div>
@@ -493,8 +470,7 @@ export class LtpAiChatElement extends YpBaseElement {
                 : nothing}
             </div>
           </div>
-          ${this.renderRefinedCausesSuggestions()}
-          ${this.renderRefinedAssumptionsSuggestions()}
+          ${this.renderRefinedSuggestions()}
         </div>
         ${this.followUpQuestions && this.followUpQuestions.length > 0
           ? html`
