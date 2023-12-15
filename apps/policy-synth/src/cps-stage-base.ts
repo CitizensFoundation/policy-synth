@@ -650,8 +650,16 @@ export abstract class CpsStageBase extends YpBaseElement {
   }
 
   toggleDarkMode() {
+    debugger;
     this.fire('yp-theme-dark-mode', !this.themeDarkMode);
     window.appGlobals.activity('Solutions - toggle darkmode');
+    if (this.themeDarkMode) {
+      window.appGlobals.activity('Settings - dark mode');
+      localStorage.setItem('md3-ps-dark-mode', 'true');
+    } else {
+      window.appGlobals.activity('Settings - light mode');
+      localStorage.removeItem('md3-ps-dark-mode');
+    }
   }
 
   renderThemeToggle() {
