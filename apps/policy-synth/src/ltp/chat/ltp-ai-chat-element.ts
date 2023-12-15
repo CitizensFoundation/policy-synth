@@ -249,6 +249,10 @@ export class LtpAiChatElement extends YpBaseElement {
           margin-top: 8px;
         }
 
+        .refinedSuggestions  {
+          padding: 16px;
+        }
+
         .refinedSuggestions label {
           display: flex;
           align-items: center;
@@ -265,6 +269,7 @@ export class LtpAiChatElement extends YpBaseElement {
         }
 
         .refinedContainer {
+          padding: 8px;
           padding-left: 36px;
         }
 
