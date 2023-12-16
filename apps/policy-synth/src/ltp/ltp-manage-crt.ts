@@ -294,6 +294,8 @@ export class LtpManageCrt extends CpsStageBase {
                 <div class="layout horizontal center-center">
                   <md-text-button
                     class="automaticCreateButton"
+                    ?hidden="${this.nodeToEditInfo.element.crtNodeType ==
+                    'rootCause'}"
                     @click="${this.createDirectCauses}"
                   >
                     Automatically create nodes (for testing)
