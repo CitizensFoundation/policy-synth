@@ -618,7 +618,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       nodeId: node.id,
       nodeType: node.type,
       crtId: this.crtData?.id,
-      isRootCause: node.isRootCause || node.type=="rootCause",
+      isRootCause: node.type=="rootCause",
       attrs: {
         //cause: node.description,
       },
