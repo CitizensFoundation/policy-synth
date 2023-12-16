@@ -172,7 +172,7 @@ export const identifyCauses = async (crt, currentUDE, currentparentNode = undefi
             },
         ],
         max_tokens: 2048,
-        temperature: 0.7,
+        temperature: 0.5,
     });
     let rawMessage = response.choices[0].message.content;
     if (DEBUGGING) {

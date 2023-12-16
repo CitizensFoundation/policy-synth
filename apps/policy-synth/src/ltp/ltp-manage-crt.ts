@@ -13,6 +13,9 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/button/filled-tonal-button.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/text-button.js';
+import '@material/web/checkbox/checkbox.js';
+import '@material/web/menu/menu.js';
+import '@material/web/menu/menu-item.js';
 
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
 
@@ -31,6 +34,14 @@ import { MdDialog } from '@material/web/dialog/dialog.js';
 import { LtpStreamingAIResponse } from './LtpStreamingAIResponse.js';
 
 const TESTING = false;
+
+const nodeTypes = [
+  'ude',
+  'directCause',
+  'assumption',
+  'intermediateCause',
+  'rootCause',
+];
 
 @customElement('ltp-manage-crt')
 export class LtpManageCrt extends CpsStageBase {
@@ -117,6 +128,7 @@ export class LtpManageCrt extends CpsStageBase {
   closeEditNodeDialog() {
     (this.$$('#editNodeDialog') as MdDialog).close();
     this.nodeToEdit = undefined;
+    this.nodeToEditInfo = undefined;
   }
 
   async handleSaveEditNode() {
@@ -124,8 +136,17 @@ export class LtpManageCrt extends CpsStageBase {
       this.$$('#nodeDescription') as MdOutlinedTextField
     ).value;
 
+    // Retrieve the selected node type from md-select
+    const nodeTypeSelect = this.$$('#nodeTypeSelect') as HTMLSelectElement; // Update the ID to match your select element
+    const selectedNodeType = nodeTypeSelect.value;
+
     if (this.nodeToEdit) {
       this.nodeToEdit.description = updatedDescription;
+
+      // Update the node type if one is selected
+      if (selectedNodeType) {
+        this.nodeToEdit.type = selectedNodeType as CrtNodeType;
+      }
 
       if (this.currentTreeId) {
         try {
@@ -138,6 +159,9 @@ export class LtpManageCrt extends CpsStageBase {
           );
           if (nodeToUpdate) {
             nodeToUpdate.description = updatedDescription;
+            if (selectedNodeType) {
+              nodeToUpdate.type = selectedNodeType as CrtNodeType;
+            }
           }
 
           this.closeEditNodeDialog();
@@ -226,47 +250,70 @@ export class LtpManageCrt extends CpsStageBase {
     return html`
       <md-dialog
         id="editNodeDialog"
-        style="max-width: 800px;max-height: 90vh;"
+        style="max-width: 800px; max-height: 90vh;"
         @closed="${this.closeEditNodeDialog}"
       >
         <div slot="headline">Edit Node</div>
         <div
           slot="content"
           id="editNodeForm"
-          class="layout vertical center-center"
+          style="max-height: 90vh;height: 500px;"
+          class="layout vertical"
         >
-          <md-outlined-text-field
-            label="Description"
-            .value="${this.nodeToEdit?.description || ''}"
-            id="nodeDescription"
-          ></md-outlined-text-field>
-          <md-icon-button
-            class="createOptionsButton"
-            @click="${this.createDirectCauses}"
-            ><md-icon>prompt_suggestion</md-icon></md-icon-button
-          >
+          ${this.nodeToEditInfo
+            ? html`
+                <md-outlined-text-field
+                  label="Description"
+                  .value="${this.nodeToEdit?.description || ''}"
+                  id="nodeDescription"
+                ></md-outlined-text-field>
+                <md-outlined-select
+                  menuPositioning="fixed"
+                  label="Node Type"
+                  id="nodeTypeSelect"
+                >
+                  ${nodeTypes
+                    .filter(type => type !== undefined)
+                    .map(
+                      type => html`
+                        <md-select-option
+                          value="${type}"
+                          ?selected="${this.nodeToEditInfo.element
+                            .crtNodeType == type}"
+                        >
+                          <div slot="headline">
+                            ${this.camelCaseToHumanReadable(type)}
+                          </div>
+                        </md-select-option>
+                      `
+                    )}
+                </md-outlined-select>
+
+                <div class="flex"></div>
+
+                <div class="layout horizontal center-center">
+                  <md-text-button
+                    class="automaticCreateButton"
+                    @click="${this.createDirectCauses}"
+                  >
+                    Automatically create nodes (for testing)
+                  </md-text-button>
+                </div>
+              `
+            : nothing}
         </div>
         <div slot="actions">
           <md-text-button
             @click="${this.handleDeleteNode}"
-            form="editNodeForm"
             class="deleteButton"
           >
             Delete
           </md-text-button>
           <div class="flex"></div>
-          <md-text-button
-            @click="${this.closeEditNodeDialog}"
-            form="editNodeForm"
-            value="cancel"
-          >
+          <md-text-button @click="${this.closeEditNodeDialog}" value="cancel">
             Cancel
           </md-text-button>
-          <md-text-button
-            @click="${this.handleSaveEditNode}"
-            form="editNodeForm"
-            value="ok"
-          >
+          <md-text-button @click="${this.handleSaveEditNode}" value="ok">
             Save
           </md-text-button>
         </div>
@@ -315,6 +362,13 @@ export class LtpManageCrt extends CpsStageBase {
       'close-add-cause-dialog',
       this.closeAddCauseDialog as EventListenerOrEventListenerObject
     );
+  }
+  camelCaseToHumanReadable(str: string) {
+    // Split the string at each uppercase letter and join with space
+    const words = str.replace(/([A-Z])/g, ' $1').trim();
+
+    // Capitalize the first letter of the resulting string
+    return words.charAt(0).toUpperCase() + words.slice(1);
   }
 
   static get styles() {
@@ -424,6 +478,17 @@ export class LtpManageCrt extends CpsStageBase {
 
         .topDiv {
           margin-bottom: 256px;
+        }
+
+        md-outlined-select {
+          z-index: 1500px;
+          margin: 16px;
+          margin-left: 0;
+          max-width: 250px;
+        }
+
+        .automaticCreateButton {
+          max-width: 300px;
         }
 
         [hidden] {

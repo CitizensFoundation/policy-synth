@@ -109,6 +109,14 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           color: var(--md-sys-color-tertiary);
         }
 
+        .typeIconRoot {
+          color: var(--md-sys-color-on-primary);
+        }
+
+        md-icon-button[root-cause] {
+          --md-icon-button-icon-color: var(--md-sys-color-on-primary);
+        }
+
         md-circular-progress {
           --md-circular-progress-size: 28px;
           margin-bottom: 6px;
@@ -138,7 +146,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
   editNode() {
     this.fire('edit-node', {
       nodeId: this.nodeId,
-      element: this
+      element: this,
     });
   }
 
@@ -146,6 +154,8 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
     switch (this.crtNodeType) {
       case 'ude':
         return 'typeIconUde';
+      case 'rootCause':
+        return 'typeIconRoot';
       default:
         console.log('crtNodeType', this.crtNodeType);
         return 'typeIcon';
@@ -198,7 +208,10 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           >${this.crtTypeIcon}</md-icon
         >
 
-        <md-icon-button class="editButton" @click="${this.editNode}"
+        <md-icon-button
+          ?root-cause="${this.isRootCause}"
+          class="editButton"
+          @click="${this.editNode}"
           ><md-icon>edit</md-icon></md-icon-button
         >
 
@@ -212,6 +225,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
               `
             : html`
                 <md-icon-button
+                  ?root-cause="${this.isRootCause}"
                   class="createOptionsButton"
                   @click="${() =>
                     this.fire('open-add-cause-dialog', {
