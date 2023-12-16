@@ -769,6 +769,56 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     }
   }
 
+  exportToDrawioXml(): void {
+    const xmlHeader = `<?xml version="1.0" encoding="UTF-8"?>`;
+    const mxfileHeader = `<mxfile host="app.diagrams.net" modified="2021-05-17T17:18:48.774Z" version="14.6.13" type="device">`;
+    const diagramStart = `<diagram name="Page-1" id="example-diagram-id">`;
+    const graphModelStart = `<mxGraphModel grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="#ffffff">`;
+    const rootStart = `<root><mxCell id="0" /><mxCell id="1" parent="0" />`;
+
+    const createDrawioXmlNode = (node: dia.Element<dia.Element.Attributes, dia.ModelSetOptions>) => {
+        const position = node.position();
+        const size = node.size();
+        return `<mxCell id="${node.id}" value="${node.attributes.label}" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="${position.x}" y="${position.y}" width="${size.width}" height="${size.height}" as="geometry" />
+                </mxCell>`;
+    };
+
+    const createDrawioXmlLink = (link: dia.Link<dia.Link.Attributes, dia.ModelSetOptions>) => {
+        return `<mxCell id="${link.id}" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="${link.source().id}" target="${link.target().id}">
+                    <mxGeometry relative="1" as="geometry" />
+                </mxCell>`;
+    };
+
+    let drawioXml = `${xmlHeader}${mxfileHeader}${diagramStart}${graphModelStart}${rootStart}`;
+
+    // Export nodes
+    this.graph.getElements().forEach((element) => {
+        drawioXml += createDrawioXmlNode(element);
+    });
+
+    // Export links
+    this.graph.getLinks().forEach((link) => {
+        drawioXml += createDrawioXmlLink(link);
+    });
+
+    const xmlFooter = `</root></mxGraphModel></diagram></mxfile>`;
+    drawioXml += xmlFooter;
+
+    // Convert the XML string to a Blob
+    const blob = new Blob([drawioXml], { type: 'application/xml' });
+
+    // Create a download link and trigger the download
+    const downloadLink = document.createElement("a");
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = "graph.drawio"; // Name the file
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+
+
+
   private unhighlightCell(cell: Cell): void {
     const view = cell.findView(this.paper);
     if (view) {
@@ -976,6 +1026,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         >
 
         <div class="flex"></div>
+        <md-icon-button @click="${this.exportToDrawioXml}"
+          ><md-icon>download</md-icon></md-icon-button
+        >
+
         <md-icon-button @click="${()=>this.pan('left')}"
           ><md-icon>arrow_back</md-icon></md-icon-button
         >
