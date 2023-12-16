@@ -41,8 +41,10 @@ class MyShapeView extends dia.ElementView {
         this.model.attributes.nodeType === 'ude' ? '185px' : '185px';
       div.style.height =
         this.model.attributes.nodeType === 'ude' ? '135px' : '107px';
-      div.className = `causeContainer ${
+      div.className = `causeContainer  ${
         this.model.attributes.isRootCause ? 'rootCauseContainer' : ''
+      } ${
+        this.model.attributes.nodeType=="assumption" as CrtNodeType ? 'assumptionCauseContainer' : ''
       } ${this.model.attributes.nodeType == 'ude' ? 'udeContainer' : ''}`;
       div.innerHTML = `<ltp-current-reality-tree-node
         nodeId="${this.model.attributes.nodeId}"
@@ -892,8 +894,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       super.styles,
       css`
         .causeContainer {
-          color: var(--md-sys-color-on-secondary-container);
-          background-color: var(--md-sys-color-secondary-container);
+          color: var(--md-sys-color-on-primary-container);
+          background-color: var(--md-sys-color-primary-container);
           border-radius: 16px;
           padding: 0;
         }
@@ -909,6 +911,13 @@ export class LtpCurrentRealityTree extends CpsStageBase {
           color: var(--md-sys-color-on-tertiary-container);
           background-color: var(--md-sys-color-tertiary-container);
           border-radius: 8px;
+          padding: 0;
+        }
+
+        .assumptionCauseContainer {
+          color: var(--md-sys-color-on-secondary-container);
+          background-color: var(--md-sys-color-secondary-container);
+          border-radius: 16px;
           padding: 0;
         }
 
