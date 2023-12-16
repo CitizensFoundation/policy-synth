@@ -616,7 +616,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       nodeId: node.id,
       nodeType: node.type,
       crtId: this.crtData?.id,
-      isRootCause: node.isRootCause,
+      isRootCause: node.isRootCause || node.type=="rootCause",
       attrs: {
         //cause: node.description,
       },
@@ -849,9 +849,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         }
 
         .rootCauseContainer {
-          color: var(--md-sys-color-on-primary-container);
-          background-color: var(--md-sys-color-primary-container);
-          border-radius: 8px;
+          color: var(--md-sys-color-on-primary);
+          background-color: var(--md-sys-color-primary);
+          border-radius: 0;
           padding: 0;
         }
 
