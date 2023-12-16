@@ -268,7 +268,7 @@ export class LtpAiChatElement extends YpBaseElement {
         }
 
         .refinedContainer {
-          padding: 8px;
+          padding: 0;
         }
 
         .directCause {
@@ -287,10 +287,12 @@ export class LtpAiChatElement extends YpBaseElement {
 
         .assumptionCheckbox {
           --md-checkbox-outline-color: var(--md-sys-color-on-secondary);
+          --md-checkbox-hover-outline-color: var(--md-sys-color-on-primary);
         }
 
         .directCauseCheckbox {
           --md-checkbox-outline-color: var(--md-sys-color-on-primary);
+          --md-checkbox-hover-outline-color: var(--md-sys-color-on-secondary);
         }
 
         md-filled-button {

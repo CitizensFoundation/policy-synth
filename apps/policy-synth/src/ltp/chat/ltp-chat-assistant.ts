@@ -1,4 +1,4 @@
-import { css, html } from 'lit';
+import { PropertyValueMap, css, html } from 'lit';
 import { property, customElement, query, queryAll } from 'lit/decorators.js';
 import {
   virtualize,
@@ -153,6 +153,13 @@ export class LtpChatAssistant extends YpBaseElement {
     this.ws.onerror = error => {
       console.error('WebSocket Error ' + error);
     };
+  }
+
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    // focus the text input
+    setTimeout(() => {
+      this.chatInputField.focus();
+    }, 420);
   }
 
   onWsOpen() {
