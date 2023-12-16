@@ -126,6 +126,10 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
           --md-menu-z-index: 1000;
           z-index: 1000;
         }
+
+        [hidden] {
+          display: none !important;
+        }
       `,
     ];
   }
@@ -227,6 +231,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
                 <md-icon-button
                   ?root-cause="${this.isRootCause}"
                   class="createOptionsButton"
+                  ?hidden="${this.crtNodeType === 'rootCause'}"
                   @click="${() =>
                     this.fire('open-add-cause-dialog', {
                       parentNodeId: this.nodeId,

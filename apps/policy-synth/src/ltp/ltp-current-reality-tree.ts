@@ -982,7 +982,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         }
 
         .downloadButton {
-          margin-right: 16px;
+          margin-right: 28px;
         }
 
       `,
