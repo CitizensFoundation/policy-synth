@@ -780,6 +780,7 @@ export class LtpManageCrt extends CpsStageBase {
                 <ltp-chat-assistant
                   .nodeToAddCauseTo="${this.nodeToAddCauseTo}"
                   method="dialog"
+                  .textInputLabel="${this.t('Enter direct and immediate cause')}"
                   .crtData="${this.crt}"
                   @close="${this.closeAddCauseDialog}"
                 >
