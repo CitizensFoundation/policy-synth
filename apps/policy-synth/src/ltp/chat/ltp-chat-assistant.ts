@@ -53,7 +53,7 @@ export class LtpChatAssistant extends YpBaseElement {
 
   @property({ type: String })
   defaultInfoMessage: string =
-    "I'm your Current Reality Tree assistant. I'm here to help to identify a direct causes of: ";
+    "I'm your Current Reality Tree assistant. I'm here to help to identify a direct cause of: ";
 
   @property({ type: String })
   wsEndpoint: string;

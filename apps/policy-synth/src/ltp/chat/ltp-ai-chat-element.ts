@@ -250,7 +250,10 @@ export class LtpAiChatElement extends YpBaseElement {
         }
 
         .refinedSuggestions  {
-          padding: 16px;
+          padding: 0;
+          border-radius: 32px;
+          margin: 16px;
+          margin-top: 0;
         }
 
         .refinedSuggestions label {
@@ -260,28 +263,36 @@ export class LtpAiChatElement extends YpBaseElement {
           padding: 8px;
         }
 
-        .refinedSuggestions label.assumption:first-of-type {
-          margin-top: 8px; // Extra margin for the first assumption
-        }
-
         .labelText {
           margin-left: 4px; // Adjust as needed
         }
 
         .refinedContainer {
           padding: 8px;
-          padding-left: 36px;
         }
 
         .directCause {
-          background-color: var(--md-sys-color-secondary-container);
-          color: var(--md-sys-color-on-secondary-container);
+          background-color: var(--md-sys-color-primary);
+          color: var(--md-sys-color-on-primary);
+          margin-bottom: 16px !important;
+          border-radius: 32px;
         }
 
         .assumption {
-          background-color: var(--md-sys-color-tertiary-container);
-          color: var(--md-sys-color-on-tertiary-container);
+          background-color: var(--md-sys-color-secondary);
+          color: var(--md-sys-color-on-secondary);
+          margin-bottom: 16px !important;
+          border-radius: 32px;
         }
+
+        .assumptionCheckbox {
+          --md-checkbox-outline-color: var(--md-sys-color-on-secondary);
+        }
+
+        .directCauseCheckbox {
+          --md-checkbox-outline-color: var(--md-sys-color-on-primary);
+        }
+
         md-filled-button {
           max-width: 250px;
           margin-top: 16px;
@@ -330,6 +341,10 @@ export class LtpAiChatElement extends YpBaseElement {
           padding: 3px;
         }
 
+        md-checkbox {
+          margin: 15px;
+        }
+
         .followUpQuestionMark {
           color: var(--md-sys-color-primary);
           font-size: 36px;
@@ -363,6 +378,12 @@ export class LtpAiChatElement extends YpBaseElement {
             stroke-dashoffset: 0;
             transform: rotate(0deg);
           }
+        }
+
+        .suggestionsHeader {
+          font-size: 18px;
+          color: var(--md-sys-color-primary);
+          margin-bottom: 16px;
         }
       `,
     ];
@@ -438,52 +459,41 @@ export class LtpAiChatElement extends YpBaseElement {
   }
 
   renderRefinedSuggestions() {
-    const combinedSuggestions = [
-      ...(this.refinedCausesSuggestions || []).map(suggestion => ({
-        text: suggestion,
-        type: 'directCause',
-      })),
-      ...(this.refinedAssumptionSuggestions || []).map(suggestion => ({
-        text: suggestion,
-        type: 'assumption',
-      })),
-    ];
-
-    if (combinedSuggestions.length > 0) {
-      return html`
-        <div
-          class="layout vertical refinedSuggestions wrap"
-          role="group"
-          aria-label="Refined suggestions"
-        >
-          ${combinedSuggestions.map(
-            ({ text, type }) => html`
-              <label
-                class="layout horizontal refinedContainer ${type ===
-                'directCause'
-                  ? 'directCause'
-                  : 'assumption'}"
-              >
-                <md-checkbox
-                  aria-label="${text}"
-                  data-type="${type}"
-                  touch-target="wrapper"
-                ></md-checkbox>
-                <div class="labelText">${text}</div>
-              </label>
-            `
-          )}
-          <div class="layout horizontal center-center">
-            <md-filled-button @click="${() => this.addSelected()}">
-              ${this.t('Add selected')}
-            </md-filled-button>
-          </div>
-        </div>
-      `;
-    } else {
+    if (!this.refinedCausesSuggestions && !this.refinedAssumptionSuggestions) {
       return nothing;
     }
+
+    const renderSection = (suggestions: string[], headerText: string, typeClass: string) => {
+      if (!suggestions || suggestions.length === 0) return nothing;
+
+      return html`
+      <div class="layout horizontal center-center">
+      <div class="suggestionsHeader">${headerText}</div>
+
+      </div>
+        <div class="layout vertical refinedSuggestions wrap" role="group">
+          ${suggestions.map((text) => html`
+            <label class="layout horizontal refinedContainer ${typeClass}">
+              <md-checkbox aria-label="${text}" class="${typeClass}Checkbox" data-type="${typeClass}" touch-target="wrapper"></md-checkbox>
+              <div class="labelText">${text}</div>
+            </label>
+          `)}
+        </div>
+      `;
+    };
+
+    return html`
+      ${renderSection(this.refinedCausesSuggestions ?? [], 'Suggested Direct Causes', 'directCause')}
+      ${renderSection(this.refinedAssumptionSuggestions ?? [], 'Suggested Assumptions', 'assumption')}
+      <div class="layout horizontal center-center">
+        <md-filled-button @click="${() => this.addSelected()}">
+          ${this.t('Add selected')}
+        </md-filled-button>
+      </div>
+    `;
   }
+
+
 
   renderChatGPT(): any {
     console.error(
