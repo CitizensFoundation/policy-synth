@@ -948,7 +948,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
           width: 100%;
           height: 62px;
           padding: 0;
-          opacity: 0.5;
+          opacity: 0.65;
           background: var(--md-sys-color-surface-variant);
         }
 
@@ -979,6 +979,10 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
         .fadeAway {
           animation: fadeAwayAnimation 60.5s;
+        }
+
+        .downloadButton {
+          margin-right: 16px;
         }
 
       `,
@@ -1026,9 +1030,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         >
 
         <div class="flex"></div>
-        <md-icon-button @click="${this.exportToDrawioXml}"
-          ><md-icon>download</md-icon></md-icon-button
-        >
 
         <md-icon-button @click="${()=>this.pan('left')}"
           ><md-icon>arrow_back</md-icon></md-icon-button
@@ -1045,6 +1046,12 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         <md-icon-button @click="${()=>this.pan('right')}" class="lastButton"
           ><md-icon>arrow_forward</md-icon></md-icon-button
         >
+        <div class="flex"></div>
+
+        <md-icon-button class="downloadButton" @click="${this.exportToDrawioXml}"
+          ><md-icon>download</md-icon></md-icon-button
+        >
+
       </div>
       <div class="jointJSCanvas" id="paper-container"></div>
     `;
