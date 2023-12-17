@@ -50,8 +50,8 @@ export class CurrentRealityTreeController {
       this.reviewTreeConfiguration
     );
 
-    this.router.delete(this.path + '/:id', this.deleteNode);
-    this.router.put(this.path + '/:id', this.updateNode);
+    this.router.delete(this.path + "/:id", this.deleteNode);
+    this.router.put(this.path + "/:id", this.updateNode);
 
     await redisClient.connect();
   }
@@ -60,7 +60,7 @@ export class CurrentRealityTreeController {
     const treeId = req.params.id;
     const updatedNode: LtpCurrentRealityTreeDataNode = req.body;
 
-    console.log(`Updating node ID: ${updatedNode.id}`)
+    console.log(`Updating node ID: ${updatedNode.id}`);
 
     try {
       const treeData = await this.getData(treeId);
@@ -91,7 +91,7 @@ export class CurrentRealityTreeController {
     const treeId = req.params.id;
     const nodeId = req.body.nodeId;
 
-    console.log(`Deleting node ID: ${nodeId}`)
+    console.log(`Deleting node ID: ${nodeId}`);
 
     try {
       const treeData = await this.getData(treeId);
@@ -108,8 +108,12 @@ export class CurrentRealityTreeController {
       }
 
       // Remove the node from the parent's children
-      parentNode.andChildren = parentNode.andChildren?.filter(child => child.id !== nodeId);
-      parentNode.orChildren = parentNode.orChildren?.filter(child => child.id !== nodeId);
+      parentNode.andChildren = parentNode.andChildren?.filter(
+        (child) => child.id !== nodeId
+      );
+      parentNode.orChildren = parentNode.orChildren?.filter(
+        (child) => child.id !== nodeId
+      );
 
       await this.setData(treeId, JSON.stringify(currentTree));
 
@@ -119,7 +123,6 @@ export class CurrentRealityTreeController {
       return res.sendStatus(500);
     }
   };
-
 
   getRefinedCauses = async (req: express.Request, res: express.Response) => {
     console.log("getRefinedCauses");
@@ -351,6 +354,7 @@ export class CurrentRealityTreeController {
 
       let treeId = await this.createData(JSON.stringify(newTree));
       newTree.id = treeId;
+      await this.setData(treeId, JSON.stringify(newTree));
 
       return res.send(newTree);
     } catch (err) {
@@ -419,12 +423,12 @@ export class CurrentRealityTreeController {
   };
 
   protected async getData(key: string | number): Promise<string | null> {
-    console.log(`Getting data for key: ${key}`)
+    console.log(`Getting data for key: ${key}`);
     return await redisClient.get(`crt:${key}`);
   }
 
   protected async setData(key: string | number, value: string): Promise<void> {
-    console.log(`Setting data for key: ${key}`)
+    console.log(`Setting data for key: ${key}`);
     await redisClient.set(`crt:${key}`, value);
   }
 
@@ -434,7 +438,10 @@ export class CurrentRealityTreeController {
     return treeId;
   }
 
-  protected async updateData(key: string | number, updateFunc: (data: any) => any): Promise<void> {
+  protected async updateData(
+    key: string | number,
+    updateFunc: (data: any) => any
+  ): Promise<void> {
     const data = await this.getData(key);
     if (data) {
       const updatedData = updateFunc(JSON.parse(data));
