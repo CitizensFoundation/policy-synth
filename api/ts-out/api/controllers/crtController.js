@@ -33,8 +33,8 @@ export class CurrentRealityTreeController {
         this.router.post(this.path + "/:id/addDirectCauses", this.addDirectCauses);
         this.router.post(this.path + "/:id/getRefinedCauses", this.getRefinedCauses);
         this.router.put(this.path + "/reviewConfiguration", this.reviewTreeConfiguration);
-        this.router.delete(this.path + '/:id', this.deleteNode);
-        this.router.put(this.path + '/:id', this.updateNode);
+        this.router.delete(this.path + "/:id", this.deleteNode);
+        this.router.put(this.path + "/:id", this.updateNode);
         await redisClient.connect();
     }
     updateNode = async (req, res) => {
@@ -77,8 +77,8 @@ export class CurrentRealityTreeController {
                 return res.status(404).send({ message: "Parent node not found" });
             }
             // Remove the node from the parent's children
-            parentNode.andChildren = parentNode.andChildren?.filter(child => child.id !== nodeId);
-            parentNode.orChildren = parentNode.orChildren?.filter(child => child.id !== nodeId);
+            parentNode.andChildren = parentNode.andChildren?.filter((child) => child.id !== nodeId);
+            parentNode.orChildren = parentNode.orChildren?.filter((child) => child.id !== nodeId);
             await this.setData(treeId, JSON.stringify(currentTree));
             return res.sendStatus(200);
         }
@@ -245,6 +245,7 @@ export class CurrentRealityTreeController {
             };
             let treeId = await this.createData(JSON.stringify(newTree));
             newTree.id = treeId;
+            await this.setData(treeId, JSON.stringify(newTree));
             return res.send(newTree);
         }
         catch (err) {
