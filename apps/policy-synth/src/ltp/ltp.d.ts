@@ -20,7 +20,7 @@ interface LtpCurrentRealityTreeDataNode {
 }
 
 interface LtpCurrentRealityTreeData {
-  id: string;
+  id: string | number;
   description?: string;
   context: string;
   undesirableEffects: string[];

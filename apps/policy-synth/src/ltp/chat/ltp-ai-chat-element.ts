@@ -33,7 +33,7 @@ export class LtpAiChatElement extends YpBaseElement {
   parentNodeId!: string;
 
   @property({ type: String })
-  crtId!: string;
+  crtId!: string | number;
 
   @property({ type: Number })
   clusterId: number;
