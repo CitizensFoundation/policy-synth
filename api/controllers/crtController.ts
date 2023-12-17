@@ -68,7 +68,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      const currentTree: LtpCurrentRealityTreeData = treeData;
 
       // Update the node in the tree
       const nodeToUpdate = this.findNode(currentTree.nodes, updatedNode.id);
@@ -99,7 +99,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      const currentTree: LtpCurrentRealityTreeData = treeData;
 
       // Find the parent of the node to be deleted
       const parentNode = this.findParentNode(currentTree.nodes, nodeId);
@@ -144,7 +144,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      const currentTree: LtpCurrentRealityTreeData = treeData;
       const parentNode = this.findNode(currentTree.nodes, crtNodeId);
 
       if (!parentNode) {
@@ -195,7 +195,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      const currentTree: LtpCurrentRealityTreeData = treeData;
       const parentNode = this.findNode(currentTree.nodes, parentNodeId);
 
       if (!parentNode) {
@@ -246,7 +246,7 @@ export class CurrentRealityTreeController {
       if (!treeData) {
         return res.sendStatus(404);
       }
-      return res.send(JSON.parse(treeData));
+      return res.send(treeData);
     } catch (err) {
       console.error(err);
       return res.sendStatus(500);
@@ -264,7 +264,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      const currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      const currentTree: LtpCurrentRealityTreeData = treeData;
 
       // Find the parent node in the tree
       const parentNode = this.findNode(currentTree.nodes, parentId);
@@ -374,7 +374,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      let currentTree: LtpCurrentRealityTreeData = JSON.parse(treeData);
+      let currentTree: LtpCurrentRealityTreeData = treeData;
 
       let parentNode = this.findNode(currentTree.nodes, parentNodeId);
 
@@ -407,7 +407,7 @@ export class CurrentRealityTreeController {
         return res.sendStatus(404);
       }
 
-      currentTree = JSON.parse(treeData);
+      currentTree = treeData;
 
       parentNode = this.findNode(currentTree.nodes, parentNodeId)!;
 
@@ -422,9 +422,14 @@ export class CurrentRealityTreeController {
     }
   };
 
-  protected async getData(key: string | number): Promise<string | null> {
+  protected async getData(key: string | number): Promise<LtpCurrentRealityTreeData | null> {
     console.log(`Getting data for key: ${key}`);
-    return await redisClient.get(`crt:${key}`);
+    const data = await redisClient.get(`crt:${key}`);
+    if (data) {
+      return JSON.parse(data);
+    } else {
+      return null;
+    }
   }
 
   protected async setData(key: string | number, value: string): Promise<void> {
@@ -436,17 +441,6 @@ export class CurrentRealityTreeController {
     const treeId = uuidv4();
     this.setData(treeId, value);
     return treeId;
-  }
-
-  protected async updateData(
-    key: string | number,
-    updateFunc: (data: any) => any
-  ): Promise<void> {
-    const data = await this.getData(key);
-    if (data) {
-      const updatedData = updateFunc(JSON.parse(data));
-      await this.setData(key, JSON.stringify(updatedData));
-    }
   }
 
   protected async deleteData(key: string | number): Promise<void> {
