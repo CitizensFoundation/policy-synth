@@ -46,7 +46,7 @@ export class CurrentRealityTreeController {
             if (!treeData) {
                 return res.sendStatus(404);
             }
-            const currentTree = JSON.parse(treeData);
+            const currentTree = treeData;
             // Update the node in the tree
             const nodeToUpdate = this.findNode(currentTree.nodes, updatedNode.id);
             if (!nodeToUpdate) {
@@ -70,7 +70,7 @@ export class CurrentRealityTreeController {
             if (!treeData) {
                 return res.sendStatus(404);
             }
-            const currentTree = JSON.parse(treeData);
+            const currentTree = treeData;
             // Find the parent of the node to be deleted
             const parentNode = this.findParentNode(currentTree.nodes, nodeId);
             if (!parentNode) {
@@ -97,7 +97,7 @@ export class CurrentRealityTreeController {
                 console.error("Tree not found");
                 return res.sendStatus(404);
             }
-            const currentTree = JSON.parse(treeData);
+            const currentTree = treeData;
             const parentNode = this.findNode(currentTree.nodes, crtNodeId);
             if (!parentNode) {
                 console.error("Parent node not found");
@@ -130,7 +130,7 @@ export class CurrentRealityTreeController {
                 console.error("Tree not found");
                 return res.sendStatus(404);
             }
-            const currentTree = JSON.parse(treeData);
+            const currentTree = treeData;
             const parentNode = this.findNode(currentTree.nodes, parentNodeId);
             if (!parentNode) {
                 console.error("Parent node not found");
@@ -171,7 +171,7 @@ export class CurrentRealityTreeController {
             if (!treeData) {
                 return res.sendStatus(404);
             }
-            return res.send(JSON.parse(treeData));
+            return res.send(treeData);
         }
         catch (err) {
             console.error(err);
@@ -187,7 +187,7 @@ export class CurrentRealityTreeController {
             if (!treeData) {
                 return res.sendStatus(404);
             }
-            const currentTree = JSON.parse(treeData);
+            const currentTree = treeData;
             // Find the parent node in the tree
             const parentNode = this.findNode(currentTree.nodes, parentId);
             if (!parentNode) {
@@ -262,7 +262,7 @@ export class CurrentRealityTreeController {
                 console.error("Tree not found");
                 return res.sendStatus(404);
             }
-            let currentTree = JSON.parse(treeData);
+            let currentTree = treeData;
             let parentNode = this.findNode(currentTree.nodes, parentNodeId);
             if (!parentNode) {
                 console.error("Parent node not found");
@@ -280,7 +280,7 @@ export class CurrentRealityTreeController {
                 console.error("Tree not found");
                 return res.sendStatus(404);
             }
-            currentTree = JSON.parse(treeData);
+            currentTree = treeData;
             parentNode = this.findNode(currentTree.nodes, parentNodeId);
             parentNode.andChildren = directCausesNodes;
             await this.setData(treeId, JSON.stringify(currentTree));
@@ -293,7 +293,13 @@ export class CurrentRealityTreeController {
     };
     async getData(key) {
         console.log(`Getting data for key: ${key}`);
-        return await redisClient.get(`crt:${key}`);
+        const data = await redisClient.get(`crt:${key}`);
+        if (data) {
+            return JSON.parse(data);
+        }
+        else {
+            return null;
+        }
     }
     async setData(key, value) {
         console.log(`Setting data for key: ${key}`);
@@ -303,13 +309,6 @@ export class CurrentRealityTreeController {
         const treeId = uuidv4();
         this.setData(treeId, value);
         return treeId;
-    }
-    async updateData(key, updateFunc) {
-        const data = await this.getData(key);
-        if (data) {
-            const updatedData = updateFunc(JSON.parse(data));
-            await this.setData(key, JSON.stringify(updatedData));
-        }
     }
     async deleteData(key) {
         await redisClient.del(`crt-${key}`);
