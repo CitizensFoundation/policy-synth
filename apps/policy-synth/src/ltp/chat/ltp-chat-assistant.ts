@@ -205,6 +205,10 @@ export class LtpChatAssistant extends YpBaseElement {
         break;
     }
 
+    if (this.chatLog.length > 1) {
+      this.textInputLabel = this.t('Ask a follow-up question');
+    }
+
     if (data.type !== 'stream_followup') {
       this.scrollDown();
     }

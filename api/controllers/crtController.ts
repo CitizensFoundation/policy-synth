@@ -63,7 +63,7 @@ export class CurrentRealityTreeController {
     console.log(`Updating node ID: ${updatedNode.id}`)
 
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
+      const treeData = await this.getData(treeId);
       if (!treeData) {
         return res.sendStatus(404);
       }
@@ -78,7 +78,7 @@ export class CurrentRealityTreeController {
 
       Object.assign(nodeToUpdate, updatedNode);
 
-      await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+      await this.setData(treeId, JSON.stringify(currentTree));
 
       return res.sendStatus(200);
     } catch (err) {
@@ -94,7 +94,7 @@ export class CurrentRealityTreeController {
     console.log(`Deleting node ID: ${nodeId}`)
 
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
+      const treeData = await this.getData(treeId);
       if (!treeData) {
         return res.sendStatus(404);
       }
@@ -111,7 +111,7 @@ export class CurrentRealityTreeController {
       parentNode.andChildren = parentNode.andChildren?.filter(child => child.id !== nodeId);
       parentNode.orChildren = parentNode.orChildren?.filter(child => child.id !== nodeId);
 
-      await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+      await this.setData(treeId, JSON.stringify(currentTree));
 
       return res.sendStatus(200);
     } catch (err) {
@@ -135,7 +135,7 @@ export class CurrentRealityTreeController {
     } = req.body;
 
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
+      const treeData = await this.getData(treeId);
       if (!treeData) {
         console.error("Tree not found");
         return res.sendStatus(404);
@@ -186,7 +186,7 @@ export class CurrentRealityTreeController {
     const causeStrings: string[] = req.body.causes;
 
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
+      const treeData = await this.getData(treeId);
       if (!treeData) {
         console.error("Tree not found");
         return res.sendStatus(404);
@@ -225,7 +225,7 @@ export class CurrentRealityTreeController {
       }
       parentNode.andChildren.push(...newNodes);
 
-      await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+      await this.setData(treeId, JSON.stringify(currentTree));
 
       console.log("Added new nodes to tree");
 
@@ -239,7 +239,7 @@ export class CurrentRealityTreeController {
   getTree = async (req: express.Request, res: express.Response) => {
     const treeId = req.params.id;
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
+      const treeData = await this.getData(treeId);
       if (!treeData) {
         return res.sendStatus(404);
       }
@@ -256,7 +256,7 @@ export class CurrentRealityTreeController {
     const parentId = req.body.parentId; // Get parentId from the request body
 
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
+      const treeData = await this.getData(treeId);
       if (!treeData) {
         return res.sendStatus(404);
       }
@@ -276,7 +276,7 @@ export class CurrentRealityTreeController {
       }
       parentNode.andChildren.push(newNode);
 
-      await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+      await this.setData(treeId, JSON.stringify(currentTree));
       return res.sendStatus(200);
     } catch (err) {
       console.error(err);
@@ -316,7 +316,6 @@ export class CurrentRealityTreeController {
   };
 
   createTree = async (req: express.Request, res: express.Response) => {
-    const treeId = uuidv4();
     const {
       context,
       undesirableEffects,
@@ -326,11 +325,6 @@ export class CurrentRealityTreeController {
     } = req.body;
 
     try {
-      const treeData = await redisClient.get(`crt:${treeId}`);
-      if (treeData) {
-        return res.status(400).send({ message: "Tree already exists" });
-      }
-
       const directNodes = undesirableEffects.flatMap((ue) =>
         ue
           .split("\n")
@@ -349,13 +343,14 @@ export class CurrentRealityTreeController {
       );
 
       const newTree: LtpCurrentRealityTreeData = {
-        id: treeId,
+        id: -1,
         context,
         undesirableEffects,
         nodes: directNodes,
       };
 
-      await redisClient.set(`crt:${treeId}`, JSON.stringify(newTree));
+      let treeId = await this.createData(JSON.stringify(newTree));
+      newTree.id = treeId;
 
       return res.send(newTree);
     } catch (err) {
@@ -369,7 +364,7 @@ export class CurrentRealityTreeController {
     const parentNodeId = req.body.parentNodeId;
 
     try {
-      let treeData = await redisClient.get(`crt:${treeId}`);
+      let treeData = await this.getData(treeId);
       if (!treeData) {
         console.error("Tree not found");
         return res.sendStatus(404);
@@ -401,7 +396,12 @@ export class CurrentRealityTreeController {
         parentNode
       );
 
-      treeData = await redisClient.get(`crt:${treeId}`);
+      treeData = await this.getData(treeId);
+
+      if (!treeData) {
+        console.error("Tree not found");
+        return res.sendStatus(404);
+      }
 
       currentTree = JSON.parse(treeData);
 
@@ -409,7 +409,7 @@ export class CurrentRealityTreeController {
 
       parentNode.andChildren = directCausesNodes;
 
-      await redisClient.set(`crt:${treeId}`, JSON.stringify(currentTree));
+      await this.setData(treeId, JSON.stringify(currentTree));
 
       return res.send(directCausesNodes);
     } catch (err) {
@@ -417,6 +417,34 @@ export class CurrentRealityTreeController {
       return res.sendStatus(500);
     }
   };
+
+  protected async getData(key: string | number): Promise<string | null> {
+    console.log(`Getting data for key: ${key}`)
+    return await redisClient.get(`crt:${key}`);
+  }
+
+  protected async setData(key: string | number, value: string): Promise<void> {
+    console.log(`Setting data for key: ${key}`)
+    await redisClient.set(`crt:${key}`, value);
+  }
+
+  protected async createData(value: string | any): Promise<number | string> {
+    const treeId = uuidv4();
+    this.setData(treeId, value);
+    return treeId;
+  }
+
+  protected async updateData(key: string | number, updateFunc: (data: any) => any): Promise<void> {
+    const data = await this.getData(key);
+    if (data) {
+      const updatedData = updateFunc(JSON.parse(data));
+      await this.setData(key, JSON.stringify(updatedData));
+    }
+  }
+
+  protected async deleteData(key: string | number): Promise<void> {
+    await redisClient.del(`crt-${key}`);
+  }
 
   private getParentNodes = (
     nodes: LtpCurrentRealityTreeDataNode[],

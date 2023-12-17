@@ -46,7 +46,7 @@ const nodeTypes = [
 @customElement('ltp-manage-crt')
 export class LtpManageCrt extends CpsStageBase {
   @property({ type: String })
-  currentTreeId: string | undefined;
+  currentTreeId: string | number | undefined;
 
   @property({ type: Object })
   crt: LtpCurrentRealityTreeData | undefined;

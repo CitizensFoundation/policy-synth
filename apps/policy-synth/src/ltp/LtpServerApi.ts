@@ -6,7 +6,7 @@ export class LtpServerApi extends YpServerApi {
     this.baseUrlPath = urlPath;
   }
 
-  public async getCrt(id: string): Promise<LtpCurrentRealityTreeData> {
+  public async getCrt(id: string | number): Promise<LtpCurrentRealityTreeData> {
     return (await this.fetchWrapper(
       this.baseUrlPath + `/crt/${id}`
     )) as unknown as LtpCurrentRealityTreeData;
@@ -46,7 +46,7 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public createDirectCauses(
-    treeId: string,
+    treeId: string | number,
     parentNodeId: string
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
@@ -62,7 +62,7 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public addDirectCauses(
-    treeId: string,
+    treeId: string | number,
     parentNodeId: string,
     causes: string[],
     type: CrtNodeType
@@ -82,7 +82,7 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public sendGetRefinedCauseQuery(
-    crtTreeId: string,
+    crtTreeId: string | number,
     crtNodeId: string,
     chatLog: LtpAiChatWsMessage[],
     wsClientId: string
@@ -110,7 +110,7 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public updateNode(
-    treeId: string,
+    treeId: string | number,
     updatedNode: LtpCurrentRealityTreeDataNode
   ): Promise<void> {
     return this.fetchWrapper(
@@ -124,7 +124,7 @@ export class LtpServerApi extends YpServerApi {
   }
 
   public deleteNode(
-    treeId: string,
+    treeId: string | number,
     nodeId: string
   ): Promise<void> {
     return this.fetchWrapper(
