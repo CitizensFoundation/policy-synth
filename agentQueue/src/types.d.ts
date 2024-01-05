@@ -222,6 +222,8 @@ type IEngineStageTypes =
   | "web-get-refined-evidence"
   | "get-metadata-for-top-evidence"
 
+  | "validation-agent"
+
   ;
 
 interface IEngineUserFeedback {

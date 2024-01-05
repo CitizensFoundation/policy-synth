@@ -18,6 +18,7 @@ interface PsClassificationAgentResult extends PsValidationAgentResult {
   classification: string;
 }
 
-interface PsDerivedClassificationAgentResult extends PsClassificationAgentResult {
-  classification: "direct" | "derived";
+interface PsMetricClassificationAgentResult extends PsClassificationAgentResult {
+  moreThanOneCause: boolean;
+  classification: "direct" | "derived" | "nometric";
 }

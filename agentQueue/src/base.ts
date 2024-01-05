@@ -4,6 +4,7 @@ import { IEngineConstants } from "./constants.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
+import { Callbacks } from "langchain/callbacks";
 
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -40,7 +41,8 @@ export class Base {
     messages: BaseMessage[],
     parseJson = true,
     limitedRetries = false,
-    tokenOutEstimate = 120
+    tokenOutEstimate = 120,
+    streamingCallbacks?: Callbacks
   ) {
     try {
       let retryCount = 0;
@@ -60,7 +62,11 @@ export class Base {
 
           //TODO: Get JSON param to work when that option can be tested in the playground
           //response = await this.chat.call(messages, {response_format: {"type": "json_object"}});
-          response = await this.chat.call(messages);
+          response = await this.chat.call(
+            messages,
+            undefined,
+            streamingCallbacks ? streamingCallbacks : undefined
+          );
 
           if (response) {
             //this.logger.debug("Got response from LLM");
@@ -101,7 +107,9 @@ export class Base {
                 this.logger.error("Error saving memory");
               }
             } else {
-              this.logger.debug("Memory is not initialized and token counts not updated");
+              this.logger.debug(
+                "Memory is not initialized and token counts not updated"
+              );
             }
 
             await this.updateRateLimits(modelConstants, tokensOut.totalCount);
