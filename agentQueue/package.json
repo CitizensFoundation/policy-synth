@@ -8,6 +8,7 @@
     "@types/html-to-text": "^9.0.1",
     "@types/node": "^20.3.3",
     "@types/pdfjs-dist": "^2.10.378",
+    "@types/pg": "^8.10.9",
     "@types/puppeteer": "^7.0.4",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
@@ -38,7 +39,7 @@
     "html-to-text": "^9.0.5",
     "ioredis": "^5.3.2",
     "jsonrepair": "^3.2.0",
-    "langchain": "^0.0.196",
+    "langchain": "^0.0.214",
     "metascraper": "^5.36.0",
     "metascraper-author": "^5.36.0",
     "metascraper-clearbit": "^5.37.0",
@@ -56,10 +57,11 @@
     "pdf2json": "^3.0.4",
     "pdfjs-dist": "^3.8.162",
     "pdfreader": "^3.0.0",
+    "pg": "^8.11.3",
     "puppeteer": "^19.11.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "weaviate-ts-client": "^2.0.0",
+    "weaviate-ts-client": "^1.6.0",
     "winston": "^3.9.0"
   }
 }
