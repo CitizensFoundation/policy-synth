@@ -1,16 +1,25 @@
+import { Callbacks } from "langchain/callbacks";
+import { IEngineConstants } from "../../constants.js";
 import { PsBaseValidationAgent } from "./baseAgent.js";
 
-export abstract class PsClassificationAgent extends PsBaseValidationAgent {
+export class PsClassificationAgent extends PsBaseValidationAgent {
   private routes: Map<string, PsValidationAgent>;
 
   constructor(
     name: string,
-    agentMemory: PsAgentMemory,
+    agentMemory: PsAgentMemory | undefined,
     systemMessage: string,
     userMessage: string,
-    nextAgent: PsValidationAgent | undefined
+    streamingCallbacks: Callbacks
   ) {
-    super(name, agentMemory, systemMessage, userMessage, nextAgent);
+    super(
+      name,
+      agentMemory,
+      systemMessage,
+      userMessage,
+      streamingCallbacks,
+      undefined
+    );
     this.routes = new Map();
   }
 
@@ -18,20 +27,13 @@ export abstract class PsClassificationAgent extends PsBaseValidationAgent {
     this.routes.set(classification, agent);
   }
 
-  protected async performExecute(
-    input: string
-  ): Promise<PsValidationAgentResult> {
-    const classificationResult = await this.classify(input);
+  protected async performExecute(): Promise<PsValidationAgentResult> {
+    const classificationResult =
+      (await this.runValidationLLM()) as PsClassificationAgentResult;
     const nextAgent = this.routes.get(classificationResult.classification);
 
-    return {
-      isValid: classificationResult.isValid,
-      validationErrors: classificationResult.validationErrors,
-      nextAgent: nextAgent,
-    };
-  }
+    classificationResult.nextAgent = nextAgent;
 
-  protected abstract classify(
-    input: string
-  ): Promise<PsClassificationAgentResult>;
+    return classificationResult;
+  }
 }

@@ -407,6 +407,18 @@ export class IEngineConstants {
     verbose: false,
   };
 
+  static validationModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 1024,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+  };
+
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
 
   static maxSubProblems = 7;
