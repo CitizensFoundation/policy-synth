@@ -7,6 +7,7 @@ export class AgentOrchestrator {
     let finalResult: PsValidationAgentResult = { isValid: true };
 
     while (currentAgent) {
+      console.log(`Current agent: ${currentAgent.name}`)
       const result = await currentAgent.execute(input);
 
       if (

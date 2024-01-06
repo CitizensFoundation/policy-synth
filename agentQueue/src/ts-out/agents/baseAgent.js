@@ -2,7 +2,6 @@ import ioredis from "ioredis";
 import { Base } from "../base.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class BaseAgent extends Base {
-    memory;
     job;
     getRedisKey(groupId) {
         return `st_mem:${groupId}:id`;
@@ -71,10 +70,16 @@ export class BaseAgent extends Base {
         "rank-web-evidence": {},
         "rate-web-evidence": {},
         "web-get-refined-evidence": {},
-        "get-metadata-for-top-evidence": {}
+        "get-metadata-for-top-evidence": {},
+        "validation-agent": {},
     };
     async saveMemory() {
-        this.memory.lastSavedAt = Date.now();
-        await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+        if (this.memory) {
+            this.memory.lastSavedAt = Date.now();
+            await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+        }
+        else {
+            this.logger.error("No memory to save");
+        }
     }
 }
