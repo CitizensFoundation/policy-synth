@@ -72,6 +72,7 @@ if (projectId) {
         "rate-web-evidence": {},
         "web-get-refined-evidence": {},
         "get-metadata-for-top-evidence": {},
+        "validation-agent": {}
       },
       timeStart: Date.now(),
       totalCost: 0,

@@ -35,6 +35,40 @@ export class Base {
     this.logger = logger;
   }
 
+  getJsonBlock(text: string) {
+    let startIndex, endIndex;
+    startIndex = text.indexOf("```json");
+    endIndex = text.indexOf("```", startIndex + 6);
+    if (endIndex !== -1) {
+      let jsonContent = text.substring(startIndex + 7, endIndex).trim();
+      return jsonContent;
+    } else {
+      throw new Error("Unable to find JSON block");
+    }
+  }
+
+  getRepairedJson(text: string) {
+    let repaired;
+
+    try {
+      repaired = jsonrepair(text);
+      return JSON.parse(repaired);
+    } catch (error) {
+      this.logger.error(error)
+    }
+
+    if (repaired) {
+      return JSON.parse(repaired);
+    } else if (text.indexOf("```json") > -1) {
+      repaired = this.getJsonBlock(text);
+      if (repaired) {
+        return JSON.parse(repaired);
+      }
+    } else {
+      throw new Error("Unable to repair JSON");
+    }
+  }
+
   async callLLM(
     stage: IEngineStageTypes,
     modelConstants: IEngineBaseAIModelConstants,
@@ -115,17 +149,17 @@ export class Base {
             await this.updateRateLimits(modelConstants, tokensOut.totalCount);
 
             if (parseJson) {
-              let parsedJson;
+              let parsedJson, originalText;
               try {
+                originalText = response.text.trim();
                 parsedJson = response.text.trim().replace(/```json/g, "");
                 parsedJson = parsedJson.replace(/```/g, "");
                 parsedJson = JSON.parse(parsedJson);
               } catch (error) {
                 this.logger.warn(`Error parsing JSON ${response.text.trim()}`);
                 try {
-                  this.logger.info(`Trying to fix JSON`);
-                  let repaired = jsonrepair(response.text.trim());
-                  parsedJson = JSON.parse(repaired);
+                  this.logger.info(`Trying to fix JSON 1`);
+                  parsedJson = this.getRepairedJson(originalText!);
                   this.logger.info("Fixed JSON");
                 } catch (error) {
                   this.logger.warn(`Error parsing fixed JSON`);

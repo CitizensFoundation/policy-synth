@@ -1,8 +1,6 @@
-import { Callbacks } from "langchain/callbacks";
 import { AgentOrchestrator } from "../agentOrchestrator.js";
 import { PsBaseValidationAgent } from "../baseAgent.js";
 import { PsClassificationAgent } from "../classificationAgent.js";
-
 const systemPrompt1 = `You are an expert validator.
 
 ###Evaluation steps###
@@ -57,7 +55,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt2 = `You are an expert classifier.
 
 ###Evaluation instructions###
@@ -81,7 +78,6 @@ Then JSON:
 \`\`\`
 
 `;
-
 const systemPrompt3 = `
 You are an expert in validating logic.
 
@@ -139,7 +135,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt4 = `
 You are an expert in validating logic.
 
@@ -166,7 +161,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt5 = `
 You are an expert in validating logic.
 
@@ -194,7 +188,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt6 = `
 You are an expert in validating logic.
 
@@ -221,134 +214,53 @@ Then JSON:
 \`\`\`
 
 `;
-
 const effect = `Our business model is not attractive to investors`;
 const cause1 = `Investors have not shown interest in our company`;
 const cause2 = `Other companies in the same market do attract investors`;
-
 //const effect = `Car's engine will not start`;
 //const cause1 = `Engine needs fuel in order to run`;
 //const cause2 = `Fuel is not getting into the engine`;
-
 //const effect = `Our survival is at stake`;
 //const cause1 = `Surviving in this competitive business requires frequent investments`;
 //const cause2 = `Our financial resources are more and more limited`;
-
 const userMessage = `Effect: ${effect}
 Cause 1: ${cause1}
 Cause 2: ${cause2}`;
-
 const hasOneCauses = false;
-
 const callbacks = [
-  {
-    handleLLMNewToken(token: string) {
-      process.stdout.write(token);
+    {
+        handleLLMNewToken(token) {
+            process.stdout.write(token);
+        },
     },
-  },
-] as Callbacks;
-
+];
 const agentOrchestrator = new AgentOrchestrator();
-
-const classification = new PsClassificationAgent(
-  "classification",
-  undefined,
-  systemPrompt2,
-  userMessage,
-  callbacks
-);
-
-const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent(
-  "syllogisticEvaluationMoreThanOne",
-  undefined,
-  systemPrompt4,
-  userMessage,
-  callbacks,
-  undefined
-);
-
-const syllogisticEvaluationDerived = new PsBaseValidationAgent(
-  "syllogisticEvaluationDerived",
-  undefined,
-  systemPrompt4,
-  userMessage,
-  callbacks,
-  undefined
-);
-
-const syllogisticEvaluationSingleCause = new PsBaseValidationAgent(
-  "syllogisticEvaluationSingleCause",
-  undefined,
-  systemPrompt4,
-  userMessage,
-  callbacks,
-  undefined
-);
-
+const classification = new PsClassificationAgent("classification", undefined, systemPrompt2, userMessage, callbacks);
+const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent("syllogisticEvaluationMoreThanOne", undefined, systemPrompt4, userMessage, callbacks, undefined);
+const syllogisticEvaluationDerived = new PsBaseValidationAgent("syllogisticEvaluationDerived", undefined, systemPrompt4, userMessage, callbacks, undefined);
+const syllogisticEvaluationSingleCause = new PsBaseValidationAgent("syllogisticEvaluationSingleCause", undefined, systemPrompt4, userMessage, callbacks, undefined);
 let validLogicalStatement;
-
 if (hasOneCauses) {
-  validLogicalStatement = new PsBaseValidationAgent(
-    "validLogicalStatement",
-    undefined,
-    systemPrompt3,
-    userMessage,
-    callbacks,
-    syllogisticEvaluationSingleCause
-  );
-} else {
-  validLogicalStatement = new PsBaseValidationAgent(
-    "validLogicalStatement",
-    undefined,
-    systemPrompt3,
-    userMessage,
-    callbacks,
-    classification
-  );
+    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, syllogisticEvaluationSingleCause);
 }
-
+else {
+    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, classification);
+}
 classification.addRoute("derived", syllogisticEvaluationDerived);
 classification.addRoute("direct", syllogisticEvaluationMoreThanOne);
 classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
-
-const cause2SentenceValidator = new PsBaseValidationAgent(
-  "cause2SentenceValidator",
-  undefined,
-  systemPrompt1,
-  `Sentence to validated: ${cause2}
+const cause2SentenceValidator = new PsBaseValidationAgent("cause2SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause2}
 
   Your evaluation in markdown and then JSON:
-  `,
-  callbacks,
-  validLogicalStatement
-);
-
-const cause1SentenceValidator = new PsBaseValidationAgent(
-  "cause1SentenceValidator",
-  undefined,
-  systemPrompt1,
-  `Sentence to validated: ${cause1}
+  `, callbacks, validLogicalStatement);
+const cause1SentenceValidator = new PsBaseValidationAgent("cause1SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause1}
 
   Your evaluation in markdown and then JSON:
-  `,
-  callbacks,
-  cause2SentenceValidator
-);
-
-const effectSentenceValidator = new PsBaseValidationAgent(
-  "effectSentenceValidator",
-  undefined,
-  systemPrompt1,
-  `Sentence to validated: ${effect}
+  `, callbacks, cause2SentenceValidator);
+const effectSentenceValidator = new PsBaseValidationAgent("effectSentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${effect}
 
   Your evaluation in markdown and then JSON:
-  `,
-  callbacks,
-  cause1SentenceValidator
-);
-
+  `, callbacks, cause1SentenceValidator);
 const result = await agentOrchestrator.execute(effectSentenceValidator, effect);
-
-console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`)
-
+console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`);
 process.exit(0);

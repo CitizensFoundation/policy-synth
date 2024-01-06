@@ -7,9 +7,9 @@ abstract class PsAgentMemory {
 }
 
 export class RedisAgentMemory extends PsAgentMemory {
-  private redis: Redis;
+  private redis: any;
 
-  constructor(redis: Redis) {
+  constructor(redis: any) {
     super();
     this.redis = redis;
   }

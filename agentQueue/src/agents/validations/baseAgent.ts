@@ -29,6 +29,7 @@ export class PsBaseValidationAgent extends Base {
     this.nextAgent = nextAgent;
     this.agentMemory = agentMemory;
     this.systemMessage = systemMessage;
+
     this.userMessage = userMessage;
     this.streamingCallbacks = streamingCallbacks;
 
@@ -71,7 +72,9 @@ export class PsBaseValidationAgent extends Base {
 
     const result = await this.performExecute();
 
-    result.nextAgent = this.nextAgent;
+    console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`)
+
+    result.nextAgent = result.nextAgent || this.nextAgent;
 
     await this.afterExecute(input, result);
 
@@ -83,11 +86,7 @@ export class PsBaseValidationAgent extends Base {
   }
 
   protected async performExecute(): Promise<PsValidationAgentResult> {
-    const results = await this.runValidationLLM();
-
-    results.nextAgent = this.nextAgent;
-
-    return results;
+    return await this.runValidationLLM();
   }
 
   protected afterExecute(

@@ -33,6 +33,7 @@ export class PsClassificationAgent extends PsBaseValidationAgent {
     const nextAgent = this.routes.get(classificationResult.classification);
 
     classificationResult.nextAgent = nextAgent;
+    console.log(`Classification: ${classificationResult.nextAgent?.name}`)
 
     return classificationResult;
   }
