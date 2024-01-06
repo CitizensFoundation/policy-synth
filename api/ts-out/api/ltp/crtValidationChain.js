@@ -1,19 +1,11 @@
-import { OpenAI } from "openai";
-import { Stream } from "openai/streaming.mjs";
-import { hrtime } from "process";
-import { v4 as uuidv4 } from "uuid";
-import WebSocket from "ws";
 import { PsBaseValidationAgent } from "../../agentQueue/src/agents/validations/baseValidationAgent.js";
 import { PsAgentOrchestrator } from "../../agentQueue/src/agents/validations/agentOrchestrator.js";
 import { PsClassificationAgent } from "../../agentQueue/src/agents/validations/classificationAgent.js";
 import { PsParallelValidationAgent } from "../../agentQueue/src/agents/validations/parallelAgent.js";
-
 const DEBUGGING = true;
-
 const config = {
-  apiKey: process.env.OPENAI_KEY,
+    apiKey: process.env.OPENAI_KEY,
 };
-
 const systemPrompt1 = `You are an expert validator.
 
 ###Evaluation steps###
@@ -68,7 +60,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt2 = `You are an expert classifier.
 
 ###Evaluation instructions###
@@ -92,7 +83,6 @@ Then JSON:
 \`\`\`
 
 `;
-
 const systemPrompt3 = `
 You are an expert in validating logic.
 
@@ -150,7 +140,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt4 = `
 You are an expert in validating logic.
 
@@ -177,7 +166,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt5 = `
 You are an expert in validating logic.
 
@@ -205,7 +193,6 @@ Then JSON:
 { validationErrors?: <string[]> , isValid: <bool> }
 \`\`\`
 `;
-
 const systemPrompt6 = `
 You are an expert in validating logic.
 
@@ -232,165 +219,101 @@ Then JSON:
 \`\`\`
 
 `;
-
-export const renderUserMessage = (
-  effect: string,
-  causes: string[],
-  valdiationReview: string
-) => {
-  const prompt = `Effect: ${effect}
+export const renderUserMessage = (effect, causes, valdiationReview) => {
+    const prompt = `Effect: ${effect}
 ${causes
-  .map(
-    (cause, index) => `Cause${causes.length > 1 ? ` ${index}` : ""}: ${cause}`
-  )
-  .join("\n")}
+        .map((cause, index) => `Cause${causes.length > 1 ? ` ${index}` : ""}: ${cause}`)
+        .join("\n")}
 Expert validation review: ${valdiationReview}
 `;
-
-  return prompt;
+    return prompt;
 };
-
-export const runValidationChain = async (
-  crt: LtpCurrentRealityTreeData,
-  clientId: string,
-  wsClients: Map<string, WebSocket>,
-  parentNode: LtpCurrentRealityTreeDataNode,
-  currentUDE: string,
-  chatLog: LtpSimplifiedChatLog[],
-  parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined,
-  effect: string,
-  causes: string[],
-  validationReview: string,
-  customSystemPrompts: Map<number, string> | undefined = undefined
-) => {
-  console.log("runValidationChain called");
-  console.log(`parentNode: ${JSON.stringify(parentNode, null, 2)}
+export const runValidationChain = async (crt, clientId, wsClients, parentNode, currentUDE, chatLog, parentNodes = undefined, effect, causes, validationReview, customSystemPrompts = undefined) => {
+    console.log("runValidationChain called");
+    console.log(`parentNode: ${JSON.stringify(parentNode, null, 2)}
                currentUDE: ${currentUDE}
                parentNodes: ${JSON.stringify(parentNodes, null, 2)}`);
-  let parentNodeType: CrtNodeType;
-
-  if (!parentNode) {
-    parentNodeType = "ude";
-  } else if (parentNode.type == "ude") {
-    parentNodeType = "directCause";
-  } else {
-    parentNodeType = "intermediateCause";
-  }
-
-  console.log(`nodeType: ${parentNodeType}`);
-
-  const webSocket = wsClients.get(clientId);
-  if (!webSocket) {
-    console.error(
-      `WS Client ${clientId} not found in streamWebSocketResponses`
-    );
-    return;
-  }
-
-  const agentOrchestrator = new PsAgentOrchestrator();
-
-  const userMessage = renderUserMessage(effect, causes, validationReview);
-
-  const classification = new PsClassificationAgent("Metric Cassification", {
-    systemMessage:
-      customSystemPrompts && customSystemPrompts.has(2)
-        ? customSystemPrompts.get(2)
-        : systemPrompt2,
-    userMessage,
-    webSocket,
-  });
-
-  const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent(
-    "Syllogistic Evaluation (More than one cause)",
-    {
-      systemMessage:
-        customSystemPrompts && customSystemPrompts.has(4)
-          ? customSystemPrompts.get(4)
-          : systemPrompt4,
-      userMessage,
-      webSocket,
+    let parentNodeType;
+    if (!parentNode) {
+        parentNodeType = "ude";
     }
-  );
-
-  const syllogisticEvaluationDerived = new PsBaseValidationAgent(
-    "Syllogistic Evaluation (Derived metric)",
-    {
-      systemMessage:
-        customSystemPrompts && customSystemPrompts.has(5)
-          ? customSystemPrompts.get(5)
-          : systemPrompt5,
-      userMessage,
-      webSocket,
+    else if (parentNode.type == "ude") {
+        parentNodeType = "directCause";
     }
-  );
-
-  const syllogisticEvaluationSingleCause = new PsBaseValidationAgent(
-    "Syllogistic Evaluation (Single cause)",
-    {
-      systemMessage:
-        customSystemPrompts && customSystemPrompts.has(6)
-          ? customSystemPrompts.get(6)
-          : systemPrompt6,
-      userMessage,
-      webSocket,
+    else {
+        parentNodeType = "intermediateCause";
     }
-  );
-
-  const validLogicalStatement = new PsBaseValidationAgent(
-    "validLogicalStatement",
-    {
-      systemMessage:
-        customSystemPrompts && customSystemPrompts.has(3)
-          ? customSystemPrompts.get(3)
-          : systemPrompt3,
+    console.log(`nodeType: ${parentNodeType}`);
+    const webSocket = wsClients.get(clientId);
+    if (!webSocket) {
+        console.error(`WS Client ${clientId} not found in streamWebSocketResponses`);
+        return;
     }
-  );
-
-  if (causes.length <= 1) {
-    validLogicalStatement.nextAgent = syllogisticEvaluationSingleCause;
-  } else {
-    validLogicalStatement.nextAgent = classification;
-  }
-
-  classification.addRoute("derived", syllogisticEvaluationDerived);
-  classification.addRoute("direct", syllogisticEvaluationMoreThanOne);
-  classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
-
-  const sentenceValidators = causes.map((cause, index) => {
-    return new PsBaseValidationAgent(`Cause ${index} Sentence Validator`, {
-      systemMessage:
-        customSystemPrompts && customSystemPrompts.has(1)
-          ? customSystemPrompts.get(1)
-          : systemPrompt1,
-      userMessage: `Sentence to validate: ${cause}\n\nYour evaluation in markdown and then JSON:\n`,
-      disableStreaming: true,
-      webSocket,
+    const agentOrchestrator = new PsAgentOrchestrator();
+    const userMessage = renderUserMessage(effect, causes, validationReview);
+    const classification = new PsClassificationAgent("Metric Cassification", {
+        systemMessage: customSystemPrompts && customSystemPrompts.has(2)
+            ? customSystemPrompts.get(2)
+            : systemPrompt2,
+        userMessage,
+        webSocket,
     });
-  });
-
-  const effectSentenceValidator = new PsBaseValidationAgent(
-    "Effect Sentence Validator",
-    {
-      systemMessage:
-        customSystemPrompts && customSystemPrompts.has(1)
-          ? customSystemPrompts.get(1)
-          : systemPrompt1,
-
-      userMessage: `Sentence to validated: ${effect}\n\nYour evaluation in markdown and then JSON:\n`,
-      disableStreaming: true,
-      webSocket,
+    const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent("Syllogistic Evaluation (More than one cause)", {
+        systemMessage: customSystemPrompts && customSystemPrompts.has(4)
+            ? customSystemPrompts.get(4)
+            : systemPrompt4,
+        userMessage,
+        webSocket,
+    });
+    const syllogisticEvaluationDerived = new PsBaseValidationAgent("Syllogistic Evaluation (Derived metric)", {
+        systemMessage: customSystemPrompts && customSystemPrompts.has(5)
+            ? customSystemPrompts.get(5)
+            : systemPrompt5,
+        userMessage,
+        webSocket,
+    });
+    const syllogisticEvaluationSingleCause = new PsBaseValidationAgent("Syllogistic Evaluation (Single cause)", {
+        systemMessage: customSystemPrompts && customSystemPrompts.has(6)
+            ? customSystemPrompts.get(6)
+            : systemPrompt6,
+        userMessage,
+        webSocket,
+    });
+    const validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", {
+        systemMessage: customSystemPrompts && customSystemPrompts.has(3)
+            ? customSystemPrompts.get(3)
+            : systemPrompt3,
+    });
+    if (causes.length <= 1) {
+        validLogicalStatement.nextAgent = syllogisticEvaluationSingleCause;
     }
-  );
-
-  const parallelAgent = new PsParallelValidationAgent(
-    "Parallel Sentence Validation",
-    {
-      webSocket,
-    },
-    [effectSentenceValidator, ...sentenceValidators]
-  );
-
-  parallelAgent.nextAgent = validLogicalStatement;
-
-  agentOrchestrator.execute(parallelAgent, effect);
+    else {
+        validLogicalStatement.nextAgent = classification;
+    }
+    classification.addRoute("derived", syllogisticEvaluationDerived);
+    classification.addRoute("direct", syllogisticEvaluationMoreThanOne);
+    classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
+    const sentenceValidators = causes.map((cause, index) => {
+        return new PsBaseValidationAgent(`Cause ${index} Sentence Validator`, {
+            systemMessage: customSystemPrompts && customSystemPrompts.has(1)
+                ? customSystemPrompts.get(1)
+                : systemPrompt1,
+            userMessage: `Sentence to validate: ${cause}\n\nYour evaluation in markdown and then JSON:\n`,
+            disableStreaming: true,
+            webSocket,
+        });
+    });
+    const effectSentenceValidator = new PsBaseValidationAgent("Effect Sentence Validator", {
+        systemMessage: customSystemPrompts && customSystemPrompts.has(1)
+            ? customSystemPrompts.get(1)
+            : systemPrompt1,
+        userMessage: `Sentence to validated: ${effect}\n\nYour evaluation in markdown and then JSON:\n`,
+        disableStreaming: true,
+        webSocket,
+    });
+    const parallelAgent = new PsParallelValidationAgent("Parallel Sentence Validation", {
+        webSocket,
+    }, [effectSentenceValidator, ...sentenceValidators]);
+    parallelAgent.nextAgent = validLogicalStatement;
+    agentOrchestrator.execute(parallelAgent, effect);
 };
