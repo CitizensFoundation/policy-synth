@@ -46,6 +46,11 @@ export class CurrentRealityTreeController {
       this.getRefinedCauses
     );
 
+    this.router.post(
+      this.path + "/:id/runValidationChain",
+      this.runValidationChain
+    );
+
     this.router.put(
       this.path + "/reviewConfiguration",
       this.reviewTreeConfiguration
@@ -206,9 +211,9 @@ export class CurrentRealityTreeController {
       crtNodeId: string;
       chatLog: LtpSimplifiedChatLog[];
       wsClientId: string;
-      effect: string;
-      causes: string[];
-      validationResults: string;
+      effect?: string;
+      causes?: string[];
+      validationResults?: string;
     } = req.body;
 
     try {

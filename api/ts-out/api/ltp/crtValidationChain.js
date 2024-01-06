@@ -283,6 +283,8 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
         systemMessage: customSystemPrompts && customSystemPrompts.has(3)
             ? customSystemPrompts.get(3)
             : systemPrompt3,
+        userMessage,
+        webSocket
     });
     if (causes.length <= 1) {
         validLogicalStatement.nextAgent = syllogisticEvaluationSingleCause;

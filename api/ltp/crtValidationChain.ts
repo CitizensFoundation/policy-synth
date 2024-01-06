@@ -343,6 +343,8 @@ export const runValidationChain = async (
         customSystemPrompts && customSystemPrompts.has(3)
           ? customSystemPrompts.get(3)
           : systemPrompt3,
+      userMessage,
+      webSocket
     }
   );
 

@@ -20,18 +20,26 @@ export class PsBaseValidationAgent extends Base {
       streaming: true,
     });
 
-    if (this.options.webSocket) {
-      const botMessage = {
-        sender: "bot",
-        type: "agentStart",
-        message: {
-          name: this.name,
-          noStreaming: !this.options.streamingCallbacks || this.options.disableStreaming,
-        } as PsAgentStartWsOptions
-      };
-      this.options.webSocket.send(
-        JSON.stringify(botMessage)
-      );
+    const webSocket = this.options.webSocket;
+
+    if (webSocket && !this.options.disableStreaming) {
+      const myCallback =  {
+        handleLLMNewToken(token: string) {
+          webSocket.send(
+            JSON.stringify({
+              sender: "bot",
+              type: "stream",
+              message: token,
+            })
+          )
+        },
+      }
+
+      if (this.options.streamingCallbacks) {
+        this.options.streamingCallbacks.push(myCallback);
+      } else {
+        this.options.streamingCallbacks = [myCallback];
+      }
     }
   }
 
@@ -85,6 +93,19 @@ export class PsBaseValidationAgent extends Base {
   }
 
   protected beforeExecute(): Promise<void> {
+    if (this.options.webSocket && !this.options.disableStreaming) {
+      const botMessage = {
+        sender: "bot",
+        type: "agentStart",
+        message: {
+          name: this.name,
+          noStreaming:
+            !this.options.streamingCallbacks || this.options.disableStreaming,
+        } as PsAgentStartWsOptions,
+      };
+      this.options.webSocket.send(JSON.stringify(botMessage));
+    }
+
     return Promise.resolve();
   }
 
@@ -93,7 +114,7 @@ export class PsBaseValidationAgent extends Base {
   }
 
   protected afterExecute(result: PsValidationAgentResult): Promise<void> {
-    if (this.options.webSocket) {
+    if (this.options.webSocket && !this.options.disableStreaming) {
       const botMessage = {
         sender: "bot",
         type: "agentCompleted",
@@ -101,14 +122,13 @@ export class PsBaseValidationAgent extends Base {
           name: this.name,
           results: {
             isValid: result.isValid,
-            validationErrors: result.validationErrors
+            validationErrors: result.validationErrors,
+            lastAgent: !this.options.nextAgent
           } as PsValidationAgentResult,
-        } as PsAgentCompletedWsOptions
+        } as PsAgentCompletedWsOptions,
       };
 
-      this.options.webSocket.send(
-        JSON.stringify(botMessage)
-      );
+      this.options.webSocket.send(JSON.stringify(botMessage));
     }
 
     return Promise.resolve();

@@ -33,6 +33,7 @@ export class CurrentRealityTreeController {
         this.router.post(this.path + "/:id/createDirectCauses", this.createDirectCauses);
         this.router.post(this.path + "/:id/addDirectCauses", this.addDirectCauses);
         this.router.post(this.path + "/:id/getRefinedCauses", this.getRefinedCauses);
+        this.router.post(this.path + "/:id/runValidationChain", this.runValidationChain);
         this.router.put(this.path + "/reviewConfiguration", this.reviewTreeConfiguration);
         this.router.delete(this.path + "/:id", this.deleteNode);
         this.router.put(this.path + "/:id", this.updateNode);

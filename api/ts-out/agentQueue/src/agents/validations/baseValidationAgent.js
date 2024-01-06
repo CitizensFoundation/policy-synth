@@ -16,16 +16,23 @@ export class PsBaseValidationAgent extends Base {
             verbose: IEngineConstants.validationModel.verbose,
             streaming: true,
         });
-        if (this.options.webSocket) {
-            const botMessage = {
-                sender: "bot",
-                type: "agentStart",
-                message: {
-                    name: this.name,
-                    noStreaming: !this.options.streamingCallbacks || this.options.disableStreaming,
-                }
+        const webSocket = this.options.webSocket;
+        if (webSocket && !this.options.disableStreaming) {
+            const myCallback = {
+                handleLLMNewToken(token) {
+                    webSocket.send(JSON.stringify({
+                        sender: "bot",
+                        type: "stream",
+                        message: token,
+                    }));
+                },
             };
-            this.options.webSocket.send(JSON.stringify(botMessage));
+            if (this.options.streamingCallbacks) {
+                this.options.streamingCallbacks.push(myCallback);
+            }
+            else {
+                this.options.streamingCallbacks = [myCallback];
+            }
         }
     }
     set nextAgent(agent) {
@@ -60,13 +67,24 @@ export class PsBaseValidationAgent extends Base {
         return result;
     }
     beforeExecute() {
+        if (this.options.webSocket && !this.options.disableStreaming) {
+            const botMessage = {
+                sender: "bot",
+                type: "agentStart",
+                message: {
+                    name: this.name,
+                    noStreaming: !this.options.streamingCallbacks || this.options.disableStreaming,
+                },
+            };
+            this.options.webSocket.send(JSON.stringify(botMessage));
+        }
         return Promise.resolve();
     }
     async performExecute() {
         return await this.runValidationLLM();
     }
     afterExecute(result) {
-        if (this.options.webSocket) {
+        if (this.options.webSocket && !this.options.disableStreaming) {
             const botMessage = {
                 sender: "bot",
                 type: "agentCompleted",
@@ -74,9 +92,10 @@ export class PsBaseValidationAgent extends Base {
                     name: this.name,
                     results: {
                         isValid: result.isValid,
-                        validationErrors: result.validationErrors
+                        validationErrors: result.validationErrors,
+                        lastAgent: !this.options.nextAgent
                     },
-                }
+                },
             };
             this.options.webSocket.send(JSON.stringify(botMessage));
         }

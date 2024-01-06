@@ -237,7 +237,6 @@ causees.forEach((cause, index) => {
   userMessage += `Cause ${index + 1}: ${cause}\n`;
 });
 
-
 const streamingCallbacks = [
   {
     handleLLMNewToken(token: string) {
