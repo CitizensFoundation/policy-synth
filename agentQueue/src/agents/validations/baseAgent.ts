@@ -11,17 +11,17 @@ export class PsBaseValidationAgent extends Base {
   nextAgent: PsValidationAgent | undefined;
   validationErrors?: string[];
 
-  systemMessage: string;
-  userMessage: string;
+  systemMessage: string | undefined;
+  userMessage: string | undefined;
 
   streamingCallbacks: Callbacks | undefined;
 
   constructor(
     name: string,
     agentMemory: PsAgentMemory | undefined,
-    systemMessage: string,
-    userMessage: string,
-    streamingCallbacks: Callbacks,
+    systemMessage: string | undefined,
+    userMessage: string | undefined,
+    streamingCallbacks: Callbacks | undefined,
     nextAgent: PsValidationAgent | undefined,
   ) {
     super();
@@ -43,10 +43,14 @@ export class PsBaseValidationAgent extends Base {
   }
 
   protected async renderPrompt() {
-    return [
-      new SystemMessage(this.systemMessage),
-      new HumanMessage(this.userMessage),
-    ];
+    if (this.systemMessage && this.userMessage) {
+      return [
+        new SystemMessage(this.systemMessage),
+        new HumanMessage(this.userMessage),
+      ];
+    } else {
+      throw new Error("System or user message is undefined");
+    }
   }
 
   async runValidationLLM(): Promise<PsValidationAgentResult> {
@@ -67,8 +71,8 @@ export class PsBaseValidationAgent extends Base {
     }
   }
 
-  async execute(input: string): Promise<PsValidationAgentResult> {
-    await this.beforeExecute(input);
+  async execute(): Promise<PsValidationAgentResult> {
+    await this.beforeExecute();
 
     const result = await this.performExecute();
 
@@ -76,12 +80,12 @@ export class PsBaseValidationAgent extends Base {
 
     result.nextAgent = result.nextAgent || this.nextAgent;
 
-    await this.afterExecute(input, result);
+    await this.afterExecute(result);
 
     return result;
   }
 
-  protected beforeExecute(input: string): Promise<void> {
+  protected beforeExecute(): Promise<void> {
     return Promise.resolve();
   }
 
@@ -90,7 +94,6 @@ export class PsBaseValidationAgent extends Base {
   }
 
   protected afterExecute(
-    input: string,
     result: PsValidationAgentResult
   ): Promise<void> {
     return Promise.resolve();
