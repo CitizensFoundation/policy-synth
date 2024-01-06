@@ -22,3 +22,25 @@ interface PsMetricClassificationAgentResult extends PsClassificationAgentResult 
   moreThanOneCause: boolean;
   classification: "direct" | "derived" | "nometric";
 }
+
+//TODO: Import real types for Callbacks from langchain and WebSockets
+interface PsBaseValidationAgentOptions {
+  agentMemory?: PsAgentMemory;
+  nextAgent?: PsValidationAgent;
+  validationErrors?: string[];
+  systemMessage?: string;
+  userMessage?: string;
+  streamingCallbacks?: Callbacks;
+  webSocket?: WebSocket;
+  disableStreaming?: boolean;
+}
+
+interface PsAgentStartWsOptions {
+  name: string;
+  noStreaming?: boolean;
+}
+
+interface PsAgentCompletedWsOptions {
+  name: string;
+  results: PsValidationAgentResult;
+}

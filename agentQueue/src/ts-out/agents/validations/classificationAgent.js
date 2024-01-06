@@ -1,8 +1,8 @@
-import { PsBaseValidationAgent } from "./baseAgent.js";
+import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 export class PsClassificationAgent extends PsBaseValidationAgent {
     routes;
-    constructor(name, agentMemory, systemMessage, userMessage, streamingCallbacks, webSocket) {
-        super(name, agentMemory, systemMessage, userMessage, streamingCallbacks, webSocket, undefined);
+    constructor(name, options = {}) {
+        super(name, options);
         this.routes = new Map();
     }
     addRoute(classification, agent) {

@@ -1,4 +1,4 @@
-export class AgentOrchestrator {
+export class PsAgentOrchestrator {
   async execute(
     initialAgent: PsValidationAgent,
     input: string

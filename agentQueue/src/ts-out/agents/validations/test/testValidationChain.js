@@ -1,5 +1,5 @@
-import { AgentOrchestrator } from "../agentOrchestrator.js";
-import { PsBaseValidationAgent } from "../baseAgent.js";
+import { PsAgentOrchestrator } from "../agentOrchestrator.js";
+import { PsBaseValidationAgent } from "../baseValidationAgent.js";
 import { PsClassificationAgent } from "../classificationAgent.js";
 import { PsParallelValidationAgent } from "../parallelAgent.js";
 const systemPrompt1 = `You are an expert validator.
@@ -216,53 +216,71 @@ Then JSON:
 
 `;
 //const effect = `Our business model is not attractive to investors`;
-//const cause1 = `Investors have not shown interest in our company`;
-//const cause2 = `Other companies in the same market do attract investors`;
+//const causees = [`Investors have not shown interest in our company`, `Other companies in the same market do attract investors`];
 const effect = `Car's engine will not start`;
-const cause1 = `Engine needs fuel in order to run`;
-const cause2 = `Fuel is not getting into the engine`;
+const causees = [`Engine needs fuel in order to run`, `Fuel is not getting into the engine`];
 //const effect = `Our survival is at stake`;
-//const cause1 = `Surviving in this competitive business requires frequent investments`;
-//const cause2 = `Our financial resources are more and more limited`;
-const userMessage = `Effect: ${effect}
-Cause 1: ${cause1}
-Cause 2: ${cause2}`;
-const hasOneCauses = false;
-const callbacks = [
+//const causees = [`Surviving in this competitive business requires frequent investments`,`Our financial resources are more and more limited`];
+let userMessage = `Effect: ${effect}\n`;
+causees.forEach((cause, index) => {
+    userMessage += `Cause ${index + 1}: ${cause}\n`;
+});
+const streamingCallbacks = [
     {
         handleLLMNewToken(token) {
             process.stdout.write(token);
         },
     },
 ];
-const agentOrchestrator = new AgentOrchestrator();
-const classification = new PsClassificationAgent("classification", undefined, systemPrompt2, userMessage, callbacks, undefined);
-const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent("syllogisticEvaluationMoreThanOne", undefined, systemPrompt4, userMessage, callbacks, undefined, undefined);
-const syllogisticEvaluationDerived = new PsBaseValidationAgent("syllogisticEvaluationDerived", undefined, systemPrompt4, userMessage, callbacks, undefined, undefined);
-const syllogisticEvaluationSingleCause = new PsBaseValidationAgent("syllogisticEvaluationSingleCause", undefined, systemPrompt4, userMessage, callbacks, undefined, undefined);
-let validLogicalStatement;
-if (hasOneCauses) {
-    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, undefined, syllogisticEvaluationSingleCause);
+const agentOrchestrator = new PsAgentOrchestrator();
+const classification = new PsClassificationAgent("Metric Cassification", {
+    systemMessage: systemPrompt2,
+    userMessage,
+    streamingCallbacks,
+});
+const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent("Syllogistic Evaluation (More than one cause)", {
+    systemMessage: systemPrompt4,
+    userMessage,
+    streamingCallbacks
+});
+const syllogisticEvaluationDerived = new PsBaseValidationAgent("Syllogistic Evaluation (Derived metric)", {
+    systemMessage: systemPrompt5,
+    userMessage,
+    streamingCallbacks
+});
+const syllogisticEvaluationSingleCause = new PsBaseValidationAgent("Syllogistic Evaluation (Single cause)", {
+    systemMessage: systemPrompt6,
+    userMessage,
+    streamingCallbacks
+});
+const validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", {
+    systemMessage: systemPrompt3,
+    userMessage,
+    streamingCallbacks
+});
+if (causees.length <= 1) {
+    validLogicalStatement.nextAgent = syllogisticEvaluationSingleCause;
 }
 else {
-    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, undefined, classification);
+    validLogicalStatement.nextAgent = classification;
 }
 classification.addRoute("derived", syllogisticEvaluationDerived);
 classification.addRoute("direct", syllogisticEvaluationMoreThanOne);
 classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
-const cause2SentenceValidator = new PsBaseValidationAgent("cause2SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause2}
-
-  Your evaluation in markdown and then JSON:
-  `, undefined, undefined, undefined);
-const cause1SentenceValidator = new PsBaseValidationAgent("cause1SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause1}
-
-  Your evaluation in markdown and then JSON:
-  `, undefined, undefined, undefined);
-const effectSentenceValidator = new PsBaseValidationAgent("effectSentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${effect}
-
-  Your evaluation in markdown and then JSON:
-  `, undefined, undefined, undefined);
-const parallelAgent = new PsParallelValidationAgent("parallelSentenceAgent", [effectSentenceValidator, cause1SentenceValidator, cause2SentenceValidator], undefined, undefined, validLogicalStatement);
+const sentenceValidators = causees.map((cause, index) => {
+    return new PsBaseValidationAgent(`Cause ${index} Sentence Validator`, {
+        systemMessage: systemPrompt1,
+        userMessage: `Sentence to validate: ${cause}\n\nYour evaluation in markdown and then JSON:\n`,
+        disableStreaming: true
+    });
+});
+const effectSentenceValidator = new PsBaseValidationAgent("Effect Sentence Validator", {
+    systemMessage: systemPrompt1,
+    userMessage: `Sentence to validated: ${effect}\n\nYour evaluation in markdown and then JSON:\n`,
+    disableStreaming: true
+});
+const parallelAgent = new PsParallelValidationAgent("Parallel Sentence Validation", {}, [effectSentenceValidator, ...sentenceValidators]);
+parallelAgent.nextAgent = validLogicalStatement;
 const result = await agentOrchestrator.execute(parallelAgent, effect);
 console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`);
 process.exit(0);
