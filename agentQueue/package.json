@@ -10,6 +10,7 @@
     "@types/pdfjs-dist": "^2.10.378",
     "@types/pg": "^8.10.9",
     "@types/puppeteer": "^7.0.4",
+    "@types/ws": "^8.5.10",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
@@ -62,6 +63,7 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "weaviate-ts-client": "^1.6.0",
-    "winston": "^3.9.0"
+    "winston": "^3.9.0",
+    "ws": "^8.16.0"
   }
 }

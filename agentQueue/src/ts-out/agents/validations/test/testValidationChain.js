@@ -236,16 +236,16 @@ const callbacks = [
     },
 ];
 const agentOrchestrator = new AgentOrchestrator();
-const classification = new PsClassificationAgent("classification", undefined, systemPrompt2, userMessage, callbacks);
-const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent("syllogisticEvaluationMoreThanOne", undefined, systemPrompt4, userMessage, callbacks, undefined);
-const syllogisticEvaluationDerived = new PsBaseValidationAgent("syllogisticEvaluationDerived", undefined, systemPrompt4, userMessage, callbacks, undefined);
-const syllogisticEvaluationSingleCause = new PsBaseValidationAgent("syllogisticEvaluationSingleCause", undefined, systemPrompt4, userMessage, callbacks, undefined);
+const classification = new PsClassificationAgent("classification", undefined, systemPrompt2, userMessage, callbacks, undefined);
+const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent("syllogisticEvaluationMoreThanOne", undefined, systemPrompt4, userMessage, callbacks, undefined, undefined);
+const syllogisticEvaluationDerived = new PsBaseValidationAgent("syllogisticEvaluationDerived", undefined, systemPrompt4, userMessage, callbacks, undefined, undefined);
+const syllogisticEvaluationSingleCause = new PsBaseValidationAgent("syllogisticEvaluationSingleCause", undefined, systemPrompt4, userMessage, callbacks, undefined, undefined);
 let validLogicalStatement;
 if (hasOneCauses) {
-    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, syllogisticEvaluationSingleCause);
+    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, undefined, syllogisticEvaluationSingleCause);
 }
 else {
-    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, classification);
+    validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", undefined, systemPrompt3, userMessage, callbacks, undefined, classification);
 }
 classification.addRoute("derived", syllogisticEvaluationDerived);
 classification.addRoute("direct", syllogisticEvaluationMoreThanOne);
@@ -253,16 +253,16 @@ classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
 const cause2SentenceValidator = new PsBaseValidationAgent("cause2SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause2}
 
   Your evaluation in markdown and then JSON:
-  `, callbacks, undefined);
+  `, undefined, undefined, undefined);
 const cause1SentenceValidator = new PsBaseValidationAgent("cause1SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause1}
 
   Your evaluation in markdown and then JSON:
-  `, callbacks, undefined);
+  `, undefined, undefined, undefined);
 const effectSentenceValidator = new PsBaseValidationAgent("effectSentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${effect}
 
   Your evaluation in markdown and then JSON:
-  `, callbacks, undefined);
-const parallelAgent = new PsParallelValidationAgent("parallelSentenceAgent", [effectSentenceValidator, cause1SentenceValidator, cause2SentenceValidator], undefined, validLogicalStatement);
+  `, undefined, undefined, undefined);
+const parallelAgent = new PsParallelValidationAgent("parallelSentenceAgent", [effectSentenceValidator, cause1SentenceValidator, cause2SentenceValidator], undefined, undefined, validLogicalStatement);
 const result = await agentOrchestrator.execute(parallelAgent, effect);
 console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`);
 process.exit(0);

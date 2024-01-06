@@ -10,7 +10,8 @@ export class PsBaseValidationAgent extends Base {
     systemMessage;
     userMessage;
     streamingCallbacks;
-    constructor(name, agentMemory, systemMessage, userMessage, streamingCallbacks, nextAgent) {
+    webSocket;
+    constructor(name, agentMemory, systemMessage, userMessage, streamingCallbacks, webSocket, nextAgent) {
         super();
         this.name = name;
         this.nextAgent = nextAgent;
@@ -18,13 +19,21 @@ export class PsBaseValidationAgent extends Base {
         this.systemMessage = systemMessage;
         this.userMessage = userMessage;
         this.streamingCallbacks = streamingCallbacks;
+        this.webSocket = webSocket;
         this.chat = new ChatOpenAI({
             temperature: IEngineConstants.validationModel.temperature,
             maxTokens: IEngineConstants.validationModel.maxOutputTokens,
             modelName: IEngineConstants.validationModel.name,
             verbose: IEngineConstants.validationModel.verbose,
-            streaming: true
+            streaming: true,
         });
+        if (this.webSocket) {
+            this.webSocket.send(JSON.stringify({
+                sender: "bot",
+                type: "agentStart",
+                message: `Agent ${this.name} started`,
+            }));
+        }
     }
     async renderPrompt() {
         if (this.systemMessage && this.userMessage) {
@@ -61,6 +70,13 @@ export class PsBaseValidationAgent extends Base {
         return await this.runValidationLLM();
     }
     afterExecute(result) {
+        if (this.webSocket) {
+            this.webSocket.send(JSON.stringify({
+                sender: "bot",
+                type: "agentEnd",
+                message: `Agent ${this.name} completed ${result.isValid ? "successfully" : "unsuccessfully"}`,
+            }));
+        }
         return Promise.resolve();
     }
 }

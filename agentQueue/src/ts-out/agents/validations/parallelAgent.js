@@ -1,8 +1,8 @@
 import { PsBaseValidationAgent } from "./baseAgent.js";
 export class PsParallelValidationAgent extends PsBaseValidationAgent {
     agents;
-    constructor(name, agents, agentMemory, nextAgent) {
-        super(name, agentMemory, undefined, undefined, undefined, nextAgent);
+    constructor(name, agents, agentMemory, webSocket, nextAgent) {
+        super(name, agentMemory, undefined, undefined, undefined, webSocket, nextAgent);
         this.agents = agents;
     }
     async execute() {

@@ -4,6 +4,7 @@ import { IEngineConstants } from "../../constants.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Callbacks } from "langchain/callbacks";
 import { BaseChatMessageHistory } from "langchain/schema";
+import { WebSocket } from "ws";
 
 export class PsBaseValidationAgent extends Base {
   name: string;
@@ -16,13 +17,16 @@ export class PsBaseValidationAgent extends Base {
 
   streamingCallbacks: Callbacks | undefined;
 
+  webSocket: WebSocket | undefined;
+
   constructor(
     name: string,
     agentMemory: PsAgentMemory | undefined,
     systemMessage: string | undefined,
     userMessage: string | undefined,
     streamingCallbacks: Callbacks | undefined,
-    nextAgent: PsValidationAgent | undefined,
+    webSocket: WebSocket | undefined,
+    nextAgent: PsValidationAgent | undefined
   ) {
     super();
     this.name = name;
@@ -33,13 +37,25 @@ export class PsBaseValidationAgent extends Base {
     this.userMessage = userMessage;
     this.streamingCallbacks = streamingCallbacks;
 
+    this.webSocket = webSocket;
+
     this.chat = new ChatOpenAI({
       temperature: IEngineConstants.validationModel.temperature,
       maxTokens: IEngineConstants.validationModel.maxOutputTokens,
       modelName: IEngineConstants.validationModel.name,
       verbose: IEngineConstants.validationModel.verbose,
-      streaming: true
+      streaming: true,
     });
+
+    if (this.webSocket) {
+      this.webSocket.send(
+        JSON.stringify({
+          sender: "bot",
+          type: "agentStart",
+          message: `Agent ${this.name} started`,
+        })
+      );
+    }
   }
 
   protected async renderPrompt() {
@@ -67,7 +83,7 @@ export class PsBaseValidationAgent extends Base {
     if (!llmResponse) {
       throw new Error("LLM response is undefined");
     } else {
-      return llmResponse
+      return llmResponse;
     }
   }
 
@@ -76,7 +92,9 @@ export class PsBaseValidationAgent extends Base {
 
     const result = await this.performExecute();
 
-    console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`)
+    console.log(
+      `Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`
+    );
 
     result.nextAgent = result.nextAgent || this.nextAgent;
 
@@ -93,9 +111,19 @@ export class PsBaseValidationAgent extends Base {
     return await this.runValidationLLM();
   }
 
-  protected afterExecute(
-    result: PsValidationAgentResult
-  ): Promise<void> {
+  protected afterExecute(result: PsValidationAgentResult): Promise<void> {
+    if (this.webSocket) {
+      this.webSocket.send(
+        JSON.stringify({
+          sender: "bot",
+          type: "agentEnd",
+          message: `Agent ${this.name} completed ${
+            result.isValid ? "successfully" : "unsuccessfully"
+          }`,
+        })
+      );
+    }
+
     return Promise.resolve();
   }
 }
