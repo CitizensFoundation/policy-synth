@@ -27,10 +27,15 @@ export class PsBaseValidationAgent extends Base {
         });
     }
     async renderPrompt() {
-        return [
-            new SystemMessage(this.systemMessage),
-            new HumanMessage(this.userMessage),
-        ];
+        if (this.systemMessage && this.userMessage) {
+            return [
+                new SystemMessage(this.systemMessage),
+                new HumanMessage(this.userMessage),
+            ];
+        }
+        else {
+            throw new Error("System or user message is undefined");
+        }
     }
     async runValidationLLM() {
         const llmResponse = await this.callLLM("validation-agent", IEngineConstants.validationModel, await this.renderPrompt(), true, false, 120, this.streamingCallbacks);
@@ -41,21 +46,21 @@ export class PsBaseValidationAgent extends Base {
             return llmResponse;
         }
     }
-    async execute(input) {
-        await this.beforeExecute(input);
+    async execute() {
+        await this.beforeExecute();
         const result = await this.performExecute();
         console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`);
         result.nextAgent = result.nextAgent || this.nextAgent;
-        await this.afterExecute(input, result);
+        await this.afterExecute(result);
         return result;
     }
-    beforeExecute(input) {
+    beforeExecute() {
         return Promise.resolve();
     }
     async performExecute() {
         return await this.runValidationLLM();
     }
-    afterExecute(input, result) {
+    afterExecute(result) {
         return Promise.resolve();
     }
 }

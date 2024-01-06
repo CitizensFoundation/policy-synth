@@ -1,6 +1,7 @@
 import { AgentOrchestrator } from "../agentOrchestrator.js";
 import { PsBaseValidationAgent } from "../baseAgent.js";
 import { PsClassificationAgent } from "../classificationAgent.js";
+import { PsParallelValidationAgent } from "../parallelAgent.js";
 const systemPrompt1 = `You are an expert validator.
 
 ###Evaluation steps###
@@ -214,12 +215,12 @@ Then JSON:
 \`\`\`
 
 `;
-const effect = `Our business model is not attractive to investors`;
-const cause1 = `Investors have not shown interest in our company`;
-const cause2 = `Other companies in the same market do attract investors`;
-//const effect = `Car's engine will not start`;
-//const cause1 = `Engine needs fuel in order to run`;
-//const cause2 = `Fuel is not getting into the engine`;
+//const effect = `Our business model is not attractive to investors`;
+//const cause1 = `Investors have not shown interest in our company`;
+//const cause2 = `Other companies in the same market do attract investors`;
+const effect = `Car's engine will not start`;
+const cause1 = `Engine needs fuel in order to run`;
+const cause2 = `Fuel is not getting into the engine`;
 //const effect = `Our survival is at stake`;
 //const cause1 = `Surviving in this competitive business requires frequent investments`;
 //const cause2 = `Our financial resources are more and more limited`;
@@ -252,15 +253,16 @@ classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
 const cause2SentenceValidator = new PsBaseValidationAgent("cause2SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause2}
 
   Your evaluation in markdown and then JSON:
-  `, callbacks, validLogicalStatement);
+  `, callbacks, undefined);
 const cause1SentenceValidator = new PsBaseValidationAgent("cause1SentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${cause1}
 
   Your evaluation in markdown and then JSON:
-  `, callbacks, cause2SentenceValidator);
+  `, callbacks, undefined);
 const effectSentenceValidator = new PsBaseValidationAgent("effectSentenceValidator", undefined, systemPrompt1, `Sentence to validated: ${effect}
 
   Your evaluation in markdown and then JSON:
-  `, callbacks, cause1SentenceValidator);
-const result = await agentOrchestrator.execute(effectSentenceValidator, effect);
+  `, callbacks, undefined);
+const parallelAgent = new PsParallelValidationAgent("parallelSentenceAgent", [effectSentenceValidator, cause1SentenceValidator, cause2SentenceValidator], undefined, validLogicalStatement);
+const result = await agentOrchestrator.execute(parallelAgent, effect);
 console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`);
 process.exit(0);
