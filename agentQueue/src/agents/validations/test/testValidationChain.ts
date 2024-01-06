@@ -256,7 +256,8 @@ const classification = new PsClassificationAgent(
   undefined,
   systemPrompt2,
   userMessage,
-  callbacks
+  callbacks,
+  undefined
 );
 
 const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent(
@@ -265,6 +266,7 @@ const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent(
   systemPrompt4,
   userMessage,
   callbacks,
+  undefined,
   undefined
 );
 
@@ -274,6 +276,7 @@ const syllogisticEvaluationDerived = new PsBaseValidationAgent(
   systemPrompt4,
   userMessage,
   callbacks,
+  undefined,
   undefined
 );
 
@@ -283,6 +286,7 @@ const syllogisticEvaluationSingleCause = new PsBaseValidationAgent(
   systemPrompt4,
   userMessage,
   callbacks,
+  undefined,
   undefined
 );
 
@@ -295,6 +299,7 @@ if (hasOneCauses) {
     systemPrompt3,
     userMessage,
     callbacks,
+    undefined,
     syllogisticEvaluationSingleCause
   );
 } else {
@@ -304,6 +309,7 @@ if (hasOneCauses) {
     systemPrompt3,
     userMessage,
     callbacks,
+    undefined,
     classification
   );
 }
@@ -320,7 +326,8 @@ const cause2SentenceValidator = new PsBaseValidationAgent(
 
   Your evaluation in markdown and then JSON:
   `,
-  callbacks,
+  undefined,
+  undefined,
   undefined
 );
 
@@ -332,7 +339,8 @@ const cause1SentenceValidator = new PsBaseValidationAgent(
 
   Your evaluation in markdown and then JSON:
   `,
-  callbacks,
+  undefined,
+  undefined,
   undefined
 );
 
@@ -344,13 +352,15 @@ const effectSentenceValidator = new PsBaseValidationAgent(
 
   Your evaluation in markdown and then JSON:
   `,
-  callbacks,
+  undefined,
+  undefined,
   undefined
 );
 
 const parallelAgent = new PsParallelValidationAgent(
   "parallelSentenceAgent",
   [effectSentenceValidator, cause1SentenceValidator, cause2SentenceValidator],
+  undefined,
   undefined,
   validLogicalStatement
 );

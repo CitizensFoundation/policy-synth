@@ -1,5 +1,6 @@
 import { Callbacks } from "langchain/callbacks";
 import { PsBaseValidationAgent } from "./baseAgent.js";
+import WebSocket from "ws";
 
 export class PsParallelValidationAgent extends PsBaseValidationAgent {
   private agents: PsBaseValidationAgent[];
@@ -8,9 +9,10 @@ export class PsParallelValidationAgent extends PsBaseValidationAgent {
     name: string,
     agents: PsBaseValidationAgent[],
     agentMemory: PsAgentMemory | undefined,
+    webSocket: WebSocket | undefined,
     nextAgent: PsValidationAgent | undefined
   ) {
-    super(name, agentMemory, undefined, undefined, undefined, nextAgent);
+    super(name, agentMemory, undefined, undefined, undefined, webSocket, nextAgent);
     this.agents = agents;
   }
 
