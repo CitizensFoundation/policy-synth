@@ -15,4 +15,22 @@ export class PsClassificationAgent extends PsBaseValidationAgent {
         console.log(`Classification: ${classificationResult.nextAgent?.name}`);
         return classificationResult;
     }
+    afterExecute(result) {
+        if (this.options.webSocket && !this.options.disableStreaming) {
+            const botMessage = {
+                sender: "bot",
+                type: "agentCompleted",
+                message: {
+                    name: this.name,
+                    results: {
+                        isValid: result.isValid,
+                        validationErrors: result.validationErrors,
+                        lastAgent: false
+                    },
+                },
+            };
+            this.options.webSocket.send(JSON.stringify(botMessage));
+        }
+        return Promise.resolve();
+    }
 }
