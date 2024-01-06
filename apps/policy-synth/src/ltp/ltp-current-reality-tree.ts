@@ -633,7 +633,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.graph.clear();
     this.elements = {};
 
-    console.error(
+    console.debug(
       'Updating graph with CRT data:',
       JSON.stringify(crtData, null, 2)
     ); // Log the entire data being processed
