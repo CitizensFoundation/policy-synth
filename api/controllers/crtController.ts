@@ -5,6 +5,7 @@ import { getRefinedCauses } from "../ltp/crtAssistant.js";
 import { v4 as uuidv4 } from "uuid";
 import { getConfigurationReview } from "../ltp/crtConfigReview.js";
 import WebSocket from "ws";
+import { runValidationChain } from "../ltp/crtValidationChain.js";
 
 let redisClient: any;
 
@@ -124,6 +125,73 @@ export class CurrentRealityTreeController {
     }
   };
 
+  runValidationChain = async (req: express.Request, res: express.Response) => {
+    console.log("runValidationChain");
+    const treeId = req.params.id;
+    const {
+      crtNodeId,
+      chatLog,
+      wsClientId,
+      effect,
+      causes,
+      validationResults,
+    }: {
+      crtNodeId: string;
+      chatLog: LtpSimplifiedChatLog[];
+      wsClientId: string;
+      effect: string;
+      causes: string[];
+      validationResults: string;
+    } = req.body;
+
+    try {
+      const treeData = await this.getData(treeId);
+      if (!treeData) {
+        console.error("Tree not found");
+        return res.sendStatus(404);
+      }
+
+      const currentTree: LtpCurrentRealityTreeData = treeData;
+      const parentNode = this.findNode(currentTree.nodes, crtNodeId);
+
+      if (!parentNode) {
+        console.error("Parent node not found");
+        return res.sendStatus(404);
+      }
+
+      const nearestUdeNode = this.findNearestUde(
+        currentTree.nodes,
+        parentNode.id
+      );
+
+      if (!nearestUdeNode) {
+        console.error("Nearest UDE node not found for: " + crtNodeId);
+        console.log(JSON.stringify(currentTree, null, 2));
+        return res.sendStatus(404);
+      }
+
+      await runValidationChain(
+        currentTree,
+        wsClientId,
+        this.wsClients,
+        parentNode,
+        nearestUdeNode.description,
+        chatLog,
+        parentNode.type == "ude"
+          ? undefined
+          : this.getParentNodes(currentTree.nodes, parentNode.id),
+        effect,
+        causes,
+        validationResults
+      );
+
+      return res.sendStatus(200);
+    } catch (err) {
+      console.error(err);
+      return res.sendStatus(500);
+    }
+  };
+
   getRefinedCauses = async (req: express.Request, res: express.Response) => {
     console.log("getRefinedCauses");
     const treeId = req.params.id;
@@ -131,10 +199,16 @@ export class CurrentRealityTreeController {
       crtNodeId,
       chatLog,
       wsClientId,
+      effect,
+      causes,
+      validationResults,
     }: {
       crtNodeId: string;
       chatLog: LtpSimplifiedChatLog[];
       wsClientId: string;
+      effect: string;
+      causes: string[];
+      validationResults: string;
     } = req.body;
 
     try {
@@ -172,7 +246,10 @@ export class CurrentRealityTreeController {
         chatLog,
         parentNode.type == "ude"
           ? undefined
-          : this.getParentNodes(currentTree.nodes, parentNode.id)
+          : this.getParentNodes(currentTree.nodes, parentNode.id),
+        effect,
+        causes,
+        validationResults
       );
 
       return res.sendStatus(200);
@@ -422,7 +499,9 @@ export class CurrentRealityTreeController {
     }
   };
 
-  protected async getData(key: string | number): Promise<LtpCurrentRealityTreeData | null> {
+  protected async getData(
+    key: string | number
+  ): Promise<LtpCurrentRealityTreeData | null> {
     console.log(`Getting data for key: ${key}`);
     const data = await redisClient.get(`crt:${key}`);
     if (data) {

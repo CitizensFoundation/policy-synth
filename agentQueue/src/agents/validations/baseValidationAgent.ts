@@ -2,42 +2,16 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Base } from "../../base.js";
 import { IEngineConstants } from "../../constants.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Callbacks } from "langchain/callbacks";
-import { BaseChatMessageHistory } from "langchain/schema";
-import { WebSocket } from "ws";
+
 
 export class PsBaseValidationAgent extends Base {
   name: string;
-  agentMemory: PsAgentMemory | undefined;
-  nextAgent: PsValidationAgent | undefined;
-  validationErrors?: string[];
+  options: PsBaseValidationAgentOptions;
 
-  systemMessage: string | undefined;
-  userMessage: string | undefined;
-
-  streamingCallbacks: Callbacks | undefined;
-
-  webSocket: WebSocket | undefined;
-
-  constructor(
-    name: string,
-    agentMemory: PsAgentMemory | undefined,
-    systemMessage: string | undefined,
-    userMessage: string | undefined,
-    streamingCallbacks: Callbacks | undefined,
-    webSocket: WebSocket | undefined,
-    nextAgent: PsValidationAgent | undefined
-  ) {
+  constructor(name: string, options: PsBaseValidationAgentOptions = {}) {
     super();
     this.name = name;
-    this.nextAgent = nextAgent;
-    this.agentMemory = agentMemory;
-    this.systemMessage = systemMessage;
-
-    this.userMessage = userMessage;
-    this.streamingCallbacks = streamingCallbacks;
-
-    this.webSocket = webSocket;
+    this.options = options;
 
     this.chat = new ChatOpenAI({
       temperature: IEngineConstants.validationModel.temperature,
@@ -47,22 +21,30 @@ export class PsBaseValidationAgent extends Base {
       streaming: true,
     });
 
-    if (this.webSocket) {
-      this.webSocket.send(
-        JSON.stringify({
-          sender: "bot",
-          type: "agentStart",
-          message: `Agent ${this.name} started`,
-        })
+    if (this.options.webSocket) {
+      const botMessage = {
+        sender: "bot",
+        type: "agentStart",
+        message: {
+          name: this.name,
+          noStreaming: !this.options.streamingCallbacks || this.options.disableStreaming,
+        } as PsAgentStartWsOptions
+      };
+      this.options.webSocket.send(
+        JSON.stringify(botMessage)
       );
     }
   }
 
+  set nextAgent(agent: PsValidationAgent) {
+    this.options.nextAgent = agent;
+  }
+
   protected async renderPrompt() {
-    if (this.systemMessage && this.userMessage) {
+    if (this.options.systemMessage && this.options.userMessage) {
       return [
-        new SystemMessage(this.systemMessage),
-        new HumanMessage(this.userMessage),
+        new SystemMessage(this.options.systemMessage),
+        new HumanMessage(this.options.userMessage),
       ];
     } else {
       throw new Error("System or user message is undefined");
@@ -77,7 +59,7 @@ export class PsBaseValidationAgent extends Base {
       true,
       false,
       120,
-      this.streamingCallbacks
+      this.options.streamingCallbacks
     );
 
     if (!llmResponse) {
@@ -96,7 +78,7 @@ export class PsBaseValidationAgent extends Base {
       `Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`
     );
 
-    result.nextAgent = result.nextAgent || this.nextAgent;
+    result.nextAgent = result.nextAgent || this.options.nextAgent;
 
     await this.afterExecute(result);
 
@@ -112,15 +94,21 @@ export class PsBaseValidationAgent extends Base {
   }
 
   protected afterExecute(result: PsValidationAgentResult): Promise<void> {
-    if (this.webSocket) {
-      this.webSocket.send(
-        JSON.stringify({
-          sender: "bot",
-          type: "agentEnd",
-          message: `Agent ${this.name} completed ${
-            result.isValid ? "successfully" : "unsuccessfully"
-          }`,
-        })
+    if (this.options.webSocket) {
+      const botMessage = {
+        sender: "bot",
+        type: "agentCompleted",
+        message: {
+          name: this.name,
+          results: {
+            isValid: result.isValid,
+            validationErrors: result.validationErrors
+          } as PsValidationAgentResult,
+        } as PsAgentCompletedWsOptions
+      };
+
+      this.options.webSocket.send(
+        JSON.stringify(botMessage)
       );
     }
 

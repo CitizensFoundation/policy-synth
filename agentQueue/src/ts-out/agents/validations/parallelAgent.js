@@ -1,8 +1,8 @@
-import { PsBaseValidationAgent } from "./baseAgent.js";
+import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 export class PsParallelValidationAgent extends PsBaseValidationAgent {
     agents;
-    constructor(name, agents, agentMemory, webSocket, nextAgent) {
-        super(name, agentMemory, undefined, undefined, undefined, webSocket, nextAgent);
+    constructor(name, options = {}, agents) {
+        super(name, options);
         this.agents = agents;
     }
     async execute() {
@@ -12,7 +12,7 @@ export class PsParallelValidationAgent extends PsBaseValidationAgent {
         // Aggregate results
         const aggregatedResult = this.aggregateResults(results);
         console.log(`Aggregated Results: ${aggregatedResult.isValid} ${JSON.stringify(aggregatedResult.validationErrors)}`);
-        aggregatedResult.nextAgent = this.nextAgent;
+        aggregatedResult.nextAgent = this.options.nextAgent;
         await this.afterExecute(aggregatedResult);
         return aggregatedResult;
     }

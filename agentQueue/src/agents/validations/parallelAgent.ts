@@ -1,5 +1,5 @@
 import { Callbacks } from "langchain/callbacks";
-import { PsBaseValidationAgent } from "./baseAgent.js";
+import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 import WebSocket from "ws";
 
 export class PsParallelValidationAgent extends PsBaseValidationAgent {
@@ -7,12 +7,10 @@ export class PsParallelValidationAgent extends PsBaseValidationAgent {
 
   constructor(
     name: string,
+    options: PsBaseValidationAgentOptions = {},
     agents: PsBaseValidationAgent[],
-    agentMemory: PsAgentMemory | undefined,
-    webSocket: WebSocket | undefined,
-    nextAgent: PsValidationAgent | undefined
   ) {
-    super(name, agentMemory, undefined, undefined, undefined, webSocket, nextAgent);
+    super(name, options);
     this.agents = agents;
   }
 
@@ -27,7 +25,7 @@ export class PsParallelValidationAgent extends PsBaseValidationAgent {
 
     console.log(`Aggregated Results: ${aggregatedResult.isValid} ${JSON.stringify(aggregatedResult.validationErrors)}`)
 
-    aggregatedResult.nextAgent = this.nextAgent;
+    aggregatedResult.nextAgent = this.options.nextAgent;
 
     await this.afterExecute(aggregatedResult);
 

@@ -1,6 +1,6 @@
 import { Callbacks } from "langchain/callbacks";
 import { IEngineConstants } from "../../constants.js";
-import { PsBaseValidationAgent } from "./baseAgent.js";
+import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 import WebSocket from "ws";
 
 export class PsClassificationAgent extends PsBaseValidationAgent {
@@ -8,20 +8,11 @@ export class PsClassificationAgent extends PsBaseValidationAgent {
 
   constructor(
     name: string,
-    agentMemory: PsAgentMemory | undefined,
-    systemMessage: string,
-    userMessage: string,
-    streamingCallbacks: Callbacks | undefined,
-    webSocket: WebSocket | undefined
+    options: PsBaseValidationAgentOptions = {},
   ) {
     super(
       name,
-      agentMemory,
-      systemMessage,
-      userMessage,
-      streamingCallbacks,
-      webSocket,
-      undefined
+      options
     );
     this.routes = new Map();
   }

@@ -1,4 +1,4 @@
-export class AgentOrchestrator {
+export class PsAgentOrchestrator {
     async execute(initialAgent, input) {
         let currentAgent = initialAgent;
         let finalResult = { isValid: true };
