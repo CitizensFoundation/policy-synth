@@ -7,6 +7,7 @@ interface PsValidationAgentResult {
   isValid: boolean;
   validationErrors?: string[];
   nextAgent?: PsValidationAgent;
+  lastAgent?: boolean;
 }
 
 interface PsValidationAgent {

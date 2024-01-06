@@ -69,6 +69,9 @@ export class LtpAiChatElement extends YpBaseElement {
   @property({ type: Boolean })
   jsonLoading = false;
 
+  @property({ type: Boolean })
+  lastChainCompletedAsValid = false;
+
   isCreatingCauses: boolean;
 
   api: LtpServerApi;
@@ -111,9 +114,9 @@ export class LtpAiChatElement extends YpBaseElement {
       jsonContent
     );
     this.jsonLoading = false;
-    let jsonContentParsed;
+    let jsonContentParsed: CrtRefinedCausesReply;
     try {
-      jsonContentParsed = JSON.parse(jsonContent.jsonContent);
+      jsonContentParsed = JSON.parse(jsonContent.jsonContent) as CrtRefinedCausesReply;
     } catch (e) {
       console.error('Error parsing JSON content:', e);
       try {
@@ -124,12 +127,12 @@ export class LtpAiChatElement extends YpBaseElement {
     }
 
     if (jsonContentParsed) {
-      if (jsonContentParsed.refinedCauses) {
-        this.refinedCausesSuggestions = jsonContentParsed.refinedCauses;
+      if (jsonContentParsed.suggestedCauses) {
+        this.refinedCausesSuggestions = jsonContentParsed.suggestedCauses;
       }
-      if (jsonContentParsed.refinedAssumptions) {
+      if (jsonContentParsed.suggestedAssumptions) {
         this.refinedAssumptionSuggestions =
-          jsonContentParsed.refinedAssumptions;
+          jsonContentParsed.suggestedAssumptions;
       }
     }
   };
@@ -417,35 +420,41 @@ export class LtpAiChatElement extends YpBaseElement {
 
     // Add causes and assumptions using separate API calls
     let nodes: LtpCurrentRealityTreeDataNode[] = [];
-    if (selectedCauses.length) {
-      const causesNodes = await this.api.addDirectCauses(
-        this.crtId,
-        this.parentNodeId,
-        selectedCauses,
-        'directCause'
-      );
-      nodes = nodes.concat(causesNodes);
+
+    if (this.lastChainCompletedAsValid) {
+      if (selectedCauses.length) {
+        const causesNodes = await this.api.addDirectCauses(
+          this.crtId,
+          this.parentNodeId,
+          selectedCauses,
+          'directCause'
+        );
+        nodes = nodes.concat(causesNodes);
+      }
+
+      if (selectedAssumptions.length) {
+        const assumptionsNodes = await this.api.addDirectCauses(
+          this.crtId,
+          this.parentNodeId,
+          selectedAssumptions,
+          'assumption'
+        );
+        nodes = nodes.concat(assumptionsNodes);
+      }
+
+      this.fireGlobal('add-nodes', {
+        parentNodeId: this.parentNodeId,
+        nodes,
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      this.fire('close-add-cause-dialog');
+
+      this.isCreatingCauses = false;
+    } else {
+      this.fire('validate-selected-causes', selectedCauses);
     }
-    if (selectedAssumptions.length) {
-      const assumptionsNodes = await this.api.addDirectCauses(
-        this.crtId,
-        this.parentNodeId,
-        selectedAssumptions,
-        'assumption'
-      );
-      nodes = nodes.concat(assumptionsNodes);
-    }
-
-    this.fireGlobal('add-nodes', {
-      parentNodeId: this.parentNodeId,
-      nodes,
-    });
-
-    await new Promise(resolve => setTimeout(resolve, 10));
-
-    this.fire('close-add-cause-dialog');
-
-    this.isCreatingCauses = false;
   }
 
   get isError() {
@@ -473,9 +482,9 @@ export class LtpAiChatElement extends YpBaseElement {
       <div class="suggestionsHeader">${headerText}</div>
 
       </div>
-        <div class="layout vertical refinedSuggestions wrap" role="group">
+        <div class="layout vertical refinedSuggestions ${typeClass} wrap" role="group">
           ${suggestions.map((text) => html`
-            <label class="layout horizontal refinedContainer ${typeClass}">
+            <label class="layout horizontal refinedContainer">
               <md-checkbox aria-label="${text}" class="${typeClass}Checkbox" data-type="${typeClass}" touch-target="wrapper"></md-checkbox>
               <div class="labelText">${text}</div>
             </label>

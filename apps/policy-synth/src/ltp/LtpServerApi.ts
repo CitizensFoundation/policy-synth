@@ -74,7 +74,7 @@ export class LtpServerApi extends YpServerApi {
         body: JSON.stringify({
           parentNodeId,
           causes,
-          type
+          type,
         }),
       },
       false
@@ -85,7 +85,10 @@ export class LtpServerApi extends YpServerApi {
     crtTreeId: string | number,
     crtNodeId: string,
     chatLog: LtpAiChatWsMessage[],
-    wsClientId: string
+    wsClientId: string,
+    effect?: string,
+    causes?: string[],
+    validationErrors?: string[]
   ): Promise<LtpChatBotCrtMessage> {
     // Filter out all chatMessages with type==thinking
     chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking');
@@ -103,7 +106,50 @@ export class LtpServerApi extends YpServerApi {
       this.baseUrlPath + `/crt/${crtTreeId}/getRefinedCauses`,
       {
         method: 'POST',
-        body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog }),
+        body: JSON.stringify({
+          wsClientId,
+          crtNodeId,
+          chatLog: simplifiedChatLog,
+          effect,
+          causes,
+          validationErrors,
+        }),
+      },
+      false
+    ) as Promise<LtpChatBotCrtMessage>;
+  }
+
+  public runValidationChain(
+    crtTreeId: string | number,
+    crtNodeId: string,
+    chatLog: LtpAiChatWsMessage[],
+    wsClientId: string,
+    effect: string,
+    causes: string[]
+  ): Promise<LtpChatBotCrtMessage> {
+    // Filter out all chatMessages with type==thinking
+    chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking');
+
+    const simplifiedChatLog = chatLog.map(chatMessage => {
+      return {
+        sender: chatMessage.sender == 'bot' ? 'assistant' : 'user',
+        message: chatMessage.rawMessage
+          ? chatMessage.rawMessage
+          : chatMessage.message,
+      };
+    });
+
+    return this.fetchWrapper(
+      this.baseUrlPath + `/crt/${crtTreeId}/runValidationChain`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          wsClientId,
+          crtNodeId,
+          chatLog: simplifiedChatLog,
+          effect,
+          causes,
+        }),
       },
       false
     ) as Promise<LtpChatBotCrtMessage>;
@@ -123,10 +169,7 @@ export class LtpServerApi extends YpServerApi {
     ) as Promise<void>;
   }
 
-  public deleteNode(
-    treeId: string | number,
-    nodeId: string
-  ): Promise<void> {
+  public deleteNode(treeId: string | number, nodeId: string): Promise<void> {
     return this.fetchWrapper(
       this.baseUrlPath + `/crt/${treeId}`,
       {

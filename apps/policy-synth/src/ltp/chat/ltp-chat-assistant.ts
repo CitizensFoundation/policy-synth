@@ -53,7 +53,7 @@ export class LtpChatAssistant extends YpBaseElement {
 
   @property({ type: String })
   defaultInfoMessage: string =
-    "I'm your Current Reality Tree assistant. I'm here to help to identify a direct cause of: ";
+    "I'm your Current Reality Tree assistant. I'm here to help to identify direct causes of: ";
 
   @property({ type: String })
   wsEndpoint: string;
@@ -73,6 +73,9 @@ export class LtpChatAssistant extends YpBaseElement {
   @property({ type: String })
   textInputLabel: string;
 
+  @property({ type: Boolean })
+  lastChainCompletedAsValid = false;
+
   @property({ type: String })
   currentFollowUpQuestions: string = '';
 
@@ -89,6 +92,7 @@ export class LtpChatAssistant extends YpBaseElement {
   chatWindow: HTMLElement;
 
   api: LtpServerApi;
+  initialCauses: string[];
 
   constructor() {
     super();
@@ -155,7 +159,9 @@ export class LtpChatAssistant extends YpBaseElement {
     };
   }
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected firstUpdated(
+    _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
+  ): void {
     // focus the text input
     setTimeout(() => {
       this.chatInputField.focus();
@@ -258,6 +264,28 @@ export class LtpChatAssistant extends YpBaseElement {
         }
         this.addToChatLogWithMessage(data, this.t('Thinking...'));
         break;
+      case 'agentStart':
+        const startOptions = data.message as unknown as PsAgentStartWsOptions;
+        this.addToChatLogWithMessage(data, startOptions.name);
+        this.chatLog[
+          this.chatLog.length - 1
+        ].message = `${startOptions.name}\n\n`;
+        break;
+      case 'agentCompleted':
+        this.lastChainCompletedAsValid = false;
+        const completedOptions =
+          data.message as unknown as PsAgentCompletedWsOptions;
+        if (
+          completedOptions.results.lastAgent ||
+          (completedOptions.results.validationErrors &&
+            completedOptions.results.validationErrors.length > 0)
+        ) {
+          this.getSuggestionsFromValidation(completedOptions.results);
+        }
+        if (completedOptions.results.isValid && completedOptions.results.lastAgent) {
+          this.lastChainCompletedAsValid = true;
+        }
+        break;
       case 'start':
         if (lastElement) {
           lastElement.active = false;
@@ -341,11 +369,86 @@ export class LtpChatAssistant extends YpBaseElement {
       this.chatInputField.blur();
     });
 
+    const effect = this.nodeToAddCauseTo.description;
+
+    let causes = message
+      .split('\n')
+      .map(cause => cause.trim())
+      .filter(cause => cause !== '');
+
+    let firstUserMessage = `Effect: ${effect}\n`;
+    causes.forEach((cause, index) => {
+      firstUserMessage += `Cause ${index + 1}: ${cause}\n`;
+    });
+
     this.addChatBotElement({
       sender: 'you',
       type: 'start',
-      message: message,
+      message: this.chatLog.length === 0 ? firstUserMessage : message,
     });
+
+    debugger;
+
+    if (this.chatLog.length === 1) {
+      this.initialCauses = causes;
+      await this.api.runValidationChain(
+        this.crtData.id,
+        this.nodeToAddCauseTo.id,
+        this.chatLog,
+        this.wsClientId,
+        effect,
+        causes
+      );
+    } else {
+      this.addChatBotElement({
+        sender: 'bot',
+        type: 'thinking',
+        message: '',
+      });
+
+      await this.api.sendGetRefinedCauseQuery(
+        this.crtData.id,
+        this.nodeToAddCauseTo.id,
+        this.chatLog,
+        this.wsClientId
+      );
+    }
+  }
+
+  async validateSelectedChoices(event: CustomEvent) {
+    debugger;
+    const causes = event.detail;
+    await this.api.runValidationChain(
+      this.crtData.id,
+      this.nodeToAddCauseTo.id,
+      this.chatLog,
+      this.wsClientId,
+      this.nodeToAddCauseTo.description,
+      causes
+    );
+  }
+
+  async getSuggestionsFromValidation(
+    validationResults: PsValidationAgentResult,
+    causes: string[] | undefined = undefined
+  ) {
+    if (!causes) {
+      causes = this.initialCauses;
+    }
+    let effect;
+    effect = this.nodeToAddCauseTo.description;
+
+    let userMessage = `Expert Validation Results:\n`;
+
+    userMessage += JSON.stringify(validationResults, null, 2);
+
+    this.addChatBotElement({
+      sender: 'you',
+      type: 'start',
+      message: userMessage,
+    });
+
+    this.chatLog[this.chatLog.length - 1].hidden = true;
 
     this.addChatBotElement({
       sender: 'bot',
@@ -541,12 +644,14 @@ export class LtpChatAssistant extends YpBaseElement {
     return html`
       <md-outlined-text-field
         class="textInput"
+        .type="${this.chatLog.length > 1 ? 'text' : 'textarea'}"
         hasTrailingIcon
         id="chatInput"
+        rows="${this.chatLog.length > 1 ? '1' : '3'}"
         @focus="${() => (this.inputIsFocused = true)}"
         @blur="${() => (this.inputIsFocused = true)}"
         @keyup="${(e: KeyboardEvent) => {
-          if (e.key === 'Enter') {
+          if (e.key === 'Enter' && this.chatLog.length > 1) {
             this.sendChatMessage();
           }
         }}"
@@ -575,22 +680,26 @@ export class LtpChatAssistant extends YpBaseElement {
             type="info"
             sender="bot"
           ></ltp-ai-chat-element>
-          ${this.chatLog.map(
-            chatElement => html`
-              <ltp-ai-chat-element
-                ?thinking="${chatElement.type === 'thinking'}"
-                @followup-question="${this.followUpQuestion}"
-                .clusterId="${this.clusterId}"
-                class="${chatElement.sender}-chat-element"
-                .detectedLanguage="${this.language}"
-                .message="${chatElement.message}"
-                .crtId="${this.crtData.id}"
-                .parentNodeId="${this.nodeToAddCauseTo.id}"
-                .type="${chatElement.type}"
-                .sender="${chatElement.sender}"
-              ></ltp-ai-chat-element>
-            `
-          )}
+          ${this.chatLog
+            .filter(chatElement => !chatElement.hidden)
+            .map(
+              chatElement => html`
+                <ltp-ai-chat-element
+                  ?thinking="${chatElement.type === 'thinking'}"
+                  @followup-question="${this.followUpQuestion}"
+                  @validate-selected-causes="${this.validateSelectedChoices}"
+                  .clusterId="${this.clusterId}"
+                  class="${chatElement.sender}-chat-element"
+                  .detectedLanguage="${this.language}"
+                  .message="${chatElement.message}"
+                  .lastChainCompletedAsValid="${this.lastChainCompletedAsValid}"
+                  .crtId="${this.crtData.id}"
+                  .parentNodeId="${this.nodeToAddCauseTo.id}"
+                  .type="${chatElement.type}"
+                  .sender="${chatElement.sender}"
+                ></ltp-ai-chat-element>
+              `
+            )}
         </div>
         <div class="layout horizontal center-center chat-input">
           ${this.renderChatInput()}

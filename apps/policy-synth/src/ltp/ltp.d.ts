@@ -41,11 +41,12 @@ interface CrtResponse {
 
 interface LtpAiChatWsMessage {
   sender: string;
-  type: 'hello_message' | 'moderation_error' | 'start' | 'message' | 'end' | 'stream' | 'error' | 'info' | 'thinking' | 'start_followup' | 'end_followup' | 'stream_followup';
+  type: 'hello_message' | 'moderation_error' | 'start' | 'message' | 'end' | 'stream' | 'error' | 'info' | 'agentStart' | 'agentCompleted' | 'thinking' | 'start_followup' | 'end_followup' | 'stream_followup';
   message: string;
   rawMessage?: string;
   refinedCausesSuggestions?: string[];
   debug?: CrtDebugData;
+  hidden?: boolean;
 }
 
 interface LtpSimplifiedChatLog {
@@ -61,8 +62,8 @@ interface LtpChatBotCrtMessage {
 }
 
 interface CrtRefinedCausesReply {
-  feedback: string;
-  refinedCauses: string[];
+  suggestedCauses?: string[];
+  suggestedAssumptions?: string[];
 }
 
 interface CrtEditNodeInfo {

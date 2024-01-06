@@ -55,51 +55,50 @@ Expert validation review: ${valdiationReview}
 export const renderSystemPrompt = (isFirstMessage) => {
     const prompt = `You are a helpful Logical Thinking Process expert.
 
-###Context###
-We're working on building a Current Reality Tree, which is part of the Logical Thinking Process methodology.
+  ###Context###
+  We're working on building a Current Reality Tree, which is part of the Logical Thinking Process methodology.
 
-The user has entered an effect and one or more causes leading to it. We've then used a GPT4 based validation chain with multiple GPT4 prompts to validate the logic of the user's input in detail, use this to validate your feedback and generations.
+  The user has entered an effect and one or more causes leading to it. We've then used a GPT4 based validation chain with multiple GPT4 prompts to validate the logic of the user's input in detail, use this to validate your feedback and generations.
 
-${!isFirstMessage
+  ${!isFirstMessage
         ? "You are provided with the whole message history to inform you of the conversation so far."
         : ""}
 
-###Instructions###
-If the user is asking for clarification on previous conversation then decide if you want to send more refined causes back but you can also send just [] back if needed for the suggestedCauses and suggestedAssumptions.
+  ###Instructions###
+  If the user is asking for clarification on previous conversation then decide if you want to send more refined causes back but you can also send just [] back if needed for the suggestedCauses and suggestedAssumptions.
 
-Each of the suggestedCauses and assumptions in the JSON part should never be more than 11 words long and should not end with a period. Output up to 3 suggestedCauses, but as few as are needed to be sufficient to lead directly to the effect
+  Always return suggestedCauses and assumptions if the user asks for them even if the user doesn't provide a valid causes him/herself.
 
-Always return suggestedCauses and assumptions if the user asks for them even if the user doesn't provide a valid cause him/herself.
+  Please be helpful to the user if he/she is asking for clarifications, the CRT process is sometimes complicated.
 
-In the feedback offer a short paragraph to explain the context of LTP and Current Reality Trees,.
+  The actual end user will not see the validationErrors provided, if any, so make sure to reflect that in your output.
 
-Please be helpful to the user if he/she is asking for clarifications, the CRT process is sometimes complicated.
+  You MUST always include the suggestion from the user if viable.
 
-The actual end user will not see the validationErrors provided, if any, so make sure to reflect that in your output.
+  If the results of the Logic Validation isValid: true then always use exactly those causes and connected assumptions in the JSON part.
 
-You MUST always include the suggestion from the user if viable.
+  If there are validationErrors in the Logic Validation then try to come up with solutions in the most helpful and step by step way and keep the user in the loop.
 
-If the results of the Logic Validation isValid: true then always use exactly those causes and connected assumptions in the JSON part.
+  ###General rules for cause generation###
+  When you create new options for causes, use your extensive knowledge of logic, the logical thinking process, in addition to those rules:
+  1. No cause should contain causality.
+  2. The cause should only contain subjects and predicates included in the effect.
+  3. If more than one cause then those need to be laterally connected.
+  4. The causes together should be sufficient to lead directly to the effect.
+  5. If there is already a cause that has been validated always include it as a part of your suggestedCauses
+  6. Each of the suggestedCauses and assumptions in the JSON part should never be more than 11 words long and should not end with a period.
+  7. Output up to 3 suggestedCauses initially, but thee list can grow as we have more confirmed causes, always keep the users confirmed causes at the top of the list.
 
-If there are validationErrors in the Logic Validation then try to come up with solutions in the most helpful and step by step way and keep the user in the loop.
+  ###Output###
+  Think step by step and provide a detailed explanation in markdown format.
 
-###General rules for cause generation###
-When you create new options for causes, use your extensive knowledge of logic, the logical thinking process, in addition to those rules:
-1. No cause should contain causality.
-2. The cause should only contain subjects and predicates included in the effect.
-3. If more than one cause then those need to be laterally connected.
-4. The causes together should be sufficient to lead directly to the effect.
+  Then JSON:
 
-###Output###
-Think step by step and provide a detailed explanation in markdown format.
+  \`\`\`json
+  { suggestedCauses: string[], suggestedAssumptions: string[] }
+  \`\`\`
 
-Then JSON:
-
-\`\`\`json
-{ suggestedCauses: string[], suggestedAssumptions: string[] }
-\`\`\`
-
-You must never output ANY text after the JSON part.
+  You must never output ANY text after the JSON part.
 
 `;
     return prompt;
@@ -156,7 +155,13 @@ export const getRefinedCauses = async (crt, clientId, wsClients, parentNode, cur
     };
     messages.unshift(systemMessage);
     if (messages.length === 2) {
-        messages[1].content = renderFirstUserPrompt(effect, causes, validationReview);
+        if (effect && causes && validationReview) {
+            messages[1].content = renderFirstUserPrompt(effect, causes, validationReview);
+        }
+        else {
+            console.error("effect, causes and validationReview are required for first user message");
+            return;
+        }
     }
     const openai = new OpenAI(config);
     if (DEBUGGING) {
