@@ -30,7 +30,7 @@ export class PsBaseValidationAgent extends Base {
         if (this.webSocket) {
             this.webSocket.send(JSON.stringify({
                 sender: "bot",
-                type: "agentStart",
+                type: "validationAgentStart",
                 message: `Agent ${this.name} started`,
             }));
         }

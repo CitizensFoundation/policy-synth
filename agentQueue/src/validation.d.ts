@@ -34,6 +34,7 @@ interface PsBaseValidationAgentOptions {
   streamingCallbacks?: Callbacks;
   webSocket?: WebSocket;
   disableStreaming?: boolean;
+  hasNoStreaming?: boolean;
 }
 
 interface PsAgentStartWsOptions {

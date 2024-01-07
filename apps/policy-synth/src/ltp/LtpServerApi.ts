@@ -91,7 +91,7 @@ export class LtpServerApi extends YpServerApi {
     validationErrors?: string[]
   ): Promise<LtpChatBotCrtMessage> {
     // Filter out all chatMessages with type==thinking
-    chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking');
+    chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming');
 
     const simplifiedChatLog = chatLog.map(chatMessage => {
       return {
@@ -128,7 +128,7 @@ export class LtpServerApi extends YpServerApi {
     causes: string[]
   ): Promise<LtpChatBotCrtMessage> {
     // Filter out all chatMessages with type==thinking
-    chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking');
+    chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming');
 
     const simplifiedChatLog = chatLog.map(chatMessage => {
       return {

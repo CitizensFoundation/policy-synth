@@ -337,7 +337,7 @@ export const runValidationChain = async (
   );
 
   const validLogicalStatement = new PsBaseValidationAgent(
-    "validLogicalStatement",
+    "Statements Logic Validation",
     {
       systemMessage:
         customSystemPrompts && customSystemPrompts.has(3)
@@ -385,9 +385,10 @@ export const runValidationChain = async (
   );
 
   const parallelAgent = new PsParallelValidationAgent(
-    "Parallel Sentence Validation",
+    "Basic Sentence Validation",
     {
       webSocket,
+      hasNoStreaming: true
     },
     [effectSentenceValidator, ...sentenceValidators]
   );

@@ -29,6 +29,7 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 import './ltp-ai-chat-element.js';
 import { LtpServerApi } from '../LtpServerApi';
 import { last } from 'lodash';
+import { start } from 'repl';
 
 const USE_WS = false;
 
@@ -66,6 +67,9 @@ export class LtpChatAssistant extends YpBaseElement {
 
   @property({ type: Number })
   clusterId: number;
+
+  @property({ type: Boolean })
+  userScrolled = false;
 
   @property({ type: Number })
   communityId: number;
@@ -157,6 +161,8 @@ export class LtpChatAssistant extends YpBaseElement {
     this.ws.onerror = error => {
       console.error('WebSocket Error ' + error);
     };
+
+    this.chatWindow.addEventListener('scroll', this.handleScroll.bind(this));
   }
 
   protected firstUpdated(
@@ -186,6 +192,21 @@ export class LtpChatAssistant extends YpBaseElement {
     }
   }
 
+  handleScroll() {
+    // Check if user has scrolled to the bottom
+    const atBottom =
+      this.chatWindow.scrollHeight - this.chatWindow.scrollTop ===
+      this.chatWindow.clientHeight;
+
+    if (atBottom) {
+      // User is at the bottom, enable auto scroll
+      this.userScrolled = false;
+    } else {
+      // User has manually scrolled
+      this.userScrolled = true;
+    }
+  }
+
   disconnectedCallback(): void {
     //    this.ws.close();
     super.disconnectedCallback();
@@ -194,6 +215,13 @@ export class LtpChatAssistant extends YpBaseElement {
       document.removeEventListener(
         'keydown',
         this.handleCtrlPKeyPress.bind(this)
+      );
+    }
+
+    if (this.chatWindow) {
+      this.chatWindow.removeEventListener(
+        'scroll',
+        this.handleScroll.bind(this)
       );
     }
   }
@@ -221,11 +249,12 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   scrollDown() {
-    //await this.updateComplete;
-    setTimeout(() => {
-      this.$$('#chat-messages').scrollTop =
-        this.$$('#chat-messages').scrollHeight;
-    }, 100);
+    if (!this.userScrolled) {
+      setTimeout(() => {
+        this.$$('#chat-messages').scrollTop =
+          this.$$('#chat-messages').scrollHeight;
+      }, 100);
+    }
   }
 
   addToChatLogWithMessage(
@@ -260,18 +289,40 @@ export class LtpChatAssistant extends YpBaseElement {
         break;
       case 'thinking':
         if (lastElement) {
-          lastElement.active = true;
+          lastElement.active = false;
         }
         this.addToChatLogWithMessage(data, this.t('Thinking...'));
         break;
-      case 'agentStart':
-        const startOptions = data.message as unknown as PsAgentStartWsOptions;
-        this.addToChatLogWithMessage(data, startOptions.name);
-        this.chatLog[
-          this.chatLog.length - 1
-        ].message = `${startOptions.name}\n\n`;
+      case 'noStreaming':
+        if (lastElement) {
+          lastElement.active = true;
+        }
+        this.addToChatLogWithMessage(data, data.message);
         break;
-      case 'agentCompleted':
+      case 'validationAgentStart':
+        if (lastElement) {
+          lastElement.active = false;
+        }
+        const startOptions = data.message as unknown as PsAgentStartWsOptions;
+
+        if (startOptions.noStreaming) {
+          this.addChatBotElement({
+            sender: 'bot',
+            type: 'noStreaming',
+            message: startOptions.name,
+          });
+        } else {
+          this.addToChatLogWithMessage(data, startOptions.name);
+          this.chatLog[
+            this.chatLog.length - 1
+          ].message = `${startOptions.name}\n\n`;
+        }
+        this.requestUpdate();
+        break;
+      case 'validationAgentCompleted':
+        if (lastElement) {
+          lastElement.active = false;
+        }
         this.lastChainCompletedAsValid = false;
         const completedOptions =
           data.message as unknown as PsAgentCompletedWsOptions;
@@ -282,7 +333,10 @@ export class LtpChatAssistant extends YpBaseElement {
         ) {
           this.getSuggestionsFromValidation(completedOptions.results);
         }
-        if (completedOptions.results.isValid && completedOptions.results.lastAgent) {
+        if (
+          completedOptions.results.isValid &&
+          completedOptions.results.lastAgent
+        ) {
           this.lastChainCompletedAsValid = true;
         }
         break;
@@ -387,8 +441,6 @@ export class LtpChatAssistant extends YpBaseElement {
       message: this.chatLog.length === 0 ? firstUserMessage : message,
     });
 
-    debugger;
-
     if (this.chatLog.length === 1) {
       this.initialCauses = causes;
       await this.api.runValidationChain(
@@ -416,7 +468,6 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   async validateSelectedChoices(event: CustomEvent) {
-    debugger;
     const causes = event.detail;
     await this.api.runValidationChain(
       this.crtData.id,
@@ -570,14 +621,15 @@ export class LtpChatAssistant extends YpBaseElement {
           width: 650px;
         }
 
+        ltp-ai-chat-element[thinking] {
+          margin-top: 8px;
+          margin-bottom: 0px;
+        }
+
         @media (max-width: 960px) {
           .restartButton {
             margin-left: 8px;
             display: none;
-          }
-
-          yp-ai-chat-element[thinking] {
-            margin-top: 12px;
           }
 
           .darkModeButton {
@@ -685,7 +737,8 @@ export class LtpChatAssistant extends YpBaseElement {
             .map(
               chatElement => html`
                 <ltp-ai-chat-element
-                  ?thinking="${chatElement.type === 'thinking'}"
+                  ?thinking="${chatElement.type === 'thinking' ||
+                  chatElement.type === 'noStreaming'}"
                   @followup-question="${this.followUpQuestion}"
                   @validate-selected-causes="${this.validateSelectedChoices}"
                   .clusterId="${this.clusterId}"

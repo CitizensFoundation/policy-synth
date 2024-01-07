@@ -46,6 +46,7 @@ export class LtpAiChatElement extends YpBaseElement {
     | 'info'
     | 'message'
     | 'thinking'
+    | 'noStreaming'
     | undefined;
 
   @property({ type: Boolean })
@@ -215,7 +216,7 @@ export class LtpAiChatElement extends YpBaseElement {
           line-height: 1.35;
           margin-bottom: 0px;
           border-radius: 10px;
-          max-width: 75%;
+          max-width: 88%;
           margin-top: 12px;
         }
 
@@ -254,7 +255,7 @@ export class LtpAiChatElement extends YpBaseElement {
 
         .refinedSuggestions  {
           padding: 0;
-          border-radius: 32px;
+          border-radius: 8px;
           margin: 16px;
           margin-top: 0;
         }
@@ -278,14 +279,14 @@ export class LtpAiChatElement extends YpBaseElement {
           background-color: var(--md-sys-color-primary);
           color: var(--md-sys-color-on-primary);
           margin-bottom: 16px !important;
-          border-radius: 32px;
+          border-radius: 16px;
         }
 
         .assumption {
           background-color: var(--md-sys-color-secondary);
           color: var(--md-sys-color-on-secondary);
           margin-bottom: 16px !important;
-          border-radius: 32px;
+          border-radius: 16px;
         }
 
         .assumptionCheckbox {
@@ -325,6 +326,7 @@ export class LtpAiChatElement extends YpBaseElement {
 
         .thinkingText {
           margin-top: 4px;
+          margin-left: 6px;
           color: var(--md-sys-color-secondary);
         }
 
@@ -504,8 +506,6 @@ export class LtpAiChatElement extends YpBaseElement {
     `;
   }
 
-
-
   renderChatGPT(): any {
     console.error(
       `renderChatGPT refinedCausesSuggestions`,
@@ -584,6 +584,26 @@ export class LtpAiChatElement extends YpBaseElement {
     `;
   }
 
+  renderNoStreaming() {
+    return html`${this.active
+        ? html`<svg class="progress-ring" width="28" height="28">
+            <circle
+              class="progress-ring__circle"
+              ?active="${this.active}"
+              stroke="blue"
+              stroke-width="2"
+              fill="transparent"
+              r="10"
+              cx="12"
+              cy="12"
+            />
+          </svg>`
+        : html`<md-icon class="doneIcon">done</md-icon>`}
+      <div class="thinkingText" ?active="${this.active}">
+        ${this.message}
+      </div> `;
+  }
+
   renderThinking() {
     return html`${this.active
         ? html`<svg class="progress-ring" width="28" height="28">
@@ -620,6 +640,8 @@ export class LtpAiChatElement extends YpBaseElement {
       return this.renderUser();
     } else if (this.sender === 'bot' && this.type === 'thinking') {
       return this.renderThinking();
+    } else if (this.sender === 'bot' && this.type === 'noStreaming') {
+      return this.renderNoStreaming();
     } else if (this.sender === 'bot') {
       return this.renderChatGPT();
     }
