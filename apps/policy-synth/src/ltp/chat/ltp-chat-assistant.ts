@@ -83,6 +83,9 @@ export class LtpChatAssistant extends YpBaseElement {
   @property({ type: String })
   currentFollowUpQuestions: string = '';
 
+  @property({ type: Boolean })
+  programmaticScroll = false;
+
   @query('#sendButton')
   sendButton: MdFilledTonalButton;
 
@@ -94,6 +97,9 @@ export class LtpChatAssistant extends YpBaseElement {
 
   @query('#chat-window')
   chatWindow: HTMLElement;
+
+  @query('#chat-messages')
+  chatMessagesElement: HTMLElement;
 
   api: LtpServerApi;
   initialCauses: string[];
@@ -161,8 +167,6 @@ export class LtpChatAssistant extends YpBaseElement {
     this.ws.onerror = error => {
       console.error('WebSocket Error ' + error);
     };
-
-    this.chatWindow.addEventListener('scroll', this.handleScroll.bind(this));
   }
 
   protected firstUpdated(
@@ -172,6 +176,10 @@ export class LtpChatAssistant extends YpBaseElement {
     setTimeout(() => {
       this.chatInputField.focus();
     }, 420);
+
+    setTimeout(() => {
+      this.chatMessagesElement.addEventListener('scroll', this.handleScroll.bind(this));
+    }, 500);
   }
 
   onWsOpen() {
@@ -180,7 +188,7 @@ export class LtpChatAssistant extends YpBaseElement {
       const data = JSON.parse(messageEvent.data);
       if (data.clientId) {
         this.wsClientId = data.clientId;
-        this.ws.onmessage = this.onMessage.bind(this); // Reset the onmessage handler
+        this.ws.onmessage = this.onMessage.bind(this);
       }
     };
     this.reset();
@@ -193,16 +201,18 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   handleScroll() {
-    // Check if user has scrolled to the bottom
+    if (this.programmaticScroll) {
+      // Skip handling if the scroll was initiated programmatically
+      return;
+    }
+
+    const threshold = 10;
     const atBottom =
-      this.chatWindow.scrollHeight - this.chatWindow.scrollTop ===
-      this.chatWindow.clientHeight;
+      this.chatMessagesElement.scrollHeight - this.chatMessagesElement.scrollTop - this.chatMessagesElement.clientHeight <= threshold;
 
     if (atBottom) {
-      // User is at the bottom, enable auto scroll
       this.userScrolled = false;
     } else {
-      // User has manually scrolled
       this.userScrolled = true;
     }
   }
@@ -218,8 +228,8 @@ export class LtpChatAssistant extends YpBaseElement {
       );
     }
 
-    if (this.chatWindow) {
-      this.chatWindow.removeEventListener(
+    if (this.chatMessagesElement) {
+      this.chatMessagesElement.removeEventListener(
         'scroll',
         this.handleScroll.bind(this)
       );
@@ -228,7 +238,7 @@ export class LtpChatAssistant extends YpBaseElement {
 
   async onMessage(event: MessageEvent) {
     const data: LtpAiChatWsMessage = JSON.parse(event.data);
-    console.error(event.data);
+    //console.error(event.data);
 
     switch (data.sender) {
       case 'bot':
@@ -250,9 +260,10 @@ export class LtpChatAssistant extends YpBaseElement {
 
   scrollDown() {
     if (!this.userScrolled) {
+      this.programmaticScroll = true; // Set the flag before scrolling
+      this.$$('#chat-messages').scrollTop = this.$$('#chat-messages').scrollHeight;
       setTimeout(() => {
-        this.$$('#chat-messages').scrollTop =
-          this.$$('#chat-messages').scrollHeight;
+        this.programmaticScroll = false; // Reset the flag after scrolling
       }, 100);
     }
   }
