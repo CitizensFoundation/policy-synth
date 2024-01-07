@@ -36,7 +36,7 @@ export class PsClassificationAgent extends PsBaseValidationAgent {
     if (this.options.webSocket && !this.options.disableStreaming) {
       const botMessage = {
         sender: "bot",
-        type: "agentCompleted",
+        type: "validationAgentCompleted",
         message: {
           name: this.name,
           results: {

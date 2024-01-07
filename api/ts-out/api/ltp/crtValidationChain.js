@@ -279,7 +279,7 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
         userMessage,
         webSocket,
     });
-    const validLogicalStatement = new PsBaseValidationAgent("validLogicalStatement", {
+    const validLogicalStatement = new PsBaseValidationAgent("Statements Logic Validation", {
         systemMessage: customSystemPrompts && customSystemPrompts.has(3)
             ? customSystemPrompts.get(3)
             : systemPrompt3,
@@ -313,8 +313,9 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
         disableStreaming: true,
         webSocket,
     });
-    const parallelAgent = new PsParallelValidationAgent("Parallel Sentence Validation", {
+    const parallelAgent = new PsParallelValidationAgent("Basic Sentence Validation", {
         webSocket,
+        hasNoStreaming: true
     }, [effectSentenceValidator, ...sentenceValidators]);
     parallelAgent.nextAgent = validLogicalStatement;
     agentOrchestrator.execute(parallelAgent, effect);

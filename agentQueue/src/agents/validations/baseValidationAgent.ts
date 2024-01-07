@@ -96,11 +96,10 @@ export class PsBaseValidationAgent extends Base {
     if (this.options.webSocket && !this.options.disableStreaming) {
       const botMessage = {
         sender: "bot",
-        type: "agentStart",
+        type: "validationAgentStart",
         message: {
           name: this.name,
-          noStreaming:
-            !this.options.streamingCallbacks || this.options.disableStreaming,
+          noStreaming: this.options.hasNoStreaming,
         } as PsAgentStartWsOptions,
       };
       this.options.webSocket.send(JSON.stringify(botMessage));
@@ -117,7 +116,7 @@ export class PsBaseValidationAgent extends Base {
     if (this.options.webSocket && !this.options.disableStreaming) {
       const botMessage = {
         sender: "bot",
-        type: "agentCompleted",
+        type: "validationAgentCompleted",
         message: {
           name: this.name,
           results: {
