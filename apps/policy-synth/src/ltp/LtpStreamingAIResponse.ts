@@ -14,7 +14,7 @@ import { YpCodeBase } from '../@yrpri/common/YpCodeBaseclass.js';
 import { YpBaseElement } from '../@yrpri/common/yp-base-element.js';
 
 export class LtpStreamingAIResponse extends YpCodeBase {
-  wsClientId: string;
+  wsClientId!: string;
 
   targetContainer: HTMLElement | HTMLInputElement | undefined;
 
@@ -22,7 +22,7 @@ export class LtpStreamingAIResponse extends YpCodeBase {
 
   api: LtpServerApi;
 
-  ws: WebSocket;
+  ws!: WebSocket;
 
   isActive = false;
 

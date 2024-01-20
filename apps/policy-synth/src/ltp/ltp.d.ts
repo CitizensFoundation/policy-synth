@@ -15,16 +15,16 @@ interface LtpCurrentRealityTreeDataNode {
   isRootCause?: boolean;
   isLogicValidated?: boolean;
   debug?: CrtDebugData;
-  andChildren?: LtpCurrentRealityTreeNode[];
-  orChildren?: LtpCurrentRealityTreeNode[];
+  andChildren?: LtpCurrentRealityTreeDataNode[];
+  orChildren?: LtpCurrentRealityTreeDataNode[];
 }
 
 interface LtpCurrentRealityTreeData {
-  id: string | number;
+  id?: string | number;
   description?: string;
   context: string;
   undesirableEffects: string[];
-  nodes: LtpCurrentRealityTreeNode[];
+  nodes: LtpCurrentRealityTreeDataNode[];
 }
 
 interface CrtPromptJson {
@@ -68,5 +68,6 @@ interface CrtRefinedCausesReply {
 
 interface CrtEditNodeInfo {
   nodeId: string;
+  //@ts-ignore
   element: LtpCurrentRealityTreeNode;
 }

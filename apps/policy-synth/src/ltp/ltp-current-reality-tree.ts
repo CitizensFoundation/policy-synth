@@ -18,18 +18,23 @@ type Cell = dia.Element | dia.Link;
 const TESTING = false;
 
 class MyShapeView extends dia.ElementView {
-  render() {
+  override render() {
+    //@ts-ignore
     super.render();
+    //@ts-ignore
     const htmlMarkup = this.model.get('markup');
 
     // Create a foreignObject with a set size and style
     const foreignObject = V('foreignObject', {
+      //@ts-ignore
       width: this.model.attributes.nodeType === 'ude' ? 185 : 185,
+      //@ts-ignore
       height: this.model.attributes.nodeType === 'ude' ? 135 : 107,
       style: 'overflow: visible; display: block;',
     }).node;
 
     // Append the foreignObject to this.el
+    //@ts-ignore
     V(this.el).append(foreignObject);
 
     // Defer the addition of the inner div with the HTML content
@@ -38,20 +43,25 @@ class MyShapeView extends dia.ElementView {
       div.setAttribute('class', 'html-element');
       div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
       div.style.width =
+        //@ts-ignore
         this.model.attributes.nodeType === 'ude' ? '185px' : '185px';
       div.style.height =
+        //@ts-ignore
         this.model.attributes.nodeType === 'ude' ? '135px' : '107px';
-      div.className = `causeContainer  ${
+        div.className = `causeContainer  ${
+        //@ts-ignore
         this.model.attributes.isRootCause ? 'rootCauseContainer' : ''
       } ${
+        //@ts-ignore
         this.model.attributes.nodeType=="assumption" as CrtNodeType ? 'assumptionCauseContainer' : ''
+        //@ts-ignore
       } ${this.model.attributes.nodeType == 'ude' ? 'udeContainer' : ''}`;
       div.innerHTML = `<ltp-current-reality-tree-node
-        nodeId="${this.model.attributes.nodeId}"
-        crtId="${this.model.attributes.crtId}"
-        crtNodeType="${this.model.attributes.nodeType}"
-        ${this.model.attributes.isRootCause ? 'isRootCause=1' : ''}
-        causeDescription="${this.model.attributes.label}"
+        nodeId="${(this as any).model.attributes.nodeId}"
+        crtId="${(this as any).model.attributes.crtId}"
+        crtNodeType="${(this as any).model.attributes.nodeType}"
+        ${(this as any).model.attributes.isRootCause ? 'isRootCause=1' : ''}
+        causeDescription="${(this as any).model.attributes.label}"
       >
       </ltp-current-reality-tree-node>`;
 
@@ -68,13 +78,14 @@ class MyShapeView extends dia.ElementView {
 }
 
 class MyShape extends shapes.devs.Model {
-  defaults() {
+  override defaults() {
     return util.deepSupplement(
       {
         type: 'html.MyShape',
         attrs: {},
         markup: '<div></div>',
       },
+      //@ts-ignore
       shapes.devs.Model.prototype.defaults
     );
   }
@@ -85,8 +96,8 @@ class MyShape extends shapes.devs.Model {
 @customElement('ltp-current-reality-tree')
 export class LtpCurrentRealityTree extends CpsStageBase {
   @property({ type: Object }) crtData?: LtpCurrentRealityTreeData;
-  private graph: dia.Graph;
-  private paper: dia.Paper;
+  private graph!: dia.Graph;
+  private paper!: dia.Paper;
   private elements: { [key: string]: dia.Element } = {};
   private selection: dia.Element | null = null;
   private panning = false;
@@ -101,7 +112,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.api = new LtpServerApi();
   }
 
-  async connectedCallback() {
+  override async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`CRT - open`);
 
@@ -153,10 +164,11 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.paper.scale(1, 1);
   }
 
-  protected firstUpdated(
+  protected override firstUpdated(
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
     this.initializeJointJS();
+    //@ts-ignore
     this.paper.el.addEventListener('wheel', event => {
       if (!event.shiftKey) {
         return; // Only zoom if the Shift key is held down
@@ -186,14 +198,14 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.addNodes(event.detail.parentNodeId, event.detail.nodes);
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
     if (changedProperties.has('crtData') && this.crtData) {
       this.updateGraphWithCRTData(this.crtData);
     }
   }
 
-  disconnectedCallback(): void {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     window.appGlobals.activity(`CRT - close`);
   }
@@ -230,21 +242,27 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       const view = el.findView(this.paper);
       if (view) {
         // Toggle the class off and on to restart the animation
+        //@ts-ignore
         view.el.classList.remove('fadeAway');
         // Force a reflow
+        //@ts-ignore
         void view.el.getBoundingClientRect();
         // Re-add the fadeAway class to restart the animation
+        //@ts-ignore
         view.el.classList.add('fadeAway');
       }
     });
 
     // Assuming crtData is always updated with the full tree data
-    const parents = this.getParentNodes(this.crtData.nodes, element.attributes.nodeId);
+
+    //@ts-ignore
+    const parents = this.getParentNodes(this.crtData!.nodes, element.attributes.nodeId);
 
     if (parents) {
       // Remove the fade class from the element being highlighted
       const view = element.findView(this.paper);
       if (view) {
+        //@ts-ignore
         view.el.classList.remove('fadeAway');
       }
 
@@ -256,6 +274,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         }
         const view = element.findView(this.paper);
         if (view) {
+          //@ts-ignore
           view.el.classList.remove('fadeAway');
         }
       });
@@ -429,6 +448,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     });
 
     this.paper.on('element:pointerdblclick', (cellView: dia.ElementView, evt: dia.Event) => {
+      //@ts-ignore
       const element = cellView.model as dia.Element;
       if (evt.shiftKey) {
         // Handle zoom out with Shift key held down
@@ -482,6 +502,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     await this.updateComplete;
 
+    //@ts-ignore
     const paperEl = this.paper.el;
 
     paperEl.addEventListener('mousedown', (event: MouseEvent) => {
@@ -549,7 +570,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
     // Translate the graph to ensure consistency in positioning
     const bbox = this.graph.getBBox();
+    //@ts-ignore
     const diffX = 100 - bbox.x - bbox.width / 2;
+    //@ts-ignore
     const diffY = 100 - bbox.y - bbox.height / 2;
     this.graph.translate(diffX, diffY);
 
@@ -603,6 +626,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       maxScaleX: 1.1,
       maxScaleY: 1.1,
       preserveAspectRatio: true,
+      //@ts-ignore
       contentArea: this.graph.getBBox(),
       verticalAlign: 'top',
       horizontalAlign: 'middle',
@@ -709,6 +733,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private createLink(source: dia.Element, target: dia.Element): dia.Link {
     if (!source || !target) {
       console.error(`source or target is null ${source} ${target}`);
+      //@ts-ignore
       return;
     }
     const l = new shapes.standard.Link({
@@ -781,6 +806,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     const createDrawioXmlNode = (node: dia.Element<dia.Element.Attributes, dia.ModelSetOptions>) => {
         const position = node.position();
         const size = node.size();
+        //@ts-ignore
         return `<mxCell id="${node.id}" value="${node.attributes.label}" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="${position.x}" y="${position.y}" width="${size.width}" height="${size.height}" as="geometry" />
                 </mxCell>`;
@@ -861,7 +887,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     };
 
     // Start the search from the root nodes
-    if (!findAndUpdateParentNode(this.crtData.nodes, parentNodeId)) {
+    if (!findAndUpdateParentNode(this.crtData!.nodes, parentNodeId)) {
       console.error(`Parent node with ID ${parentNodeId} not found in crtData`);
       return;
     }
@@ -889,7 +915,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     }, 10);
   }
 
-  static get styles() {
+  static override get styles() {
     return [
       super.styles,
       css`
@@ -1021,7 +1047,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.paper.translate(currentTranslate.tx + dx, currentTranslate.ty + dy);
   }
 
-  render() {
+  override render() {
     return html`
       <div class="controlPanelContainer"></div>
       <div class="controlPanel">
