@@ -2,6 +2,8 @@
   "extends": "@tsconfig/node18/tsconfig.json",
   "compilerOptions": {
     "typeRoots": ["./node_modules/@types",
-    "./src/types.d.ts"]
+    "./src/types.d.ts"],
+		"declaration": true,
+		"declarationMap": true
   }
 }

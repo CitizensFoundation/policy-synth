@@ -1,0 +1,1 @@
+{"version":3,"file":"createSubProblems.d.ts","sourceRoot":"","sources":["../../../../agents/problems/create/createSubProblems.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,wBAAwB,CAAC;AAEvD,OAAO,EAEL,WAAW,EAGZ,MAAM,kBAAkB,CAAC;AAI1B,qBAAa,0BAA2B,SAAQ,aAAa;IACrD,kBAAkB,CAAC,OAAO,EAAE,iBAAiB,EAAE;IAoC/C,kBAAkB;IAmClB,iBAAiB;IA0BjB,OAAO;CAYd"}

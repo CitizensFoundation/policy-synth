@@ -1,9 +1,7 @@
 declare module 'vectorizer';
 declare module 'dagre';
 
-type CrtNodeType = 'ude' | 'directCause' | 'assumption' | 'intermediateCause' | 'rootCause' | 'criticalRootCause' | 'and' | 'xor' | 'mag';
-
-type CrtNodeConnectionType = 'and' | 'xor' | 'mag';
+type CrtNodeType = 'ude' | 'directCause' | 'assumption' | 'intermediateCause' | 'rootCause';
 
 interface CrtDebugData  {
   systemPromptUsedForGeneration?: string;
@@ -17,15 +15,23 @@ interface LtpCurrentRealityTreeDataNode {
   isRootCause?: boolean;
   isLogicValidated?: boolean;
   debug?: CrtDebugData;
-  children?: LtpCurrentRealityTreeDataNode[];
+  children?: LtpCurrentRealityTreeNode[];
+  orChildren?: LtpCurrentRealityTreeNode[];
 }
 
 interface LtpCurrentRealityTreeData {
-  id?: string | number;
+  id: string | number;
   description?: string;
   context: string;
   undesirableEffects: string[];
-  nodes: LtpCurrentRealityTreeDataNode[];
+  nodes: LtpCurrentRealityTreeNode[];
+  prompts?: Record<number, string>;
+}
+
+interface LtpCrtSimplifiedForAI {
+  effect: string;
+  causes: LtpCrtSimplifiedForAI[];
+  isCurrentlyLookingForCausesToThisEffect?: boolean;
 }
 
 interface CrtPromptJson {

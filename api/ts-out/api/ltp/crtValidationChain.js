@@ -10,11 +10,11 @@ const systemPrompt1 = `You are an expert validator.
 
 ###Evaluation steps###
 Evaluate the sentence submitted by the user. The requirements for a valid sentence are:
-1. It contains a subject, a verb and an object.
-2. It is clearly stated.
-3. It is not a compound sentence.
-5. It is not a conditional sentence.
-6. Could be true based on our general knowledge of the world.
+1. Has a subject, a verb, and an object.
+2. Is easy to understand.
+3. Is simple, not combined with another sentence.
+4. Might suggest a need but not a guarantee.
+5. Seems true based on common knowledge.
 
 YOU MUST GO THROUGH ALL OF THESE STEPS IN ORDER. DO NOT SKIP ANY STEPS.
 
@@ -38,10 +38,10 @@ Evaluation steps:
 3. **It is not a compound sentence.**
    - The sentence does not contain multiple independent clauses. It is not compound.
 
-5. **It is not a conditional sentence.**
-   - The phrase "in the summer" does imply a specific time condition under which the subject loves their car. This makes the sentence conditional, as it specifies the time when the love for the car is particularly felt.
+4. **It does not imply a sufficiency relationship.**
+   - The sentence does not explicitly state a sufficiency relationship.
 
-6. **Could be true based on our general knowledge of the world.**
+5. **Could be true based on our general knowledge of the world.**
    - It is reasonable for someone to love their car, especially during a particular season like summer.
 
 The sentence fails the evaluation at step 5 because it is a conditional sentence.
@@ -63,23 +63,23 @@ Then JSON:
 const systemPrompt2 = `You are an expert classifier.
 
 ###Evaluation instructions###
-Evaluate if the effect contains a derived metric, a direct metric or no metric. Then if there are metrics, what the metric is and what its direct components are.
+A derived metric, direct metric, or no metric.
+Identify the metric and its basic parts, if any.
+Check if there's more than one cause.
 
-Evaluate if there are more than one cause.
+If only one cause and a derived metric, give a validation error.
 
-If there is only one cause and a derived metric then issue a validationError as this is strictly not allowed.
-
-Do not issue a validation error if there is no metric.
+No error if there's no metric.
 
 ###Output###
-Output precise evaluation. Detail precisely whether the sentence contains a derived or a direct metric.
+Give a clear evaluation. Specify if the sentence has a derived or a direct metric.
 
 Step by step evaluation in markdown format.
 
 Then JSON:
 
 \`\`\`json
-{ validationErrors?: <string[]> , classification:  "derived" |  " direct" | "nometric", moreThanOneCause:<bool>, isValid: true }
+{ validationErrors?: <string[]> , classification: "derived" | " direct" | "nometric", moreThanOneCause:<bool>, isValid: true }
 \`\`\`
 
 `;
@@ -87,13 +87,14 @@ const systemPrompt3 = `
 You are an expert in validating logic.
 
 ###Information###
-We are building a logical cause-effect analysis. Your role is to access the causes provided and verify their validity and the validity of the logical connections between the causes and the effect.
+Your job is to check the causes given and make sure they are valid and logically connected to the effect.
 
 ###Evaluation Instructions###
-Evaluate if the statement is a valid logical statement based on the following requirements:
-1.  Check if the causes and effects could be reversed, sometimes the causes are mixed with effects.
-2. No cause should contain causality.
-3. The causes together should be sufficient to lead directly to the conclusion.
+Check if the statement makes logical sense by:
+
+1. Seeing if causes and effects can be switched, as they might be mixed up.
+2. Making sure no cause includes causality.
+3. Ensuring all causes together directly lead to the conclusion.
 
 YOU MUST GO THROUGH ALL OF THESE STEPS IN ORDER. DO NOT SKIP ANY STEPS.
 
@@ -144,19 +145,23 @@ const systemPrompt4 = `
 You are an expert in validating logic.
 
 ###Information###
-We are building a logical cause-effect analysis. Your role is to assess each cause and the effect provided.
+Your job is to evaluate each cause and the effect in our logical analysis.
 
 ###Evaluation steps###
-Evaluate if the causes and the effect can be regarded as a valid syllogistic statement based on the following requirements:
-1. The statement should contain an effect and at least two causes.
-2. The causes should be connected laterally so that the subject of the second cause is a word referred to in the predicate of the first cause.
-3. The effect should only contain subjects and predicates included in the causes.
-4. Together, the causes are sufficient to lead to the effect.
+Check if the causes and effect form a valid syllogism by:
+1. Making sure the second cause relates to something mentioned in the first cause.
+2. Ensuring there's an effect and at least two causes.
+3. Confirming the effect only includes elements from the causes.
+4. Verifying that the causes together fully lead to the effect.
 
 YOU MUST GO THROUGH ALL OF THESE STEPS IN ORDER. DO NOT SKIP ANY STEPS.
 
 ###Output###
-Output precise evaluation. Detail precisely how the causes are laterally connected. Detail precisely which subjects and which predicates from the causes are contained in the effect. Detail if the causes are not sufficient to lead to the effect.
+Give a detailed evaluation:
+
+1. Explain how the causes are connected to each other.
+2. Specify which subjects and predicates from the causes are in the effect.
+3. State if the causes don't fully lead to the effect.
 
 Step by step evaluation in markdown format.
 
@@ -170,20 +175,25 @@ const systemPrompt5 = `
 You are an expert in validating logic.
 
 ###Information###
-We are building a logical cause-effect analysis. Your role is to assess each cause and the effect provided.
+Your task is to evaluate each cause and the effect in our logical analysis.
 
 ###Evaluation steps###
-Evaluate if the causes and the effect can be regarded as a valid syllogistic statement based on the following requirements:
-1. The statement should contain an effect and at least two causes.
-2. The subject of the effect should be a derived metric.
-2. The causes should be connected through the derived metric so that the subject of the second cause is a component of the derived metric and the predicate of the second cause refers to another component of the derived metric.
-3. The metric contained in the effect should be derived from components contained in the causes.
-4. No cause should contain causality.
+Check if the causes and effect make a valid syllogism by:
+
+1. Having an effect and at least two causes.
+2. The effect's subject must be a derived metric.
+3. The causes must link through this metric, with the second cause's subject being part of the metric and its predicate referring to another metric component.
+4. The effect's metric should come from the causes' components.
+5. Causes should not include causality.
 
 YOU MUST GO THROUGH ALL OF THESE STEPS IN ORDER. DO NOT SKIP ANY STEPS.
 
 ###Output###
-Output precise evaluation. Detail precisely how the causes are laterally connected. Detail precisely which subjects and which predicates from the causes are contained in the effect through the derived metric. Detail if the causes are not sufficient to lead to the effect.
+Provide a detailed evaluation:
+
+1. Explain exactly how the causes are connected side by side.
+2. Clearly identify which subjects and predicates from the causes are included in the effect via the derived metric.
+3. State if the causes are not enough to result in the effect.
 
 Step by step evaluation in markdown format.
 
@@ -197,18 +207,22 @@ const systemPrompt6 = `
 You are an expert in validating logic.
 
 ###Information###
-We are building a logical cause-effect analysis. Your role is to assess each cause and the effect provided.
+Your task is to check each cause and the resulting effect in our logical analysis.
 
 ###Evaluation steps###
-Evaluate if the causes and the effect can be regarded as a valid syllogistic statement based on the following requirements:
-1. The statement should contain an effect and one cause.
-2. The effect should only contain subjects and predicates included in the cause.
-3. The cause is sufficient to lead to the effect.
+Check if the cause and effect form a valid syllogism by:
+
+1. Including one cause and one effect in the statement.
+2. Making sure the effect only has elements from the cause.
+3. Ensuring the cause alone can lead to the effect.
 
 YOU MUST GO THROUGH ALL OF THESE STEPS IN ORDER. DO NOT SKIP ANY STEPS.
 
 ###Output###
-Output precise evaluation. Detail precisely which subjects and which predicates from the cause are contained in the effect. Detail if the cause is not sufficient to lead to the effect.
+Give a detailed evaluation:
+
+1. Clearly identify which subjects and predicates from the cause are in the effect.
+2. State if the cause isn't enough to result in the effect.
 
 Step by step evaluation in markdown format.
 
@@ -241,7 +255,7 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
         parentNodeType = "directCause";
     }
     else {
-        parentNodeType = "intermediateCause";
+        parentNodeType = "directCause";
     }
     console.log(`nodeType: ${parentNodeType}`);
     const webSocket = wsClients.get(clientId);
@@ -252,39 +266,49 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
     const agentOrchestrator = new PsAgentOrchestrator();
     const userMessage = renderUserMessage(effect, causes, validationReview);
     const classification = new PsClassificationAgent("Metric Cassification", {
-        systemMessage: customSystemPrompts && customSystemPrompts.has(2)
+        systemMessage: customSystemPrompts &&
+            customSystemPrompts.has(2) &&
+            customSystemPrompts.get(2) != ""
             ? customSystemPrompts.get(2)
             : systemPrompt2,
         userMessage,
         webSocket,
     });
     const syllogisticEvaluationMoreThanOne = new PsBaseValidationAgent("Syllogistic Evaluation (More than one cause)", {
-        systemMessage: customSystemPrompts && customSystemPrompts.has(4)
+        systemMessage: customSystemPrompts &&
+            customSystemPrompts.has(4) &&
+            customSystemPrompts.get(4) != ""
             ? customSystemPrompts.get(4)
             : systemPrompt4,
         userMessage,
         webSocket,
     });
     const syllogisticEvaluationDerived = new PsBaseValidationAgent("Syllogistic Evaluation (Derived metric)", {
-        systemMessage: customSystemPrompts && customSystemPrompts.has(5)
+        systemMessage: customSystemPrompts &&
+            customSystemPrompts.has(5) &&
+            customSystemPrompts.get(5) != ""
             ? customSystemPrompts.get(5)
             : systemPrompt5,
         userMessage,
         webSocket,
     });
     const syllogisticEvaluationSingleCause = new PsBaseValidationAgent("Syllogistic Evaluation (Single cause)", {
-        systemMessage: customSystemPrompts && customSystemPrompts.has(6)
+        systemMessage: customSystemPrompts &&
+            customSystemPrompts.has(6) &&
+            customSystemPrompts.get(6) != ""
             ? customSystemPrompts.get(6)
             : systemPrompt6,
         userMessage,
         webSocket,
     });
     const validLogicalStatement = new PsBaseValidationAgent("Statements Logic Validation", {
-        systemMessage: customSystemPrompts && customSystemPrompts.has(3)
+        systemMessage: customSystemPrompts &&
+            customSystemPrompts.has(3) &&
+            customSystemPrompts.get(3) != ""
             ? customSystemPrompts.get(3)
             : systemPrompt3,
         userMessage,
-        webSocket
+        webSocket,
     });
     if (causes.length <= 1) {
         validLogicalStatement.nextAgent = syllogisticEvaluationSingleCause;
@@ -297,7 +321,9 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
     classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
     const sentenceValidators = causes.map((cause, index) => {
         return new PsBaseValidationAgent(`Cause ${index} Sentence Validator`, {
-            systemMessage: customSystemPrompts && customSystemPrompts.has(1)
+            systemMessage: customSystemPrompts &&
+                customSystemPrompts.has(1) &&
+                customSystemPrompts.get(1) != ""
                 ? customSystemPrompts.get(1)
                 : systemPrompt1,
             userMessage: `Sentence to validate: ${cause}\n\nYour evaluation in markdown and then JSON:\n`,
@@ -306,7 +332,9 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
         });
     });
     const effectSentenceValidator = new PsBaseValidationAgent("Effect Sentence Validator", {
-        systemMessage: customSystemPrompts && customSystemPrompts.has(1)
+        systemMessage: customSystemPrompts &&
+            customSystemPrompts.has(1) &&
+            customSystemPrompts.get(1) != ""
             ? customSystemPrompts.get(1)
             : systemPrompt1,
         userMessage: `Sentence to validated: ${effect}\n\nYour evaluation in markdown and then JSON:\n`,
@@ -315,8 +343,8 @@ export const runValidationChain = async (crt, clientId, wsClients, parentNode, c
     });
     const parallelAgent = new PsParallelValidationAgent("Basic Sentence Validation", {
         webSocket,
-        hasNoStreaming: true
-    }, [effectSentenceValidator, ...sentenceValidators]);
+        hasNoStreaming: true,
+    }, [...sentenceValidators]);
     parallelAgent.nextAgent = validLogicalStatement;
     agentOrchestrator.execute(parallelAgent, effect);
 };

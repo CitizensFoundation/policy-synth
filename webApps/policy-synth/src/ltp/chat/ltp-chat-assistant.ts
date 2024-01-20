@@ -22,9 +22,6 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 
 import './ltp-ai-chat-element.js';
 import { LtpServerApi } from '../LtpServerApi';
-import { last } from 'lodash';
-
-const USE_WS = false;
 
 const PROMPT_DEBUG = true;
 
@@ -206,6 +203,8 @@ export class LtpChatAssistant extends YpBaseElement {
   onWsOpen() {
     console.error('WebSocket Open');
     this.sendHeartbeat();
+
+    //@ts-ignore
     this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 55000);
     this.ws.onmessage = messageEvent => {
       const data = JSON.parse(messageEvent.data);

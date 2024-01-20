@@ -10,7 +10,7 @@
     "allowUnreachableCode": false,
     "baseUrl": ".",
     "declaration": true,
-    "declarationMap": false,
+    "declarationMap": true,
     "downlevelIteration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
