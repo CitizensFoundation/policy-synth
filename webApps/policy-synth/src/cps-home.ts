@@ -25,7 +25,7 @@ const projects = [
 ] as PsProjectData[];
 
 @customElement('cps-home')
-export class CpsSubProblems extends CpsStageBase {
+export class CpsHome extends CpsStageBase {
   async connectedCallback() {
     super.connectedCallback();
     window.appGlobals.activity(`Home - open`);

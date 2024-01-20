@@ -1,5 +1,5 @@
 import { PropertyValueMap, css, html, nothing } from "lit";
-import { property, customElement } from "lit/decorators.js";
+import { property, customElement, query } from "lit/decorators.js";
 
 import { cache } from "lit/directives/cache.js";
 import { resolveMarkdown } from "./chat/litMarkdown.js";
@@ -274,7 +274,7 @@ export class LtpManageCrt extends CpsStageBase {
     `;
   }
 
-  enderEditNodeDialog() {
+  renderEditNodeDialog() {
     return html`
       <md-dialog
         id="editNodeDialog"
@@ -405,7 +405,7 @@ export class LtpManageCrt extends CpsStageBase {
       if (this.crt && this.crt.id) {
         window.history.pushState({}, "", `/group/${this.crt.id}`);
       } else {
-        console.error("Could not fetch current tree: " + this.groupId);
+        console.error("Could not fetch current tree: " + this.currentTreeId);
       }
     }
   }
@@ -426,7 +426,7 @@ export class LtpManageCrt extends CpsStageBase {
         // Update the node on the server side with the new children IDs
         try {
           await this.api.updateNodeChildren(
-            this.groupId,
+            this.currentTreeId,
             this.nodeToEdit.id,
             this.nodeToEdit.children.map(child => child.id)
           );
@@ -475,7 +475,7 @@ export class LtpManageCrt extends CpsStageBase {
       // Call API to update the node
       try {
         await this.api.updateNodeChildren(
-          this.groupId,
+          this.currentTreeId,
           this.nodeToEdit.id,
           updatedChildrenIds
         );
@@ -494,7 +494,7 @@ export class LtpManageCrt extends CpsStageBase {
   async fetchCurrentTree() {
     this.isFetchingCrt = true;
 
-    this.crt = await this.api.getCrt(this.currentTreeId);
+    this.crt = await this.api.getCrt(this.currentTreeId as number);
 
     this.isFetchingCrt = false;
 

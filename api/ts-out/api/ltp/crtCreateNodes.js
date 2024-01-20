@@ -109,21 +109,17 @@ export const getParentNodes = (nodes, // Pass in crt.nodes here
 currentNodeId, parentNodes = []) => {
     for (const node of nodes) {
         // Check if the current node is a direct child of this node
-        const isDirectChild = node.andChildren?.some((child) => child.id === currentNodeId) ||
-            node.orChildren?.some((child) => child.id === currentNodeId);
+        const isDirectChild = node.children?.some((child) => child.id === currentNodeId);
         if (isDirectChild) {
             parentNodes.push(node);
             // Call recursively with the parent node's ID
             return getParentNodes(nodes, node.id, parentNodes);
         }
-        // Recursively check in andChildren and orChildren
-        const andChildrenResult = node.andChildren
-            ? getParentNodes(node.andChildren, currentNodeId, parentNodes)
+        // Recursively check in children children
+        const childrenResult = node.children
+            ? getParentNodes(node.children, currentNodeId, parentNodes)
             : undefined;
-        const orChildrenResult = node.orChildren
-            ? getParentNodes(node.orChildren, currentNodeId, parentNodes)
-            : undefined;
-        if (andChildrenResult || orChildrenResult) {
+        if (childrenResult) {
             // If either returns a result, we found the parent node
             if (!parentNodes.includes(node)) {
                 parentNodes.push(node);
@@ -146,7 +142,7 @@ export const identifyCauses = async (crt, currentUDE, currentparentNode = undefi
         nodeType = "directCause";
     }
     else {
-        nodeType = "intermediateCause";
+        nodeType = "directCause";
     }
     const openai = new OpenAI(config);
     if (DEBUGGING) {

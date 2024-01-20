@@ -5,7 +5,7 @@
     "moduleResolution": "NodeNext",
 		"outDir": "ts-out/",
 		"declaration": true,
-		"declarationMap": true,
+		"declarationMap": true
 	},
 	"include": [
 		"**/*.ts",

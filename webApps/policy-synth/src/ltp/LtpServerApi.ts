@@ -44,12 +44,11 @@ export class LtpServerApi extends YpServerApi {
 
 
   public reviewConfiguration(
-    groupId: number,
     wsClientId: string,
     crt: LtpCurrentRealityTreeData
   ): Promise<string> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${groupId}/reviewConfiguration`,
+      this.baseUrlPath + `${this.baseLtpPath}/reviewConfiguration`,
       {
         method: 'PUT',
         body: JSON.stringify({
