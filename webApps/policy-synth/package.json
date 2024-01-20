@@ -1,4 +1,13 @@
 {
+  "name": "@policysynth/webapp",
+  "version": "1.0.0",
+  "description": "Policy Synth Web App",
+  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/webApps/policy-synth"
+  },
+  "license": "MIT",
   "scripts": {
     "lint:eslint": "eslint --ext .ts,.html . --ignore-path .gitignore",
     "format:eslint": "eslint --ext .ts,.html . --fix --ignore-path .gitignore",
@@ -119,11 +128,6 @@
     "singleQuote": true,
     "arrowParens": "avoid"
   },
-  "name": "aoi-survey-app",
-  "version": "18",
-  "description": "aoi-survey-app",
-  "author": "Citizens Foundation",
-  "license": "AGPL",
   "dependencies": {
     "@fingerprintjs/fingerprintjs": "^3.4.1",
     "@lit-labs/router": "^0.1.1",
