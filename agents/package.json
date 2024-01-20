@@ -1,5 +1,5 @@
 {
-  "name": "@policy-synth/api",
+  "name": "@policy-synth/agents",
   "version": "1.0.0",
   "license": "MIT",
   "main": "src/ts-out/queue.js",
