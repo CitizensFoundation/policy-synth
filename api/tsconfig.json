@@ -10,11 +10,11 @@
 	"include": [
 		"**/*.ts",
 		"../agents/src/types.d.ts",
-		"../apps/policy-synth/src/ltp/ltp.d.ts",
+		"../webApps/policy-synth/src/ltp/ltp.d.ts",
 		"../agents/src/policy.d.ts",
 		"../agents/src/validation.d.ts",
 		"../agents/src/rootCauses.d.ts",
-		"../apps/policy-synth/src/types.d.ts",
+		"../webApps/policy-synth/src/types.d.ts",
 		"../agents/src/agents/vectorstore/*.ts"
 	]
 }

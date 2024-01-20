@@ -80,12 +80,12 @@ export class App {
                 console.error("index.html does not exist");
             }
         }
-        this.app.use(express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
-        this.app.use("/projects*", express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
-        this.app.use("/crt*", express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
-        this.app.use("/webResearch*", express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
-        this.app.use("/policies*", express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
-        this.app.use("/solutions*", express.static(path.join(__dirname, "../../apps/policy-synth/dist")));
+        this.app.use(express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
+        this.app.use("/projects*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
+        this.app.use("/crt*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
+        this.app.use("/webResearch*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
+        this.app.use("/policies*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
+        this.app.use("/solutions*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         app.use(session({
             store: redisStore,
             secret: process.env.SESSION_SECRET
