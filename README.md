@@ -4,11 +4,13 @@
 
 Policy Synth aims to help governments and citizens make better decisions together by seamlessly integrating collective and artificial intelligence. Utilizing our top-rated community engagement solutions, over 40 x GPT-4 agent types, and advanced genetic algorithms, Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse.
 
+Policy Synth is both an agent toolbox and a Typescript class-based SDK, enabling the creation of new web applications, Express.js APIs with WebSockets, and multi-scale 'system 2 slow thinking' agent systems through Typescript subclassing.
+
 <h2 align="center">
   <a href="https://policy-synth.ai/projects/1/"><strong>Open Test Results: Democracy in Distress</strong></a><br>
 </h2>
 
-## Policy Synth Overview Diagram
+## Example Policy Synth Agent Configuration
 ![Policy Synth v 43](https://github.com/CitizensFoundation/policy-synth/assets/43699/6956d011-4899-4d5e-ab59-b75556982f44)
 
 ## Top-Rated Community Engagement Platforms
