@@ -20,8 +20,8 @@ RUN npm install
 # Copy the rest of your application code from api directory
 COPY --chown=node:node ./api .
 
-# Copy your apps directory to the WORKDIR
-COPY --chown=node:node ./apps ./apps
+# Copy your webApps directory to the WORKDIR
+COPY --chown=node:node ./webApps ./webApps
 
 ENV PORT=9080
 
