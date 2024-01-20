@@ -6,6 +6,8 @@ Policy Synth aims to help governments and citizens make better decisions togethe
 
 Policy Synth is an agent toolbox and a Typescript class-based SDK, enabling the creation of new web applications, Express.js APIs with WebSockets, and multi-scale "slow" thinking agent systems through Typescript subclassing.
 
+Policy Synth is already having real life impact: [https://www.fastcompany.com/91001497/ai-faith-in-democracy](https://www.fastcompany.com/91001497/ai-faith-in-democracy)
+
 <h2 align="center">
   <a href="https://policy-synth.ai/projects/1/"><strong>Open Test Results: Democracy in Distress</strong></a><br>
 </h2>
