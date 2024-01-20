@@ -12,21 +12,21 @@ import { LtpCurrentRealityTree } from './ltp-current-reality-tree.js';
 import { MdMenu } from '@material/web/menu/menu.js';
 
 @customElement('ltp-current-reality-tree-node')
-export class LtpCurrentRealityTreeNode extends CpsStageBase {
+export class LtpCurrentRealityTreeNode extends YpBaseElement {
   @property({ type: String })
-  nodeId: string;
+  nodeId!: string;
 
   @property({ type: String })
-  crtNodeType: CrtNodeType;
+  crtNodeType!: CrtNodeType;
 
   @property({ type: String })
-  crtId: string;
+  crtId!: string;
 
   @property({ type: Boolean })
   isRootCause = false;
 
   @property({ type: String })
-  causeDescription: string;
+  causeDescription!: string;
 
   @property({ type: Boolean })
   isCreatingCauses = false;
@@ -38,19 +38,19 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
     this.api = new LtpServerApi();
   }
 
-  async connectedCallback() {
+  override async connectedCallback() {
     super.connectedCallback();
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
   }
 
-  disconnectedCallback(): void {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
   }
 
-  static get styles() {
+  static override get styles() {
     return [
       super.styles,
       css`
@@ -192,7 +192,7 @@ export class LtpCurrentRealityTreeNode extends CpsStageBase {
     }
   }
 
-  render() {
+  override render() {
     return html`
       <div
         class="layout vertical mainContainer"

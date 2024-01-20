@@ -10,7 +10,6 @@ import { YpBaseElement } from '../../@yrpri/common/yp-base-element';
 
 import '@material/web/fab/fab.js';
 
-//import '@material/web/formfield/formfield.js';
 import '@material/web/radio/radio.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/button/text-button.js';
@@ -29,7 +28,6 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 import './ltp-ai-chat-element.js';
 import { LtpServerApi } from '../LtpServerApi';
 import { last } from 'lodash';
-import { start } from 'repl';
 
 const USE_WS = false;
 
@@ -41,7 +39,7 @@ export class LtpChatAssistant extends YpBaseElement {
   chatLog: LtpAiChatWsMessage[] = [];
 
   @property({ type: String })
-  infoMessage: string;
+  infoMessage!: string;
 
   @property({ type: String })
   wsClientId!: string;
@@ -57,7 +55,7 @@ export class LtpChatAssistant extends YpBaseElement {
     "I'm your Current Reality Tree assistant. I'm here to help to identify direct causes of: ";
 
   @property({ type: String })
-  wsEndpoint: string;
+  wsEndpoint!: string;
 
   @property({ type: Object })
   ws!: WebSocket;
@@ -66,16 +64,16 @@ export class LtpChatAssistant extends YpBaseElement {
   inputIsFocused = false;
 
   @property({ type: Number })
-  clusterId: number;
+  clusterId!: number;
 
   @property({ type: Boolean })
   userScrolled = false;
 
   @property({ type: Number })
-  communityId: number;
+  communityId!: number;
 
   @property({ type: String })
-  textInputLabel: string;
+  textInputLabel!: string;
 
   @property({ type: Boolean })
   lastChainCompletedAsValid = false;
@@ -86,23 +84,26 @@ export class LtpChatAssistant extends YpBaseElement {
   @property({ type: Boolean })
   programmaticScroll = false;
 
+  @property({ type: Number })
+  scrollStart: number = 0;
+
   @query('#sendButton')
-  sendButton: MdFilledTonalButton;
+  sendButton?: MdFilledTonalButton;
 
   @queryAll('ltp-ai-chat-element')
-  chatElements: LtpAiChatElement[];
+  chatElements?: LtpAiChatElement[];
 
   @query('#chatInput')
-  chatInputField: MdOutlinedTextField;
+  chatInputField?: MdOutlinedTextField;
 
   @query('#chat-window')
-  chatWindow: HTMLElement;
+  chatWindow?: HTMLElement;
 
   @query('#chat-messages')
-  chatMessagesElement: HTMLElement;
+  chatMessagesElement?: HTMLElement;
 
   api: LtpServerApi;
-  initialCauses: string[];
+  initialCauses: string[] | undefined;
 
   constructor() {
     super();
@@ -114,7 +115,7 @@ export class LtpChatAssistant extends YpBaseElement {
       document.documentElement.clientHeight,
       window.innerHeight || 0
     );
-    this.chatWindow.setAttribute('style', 'height:' + vH + 'px;');
+    this.chatWindow!.setAttribute('style', 'height:' + vH + 'px;');
   }
 
   handleCtrlPKeyPress(event: KeyboardEvent) {
@@ -140,7 +141,7 @@ export class LtpChatAssistant extends YpBaseElement {
     }
   }
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this.defaultInfoMessage += `**${this.nodeToAddCauseTo.description}**`;
     console.error(this.defaultInfoMessage);
@@ -169,16 +170,14 @@ export class LtpChatAssistant extends YpBaseElement {
     };
   }
 
-  protected firstUpdated(
-    _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
-  ): void {
+  protected override firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
     // focus the text input
     setTimeout(() => {
-      this.chatInputField.focus();
+      this.chatInputField!.focus();
     }, 420);
 
     setTimeout(() => {
-      this.chatMessagesElement.addEventListener('scroll', this.handleScroll.bind(this));
+      this.chatMessagesElement!.addEventListener('scroll', this.handleScroll.bind(this));
     }, 500);
   }
 
@@ -188,13 +187,13 @@ export class LtpChatAssistant extends YpBaseElement {
       const data = JSON.parse(messageEvent.data);
       if (data.clientId) {
         this.wsClientId = data.clientId;
-        this.ws.onmessage = this.onMessage.bind(this);
+        this.ws.onmessage = this.onMessage.bind(this); // Reset the onmessage handler
       }
     };
     this.reset();
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
     if (changedProperties.has('themeDarkMode')) {
     }
@@ -202,22 +201,30 @@ export class LtpChatAssistant extends YpBaseElement {
 
   handleScroll() {
     if (this.programmaticScroll) {
-      // Skip handling if the scroll was initiated programmatically
-      return;
+      return; // Skip handling if the scroll was initiated programmatically
+    }
+
+    const currentScrollTop = this.chatMessagesElement!.scrollTop;
+    if (this.scrollStart === 0) { // Initial scroll
+      this.scrollStart = currentScrollTop;
     }
 
     const threshold = 10;
     const atBottom =
-      this.chatMessagesElement.scrollHeight - this.chatMessagesElement.scrollTop - this.chatMessagesElement.clientHeight <= threshold;
+      this.chatMessagesElement!.scrollHeight - currentScrollTop - this.chatMessagesElement!.clientHeight <= threshold;
 
     if (atBottom) {
       this.userScrolled = false;
-    } else {
+      this.scrollStart = 0; // Reset scroll start
+    } else if (Math.abs(this.scrollStart - currentScrollTop) > threshold) {
       this.userScrolled = true;
+      // Optionally reset scrollStart here if you want to continuously check for threshold scroll
+      // this.scrollStart = currentScrollTop;
     }
   }
 
-  disconnectedCallback(): void {
+
+  override disconnectedCallback(): void {
     //    this.ws.close();
     super.disconnectedCallback();
 
@@ -261,7 +268,7 @@ export class LtpChatAssistant extends YpBaseElement {
   scrollDown() {
     if (!this.userScrolled) {
       this.programmaticScroll = true; // Set the flag before scrolling
-      this.$$('#chat-messages').scrollTop = this.$$('#chat-messages').scrollHeight;
+      this.$$('#chat-messages')!.scrollTop = this.$$('#chat-messages')!.scrollHeight;
       setTimeout(() => {
         this.programmaticScroll = false; // Reset the flag after scrolling
       }, 100);
@@ -276,7 +283,7 @@ export class LtpChatAssistant extends YpBaseElement {
     refinedCausesSuggestions: string[] | undefined = undefined,
     rawMessage: string | undefined = undefined
   ) {
-    this.infoMessage = message;
+    this.infoMessage = message!;
     data.refinedCausesSuggestions = refinedCausesSuggestions || [];
     data.rawMessage = data.rawMessage || rawMessage;
     this.chatLog = [...this.chatLog, data];
@@ -284,16 +291,16 @@ export class LtpChatAssistant extends YpBaseElement {
     this.requestUpdate();
 
     if (changeButtonDisabledState !== undefined) {
-      this.sendButton.disabled = changeButtonDisabledState;
+      this.sendButton!.disabled = changeButtonDisabledState;
     }
 
     if (changeButtonLabelTo !== undefined) {
-      this.sendButton.innerHTML = changeButtonLabelTo;
+      this.sendButton!.innerHTML = changeButtonLabelTo;
     }
   }
 
   addChatBotElement(data: LtpAiChatWsMessage) {
-    const lastElement = this.chatElements[this.chatElements.length - 1];
+    const lastElement = this.chatElements![this.chatElements!.length - 1];
     switch (data.type) {
       case 'hello_message':
         this.addToChatLogWithMessage(data);
@@ -380,8 +387,8 @@ export class LtpChatAssistant extends YpBaseElement {
       case 'end':
         lastElement.stopJsonLoading();
         this.chatLog[this.chatLog.length - 1].debug = data.debug;
-        this.sendButton.disabled = false;
-        this.sendButton.innerHTML = this.t('Send');
+        this.sendButton!.disabled = false;
+        this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
         break;
       case 'message':
@@ -397,8 +404,8 @@ export class LtpChatAssistant extends YpBaseElement {
         );
         this.chatLog[this.chatLog.length - 1].refinedCausesSuggestions =
           data.refinedCausesSuggestions;
-        this.sendButton.disabled = false;
-        this.sendButton.innerHTML = this.t('Send');
+        this.sendButton!.disabled = false;
+        this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
         this.requestUpdate();
         break;
@@ -422,16 +429,16 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   async sendChatMessage() {
-    const message = this.chatInputField.value;
+    const message = this.chatInputField!.value;
 
     if (message.length === 0) return;
 
     //this.ws.send(message);
-    this.chatInputField.value = '';
-    this.sendButton.disabled = false;
-    this.sendButton.innerHTML = this.t('Thinking...');
+    this.chatInputField!.value = '';
+    this.sendButton!.disabled = false;
+    this.sendButton!.innerHTML = this.t('Thinking...');
     setTimeout(() => {
-      this.chatInputField.blur();
+      this.chatInputField!.blur();
     });
 
     const effect = this.nodeToAddCauseTo.description;
@@ -455,7 +462,7 @@ export class LtpChatAssistant extends YpBaseElement {
     if (this.chatLog.length === 1) {
       this.initialCauses = causes;
       await this.api.runValidationChain(
-        this.crtData.id,
+        this.crtData.id!,
         this.nodeToAddCauseTo.id,
         this.chatLog,
         this.wsClientId,
@@ -470,7 +477,7 @@ export class LtpChatAssistant extends YpBaseElement {
       });
 
       await this.api.sendGetRefinedCauseQuery(
-        this.crtData.id,
+        this.crtData.id!,
         this.nodeToAddCauseTo.id,
         this.chatLog,
         this.wsClientId
@@ -481,7 +488,7 @@ export class LtpChatAssistant extends YpBaseElement {
   async validateSelectedChoices(event: CustomEvent) {
     const causes = event.detail;
     await this.api.runValidationChain(
-      this.crtData.id,
+      this.crtData.id!,
       this.nodeToAddCauseTo.id,
       this.chatLog,
       this.wsClientId,
@@ -519,14 +526,14 @@ export class LtpChatAssistant extends YpBaseElement {
     });
 
     await this.api.sendGetRefinedCauseQuery(
-      this.crtData.id,
+      this.crtData.id!,
       this.nodeToAddCauseTo.id,
       this.chatLog,
       this.wsClientId
     );
   }
 
-  static get styles() {
+  static override get styles() {
     return [
       Layouts,
       css`
@@ -688,7 +695,7 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   followUpQuestion(event: CustomEvent) {
-    this.chatInputField.value = event.detail;
+    this.chatInputField!.value = event.detail;
     this.sendChatMessage();
   }
 
@@ -732,7 +739,7 @@ export class LtpChatAssistant extends YpBaseElement {
     `;
   }
 
-  render() {
+  override render() {
     return html`
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
@@ -756,6 +763,7 @@ export class LtpChatAssistant extends YpBaseElement {
                   class="${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
                   .message="${chatElement.message}"
+                  @scroll-down-enabled="${() => (this.userScrolled = false)}"
                   .lastChainCompletedAsValid="${this.lastChainCompletedAsValid}"
                   .crtId="${this.crtData.id}"
                   .parentNodeId="${this.nodeToAddCauseTo.id}"

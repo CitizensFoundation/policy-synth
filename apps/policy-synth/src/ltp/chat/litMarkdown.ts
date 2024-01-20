@@ -100,7 +100,7 @@ export class MarkdownDirective extends AsyncDirective {
       options ?? {}
     );
 
-    if (options.handleJsonBlocks && options.targetElement && rawMarkdown) {
+    if (options && options.handleJsonBlocks && options.targetElement && rawMarkdown) {
       rawMarkdown = this.handleJsonBlocks(rawMarkdown, options.targetElement);
     }
 
@@ -114,6 +114,7 @@ export class MarkdownDirective extends AsyncDirective {
     }
 
     new Promise<string>((resolve, reject) => {
+      //@ts-ignore
       marked.parse(rawMarkdown, (error: any, result: any) => {
         if (error) return reject(error);
 

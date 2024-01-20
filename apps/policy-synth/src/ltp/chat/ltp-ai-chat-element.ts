@@ -15,7 +15,6 @@ import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
 import '../../@yrpri/common/yp-image.js';
 import { LtpServerApi } from '../LtpServerApi';
-import { json } from 'stream/consumers';
 import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 
 @customElement('ltp-ai-chat-element')
@@ -24,10 +23,10 @@ export class LtpAiChatElement extends YpBaseElement {
   message!: string;
 
   @property({ type: String })
-  sender: 'you' | 'bot';
+  sender!: 'you' | 'bot';
 
   @property({ type: String })
-  detectedLanguage: string;
+  detectedLanguage!: string;
 
   @property({ type: String })
   parentNodeId!: string;
@@ -36,7 +35,7 @@ export class LtpAiChatElement extends YpBaseElement {
   crtId!: string | number;
 
   @property({ type: Number })
-  clusterId: number;
+  clusterId!: number;
 
   @property({ type: String })
   type:
@@ -73,7 +72,7 @@ export class LtpAiChatElement extends YpBaseElement {
   @property({ type: Boolean })
   lastChainCompletedAsValid = false;
 
-  isCreatingCauses: boolean;
+  isCreatingCauses: boolean = false;
 
   api: LtpServerApi;
 
@@ -82,7 +81,7 @@ export class LtpAiChatElement extends YpBaseElement {
     this.api = new LtpServerApi();
   }
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
 
     // Subscribe to MarkdownDirective events
@@ -90,7 +89,7 @@ export class LtpAiChatElement extends YpBaseElement {
     this.addEventListener('jsonLoadingEnd', this.handleJsonLoadingEnd);
   }
 
-  disconnectedCallback() {
+  override disconnectedCallback() {
     // Remove event listeners for MarkdownDirective
     this.removeEventListener('jsonLoadingStart', this.handleJsonLoadingStart);
     this.removeEventListener('jsonLoadingEnd', this.handleJsonLoadingEnd);
@@ -115,7 +114,7 @@ export class LtpAiChatElement extends YpBaseElement {
       jsonContent
     );
     this.jsonLoading = false;
-    let jsonContentParsed: CrtRefinedCausesReply;
+    let jsonContentParsed: CrtRefinedCausesReply | undefined = undefined;
     try {
       jsonContentParsed = JSON.parse(jsonContent.jsonContent) as CrtRefinedCausesReply;
     } catch (e) {
@@ -138,7 +137,7 @@ export class LtpAiChatElement extends YpBaseElement {
     }
   };
 
-  static get styles() {
+  static override get styles() {
     return [
       Layouts,
       css`
@@ -397,8 +396,7 @@ export class LtpAiChatElement extends YpBaseElement {
   }
 
   async addSelected() {
-    // Get all checked checkbox elements
-    const checkboxes = this.shadowRoot.querySelectorAll('md-checkbox');
+    const checkboxes = this.shadowRoot!.querySelectorAll('md-checkbox');
 
     // Arrays to hold selected causes and assumptions
     const selectedCauses: string[] = [];
@@ -411,9 +409,9 @@ export class LtpAiChatElement extends YpBaseElement {
         const type = (checkbox as MdCheckbox).dataset.type;
 
         if (type === 'directCause') {
-          selectedCauses.push(item);
+          selectedCauses.push(item!);
         } else if (type === 'assumption') {
-          selectedAssumptions.push(item);
+          selectedAssumptions.push(item!);
         }
       }
     });
@@ -435,28 +433,31 @@ export class LtpAiChatElement extends YpBaseElement {
       }
 
       if (selectedAssumptions.length) {
-        const assumptionsNodes = await this.api.addDirectCauses(
-          this.crtId,
-          this.parentNodeId,
-          selectedAssumptions,
-          'assumption'
-        );
-        nodes = nodes.concat(assumptionsNodes);
-      }
+      const assumptionsNodes = await this.api.addDirectCauses(
+	this.crtId,
+	this.parentNodeId,
+	selectedAssumptions,
+	'assumption'
+      );
+      nodes = nodes.concat(assumptionsNodes);
+    }
 
       this.fireGlobal('add-nodes', {
-        parentNodeId: this.parentNodeId,
-        nodes,
-      });
+      parentNodeId: this.parentNodeId,
+      nodes,
+    });
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise(resolve => setTimeout(resolve, 10));
 
-      this.fire('close-add-cause-dialog');
+    this.fire('close-add-cause-dialog');
 
-      this.isCreatingCauses = false;
+    this.isCreatingCauses = false;
+
     } else {
       this.fire('validate-selected-causes', selectedCauses);
     }
+
+    this.fire('scroll-down-enabled');
   }
 
   get isError() {
@@ -565,7 +566,7 @@ export class LtpAiChatElement extends YpBaseElement {
     );
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
     if (
       changedProperties.has('followUpQuestionsRaw') &&
@@ -647,7 +648,7 @@ export class LtpAiChatElement extends YpBaseElement {
     }
   }
 
-  render() {
+  override render() {
     return html` ${this.renderMessage()} `;
   }
 }

@@ -1,49 +1,49 @@
-import { PropertyValueMap, css, html, nothing } from 'lit';
-import { property, customElement } from 'lit/decorators.js';
+import { PropertyValueMap, css, html, nothing } from "lit";
+import { property, customElement } from "lit/decorators.js";
 
-import { cache } from 'lit/directives/cache.js';
-import { resolveMarkdown } from './chat/litMarkdown.js';
+import { cache } from "lit/directives/cache.js";
+import { resolveMarkdown } from "./chat/litMarkdown.js";
 
-import '@material/web/iconbutton/icon-button.js';
-import '@material/web/progress/linear-progress.js';
-import '@material/web/tabs/tabs.js';
-import '@material/web/tabs/primary-tab.js';
-import '@material/web/textfield/outlined-text-field.js';
-import '@material/web/iconbutton/outlined-icon-button.js';
-import '@material/web/button/filled-tonal-button.js';
-import '@material/web/dialog/dialog.js';
-import '@material/web/button/text-button.js';
-import '@material/web/checkbox/checkbox.js';
-import '@material/web/menu/menu.js';
-import '@material/web/menu/menu-item.js';
+import "@material/web/iconbutton/icon-button.js";
+import "@material/web/progress/linear-progress.js";
+import "@material/web/tabs/tabs.js";
+import "@material/web/tabs/primary-tab.js";
+import "@material/web/textfield/outlined-text-field.js";
+import "@material/web/iconbutton/outlined-icon-button.js";
+import "@material/web/button/filled-tonal-button.js";
+import "@material/web/dialog/dialog.js";
+import "@material/web/button/text-button.js";
+import "@material/web/checkbox/checkbox.js";
+import "@material/web/menu/menu.js";
+import "@material/web/menu/menu-item.js";
 
-import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
+import { MdOutlinedTextField } from "@material/web/textfield/outlined-text-field.js";
 
-import '@material/web/button/filled-button.js';
+import "@material/web/button/filled-button.js";
 
-import { MdTabs } from '@material/web/tabs/tabs.js';
+import { MdTabs } from "@material/web/tabs/tabs.js";
 
 import { CpsStageBase } from '../cps-stage-base.js';
 
-import './ltp-current-reality-tree.js';
-import './LtpServerApi.js';
-import { LtpServerApi } from './LtpServerApi.js';
+import "./ltp-current-reality-tree.js";
+import "./LtpServerApi.js";
+import { LtpServerApi } from "./LtpServerApi.js";
 
-import './chat/ltp-chat-assistant.js';
-import { MdDialog } from '@material/web/dialog/dialog.js';
-import { LtpStreamingAIResponse } from './LtpStreamingAIResponse.js';
+import "./chat/ltp-chat-assistant.js";
+import { MdDialog } from "@material/web/dialog/dialog.js";
+import { LtpStreamingAIResponse } from "./LtpStreamingAIResponse.js";
 
 const TESTING = false;
 
 const nodeTypes = [
-  'ude',
-  'directCause',
-  'assumption',
-  'intermediateCause',
-  'rootCause',
+  "ude",
+  "directCause",
+  "assumption",
+  "intermediateCause",
+  "rootCause",
 ];
 
-@customElement('ltp-manage-crt')
+@customElement("ltp-manage-crt")
 export class LtpManageCrt extends CpsStageBase {
   @property({ type: String })
   currentTreeId: string | number | undefined;
@@ -79,23 +79,23 @@ export class LtpManageCrt extends CpsStageBase {
 
   @property({ type: Object })
   nodeToAddCauseTo: LtpCurrentRealityTreeDataNode | undefined;
-  wsMessageListener: (event: any) => void;
-  currentStreaminReponse: LtpStreamingAIResponse;
+  wsMessageListener: ((event: any) => void) | undefined = undefined;
+  currentStreaminReponse: LtpStreamingAIResponse | undefined;
 
   constructor() {
     super();
     this.api = new LtpServerApi();
   }
 
-  async connectedCallback() {
+  override async connectedCallback() {
     super.connectedCallback();
     this.addEventListener(
-      'open-add-cause-dialog',
+      "open-add-cause-dialog",
       this.openAddCauseDialog as EventListenerOrEventListenerObject
     );
 
     this.addEventListener(
-      'close-add-cause-dialog',
+      "close-add-cause-dialog",
       this.closeAddCauseDialog as EventListenerOrEventListenerObject
     );
 
@@ -104,7 +104,7 @@ export class LtpManageCrt extends CpsStageBase {
     }
 
     this.addEventListener(
-      'edit-node',
+      "edit-node",
       this.openEditNodeDialog as EventListenerOrEventListenerObject
     );
   }
@@ -114,30 +114,30 @@ export class LtpManageCrt extends CpsStageBase {
 
     this.nodeToEdit = this.findNodeRecursively(
       this.crt?.nodes || [],
-      this.nodeToEditInfo.nodeId
+      this.nodeToEditInfo!.nodeId
     );
     if (!this.nodeToEdit) {
-      console.error(`Could not find node ${this.nodeToEditInfo.nodeId}`);
+      console.error(`Could not find node ${this.nodeToEditInfo!.nodeId}`);
       console.error(JSON.stringify(this.crt, null, 2));
       return;
     }
 
-    (this.$$('#editNodeDialog') as MdDialog).show();
+    (this.$$("#editNodeDialog") as MdDialog).show();
   }
 
   closeEditNodeDialog() {
-    (this.$$('#editNodeDialog') as MdDialog).close();
+    (this.$$("#editNodeDialog") as MdDialog).close();
     this.nodeToEdit = undefined;
     this.nodeToEditInfo = undefined;
   }
 
   async handleSaveEditNode() {
     const updatedDescription = (
-      this.$$('#nodeDescription') as MdOutlinedTextField
+      this.$$("#nodeDescription") as MdOutlinedTextField
     ).value;
 
     // Retrieve the selected node type from md-select
-    const nodeTypeSelect = this.$$('#nodeTypeSelect') as HTMLSelectElement; // Update the ID to match your select element
+    const nodeTypeSelect = this.$$("#nodeTypeSelect") as HTMLSelectElement; // Update the ID to match your select element
     const selectedNodeType = nodeTypeSelect.value;
 
     if (this.nodeToEdit) {
@@ -168,7 +168,7 @@ export class LtpManageCrt extends CpsStageBase {
           //TODO: Do this with less brute force, actually update the element
           this.crt = { ...this.crt };
         } catch (error) {
-          console.error('Error updating node:', error);
+          console.error("Error updating node:", error);
         }
       }
     }
@@ -182,12 +182,12 @@ export class LtpManageCrt extends CpsStageBase {
     nodes: LtpCurrentRealityTreeDataNode[],
     nodeId: string
   ) {
-    const index = nodes.findIndex(node => node.id === nodeId);
+    const index = nodes.findIndex((node) => node.id === nodeId);
     if (index !== -1) {
       nodes.splice(index, 1);
       return;
     }
-    nodes.forEach(node => {
+    nodes.forEach((node) => {
       if (node.andChildren) {
         this.removeNodeRecursively(node.andChildren, nodeId);
       }
@@ -207,7 +207,7 @@ export class LtpManageCrt extends CpsStageBase {
         this.closeEditNodeDialog();
         this.crt = { ...this.crt };
       } catch (error) {
-        console.error('Error deleting node:', error);
+        console.error("Error deleting node:", error);
       } finally {
         this.closeDeleteConfirmationDialog();
       }
@@ -264,7 +264,7 @@ export class LtpManageCrt extends CpsStageBase {
             ? html`
                 <md-outlined-text-field
                   label="Description"
-                  .value="${this.nodeToEdit?.description || ''}"
+                  .value="${this.nodeToEdit?.description || ""}"
                   id="nodeDescription"
                 ></md-outlined-text-field>
                 <md-outlined-select
@@ -273,9 +273,9 @@ export class LtpManageCrt extends CpsStageBase {
                   id="nodeTypeSelect"
                 >
                   ${nodeTypes
-                    .filter(type => type !== undefined)
+                    .filter((type) => type !== undefined)
                     .map(
-                      type => html`
+                      (type) => html`
                         <md-select-option
                           value="${type}"
                           ?selected="${this.nodeToEditInfo.element
@@ -338,42 +338,46 @@ export class LtpManageCrt extends CpsStageBase {
 
     this.isFetchingCrt = false;
 
-    this.updatePath();
+    if (this.crt) {
+      this.updatePath();
 
-    await this.updateComplete;
+      await this.updateComplete;
 
-    (this.$$('#context') as MdOutlinedTextField).value = this.crt.context;
-    (this.$$('#undesirableEffects') as MdOutlinedTextField).value =
-      this.crt.undesirableEffects.join('\n');
+      (this.$$("#context") as MdOutlinedTextField).value = this.crt.context;
+      (this.$$("#undesirableEffects") as MdOutlinedTextField).value =
+        this.crt.undesirableEffects.join("\n");
 
-    this.activeTabIndex = 1;
-    (this.$$('#tabBar') as MdTabs).activeTabIndex = 1;
+      this.activeTabIndex = 1;
+      (this.$$("#tabBar") as MdTabs).activeTabIndex = 1;
+    }
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(
+    changedProperties: Map<string | number | symbol, unknown>
+  ): void {
     super.updated(changedProperties);
   }
 
-  disconnectedCallback(): void {
+  override disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener(
-      'open-add-cause-dialog',
+      "open-add-cause-dialog",
       this.openAddCauseDialog as EventListenerOrEventListenerObject
     );
     this.removeEventListener(
-      'close-add-cause-dialog',
+      "close-add-cause-dialog",
       this.closeAddCauseDialog as EventListenerOrEventListenerObject
     );
   }
   camelCaseToHumanReadable(str: string) {
     // Split the string at each uppercase letter and join with space
-    const words = str.replace(/([A-Z])/g, ' $1').trim();
+    const words = str.replace(/([A-Z])/g, " $1").trim();
 
     // Capitalize the first letter of the resulting string
     return words.charAt(0).toUpperCase() + words.slice(1);
   }
 
-  static get styles() {
+  static override get styles() {
     return [
       super.styles,
       css`
@@ -382,6 +386,10 @@ export class LtpManageCrt extends CpsStageBase {
           color: var(--md-sys-color-on-primary-container);
           background-color: var(--md-sys-color-primary-container);
           padding: 8px;
+        }
+
+        md-icon-button {
+          margin-top: 32px;
         }
 
         .createOptionsButtons {
@@ -409,11 +417,11 @@ export class LtpManageCrt extends CpsStageBase {
           margin-bottom: 16px;
         }
 
-        [type='textarea'] {
+        [type="textarea"] {
           min-height: 150px;
         }
 
-        [type='textarea'][supporting-text] {
+        [type="textarea"][supporting-text] {
           min-height: 76px;
         }
 
@@ -501,26 +509,26 @@ export class LtpManageCrt extends CpsStageBase {
   }
 
   tabChanged() {
-    this.activeTabIndex = (this.$$('#tabBar') as MdTabs).activeTabIndex;
+    this.activeTabIndex = (this.$$("#tabBar") as MdTabs).activeTabIndex;
   }
 
   clearForNew() {
     this.crt = undefined;
     this.currentTreeId = undefined;
     this.AIConfigReview = undefined;
-    (this.$$('#context') as MdOutlinedTextField).value = '';
-    (this.$$('#undesirableEffects') as MdOutlinedTextField).value = '';
-    window.history.pushState({}, '', `/crt`);
+    (this.$$("#context") as MdOutlinedTextField).value = "";
+    (this.$$("#undesirableEffects") as MdOutlinedTextField).value = "";
+    //window.history.pushState({}, '', `/crt`);
   }
 
   get crtInputData() {
     return {
       description:
-        (this.$$('#description') as MdOutlinedTextField)?.value ?? '',
-      context: (this.$$('#context') as MdOutlinedTextField).value ?? '',
+        (this.$$("#description") as MdOutlinedTextField)?.value ?? "",
+      context: (this.$$("#context") as MdOutlinedTextField).value ?? "",
       undesirableEffects:
-        (this.$$('#undesirableEffects') as MdOutlinedTextField).value.split(
-          '\n'
+        (this.$$("#undesirableEffects") as MdOutlinedTextField).value.split(
+          "\n"
         ) ?? [],
       nodes: [],
     } as LtpCurrentRealityTreeData;
@@ -534,7 +542,7 @@ export class LtpManageCrt extends CpsStageBase {
     }
 
     if (this.wsMessageListener) {
-      this.removeEventListener('wsMessage', this.wsMessageListener);
+      this.removeEventListener("wsMessage", this.wsMessageListener);
     }
 
     this.AIConfigReview = undefined;
@@ -543,29 +551,29 @@ export class LtpManageCrt extends CpsStageBase {
 
     try {
       const wsClientId = await this.currentStreaminReponse.connect();
-      this.AIConfigReview = '';
-      console.log('Connected with clientId:', wsClientId);
+      this.AIConfigReview = "";
+      console.log("Connected with clientId:", wsClientId);
 
       this.wsMessageListener = (event: any) => {
         const { data } = event.detail;
-        if (data.type === 'part' && data.text) {
+        if (data.type === "part" && data.text) {
           this.AIConfigReview += data.text;
-        } else if (data.type === 'end') {
-          this.removeEventListener('wsMessage', this.wsMessageListener);
+        } else if (data.type === "end") {
+          this.removeListener("wsMessage", this.wsMessageListener!);
           this.wsMessageListener = undefined;
           this.currentStreaminReponse = undefined;
           this.isReviewingCrt = false;
         }
       };
 
-      this.addEventListener('wsMessage', this.wsMessageListener);
+      this.addEventListener("wsMessage", this.wsMessageListener);
 
       await this.api.reviewConfiguration(wsClientId, this.crtInputData);
 
       // Proceed with your logic
     } catch (error) {
-      console.error('WebSocket connection failed:', error);
-      this.removeEventListener('wsMessage', this.wsMessageListener);
+      console.error("WebSocket connection failed:", error);
+      this.removeListener("wsMessage", this.wsMessageListener!);
     }
   }
 
@@ -574,10 +582,10 @@ export class LtpManageCrt extends CpsStageBase {
 
     const crtSeed = this.crtInputData;
 
-    if (TESTING && (this.$$('#context') as MdOutlinedTextField).value == '') {
+    if (TESTING && (this.$$("#context") as MdOutlinedTextField).value == "") {
       crtSeed.context =
-        'We are a software company with a product we have as as service';
-      crtSeed.undesirableEffects = ['End users are unhappy with the service'];
+        "We are a software company with a product we have as as service";
+      crtSeed.undesirableEffects = ["End users are unhappy with the service"];
     }
 
     this.crt = await this.api.createTree(crtSeed);
@@ -628,7 +636,7 @@ export class LtpManageCrt extends CpsStageBase {
       <md-outlined-button
         @click="${this.reviewTreeConfiguration}"
         ?hidden="${!this.AIConfigReview || this.crt != undefined}"
-        >${this.t('Review CRT again')}<md-icon slot="icon"
+        >${this.t("Review CRT again")}<md-icon slot="icon"
           >rate_review</md-icon
         ></md-outlined-button
       >
@@ -695,7 +703,7 @@ export class LtpManageCrt extends CpsStageBase {
             <md-outlined-button
               @click="${this.clearForNew}"
               ?hidden="${!this.crt}"
-              >${this.t('Create New Tree')}<md-icon slot="icon"
+              >${this.t("Create New Tree")}<md-icon slot="icon"
                 >rate_review</md-icon
               ></md-outlined-button
             >
@@ -706,7 +714,7 @@ export class LtpManageCrt extends CpsStageBase {
               @click="${this.createTree}"
               ?hidden="${!this.AIConfigReview || this.crt != undefined}"
               ?disabled="${this.isReviewingCrt}"
-              >${this.t('Create CRT')}<md-icon slot="icon"
+              >${this.t("Create CRT")}<md-icon slot="icon"
                 >send</md-icon
               ></md-filled-button
             >
@@ -758,11 +766,11 @@ export class LtpManageCrt extends CpsStageBase {
       return;
     }
     this.nodeToAddCauseTo = node;
-    (this.$$('#addCauseDialog') as MdDialog).show();
+    (this.$$("#addCauseDialog") as MdDialog).show();
   }
 
   closeAddCauseDialog() {
-    (this.$$('#addCauseDialog') as MdDialog).close();
+    (this.$$("#addCauseDialog") as MdDialog).close();
     this.nodeToAddCauseTo = undefined;
   }
 
@@ -792,9 +800,9 @@ export class LtpManageCrt extends CpsStageBase {
     `;
   }
 
-  render() {
+  override render() {
     if (this.isFetchingCrt) {
-      html`<md-linear-progress indeterminate></md-linear-progress>`;
+      return html`<md-linear-progress indeterminate></md-linear-progress>`;
     } else {
       return cache(html`
         ${this.renderAddCauseDialog()} ${this.renderEditNodeDialog()}
@@ -802,7 +810,7 @@ export class LtpManageCrt extends CpsStageBase {
         <md-tabs id="tabBar" @change="${this.tabChanged}">
           <md-primary-tab id="configure-tab" aria-controls="configure-panel">
             <md-icon slot="icon">psychology</md-icon>
-            ${this.t('Configuration')}
+            ${this.t("Configuration")}
           </md-primary-tab>
           <md-primary-tab
             id="crt-tab"
@@ -818,7 +826,7 @@ export class LtpManageCrt extends CpsStageBase {
             ?disabled="${!this.crt}"
           >
             <md-icon slot="icon">mindfulness</md-icon>
-            ${this.t('Logic Validation')}
+            ${this.t("Logic Validation")}
           </md-primary-tab>
         </md-tabs>
 

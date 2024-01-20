@@ -31,8 +31,8 @@ interface PsBaseValidationAgentOptions {
   validationErrors?: string[];
   systemMessage?: string;
   userMessage?: string;
-  streamingCallbacks?: Callbacks;
-  webSocket?: WebSocket;
+  streamingCallbacks?: any;
+  webSocket?: any;
   disableStreaming?: boolean;
   hasNoStreaming?: boolean;
 }

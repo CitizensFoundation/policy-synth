@@ -74,7 +74,7 @@ export class LtpServerApi extends YpServerApi {
         body: JSON.stringify({
           parentNodeId,
           causes,
-          type,
+          type
         }),
       },
       false
@@ -106,14 +106,7 @@ export class LtpServerApi extends YpServerApi {
       this.baseUrlPath + `/crt/${crtTreeId}/getRefinedCauses`,
       {
         method: 'POST',
-        body: JSON.stringify({
-          wsClientId,
-          crtNodeId,
-          chatLog: simplifiedChatLog,
-          effect,
-          causes,
-          validationErrors,
-        }),
+        body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog, effect, causes, validationErrors }),
       },
       false
     ) as Promise<LtpChatBotCrtMessage>;
@@ -155,6 +148,7 @@ export class LtpServerApi extends YpServerApi {
     ) as Promise<LtpChatBotCrtMessage>;
   }
 
+
   public updateNode(
     treeId: string | number,
     updatedNode: LtpCurrentRealityTreeDataNode
@@ -169,7 +163,10 @@ export class LtpServerApi extends YpServerApi {
     ) as Promise<void>;
   }
 
-  public deleteNode(treeId: string | number, nodeId: string): Promise<void> {
+  public deleteNode(
+    treeId: string | number,
+    nodeId: string
+  ): Promise<void> {
     return this.fetchWrapper(
       this.baseUrlPath + `/crt/${treeId}`,
       {
