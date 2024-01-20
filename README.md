@@ -35,15 +35,5 @@ To further enrich our evolving solution space, we introduce fresh random immigra
 
 For the real-world application of our platform, a series of expert and mass citizen crowdsourcing stages will be integrated. These stages are designed to accompany the AI-generated and ranked options. This multifaceted approach combines collective human insights, expert opinions, and machine intelligence. Our model leverages technology to harness collective wisdom, effectively facilitating the development and implementation of well-informed policy decisions.
 
-## Project Status
-- **Implemented**: Problem identification and solution agents 
-- **In Progress**: First iteration of the policy ideas agents
-
-## Future Timeline
-- **End of November 2023**: First full iteration of the policy ideas agents
-
-
-
-
 
 
