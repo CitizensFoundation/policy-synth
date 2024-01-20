@@ -1,6 +1,11 @@
 {
-  "name": "@policy-synth/agents",
+  "name": "@policysynth/agents",
   "version": "1.0.0",
+  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/agents"
+  },
   "license": "MIT",
   "main": "src/ts-out/queue.js",
   "devDependencies": {

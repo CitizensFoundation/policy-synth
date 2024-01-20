@@ -1,6 +1,12 @@
 {
-  "name": "@policy-synth/api",
-  "version": "1.0.0",
+  "name": "@policysynth/api",
+  "version": "1.0.1",
+  "description": "Policy Synth Web App",
+  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/api"
+  },
   "license": "MIT",
   "main": "ts-out/api/server.js",
   "type": "module",
