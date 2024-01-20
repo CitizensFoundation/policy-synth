@@ -1,11 +1,6 @@
 import { PropertyValueMap, css, html } from 'lit';
 import { property, customElement, query, queryAll } from 'lit/decorators.js';
-import {
-  virtualize,
-  virtualizerRef,
-} from '@lit-labs/virtualizer/virtualize.js';
 
-import { Layouts } from '../../flexbox-literals/classes';
 import { YpBaseElement } from '../../@yrpri/common/yp-base-element';
 
 import '@material/web/fab/fab.js';
@@ -102,8 +97,14 @@ export class LtpChatAssistant extends YpBaseElement {
   @query('#chat-messages')
   chatMessagesElement?: HTMLElement;
 
+  @property({ type: Array })
+  lastCausesToValidate: string[] | undefined;
+
+  @property({ type: Array })
+  lastValidatedCauses: string[] | undefined;
+
   api: LtpServerApi;
-  initialCauses: string[] | undefined;
+  heartbeatInterval: number | undefined;
 
   constructor() {
     super();
@@ -150,24 +151,39 @@ export class LtpChatAssistant extends YpBaseElement {
       document.addEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
     }
 
+    this.initWebSockets();
+
+    this.ws.onmessage = this.onMessage.bind(this);
+    this.ws.onopen = this.onWsOpen.bind(this);
+    this.ws.onerror = error => {
+      //TODO: Try to resend the last message
+      console.error('WebSocket Error ' + error);
+      setTimeout(() => this.initWebSockets(), 500);
+    };
+    this.ws.onclose = error => {
+      console.error('WebSocket Close ' + error);
+      setTimeout(() => this.initWebSockets(), 500);
+    };
+  }
+
+  initWebSockets() {
     let wsEndpoint;
 
     if (
       window.location.hostname === 'localhost' ||
       window.location.hostname === '192.1.168'
     ) {
-      wsEndpoint = `ws://${window.location.hostname}:8000`;
+      wsEndpoint = `ws://${window.location.hostname}:9292`;
     } else {
       wsEndpoint = `wss://${window.location.hostname}:443`;
     }
 
-    this.ws = new WebSocket(wsEndpoint);
-
-    this.ws.onmessage = this.onMessage.bind(this);
-    this.ws.onopen = this.onWsOpen.bind(this);
-    this.ws.onerror = error => {
+    try {
+      this.ws = new WebSocket(wsEndpoint);
+    } catch (error) {
       console.error('WebSocket Error ' + error);
-    };
+      setTimeout(() => this.initWebSockets(), 2500);
+    }
   }
 
   protected override firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
@@ -181,13 +197,23 @@ export class LtpChatAssistant extends YpBaseElement {
     }, 500);
   }
 
+  sendHeartbeat() {
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'heartbeat' }));
+    }
+  }
+
   onWsOpen() {
-    // Assuming the server sends the clientId immediately after connection
+    console.error('WebSocket Open');
+    this.sendHeartbeat();
+    this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 55000);
     this.ws.onmessage = messageEvent => {
       const data = JSON.parse(messageEvent.data);
       if (data.clientId) {
         this.wsClientId = data.clientId;
-        this.ws.onmessage = this.onMessage.bind(this); // Reset the onmessage handler
+        this.ws.onmessage = this.onMessage.bind(this);
+      } else {
+        console.error('Error: No clientId received from server!');
       }
     };
     this.reset();
@@ -240,6 +266,10 @@ export class LtpChatAssistant extends YpBaseElement {
         'scroll',
         this.handleScroll.bind(this)
       );
+    }
+
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
     }
   }
 
@@ -295,7 +325,7 @@ export class LtpChatAssistant extends YpBaseElement {
     }
 
     if (changeButtonLabelTo !== undefined) {
-      this.sendButton!.innerHTML = changeButtonLabelTo;
+      //this.sendButton!.innerHTML = changeButtonLabelTo;
     }
   }
 
@@ -323,6 +353,10 @@ export class LtpChatAssistant extends YpBaseElement {
         }
         const startOptions = data.message as unknown as PsAgentStartWsOptions;
 
+        setTimeout(() => {
+          this.scrollDown();
+        }, 50);
+
         if (startOptions.noStreaming) {
           this.addChatBotElement({
             sender: 'bot',
@@ -342,6 +376,8 @@ export class LtpChatAssistant extends YpBaseElement {
           lastElement.active = false;
         }
         this.lastChainCompletedAsValid = false;
+        this.lastValidatedCauses = undefined;
+
         const completedOptions =
           data.message as unknown as PsAgentCompletedWsOptions;
         if (
@@ -349,13 +385,14 @@ export class LtpChatAssistant extends YpBaseElement {
           (completedOptions.results.validationErrors &&
             completedOptions.results.validationErrors.length > 0)
         ) {
-          this.getSuggestionsFromValidation(completedOptions.results);
+          this.getSuggestionsFromValidation(completedOptions.name, completedOptions.results);
         }
         if (
           completedOptions.results.isValid &&
           completedOptions.results.lastAgent
         ) {
           this.lastChainCompletedAsValid = true;
+          this.lastValidatedCauses = this.lastCausesToValidate;
         }
         break;
       case 'start':
@@ -436,7 +473,7 @@ export class LtpChatAssistant extends YpBaseElement {
     //this.ws.send(message);
     this.chatInputField!.value = '';
     this.sendButton!.disabled = false;
-    this.sendButton!.innerHTML = this.t('Thinking...');
+    //this.sendButton!.innerHTML = this.t('Thinking...');
     setTimeout(() => {
       this.chatInputField!.blur();
     });
@@ -460,7 +497,7 @@ export class LtpChatAssistant extends YpBaseElement {
     });
 
     if (this.chatLog.length === 1) {
-      this.initialCauses = causes;
+      this.lastCausesToValidate = causes;
       await this.api.runValidationChain(
         this.crtData.id!,
         this.nodeToAddCauseTo.id,
@@ -476,6 +513,8 @@ export class LtpChatAssistant extends YpBaseElement {
         message: '',
       });
 
+      this.lastChainCompletedAsValid = false;
+
       await this.api.sendGetRefinedCauseQuery(
         this.crtData.id!,
         this.nodeToAddCauseTo.id,
@@ -487,6 +526,8 @@ export class LtpChatAssistant extends YpBaseElement {
 
   async validateSelectedChoices(event: CustomEvent) {
     const causes = event.detail;
+    this.lastCausesToValidate = causes;
+
     await this.api.runValidationChain(
       this.crtData.id!,
       this.nodeToAddCauseTo.id,
@@ -498,16 +539,20 @@ export class LtpChatAssistant extends YpBaseElement {
   }
 
   async getSuggestionsFromValidation(
-    validationResults: PsValidationAgentResult,
-    causes: string[] | undefined = undefined
+    agentName: string,
+    validationResults: PsValidationAgentResult
   ) {
-    if (!causes) {
-      causes = this.initialCauses;
-    }
     let effect;
     effect = this.nodeToAddCauseTo.description;
 
-    let userMessage = `Expert Validation Results:\n`;
+    let userMessage = `Expert: ${agentName}
+
+Effect: ${this.nodeToAddCauseTo?.description}\n`;
+    this.lastCausesToValidate!.forEach((cause, index) => {
+      userMessage += `Cause ${index + 1}: ${cause}\n`;
+    });
+
+    userMessage+=`Expert Validation Results:\n`;
 
     userMessage += JSON.stringify(validationResults, null, 2);
 
@@ -535,7 +580,7 @@ export class LtpChatAssistant extends YpBaseElement {
 
   static override get styles() {
     return [
-      Layouts,
+      super.styles,
       css`
         md-textfield {
           width: 600px;
@@ -765,6 +810,7 @@ export class LtpChatAssistant extends YpBaseElement {
                   .message="${chatElement.message}"
                   @scroll-down-enabled="${() => (this.userScrolled = false)}"
                   .lastChainCompletedAsValid="${this.lastChainCompletedAsValid}"
+                  .lastValidatedCauses="${this.lastValidatedCauses}"
                   .crtId="${this.crtData.id}"
                   .parentNodeId="${this.nodeToAddCauseTo.id}"
                   .type="${chatElement.type}"

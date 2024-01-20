@@ -26,6 +26,7 @@ export class CurrentRealityTreeController {
   public path = "/api/crt";
   public router = express.Router();
   public wsClients = new Map<string, WebSocket>();
+  public prompts: Map<number, string> | undefined;
 
   constructor(wsClients: Map<string, WebSocket>) {
     this.wsClients = wsClients;
@@ -55,6 +56,8 @@ export class CurrentRealityTreeController {
       this.path + "/reviewConfiguration",
       this.reviewTreeConfiguration
     );
+
+    this.router.put(this.path + "/:id/updateChildren", this.updateNodeChildren);
 
     this.router.delete(this.path + "/:id", this.deleteNode);
     this.router.put(this.path + "/:id", this.updateNode);
@@ -93,6 +96,38 @@ export class CurrentRealityTreeController {
     }
   };
 
+  updateNodeChildren = async (req: express.Request, res: express.Response) => {
+    const treeId = req.params.id;
+    const nodeId = req.body.nodeId;
+    const childrenIds: string[] = req.body.childrenIds;
+
+    try {
+      const treeData = await this.getData(treeId);
+      if (!treeData) {
+        return res.status(404).send({ message: "Tree not found" });
+      }
+
+      const currentTree: LtpCurrentRealityTreeData = treeData;
+
+      // Find the node to update
+      const nodeToUpdate = this.findNode(currentTree.nodes, nodeId);
+      if (!nodeToUpdate) {
+        return res.status(404).send({ message: "Node not found" });
+      }
+
+      // Find and update the children of the node
+      const updatedChildren = childrenIds.map(childId => this.findNode(currentTree.nodes, childId)).filter(node => node !== null);
+
+      nodeToUpdate.children = updatedChildren;
+      await this.setData(treeId, JSON.stringify(currentTree));
+
+      return res.status(200).send(nodeToUpdate);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).send({ message: "Internal Server Error" });
+    }
+  };
+
   deleteNode = async (req: express.Request, res: express.Response) => {
     const treeId = req.params.id;
     const nodeId = req.body.nodeId;
@@ -114,10 +149,7 @@ export class CurrentRealityTreeController {
       }
 
       // Remove the node from the parent's children
-      parentNode.andChildren = parentNode.andChildren?.filter(
-        (child) => child.id !== nodeId
-      );
-      parentNode.orChildren = parentNode.orChildren?.filter(
+      parentNode.children = parentNode.children?.filter(
         (child) => child.id !== nodeId
       );
 
@@ -187,7 +219,8 @@ export class CurrentRealityTreeController {
           : this.getParentNodes(currentTree.nodes, parentNode.id),
         effect,
         causes,
-        validationResults
+        validationResults,
+        this.prompts
       );
 
       return res.sendStatus(200);
@@ -252,6 +285,7 @@ export class CurrentRealityTreeController {
         parentNode.type == "ude"
           ? undefined
           : this.getParentNodes(currentTree.nodes, parentNode.id),
+        this.prompts,
         effect,
         causes,
         validationResults
@@ -271,55 +305,62 @@ export class CurrentRealityTreeController {
     const causeStrings: string[] = req.body.causes;
 
     try {
-      const treeData = await this.getData(treeId);
-      if (!treeData) {
-        console.error("Tree not found");
-        return res.sendStatus(404);
-      }
+        const treeData = await this.getData(treeId);
+        if (!treeData) {
+            console.error("Tree not found");
+            return res.sendStatus(404);
+        }
 
-      const currentTree: LtpCurrentRealityTreeData = treeData;
-      const parentNode = this.findNode(currentTree.nodes, parentNodeId);
+        const currentTree: LtpCurrentRealityTreeData = treeData;
+        const parentNode = this.findNode(currentTree.nodes, parentNodeId);
 
-      if (!parentNode) {
-        console.error("Parent node not found");
-        return res.sendStatus(404);
-      }
+        if (!parentNode) {
+            console.error("Parent node not found");
+            return res.sendStatus(404);
+        }
 
-      // Convert cause strings to LtpCurrentRealityTreeDataNode objects
-      const newNodes = causeStrings.map(
-        (cause) =>
-          ({
+        let newNodes = causeStrings.map(cause => ({
             id: uuidv4(),
             description: cause,
-            type:
-              nodeType == "assumption"
-                ? "assumption"
-                : parentNode.type == "ude"
-                ? "directCause"
-                : "intermediateCause",
-            andChildren: [] as LtpCurrentRealityTreeDataNode[],
-            orChildren: [] as LtpCurrentRealityTreeDataNode[],
+            type: nodeType === "assumption" ? "assumption" : "directCause",
+            children: [] as LtpCurrentRealityTreeDataNode[],
             isRootCause: false,
             isLogicValidated: false,
-          } as LtpCurrentRealityTreeDataNode)
-      );
+        }));
 
-      // Add the new nodes to the parent node's children
-      if (!parentNode.andChildren) {
-        parentNode.andChildren = [];
-      }
-      parentNode.andChildren.push(...newNodes);
+        console.log("New nodes count: ", newNodes.length)
 
-      await this.setData(treeId, JSON.stringify(currentTree));
+        // If more than two cause strings, add an AND node
+        if (causeStrings.length > 1) {
+            const andNode = {
+                id: uuidv4(),
+                description: "AND node",
+                type: "and",
+                children: newNodes  as LtpCurrentRealityTreeDataNode[],
+                isRootCause: false,
+                isLogicValidated: false,
+            };
 
-      console.log("Added new nodes to tree");
+            newNodes = [andNode];
+        }
 
-      return res.send(newNodes);
+        // Add the new nodes to the parent node's children
+        if (!parentNode.children) {
+            parentNode.children = [];
+        }
+        parentNode.children.push(...newNodes);
+
+        await this.setData(treeId, JSON.stringify(currentTree));
+
+        console.log("Added new nodes to tree");
+
+        return res.send(newNodes);
     } catch (err) {
-      console.error(err);
-      return res.sendStatus(500);
+        console.error(err);
+        return res.sendStatus(500);
     }
-  };
+};
+
 
   getTree = async (req: express.Request, res: express.Response) => {
     const treeId = req.params.id;
@@ -356,10 +397,10 @@ export class CurrentRealityTreeController {
       }
 
       // Assuming a binary tree structure for simplicity. Modify as needed for your tree structure.
-      if (!parentNode.andChildren) {
-        parentNode.andChildren = [];
+      if (!parentNode.children) {
+        parentNode.children = [];
       }
-      parentNode.andChildren.push(newNode);
+      parentNode.children.push(newNode);
 
       await this.setData(treeId, JSON.stringify(currentTree));
       return res.sendStatus(200);
@@ -421,8 +462,7 @@ export class CurrentRealityTreeController {
                 id: uuidv4(),
                 description: effect,
                 type: "ude",
-                andChildren: [],
-                orChildren: [],
+                children: []
               } as LtpCurrentRealityTreeDataNode)
           )
       );
@@ -493,7 +533,7 @@ export class CurrentRealityTreeController {
 
       parentNode = this.findNode(currentTree.nodes, parentNodeId)!;
 
-      parentNode.andChildren = directCausesNodes;
+      parentNode.children = directCausesNodes;
 
       await this.setData(treeId, JSON.stringify(currentTree));
 
@@ -581,18 +621,11 @@ export class CurrentRealityTreeController {
       }
 
       // Check if any children have the node as a child
-      const foundParentInAndChildren = node.andChildren
-        ? this.findParentNode(node.andChildren, childId)
+      const foundParentInChildren = node.children
+        ? this.findParentNode(node.children, childId)
         : null;
-      if (foundParentInAndChildren) {
-        return foundParentInAndChildren;
-      }
-
-      const foundParentInOrChildren = node.orChildren
-        ? this.findParentNode(node.orChildren, childId)
-        : null;
-      if (foundParentInOrChildren) {
-        return foundParentInOrChildren;
+      if (foundParentInChildren) {
+        return foundParentInChildren;
       }
     }
     console.log(`No parent found for child ID: ${childId}`);
@@ -603,20 +636,14 @@ export class CurrentRealityTreeController {
     node: LtpCurrentRealityTreeDataNode,
     childId: string
   ): boolean => {
-    // Check in 'andChildren'
+    // Check in 'children'
     if (
-      node.andChildren &&
-      node.andChildren.some((child) => child.id === childId)
+      node.children &&
+      node.children.some((child) => child.id === childId)
     ) {
       return true;
     }
-    // Check in 'orChildren'
-    if (
-      node.orChildren &&
-      node.orChildren.some((child) => child.id === childId)
-    ) {
-      return true;
-    }
+
     // Not found in this node's direct children
     return false;
   };
@@ -631,18 +658,11 @@ export class CurrentRealityTreeController {
         console.log(`Node found with ID: ${id}`);
         return node;
       }
-      if (node.andChildren) {
-        const foundInAndChildren = this.findNode(node.andChildren, id);
-        if (foundInAndChildren) {
-          console.log(`Node found in 'andChildren' with ID: ${id}`);
-          return foundInAndChildren;
-        }
-      }
-      if (node.orChildren) {
-        const foundInOrChildren = this.findNode(node.orChildren, id);
-        if (foundInOrChildren) {
-          console.log(`Node found in 'orChildren' with ID: ${id}`);
-          return foundInOrChildren;
+      if (node.children) {
+        const foundInChildren = this.findNode(node.children, id);
+        if (foundInChildren) {
+          console.log(`Node found in 'children' with ID: ${id}`);
+          return foundInChildren;
         }
       }
     }

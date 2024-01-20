@@ -8,8 +8,8 @@ import {
   createClient,
 } from "redis";
 import { RedisClientType } from "@redis/client";
-import { EvidenceWebPageVectorStore } from "../../agentQueue/src/agents/vectorstore/evidenceWebPage.js";
-import { IEngineConstants } from "../../agentQueue/src/constants.js";
+import { EvidenceWebPageVectorStore } from "../../agents/src/agents/vectorstore/evidenceWebPage.js";
+import { IEngineConstants } from "../../agents/src/constants.js";
 import WebSocket from "ws";
 
 let redisClient: any;

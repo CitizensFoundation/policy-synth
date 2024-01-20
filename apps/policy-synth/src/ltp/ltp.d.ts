@@ -1,7 +1,9 @@
 declare module 'vectorizer';
 declare module 'dagre';
 
-type CrtNodeType = 'ude' | 'directCause' | 'assumption' | 'intermediateCause' | 'rootCause';
+type CrtNodeType = 'ude' | 'directCause' | 'assumption' | 'intermediateCause' | 'rootCause' | 'criticalRootCause' | 'and' | 'xor' | 'mag';
+
+type CrtNodeConnectionType = 'and' | 'xor' | 'mag';
 
 interface CrtDebugData  {
   systemPromptUsedForGeneration?: string;
@@ -15,8 +17,7 @@ interface LtpCurrentRealityTreeDataNode {
   isRootCause?: boolean;
   isLogicValidated?: boolean;
   debug?: CrtDebugData;
-  andChildren?: LtpCurrentRealityTreeDataNode[];
-  orChildren?: LtpCurrentRealityTreeDataNode[];
+  children?: LtpCurrentRealityTreeDataNode[];
 }
 
 interface LtpCurrentRealityTreeData {

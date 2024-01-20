@@ -6,10 +6,10 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 
-import { CpsStageBase } from '../cps-stage-base.js';
 import { LtpServerApi } from './LtpServerApi.js';
 import { LtpCurrentRealityTree } from './ltp-current-reality-tree.js';
 import { MdMenu } from '@material/web/menu/menu.js';
+import { YpBaseElement } from '../@yrpri/common/yp-base-element.js';
 
 @customElement('ltp-current-reality-tree-node')
 export class LtpCurrentRealityTreeNode extends YpBaseElement {

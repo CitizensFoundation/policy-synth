@@ -63,14 +63,14 @@ export class LtpAiChatElement extends YpBaseElement {
   @property({ type: Array })
   refinedCausesSuggestions: string[] | undefined = undefined;
 
-  @property({ type: Array })
-  refinedAssumptionSuggestions: string[] | undefined = undefined;
-
   @property({ type: Boolean })
   jsonLoading = false;
 
   @property({ type: Boolean })
   lastChainCompletedAsValid = false;
+
+  @property({ type: Array })
+  lastValidateCauses: string[] | undefined = undefined;
 
   isCreatingCauses: boolean = false;
 
@@ -127,19 +127,21 @@ export class LtpAiChatElement extends YpBaseElement {
     }
 
     if (jsonContentParsed) {
-      if (jsonContentParsed.suggestedCauses) {
+      if (
+        this.lastChainCompletedAsValid &&
+        this.lastValidateCauses &&
+        this.lastValidateCauses.length > 0
+      ) {
+        this.refinedCausesSuggestions = this.lastValidateCauses;
+      } else if (jsonContentParsed.suggestedCauses) {
         this.refinedCausesSuggestions = jsonContentParsed.suggestedCauses;
-      }
-      if (jsonContentParsed.suggestedAssumptions) {
-        this.refinedAssumptionSuggestions =
-          jsonContentParsed.suggestedAssumptions;
       }
     }
   };
 
   static override get styles() {
     return [
-      Layouts,
+      super.styles,
       css`
         :host {
           display: flex;
@@ -215,7 +217,7 @@ export class LtpAiChatElement extends YpBaseElement {
           line-height: 1.35;
           margin-bottom: 0px;
           border-radius: 10px;
-          max-width: 88%;
+          max-width: 89%;
           margin-top: 12px;
         }
 
@@ -252,7 +254,7 @@ export class LtpAiChatElement extends YpBaseElement {
           margin-top: 8px;
         }
 
-        .refinedSuggestions  {
+        .refinedSuggestions {
           padding: 0;
           border-radius: 8px;
           margin: 16px;
@@ -433,31 +435,30 @@ export class LtpAiChatElement extends YpBaseElement {
       }
 
       if (selectedAssumptions.length) {
-      const assumptionsNodes = await this.api.addDirectCauses(
-	this.crtId,
-	this.parentNodeId,
-	selectedAssumptions,
-	'assumption'
-      );
-      nodes = nodes.concat(assumptionsNodes);
-    }
+        const assumptionsNodes = await this.api.addDirectCauses(
+          this.crtId,
+          this.parentNodeId,
+          selectedAssumptions,
+          "assumption"
+        );
+        nodes = nodes.concat(assumptionsNodes);
+      }
 
-      this.fireGlobal('add-nodes', {
-      parentNodeId: this.parentNodeId,
-      nodes,
-    });
+      this.fireGlobal("add-nodes", {
+        parentNodeId: this.parentNodeId,
+        nodes,
+      });
 
-    await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-    this.fire('close-add-cause-dialog');
+      this.fire("close-add-cause-dialog");
 
-    this.isCreatingCauses = false;
-
+      this.isCreatingCauses = false;
     } else {
-      this.fire('validate-selected-causes', selectedCauses);
+      this.fire("validate-selected-causes", selectedCauses);
     }
 
-    this.fire('scroll-down-enabled');
+    this.fire("scroll-down-enabled");
   }
 
   get isError() {
@@ -473,35 +474,56 @@ export class LtpAiChatElement extends YpBaseElement {
   }
 
   renderRefinedSuggestions() {
-    if (!this.refinedCausesSuggestions && !this.refinedAssumptionSuggestions) {
+    if (!this.refinedCausesSuggestions) {
       return nothing;
     }
 
-    const renderSection = (suggestions: string[], headerText: string, typeClass: string) => {
+    const renderSection = (
+      suggestions: string[],
+      headerText: string,
+      typeClass: string
+    ) => {
       if (!suggestions || suggestions.length === 0) return nothing;
 
       return html`
-      <div class="layout horizontal center-center">
-      <div class="suggestionsHeader">${headerText}</div>
-
-      </div>
-        <div class="layout vertical refinedSuggestions ${typeClass} wrap" role="group">
-          ${suggestions.map((text) => html`
-            <label class="layout horizontal refinedContainer">
-              <md-checkbox aria-label="${text}" class="${typeClass}Checkbox" data-type="${typeClass}" touch-target="wrapper"></md-checkbox>
-              <div class="labelText">${text}</div>
-            </label>
-          `)}
+        <div class="layout horizontal center-center">
+          <div class="suggestionsHeader">${headerText}</div>
+        </div>
+        <div
+          class="layout vertical refinedSuggestions ${typeClass} wrap"
+          role="group"
+        >
+          ${suggestions.map(
+            (text) => html`
+              <label class="layout horizontal refinedContainer">
+                <md-checkbox
+                  aria-label="${text}"
+                  .checked="${this.lastChainCompletedAsValid}"
+                  .disabled="${this.lastChainCompletedAsValid}"
+                  class="${typeClass}Checkbox"
+                  data-type="${typeClass}"
+                  touch-target="wrapper"
+                ></md-checkbox>
+                <div class="labelText">${text}</div>
+              </label>
+            `
+          )}
         </div>
       `;
     };
 
     return html`
-      ${renderSection(this.refinedCausesSuggestions ?? [], 'Suggested Direct Causes', 'directCause')}
-      ${renderSection(this.refinedAssumptionSuggestions ?? [], 'Suggested Assumptions', 'assumption')}
+      ${renderSection(
+        this.refinedCausesSuggestions ?? [],
+        "Suggested Direct Causes",
+        "directCause"
+      )}
+
       <div class="layout horizontal center-center">
         <md-filled-button @click="${() => this.addSelected()}">
-          ${this.t('Add selected')}
+          ${this.lastChainCompletedAsValid
+            ? this.t("Add selected")
+            : this.t("Validate selected")}
         </md-filled-button>
       </div>
     `;

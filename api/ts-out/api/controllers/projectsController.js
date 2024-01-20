@@ -1,8 +1,8 @@
 import express from "express";
 import axios from "axios";
 import { createClient, } from "redis";
-import { EvidenceWebPageVectorStore } from "../../agentQueue/src/agents/vectorstore/evidenceWebPage.js";
-import { IEngineConstants } from "../../agentQueue/src/constants.js";
+import { EvidenceWebPageVectorStore } from "../../agents/src/agents/vectorstore/evidenceWebPage.js";
+import { IEngineConstants } from "../../agents/src/constants.js";
 let redisClient;
 if (process.env.REDIS_URL) {
     redisClient = createClient({
