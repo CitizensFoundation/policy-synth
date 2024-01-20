@@ -17,8 +17,8 @@ export class PsBaseValidationAgent extends Base {
       maxTokens: IEngineConstants.validationModel.maxOutputTokens,
       modelName: IEngineConstants.validationModel.name,
       verbose: IEngineConstants.validationModel.verbose,
-      streaming: true,
-    });
+      streaming: true
+   });
 
     const webSocket = this.options.webSocket;
 
@@ -79,11 +79,23 @@ export class PsBaseValidationAgent extends Base {
   async execute(): Promise<PsValidationAgentResult> {
     await this.beforeExecute();
 
-    const result = await this.performExecute();
+    let result;
 
-    console.log(
-      `Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`
-    );
+    try {
+      result = await this.performExecute();
+      console.log(
+        `Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`
+      );
+    } catch (e) {
+      //TODO: Send airbrake error
+      console.error("Unkown system error in validation agent")
+      console.error(e);
+      result = {
+        isValid: false,
+        validationErrors: ["Unkown system error in validation agent"],
+        nextAgent: this.options.nextAgent,
+      };
+    }
 
     result.nextAgent = result.nextAgent || this.options.nextAgent;
 

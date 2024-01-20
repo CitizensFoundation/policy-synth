@@ -1,7 +1,7 @@
 {
-  "name": "innovation-engine",
+  "name": "@policy-synth/api",
   "version": "1.0.0",
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "main": "src/ts-out/queue.js",
   "devDependencies": {
     "@tsconfig/node18": "^18.2.0",

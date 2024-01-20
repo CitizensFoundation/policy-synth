@@ -32,6 +32,10 @@ import { LtpServerApi } from "./LtpServerApi.js";
 import "./chat/ltp-chat-assistant.js";
 import { MdDialog } from "@material/web/dialog/dialog.js";
 import { LtpStreamingAIResponse } from "./LtpStreamingAIResponse.js";
+import { YpBaseElement } from "../@yrpri/common/yp-base-element.js";
+import { YpAccessHelpers } from "../@yrpri/common/YpAccessHelpers.js";
+import { YpNavHelpers } from "../@yrpri/common/YpNavHelpers.js";
+import { LtpCurrentRealityTree } from "./ltp-current-reality-tree.js";
 
 const TESTING = false;
 
@@ -41,6 +45,9 @@ const nodeTypes = [
   "assumption",
   "intermediateCause",
   "rootCause",
+  "and",
+  "xor",
+  "mag",
 ];
 
 @customElement("ltp-manage-crt")
@@ -63,6 +70,9 @@ export class LtpManageCrt extends CpsStageBase {
   @property({ type: Object })
   nodeToEdit: LtpCurrentRealityTreeDataNode | undefined;
 
+  @property({ type: Array })
+  allCausesExceptCurrentToEdit: LtpCurrentRealityTreeDataNode[] = [];
+
   @property({ type: Boolean })
   showDeleteConfirmation = false;
 
@@ -70,10 +80,16 @@ export class LtpManageCrt extends CpsStageBase {
   activeTabIndex = 0;
 
   @property({ type: String })
+  currentlySelectedCauseIdToAddAsChild: string | undefined;
+
+  @property({ type: String })
   AIConfigReview: string | undefined;
 
   @property({ type: Boolean })
   isReviewingCrt = false;
+
+  @query("ltp-current-reality-tree")
+  crtElement!: LtpCurrentRealityTree;
 
   api: LtpServerApi;
 
@@ -112,6 +128,8 @@ export class LtpManageCrt extends CpsStageBase {
   openEditNodeDialog(event: CustomEvent) {
     this.nodeToEditInfo = event.detail;
 
+    this.currentlySelectedCauseIdToAddAsChild = undefined;
+
     this.nodeToEdit = this.findNodeRecursively(
       this.crt?.nodes || [],
       this.nodeToEditInfo!.nodeId
@@ -122,7 +140,15 @@ export class LtpManageCrt extends CpsStageBase {
       return;
     }
 
-    (this.$$("#editNodeDialog") as MdDialog).show();
+    const childrenIds = (this.nodeToEdit.children || []).map(
+      (child) => child.id
+    );
+    childrenIds.push(this.nodeToEdit.id);
+
+    this.allCausesExceptCurrentToEdit =
+      this.crtElement!.getAllCausesExcept(childrenIds);
+
+      (this.$$("#editNodeDialog") as MdDialog).show();
   }
 
   closeEditNodeDialog() {
@@ -131,13 +157,18 @@ export class LtpManageCrt extends CpsStageBase {
     this.nodeToEditInfo = undefined;
   }
 
+  addChildChanged() {
+    const effectIdSelect = this.$$("#addEffectToNodeId") as HTMLSelectElement;
+    this.currentlySelectedCauseIdToAddAsChild = effectIdSelect.value;
+  }
+
   async handleSaveEditNode() {
     const updatedDescription = (
       this.$$("#nodeDescription") as MdOutlinedTextField
     ).value;
 
     // Retrieve the selected node type from md-select
-    const nodeTypeSelect = this.$$("#nodeTypeSelect") as HTMLSelectElement; // Update the ID to match your select element
+    const nodeTypeSelect = this.$$("#nodeTypeSelect") as HTMLSelectElement;
     const selectedNodeType = nodeTypeSelect.value;
 
     if (this.nodeToEdit) {
@@ -188,11 +219,8 @@ export class LtpManageCrt extends CpsStageBase {
       return;
     }
     nodes.forEach((node) => {
-      if (node.andChildren) {
-        this.removeNodeRecursively(node.andChildren, nodeId);
-      }
-      if (node.orChildren) {
-        this.removeNodeRecursively(node.orChildren, nodeId);
+      if (node.children) {
+        this.removeNodeRecursively(node.children, nodeId);
       }
     });
   }
@@ -246,7 +274,7 @@ export class LtpManageCrt extends CpsStageBase {
     `;
   }
 
-  renderEditNodeDialog() {
+  enderEditNodeDialog() {
     return html`
       <md-dialog
         id="editNodeDialog"
@@ -278,7 +306,7 @@ export class LtpManageCrt extends CpsStageBase {
                       (type) => html`
                         <md-select-option
                           value="${type}"
-                          ?selected="${this.nodeToEditInfo.element
+                          ?selected="${this.nodeToEditInfo!.element
                             .crtNodeType == type}"
                         >
                           <div slot="headline">
@@ -288,14 +316,62 @@ export class LtpManageCrt extends CpsStageBase {
                       `
                     )}
                 </md-outlined-select>
+                <div class="flex"></div>
 
+                <div class="childEditing">
+                <div class="layout horizontal">
+                  <md-outlined-select
+                    menuPositioning="fixed"
+                    label="Add as Effect to"
+                    id="addEffectToNodeId"
+                    @change="${this.addChildChanged}"
+                  >
+                    ${this.allCausesExceptCurrentToEdit.map(
+                      (node) => html`
+                        <md-select-option value="${node.id}">
+                          <div slot="headline">${node.description}</div>
+                        </md-select-option>
+                      `
+                    )}
+                  </md-outlined-select>
+                  ${this.currentlySelectedCauseIdToAddAsChild
+                    ? html`
+                        <md-text-button
+                          class="addButton"
+                          @click="${this.addChildToCurrentNode}"
+                        >
+                          Add as an Effect
+                        </md-text-button>
+                      `
+                    : nothing}
+                </div>
+
+                ${this.nodeToEdit?.children &&
+                this.nodeToEdit?.children.length > 0
+                  ? html`
+                      <div class="childrenList">
+                        ${this.nodeToEdit.children.map(
+                          (child) => html`
+                            <div class="childItem">
+                              <span>${child.description}</span>
+                              <md-icon-button
+                                @click="${() => this.removeChildNode(child.id)}"
+                              >
+                                <md-icon>delete</md-icon>
+                              </md-icon-button>
+                            </div>
+                          `
+                        )}
+                      </div>
+                    `
+                  : nothing}
+                </div>
                 <div class="flex"></div>
 
                 <div class="layout horizontal center-center">
                   <md-text-button
                     class="automaticCreateButton"
-                    ?hidden="${this.nodeToEditInfo.element.crtNodeType ==
-                    'rootCause'}"
+                    ?hidden="${this.nodeToEditInfo.element.type == "rootCause"}"
                     @click="${this.createDirectCauses}"
                   >
                     Automatically create nodes (for testing)
@@ -324,8 +400,92 @@ export class LtpManageCrt extends CpsStageBase {
   }
 
   updatePath() {
-    if (this.crt && this.crt.id) {
-      window.history.pushState({}, '', `/crt/${this.crt.id}`);
+    const dontDoIt = true;
+    if (!dontDoIt) {
+      if (this.crt && this.crt.id) {
+        window.history.pushState({}, "", `/group/${this.crt.id}`);
+      } else {
+        console.error("Could not fetch current tree: " + this.groupId);
+      }
+    }
+  }
+
+  async addChildToCurrentNode() {
+    if (this.currentlySelectedCauseIdToAddAsChild && this.nodeToEdit) {
+      if (!this.nodeToEdit.children) {
+        this.nodeToEdit.children = [];
+      }
+
+      // Find the node in this.crt corresponding to the selected ID
+      const childNodeToAdd = this.findNodeById(this.crt!.nodes, this.currentlySelectedCauseIdToAddAsChild);
+
+      if (childNodeToAdd) {
+        // Add the full node object to this.nodeToEdit.children
+        this.nodeToEdit.children.unshift(childNodeToAdd);
+
+        // Update the node on the server side with the new children IDs
+        try {
+          await this.api.updateNodeChildren(
+            this.groupId,
+            this.nodeToEdit.id,
+            this.nodeToEdit.children.map(child => child.id)
+          );
+
+          // Update local state
+          this.crt = { ...this.crt } as any;
+          this.requestUpdate();
+        } catch (error) {
+          console.error("Error updating node with new child ID:", error);
+        }
+      } else {
+        console.error(`Child node with ID ${this.currentlySelectedCauseIdToAddAsChild} not found`);
+      }
+    }
+  }
+
+  // Helper function to find a node by ID
+  findNodeById(nodes: LtpCurrentRealityTreeDataNode[], id: string): LtpCurrentRealityTreeDataNode | null {
+    for (const node of nodes) {
+      if (node.id === id) {
+        return node;
+      }
+      if (node.children) {
+        const foundNode = this.findNodeById(node.children, id);
+        if (foundNode) {
+          return foundNode;
+        }
+      }
+    }
+    return null;
+  }
+
+
+  async removeChildNode(childIdToRemove: string) {
+    if (this.nodeToEdit && this.nodeToEdit.children) {
+      // Filter out the child ID to remove
+      this.nodeToEdit.children = this.nodeToEdit.children.filter(
+        (child) => child.id !== childIdToRemove
+      );
+
+      // Prepare the data for the API call
+      const updatedChildrenIds = this.nodeToEdit.children.map(
+        (child) => child.id
+      );
+
+      // Call API to update the node
+      try {
+        await this.api.updateNodeChildren(
+          this.groupId,
+          this.nodeToEdit.id,
+          updatedChildrenIds
+        );
+
+        this.crt = { ...this.crt } as any;
+        this.requestUpdate();
+      } catch (error) {
+        console.error("Error updating node after removing child ID:", error);
+        // Handle error
+      }
     } else {
       console.error('Could not fetch current tree: ' + this.currentTreeId);
     }
@@ -386,6 +546,18 @@ export class LtpManageCrt extends CpsStageBase {
           color: var(--md-sys-color-on-primary-container);
           background-color: var(--md-sys-color-primary-container);
           padding: 8px;
+        }
+
+        .childEditing {
+          color: var(--md-sys-color-on-surface-variant);
+          background-color: var(--md-sys-color-surface-variant);
+          padding: 16px;
+          border-radius: 8px;
+        }
+
+        .childrenList {
+          height: 100px;
+          overflow-y: auto;
         }
 
         md-icon-button {
@@ -737,14 +909,8 @@ export class LtpManageCrt extends CpsStageBase {
       if (node.id === nodeId) {
         return node;
       }
-      if (node.andChildren) {
-        const foundNode = this.findNodeRecursively(node.andChildren, nodeId);
-        if (foundNode) {
-          return foundNode;
-        }
-      }
-      if (node.orChildren) {
-        const foundNode = this.findNodeRecursively(node.orChildren, nodeId);
+      if (node.children) {
+        const foundNode = this.findNodeRecursively(node.children, nodeId);
         if (foundNode) {
           return foundNode;
         }
@@ -788,7 +954,9 @@ export class LtpManageCrt extends CpsStageBase {
                 <ltp-chat-assistant
                   .nodeToAddCauseTo="${this.nodeToAddCauseTo}"
                   method="dialog"
-                  .textInputLabel="${this.t('Enter sufficent direct causes to the effect')}"
+                  .textInputLabel="${this.t(
+                    "Enter sufficent direct causes to the effect"
+                  )}"
                   .crtData="${this.crt}"
                   @close="${this.closeAddCauseDialog}"
                 >

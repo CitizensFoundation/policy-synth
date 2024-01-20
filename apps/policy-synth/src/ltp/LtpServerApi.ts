@@ -1,15 +1,14 @@
 import { YpServerApi } from '../@yrpri/common/YpServerApi.js';
 
 export class LtpServerApi extends YpServerApi {
+  baseLtpPath = '/ltp/crt/';
   constructor(urlPath: string = '/api') {
     super();
     this.baseUrlPath = urlPath;
   }
 
-  public async getCrt(id: string | number): Promise<LtpCurrentRealityTreeData> {
-    return (await this.fetchWrapper(
-      this.baseUrlPath + `/crt/${id}`
-    )) as unknown as LtpCurrentRealityTreeData;
+  public async getCrt(groupId: number): Promise<LtpCurrentRealityTreeData> {
+    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
   }
 
   public createTree(
@@ -25,12 +24,32 @@ export class LtpServerApi extends YpServerApi {
     ) as Promise<LtpCurrentRealityTreeData>;
   }
 
+  public updateNodeChildren(
+    treeId: string | number,
+    nodeId: string,
+    childrenIds: string[]
+  ): Promise<void> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseLtpPath}${treeId}/updateChildren`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          nodeId,
+          childrenIds
+        }),
+      },
+      false
+    ) as Promise<void>;
+  }
+
+
   public reviewConfiguration(
+    groupId: number,
     wsClientId: string,
     crt: LtpCurrentRealityTreeData
   ): Promise<string> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/reviewConfiguration`,
+      this.baseUrlPath + `${this.baseLtpPath}${groupId}/reviewConfiguration`,
       {
         method: 'PUT',
         body: JSON.stringify({
@@ -40,8 +59,7 @@ export class LtpServerApi extends YpServerApi {
         }),
       },
       false,
-      undefined,
-      true
+      undefined
     ) as Promise<string>;
   }
 
@@ -50,7 +68,7 @@ export class LtpServerApi extends YpServerApi {
     parentNodeId: string
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/${treeId}/createDirectCauses`,
+      this.baseUrlPath + `${this.baseLtpPath}${treeId}/createDirectCauses`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -68,7 +86,7 @@ export class LtpServerApi extends YpServerApi {
     type: CrtNodeType
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/${treeId}/addDirectCauses`,
+      this.baseUrlPath + `${this.baseLtpPath}${treeId}/addDirectCauses`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -103,7 +121,7 @@ export class LtpServerApi extends YpServerApi {
     });
 
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/${crtTreeId}/getRefinedCauses`,
+      this.baseUrlPath + `${this.baseLtpPath}${crtTreeId}/getRefinedCauses`,
       {
         method: 'POST',
         body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog, effect, causes, validationErrors }),
@@ -133,7 +151,7 @@ export class LtpServerApi extends YpServerApi {
     });
 
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/${crtTreeId}/runValidationChain`,
+      this.baseUrlPath + `${this.baseLtpPath}${crtTreeId}/runValidationChain`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -154,7 +172,7 @@ export class LtpServerApi extends YpServerApi {
     updatedNode: LtpCurrentRealityTreeDataNode
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/${treeId}`,
+      this.baseUrlPath + `${this.baseLtpPath}${treeId}`,
       {
         method: 'PUT',
         body: JSON.stringify(updatedNode),
@@ -168,7 +186,7 @@ export class LtpServerApi extends YpServerApi {
     nodeId: string
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/crt/${treeId}`,
+      this.baseUrlPath + `${this.baseLtpPath}${treeId}`,
       {
         method: 'DELETE',
         body: JSON.stringify({ nodeId }),

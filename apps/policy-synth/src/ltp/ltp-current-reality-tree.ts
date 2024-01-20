@@ -17,20 +17,33 @@ type Cell = dia.Element | dia.Link;
 
 const TESTING = false;
 
+const nodeConnectionTypes = ["and", "xor", "mag"];
+
 class MyShapeView extends dia.ElementView {
   override render() {
     //@ts-ignore
     super.render();
     //@ts-ignore
-    const htmlMarkup = this.model.get('markup');
+    const htmlMarkup = this.model.get("markup");
+
+    //TODO: Make TS work here
+    const nodeType = this.model.attributes.nodeType as CrtNodeType;
+
+    let foreignObjectWidth, foreignObjectHeight;
+
+    if (nodeConnectionTypes.includes(nodeType)) {
+      foreignObjectWidth = 90;
+      foreignObjectHeight = 40;
+    } else {
+      foreignObjectWidth = nodeType === "ude" ? 185 : 185;
+      foreignObjectHeight = nodeType === "ude" ? 107 : 107;
+    }
 
     // Create a foreignObject with a set size and style
-    const foreignObject = V('foreignObject', {
-      //@ts-ignore
-      width: this.model.attributes.nodeType === 'ude' ? 185 : 185,
-      //@ts-ignore
-      height: this.model.attributes.nodeType === 'ude' ? 135 : 107,
-      style: 'overflow: visible; display: block;',
+    const foreignObject = V("foreignObject", {
+      width: foreignObjectWidth,
+      height: foreignObjectHeight,
+      style: "overflow: visible; display: block;",
     }).node;
 
     // Append the foreignObject to this.el
@@ -39,31 +52,40 @@ class MyShapeView extends dia.ElementView {
 
     // Defer the addition of the inner div with the HTML content
     setTimeout(() => {
-      const div = document.createElement('div');
-      div.setAttribute('class', 'html-element');
-      div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-      div.style.width =
-        //@ts-ignore
-        this.model.attributes.nodeType === 'ude' ? '185px' : '185px';
-      div.style.height =
-        //@ts-ignore
-        this.model.attributes.nodeType === 'ude' ? '135px' : '107px';
+      const div = document.createElement("div");
+      div.setAttribute("class", "html-element");
+      div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+
+      if (nodeConnectionTypes.includes(nodeType)) {
+        div.style.width = "90px";
+        div.style.height = "40px";
+        div.className = "connectorContainer";
+        div.innerHTML = `<ltp-current-reality-tree-connector
+          nodeId="${(this as any).model.attributes.nodeId}"
+          crtId="${(this as any).model.attributes.crtId}"
+          crtNodeType="${(this as any).model.attributes.nodeType}"
+        >
+        </ltp-current-reality-tree-connector>`;
+      } else {
+        div.style.width = nodeType === "ude" ? "185px" : "185px";
+        div.style.height = nodeType === "ude" ? "107px" : "107px";
         div.className = `causeContainer  ${
-        //@ts-ignore
-        this.model.attributes.isRootCause ? 'rootCauseContainer' : ''
-      } ${
-        //@ts-ignore
-        this.model.attributes.nodeType=="assumption" as CrtNodeType ? 'assumptionCauseContainer' : ''
-        //@ts-ignore
-      } ${this.model.attributes.nodeType == 'ude' ? 'udeContainer' : ''}`;
-      div.innerHTML = `<ltp-current-reality-tree-node
-        nodeId="${(this as any).model.attributes.nodeId}"
-        crtId="${(this as any).model.attributes.crtId}"
-        crtNodeType="${(this as any).model.attributes.nodeType}"
-        ${(this as any).model.attributes.isRootCause ? 'isRootCause=1' : ''}
-        causeDescription="${(this as any).model.attributes.label}"
-      >
-      </ltp-current-reality-tree-node>`;
+          //@ts-ignore
+          this.model.attributes.isRootCause ? "rootCauseContainer" : ""
+        } ${
+          nodeType == ("assumption" as CrtNodeType)
+            ? "assumptionCauseContainer"
+            : ""
+        } ${nodeType == "ude" ? "udeContainer" : ""}`;
+        div.innerHTML = `<ltp-current-reality-tree-node
+          nodeId="${(this as any).model.attributes.nodeId}"
+          crtId="${(this as any).model.attributes.crtId}"
+          crtNodeType="${(this as any).model.attributes.nodeType}"
+          ${(this as any).model.attributes.isRootCause ? "isRootCause=1" : ""}
+          causeDescription="${(this as any).model.attributes.label}"
+        >
+        </ltp-current-reality-tree-node>`;
+      }
 
       // Append the div to the foreignObject
       foreignObject.appendChild(div);
@@ -198,10 +220,14 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     this.addNodes(event.detail.parentNodeId, event.detail.nodes);
   }
 
-  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(
+    changedProperties: Map<string | number | symbol, unknown>
+  ): void {
     super.updated(changedProperties);
-    if (changedProperties.has('crtData') && this.crtData) {
+    if (changedProperties.has("crtData") && this.crtData) {
+      this.paper.freeze();
       this.updateGraphWithCRTData(this.crtData);
+      this.paper.unfreeze();
     }
   }
 
@@ -288,13 +314,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   ): LtpCurrentRealityTreeDataNode[] | undefined => {
     for (const node of nodes) {
       // Check if the current node is a direct child of this node
-      const isDirectChild =
-        node.andChildren?.some(
-          (child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId
-        ) ||
-        node.orChildren?.some(
-          (child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId
-        );
+      const isDirectChild = node.children?.some(
+        (child: LtpCurrentRealityTreeDataNode) => child.id === currentNodeId
+      );
 
       if (isDirectChild) {
         parentNodes.push(node);
@@ -302,16 +324,12 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         return this.getParentNodes(nodes, node.id, parentNodes);
       }
 
-      // Recursively check in andChildren and orChildren
-      const andChildrenResult = node.andChildren
-        ? this.getParentNodes(node.andChildren, currentNodeId, parentNodes)
-        : undefined;
-      const orChildrenResult = node.orChildren
-        ? this.getParentNodes(node.orChildren, currentNodeId, parentNodes)
+      // Recursively check in children
+      const childrenResult = node.children
+        ? this.getParentNodes(node.children, currentNodeId, parentNodes)
         : undefined;
 
-      if (andChildrenResult || orChildrenResult) {
-        // If either returns a result, we found the parent node
+      if (childrenResult) {
         if (!parentNodes.includes(node)) {
           parentNodes.push(node);
         }
@@ -335,29 +353,26 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       }
 
       // Check if any children have the node as a child
-      const foundParentInAndChildren = node.andChildren ? this.findParentNode(node.andChildren, childId) : null;
-      if (foundParentInAndChildren) {
-        return foundParentInAndChildren;
-      }
-
-      const foundParentInOrChildren = node.orChildren ? this.findParentNode(node.orChildren, childId) : null;
-      if (foundParentInOrChildren) {
-        return foundParentInOrChildren;
+      const foundParentInChildren = node.children
+        ? this.findParentNode(node.children, childId)
+        : null;
+      if (foundParentInChildren) {
+        return foundParentInChildren;
       }
     }
     console.log(`No parent found for child ID: ${childId}`);
     return null;
   };
 
-  private isParentNode = (node: LtpCurrentRealityTreeDataNode, childId: string): boolean => {
-    // Check in 'andChildren'
-    if (node.andChildren && node.andChildren.some(child => child.id === childId)) {
+  private isParentNode = (
+    node: LtpCurrentRealityTreeDataNode,
+    childId: string
+  ): boolean => {
+    // Check in 'children'
+    if (node.children && node.children.some((child) => child.id === childId)) {
       return true;
     }
-    // Check in 'orChildren'
-    if (node.orChildren && node.orChildren.some(child => child.id === childId)) {
-      return true;
-    }
+
     // Not found in this node's direct children
     return false;
   };
@@ -372,18 +387,11 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         console.log(`Node found with ID: ${id}`);
         return node;
       }
-      if (node.andChildren) {
-        const foundInAndChildren = this.findNode(node.andChildren, id);
-        if (foundInAndChildren) {
-          console.log(`Node found in 'andChildren' with ID: ${id}`);
-          return foundInAndChildren;
-        }
-      }
-      if (node.orChildren) {
-        const foundInOrChildren = this.findNode(node.orChildren, id);
-        if (foundInOrChildren) {
-          console.log(`Node found in 'orChildren' with ID: ${id}`);
-          return foundInOrChildren;
+      if (node.children) {
+        const foundInChildren = this.findNode(node.children, id);
+        if (foundInChildren) {
+          console.log(`Node found in 'children' with ID: ${id}`);
+          return foundInChildren;
         }
       }
     }
@@ -408,9 +416,9 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       el: paperContainer,
       model: this.graph,
       cellViewNamespace: this.jointNamespace,
-      width: '100%',
-      height: '100%',
-      gridSize: 10,
+      width: "100%",
+      height: "100%",
+      gridSize: 20,
       panning: {
         enabled: false, // Initially disabled
         modifiers: 'mouseMiddle', // Enable panning with the middle mouse button
@@ -429,7 +437,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       background: { color: 'var(--md-sys-color-surface)' },
       clickThreshold: 10,
       defaultConnector: {
-        name: 'rounded',
+        name: "normal",
         // Add attributes for the arrowheads to point upwards
       },
       defaultRouter: {
@@ -553,14 +561,14 @@ export class LtpCurrentRealityTree extends CpsStageBase {
   private applyDirectedGraphLayout(): void {
     layout.DirectedGraph.layout(this.graph, {
       setLinkVertices: true,
-      align: 'UR',
-      ranker: 'longest-path',
-      rankDir: 'BT', // Adjust as needed
-      marginX: 50,
-      marginY: 50,
+      align: "UR",
+      ranker: "longest-path",
+      rankDir: "BT", // Adjust as needed
+      marginX: 20,
+      marginY: 40,
       nodeSep: 120,
       edgeSep: 120,
-      rankSep: 120,
+      rankSep: 80,
     });
 
     // Additional manual adjustments if needed
@@ -614,7 +622,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
   private updatePaperSize(): void {
     if (!this.paper) {
-      console.warn('Paper not initialized');
+      console.warn("Paper not initialized");
       return;
     }
 
@@ -628,8 +636,8 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       preserveAspectRatio: true,
       //@ts-ignore
       contentArea: this.graph.getBBox(),
-      verticalAlign: 'top',
-      horizontalAlign: 'middle',
+      verticalAlign: "top",
+      horizontalAlign: "middle",
     });
   }
 
@@ -642,7 +650,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
       nodeId: node.id,
       nodeType: node.type,
       crtId: this.crtData?.id,
-      isRootCause: node.type=="rootCause",
+      isRootCause: node.type == "rootCause",
       attrs: {
         //cause: node.description,
       },
@@ -656,73 +664,57 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     // Clear the existing graph elements
     this.graph.clear();
     this.elements = {};
+    const renderedNodes = new Set();
 
-    console.debug(
-      'Updating graph with CRT data:',
-      JSON.stringify(crtData, null, 2)
-    ); // Log the entire data being processed
-
-    // Function to recursively create elements/nodes
     const createNodes = (nodeData: LtpCurrentRealityTreeDataNode) => {
-      console.log('Creating node for:', nodeData.id); // Log the ID of the node being processed
+      // Skip node creation if already rendered
+      if (renderedNodes.has(nodeData.id)) {
+        return;
+      }
 
       const el = this.createElement(nodeData);
       this.elements[nodeData.id] = el;
+      renderedNodes.add(nodeData.id); // Mark this node as rendered
 
-      const processChildren = (children: LtpCurrentRealityTreeDataNode[]) => {
-        children.forEach(childNode => {
+      if (nodeData.children) {
+        nodeData.children.forEach((childNode) => {
           createNodes(childNode); // Recursive call
         });
-      };
-
-      if (nodeData.andChildren) {
-        processChildren(nodeData.andChildren);
-      }
-      if (nodeData.orChildren) {
-        processChildren(nodeData.orChildren);
       }
     };
 
-    // Create all elements/nodes
-    crtData.nodes.forEach(createNodes);
-
-    // Create links for all 'andChildren' and 'orChildren'
-    const createLinks = (
-      source: dia.Element,
-      children: LtpCurrentRealityTreeDataNode[]
-    ) => {
-      children.forEach(childNode => {
+    // Create links between nodes and their children
+    const createLinks = (sourceId: string, children: LtpCurrentRealityTreeDataNode[]) => {
+      children.forEach((childNode) => {
         const targetElement = this.elements[childNode.id];
         if (!targetElement) {
-          console.error(
-            `Target element not found for node ID: ${childNode.id}`
-          );
+          console.error(`Target element not found for node ID: ${childNode.id}`);
           return;
         }
 
-        console.log('Creating link from', source.id, 'to', childNode.id); // Log the source and target IDs
-        this.createLink(source, targetElement);
-
-        // Recursively create links for nested children
-        if (childNode.andChildren) {
-          createLinks(targetElement, childNode.andChildren);
+        // Create a link only if it doesn't already exist to avoid duplicates
+        if (!this.graph.getCell(childNode.id)) {
+          this.createLink(this.elements[sourceId], targetElement);
         }
-        if (childNode.orChildren) {
-          createLinks(targetElement, childNode.orChildren);
+
+        if (childNode.children) {
+          createLinks(childNode.id, childNode.children); // Recursive call
         }
       });
     };
 
-    crtData.nodes.forEach(node => {
-      const sourceElement = this.elements[node.id];
-      if (node.andChildren) {
-        createLinks(sourceElement, node.andChildren);
-      }
-      if (node.orChildren) {
-        createLinks(sourceElement, node.orChildren);
+    // Process each node in the CRT data
+    crtData.nodes.forEach((node) => {
+      createNodes(node); // Create node elements
+    });
+
+    crtData.nodes.forEach((node) => {
+      if (node.children) {
+        createLinks(node.id, node.children); // Create links
       }
     });
 
+    // Apply layout and update paper size after processing nodes and links
     setTimeout(() => {
       this.applyDirectedGraphLayout();
       this.updatePaperSize();
@@ -854,59 +846,118 @@ export class LtpCurrentRealityTree extends CpsStageBase {
     }
   }
 
+  getNode(id: string): LtpCurrentRealityTreeDataNode | null {
+    const findNode = (
+      nodes: LtpCurrentRealityTreeDataNode[],
+      nodeId: string
+    ): LtpCurrentRealityTreeDataNode | null => {
+      for (const node of nodes) {
+        if (node.id === nodeId) {
+          return node;
+        }
+        if (node.children) {
+          const foundNode = findNode(node.children, nodeId);
+          if (foundNode) return foundNode;
+        }
+      }
+      return null;
+    };
+
+    return this.crtData ? findNode(this.crtData.nodes, id) : null;
+  }
+
+  getAllCausesExcept(idsToExclude: string[]): LtpCurrentRealityTreeDataNode[] {
+    const excludedTypes = ["and", "mag", "xor", "ude"];
+    const renderedNodeIds = new Set<string>();
+
+    const traverseNodes = (
+      nodes: LtpCurrentRealityTreeDataNode[],
+      result: LtpCurrentRealityTreeDataNode[] = []
+    ) => {
+      nodes.forEach((node) => {
+        if (
+          !excludedTypes.includes(node.type) &&
+          !idsToExclude.includes(node.id) &&
+          !renderedNodeIds.has(node.id)
+        ) {
+          result.push(node);
+          renderedNodeIds.add(node.id);
+        }
+        if (node.children) {
+          traverseNodes(node.children, result);
+        }
+      });
+      return result;
+    };
+
+    if (!this.crtData || !this.crtData.nodes) {
+      return [];
+    }
+
+    return traverseNodes(this.crtData.nodes);
+  }
+
   addNodes(parentNodeId: string, nodes: LtpCurrentRealityTreeDataNode[]): void {
     if (!Array.isArray(nodes) || nodes.length === 0) {
-      console.error('No nodes provided to add');
+      console.error("No nodes provided to add");
       return;
     }
 
     const findAndUpdateParentNode = (
       nodeDataArray: LtpCurrentRealityTreeDataNode[],
-      parentNodeId: string
+      parentNodeId: string,
+      nodesToAdd: LtpCurrentRealityTreeDataNode[]
     ) => {
       for (const nodeData of nodeDataArray) {
         if (nodeData.id === parentNodeId) {
-          // Found the parent node, update its andChildren
-          nodeData.andChildren = nodeData.andChildren || [];
-          nodeData.andChildren.push(...nodes);
+          nodeData.children = nodeData.children || [];
+          nodeData.children.push(...nodesToAdd); // Update the data structure with new nodes
           return true;
         }
-        // Recursively search in andChildren and orChildren
+
+        // Recursively search in children
         if (
-          nodeData.andChildren &&
-          findAndUpdateParentNode(nodeData.andChildren, parentNodeId)
-        )
+          nodeData.children &&
+          findAndUpdateParentNode(nodeData.children, parentNodeId, nodesToAdd)
+        ) {
           return true;
-        if (
-          nodeData.orChildren &&
-          findAndUpdateParentNode(nodeData.orChildren, parentNodeId)
-        )
-          return true;
+        }
       }
       return false;
     };
 
-    // Start the search from the root nodes
-    if (!findAndUpdateParentNode(this.crtData!.nodes, parentNodeId)) {
+    // Find the parent node in the data structure and update it with the new nodes
+    if (!findAndUpdateParentNode(this.crtData!.nodes, parentNodeId, nodes)) {
       console.error(`Parent node with ID ${parentNodeId} not found in crtData`);
       return;
     }
 
-    const parentNode = this.elements[parentNodeId];
+    // Function to add a node and its children to the graph
+    const addNodeAndChildren = (
+      parentNode: dia.Element,
+      nodeData: LtpCurrentRealityTreeDataNode
+    ) => {
+      const newNode = this.createElement(nodeData);
+      this.elements[nodeData.id] = newNode;
+      this.createLink(parentNode, newNode);
 
-    if (!parentNode) {
-      console.error(`Parent node with ID ${parentNodeId} not found`);
+      if (nodeData.children && nodeData.children.length > 0) {
+        nodeData.children.forEach((childNode) =>
+          addNodeAndChildren(newNode, childNode)
+        );
+      }
+    };
+
+    // Find the parent node element in the graph
+    const parentNodeElement = this.elements[parentNodeId];
+    if (!parentNodeElement) {
+      console.error(`Parent node element with ID ${parentNodeId} not found`);
       return;
     }
 
-    nodes.forEach(node => {
-      node.andChildren = [];
-      node.orChildren = [];
-      const newNode = this.createElement(node);
-      this.elements[node.id] = newNode;
-
-      // Create a link from the parent node to the new node
-      this.createLink(parentNode, newNode);
+    // Add each node and its children
+    nodes.forEach((node) => {
+      addNodeAndChildren(parentNodeElement, node);
     });
 
     this.applyDirectedGraphLayout();
@@ -929,6 +980,13 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         .rootCauseContainer {
           color: var(--md-sys-color-on-primary);
           background-color: var(--md-sys-color-primary);
+          border-radius: 0;
+          padding: 0;
+        }
+
+        .connectorContainer {
+          color: var(--md-sys-color-on-secondary-container);
+          background-color: var(--md-sys-color-secondary-container);
           border-radius: 0;
           padding: 0;
         }
@@ -1019,7 +1077,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         .downloadButton {
           margin-right: 28px;
         }
-
       `,
     ];
   }
@@ -1086,7 +1143,6 @@ export class LtpCurrentRealityTree extends CpsStageBase {
         <md-icon-button class="downloadButton" @click="${this.exportToDrawioXml}"
           ><md-icon>download</md-icon></md-icon-button
         >
-
       </div>
       <div class="jointJSCanvas" id="paper-container"></div>
     `;

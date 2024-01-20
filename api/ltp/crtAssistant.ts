@@ -10,6 +10,9 @@ const config = {
   apiKey: process.env.OPENAI_KEY,
 };
 
+const contextReplaceToken = "!!!replaceCONTEXTreplace!!!";
+const simpleTreeReplaceToken = "!!!replaceSIMPLIFIED_TREEreplace!!!";
+
 export const renderFirstUserPromptWithTree = (
   currentUserMessage: string,
   currentRealityTree: LtpCurrentRealityTreeData,
@@ -88,66 +91,87 @@ Expert validation review: ${valdiationReview}
   return prompt;
 };
 
-export const renderSystemPrompt = (isFirstMessage: boolean) => {
-  const prompt = `You are a helpful Logical Thinking Process expert.
+export const renderSystemPrompt = () => {
+  const prompt = `You're helping to create a Current Reality Tree, a tool in Logical Thinking Process methodology. Here's a simplified guide:
 
-  ###Context###
-  We're working on building a Current Reality Tree, which is part of the Logical Thinking Process methodology.
+  1. You'll get the entire conversation history for context.
+  2. If asked for clarification, you can refine causes or send an empty response.
+  3. Always offer suggested causes, even if the user's causes aren’t valid.
+  4. Be helpful; the CRT process can be complex.
+  5. Reflect any validation errors in your output without showing them to the user.
+  6. Include the user's suggestion if it's viable.
+  7. Use causes from the Logic Validation if it says "isValid: true".
+  8. If there are validation errors, provide step-by-step solutions, keeping the user informed.
 
-  The user has entered an effect and one or more causes leading to it. We've then used a GPT4 based validation chain with multiple GPT4 prompts to validate the logic of the user's input in detail, use this to validate your feedback and generations.
+  When creating new causes:
 
-  ${
-    !isFirstMessage
-      ? "You are provided with the whole message history to inform you of the conversation so far."
-      : ""
-  }
+  1. Avoid causality in causes.
+  2. Causes should only have elements from the effect.
+  3. If multiple causes, they must be connected.
+  4. Causes together must lead to the effect.
+  5. Always include previously validated causes.
+  6. Don’t suggest causes already in the working tree. Use the tree to guide your suggestions.
+  7. Suggested causes shouldn’t exceed 11 words and avoid ending with a period.
+  8. Start with 1-3 suggested causes, as many ase are needed, adding more as the list grows. Keep user's confirmed causes at the top.
+  9. Include the user’s submitted cause, even if not perfect.
+  10. Always present suggested causes in JSON format, even if previously discussed.
 
-  ###Instructions###
-  If the user is asking for clarification on previous conversation then decide if you want to send more refined causes back but you can also send just [] back if needed for the suggestedCauses and suggestedAssumptions.
+  Provide explanations in markdown format, followed by JSON format.
+\`\`\`json
+{ suggestedCauses: string[] }
+\`\`\`
 
-  Always return suggestedCauses and assumptions if the user asks for them even if the user doesn't provide a valid causes him/herself.
-
-  Please be helpful to the user if he/she is asking for clarifications, the CRT process is sometimes complicated.
-
-  The actual end user will not see the validationErrors provided, if any, so make sure to reflect that in your output.
-
-  You MUST always include the suggestion from the user if viable.
-
-  If the results of the Logic Validation isValid: true then always use exactly those causes and connected assumptions in the JSON part.
-
-  If there are validationErrors in the Logic Validation then try to come up with solutions in the most helpful and step by step way and keep the user in the loop.
-
-  ###General rules for cause generation###
-  When you create new options for causes, use your extensive knowledge of logic, the logical thinking process, in addition to those rules:
-  1. No cause should contain causality.
-  2. The cause should only contain subjects and predicates included in the effect.
-  3. If more than one cause then those need to be laterally connected.
-  4. The causes together should be sufficient to lead directly to the effect.
-  5. If there is already a cause that has been validated always include it as a part of your suggestedCauses
-  6. Each of the suggestedCauses and assumptions in the JSON part should never be more than 11 words long and should not end with a period.
-  7. Output up to 3 suggestedCauses initially, but thee list can grow as we have more confirmed causes, always keep the users confirmed causes at the top of the list.
-
-  ###Output###
-  Think step by step and provide a detailed explanation in markdown format.
-
-  Then JSON:
-
-  \`\`\`json
-  { suggestedCauses: string[], suggestedAssumptions: string[] }
-  \`\`\`
-
-  You must never output ANY text after the JSON part.
+You must never output ANY text after the JSON part.
 
 `;
 
   return prompt;
 };
 
+let simplifiedIdMap: Record<string, number> = {};
+let simplifiedIdCounter = 0;
+
+const getSimplifiedId = (originalId: string) => {
+  if (!simplifiedIdMap[originalId]) {
+    simplifiedIdCounter += 1;
+    simplifiedIdMap[originalId] = simplifiedIdCounter;
+  }
+  return simplifiedIdMap[originalId];
+};
+
+const simplifyTree = (
+  node: LtpCurrentRealityTreeDataNode,
+  crtNodeId: string
+) => {
+  if (!node) return null;
+
+  // Check if the current node is the one we're working with
+  const isCurrentlyLookingForCausesToThisEffect = node.id === crtNodeId;
+
+  const causes = node.children
+    ? node.children.map((child) => simplifyTree(child, crtNodeId))
+    : [];
+
+  let simplifiedNode = {
+    id: getSimplifiedId(node.id),
+    effect: node.description,
+    causes: causes,
+  } as LtpCrtSimplifiedForAI;
+
+  if (isCurrentlyLookingForCausesToThisEffect === true) {
+    simplifiedNode.isCurrentlyLookingForCausesToThisEffect = true;
+  }
+
+  return simplifiedNode;
+};
+
 const streamWebSocketResponses = async (
   messages: any,
+  //@ts-ignore
   stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>,
   clientId: string,
-  wsClients: Map<string, WebSocket>
+  wsClients: Map<string, WebSocket>,
+  systemPrompt: string
 ) => {
   const wsClient = wsClients.get(clientId);
   if (!wsClient) {
@@ -173,9 +197,7 @@ const streamWebSocketResponses = async (
       sender: "bot",
       type: "end",
       debug: {
-        systemPromptUsedForGeneration: renderSystemPrompt(
-          messages.length === 2
-        ),
+        systemPromptUsedForGeneration: systemPrompt,
         firstUserMessageUserForGeneration: messages[1].content,
       },
     })
@@ -190,6 +212,7 @@ export const getRefinedCauses = async (
   currentUDE: string,
   chatLog: LtpSimplifiedChatLog[],
   parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined,
+  customSystemPrompts: Map<number, string> | undefined = undefined,
   effect?: string,
   causes?: string[],
   validationReview?: string
@@ -205,7 +228,7 @@ export const getRefinedCauses = async (
   } else if (parentNode.type == "ude") {
     parentNodeType = "directCause";
   } else {
-    parentNodeType = "intermediateCause";
+    parentNodeType = "directCause";
   }
 
   console.log(`nodeType: ${parentNodeType}`);
@@ -217,9 +240,34 @@ export const getRefinedCauses = async (
     };
   });
 
+  let systemPrompt;
+
+  if (
+    customSystemPrompts &&
+    customSystemPrompts.has(7) &&
+    customSystemPrompts.get(7) != ""
+  ) {
+    systemPrompt = customSystemPrompts.get(7);
+  } else {
+    systemPrompt = renderSystemPrompt();
+  }
+
+  const simplifiedTreeText = `The whole working tree: ${JSON.stringify(
+    crt.nodes.map((node) => simplifyTree(node, parentNode.id)),
+    null,
+    2
+  )}`;
+
+  systemPrompt = systemPrompt!.replace(contextReplaceToken, crt.context);
+
+  systemPrompt = systemPrompt!.replace(
+    simpleTreeReplaceToken,
+    simplifiedTreeText
+  );
+
   const systemMessage = {
     role: "system",
-    content: renderSystemPrompt(messages.length === 2),
+    content: systemPrompt,
   };
 
   messages.unshift(systemMessage);
@@ -254,7 +302,13 @@ export const getRefinedCauses = async (
   });
 
   if (wsClients.get(clientId)) {
-    streamWebSocketResponses(messages, stream, clientId, wsClients);
+    streamWebSocketResponses(
+      messages,
+      stream,
+      clientId,
+      wsClients,
+      systemPrompt!
+    );
   } else {
     console.error(`WS Client ${clientId} not found`);
     // TODO: Implement this when available

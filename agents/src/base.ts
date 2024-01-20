@@ -6,6 +6,7 @@ import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
 import { Callbacks } from "langchain/callbacks";
 
+//@ts-ignore
 const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );

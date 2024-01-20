@@ -9,7 +9,8 @@
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/api/server.js",
     "dev": "nodemon --config nodemon.json ./ts-out/api/server.js",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",
-    "build": "tsc --project ./ --outDir ./ts-out"
+    "build": "tsc --project ./ --outDir ./ts-out",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.0",
