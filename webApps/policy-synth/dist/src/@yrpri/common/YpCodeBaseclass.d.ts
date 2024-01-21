@@ -1,6 +1,6 @@
 import { LitElement } from 'lit';
 import { YpAppUser } from '../yp-app/YpAppUser.js';
-import { CpsServerApi } from '../../CpsServerApi.js';
+import { CpsServerApi } from '../../base/CpsServerApi.js';
 declare global {
     interface Window {
         appGlobals: any;

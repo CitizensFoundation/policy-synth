@@ -101,7 +101,7 @@ export class LtpServerApi extends YpServerApi {
   public sendGetRefinedCauseQuery(
     crtTreeId: string | number,
     crtNodeId: string,
-    chatLog: LtpAiChatWsMessage[],
+    chatLog: PsAiChatWsMessage[],
     wsClientId: string,
     effect?: string,
     causes?: string[],
@@ -132,7 +132,7 @@ export class LtpServerApi extends YpServerApi {
   public runValidationChain(
     crtTreeId: string | number,
     crtNodeId: string,
-    chatLog: LtpAiChatWsMessage[],
+    chatLog: PsAiChatWsMessage[],
     wsClientId: string,
     effect: string,
     causes: string[]

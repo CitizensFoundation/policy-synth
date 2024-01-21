@@ -6,7 +6,7 @@ The `LtpChatAssistant` class is a web component that acts as a chat interface fo
 
 | Name                      | Type                                      | Description                                                                                   |
 |---------------------------|-------------------------------------------|-----------------------------------------------------------------------------------------------|
-| chatLog                   | LtpAiChatWsMessage[]                      | An array of chat messages exchanged in the chat interface.                                     |
+| chatLog                   | PsAiChatWsMessage[]                      | An array of chat messages exchanged in the chat interface.                                     |
 | infoMessage               | string                                    | A message providing information to the user.                                                   |
 | wsClientId                | string                                    | The client ID for the WebSocket connection.                                                    |
 | crtData                   | LtpCurrentRealityTreeData                 | Data related to the current reality tree.                                                      |
@@ -45,9 +45,9 @@ The `LtpChatAssistant` class is a web component that acts as a chat interface fo
 | disconnectedCallback     |                             | void        | Lifecycle method called when the component is removed from the DOM.                            |
 | onMessage                | event: MessageEvent         | Promise<void> | Handles incoming WebSocket messages.                                                          |
 | scrollDown               |                             | void        | Scrolls the chat messages element to the bottom.                                              |
-| addToChatLogWithMessage  | data: LtpAiChatWsMessage, message: string \| undefined, changeButtonDisabledState: boolean \| undefined, changeButtonLabelTo: string \| undefined, refinedCausesSuggestions: string[] \| undefined, rawMessage: string \| undefined | void        | Adds a message to the chat log with additional options.                                       |
-| addChatBotElement        | data: LtpAiChatWsMessage    | void        | Adds a chat bot element to the chat log.                                                      |
-| addChatUserElement       | data: LtpAiChatWsMessage    | void        | Adds a chat user element to the chat log.                                                     |
+| addToChatLogWithMessage  | data: PsAiChatWsMessage, message: string \| undefined, changeButtonDisabledState: boolean \| undefined, changeButtonLabelTo: string \| undefined, refinedCausesSuggestions: string[] \| undefined, rawMessage: string \| undefined | void        | Adds a message to the chat log with additional options.                                       |
+| addChatBotElement        | data: PsAiChatWsMessage    | void        | Adds a chat bot element to the chat log.                                                      |
+| addChatUserElement       | data: PsAiChatWsMessage    | void        | Adds a chat user element to the chat log.                                                     |
 | sendChatMessage          |                             | Promise<void> | Sends a chat message to the server.                                                           |
 | validateSelectedChoices  | event: CustomEvent          | Promise<void> | Validates the selected choices from the chat interface.                                       |
 | getSuggestionsFromValidation | agentName: string, validationResults: PsValidationAgentResult | Promise<void> | Retrieves suggestions based on validation results.                                            |
@@ -89,4 +89,4 @@ The `LtpChatAssistant` class is a web component that acts as a chat interface fo
 ></ltp-chat-assistant>
 ```
 
-Note: The `LtpAiChatWsMessage`, `LtpCurrentRealityTreeData`, `LtpCurrentRealityTreeDataNode`, `LtpServerApi`, `PsAgentStartWsOptions`, `PsAgentCompletedWsOptions`, and `PsValidationAgentResult` types are assumed to be defined elsewhere in the codebase and are required for the proper functioning of the `LtpChatAssistant` component.
+Note: The `PsAiChatWsMessage`, `LtpCurrentRealityTreeData`, `LtpCurrentRealityTreeDataNode`, `LtpServerApi`, `PsAgentStartWsOptions`, `PsAgentCompletedWsOptions`, and `PsValidationAgentResult` types are assumed to be defined elsewhere in the codebase and are required for the proper functioning of the `LtpChatAssistant` component.

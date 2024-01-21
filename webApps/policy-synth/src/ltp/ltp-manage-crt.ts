@@ -2,7 +2,7 @@ import { PropertyValueMap, css, html, nothing } from "lit";
 import { property, customElement, query } from "lit/decorators.js";
 
 import { cache } from "lit/directives/cache.js";
-import { resolveMarkdown } from "./chat/litMarkdown.js";
+import { resolveMarkdown } from "../chatBot/litMarkdown.js";
 
 import "@material/web/iconbutton/icon-button.js";
 import "@material/web/progress/linear-progress.js";
@@ -23,7 +23,7 @@ import "@material/web/button/filled-button.js";
 
 import { MdTabs } from "@material/web/tabs/tabs.js";
 
-import { CpsStageBase } from '../cps-stage-base.js';
+import { CpsStageBase } from '../base/cps-stage-base.js';
 
 import "./ltp-current-reality-tree.js";
 import "./LtpServerApi.js";

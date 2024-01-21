@@ -6,7 +6,7 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 
-import { CpsStageBase } from '../cps-stage-base.js';
+import { CpsStageBase } from '../base/cps-stage-base.js';
 import { LtpServerApi } from './LtpServerApi.js';
 import { LtpCurrentRealityTree } from './ltp-current-reality-tree.js';
 import { MdMenu } from '@material/web/menu/menu.js';

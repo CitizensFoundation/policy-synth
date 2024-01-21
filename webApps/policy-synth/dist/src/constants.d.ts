@@ -9,6 +9,7 @@ export declare class IEngineConstants {
     static createSolutionImagesModel: IEngineBaseAIModelConstants;
     static createSearchQueriesModel: IEngineBaseAIModelConstants;
     static createEvidenceSearchQueriesModel: IEngineBaseAIModelConstants;
+    static createRootCauseSearchQueriesModel: IEngineBaseAIModelConstants;
     static searchQueryRankingsModel: IEngineBaseAIModelConstants;
     static searchResultsRankingsModel: IEngineBaseAIModelConstants;
     static subProblemsRankingsModel: IEngineBaseAIModelConstants;
@@ -16,10 +17,15 @@ export declare class IEngineConstants {
     static solutionsRankingsModel: IEngineBaseAIModelConstants;
     static prosConsRankingsModel: IEngineBaseAIModelConstants;
     static getPageAnalysisModel: IEngineBaseAIModelConstants;
+    static getSolutionsPagesAnalysisModel: IEngineBaseAIModelConstants;
     static rankWebSolutionsModel: IEngineBaseAIModelConstants;
+    static reduceSubProblemsModel: IEngineBaseAIModelConstants;
     static rateWebEvidenceModel: IEngineBaseAIModelConstants;
+    static rateWebRootCausesModel: IEngineBaseAIModelConstants;
     static rankWebEvidenceModel: IEngineBaseAIModelConstants;
+    static rankWebRootCausesModel: IEngineBaseAIModelConstants;
     static getRefinedEvidenceModel: IEngineBaseAIModelConstants;
+    static getRefinedRootCausesModel: IEngineBaseAIModelConstants;
     static reapSolutionsModel: IEngineBaseAIModelConstants;
     static groupSolutionsModel: IEngineBaseAIModelConstants;
     static rateSolutionsModel: IEngineBaseAIModelConstants;
@@ -28,6 +34,7 @@ export declare class IEngineConstants {
     static createProsConsModel: IEngineBaseAIModelConstants;
     static evolutionMutateModel: IEngineBaseAIModelConstants;
     static evolutionRecombineModel: IEngineBaseAIModelConstants;
+    static validationModel: IEngineBaseAIModelConstants;
     static getPageCacheExpiration: number;
     static maxSubProblems: number;
     static maxNumberGeneratedOfEntities: number;
@@ -39,11 +46,13 @@ export declare class IEngineConstants {
     static maxTopEntitiesToRender: number;
     static maxTopQueriesToSearchPerType: number;
     static maxTopEvidenceQueriesToSearchPerType: number;
+    static maxTopRootCauseQueriesToSearchPerType: number;
+    static maxRootCausePercentOfSearchResultWebPagesToGet: number;
+    static maxRootCausesToUseForRatingRootCauses: number;
+    static topWebPagesToGetForRefineRootCausesScan: number;
     static mainSearchRetryCount: number;
     static maxDalleRetryCount: number;
     static maxTopWebPagesToGet: number;
-    static maxWebPagesToGetByTopSearchPosition: number;
-    static maxEvidenceWebPagesToGetByTopSearchPosition: number;
     static maxBingSearchResults: number;
     static maxTopProsConsUsedForRating: number;
     static maxNumberGeneratedProsConsForSolution: number;
@@ -51,6 +60,7 @@ export declare class IEngineConstants {
     static maxAdditionalRandomSleepBeforeBrowserRequest: number;
     static numberOfSearchTypes: number;
     static webPageNavTimeout: number;
+    static subProblemsRankingMinNumberOfMatches: number;
     static currentUserAgent: string;
     static topItemsToKeepForTopicClusterPruning: number;
     static chances: {
@@ -72,6 +82,7 @@ export declare class IEngineConstants {
         };
     };
     static maxTopSearchQueriesForSolutionCreation: number;
+    static maxPercentOfSolutionsWebPagesToGet: number;
     static limits: {
         webPageVectorResultsForNewSolutions: number;
         useRandomTopFromVectorSearchResults: number;
@@ -105,6 +116,8 @@ export declare class IEngineConstants {
     static maxTopPoliciesToProcess: number;
     static maxEvidenceToUseForRatingEvidence: number;
     static policyEvidenceFieldTypes: string[];
+    static rootCauseFieldTypes: string[];
     static simplifyEvidenceType(evidenceType: string): string;
+    static simplifyRootCauseType(rootCauseType: string): string;
 }
 //# sourceMappingURL=constants.d.ts.map

@@ -48,7 +48,7 @@ interface CrtResponse {
   crt: LtpCurrentRealityTreeData;
 }
 
-interface LtpAiChatWsMessage {
+interface PsAiChatWsMessage {
   sender: string;
   type:
     | "hello_message"
