@@ -8,7 +8,7 @@ import {
   createClient,
 } from "redis";
 import { RedisClientType } from "@redis/client";
-import { EvidenceWebPageVectorStore } from "../../agents/src/agents/vectorstore/evidenceWebPage.js";
+import { EvidenceWebPageVectorStore } from "@policysynth/agents";
 import { IEngineConstants } from "../../agents/src/constants.js";
 import WebSocket from "ws";
 

@@ -1,7 +1,7 @@
 import express from "express";
 import axios from "axios";
 import { createClient, } from "redis";
-import { EvidenceWebPageVectorStore } from "../../agents/src/agents/vectorstore/evidenceWebPage.js";
+import { EvidenceWebPageVectorStore } from "@policysynth/agents";
 import { IEngineConstants } from "../../agents/src/constants.js";
 let redisClient;
 if (process.env.REDIS_URL) {
