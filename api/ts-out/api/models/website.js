@@ -3,14 +3,6 @@ import pgvector from "pgvector/utils";
 import sequelize, { Sequelize } from "sequelize";
 import { DataTypes, Model } from "sequelize";
 class Website extends Model {
-    id;
-    name;
-    slug;
-    description;
-    image;
-    embedding;
-    createdAt;
-    updatedAt;
     static async getSimilar(searchTerm, skip = 0, limit = 9999) {
         const embedding = await createEmbedding(searchTerm);
         const embSql = pgvector.toSql(embedding);

@@ -1,6 +1,5 @@
 import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 export class PsClassificationAgent extends PsBaseValidationAgent {
-    routes;
     constructor(name, options = {}) {
         super(name, options);
         this.routes = new Map();

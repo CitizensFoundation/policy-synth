@@ -1,8 +1,8 @@
 {
   "extends": "@tsconfig/node18/tsconfig.json",
   "compilerOptions": {
-    "target": "es2020", // or higher
-    "module": "esnext", // or 'nodenext'
+    "target": "es2020",
+    "module": "esnext",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -10,5 +10,4 @@
   },
   "exclude": ["node_modules", "**/*.spec.ts"],
   "include": ["src/**/*.ts"]
-
 }

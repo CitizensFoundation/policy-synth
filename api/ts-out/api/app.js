@@ -36,11 +36,8 @@ let redisStore = new RedisStore({
 const app = express();
 const httpServer = createServer(app);
 export class App {
-    app;
-    port;
-    ws;
-    wsClients = new Map();
     constructor(controllers, port) {
+        this.wsClients = new Map();
         this.app = app;
         this.port = parseInt(process.env.PORT || "8000");
         this.ws = new WebSocketServer({ server: httpServer });

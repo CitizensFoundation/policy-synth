@@ -1,6 +1,0 @@
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
-export declare class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
-    voteOnPromptPair(subProblemIndex: number, promptPair: number[]): Promise<IEnginePairWiseVoteResults>;
-    process(): Promise<void>;
-}
-//# sourceMappingURL=rankEntities.d.ts.map
