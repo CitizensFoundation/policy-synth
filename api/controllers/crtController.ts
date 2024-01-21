@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getConfigurationReview } from "../ltp/crtConfigReview.js";
 import WebSocket from "ws";
 import { runValidationChain } from "../ltp/crtValidationChain.js";
+import { BaseController } from "./baseController.js";
 
 let redisClient: any;
 
@@ -22,7 +23,7 @@ if (process.env.REDIS_URL) {
   });
 }
 
-export class CurrentRealityTreeController {
+export class CurrentRealityTreeController  {
   public path = "/api/crt";
   public router = express.Router();
   public wsClients = new Map<string, WebSocket>();
@@ -32,7 +33,6 @@ export class CurrentRealityTreeController {
     this.wsClients = wsClients;
     this.initializeRoutes();
   }
-
   public async initializeRoutes() {
     this.router.get(this.path + "/:id", this.getTree);
     this.router.post(this.path, this.createTree);
