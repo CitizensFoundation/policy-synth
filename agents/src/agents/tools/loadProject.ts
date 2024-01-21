@@ -20,7 +20,7 @@ const loadProject = async (): Promise<void> => {
   console.log(`Project data has been loaded from ${fileName}`);
   process.exit(0);
   } else {
-    console.log('No project id provided');
+    console.log('No project id provided - load project');
     process.exit(1);
   }
 };

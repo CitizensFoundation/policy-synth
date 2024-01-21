@@ -15,7 +15,7 @@ import '@material/web/icon/icon.js';
 
 import '@material/web/iconbutton/outlined-icon-button.js';
 
-import '../../@yrpri/common/yp-image.js';
+import '../@yrpri/common/yp-image.js';
 import { PsAiChatElement } from './ps-ai-chat-element.js';
 import { MdFilledTonalButton } from '@material/web/button/filled-tonal-button.js';
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';

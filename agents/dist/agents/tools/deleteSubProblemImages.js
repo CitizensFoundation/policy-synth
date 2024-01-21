@@ -11,7 +11,7 @@ const loadProject = async () => {
         process.exit(0);
     }
     else {
-        console.log('No project id provided');
+        console.log('No project id provided - delete sub problem image');
         process.exit(1);
     }
 };

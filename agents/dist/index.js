@@ -9,7 +9,6 @@ export { CreateSeedPoliciesProcessor } from './agents/policies/create/createSeed
 export { AgentPolicies } from './agents/policies/policies.js';
 export { RankWebEvidenceProcessor } from './agents/policies/ranking/rankWebEvidence.js';
 export { RateWebEvidenceProcessor } from './agents/policies/ranking/rateWebEvidence.js';
-export { CountWebEvidenceProcessor } from './agents/policies/tools/countEvidence.js';
 export { EvidenceExamplePrompts } from './agents/policies/web/evidenceExamplePrompts.js';
 export { GetEvidenceWebPagesProcessor } from './agents/policies/web/getEvidenceWebPages.js';
 export { GetMetaDataForTopWebEvidenceProcessor } from './agents/policies/web/getMetaDataForTopWebEvidence.js';
@@ -47,7 +46,6 @@ export { RankSolutionsProcessor } from './agents/solutions/ranking/rankSolutions
 export { RankWebSolutionsProcessor } from './agents/solutions/ranking/rankWebSolutions.js';
 export { RateSolutionsProcessor } from './agents/solutions/ranking/rateSolutions.js';
 export { AgentSolutions } from './agents/solutions/solutions.js';
-export { AnalyseExternalSolutions } from './agents/solutions/tools/analyseExternalSolutions.js';
 export { BingSearchApi } from './agents/solutions/web/bingSearchApi.js';
 export { GetWebPagesProcessor } from './agents/solutions/web/getWebPages.js';
 export { GoogleSearchApi } from './agents/solutions/web/googleSearchApi.js';

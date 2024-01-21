@@ -16,7 +16,7 @@ const loadProject = async () => {
         process.exit(0);
     }
     else {
-        console.log('No project id provided');
+        console.log('No project id provided - modify sub problem elo scores');
         process.exit(1);
     }
 };

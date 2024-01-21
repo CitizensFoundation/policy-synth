@@ -93,7 +93,7 @@ async function run() {
         process.exit(0);
     }
     else {
-        console.log("No project id provided");
+        console.log("No project id provided - show counts");
         process.exit(1);
     }
 }

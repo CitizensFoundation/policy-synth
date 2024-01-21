@@ -20,7 +20,7 @@ const loadProject = async () => {
         process.exit(0);
     }
     else {
-        console.log('No project id provided');
+        console.log('No project id provided - update sub problems');
         process.exit(1);
     }
 };
