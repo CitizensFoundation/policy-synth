@@ -327,7 +327,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
         return html ` <md-icon class="robotIcon">person</md-icon> `;
     }
     renderJson() {
-        return nothing;
+        return html ``;
     }
     renderChatGPT() {
         return html `

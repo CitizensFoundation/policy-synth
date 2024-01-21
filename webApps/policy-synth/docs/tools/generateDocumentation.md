@@ -1,33 +1,16 @@
-The provided TypeScript code is a script for generating API documentation for TypeScript files in a project. It uses the OpenAI API to generate the documentation content. Below is the API documentation for the script itself, formatted in the requested Markdown format.
+The provided TypeScript code is a script for generating API documentation for TypeScript files in a project. It uses the OpenAI API to generate the documentation content. The script performs the following steps:
 
-# OpenAI Documentation Generator Script
+1. It checks for the existence of the `docs` and `checksum` directories and creates them if they don't exist.
+2. It builds a directory tree of Markdown files in the `docs/src` directory, excluding certain files and directories.
+3. It generates a `README.md` file in the `docs` directory with links to the documentation files.
+4. It finds all TypeScript files in the project, excluding `index.ts` and declaration files (`.d.ts`).
+5. It generates a SHA-256 checksum for each TypeScript file to determine if the file has changed since the last documentation generation.
+6. If a file has changed, it uses the OpenAI API to generate new documentation content and writes it to a corresponding Markdown file in the `docs` directory.
+7. It updates the checksum file with the new checksum for each processed file.
+8. It regenerates the `README.md` file to reflect any new or updated documentation files.
 
-This script generates API documentation for TypeScript files in a project using the OpenAI API.
+The script is designed to be run as a Node.js application and uses the `fs` module for file system operations, the `path` module for path manipulations, the `crypto` module for generating checksums, and the `openai` module to interact with the OpenAI API.
 
-## Properties
+Please note that the script is not complete in terms of generating the actual Markdown documentation content. The OpenAI API call is expected to return the documentation content, but the script does not include the logic to format the TypeScript source code into the standard Markdown API documentation format as described in the initial prompt.
 
-No properties are documented in the script.
-
-## Methods
-
-| Name                  | Parameters | Return Type | Description |
-|-----------------------|------------|-------------|-------------|
-| buildDirectoryTree    | dir: string, basePath: string = '', isSrc: boolean = false | any[] | Builds a tree structure of the directory contents, excluding certain files and directories. |
-| generateMarkdownFromTree | tree: any, depth: number = 0 | string | Generates markdown text from the directory tree structure. |
-| generateDocsReadme    | None       | void        | Generates a README.md file in the docs directory with a markdown representation of the directory tree. |
-| findTSFiles           | dir: string, fileList: string[] = [] | string[] | Recursively finds all TypeScript files in a directory, excluding certain files and directories. |
-| generateChecksum      | content: string | string | Generates a SHA-256 checksum for the given content. |
-| generateDocumentation | fileList: string[], systemPrompt: string | Promise<void> | Generates documentation for each TypeScript file in the fileList using the OpenAI API. |
-| main                  | None       | Promise<void> | The main function that finds TypeScript files, generates the docs README, and generates documentation for each file. |
-
-## Events
-
-No events are documented in the script.
-
-## Examples
-
-```typescript
-// Example usage of the script is not provided as it is intended to be run as a standalone process.
-```
-
-Please note that the script does not contain explicit examples, properties, or events within the code. The methods are derived from the functions defined in the script, and the descriptions are based on the comments and the code's functionality.
+To generate the full detailed documentation for the TypeScript file, you would need to implement the logic that parses the TypeScript source code, extracts the relevant information (classes, properties, methods, events, etc.), and formats it into the Markdown format as specified. This would likely involve using a TypeScript parser or AST (Abstract Syntax Tree) tool to analyze the source code.

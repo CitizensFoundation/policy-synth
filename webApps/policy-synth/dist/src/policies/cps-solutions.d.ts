@@ -38,10 +38,10 @@ export declare class CpsSolutions extends CpsStageBase {
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
     get filteredSolutions(): IEngineSolution[];
-    render(): typeof nothing | import("lit-html").TemplateResult<1>;
+    render(): import("lit-html").TemplateResult<1> | typeof nothing;
     renderSolutionItem(solution: IEngineSolution, index: number): import("lit-html").TemplateResult<1>;
     renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1>;
-    renderChipSet(subProblem: IEngineSubProblem): typeof nothing | import("lit-html").TemplateResult<1>;
+    renderChipSet(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1> | typeof nothing;
     toggleSearchVisibility(): void;
     renderSearchField(): import("lit-html").TemplateResult<1>;
     handleSearchBlur(): void;
@@ -49,13 +49,13 @@ export declare class CpsSolutions extends CpsStageBase {
     handleDropdownChange(e: Event): void;
     toggleDropdownVisibility(): Promise<void>;
     resetDropdown(): void;
-    renderDropdown(middleItems: IEngineSolution[][], startIndex: number): typeof nothing | import("lit-html").TemplateResult<1>;
+    renderDropdown(middleItems: IEngineSolution[][], startIndex: number): import("lit-html").TemplateResult<1> | typeof nothing;
     camelCaseToRegular(text: string): string;
     renderRatings(solution: IEngineSolution): import("lit-html").TemplateResult<1>;
     renderSolutionNavigationButtons(solutionIndex: number, solutions: IEngineSolution[]): import("lit-html").TemplateResult<1>;
     getSolutionImgHeight(): 314 | 150;
     getSolutionImgWidth(): 550 | 263;
     renderSolutionImage(solution: IEngineSolution): import("lit-html").TemplateResult<1>;
-    renderSolutionScreen(solutionIndex: number): typeof nothing | import("lit-html").TemplateResult<1>;
+    renderSolutionScreen(solutionIndex: number): import("lit-html").TemplateResult<1> | typeof nothing;
 }
 //# sourceMappingURL=cps-solutions.d.ts.map

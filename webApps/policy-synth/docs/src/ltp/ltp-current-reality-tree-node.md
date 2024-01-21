@@ -1,46 +1,49 @@
 # LtpCurrentRealityTreeNode
 
-`LtpCurrentRealityTreeNode` is a custom web component that represents a node within a current reality tree structure. It extends `YpBaseElement` and provides functionality to create direct causes, edit nodes, and display node information.
+This class represents a node within a current reality tree structure. It extends from `YpBaseElement` and manages the state and behavior of a single node, including its type, description, and creation of direct causes.
 
 ## Properties
 
-| Name               | Type      | Description                                           |
-|--------------------|-----------|-------------------------------------------------------|
-| nodeId             | string    | The unique identifier for the node.                   |
-| crtNodeType        | string    | The type of the current reality tree node.            |
-| crtId              | string    | The identifier for the current reality tree.          |
-| isRootCause        | boolean   | Indicates if the node is a root cause.                |
-| causeDescription   | string    | The description of the cause associated with the node.|
-| isCreatingCauses   | boolean   | Indicates if the node is in the process of creating causes. |
+| Name               | Type    | Description                                           |
+|--------------------|---------|-------------------------------------------------------|
+| nodeId             | String  | The unique identifier for the node.                   |
+| crtNodeType        | String  | The type of the current reality tree node.            |
+| crtId              | String  | The identifier for the current reality tree.          |
+| isRootCause        | Boolean | Indicates if the node is a root cause.                |
+| causeDescription   | String  | The description of the cause represented by the node. |
+| isCreatingCauses   | Boolean | Indicates if the node is in the process of creating causes. |
 
 ## Methods
 
-| Name                  | Parameters                        | Return Type | Description                                      |
-|-----------------------|-----------------------------------|-------------|--------------------------------------------------|
-| createDirectCauses    |                                   | Promise<void> | Initiates the creation of direct causes for the node. |
-| editNode              |                                   | void        | Triggers the edit node action.                   |
-| crtTypeIconClass      |                                   | string      | Returns the class for the node type icon based on the node type. |
-| toggleMenu            |                                   | void        | Toggles the visibility of the node's menu.       |
-| crtTypeIcon           |                                   | string      | Returns the icon name based on the node type.    |
+| Name                  | Parameters                        | Return Type | Description                                                                 |
+|-----------------------|-----------------------------------|-------------|-----------------------------------------------------------------------------|
+| connectedCallback     |                                   | void        | Lifecycle method that runs when the element is added to the document's DOM. |
+| updated               | changedProperties: PropertyValueMap | void        | Lifecycle method that runs when the element's properties have changed.      |
+| disconnectedCallback  |                                   | void        | Lifecycle method that runs when the element is removed from the document's DOM. |
+| createDirectCauses    |                                   | Promise<void> | Asynchronously creates direct causes for the node.                          |
+| editNode              |                                   | void        | Emits an event to edit the node.                                            |
+| crtTypeIconClass      |                                   | String      | Returns the class for the type icon based on the node type.                 |
+| toggleMenu            |                                   | void        | Toggles the visibility of the menu.                                         |
+| crtTypeIcon           |                                   | String      | Returns the icon name based on the node type.                               |
+| render                |                                   | TemplateResult | Renders the HTML template for the component.                                |
 
 ## Events
 
-- **add-nodes**: Emitted when new nodes are added to the current reality tree.
-- **edit-node**: Emitted when the node is requested to be edited.
-- **open-add-cause-dialog**: Emitted when the dialog to add a new cause is requested to be opened.
+- **edit-node**: Emitted when the node is to be edited.
+- **open-add-cause-dialog**: Emitted when the dialog to add a cause is to be opened.
+- **add-nodes**: Emitted when new nodes are added to the tree.
 
 ## Examples
 
 ```typescript
-// Example usage of the LtpCurrentRealityTreeNode component
-<ltp-current-reality-tree-node
-  nodeId="node123"
-  crtNodeType="ude"
-  crtId="crt456"
-  isRootCause={false}
-  causeDescription="This is a description of the cause."
-  isCreatingCauses={false}
-></ltp-current-reality-tree-node>
+// Example usage of the LtpCurrentRealityTreeNode
+const nodeElement = document.createElement('ltp-current-reality-tree-node');
+nodeElement.nodeId = 'node123';
+nodeElement.crtNodeType = 'ude';
+nodeElement.crtId = 'crt456';
+nodeElement.isRootCause = false;
+nodeElement.causeDescription = 'Example cause description';
+document.body.appendChild(nodeElement);
 ```
 
-Please note that the above example is a representation of how the component might be used in HTML and does not include the full functionality that would be present in a complete web application environment.
+Please note that the above example assumes that the custom element `ltp-current-reality-tree-node` has been defined and registered in the custom elements registry.
