@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@langchain/openai": "^0.0.10",
-    "@policysynth/agents": "^1.0.6",
+    "@policysynth/agents": "^1.0.7",
     "axios": "^1.4.0",
     "colors": "^1.4.0",
     "connect-redis": "^7.1.0",
