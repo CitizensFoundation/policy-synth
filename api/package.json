@@ -1,7 +1,6 @@
 {
   "name": "@policysynth/api",
-  "version": "1.0.1",
-  "description": "Policy Synth Web App",
+  "version": "1.0.2",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
