@@ -1,6 +1,5 @@
 .env
 docs
-src
 currentMemory.json
 currentProject1.json
 currentProject2.json

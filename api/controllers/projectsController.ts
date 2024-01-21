@@ -9,7 +9,7 @@ import {
 } from "redis";
 import { RedisClientType } from "@redis/client";
 import { EvidenceWebPageVectorStore } from "@policysynth/agents";
-import { IEngineConstants } from "../../agents/src/constants.js";
+import { IEngineConstants } from "@policysynth/agents";
 import WebSocket from "ws";
 
 let redisClient: any;

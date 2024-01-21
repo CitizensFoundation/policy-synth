@@ -1,7 +1,7 @@
-import { PsBaseValidationAgent } from "../../agents/src/agents/validations/baseValidationAgent.js";
-import { PsAgentOrchestrator } from "../../agents/src/agents/validations/agentOrchestrator.js";
-import { PsClassificationAgent } from "../../agents/src/agents/validations/classificationAgent.js";
-import { PsParallelValidationAgent } from "../../agents/src/agents/validations/parallelAgent.js";
+import { PsBaseValidationAgent } from "@policysynth/agents";
+import { PsAgentOrchestrator } from "@policysynth/agents";
+import { PsClassificationAgent } from "@policysynth/agents";
+import { PsParallelValidationAgent } from "@policysynth/agents";
 const DEBUGGING = true;
 const config = {
     apiKey: process.env.OPENAI_KEY,

@@ -9,7 +9,7 @@ x-collective-policy-synth-common: &collective-policy-synth-common
   image: collective-policy-synth:current
   volumes:
     - client-app-dist:/usr/src/webApps/collective-policy-synth/dist
-  command: node dist/api/server.js
+  command: node dist/server.js
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
     interval: 30s
