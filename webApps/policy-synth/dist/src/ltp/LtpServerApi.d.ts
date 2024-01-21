@@ -8,8 +8,8 @@ export declare class LtpServerApi extends YpServerApi {
     reviewConfiguration(wsClientId: string, crt: LtpCurrentRealityTreeData): Promise<string>;
     createDirectCauses(treeId: string | number, parentNodeId: string): Promise<LtpCurrentRealityTreeDataNode[]>;
     addDirectCauses(treeId: string | number, parentNodeId: string, causes: string[], type: CrtNodeType): Promise<LtpCurrentRealityTreeDataNode[]>;
-    sendGetRefinedCauseQuery(crtTreeId: string | number, crtNodeId: string, chatLog: LtpAiChatWsMessage[], wsClientId: string, effect?: string, causes?: string[], validationErrors?: string[]): Promise<LtpChatBotCrtMessage>;
-    runValidationChain(crtTreeId: string | number, crtNodeId: string, chatLog: LtpAiChatWsMessage[], wsClientId: string, effect: string, causes: string[]): Promise<LtpChatBotCrtMessage>;
+    sendGetRefinedCauseQuery(crtTreeId: string | number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect?: string, causes?: string[], validationErrors?: string[]): Promise<LtpChatBotCrtMessage>;
+    runValidationChain(crtTreeId: string | number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect: string, causes: string[]): Promise<LtpChatBotCrtMessage>;
     updateNode(treeId: string | number, updatedNode: LtpCurrentRealityTreeDataNode): Promise<void>;
     deleteNode(treeId: string | number, nodeId: string): Promise<void>;
 }

@@ -2,7 +2,7 @@ import { __decorate } from "tslib";
 import { css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import './@yrpri/common/yp-image.js';
-import { CpsStageBase } from './cps-stage-base.js';
+import { CpsStageBase } from './base/cps-stage-base.js';
 const projects = [
     {
         id: 1,

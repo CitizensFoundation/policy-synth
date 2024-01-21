@@ -1,5 +1,5 @@
 import './@yrpri/common/yp-image.js';
-import { CpsStageBase } from './cps-stage-base.js';
+import { CpsStageBase } from './base/cps-stage-base.js';
 export declare class CpsHome extends CpsStageBase {
     connectedCallback(): Promise<void>;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;

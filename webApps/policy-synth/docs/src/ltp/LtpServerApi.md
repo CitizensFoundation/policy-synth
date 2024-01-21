@@ -19,8 +19,8 @@ The `LtpServerApi` class extends the `YpServerApi` class to provide methods for 
 | reviewConfiguration     | wsClientId: string, crt: LtpCurrentRealityTreeData                         | Promise<string>                         | Reviews the configuration of the current reality tree.                                        |
 | createDirectCauses      | treeId: string \| number, parentNodeId: string                             | Promise<LtpCurrentRealityTreeDataNode[]>| Creates direct causes for a given parent node ID in the current reality tree.                 |
 | addDirectCauses         | treeId: string \| number, parentNodeId: string, causes: string[], type: CrtNodeType | Promise<LtpCurrentRealityTreeDataNode[]>| Adds direct causes to a node in the current reality tree.                                     |
-| sendGetRefinedCauseQuery| crtTreeId: string \| number, crtNodeId: string, chatLog: LtpAiChatWsMessage[], wsClientId: string, effect?: string, causes?: string[], validationErrors?: string[] | Promise<LtpChatBotCrtMessage> | Sends a query to get refined causes based on a chat log and other parameters.                |
-| runValidationChain      | crtTreeId: string \| number, crtNodeId: string, chatLog: LtpAiChatWsMessage[], wsClientId: string, effect: string, causes: string[] | Promise<LtpChatBotCrtMessage> | Runs a validation chain for a node in the current reality tree based on a chat log and other parameters. |
+| sendGetRefinedCauseQuery| crtTreeId: string \| number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect?: string, causes?: string[], validationErrors?: string[] | Promise<LtpChatBotCrtMessage> | Sends a query to get refined causes based on a chat log and other parameters.                |
+| runValidationChain      | crtTreeId: string \| number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect: string, causes: string[] | Promise<LtpChatBotCrtMessage> | Runs a validation chain for a node in the current reality tree based on a chat log and other parameters. |
 | updateNode              | treeId: string \| number, updatedNode: LtpCurrentRealityTreeDataNode       | Promise<void>                           | Updates a node in the current reality tree with the provided data.                            |
 | deleteNode              | treeId: string \| number, nodeId: string                                   | Promise<void>                           | Deletes a node from the current reality tree.                                                |
 
@@ -49,4 +49,4 @@ ltpApi.updateNodeChildren(treeId, nodeId, childrenIds).then(() => {
 });
 ```
 
-Please note that the actual implementation of `LtpCurrentRealityTreeData`, `LtpCurrentRealityTreeDataNode`, `CrtNodeType`, `LtpAiChatWsMessage`, and `LtpChatBotCrtMessage` types are not provided in the example above. These should be defined elsewhere in your codebase.
+Please note that the actual implementation of `LtpCurrentRealityTreeData`, `LtpCurrentRealityTreeDataNode`, `CrtNodeType`, `PsAiChatWsMessage`, and `LtpChatBotCrtMessage` types are not provided in the example above. These should be defined elsewhere in your codebase.

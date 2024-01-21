@@ -6,7 +6,7 @@ import { YpAppGlobals } from '../yp-app/YpAppGlobals.js';
 import { YpAppUser } from '../yp-app/YpAppUser.js';
 //import { YpAppDialogs } from '../yp-dialog-container/yp-app-dialogs.js';
 import { YpServerApi } from './YpServerApi.js';
-import { CpsServerApi } from '../../CpsServerApi.js';
+import { CpsServerApi } from '../../base/CpsServerApi.js';
 
 declare global {
   interface Window {

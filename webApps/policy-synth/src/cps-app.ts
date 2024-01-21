@@ -30,10 +30,10 @@ import { YpBaseElement } from './@yrpri/common/yp-base-element.js';
 //import './chat/yp-chat-assistant.js';
 import { Layouts } from './flexbox-literals/classes.js';
 
-import './cps-web-research.js';
+import './policies/cps-web-research.js';
 
-import { CpsServerApi } from './CpsServerApi.js';
-import { CpsAppGlobals } from './CpsAppGlobals.js';
+import { CpsServerApi } from './base/CpsServerApi.js';
+import { CpsAppGlobals } from './base/CpsAppGlobals.js';
 import { MdNavigationDrawer } from '@material/web/labs/navigationdrawer/navigation-drawer.js';
 import { Snackbar } from '@material/mwc-snackbar/mwc-snackbar.js';
 import { NavigationBar } from '@material/web/labs/navigationbar/internal/navigation-bar.js';
@@ -42,28 +42,28 @@ import {
   applyThemeWithContrast,
   themeFromSourceColorWithContrast,
 } from './@yrpri/common/YpMaterialThemeHelper.js';
-import { CpsAppUser } from './CpsAppUser.js';
+import { CpsAppUser } from './base/CpsAppUser.js';
 
 import './cps-home.js';
 
-import './cps-problem-statement.js';
-import './cps-sub-problems.js';
-import './cps-entities.js';
-import './cps-solutions.js';
-import './ps-policies.js';
+import './policies/cps-problem-statement.js';
+import './policies/cps-sub-problems.js';
+import './policies/cps-entities.js';
+import './policies/cps-solutions.js';
+import './policies/ps-policies.js';
 
 import './ltp/ltp-manage-crt.js';
 
 import { IEngineConstants } from './constants.js';
 import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
-import { CpsSolutions } from './cps-solutions.js';
+import { CpsSolutions } from './policies/cps-solutions.js';
 import { TextField } from '@material/web/textfield/internal/text-field.js';
 import { Dialog } from '@material/web/dialog/internal/dialog.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import { debug } from 'console';
-import { PsPolicies } from './ps-policies.js';
+import { PsPolicies } from './policies/ps-policies.js';
 
 const PagesTypes = {
   ProblemStatement: 1,

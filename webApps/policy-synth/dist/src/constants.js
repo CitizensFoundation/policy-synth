@@ -1,88 +1,94 @@
-const gpt4InTokenPrice = 0.03 / 1000;
-const gpt4OutTokenPrice = 0.06 / 1000;
-const gpt35_16kInTokenPrice = 0.003 / 1000;
-const gpt35_16kOutTokenPrice = 0.004 / 1000;
-const gpt35InTokenPrice = 0.0015 / 1000;
+const gpt4InTokenPrice = 0.01 / 1000;
+const gpt4OutTokenPrice = 0.03 / 1000;
+const gpt35_16kInTokenPrice = 0.001 / 1000;
+const gpt35_16kOutTokenPrice = 0.002 / 1000;
+// The total limit is 128k but we'll use the first 70k
+const gpt4TotalTokenLimit = 70000;
 const adaInTokenPrice = 0.0001;
-const gpt35kOutTokenPrice = 0.002 / 1000;
-const gpt35_16k_TPM = 750000;
+const gpt35_16k_TPM = 1000000;
 const gpt35_16k_RPM = 10000;
-const gpt35_TPM = 180000;
-const gpt35_RPM = 3500;
-const gpt4_TPM = 40000;
-const gpt4_RPM = 200;
+const gpt35_TPM = 750000;
+const gpt35_RPM = 10000;
+const gpt4_TPM = 150000;
+const gpt4_RPM = 10000;
 export class IEngineConstants {
     static simplifyEvidenceType(evidenceType) {
-        let type = evidenceType
-            .replace(/allPossible/g, "")
-            .replace(/IdentifiedInTextContext/g, "");
+        let type = evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
         type = type.charAt(0).toLowerCase() + type.slice(1);
+        return type;
+    }
+    static simplifyRootCauseType(rootCauseType) {
+        let type = rootCauseType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
+        type = type.charAt(0).toLowerCase() + type.slice(1);
+        if (type != "rootCausesCaseStudies") {
+            type = type.slice(0, -1);
+        }
         return type;
     }
 }
 IEngineConstants.createSubProblemsModel = {
-    name: "gpt-4",
-    temperature: 0.7,
-    maxOutputTokens: 4500,
-    tokenLimit: 8192,
-    inTokenCostUSD: gpt4InTokenPrice,
-    outTokenCostUSD: gpt4OutTokenPrice,
-    limitTPM: gpt4_TPM,
-    limitRPM: gpt4_RPM,
-    verbose: true
-};
-IEngineConstants.policiesSeedModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 4096,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: true,
+};
+IEngineConstants.policiesSeedModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.7,
+    maxOutputTokens: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
 };
 IEngineConstants.analyseExternalSolutionsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 256,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
 };
 IEngineConstants.createEntitiesModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 2048,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true
+    verbose: true,
 };
 IEngineConstants.topicMapSolutionsModel = {
-    inTokenCostsUSD: adaInTokenPrice
+    inTokenCostsUSD: adaInTokenPrice,
 };
 IEngineConstants.createSolutionImagesModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 256,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
 };
 IEngineConstants.createSearchQueriesModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -90,32 +96,43 @@ IEngineConstants.createSearchQueriesModel = {
     verbose: true,
 };
 IEngineConstants.createEvidenceSearchQueriesModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.searchQueryRankingsModel = {
-    name: "gpt-4",
-    temperature: 0.0,
-    maxOutputTokens: 2,
-    tokenLimit: 8192,
+IEngineConstants.createRootCauseSearchQueriesModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.7,
+    maxOutputTokens: 1024,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true,
+    verbose: true
 };
-IEngineConstants.searchResultsRankingsModel = {
-    name: "gpt-4",
+IEngineConstants.searchQueryRankingsModel = {
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+};
+IEngineConstants.searchResultsRankingsModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 2,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -123,21 +140,21 @@ IEngineConstants.searchResultsRankingsModel = {
     verbose: false,
 };
 IEngineConstants.subProblemsRankingsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true,
+    verbose: false,
 };
 IEngineConstants.entitiesRankingsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -145,29 +162,29 @@ IEngineConstants.entitiesRankingsModel = {
     verbose: true,
 };
 IEngineConstants.solutionsRankingsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
+};
+IEngineConstants.prosConsRankingsModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 2,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.prosConsRankingsModel = {
-    name: "gpt-3.5-turbo",
-    temperature: 0.0,
-    maxOutputTokens: 2,
-    tokenLimit: 8192,
-    inTokenCostUSD: gpt35InTokenPrice,
-    outTokenCostUSD: gpt35kOutTokenPrice,
-    limitTPM: gpt35_TPM,
-    limitRPM: gpt35_RPM,
-    verbose: false,
-};
 IEngineConstants.getPageAnalysisModel = {
-    name: "gpt-3.5-turbo-16k",
+    name: "gpt-3.5-turbo-1106",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: 16385,
@@ -177,11 +194,33 @@ IEngineConstants.getPageAnalysisModel = {
     limitRPM: gpt35_16k_RPM,
     verbose: false,
 };
+IEngineConstants.getSolutionsPagesAnalysisModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 4000,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+};
 IEngineConstants.rankWebSolutionsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+};
+IEngineConstants.reduceSubProblemsModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.1,
+    maxOutputTokens: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -189,10 +228,21 @@ IEngineConstants.rankWebSolutionsModel = {
     verbose: false
 };
 IEngineConstants.rateWebEvidenceModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: 4096,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+};
+IEngineConstants.rateWebRootCausesModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -200,21 +250,43 @@ IEngineConstants.rateWebEvidenceModel = {
     verbose: false
 };
 IEngineConstants.rankWebEvidenceModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
-    tokenLimit: 4096,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
+};
+IEngineConstants.rankWebRootCausesModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 2048,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
 };
 IEngineConstants.getRefinedEvidenceModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
-    maxOutputTokens: 1750,
-    tokenLimit: 8192,
+    maxOutputTokens: 2048,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+};
+IEngineConstants.getRefinedRootCausesModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 3048,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -222,21 +294,21 @@ IEngineConstants.getRefinedEvidenceModel = {
     verbose: false
 };
 IEngineConstants.reapSolutionsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 128,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
 };
 IEngineConstants.groupSolutionsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
-    maxOutputTokens: 2048,
-    tokenLimit: 8192,
+    maxOutputTokens: 4095,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -244,21 +316,21 @@ IEngineConstants.groupSolutionsModel = {
     verbose: false
 };
 IEngineConstants.rateSolutionsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: false
+    verbose: false,
 };
 IEngineConstants.createSolutionsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1200,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -266,10 +338,10 @@ IEngineConstants.createSolutionsModel = {
     verbose: false,
 };
 IEngineConstants.evolveSolutionsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1200,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -277,10 +349,10 @@ IEngineConstants.evolveSolutionsModel = {
     verbose: false,
 };
 IEngineConstants.createProsConsModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 2048,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -288,10 +360,10 @@ IEngineConstants.createProsConsModel = {
     verbose: false,
 };
 IEngineConstants.evolutionMutateModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -299,10 +371,21 @@ IEngineConstants.evolutionMutateModel = {
     verbose: false,
 };
 IEngineConstants.evolutionRecombineModel = {
-    name: "gpt-4",
+    name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
-    tokenLimit: 8192,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false,
+};
+IEngineConstants.validationModel = {
+    name: "gpt-4-1106-preview",
+    temperature: 0.0,
+    maxOutputTokens: 1024,
+    tokenLimit: gpt4TotalTokenLimit,
     inTokenCostUSD: gpt4InTokenPrice,
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
@@ -319,41 +402,45 @@ IEngineConstants.rankingLLMmaxRetryCount = 40;
 // See also hardcoded 3 for project 1 in createSolutions
 IEngineConstants.maxTopEntitiesToSearch = 4;
 IEngineConstants.maxTopEntitiesToRender = 3;
-IEngineConstants.maxTopQueriesToSearchPerType = 4;
+IEngineConstants.maxTopQueriesToSearchPerType = 5;
 IEngineConstants.maxTopEvidenceQueriesToSearchPerType = 4;
+IEngineConstants.maxTopRootCauseQueriesToSearchPerType = 5;
+IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet = 0.65;
+IEngineConstants.maxRootCausesToUseForRatingRootCauses = 5;
+IEngineConstants.topWebPagesToGetForRefineRootCausesScan = 10;
 IEngineConstants.mainSearchRetryCount = 40;
 IEngineConstants.maxDalleRetryCount = 7;
-IEngineConstants.maxTopWebPagesToGet = 10;
-IEngineConstants.maxWebPagesToGetByTopSearchPosition = 10;
-IEngineConstants.maxEvidenceWebPagesToGetByTopSearchPosition = 10;
+IEngineConstants.maxTopWebPagesToGet = 5;
 IEngineConstants.maxBingSearchResults = 10;
 IEngineConstants.maxTopProsConsUsedForRating = 2;
 IEngineConstants.maxNumberGeneratedProsConsForSolution = 3;
 IEngineConstants.minSleepBeforeBrowserRequest = 50;
 IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest = 100;
 IEngineConstants.numberOfSearchTypes = 4;
-IEngineConstants.webPageNavTimeout = 60 * 1000;
-IEngineConstants.currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36";
-IEngineConstants.topItemsToKeepForTopicClusterPruning = 5;
+IEngineConstants.webPageNavTimeout = 30 * 1000;
+IEngineConstants.subProblemsRankingMinNumberOfMatches = 10;
+IEngineConstants.currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
+IEngineConstants.topItemsToKeepForTopicClusterPruning = 3;
 IEngineConstants.chances = {
     createSolutions: {
         searchQueries: {
             useMainProblemSearchQueries: 0.01,
-            useOtherSubProblemSearchQueries: 0.09,
-            useSubProblemSearchQueries: 0.45,
-            useRandomEntitySearchQueries: 0.45,
+            useOtherSubProblemSearchQueries: 0.01,
+            useSubProblemSearchQueries: 0.38,
+            useRandomEntitySearchQueries: 0.58,
         },
         webSolutions: {
-            top: 0.20,
-            topThree: 0.45,
-            topSeven: 0.25,
-            all: 0.10
+            top: 0.05,
+            topThree: 0.25,
+            topSeven: 0.50,
+            all: 0.20,
         },
-        notUsingTopSearchQueries: 0.50,
-        vectorSearchAcrossAllProblems: 0.01,
+        notUsingTopSearchQueries: 0.1,
+        vectorSearchAcrossAllProblems: 0.001,
     },
 };
 IEngineConstants.maxTopSearchQueriesForSolutionCreation = 8;
+IEngineConstants.maxPercentOfSolutionsWebPagesToGet = 0.25;
 IEngineConstants.limits = {
     webPageVectorResultsForNewSolutions: 14,
     useRandomTopFromVectorSearchResults: 14,
@@ -364,7 +451,7 @@ IEngineConstants.enable = {
         createEntities: true,
         createSolutions: true,
         createProsCons: true,
-        policiesSeed: true
+        policiesSeed: true,
     },
 };
 IEngineConstants.evolution = {
@@ -372,45 +459,57 @@ IEngineConstants.evolution = {
     limitTopTopicClusterElitesToEloRating: 850,
     // Population split
     keepElitePercent: 0.1,
-    randomImmigrationPercent: 0.40,
-    mutationOffspringPercent: 0.40,
-    crossoverPercent: 0.1,
+    randomImmigrationPercent: 0.4,
+    mutationOffspringPercent: 0.35,
+    crossoverPercent: 0.15,
     // General mutation rate split
-    lowMutationRate: 0.4,
-    mediumMutationRate: 0.4,
+    lowMutationRate: 0.5,
+    mediumMutationRate: 0.3,
     highMutationRate: 0.2,
     selectParentTournamentSize: 7,
-    crossoverMutationPercent: 0.1,
+    crossoverMutationPercent: 0.05,
 };
 IEngineConstants.maxPercentOfEloMatched = 0.75;
-IEngineConstants.minimumNumberOfPairwiseVotesForPopulation = 8;
-IEngineConstants.maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize *
-    IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
+IEngineConstants.minimumNumberOfPairwiseVotesForPopulation = 10;
+IEngineConstants.maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize * IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
 IEngineConstants.maxTopSolutionsToCreatePolicies = 3;
 IEngineConstants.maxTopPoliciesToProcess = 1;
 IEngineConstants.maxEvidenceToUseForRatingEvidence = 5;
 IEngineConstants.policyEvidenceFieldTypes = [
-    'allPossiblePositiveEvidenceIdentifiedInTextContext',
-    'allPossibleNegativeEvidenceIdentifiedInTextContext',
-    'allPossibleNeutralEvidenceIdentifiedInTextContext',
-    'allPossibleEconomicEvidenceIdentifiedInTextContext',
-    'allPossibleScientificEvidenceIdentifiedInTextContext',
-    'allPossibleCulturalEvidenceIdentifiedInTextContext',
-    'allPossibleEnvironmentalEvidenceIdentifiedInTextContext',
-    'allPossibleLegalEvidenceIdentifiedInTextContext',
-    'allPossibleTechnologicalEvidenceIdentifiedInTextContext',
-    'allPossibleGeopoliticalEvidenceIdentifiedInTextContext',
-    'allPossibleCaseStudiesIdentifiedInTextContext',
-    'allPossibleStakeholderOpinionsIdentifiedInTextContext',
-    'allPossibleExpertOpinionsIdentifiedInTextContext',
-    'allPossiblePublicOpinionsIdentifiedInTextContext',
-    'allPossibleHistoricalContextIdentifiedInTextContext',
-    'allPossibleEthicalConsiderationsIdentifiedInTextContext',
-    'allPossibleLongTermImpactIdentifiedInTextContext',
-    'allPossibleShortTermImpactIdentifiedInTextContext',
-    'allPossibleLocalPerspectiveIdentifiedInTextContext',
-    'allPossibleGlobalPerspectiveIdentifiedInTextContext',
-    'allPossibleCostAnalysisIdentifiedInTextContext',
-    'allPossibleImplementationFeasibilityIdentifiedInTextContext'
+    "allPossiblePositiveEvidenceIdentifiedInTextContext",
+    "allPossibleNegativeEvidenceIdentifiedInTextContext",
+    "allPossibleNeutralEvidenceIdentifiedInTextContext",
+    "allPossibleEconomicEvidenceIdentifiedInTextContext",
+    "allPossibleScientificEvidenceIdentifiedInTextContext",
+    "allPossibleCulturalEvidenceIdentifiedInTextContext",
+    "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
+    "allPossibleLegalEvidenceIdentifiedInTextContext",
+    "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
+    "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
+    "allPossibleCaseStudiesIdentifiedInTextContext",
+    "allPossibleStakeholderOpinionsIdentifiedInTextContext",
+    "allPossibleExpertOpinionsIdentifiedInTextContext",
+    "allPossiblePublicOpinionsIdentifiedInTextContext",
+    "allPossibleHistoricalContextIdentifiedInTextContext",
+    "allPossibleEthicalConsiderationsIdentifiedInTextContext",
+    "allPossibleLongTermImpactIdentifiedInTextContext",
+    "allPossibleShortTermImpactIdentifiedInTextContext",
+    "allPossibleLocalPerspectiveIdentifiedInTextContext",
+    "allPossibleGlobalPerspectiveIdentifiedInTextContext",
+    "allPossibleCostAnalysisIdentifiedInTextContext",
+    "allPossibleImplementationFeasibilityIdentifiedInTextContext",
+];
+IEngineConstants.rootCauseFieldTypes = [
+    "allPossibleHistoricalRootCausesIdentifiedInTextContext",
+    "allPossibleEconomicRootCausesIdentifiedInTextContext",
+    "allPossibleScientificRootCausesIdentifiedInTextContext",
+    "allPossibleCulturalRootCausesIdentifiedInTextContext",
+    "allPossibleSocialRootCausesIdentifiedInTextContext",
+    "allPossibleEnvironmentalRootCausesIdentifiedInTextContext",
+    "allPossibleLegalRootCausesIdentifiedInTextContext",
+    "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
+    "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
+    "allPossibleEthicalRootCausesIdentifiedInTextContext",
+    "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
 ];
 //# sourceMappingURL=constants.js.map
