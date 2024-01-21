@@ -130,6 +130,7 @@
     "arrowParens": "avoid"
   },
   "dependencies": {
+    "@policysynth/agents": "^1.0.3",
     "@fingerprintjs/fingerprintjs": "^3.4.1",
     "@lit-labs/router": "^0.1.1",
     "@lit-labs/virtualizer": "^1.0.1",
