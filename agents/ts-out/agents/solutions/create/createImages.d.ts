@@ -9,7 +9,7 @@ export declare class CreateSolutionImagesProcessor extends BaseProcessor {
     uploadImageToS3(bucket: string, filePath: string, key: string): Promise<unknown>;
     get randomSecondaryColor(): string;
     getSubProblemColor(subProblemIndex: number): string;
-    renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution | PSPolicy, injectText?: string): Promise<(SystemMessage | HumanMessage)[]>;
+    renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution | PSPolicy, injectText?: string): Promise<(HumanMessage | SystemMessage)[]>;
     getImageUrlFromPrompt(prompt: string): Promise<any>;
     createImages(): Promise<void>;
     process(): Promise<void>;
