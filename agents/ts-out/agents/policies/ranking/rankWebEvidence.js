@@ -4,7 +4,10 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export class RankWebEvidenceProcessor extends BaseProcessor {
-    evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+    constructor() {
+        super(...arguments);
+        this.evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+    }
     async renderProblemPrompt(subProblemIndex, policy, evidenceToRank, evidenceType) {
         return [
             new SystemMessage(`

@@ -5,7 +5,10 @@ import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCaus
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const FORCE_RESEARCH = false;
 export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
-    searchCounter = 0;
+    constructor() {
+        super(...arguments);
+        this.searchCounter = 0;
+    }
     async searchWeb() {
         const problemStatement = this.memory.problemStatement;
         if (!problemStatement.rootCauseSearchResults) {

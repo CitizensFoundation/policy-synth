@@ -1,9 +1,6 @@
 import { Base } from "../base.js";
 import { IEngineConstants } from "../constants.js";
 export class BaseProcessor extends Base {
-    memory;
-    job;
-    currentSubProblemIndex;
     constructor(job, memory) {
         super();
         this.job = job;

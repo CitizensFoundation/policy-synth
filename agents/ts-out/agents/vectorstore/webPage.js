@@ -3,11 +3,6 @@ import { Base } from "../../base.js";
 import { IEngineConstants } from "../../constants.js";
 import fs from "fs/promises";
 export class WebPageVectorStore extends Base {
-    //@ts-ignore
-    static client = weaviate.client({
-        scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
-        host: process.env.WEAVIATE_HOST || "localhost:8080",
-    });
     async addSchema() {
         let classObj;
         try {
@@ -374,4 +369,9 @@ export class WebPageVectorStore extends Base {
         return doSearch();
     }
 }
+//@ts-ignore
+WebPageVectorStore.client = weaviate.client({
+    scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
+    host: process.env.WEAVIATE_HOST || "localhost:8080",
+});
 //# sourceMappingURL=webPage.js.map

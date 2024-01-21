@@ -3,19 +3,22 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
-    rootCauseTypes = [
-        "historicalRootCause",
-        "economicRootCause",
-        "scientificRootCause",
-        "culturalRootCause",
-        "socialRootCause",
-        "environmentalRootCause",
-        "legalRootCause",
-        "technologicalRootCause",
-        "geopoliticalRootCause",
-        "ethicalRootCause",
-        "caseStudies",
-    ];
+    constructor() {
+        super(...arguments);
+        this.rootCauseTypes = [
+            "historicalRootCause",
+            "economicRootCause",
+            "scientificRootCause",
+            "culturalRootCause",
+            "socialRootCause",
+            "environmentalRootCause",
+            "legalRootCause",
+            "technologicalRootCause",
+            "geopoliticalRootCause",
+            "ethicalRootCause",
+            "caseStudies",
+        ];
+    }
     async voteOnPromptPair(index, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];

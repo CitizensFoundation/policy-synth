@@ -4,7 +4,10 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export class RankWebSolutionsProcessor extends BaseProcessor {
-    webPageVectorStore = new WebPageVectorStore();
+    constructor() {
+        super(...arguments);
+        this.webPageVectorStore = new WebPageVectorStore();
+    }
     async renderProblemPrompt(solutionsToRank, subProblemIndex) {
         return [
             new SystemMessage(`You are an expert in filtering and ranking solutions to problems.

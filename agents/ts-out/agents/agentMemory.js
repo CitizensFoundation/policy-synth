@@ -1,7 +1,6 @@
 class PsAgentMemory {
 }
 export class RedisAgentMemory extends PsAgentMemory {
-    redis;
     constructor(redis) {
         super();
         this.redis = redis;
@@ -15,8 +14,6 @@ export class RedisAgentMemory extends PsAgentMemory {
     }
 }
 export class PostgresAgentMemory extends PsAgentMemory {
-    client;
-    tableName;
     constructor(client, tableName = "ps_agent_memory") {
         super();
         this.client = client;

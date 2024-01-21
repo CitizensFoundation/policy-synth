@@ -4,7 +4,10 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export class RankWebRootCausesProcessor extends BaseProcessor {
-    rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
+    constructor() {
+        super(...arguments);
+        this.rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
+    }
     async renderProblemPrompt(rootCausesToRank, rootCauseType) {
         return [
             new SystemMessage(`

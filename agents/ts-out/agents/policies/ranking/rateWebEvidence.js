@@ -4,7 +4,10 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export class RateWebEvidenceProcessor extends BaseProcessor {
-    evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+    constructor() {
+        super(...arguments);
+        this.evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+    }
     simplifyEvidenceType(evidenceType) {
         return evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
     }

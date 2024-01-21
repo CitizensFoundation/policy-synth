@@ -3,7 +3,10 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
-    subProblemIndex = 0;
+    constructor() {
+        super(...arguments);
+        this.subProblemIndex = 0;
+    }
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];

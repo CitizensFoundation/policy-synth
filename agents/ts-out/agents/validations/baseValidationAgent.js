@@ -3,8 +3,6 @@ import { Base } from "../../base.js";
 import { IEngineConstants } from "../../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 export class PsBaseValidationAgent extends Base {
-    name;
-    options;
     constructor(name, options = {}) {
         super();
         this.name = name;
