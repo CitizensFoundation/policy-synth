@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "es2020",
     "module": "esnext",
-    "outDir": "ts-out/",
+    "outDir": "dist/",
     "declaration": true,
     "declarationMap": true
   },

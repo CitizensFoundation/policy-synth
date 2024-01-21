@@ -7,14 +7,14 @@
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/api"
   },
   "license": "MIT",
-  "main": "ts-out/api/server.js",
+  "main": "dist/api/server.js",
   "type": "module",
   "scripts": {
     "start": "nodemon -e ts out-ts/api/server.js",
-    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/api/server.js",
-    "dev": "nodemon --config nodemon.json ./ts-out/api/server.js",
+    "watch-start": "tsc --project ./ --outDir ./dist -w & nodemon -q ./dist/api/server.js",
+    "dev": "nodemon --config nodemon.json ./dist/api/server.js",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",
-    "build": "tsc --project ./ --outDir ./ts-out",
+    "build": "tsc --project ./ --outDir ./dist",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@langchain/openai": "^0.0.10",
-    "@policysynth/agents": "^1.0.7",
+    "@policysynth/agents": "^1.0.8",
     "axios": "^1.4.0",
     "colors": "^1.4.0",
     "connect-redis": "^7.1.0",

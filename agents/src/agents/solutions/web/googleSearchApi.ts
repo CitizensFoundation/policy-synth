@@ -47,7 +47,7 @@ export class GoogleSearchApi extends Base {
   }
 }
 
-// TEST_GOOGLE_SEARCH=true GOOGLE_SEARCH_API_KEY= GOOGLE_SEARCH_API_CX_ID= node src/ts-out/agents/solutions/web/googleSearchApi.js
+// TEST_GOOGLE_SEARCH=true GOOGLE_SEARCH_API_KEY= GOOGLE_SEARCH_API_CX_ID= node src/dist/agents/solutions/web/googleSearchApi.js
 
 if (process.env.TEST_GOOGLE_SEARCH) {
   async function test() {
