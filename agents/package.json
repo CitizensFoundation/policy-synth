@@ -19,11 +19,11 @@
     "typescript": "^5.1.6"
   },
   "types": "ts-out/index.d.ts",
-  "main": "ts-out/queue.js",
+  "main": "ts-out/index.js",
   "scripts": {
     "test": "gulp test:local",
-    "start": "nodemon -q ts-out/src/queue.js",
-    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ts-out/src/queue.js"
+    "start": "nodemon -q ts-out/queue.js",
+    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ts-out/queue.js"
   },
   "cacheDirectories": [
     "node_modules"
