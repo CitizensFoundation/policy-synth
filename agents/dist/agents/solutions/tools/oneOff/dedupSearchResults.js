@@ -101,7 +101,7 @@ const dedup = async () => {
         process.exit(0);
     }
     else {
-        console.log("No project id provided");
+        console.log("No project id provided - deduplicate search results");
         process.exit(1);
     }
 };

@@ -22,7 +22,7 @@ const saveProject = async (): Promise<void> => {
     console.log(`Project data has been saved to ${fileName}`);
     process.exit(0);
   } else {
-    console.log('No project id provided');
+    console.log('No project id provided - save project');
     process.exit(1);
   }
 };

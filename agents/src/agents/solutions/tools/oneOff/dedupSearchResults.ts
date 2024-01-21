@@ -155,7 +155,7 @@ const dedup = async (): Promise<void> => {
     await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memory));
     process.exit(0);
   } else {
-    console.log("No project id provided");
+    console.log("No project id provided - deduplicate search results");
     process.exit(1);
   }
 };

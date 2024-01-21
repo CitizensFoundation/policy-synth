@@ -12,7 +12,7 @@ import '@material/web/textfield/filled-text-field.js';
 
 import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
-import '../../@yrpri/common/yp-image.js';
+import '../@yrpri/common/yp-image.js';
 import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 import { BaseChatBotServerApi } from './BaseChatBotApi';
 

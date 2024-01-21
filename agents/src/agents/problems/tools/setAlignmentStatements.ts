@@ -531,6 +531,6 @@ if (projectId) {
 
   process.exit(0);
 } else {
-  console.log("No project id provided");
+  console.log("No project id provided - set alignment statements");
   process.exit(1);
 }

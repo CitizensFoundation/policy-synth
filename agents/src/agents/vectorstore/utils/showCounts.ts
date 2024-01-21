@@ -142,7 +142,7 @@ async function run() {
     await counts.process();
     process.exit(0);
   } else {
-    console.log("No project id provided");
+    console.log("No project id provided - show counts");
     process.exit(1);
   }
 }
