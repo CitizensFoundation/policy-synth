@@ -1,13 +1,13 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/agents"
   },
   "license": "MIT",
-  "main": "src/ts-out/queue.js",
+  "main": "ts-out/src/queue.js",
   "devDependencies": {
     "@tsconfig/node18": "^18.2.0",
     "@types/html-to-text": "^9.0.1",
@@ -19,11 +19,11 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
+  "types": "ts-out/index.d.ts",
   "scripts": {
     "test": "gulp test:local",
-    "start": "nodemon -q src/out-tsc/main.js",
-    "watch-start": "tsc --project ./src/ --outDir ./src/ts-out -w & nodemon -q src/out-tsc/main.js",
-    "worker": "node api/server-api/ts-out/ac-services/workers/main.js"
+    "start": "nodemon -q ts-out/src/queue.js",
+    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ts-out/src/queue.js"
   },
   "cacheDirectories": [
     "node_modules"

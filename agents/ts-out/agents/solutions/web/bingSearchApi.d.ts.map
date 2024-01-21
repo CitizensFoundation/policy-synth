@@ -1,0 +1,1 @@
+{"version":3,"file":"bingSearchApi.d.ts","sourceRoot":"","sources":["../../../../src/agents/solutions/web/bingSearchApi.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,IAAI,EAAE,MAAM,kBAAkB,CAAC;AAOxC,qBAAa,aAAc,SAAQ,IAAI;IACrC,OAAO,CAAC,gBAAgB,CAAqB;;IAWhC,MAAM,CAAC,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,uBAAuB,EAAE,CAAC;CA2EvE"}
