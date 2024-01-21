@@ -4,13 +4,16 @@ import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 class ShowCounts extends BaseProcessor {
-    webPageVectorStore = new WebPageVectorStore();
-    foundIds = new Set();
-    foundUrls = new Set();
-    totalWebPageCount = 0;
-    totalSolutionsFound = 0;
-    totalEmptySolutions = 0;
-    totalNonEmptySolutions = 0;
+    constructor() {
+        super(...arguments);
+        this.webPageVectorStore = new WebPageVectorStore();
+        this.foundIds = new Set();
+        this.foundUrls = new Set();
+        this.totalWebPageCount = 0;
+        this.totalSolutionsFound = 0;
+        this.totalEmptySolutions = 0;
+        this.totalNonEmptySolutions = 0;
+    }
     async countWebPages(subProblemIndex) {
         let webPageCount = 0;
         let solutionsCount = 0;

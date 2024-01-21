@@ -1,6 +1,5 @@
 import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 export class PsParallelValidationAgent extends PsBaseValidationAgent {
-    agents;
     constructor(name, options = {}, agents) {
         super(name, options);
         this.agents = agents;

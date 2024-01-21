@@ -95,7 +95,6 @@ const externalSolutionsMisuseOfLegalSystem = [
     },
 ];
 export class AnalyseExternalSolutions extends BaseProcessor {
-    folderPath;
     async renderAnalysisPrompt(solutionDescription, requirement) {
         const messages = [
             new SystemMessage(`

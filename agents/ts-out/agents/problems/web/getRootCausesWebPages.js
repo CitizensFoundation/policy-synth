@@ -13,25 +13,28 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = true;
 class RootCauseTypeLookup {
-    static rootCauseTypeMapping = {
-        historicalRootCause: "allPossibleHistoricalRootCausesIdentifiedInTextContext",
-        economicRootCause: "allPossibleEconomicRootCausesIdentifiedInTextContext",
-        scientificRootCause: "allPossibleScientificRootCausesIdentifiedInTextContext",
-        culturalRootCause: "allPossibleCulturalRootCausesIdentifiedInTextContext",
-        socialRootCause: "allPossibleSocialRootCausesIdentifiedInTextContext",
-        environmentalRootCause: "allPossibleEnvironmentalRootCausesIdentifiedInTextContext",
-        legalRootCause: "allPossibleLegalRootCausesIdentifiedInTextContext",
-        technologicalRootCause: "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
-        geopoliticalRootCause: "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
-        ethicalRootCause: "allPossibleEthicalRootCausesIdentifiedInTextContext",
-        caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
-    };
     static getPropertyName(rootCauseType) {
         return this.rootCauseTypeMapping[rootCauseType];
     }
 }
+RootCauseTypeLookup.rootCauseTypeMapping = {
+    historicalRootCause: "allPossibleHistoricalRootCausesIdentifiedInTextContext",
+    economicRootCause: "allPossibleEconomicRootCausesIdentifiedInTextContext",
+    scientificRootCause: "allPossibleScientificRootCausesIdentifiedInTextContext",
+    culturalRootCause: "allPossibleCulturalRootCausesIdentifiedInTextContext",
+    socialRootCause: "allPossibleSocialRootCausesIdentifiedInTextContext",
+    environmentalRootCause: "allPossibleEnvironmentalRootCausesIdentifiedInTextContext",
+    legalRootCause: "allPossibleLegalRootCausesIdentifiedInTextContext",
+    technologicalRootCause: "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
+    geopoliticalRootCause: "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
+    ethicalRootCause: "allPossibleEthicalRootCausesIdentifiedInTextContext",
+    caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
+};
 export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
-    rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
+    constructor() {
+        super(...arguments);
+        this.rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
+    }
     renderRootCauseScanningPrompt(type, text) {
         const nameOfColumn = RootCauseTypeLookup.getPropertyName(type);
         if (!nameOfColumn) {

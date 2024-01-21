@@ -3,11 +3,11 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
-    subProblemIndex = 0;
-    entitiesIndex = 0;
-    currentEntity;
-    searchResultType;
-    searchResultTarget;
+    constructor() {
+        super(...arguments);
+        this.subProblemIndex = 0;
+        this.entitiesIndex = 0;
+    }
     renderProblemDetail() {
         let detail = ``;
         if (this.searchResultTarget === "problemStatement") {

@@ -20,8 +20,11 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
 export class GetWebPagesProcessor extends BaseProcessor {
-    webPageVectorStore = new WebPageVectorStore();
-    totalPagesSave = 0;
+    constructor() {
+        super(...arguments);
+        this.webPageVectorStore = new WebPageVectorStore();
+        this.totalPagesSave = 0;
+    }
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         return [
             new SystemMessage(`Your are an AI expert in analyzing text for practical solutions to difficult problems:

@@ -4,7 +4,6 @@ import { Base } from "../../../base.js";
 import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class BingSearchApi extends Base {
-    SUBSCRIPTION_KEY;
     constructor() {
         super();
         this.SUBSCRIPTION_KEY = process.env.AZURE_BING_SEARCH_KEY;

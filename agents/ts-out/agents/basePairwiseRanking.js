@@ -1,16 +1,19 @@
 import { BaseProcessor } from "./baseProcessor.js";
 import { IEngineConstants } from "../constants.js";
 export class BasePairwiseRankingsProcessor extends BaseProcessor {
-    prompts = {};
-    allItems = {};
-    INITIAL_ELO_RATING = 1000;
-    K_FACTOR_INITIAL = 60; // Initial K-factor
-    K_FACTOR_MIN = 10; // Minimum K-factor
-    NUM_COMPARISONS_FOR_MIN_K = 20; // Number of comparisons for K to reach its minimum
-    maxNumberOfPrompts = IEngineConstants.maxNumberOfPairwiseRankingPrompts;
-    numComparisons = {};
-    KFactors = {};
-    eloRatings = {};
+    constructor() {
+        super(...arguments);
+        this.prompts = {};
+        this.allItems = {};
+        this.INITIAL_ELO_RATING = 1000;
+        this.K_FACTOR_INITIAL = 60; // Initial K-factor
+        this.K_FACTOR_MIN = 10; // Minimum K-factor
+        this.NUM_COMPARISONS_FOR_MIN_K = 20; // Number of comparisons for K to reach its minimum
+        this.maxNumberOfPrompts = IEngineConstants.maxNumberOfPairwiseRankingPrompts;
+        this.numComparisons = {};
+        this.KFactors = {};
+        this.eloRatings = {};
+    }
     fisherYatesShuffle(array) {
         if (array && array.length > 0) {
             for (let i = array.length - 1; i > 0; i--) {

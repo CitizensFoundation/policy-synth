@@ -13,36 +13,39 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
 class EvidenceTypeLookup {
-    static evidenceTypeMapping = {
-        positiveEvidence: "allPossiblePositiveEvidenceIdentifiedInTextContext",
-        negativeEvidence: "allPossibleNegativeEvidenceIdentifiedInTextContext",
-        neutralEvidence: "allPossibleNeutralEvidenceIdentifiedInTextContext",
-        economicEvidence: "allPossibleEconomicEvidenceIdentifiedInTextContext",
-        scientificEvidence: "allPossibleScientificEvidenceIdentifiedInTextContext",
-        culturalEvidence: "allPossibleCulturalEvidenceIdentifiedInTextContext",
-        environmentalEvidence: "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
-        legalEvidence: "allPossibleLegalEvidenceIdentifiedInTextContext",
-        technologicalEvidence: "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
-        geopoliticalEvidence: "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
-        caseStudies: "allPossibleCaseStudiesIdentifiedInTextContext",
-        stakeholderOpinions: "allPossibleStakeholderOpinionsIdentifiedInTextContext",
-        expertOpinions: "allPossibleExpertOpinionsIdentifiedInTextContext",
-        publicOpinions: "allPossiblePublicOpinionsIdentifiedInTextContext",
-        historicalContext: "allPossibleHistoricalContextIdentifiedInTextContext",
-        ethicalConsiderations: "allPossibleEthicalConsiderationsIdentifiedInTextContext",
-        longTermImpact: "allPossibleLongTermImpactIdentifiedInTextContext",
-        shortTermImpact: "allPossibleShortTermImpactIdentifiedInTextContext",
-        localPerspective: "allPossibleLocalPerspectiveIdentifiedInTextContext",
-        globalPerspective: "allPossibleGlobalPerspectiveIdentifiedInTextContext",
-        costAnalysis: "allPossibleCostAnalysisIdentifiedInTextContext",
-        implementationFeasibility: "allPossibleImplementationFeasibilityIdentifiedInTextContext",
-    };
     static getPropertyName(evidenceType) {
         return this.evidenceTypeMapping[evidenceType];
     }
 }
+EvidenceTypeLookup.evidenceTypeMapping = {
+    positiveEvidence: "allPossiblePositiveEvidenceIdentifiedInTextContext",
+    negativeEvidence: "allPossibleNegativeEvidenceIdentifiedInTextContext",
+    neutralEvidence: "allPossibleNeutralEvidenceIdentifiedInTextContext",
+    economicEvidence: "allPossibleEconomicEvidenceIdentifiedInTextContext",
+    scientificEvidence: "allPossibleScientificEvidenceIdentifiedInTextContext",
+    culturalEvidence: "allPossibleCulturalEvidenceIdentifiedInTextContext",
+    environmentalEvidence: "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
+    legalEvidence: "allPossibleLegalEvidenceIdentifiedInTextContext",
+    technologicalEvidence: "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
+    geopoliticalEvidence: "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
+    caseStudies: "allPossibleCaseStudiesIdentifiedInTextContext",
+    stakeholderOpinions: "allPossibleStakeholderOpinionsIdentifiedInTextContext",
+    expertOpinions: "allPossibleExpertOpinionsIdentifiedInTextContext",
+    publicOpinions: "allPossiblePublicOpinionsIdentifiedInTextContext",
+    historicalContext: "allPossibleHistoricalContextIdentifiedInTextContext",
+    ethicalConsiderations: "allPossibleEthicalConsiderationsIdentifiedInTextContext",
+    longTermImpact: "allPossibleLongTermImpactIdentifiedInTextContext",
+    shortTermImpact: "allPossibleShortTermImpactIdentifiedInTextContext",
+    localPerspective: "allPossibleLocalPerspectiveIdentifiedInTextContext",
+    globalPerspective: "allPossibleGlobalPerspectiveIdentifiedInTextContext",
+    costAnalysis: "allPossibleCostAnalysisIdentifiedInTextContext",
+    implementationFeasibility: "allPossibleImplementationFeasibilityIdentifiedInTextContext",
+};
 export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
-    evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+    constructor() {
+        super(...arguments);
+        this.evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+    }
     renderEvidenceScanningPrompt(subProblemIndex, policy, type, text) {
         const nameOfColumn = EvidenceTypeLookup.getPropertyName(type);
         if (!nameOfColumn) {

@@ -3,30 +3,6 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../../constants.js";
 export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
-    static evidenceWebPageTypesArray = [
-        "positiveEvidence",
-        "negativeEvidence",
-        "neutralEvidence",
-        "economicEvidence",
-        "scientificEvidence",
-        "culturalEvidence",
-        "environmentalEvidence",
-        "legalEvidence",
-        "technologicalEvidence",
-        "geopoliticalEvidence",
-        "caseStudies",
-        "stakeholderOpinions",
-        "expertOpinions",
-        "publicOpinions",
-        "historicalContext",
-        "ethicalConsiderations",
-        "longTermImpact",
-        "shortTermImpact",
-        "localPerspective",
-        "globalPerspective",
-        "costAnalysis",
-        "implementationFeasibility"
-    ];
     filterPolicyParameters(policy) {
         const { imageUrl, imagePrompt, solutionIndex, ...filteredPolicy } = policy;
         return filteredPolicy;
@@ -175,4 +151,28 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProcessor {
         this.logger.info("Finished creating policies evidence search queries for all subproblems");
     }
 }
+CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray = [
+    "positiveEvidence",
+    "negativeEvidence",
+    "neutralEvidence",
+    "economicEvidence",
+    "scientificEvidence",
+    "culturalEvidence",
+    "environmentalEvidence",
+    "legalEvidence",
+    "technologicalEvidence",
+    "geopoliticalEvidence",
+    "caseStudies",
+    "stakeholderOpinions",
+    "expertOpinions",
+    "publicOpinions",
+    "historicalContext",
+    "ethicalConsiderations",
+    "longTermImpact",
+    "shortTermImpact",
+    "localPerspective",
+    "globalPerspective",
+    "costAnalysis",
+    "implementationFeasibility"
+];
 //# sourceMappingURL=createEvidenceSearchQueries.js.map

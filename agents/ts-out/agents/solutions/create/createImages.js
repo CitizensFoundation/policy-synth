@@ -11,40 +11,43 @@ const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
 export class CreateSolutionImagesProcessor extends BaseProcessor {
-    cloudflareProxy = "https://cps-images.citizens.is";
-    subProblemColors = [
-        "blue",
-        "orange",
-        "yellow",
-        "green",
-        "red",
-        "indigo",
-        "violet",
-        "sea Green",
-        "saddle Brown",
-        "chocolate",
-        "fire Brick",
-        "orange Red",
-        "yellow Green",
-        "gold",
-        "dark Khaki",
-        "dark Magenta",
-        "dark Violet",
-        "wheat",
-        "forest Green",
-        "tan",
-        "gray",
-        "transparent",
-    ];
-    secondaryColors = [
-        "gold",
-        "silver",
-        "bronze",
-        "copper",
-        "brass",
-        "steel",
-        "pewter",
-    ];
+    constructor() {
+        super(...arguments);
+        this.cloudflareProxy = "https://cps-images.citizens.is";
+        this.subProblemColors = [
+            "blue",
+            "orange",
+            "yellow",
+            "green",
+            "red",
+            "indigo",
+            "violet",
+            "sea Green",
+            "saddle Brown",
+            "chocolate",
+            "fire Brick",
+            "orange Red",
+            "yellow Green",
+            "gold",
+            "dark Khaki",
+            "dark Magenta",
+            "dark Violet",
+            "wheat",
+            "forest Green",
+            "tan",
+            "gray",
+            "transparent",
+        ];
+        this.secondaryColors = [
+            "gold",
+            "silver",
+            "bronze",
+            "copper",
+            "brass",
+            "steel",
+            "pewter",
+        ];
+    }
     async downloadImage(imageUrl, imageFilePath) {
         const response = await axios({
             method: "GET",
