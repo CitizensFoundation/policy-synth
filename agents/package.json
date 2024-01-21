@@ -19,7 +19,7 @@
     "typescript": "^5.1.6"
   },
   "types": "ts-out/index.d.ts",
-  "main": "ts-out/index.js",
+  "main": "ts-out/queue.js",
   "scripts": {
     "test": "gulp test:local",
     "start": "nodemon -q ts-out/src/queue.js",
