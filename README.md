@@ -12,6 +12,12 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
   <a href="https://policy-synth.ai/projects/1/"><strong>Open Test Results: Democracy in Distress</strong></a><br>
 </h2>
 
+## NPM SDK Modules
+
+- [@policysynth/agents](agents/README.md)
+- [@policysynth/api](api/README.md)
+- [@policysynth/webApp](webApp/README.md)
+
 ## Example Policy Synth Agent Configuration
 ![Policy Synth v 43](https://github.com/CitizensFoundation/policy-synth/assets/43699/6956d011-4899-4d5e-ab59-b75556982f44)
 
