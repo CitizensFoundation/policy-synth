@@ -1,6 +1,11 @@
-type CrtNodeType = 'ude' | 'directCause' | 'assumption' | 'intermediateCause' | 'rootCause';
+type CrtNodeType =
+  | "ude"
+  | "directCause"
+  | "assumption"
+  | "intermediateCause"
+  | "rootCause";
 
-interface CrtDebugData  {
+interface CrtDebugData {
   systemPromptUsedForGeneration?: string;
   firstUserMessageUserForGeneration?: string;
 }
@@ -45,7 +50,22 @@ interface CrtResponse {
 
 interface LtpAiChatWsMessage {
   sender: string;
-  type: 'hello_message' | 'moderation_error' | 'start' | 'message' | 'end' | 'stream' | 'noStreaming' | 'error' | 'info' | 'validationAgentStart' | 'validationAgentCompleted' | 'thinking' | 'start_followup' | 'end_followup' | 'stream_followup';
+  type:
+    | "hello_message"
+    | "moderation_error"
+    | "start"
+    | "message"
+    | "end"
+    | "stream"
+    | "noStreaming"
+    | "error"
+    | "info"
+    | "validationAgentStart"
+    | "validationAgentCompleted"
+    | "thinking"
+    | "start_followup"
+    | "end_followup"
+    | "stream_followup";
   message: string;
   rawMessage?: string;
   refinedCausesSuggestions?: string[];
