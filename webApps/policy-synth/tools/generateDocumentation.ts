@@ -104,7 +104,7 @@ function generateMarkdownFromTree(tree: any, depth = 0) {
           markdown += generateMarkdownFromTree(item.children, depth + 1);
       } else if (item.type === 'file') {
           // Correct the path for files directly under 'src'
-          const filePath = depth === 0 ? `src/${item.path}` : item.path;
+          const filePath = depth === 0 ? `src/${item.path}` : `src/${item.path}`;
           markdown += `${indent}- [${item.name.replace('.md', '')}](${filePath})\n`;
       }
   });
@@ -113,7 +113,7 @@ function generateMarkdownFromTree(tree: any, depth = 0) {
 }
 
 function generateDocsReadme() {
-  const tree = buildDirectoryTree(docsDir);
+  const tree = buildDirectoryTree("docs/src");
   console.log(JSON.stringify(tree, null, 2));
   const markdown = generateMarkdownFromTree(tree);
   fs.writeFileSync(path.join(docsDir, 'README.md'), `${indexHeader}${markdown}`);
