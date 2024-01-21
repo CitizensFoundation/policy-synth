@@ -1,13 +1,12 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/agents"
   },
   "license": "MIT",
-  "main": "ts-out/src/queue.js",
   "devDependencies": {
     "@tsconfig/node18": "^18.2.0",
     "@types/html-to-text": "^9.0.1",
@@ -20,6 +19,7 @@
     "typescript": "^5.1.6"
   },
   "types": "ts-out/index.d.ts",
+  "main": "ts-out/index.js",
   "scripts": {
     "test": "gulp test:local",
     "start": "nodemon -q ts-out/src/queue.js",

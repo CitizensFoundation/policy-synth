@@ -14,12 +14,9 @@ const logger = winston.createLogger({
     ],
 });
 export class Base {
-    memory;
-    logger;
-    timeStart = Date.now();
-    chat;
-    rateLimits = {};
     constructor() {
+        this.timeStart = Date.now();
+        this.rateLimits = {};
         this.logger = logger;
     }
     getJsonBlock(text) {
