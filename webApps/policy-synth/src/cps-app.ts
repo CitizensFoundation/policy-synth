@@ -24,16 +24,16 @@ import {
 import '@material/web/menu/menu.js';
 import { cache } from 'lit/directives/cache.js';
 
-import './src/@yrpri/common/yp-image.js';
-import { YpBaseElement } from './src/@yrpri/common/yp-base-element.js';
+import './@yrpri/common/yp-image.js';
+import { YpBaseElement } from './@yrpri/common/yp-base-element.js';
 
 //import './chat/yp-chat-assistant.js';
-import { Layouts } from './src/flexbox-literals/classes.js';
+import { Layouts } from './flexbox-literals/classes.js';
 
-import './src/cps-web-research.js';
+import './cps-web-research.js';
 
-import { CpsServerApi } from './src/CpsServerApi.js';
-import { CpsAppGlobals } from './src/CpsAppGlobals.js';
+import { CpsServerApi } from './CpsServerApi.js';
+import { CpsAppGlobals } from './CpsAppGlobals.js';
 import { MdNavigationDrawer } from '@material/web/labs/navigationdrawer/navigation-drawer.js';
 import { Snackbar } from '@material/mwc-snackbar/mwc-snackbar.js';
 import { NavigationBar } from '@material/web/labs/navigationbar/internal/navigation-bar.js';
@@ -41,29 +41,29 @@ import {
   Scheme,
   applyThemeWithContrast,
   themeFromSourceColorWithContrast,
-} from './src/@yrpri/common/YpMaterialThemeHelper.js';
-import { CpsAppUser } from './src/CpsAppUser.js';
+} from './@yrpri/common/YpMaterialThemeHelper.js';
+import { CpsAppUser } from './CpsAppUser.js';
 
-import './src/cps-home.js';
+import './cps-home.js';
 
-import './src/cps-problem-statement.js';
-import './src/cps-sub-problems.js';
-import './src/cps-entities.js';
-import './src/cps-solutions.js';
-import './src/ps-policies.js';
+import './cps-problem-statement.js';
+import './cps-sub-problems.js';
+import './cps-entities.js';
+import './cps-solutions.js';
+import './ps-policies.js';
 
-import './src/ltp/ltp-manage-crt.js';
+import './ltp/ltp-manage-crt.js';
 
-import { IEngineConstants } from './src/constants.js';
-import { YpFormattingHelpers } from './src/@yrpri/common/YpFormattingHelpers.js';
-import { CpsSolutions } from './src/cps-solutions.js';
+import { IEngineConstants } from './constants.js';
+import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
+import { CpsSolutions } from './cps-solutions.js';
 import { TextField } from '@material/web/textfield/internal/text-field.js';
 import { Dialog } from '@material/web/dialog/internal/dialog.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import { debug } from 'console';
-import { PsPolicies } from './src/ps-policies.js';
+import { PsPolicies } from './ps-policies.js';
 
 const PagesTypes = {
   ProblemStatement: 1,
