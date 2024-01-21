@@ -19,7 +19,7 @@ else {
         url: "redis://localhost:6379",
     });
 }
-export class CurrentRealityTreeController {
+export class TreeController {
     path = "/api/crt";
     router = express.Router();
     wsClients = new Map();

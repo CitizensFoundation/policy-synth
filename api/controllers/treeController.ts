@@ -23,16 +23,14 @@ if (process.env.REDIS_URL) {
   });
 }
 
-export class CurrentRealityTreeController  {
+export class TreeController  extends BaseController {
   public path = "/api/crt";
-  public router = express.Router();
-  public wsClients = new Map<string, WebSocket>();
-  public prompts: Map<number, string> | undefined;
 
   constructor(wsClients: Map<string, WebSocket>) {
-    this.wsClients = wsClients;
+    super(wsClients);
     this.initializeRoutes();
   }
+
   public async initializeRoutes() {
     this.router.get(this.path + "/:id", this.getTree);
     this.router.post(this.path, this.createTree);
@@ -220,7 +218,7 @@ export class CurrentRealityTreeController  {
         effect,
         causes,
         validationResults,
-        this.prompts
+        this.basePromptOverrides
       );
 
       return res.sendStatus(200);
@@ -285,7 +283,7 @@ export class CurrentRealityTreeController  {
         parentNode.type == "ude"
           ? undefined
           : this.getParentNodes(currentTree.nodes, parentNode.id),
-        this.prompts,
+        this.basePromptOverrides,
         effect,
         causes,
         validationResults

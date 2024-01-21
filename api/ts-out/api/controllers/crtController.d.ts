@@ -1,6 +1,6 @@
 import express from "express";
 import WebSocket from "ws";
-export declare class CurrentRealityTreeController {
+export declare class TreeController {
     path: string;
     router: import("express-serve-static-core").Router;
     wsClients: Map<string, WebSocket>;
