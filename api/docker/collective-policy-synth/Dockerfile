@@ -27,4 +27,4 @@ ENV PORT=9080
 
 EXPOSE 9080
 
-CMD [ "node", "dist/api/server.js" ]
+CMD [ "node", "dist/server.js" ]
