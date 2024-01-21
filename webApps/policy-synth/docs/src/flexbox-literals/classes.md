@@ -1,6 +1,6 @@
 # Layouts
 
-The `Layouts` class provides CSS styles for basic layout configurations using Flexbox.
+CSS template literal containing layout styles for horizontal, vertical, inline, wrap, no-wrap, center, and flex classes.
 
 ## Properties
 
@@ -13,14 +13,19 @@ No methods.
 ## Examples
 
 ```typescript
+// Example usage of Layouts CSS template literal
 import { Layouts } from './path-to-styles';
 
-// Apply Layouts styles to your components
+// Apply Layouts styles to your component
+const styles = [
+  Layouts,
+  // ... other styles
+];
 ```
 
 # Factors
 
-The `Factors` class provides CSS styles for controlling the flex factors of elements within a Flexbox layout.
+CSS template literal containing flex factor styles for flex classes with different flex factors.
 
 ## Properties
 
@@ -33,14 +38,19 @@ No methods.
 ## Examples
 
 ```typescript
+// Example usage of Factors CSS template literal
 import { Factors } from './path-to-styles';
 
-// Use Factors to define the flex grow factor of your flex items
+// Apply Factors styles to your component
+const styles = [
+  Factors,
+  // ... other styles
+];
 ```
 
 # ReverseLayouts
 
-The `ReverseLayouts` class provides CSS styles for creating reversed Flexbox layouts.
+CSS template literal containing reverse layout styles for horizontal-reverse, vertical-reverse, and wrap-reverse classes.
 
 ## Properties
 
@@ -53,14 +63,19 @@ No methods.
 ## Examples
 
 ```typescript
+// Example usage of ReverseLayouts CSS template literal
 import { ReverseLayouts } from './path-to-styles';
 
-// Apply ReverseLayouts to reverse the order of flex items
+// Apply ReverseLayouts styles to your component
+const styles = [
+  ReverseLayouts,
+  // ... other styles
+];
 ```
 
 # Positioning
 
-The `Positioning` class provides CSS styles for various positioning strategies.
+CSS template literal containing positioning styles for block, hidden, invisible, relative, fit, scroll, and fixed position classes.
 
 ## Properties
 
@@ -73,14 +88,19 @@ No methods.
 ## Examples
 
 ```typescript
+// Example usage of Positioning CSS template literal
 import { Positioning } from './path-to-styles';
 
-// Use Positioning to set the position of your elements
+// Apply Positioning styles to your component
+const styles = [
+  Positioning,
+  // ... other styles
+];
 ```
 
 # Alignment
 
-The `Alignment` class provides CSS styles for aligning elements within a Flexbox layout.
+CSS template literal containing alignment styles for start, center, end, baseline, justified, self-alignment, and content alignment classes.
 
 ## Properties
 
@@ -93,7 +113,12 @@ No methods.
 ## Examples
 
 ```typescript
+// Example usage of Alignment CSS template literal
 import { Alignment } from './path-to-styles';
 
-// Apply Alignment styles to align items in your layout
+// Apply Alignment styles to your component
+const styles = [
+  Alignment,
+  // ... other styles
+];
 ```

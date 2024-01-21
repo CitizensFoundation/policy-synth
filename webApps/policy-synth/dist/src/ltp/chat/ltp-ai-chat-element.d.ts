@@ -1,4 +1,4 @@
-import { nothing } from 'lit';
+import { TemplateResult } from 'lit';
 import '@material/web/icon/icon.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
@@ -21,7 +21,6 @@ export declare class LtpAiChatElement extends PsAiChatElement {
     static get styles(): (any[] | import("lit").CSSResult)[];
     addSelected(): Promise<void>;
     get isError(): boolean;
-    renderRefinedSuggestions(): typeof nothing | import("lit-html").TemplateResult<1>;
-    renderChatGPT(): any;
+    renderJson(): TemplateResult<1>;
 }
 //# sourceMappingURL=ltp-ai-chat-element.d.ts.map

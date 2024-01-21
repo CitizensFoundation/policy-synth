@@ -13,7 +13,7 @@
 | nodeToEditInfo                        | CrtEditNodeInfo \| undefined              | Information about the node to be edited.                                    |
 | nodeToEdit                            | LtpCurrentRealityTreeDataNode \| undefined| The node currently being edited.                                            |
 | allCausesExceptCurrentToEdit          | LtpCurrentRealityTreeDataNode[]           | An array of all causes except the one currently being edited.               |
-| showDeleteConfirmation                | boolean                                   | Indicates if the delete confirmation dialog should be shown.                 |
+| showDeleteConfirmation                | boolean                                   | Indicates if the delete confirmation dialog should be shown.                |
 | activeTabIndex                        | number                                    | The index of the currently active tab.                                      |
 | currentlySelectedCauseIdToAddAsChild  | string \| undefined                       | The ID of the cause currently selected to be added as a child.              |
 | AIConfigReview                        | string \| undefined                       | The AI configuration review text.                                           |
@@ -32,14 +32,13 @@
 | confirmDeleteNode        |                             | void        | Confirms the deletion of a node.                                            |
 | createDirectCauses       |                             | void        | Creates direct causes for a node.                                           |
 | closeDeleteConfirmationDialog |                     | void        | Closes the delete confirmation dialog.                                      |
-| updatePath               |                             | void        | Updates the browser path to reflect the current tree.                       |
-| addChildToCurrentNode    |                             | Promise<void>| Adds a child node to the current node being edited.                        |
-| removeChildNode          | childIdToRemove: string     | Promise<void>| Removes a child node from the current node being edited.                  |
-| fetchCurrentTree         |                             | Promise<void>| Fetches the current tree data.                                             |
-| reviewTreeConfiguration  |                             | Promise<void>| Initiates the review of the tree configuration with AI assistance.          |
-| createTree               |                             | Promise<void>| Creates a new CRT based on the provided configuration.                      |
+| addChildToCurrentNode    |                             | Promise<void>| Adds a child to the current node being edited.                              |
+| removeChildNode          | childIdToRemove: string     | Promise<void>| Removes a child node from the current node being edited.                    |
+| fetchCurrentTree         |                             | Promise<void>| Fetches the current CRT.                                                   |
 | toggleDarkMode           |                             | void        | Toggles the dark mode theme.                                                |
 | randomizeTheme           |                             | void        | Randomizes the theme color.                                                 |
+| reviewTreeConfiguration  |                             | Promise<void>| Reviews the CRT configuration with AI assistance.                          |
+| createTree               |                             | Promise<void>| Creates a new CRT based on the input data.                                  |
 | openAddCauseDialog       | event: CustomEvent          | void        | Opens the dialog to add a cause to a node.                                  |
 | closeAddCauseDialog      |                             | void        | Closes the add cause dialog.                                                |
 
@@ -48,7 +47,6 @@
 - **open-add-cause-dialog**: Emitted when the dialog to add a cause to a node is to be opened.
 - **close-add-cause-dialog**: Emitted when the dialog to add a cause to a node is to be closed.
 - **edit-node**: Emitted when a node is to be edited.
-- **wsMessage**: Emitted when a WebSocket message is received during AI review.
 
 ## Examples
 
@@ -57,4 +55,4 @@
 <ltp-manage-crt></ltp-manage-crt>
 ```
 
-Note: The above example is a simple usage scenario. The actual use of `LtpManageCrt` involves interaction with various methods and properties to manage the CRT effectively.
+Note: The above documentation is a high-level overview of the `LtpManageCrt` class. The actual implementation includes additional methods, event listeners, and internal logic to handle the complex interactions within the CRT management process.

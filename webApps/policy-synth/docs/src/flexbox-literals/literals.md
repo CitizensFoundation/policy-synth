@@ -1,81 +1,83 @@
 # CSSStyles
 
-This TypeScript file exports a series of constants representing common CSS styles for use with the `lit` library. Each constant is a `CSSResult` that can be used to style Lit elements.
+This TypeScript file exports a series of constants representing common CSS styles using the `lit` library's `css` tagged template literal. Each constant is a CSS style rule that can be used to style web components.
 
 ## Properties
 
-| Name                  | Type       | Description                                   |
-|-----------------------|------------|-----------------------------------------------|
-| displayFlex           | CSSResult  | Sets an element to use a flex display.        |
-| borderBox             | CSSResult  | Sets the box-sizing to border-box.            |
-| displayInlineFlex     | CSSResult  | Sets an element to use an inline-flex display.|
-| horizontal            | CSSResult  | Sets flex-direction to row.                   |
-| vertical              | CSSResult  | Sets flex-direction to column.                |
-| wrap                  | CSSResult  | Allows flex items to wrap as needed.          |
-| noWrap                | CSSResult  | Prevents flex items from wrapping.            |
-| flexFactor            | CSSResult  | Sets the flex grow, shrink, and basis.        |
-| flexFactorAuto        | CSSResult  | Sets the flex grow, shrink to auto.           |
-| flexFactorNone        | CSSResult  | Sets the flex grow, shrink to none.           |
-| displayNone           | CSSResult  | Hides an element by setting display to none.  |
-| flex2                 | CSSResult  | Sets the flex grow factor to 2.               |
-| flex3                 | CSSResult  | Sets the flex grow factor to 3.               |
-| flex4                 | CSSResult  | Sets the flex grow factor to 4.               |
-| flex5                 | CSSResult  | Sets the flex grow factor to 5.               |
-| flex6                 | CSSResult  | Sets the flex grow factor to 6.               |
-| flex7                 | CSSResult  | Sets the flex grow factor to 7.               |
-| flex8                 | CSSResult  | Sets the flex grow factor to 8.               |
-| flex9                 | CSSResult  | Sets the flex grow factor to 9.               |
-| flex10                | CSSResult  | Sets the flex grow factor to 10.              |
-| flex11                | CSSResult  | Sets the flex grow factor to 11.              |
-| flex12                | CSSResult  | Sets the flex grow factor to 12.              |
-| horizontalReverse     | CSSResult  | Sets flex-direction to row-reverse.           |
-| verticalReverse       | CSSResult  | Sets flex-direction to column-reverse.        |
-| wrapReverse           | CSSResult  | Sets flex-wrap to wrap-reverse.               |
-| displayBlock          | CSSResult  | Sets an element to use a block display.       |
-| invisible             | CSSResult  | Makes an element invisible.                   |
-| relative              | CSSResult  | Sets the position of an element to relative.  |
-| fit                   | CSSResult  | Positions an element to fit its container.    |
-| scroll                | CSSResult  | Enables touch scrolling.                      |
-| fixed                 | CSSResult  | Sets the position of an element to fixed.     |
-| fixedTop              | CSSResult  | Fixes an element to the top of the viewport.  |
-| fixedRight            | CSSResult  | Fixes an element to the right of the viewport.|
-| fixedLeft             | CSSResult  | Fixes an element to the left of the viewport. |
-| fixedBottom           | CSSResult  | Fixes an element to the bottom of the viewport.|
-| startAligned          | CSSResult  | Aligns items to the start of the flex container.|
-| centerAligned         | CSSResult  | Centers items in the flex container.          |
-| endAligned            | CSSResult  | Aligns items to the end of the flex container.|
-| baseline              | CSSResult  | Aligns items to their baseline.               |
-| startJustified        | CSSResult  | Justifies content to the start of the container.|
-| centerJustified       | CSSResult  | Centers content in the container.             |
-| endJustified          | CSSResult  | Justifies content to the end of the container.|
-| aroundJustified       | CSSResult  | Distributes content evenly around the container.|
-| justified             | CSSResult  | Distributes content evenly between the container.|
-| selfStart             | CSSResult  | Aligns the element itself to the start.       |
-| selfCenter            | CSSResult  | Centers the element itself.                   |
-| selfEnd               | CSSResult  | Aligns the element itself to the end.         |
-| selfStretch           | CSSResult  | Stretches the element itself to fit.          |
-| selfBaseline          | CSSResult  | Aligns the element itself to its baseline.    |
-| startAlignedContent   | CSSResult  | Aligns content to the start of the flex line. |
-| endAlignedContent     | CSSResult  | Aligns content to the end of the flex line.   |
-| centerAlignedContent  | CSSResult  | Centers content in the flex line.             |
-| beteweenAlignedContent| CSSResult  | Justifies content between the flex lines.     |
-| aroundAlignedContent  | CSSResult  | Distributes content around the flex lines.    |
+| Name                  | Type   | Description                                           |
+|-----------------------|--------|-------------------------------------------------------|
+| displayFlex           | CSSResult | CSS for setting an element to display as a flex container. |
+| borderBox             | CSSResult | CSS for setting the box-sizing to border-box.         |
+| displayInlineFlex     | CSSResult | CSS for setting an element to display as an inline flex container. |
+| horizontal            | CSSResult | CSS for setting flex-direction to row.                |
+| vertical              | CSSResult | CSS for setting flex-direction to column.             |
+| wrap                  | CSSResult | CSS for setting flex-wrap to wrap.                    |
+| noWrap                | CSSResult | CSS for setting flex-wrap to nowrap.                  |
+| flexFactor            | CSSResult | CSS for setting flex to a default factor with a very small flex-basis. |
+| flexFactorAuto        | CSSResult | CSS for setting flex to 1 1 auto.                     |
+| flexFactorNone        | CSSResult | CSS for setting flex to none.                         |
+| displayNone           | CSSResult | CSS for setting display to none with !important.      |
+| flex2                 | CSSResult | CSS for setting flex to 2.                            |
+| flex3                 | CSSResult | CSS for setting flex to 3.                            |
+| flex4                 | CSSResult | CSS for setting flex to 4.                            |
+| flex5                 | CSSResult | CSS for setting flex to 5.                            |
+| flex6                 | CSSResult | CSS for setting flex to 6.                            |
+| flex7                 | CSSResult | CSS for setting flex to 7.                            |
+| flex8                 | CSSResult | CSS for setting flex to 8.                            |
+| flex9                 | CSSResult | CSS for setting flex to 9.                            |
+| flex10                | CSSResult | CSS for setting flex to 10.                           |
+| flex11                | CSSResult | CSS for setting flex to 11.                           |
+| flex12                | CSSResult | CSS for setting flex to 12.                           |
+| horizontalReverse     | CSSResult | CSS for setting flex-direction to row-reverse.       |
+| verticalReverse       | CSSResult | CSS for setting flex-direction to column-reverse.    |
+| wrapReverse           | CSSResult | CSS for setting flex-wrap to wrap-reverse.           |
+| displayBlock          | CSSResult | CSS for setting display to block.                     |
+| invisible             | CSSResult | CSS for setting visibility to hidden with !important. |
+| relative              | CSSResult | CSS for setting position to relative.                 |
+| fit                   | CSSResult | CSS for setting an element to absolutely position itself to fit its container. |
+| scroll                | CSSResult | CSS for setting overflow to auto and touch scrolling behavior for Webkit. |
+| fixed                 | CSSResult | CSS for setting position to fixed.                    |
+| fixedTop              | CSSResult | CSS for fixing an element to the top of the viewport. |
+| fixedRight            | CSSResult | CSS for fixing an element to the right of the viewport. |
+| fixedLeft             | CSSResult | CSS for fixing an element to the left of the viewport. |
+| fixedBottom           | CSSResult | CSS for fixing an element to the bottom of the viewport. |
+| startAligned          | CSSResult | CSS for aligning items to the start of the flex container. |
+| centerAligned         | CSSResult | CSS for aligning items to the center of the flex container. |
+| endAligned            | CSSResult | CSS for aligning items to the end of the flex container. |
+| baseline              | CSSResult | CSS for aligning items to the baseline of the flex container. |
+| startJustified        | CSSResult | CSS for justifying content to the start of the flex container. |
+| centerJustified       | CSSResult | CSS for justifying content to the center of the flex container. |
+| endJustified          | CSSResult | CSS for justifying content to the end of the flex container. |
+| aroundJustified       | CSSResult | CSS for distributing space around items in the flex container. |
+| justified             | CSSResult | CSS for distributing space between items in the flex container. |
+| selfStart             | CSSResult | CSS for aligning an item to the start of the cross axis. |
+| selfCenter            | CSSResult | CSS for aligning an item to the center of the cross axis. |
+| selfEnd               | CSSResult | CSS for aligning an item to the end of the cross axis. |
+| selfStretch           | CSSResult | CSS for stretching an item to fill the cross axis.     |
+| selfBaseline          | CSSResult | CSS for aligning an item to the baseline of the cross axis. |
+| startAlignedContent   | CSSResult | CSS for aligning content to the start of the flex line. |
+| endAlignedContent     | CSSResult | CSS for aligning content to the end of the flex line. |
+| centerAlignedContent  | CSSResult | CSS for aligning content to the center of the flex line. |
+| beteweenAlignedContent| CSSResult | CSS for distributing space between lines in the flex container. |
+| aroundAlignedContent  | CSSResult | CSS for distributing space around lines in the flex container. |
+
+## Methods
+
+There are no methods in this file as it only exports constants.
+
+## Events
+
+There are no events in this file as it only exports constants.
 
 ## Examples
 
 ```typescript
-import { LitElement, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
-import { displayFlex, centerJustified } from './css-styles';
+import { displayFlex, vertical } from './path-to-this-file';
 
-@customElement('my-element')
-export class MyElement extends LitElement {
-  static styles = [displayFlex, centerJustified];
-
-  render() {
-    return html`<div>Content here</div>`;
-  }
-}
+// Example usage of the exported styles
+const myElementStyles = css`
+  ${displayFlex}
+  ${vertical}
+  // additional styles here
+`;
 ```
-
-This example demonstrates how to import and use the CSS styles in a LitElement component.

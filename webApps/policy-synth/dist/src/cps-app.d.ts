@@ -67,13 +67,13 @@ export declare class CpsApp extends YpBaseElement {
     totalCons: number;
     drawer: MdNavigationDrawer;
     constructor();
-    renderSolutionPage(): TemplateResult<1 | 2>;
-    renderPoliciesPage(): TemplateResult<1 | 2>;
+    renderSolutionPage(): TemplateResult<2 | 1>;
+    renderPoliciesPage(): TemplateResult<2 | 1>;
     setupCurrentProjectFromRoute(newProjectId: number, clearAll?: boolean): void;
     parseAllActiveIndexes(params: any): void;
     private router;
     renderCrtPage(treeId?: string | undefined): TemplateResult<1>;
-    renderWebResearchPage(): TemplateResult<1 | 2>;
+    renderWebResearchPage(): TemplateResult<2 | 1>;
     getServerUrlFromClusterId(clusterId: number): "https://betrireykjavik.is/api" | "https://ypus.org/api" | "https://yrpri.org/api";
     connectedCallback(): void;
     openTempPassword(): void;
@@ -151,7 +151,7 @@ export declare class CpsApp extends YpBaseElement {
     toCamelCase(str: string): string;
     renderStats(): TemplateResult<1>;
     renderCosts(): TemplateResult<1>;
-    renderContentOrLoader(content: TemplateResult): TemplateResult<1 | 2>;
+    renderContentOrLoader(content: TemplateResult): TemplateResult<2 | 1>;
     handleShowMore(event: CustomEvent): void;
     getCustomVersion(version: string): string;
     renderThemeToggle(): TemplateResult<1>;

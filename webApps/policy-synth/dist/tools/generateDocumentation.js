@@ -170,6 +170,7 @@ async function main() {
     const tsFiles = findTSFiles(rootDir);
     generateDocsReadme();
     await generateDocumentation(tsFiles, systemPromptWebApp);
+    generateDocsReadme();
 }
 main().then(() => console.log('Documentation generation complete.'));
 //# sourceMappingURL=generateDocumentation.js.map

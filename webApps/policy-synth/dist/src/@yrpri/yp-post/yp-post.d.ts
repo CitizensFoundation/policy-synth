@@ -20,7 +20,7 @@ export declare class YpPost extends YpCollection {
     static get styles(): import("lit").CSSResult[];
     renderPostHeader(): TemplateResult<1>;
     renderPostTabs(): symbol;
-    renderPostTabsTODO(): typeof nothing | TemplateResult<1>;
+    renderPostTabsTODO(): TemplateResult<1> | typeof nothing;
     renderCurrentPostTabPage(): TemplateResult | undefined;
     render(): TemplateResult<1>;
     get tabDebateCount(): string;

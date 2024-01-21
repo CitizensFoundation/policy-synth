@@ -29,14 +29,14 @@ export declare class PsAiChatElement extends YpBaseElement {
     get isError(): boolean;
     renderCGImage(): import("lit-html").TemplateResult<1>;
     renderRoboImage(): import("lit-html").TemplateResult<1>;
-    renderJson(): symbol;
+    renderJson(): import("lit-html").TemplateResult<1>;
     renderChatGPT(): any;
     parseFollowUpQuestions(): void;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     renderUser(): import("lit-html").TemplateResult<1>;
     renderNoStreaming(): import("lit-html").TemplateResult<1>;
     renderThinking(): import("lit-html").TemplateResult<1>;
-    getThinkingText(): "Mõeldes..." | "Hugsa..." | "Thinking...";
+    getThinkingText(): "Thinking..." | "Mõeldes..." | "Hugsa...";
     renderMessage(): any;
     render(): import("lit-html").TemplateResult<1>;
 }

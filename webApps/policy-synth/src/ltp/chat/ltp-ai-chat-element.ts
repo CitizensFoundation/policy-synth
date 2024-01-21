@@ -1,4 +1,4 @@
-import { css, html, nothing } from 'lit';
+import { TemplateResult, css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
 import { Layouts } from '../../flexbox-literals/classes';
@@ -224,9 +224,9 @@ export class LtpAiChatElement extends PsAiChatElement {
     return this.type == 'error' || this.type == 'moderation_error';
   }
 
-  renderRefinedSuggestions() {
+  override renderJson() {
     if (!this.refinedCausesSuggestions) {
-      return nothing;
+      return html``;
     }
 
     const renderSection = (
@@ -234,7 +234,7 @@ export class LtpAiChatElement extends PsAiChatElement {
       headerText: string,
       typeClass: string
     ) => {
-      if (!suggestions || suggestions.length === 0) return nothing;
+      if (!suggestions || suggestions.length === 0) return html``;
 
       return html`
         <div class="layout horizontal center-center">
@@ -276,55 +276,6 @@ export class LtpAiChatElement extends PsAiChatElement {
             ? this.t('Add selected')
             : this.t('Validate selected')}
         </md-filled-button>
-      </div>
-    `;
-  }
-
-  renderChatGPT(): any {
-    console.error(
-      `renderChatGPT refinedCausesSuggestions`,
-      JSON.stringify(this.refinedCausesSuggestions, null, 2)
-    );
-    return html`
-      <div class="layout vertical chatGPTDialogContainer">
-        <div
-          class="chatGPTDialog layout vertical bot-message"
-          ?error="${this.isError}"
-        >
-          <div class="layout horizontal">
-            <div class="layout vertical chatImage">${this.renderCGImage()}</div>
-            <div class="layout vertical chatText">
-              ${resolveMarkdown(this.message, {
-                includeImages: true,
-                includeCodeBlockClassNames: true,
-                handleJsonBlocks: true,
-                targetElement: this,
-              })}
-              ${this.jsonLoading
-                ? html`<div class="layout horizontal center-center">
-                    <md-circular-progress indeterminate></md-circular-progress>
-                  </div>`
-                : nothing}
-            </div>
-          </div>
-          ${this.renderRefinedSuggestions()}
-        </div>
-        ${this.followUpQuestions && this.followUpQuestions.length > 0
-          ? html`
-              <div class="layout horizontal followup-question-container wrap">
-                <md-icon class="followUpQuestionMark">contact_support</md-icon
-                >${this.followUpQuestions.map(
-                  question => html`
-                    <md-outlined-button
-                      class="followup-question"
-                      .label="${question}"
-                      @click="${() => this.fire('followup-question', question)}"
-                    ></md-outlined-button>
-                  `
-                )}
-              </div>
-            `
-          : nothing}
       </div>
     `;
   }

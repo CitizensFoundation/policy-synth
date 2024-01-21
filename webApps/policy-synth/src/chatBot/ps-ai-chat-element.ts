@@ -381,7 +381,7 @@ export class PsAiChatElement extends YpBaseElement {
   }
 
   renderJson() {
-    return nothing;
+    return html``;
   }
 
   renderChatGPT(): any {
