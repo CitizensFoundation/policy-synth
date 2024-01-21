@@ -8,7 +8,7 @@ export default {
   mimeTypes: {
     '**/*.cjs': 'js'
   },
-  files: 'out-tsc/**/*.test.js',
+  files: 'dist/**/*.test.js',
   port: 5500,
   middleware: [
     proxy('/api/', {

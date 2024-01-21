@@ -1,5 +1,6 @@
 .env
 docs
+src
 currentMemory.json
 currentProject1.json
 currentProject2.json
@@ -13,6 +14,5 @@ currentProject9.json
 memoryBackups/
 projectImages/
 node_modules/
-src/
 webPagesCache/
 .DS_Store

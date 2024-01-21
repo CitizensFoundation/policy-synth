@@ -8,7 +8,7 @@ module.exports = config => {
   config.set(
     merge(createDefaultConfig(config), {
       files: [
-        { pattern: config.grep ? config.grep : 'out-tsc/**/test/**/*.test.js', type: 'module' },
+        { pattern: config.grep ? config.grep : 'dist/**/test/**/*.test.js', type: 'module' },
       ],
       esm: {
         nodeResolve: true,
