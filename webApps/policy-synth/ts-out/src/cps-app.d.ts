@@ -130,6 +130,7 @@ export declare class CpsApp extends YpBaseElement {
         rankProsCons: IEngineBaseAIModelConstants;
         evolveReapPopulation: IEngineBaseAIModelConstants;
         rateSolutions: IEngineBaseAIModelConstants;
+        alidationAgent: IEngineBaseAIModelConstants;
         groupSolutions: IEngineBaseAIModelConstants;
         evolveCreatePopulation: IEngineBaseAIModelConstants;
         evolveMutatePopulation: IEngineBaseAIModelConstants;
@@ -139,8 +140,14 @@ export declare class CpsApp extends YpBaseElement {
         webGetPages: IEngineBaseAIModelConstants;
         webGetEvidencePages: IEngineBaseAIModelConstants;
         webGetRefinedEvidence: IEngineBaseAIModelConstants;
+        webGetRefinedRootCauses: IEngineBaseAIModelConstants;
+        rankWebRootCauses: IEngineBaseAIModelConstants;
+        rateWebRootCauses: IEngineBaseAIModelConstants;
         rankWebEvidence: IEngineBaseAIModelConstants;
+        reduceSubProblems: IEngineBaseAIModelConstants;
+        createRootCausesSearchQueries: IEngineBaseAIModelConstants;
         rateWebEvidence: IEngineBaseAIModelConstants;
+        webGetRootCausesPages: IEngineBaseAIModelConstants;
         createSeedSolutions: IEngineBaseAIModelConstants;
         createEvidenceSearchQueries: IEngineBaseAIModelConstants;
         createProsCons: IEngineBaseAIModelConstants;

@@ -234,6 +234,7 @@ let CpsApp = class CpsApp extends YpBaseElement {
             rankProsCons: IEngineConstants.prosConsRankingsModel,
             evolveReapPopulation: IEngineConstants.reapSolutionsModel,
             rateSolutions: IEngineConstants.rateSolutionsModel,
+            alidationAgent: IEngineConstants.validationModel,
             groupSolutions: IEngineConstants.groupSolutionsModel,
             evolveCreatePopulation: IEngineConstants.evolveSolutionsModel,
             evolveMutatePopulation: IEngineConstants.evolutionMutateModel,
@@ -243,8 +244,14 @@ let CpsApp = class CpsApp extends YpBaseElement {
             webGetPages: IEngineConstants.getPageAnalysisModel,
             webGetEvidencePages: IEngineConstants.getPageAnalysisModel,
             webGetRefinedEvidence: IEngineConstants.getRefinedEvidenceModel,
+            webGetRefinedRootCauses: IEngineConstants.getRefinedRootCausesModel,
+            rankWebRootCauses: IEngineConstants.rankWebRootCausesModel,
+            rateWebRootCauses: IEngineConstants.rateWebRootCausesModel,
             rankWebEvidence: IEngineConstants.rankWebEvidenceModel,
+            reduceSubProblems: IEngineConstants.reduceSubProblemsModel,
+            createRootCausesSearchQueries: IEngineConstants.createSearchQueriesModel,
             rateWebEvidence: IEngineConstants.rateWebEvidenceModel,
+            webGetRootCausesPages: IEngineConstants.getPageAnalysisModel,
             createSeedSolutions: IEngineConstants.createSolutionsModel,
             createEvidenceSearchQueries: IEngineConstants.createSearchQueriesModel,
             createProsCons: IEngineConstants.createProsConsModel,
@@ -798,12 +805,6 @@ let CpsApp = class CpsApp extends YpBaseElement {
           margin-bottom: 16px;
         }
 
-        md-list-item {
-          --md-list-list-item-container-color: var(--md-sys-color-surface);
-          color: var(--md-sys-color-on-surface);
-          --md-list-list-item-label-text-color: var(--md-sys-color-on-surface);
-        }
-
         .selectedContainer {
           /*--md-list-item-list-item-container-color: var(--md-sys-color-surface-variant);*/
           color: var(--md-sys-color-primary);
@@ -1052,17 +1053,24 @@ let CpsApp = class CpsApp extends YpBaseElement {
                         //console.error(`stage: ${stage} camelCaseStage: ${camelCaseStage}`)
                         //@ts-ignore
                         const modelConstants = this.stageModelMap[camelCaseStage];
-                        if (modelConstants.name === 'gpt-4') {
-                            gpt4Cost += stageCost;
-                        }
-                        else if (modelConstants.name === 'gpt-3.5-turbo') {
-                            gpt35Cost += stageCost;
-                        }
-                        else if (modelConstants.name === 'gpt-3.5-turbo-16k') {
-                            gpt35_16kCost += stageCost;
+                        if (!modelConstants) {
+                            console.error(`Can't find stage: ${stage}`);
                         }
                         else {
-                            console.error(`Unknown model name: ${modelConstants.name}`);
+                            if (modelConstants.name === 'gpt-4' ||
+                                modelConstants.name === 'gpt-4-1106-preview') {
+                                gpt4Cost += stageCost;
+                            }
+                            else if (modelConstants.name === 'gpt-3.5-turbo' ||
+                                modelConstants.name === 'gpt-3.5-turbo-1106') {
+                                gpt35Cost += stageCost;
+                            }
+                            else if (modelConstants.name === 'gpt-3.5-turbo-16k') {
+                                gpt35_16kCost += stageCost;
+                            }
+                            else {
+                                console.error(`Unknown model name: ${modelConstants.name}`);
+                            }
                         }
                     }
                 }
@@ -1073,7 +1081,6 @@ let CpsApp = class CpsApp extends YpBaseElement {
         }
         catch (error) {
             console.error(error.stack || error);
-            debugger;
         }
         // Render total and model costs
         let costTemplates = [];
@@ -1240,22 +1247,22 @@ let CpsApp = class CpsApp extends YpBaseElement {
             <md-list-item
               class="${location.href.indexOf('/webResearch') > -1 &&
                 'selectedContainer'}"
-              headline="${this.t('Web Research')}"
+
               @click="${() => this.openWebResearch()}"
               @keydown="${(e) => {
                 if (e.key === 'Enter') {
                     this.openWebResearch();
                 }
             }}"
-              .supportingText="${this.t('Automated research')}"
+
             >
-              <md-list-item-icon slot="start">
-                <md-icon>manage_search</md-icon>
-              </md-list-item-icon></md-list-item
-            >
+              <div slot="headline">${this.t('Web Research')}</div>
+              <div slot="supporting-text">${this.t('Automated research')}</div>
+              <md-icon slot="start">manage_search</md-icon>
+            </md-list-item>
             <md-list-item
             class="${location.href.indexOf('/solutions') > -1 && 'selectedContainer'}"
-              headline="${this.t('Solutions')} (${this.numberOfSolutionsGenerations} gen)"
+
               @click="${async () => {
                 this.openSolutions();
                 setTimeout(() => {
@@ -1267,27 +1274,24 @@ let CpsApp = class CpsApp extends YpBaseElement {
                     this.openSolutions();
                 }
             }}"
-              .supportingText="${this.t('Evolving solutions')}"
             >
-              <md-list-item-icon slot="start">
-                <md-icon>online_prediction</md-icon>
-              </md-list-item-icon></md-list-item
-            >
+              <div slot="headline">${this.t('Solutions')}</div>
+              <div slot="supporting-text">${this.numberOfSolutionsGenerations} generations</div>
+              <md-icon slot="start">online_prediction</md-icon>
+            </md-list-item>
             <md-list-item hidden
               class="${this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'}"
-              headline="${this.t('Policy categories')}"
+            >
+              <div slot="headline">${this.t('Policy categories')}</div>
+              <div slot="supporting-text">${this.t('Policy categories')}</div>
+              <md-icon slot="start">category</md-icon>
+            </md-list-item>
 
-              .supportingText="${this.t('Policy categories')}"
-            >
-              <md-list-item-icon slot="start">
-                <md-icon>category</md-icon>
-              </md-list-item-icon></md-list-item
-            >
             <md-list-item
               class="${this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'}"
-              headline="${this.t('Policy ideas')} (${this.numberOfPoliciesIdeasGeneration} gen)"
+
               @click="${async () => {
                 this.openPolicies();
                 setTimeout(() => {
@@ -1299,12 +1303,12 @@ let CpsApp = class CpsApp extends YpBaseElement {
                     this.openPolicies();
                 }
             }}"
-              .supportingText="${this.t('Evolving policy ideas')}"
             >
-              <md-list-item-icon slot="start">
-                <md-icon>policy</md-icon>
-              </md-list-item-icon></md-list-item
-            >
+              <div slot="headline">${this.t('Policy ideas')}</div>
+              <div slot="supporting-text">${this.numberOfPoliciesIdeasGeneration} generations</div>
+              <md-icon slot="start">policy</md-icon>
+            </md-list-item>
+
             <md-list-divider></md-list-divider>
             <md-list-item
               ?hidden="${true /*!this.isAdmin*/}"
@@ -1314,13 +1318,11 @@ let CpsApp = class CpsApp extends YpBaseElement {
                 }
             }}"
               @click="${this.openAnalytics}"
-              headline="${this.t('Analytics')}"
-              supportingText="${this.t('Admin analytics')}"
             >
-              <md-list-item-icon slot="start"
-                ><md-icon>monitoring</md-icon></md-list-item-icon
-              ></md-list-item
-            >
+              <div slot="headline">${this.t('Analytics')}</div>
+              <div slot="supporting-text">${this.t('Admin analytics')}</div>
+              <md-icon slot="start">monitoring</md-icon>
+            </md-list-item>
             <md-list-item
               ?hidden="${true /*!this.isAdmin*/}"
               @keydown="${(e) => {
@@ -1329,13 +1331,11 @@ let CpsApp = class CpsApp extends YpBaseElement {
                 }
             }}"
               @click="${this.goToAdmin}"
-              headline="${this.t('Administration')}"
-              supportingText="${this.t('Administer the process')}"
             >
-              <md-list-item-icon slot="start"
-                ><md-icon>settings</md-icon></md-list-item-icon
-              ></md-list-item
-            >
+              <div slot="headline">${this.t('Administration')}</div>
+              <div slot="supporting-text">${this.t('Administer the process')}</div>
+              <md-icon slot="start">settings</md-icon>
+            </md-list-item>
             <md-list-divider></md-list-divider>
             <md-list-item
               @keydown="${(e) => {
@@ -1344,14 +1344,11 @@ let CpsApp = class CpsApp extends YpBaseElement {
                 }
             }}"
               @click="${this.openGitHub}"
-              headline="${this.t('Open Source Collab')}"
-              .supportingText="${this.t('Join us!')}"
             >
-              <md-list-item-icon slot="start"
-                ><md-icon>crowdsource</md-icon></md-list-item-icon
-              ></md-list-item
-            >
-
+              <div slot="headline">${this.t('Open Source')}</div>
+              <div slot="supporting-text">${this.t('Join us!')}</div>
+              <md-icon slot="start">crowdsource</md-icon></md-list-item>
+            </md-list-item>
             <div class="layout horizontal center-center">
               ${this.renderThemeToggle()}
             </div>
