@@ -32,7 +32,7 @@ declare global {
         aoiServerApi: CpsServerApi;
     }
 }
-export declare class CpsApp extends YpBaseElement {
+export declare class PolicySynthWebApp extends YpBaseElement {
     currentProjectId: number | undefined;
     activeSubProblemIndex: number | undefined;
     activePopulationIndex: number | undefined;

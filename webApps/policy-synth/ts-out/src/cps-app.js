@@ -44,7 +44,7 @@ const PagesTypes = {
     PolicyCategories: 5,
     PolicyIdeas: 6,
 };
-let CpsApp = class CpsApp extends YpBaseElement {
+let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
     constructor() {
         super();
         this.currentProjectId = undefined;
@@ -1463,134 +1463,134 @@ let CpsApp = class CpsApp extends YpBaseElement {
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Number)
-], CpsApp.prototype, "currentProjectId", void 0);
+], PolicySynthWebApp.prototype, "currentProjectId", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Number)
-], CpsApp.prototype, "activeSubProblemIndex", void 0);
+], PolicySynthWebApp.prototype, "activeSubProblemIndex", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Number)
-], CpsApp.prototype, "activePopulationIndex", void 0);
+], PolicySynthWebApp.prototype, "activePopulationIndex", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Number)
-], CpsApp.prototype, "activeSolutionIndex", void 0);
+], PolicySynthWebApp.prototype, "activeSolutionIndex", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Number)
-], CpsApp.prototype, "activePolicyIndex", void 0);
+], PolicySynthWebApp.prototype, "activePolicyIndex", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "pageIndex", void 0);
+], PolicySynthWebApp.prototype, "pageIndex", void 0);
 __decorate([
     property({ type: Object }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "currentMemory", void 0);
+], PolicySynthWebApp.prototype, "currentMemory", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "totalNumberOfVotes", void 0);
+], PolicySynthWebApp.prototype, "totalNumberOfVotes", void 0);
 __decorate([
     property({ type: Boolean }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "showAllCosts", void 0);
+], PolicySynthWebApp.prototype, "showAllCosts", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "lastSnackbarText", void 0);
+], PolicySynthWebApp.prototype, "lastSnackbarText", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "collectionType", void 0);
+], PolicySynthWebApp.prototype, "collectionType", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "earlName", void 0);
+], PolicySynthWebApp.prototype, "earlName", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "currentError", void 0);
+], PolicySynthWebApp.prototype, "currentError", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "forceGetBackupForProject", void 0);
+], PolicySynthWebApp.prototype, "forceGetBackupForProject", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "tempPassword", void 0);
+], PolicySynthWebApp.prototype, "tempPassword", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "themeColor", void 0);
+], PolicySynthWebApp.prototype, "themeColor", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "themePrimaryColor", void 0);
+], PolicySynthWebApp.prototype, "themePrimaryColor", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "themeSecondaryColor", void 0);
+], PolicySynthWebApp.prototype, "themeSecondaryColor", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "themeTertiaryColor", void 0);
+], PolicySynthWebApp.prototype, "themeTertiaryColor", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "themeNeutralColor", void 0);
+], PolicySynthWebApp.prototype, "themeNeutralColor", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "themeScheme", void 0);
+], PolicySynthWebApp.prototype, "themeScheme", void 0);
 __decorate([
     property({ type: Boolean }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "themeHighContrast", void 0);
+], PolicySynthWebApp.prototype, "themeHighContrast", void 0);
 __decorate([
     property({ type: Boolean }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "isAdmin", void 0);
+], PolicySynthWebApp.prototype, "isAdmin", void 0);
 __decorate([
     property({ type: Boolean }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "surveyClosed", void 0);
+], PolicySynthWebApp.prototype, "surveyClosed", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "appearanceLookup", void 0);
+], PolicySynthWebApp.prototype, "appearanceLookup", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "currentLeftAnswer", void 0);
+], PolicySynthWebApp.prototype, "currentLeftAnswer", void 0);
 __decorate([
     property({ type: String }),
     __metadata("design:type", String)
-], CpsApp.prototype, "currentRightAnswer", void 0);
+], PolicySynthWebApp.prototype, "currentRightAnswer", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "numberOfSolutionsGenerations", void 0);
+], PolicySynthWebApp.prototype, "numberOfSolutionsGenerations", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "numberOfPoliciesIdeasGeneration", void 0);
+], PolicySynthWebApp.prototype, "numberOfPoliciesIdeasGeneration", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "totalSolutions", void 0);
+], PolicySynthWebApp.prototype, "totalSolutions", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "totalPros", void 0);
+], PolicySynthWebApp.prototype, "totalPros", void 0);
 __decorate([
     property({ type: Number }),
     __metadata("design:type", Object)
-], CpsApp.prototype, "totalCons", void 0);
-CpsApp = __decorate([
+], PolicySynthWebApp.prototype, "totalCons", void 0);
+PolicySynthWebApp = __decorate([
     customElement('cps-app'),
     __metadata("design:paramtypes", [])
-], CpsApp);
-export { CpsApp };
+], PolicySynthWebApp);
+export { PolicySynthWebApp };
 //# sourceMappingURL=cps-app.js.map
