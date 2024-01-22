@@ -11,9 +11,9 @@ import { CpsServerApi } from '../../base/CpsServerApi.js';
 declare global {
   interface Window {
     appGlobals: any; /*YpAppGlobals*/
-    appUser: YpAppUser;
-    appDialogs: any /*YpAppDialogs*/;
-    serverApi: CpsServerApi;
+    appUser: any;
+    appDialogs: any; /*YpAppDialogs*/
+    serverApi: any;
     app: any /*YpApp*/;
     locale: string;
     MSStream: any;
