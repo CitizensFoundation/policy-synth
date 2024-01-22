@@ -15,7 +15,7 @@ export class SimpleChatServerApi extends YpServerApi {
       this.baseUrlPath + `simple_chat/`,
       {
         method: 'PUT',
-        body: JSON.stringify({ wsClientId, chatLog: simplifiedChatLog }),
+        body: JSON.stringify({ wsClientId, chatLog: chatLog }),
       },
       false
     ) as Promise<void>;
