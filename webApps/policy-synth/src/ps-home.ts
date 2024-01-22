@@ -1,45 +1,48 @@
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-import { css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { css, html, nothing } from 'lit';
+import { property, customElement } from 'lit/decorators.js';
+
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { PsStageBase } from './base/cps-stage-base.js';
+
+import { PsStageBase } from './base/ps-stage-base.js';
+
 const projects = [
-    {
-        id: 1,
-        title: 'Democracy in Distress',
-        imageUrl: 'https://cps-images.citizens.is/projects/1/problemStatement/images/916898992.png',
-        description: 'The first test run is entirely automated except for the problem statement provided by us. All sub problems, entities and solutions with pros & cons are generated using GPT-4 & GPT-3.5. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.',
-    },
-    /*{
-      id: 2,
-      title: 'Democracy Undermined',
-      imageUrl:
-        'https://cps-images.citizens.is/projects/2/subProblems/images/17_v10.png',
-      description:
-        'Authoritarians who prioritize political outcomes over independent processes are using unfair and often illegal tactics, including political violence and changes to policies, procedures, and election administration',
-    },*/
-];
-let PsHome = class PsHome extends PsStageBase {
-    async connectedCallback() {
-        super.connectedCallback();
-        window.psAppGlobals.activity(`Home - open`);
-    }
-    updated(changedProperties) {
-        super.updated(changedProperties);
-    }
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        window.psAppGlobals.activity(`Home - close`);
-    }
-    static get styles() {
-        return [
-            super.styles,
-            css `
+  {
+    id: 1,
+    title: 'Democracy in Distress',
+    imageUrl:
+      'https://cps-images.citizens.is/projects/1/problemStatement/images/916898992.png',
+    description:
+      'The first test run is entirely automated except for the problem statement provided by us. All sub problems, entities and solutions with pros & cons are generated using GPT-4 & GPT-3.5. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.',
+  },
+  /*{
+    id: 2,
+    title: 'Democracy Undermined',
+    imageUrl:
+      'https://cps-images.citizens.is/projects/2/subProblems/images/17_v10.png',
+    description:
+      'Authoritarians who prioritize political outcomes over independent processes are using unfair and often illegal tactics, including political violence and changes to policies, procedures, and election administration',
+  },*/
+] as PsProjectData[];
+
+@customElement('ps-home')
+export class PsHome extends PsStageBase {
+  async connectedCallback() {
+    super.connectedCallback();
+    window.psAppGlobals.activity(`Home - open`);
+  }
+
+  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+    super.updated(changedProperties);
+  }
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.psAppGlobals.activity(`Home - close`);
+  }
+
+  static get styles() {
+    return [
+      super.styles,
+      css`
         .subContainer {
           max-width: 960px;
           margin-top: 8px;
@@ -151,10 +154,11 @@ let PsHome = class PsHome extends PsStageBase {
           }
         }
       `,
-        ];
-    }
-    renderProject(project) {
-        return html `
+    ];
+  }
+
+  renderProject(project: PsProjectData) {
+    return html`
       <a href="/projects/${project.id}" @click="${() => window.scrollTo(0, 0)}">
         <div class="projectItem layout vertical center-center">
           <div class="projectImage">
@@ -171,9 +175,10 @@ let PsHome = class PsHome extends PsStageBase {
         </div>
       </a>
     `;
-    }
-    render() {
-        return html `
+  }
+
+  render() {
+    return html`
       <div class="topContainer layout vertical center-center">
         <img
           height="${this.wide ? 300 : 190}"
@@ -185,7 +190,9 @@ let PsHome = class PsHome extends PsStageBase {
         </div>
         <div class="subContainer layout vertical center-center">
           <div class="title">
-            ${this.t('Bringing together the best of collective and artificial intelligence')}
+            ${this.t(
+              'Bringing together the best of collective and artificial intelligence'
+            )}
           </div>
           <div class="moreInfo">
             Our project embodies a unique effort to intertwine human insights
@@ -207,10 +214,5 @@ let PsHome = class PsHome extends PsStageBase {
         </div>
       </div>
     `;
-    }
-};
-PsHome = __decorate([
-    customElement('ps-home')
-], PsHome);
-export { PsHome };
-//# sourceMappingURL=ps-home.js.map
+  }
+}

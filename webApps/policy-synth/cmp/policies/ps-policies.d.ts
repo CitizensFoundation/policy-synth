@@ -1,6 +1,6 @@
 import { nothing } from 'lit';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -12,7 +12,7 @@ import '@material/web/chips/input-chip.js';
 import '@material/web/textfield/outlined-text-field.js';
 import './ps-family-tree.js';
 import './ps-raw-evidence.js';
-export declare class PsPolicies extends CpsStageBase {
+export declare class PsPolicies extends PsStageBase {
     isDropdownVisible: boolean;
     searchText: string;
     activeFilteredPolicyIndex: number;

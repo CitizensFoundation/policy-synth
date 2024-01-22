@@ -1,6 +1,6 @@
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
-export declare class CpsWebResearch extends CpsStageBase {
+import { PsStageBase } from '../base/cps-stage-base.js';
+export declare class PsWebResearch extends PsStageBase {
     maxNumberOfTopEntities: number;
     connectedCallback(): Promise<void>;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
@@ -10,4 +10,4 @@ export declare class CpsWebResearch extends CpsStageBase {
     renderEntities(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1>;
     renderSubProblemsWithAll(): import("lit-html").TemplateResult<1>;
 }
-//# sourceMappingURL=cps-web-research.d.ts.map
+//# sourceMappingURL=ps-web-research.d.ts.map

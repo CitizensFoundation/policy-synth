@@ -18,12 +18,10 @@ import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 import { IEngineConstants } from '../constants.js';
 
 import './ps-family-tree.js';
-import './ps-raw-evidence.js';
-import { cache } from 'lit/directives/cache.js';
 import { YpFormattingHelpers } from '@yrpri/webapp';
 
-@customElement('ps-policies')
-export class PsPolicies extends PsStageBase {
+@customElement('ps-solutions')
+export class PsSolutions extends PsStageBase {
   @property({ type: Boolean })
   isDropdownVisible = false;
 
@@ -31,50 +29,21 @@ export class PsPolicies extends PsStageBase {
   searchText = '';
 
   @property({ type: Number })
-  activeFilteredPolicyIndex: number = null;
+  activeFilteredSolutionIndex: number = null;
 
   @property({ type: Boolean })
   isSearchVisible = false;
 
   @property({ type: Boolean })
-  hideExtraPolicyInformation = false;
+  hideExtraSolutionInformation = true;
+
+  @property({ type: Boolean })
+  isLoadingMiddle: boolean = false;
 
   @property({ type: Number }) groupListScrollPositionY: number = null;
 
   lastKeys: any[] = []
   findBarProbablyOpen = false;
-
-  updateRoutes() {
-    this.fire('update-route', {
-      activePolicyIndex: this.activePolicyIndex,
-      activeSubProblemIndex: this.activeSubProblemIndex,
-      activePopulationIndex: this.activePopulationIndex,
-    });
-  }
-
-  setSubProblem(index: number) {
-    this.activeSubProblemIndex = index;
-    this.subProblemListScrollPositionX = window.scrollX;
-    this.subProblemListScrollPositionY = window.scrollY;
-
-    window.scrollTo(0, 0);
-
-    if (this.firstTimeSubProblemClick || this.activePopulationIndex === null) {
-      this.firstTimeSubProblemClick = false;
-      if (
-        this.memory.subProblems.length > 0 &&
-        this.memory.subProblems[this.activeSubProblemIndex].policies
-      ) {
-        this.activePopulationIndex =
-          this.memory.subProblems[this.activeSubProblemIndex].policies
-            .populations.length - 1;
-      }
-    }
-
-    this.updateRoutes();
-
-    window.psAppGlobals.activity('Sub Problem - click');
-  }
 
   async handleGroupButtonClick(groupIndex: number): Promise<void> {
     if (this.activeGroupIndex === groupIndex) {
@@ -83,17 +52,18 @@ export class PsPolicies extends PsStageBase {
       await this.updateComplete;
       window.scrollTo(0, this.groupListScrollPositionY);
       this.groupListScrollPositionY = null;
-      window.psAppGlobals.activity('Policies - deactive group filter');
+      window.psAppGlobals.activity('Solutions - deactive group filter');
     } else {
       // Activating group filter
       this.groupListScrollPositionY = window.scrollY;
       this.activeGroupIndex = groupIndex;
       await this.updateComplete;
-      const policyListElement = this.shadowRoot.getElementById('policyList');
-      const rect = policyListElement.getBoundingClientRect();
+      const solutionListElement =
+        this.shadowRoot.getElementById('solutionList');
+      const rect = solutionListElement.getBoundingClientRect();
       const docTop = window.pageYOffset;
       window.scrollTo(0, rect.top + docTop);
-      window.psAppGlobals.activity('Policies - activate group filter');
+      window.psAppGlobals.activity('Solutions - activate group filter');
     }
   }
 
@@ -101,20 +71,19 @@ export class PsPolicies extends PsStageBase {
     this.searchText = '';
     this.isSearchVisible = false;
     this.isDropdownVisible = false;
-    this.activePolicyIndex = null;
+    this.activeSolutionIndex = null;
     this.activeSubProblemIndex = null;
     this.fire('yp-theme-color', this.subProblemColors[7]);
   }
 
   private touchStartX = 0;
   private minSwipeDistance = 100;
-  policyListScrollPositionX: number = 0;
-  policyListScrollPositionY: number = 0;
+  solutionListScrollPositionX: number = 0;
+  solutionListScrollPositionY: number = 0;
 
   async connectedCallback() {
     super.connectedCallback();
-    this.childType = 'policy';
-    window.psAppGlobals.activity(`Policies - open`);
+    window.psAppGlobals.activity(`Solutions - open`);
 
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     this.addEventListener('touchstart', this.handleTouchStart.bind(this));
@@ -123,7 +92,7 @@ export class PsPolicies extends PsStageBase {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.psAppGlobals.activity(`Policies - close`);
+    window.psAppGlobals.activity(`Solutions - close`);
     document.removeEventListener('keydown', this.handleKeyDown);
     this.removeEventListener('touchstart', this.handleTouchStart.bind(this));
     this.removeEventListener('touchend', this.handleTouchEnd.bind(this));
@@ -131,17 +100,17 @@ export class PsPolicies extends PsStageBase {
 
   updateSwipeIndex(direction: string) {
     /*console.error(
-      `updateSwipeIndex ${this.activeFilteredPolicyIndex} ${this.activePolicyIndex}`
+      `updateSwipeIndex ${this.activeFilteredSolutionIndex} ${this.activeSolutionIndex}`
     );*/
     if (direction === 'right') {
       if (
-        this.activePolicyIndex !== null &&
-        this.activeFilteredPolicyIndex < this.filteredPolicies.length - 1
+        this.activeSolutionIndex !== null &&
+        this.activeFilteredSolutionIndex < this.filteredSolutions.length - 1
       ) {
-        this.activeFilteredPolicyIndex += 1;
-        window.psAppGlobals.activity('Policies - swipe right');
+        this.activeFilteredSolutionIndex += 1;
+        window.psAppGlobals.activity('Solutions - swipe right');
       } else if (
-        this.activePolicyIndex == null &&
+        this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
       ) {
@@ -150,13 +119,13 @@ export class PsPolicies extends PsStageBase {
       }
     } else if (direction === 'left') {
       if (
-        this.activePolicyIndex !== null &&
-        this.activeFilteredPolicyIndex > 0
+        this.activeSolutionIndex !== null &&
+        this.activeFilteredSolutionIndex > 0
       ) {
-        this.activeFilteredPolicyIndex -= 1;
-        window.psAppGlobals.activity('Policies - swipe left');
+        this.activeFilteredSolutionIndex -= 1;
+        window.psAppGlobals.activity('Solutions - swipe left');
       } else if (
-        this.activePolicyIndex == null &&
+        this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex > 0
       ) {
@@ -166,6 +135,35 @@ export class PsPolicies extends PsStageBase {
     }
     this.setSubProblemColor(this.activeSubProblemIndex);
   }
+
+  async loadMiddleData() {
+    console.log(`loadMiddleData`)
+    try {
+      for (let i = 0; i < IEngineConstants.maxSubProblems; i++) {
+        const middleData = await window.psServerApi.getMiddleSolutions(this.memory.groupId, i);
+
+        if (middleData && Array.isArray(middleData)) {
+          // Check if your populations are already initialized and have more than 6 elements
+          if (this.memory.subProblems[i].solutions.populations.length > 6) {
+            const firstThree = this.memory.subProblems[i].solutions.populations.slice(0, 3);
+            const lastThree = this.memory.subProblems[i].solutions.populations.slice(-3);
+
+            // If middleData is not of the same length as the middle portion to be replaced, you may need to adjust it
+            const middle = middleData;  // Or manipulate as needed
+
+            this.memory.subProblems[i].solutions.populations = [...firstThree, ...middle, ...lastThree];
+          } else {
+            // If populations are not initialized or have less than 6 elements, you might want to just set the middle directly
+            this.memory.subProblems[i].solutions.populations = middleData;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load middle data:", error);
+      this.isLoadingMiddle = false;
+    }
+  }
+
 
   handleKeyDown(e: KeyboardEvent) {
     this.lastKeys.push(e.key);
@@ -182,18 +180,19 @@ export class PsPolicies extends PsStageBase {
       console.log("Doing my escape action.");
       return;
     }
+
     if (e.key === 'ArrowRight') {
       this.updateSwipeIndex('right');
       e.stopPropagation();
       e.preventDefault();
-    } else if (e.key === 'ArrowLeft') {
+  } else if (e.key === 'ArrowLeft') {
       this.updateSwipeIndex('left');
       e.stopPropagation();
       e.preventDefault();
-    } else if (e.key === 'Escape' && !this.findBarProbablyOpen) {
-      if (this.activePolicyIndex !== null) {
-        this.activePolicyIndex = null;
-        this.exitPolicyScreen();
+  } else if (e.key === 'Escape' && !this.findBarProbablyOpen) {
+      if (this.activeSolutionIndex !== null) {
+        this.activeSolutionIndex = null;
+        this.exitSolutionScreen();
         e.stopPropagation();
         e.preventDefault();
       } else if (this.activeSubProblemIndex !== null) {
@@ -204,11 +203,11 @@ export class PsPolicies extends PsStageBase {
     }
   }
 
-  exitPolicyScreen() {
+  exitSolutionScreen() {
     setTimeout(() => {
       window.scrollTo(
-        this.policyListScrollPositionX,
-        this.policyListScrollPositionY
+        this.solutionListScrollPositionX,
+        this.solutionListScrollPositionY
       );
     }, 10);
   }
@@ -229,7 +228,9 @@ export class PsPolicies extends PsStageBase {
     let targetElement = actualTarget as Element;
     while (targetElement) {
       console.error(targetElement.tagName);
-      if (targetElement.getAttribute('data-scrollable') === 'true') {
+      if (
+        targetElement.getAttribute('data-scrollable') === 'true'
+      ) {
         return;
       }
       targetElement = targetElement.parentElement;
@@ -244,22 +245,23 @@ export class PsPolicies extends PsStageBase {
     e.stopPropagation(); // Prevent event bubbling after handling
   }
 
+
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
     if (
       changedProperties.has('searchText') ||
-      changedProperties.has('activePolicyIndex')
+      changedProperties.has('activeSolutionIndex')
     ) {
-      this.activeFilteredPolicyIndex = this.filteredPolicies.findIndex(
-        policy =>
-          policy ===
-          this.memory.subProblems[this.activeSubProblemIndex].policies
-            .populations[this.activePopulationIndex][this.activePolicyIndex]
+      this.activeFilteredSolutionIndex = this.filteredSolutions.findIndex(
+        solution =>
+          solution ===
+          this.memory.subProblems[this.activeSubProblemIndex].solutions
+            .populations[this.activePopulationIndex][this.activeSolutionIndex]
       );
     }
 
     if (
-      changedProperties.has('activePolicyIndex') ||
+      changedProperties.has('activeSolutionIndex') ||
       changedProperties.has('activeSubProblemIndex') ||
       changedProperties.has('activePopulationIndex')
     ) {
@@ -267,32 +269,32 @@ export class PsPolicies extends PsStageBase {
     }
 
     if (
-      changedProperties.has('activeFilteredPolicyIndex') &&
-      this.activeFilteredPolicyIndex !== null &&
+      changedProperties.has('activeFilteredSolutionIndex') &&
+      this.activeFilteredSolutionIndex !== null &&
       this.activePopulationIndex !== null &&
-      this.activeFilteredPolicyIndex !== undefined &&
+      this.activeFilteredSolutionIndex !== undefined &&
       this.memory.subProblems[this.activeSubProblemIndex] &&
-      this.memory.subProblems[this.activeSubProblemIndex].policies
+      this.memory.subProblems[this.activeSubProblemIndex].solutions
     ) {
       const subProblem = this.memory.subProblems[this.activeSubProblemIndex];
-      const policies =
-        subProblem.policies.populations[this.activePopulationIndex];
-      const filteredPolicy =
-        this.filteredPolicies[this.activeFilteredPolicyIndex];
+      const solutions =
+        subProblem.solutions.populations[this.activePopulationIndex];
+      const filteredSolution =
+        this.filteredSolutions[this.activeFilteredSolutionIndex];
 
-      const policyIndex = policies.findIndex(
-        policy => policy === filteredPolicy
+      const solutionIndex = solutions.findIndex(
+        solution => solution === filteredSolution
       );
 
-      if (policyIndex !== undefined && policyIndex !== -1) {
-        this.activePolicyIndex = policyIndex;
+      if (solutionIndex !== undefined && solutionIndex !== -1) {
+        this.activeSolutionIndex = solutionIndex;
       }
 
       /*console.error(
-        `activeFilteredPolicyIndex`,
-        this.activeFilteredPolicyIndex
+        `activeFilteredSolutionIndex`,
+        this.activeFilteredSolutionIndex
       );
-      console.error(`activePolicyIndex`, this.activePolicyIndex);
+      console.error(`activeSolutionIndex`, this.activeSolutionIndex);
       */
     }
   }
@@ -342,27 +344,26 @@ export class PsPolicies extends PsStageBase {
           width: 134px;
         }
 
-        .policyImage {
-          padding: 0;
-          margin-top: -20px;
+        .solutionImage {
+          padding: 8px;
         }
 
-        .policyTopImage {
+        .solutionTopImage {
           vertical-align: top;
           margin-top: 20px;
         }
 
-        .policyItem {
+        .solutionItem {
           text-align: left;
           background-color: var(--md-sys-color-secondary-container);
           color: var(--md-sys-color-on-secondary-container);
           border-radius: 16px;
           padding: 20px;
-          margin: 16px;
+          margin: 8px 0;
           max-width: 600px;
           width: 600px;
           font-size: 22px;
-          min-height: 110px;
+          min-height: 100px;
           display: flex;
           flex-direction: column;
           justify-content: left;
@@ -379,13 +380,6 @@ export class PsPolicies extends PsStageBase {
           right: 4px;
         }
 
-        .policyAttributeHeader {
-          font-size: 22px;
-          margin-top: 6px;
-          margin-bottom: 6px;
-          font-family: 'Cabin', sans-serif;
-        }
-
         .groupInfoText {
           font-size: 18px;
           margin-top: 6px;
@@ -393,11 +387,11 @@ export class PsPolicies extends PsStageBase {
           opacity: 0.55;
         }
 
-        .policyItem[has-image] {
-          margin-bottom: 24px;
+        .solutionItem[has-image] {
+          margin-bottom: 16px;
         }
 
-        .policyItem[group-solo] {
+        .solutionItem[group-solo] {
           background-color: var(--md-sys-color-tertiary-container);
           color: var(--md-sys-color-on-tertiary-container);
         }
@@ -406,7 +400,7 @@ export class PsPolicies extends PsStageBase {
           width: 100%;
         }
 
-        .policy {
+        .solution {
           text-align: left;
           background-color: var(--md-sys-color-surface);
           color: var(--md-sys-color-on-surface);
@@ -416,22 +410,20 @@ export class PsPolicies extends PsStageBase {
           max-width: 1360px;
         }
 
-        .policyImageContainer {
+        .solutionImageContainer {
           display: inline-block;
           margin-left: 8px;
         }
 
-        .policyItemTitle {
+        .solutionItemTitle {
           padding: 8px;
-          font-size: 28px;
-          font-family: 'Roboto Condensed', sans-serif;
         }
 
-        .policyItemTitle[has-image] {
+        .solutionItemTitle[has-image] {
           margin-top: 6px;
         }
 
-        .policyIndex {
+        .solutionIndex {
           margin-right: 8px;
         }
 
@@ -448,7 +440,7 @@ export class PsPolicies extends PsStageBase {
           line-height: 1.4;
         }
 
-        .policyItemEloRating {
+        .solutionItemEloRating {
           font-size: 18px;
           margin-top: 8px;
           opacity: 0.5;
@@ -491,7 +483,7 @@ export class PsPolicies extends PsStageBase {
           margin-bottom: 8px;
         }
 
-        .policyTitle {
+        .solutionTitle {
           font-size: 26px;
           line-height: 1.4;
           margin: 8px;
@@ -501,12 +493,12 @@ export class PsPolicies extends PsStageBase {
           font-family: 'Roboto Condensed', sans-serif;
         }
 
-        .policyTitleDesc {
+        .solutionTitleDesc {
           max-width: 600px;
           margin-right: 8px;
         }
 
-        .policyDescription {
+        .solutionDescription {
           padding: 8px;
           font-size: 20px;
           line-height: 1.4;
@@ -514,16 +506,10 @@ export class PsPolicies extends PsStageBase {
           margin-right: 8px;
         }
 
-        .policyAttributes {
-          color: var(--md-sys-color-on-surface);
-        }
-
-        .policyAttributeHeader {
-          color: var(--md-sys-color-primary);
-        }
-
-        .policyInfoContainer {
-          max-width: 600px;
+        .solutionAttributes {
+          display: flex;
+          justify-content: space-between;
+          align-items: self-start;
         }
 
         .pros,
@@ -534,17 +520,17 @@ export class PsPolicies extends PsStageBase {
         }
 
         @media (max-width: 960px) {
-          .policyItemTitle {
+          .solutionItemTitle {
             margin-top: 0;
             padding-top: 0;
             padding-bottom: 16px;
           }
 
-          .policyTopImage {
+          .solutionTopImage {
             margin-top: 10px;
           }
 
-          .policy {
+          .solution {
             max-width: 100%;
             margin-top: 6px;
           }
@@ -572,7 +558,7 @@ export class PsPolicies extends PsStageBase {
             margin-left: 0;
           }
 
-          .policyItem {
+          .solutionItem {
             border-radius: 24px;
             padding: 32px;
             max-width: 300px;
@@ -580,26 +566,26 @@ export class PsPolicies extends PsStageBase {
             font-size: 18px;
           }
 
-          .policyItem[has-image] {
+          .solutionItem[has-image] {
             height: unset;
             margin-top: 0;
             padding-bottom: 12px;
             margin-bottom: 16px;
           }
 
-          .policyDescription {
+          .solutionDescription {
             font-size: 16px;
             margin-left: 0px;
             margin-right: 0px;
           }
 
-          .policyTitle {
+          .solutionTitle {
             font-size: 20px;
             margin-left: 0px;
             margin-right: 0px;
           }
 
-          .policyAttributes {
+          .solutionAttributes {
             flex-direction: column;
           }
 
@@ -617,10 +603,6 @@ export class PsPolicies extends PsStageBase {
             opacity: 0.55;
           }
 
-          .policyItemTitle {
-            font-size: 22px;
-          }
-
           .topContainer {
           }
         }
@@ -632,67 +614,68 @@ export class PsPolicies extends PsStageBase {
     ];
   }
 
-  get filteredPolicies() {
+  get filteredSolutions() {
     let subProblem = this.memory.subProblems[this.activeSubProblemIndex];
-    if (subProblem && subProblem.policies) {
-      let policies =
-        subProblem.policies.populations[this.activePopulationIndex];
+    if (subProblem && subProblem.solutions) {
+      let solutions =
+        subProblem.solutions.populations[this.activePopulationIndex];
 
-      let firstInGroup: Record<number, PSPolicy> = {};
+      let firstInGroup: Record<number, IEngineSolution> = {};
 
-      if (policies) {
-        policies.forEach(policy => {
-          if (policy.similarityGroup !== undefined) {
-            let groupIndex = policy.similarityGroup.index;
+      if (solutions) {
+        solutions.forEach(solution => {
+          if (solution.similarityGroup !== undefined) {
+            let groupIndex = solution.similarityGroup.index;
             if (!firstInGroup[groupIndex]) {
-              firstInGroup[groupIndex] = policy;
-              policy.similarityGroup.isFirst = true;
+              firstInGroup[groupIndex] = solution;
+              solution.similarityGroup.isFirst = true;
             } else {
-              policy.similarityGroup.isFirst = undefined;
+              solution.similarityGroup.isFirst = undefined;
             }
           }
         });
 
-        // Check if the active policy is part of a similarity group and the group is not already active
-        if (this.activePolicyIndex !== null) {
-          const activePolicy = policies[this.activePolicyIndex];
+        // Check if the active solution is part of a similarity group and the group is not already active
+        if (this.activeSolutionIndex !== null) {
+          const activeSolution = solutions[this.activeSolutionIndex];
           if (
-            activePolicy?.similarityGroup &&
-            this.activeGroupIndex !== activePolicy.similarityGroup.index &&
-            !activePolicy.similarityGroup.isFirst
+            activeSolution?.similarityGroup &&
+            this.activeGroupIndex !== activeSolution.similarityGroup.index &&
+            !activeSolution.similarityGroup.isFirst
           ) {
-            this.activeGroupIndex = activePolicy.similarityGroup.index;
+            this.activeGroupIndex = activeSolution.similarityGroup.index;
           }
         }
 
         if (this.activeGroupIndex !== null) {
-          // If a group is active, only return policies from this group
-          policies = policies.filter(
-            policy => policy.similarityGroup?.index === this.activeGroupIndex
+          // If a group is active, only return solutions from this group
+          solutions = solutions.filter(
+            solution =>
+              solution.similarityGroup?.index === this.activeGroupIndex
           );
         } else {
-          // Otherwise, return only the first policy of each group
-          policies = policies.filter(
-            policy =>
-              policy.similarityGroup?.isFirst ||
-              policy.similarityGroup === undefined
+          // Otherwise, return only the first solution of each group
+          solutions = solutions.filter(
+            solution =>
+              solution.similarityGroup?.isFirst ||
+              solution.similarityGroup === undefined
           );
         }
 
         if (this.searchText) {
           const searchTerms = this.searchText.toLowerCase().split(' ');
-          policies = policies.filter(policy =>
+          solutions = solutions.filter(solution =>
             searchTerms.every(
               term =>
-                policy.title.toLowerCase().includes(term) ||
-                policy.description.toLowerCase().includes(term)
+                solution.title.toLowerCase().includes(term) ||
+                solution.description.toLowerCase().includes(term)
             )
           );
         }
       } else {
         return [];
       }
-      return policies;
+      return solutions;
     } else {
       return [];
     }
@@ -700,11 +683,11 @@ export class PsPolicies extends PsStageBase {
 
   render() {
     const subProblems = this.memory.subProblems || [];
-    if (this.activePolicyIndex !== null) {
-      return this.renderPolicyScreen(
-        this.activeFilteredPolicyIndex !== null
-          ? this.activeFilteredPolicyIndex
-          : this.activePolicyIndex
+    if (this.activeSolutionIndex !== null) {
+      return this.renderSolutionScreen(
+        this.activeFilteredSolutionIndex !== null
+          ? this.activeFilteredSolutionIndex
+          : this.activeSolutionIndex
       );
     } else if (this.activeSubProblemIndex !== null) {
       return this.renderSubProblemScreen(
@@ -713,52 +696,52 @@ export class PsPolicies extends PsStageBase {
     } else {
       return this.renderSubProblemList(
         subProblems,
-        this.t('Sub Problems and Policies')
+        this.t('Sub Problems and Solutions')
       );
     }
   }
 
-  renderPolicyItem(policy: PSPolicy, index: number) {
+  renderSolutionItem(solution: IEngineSolution, index: number) {
     return html`
       <div
-        class="policyItem layout vertical center-center"
-        ?has-image="${policy.imageUrl}"
+        class="solutionItem layout vertical center-center"
+        ?has-image="${solution.imageUrl}"
         ?group-solo="${this.activeGroupIndex !== null}"
         @click="${(): void => {
-          //this.activePolicyIndex = index;
-          this.activeFilteredPolicyIndex = index;
-          this.policyListScrollPositionX = window.scrollX;
-          this.policyListScrollPositionY = window.scrollY;
+          //this.activeSolutionIndex = index;
+          this.activeFilteredSolutionIndex = index;
+          this.solutionListScrollPositionX = window.scrollX;
+          this.solutionListScrollPositionY = window.scrollY;
           window.scrollTo(0, 0);
-          //console.error(`click`, this.activeFilteredPolicyIndex);
-          //console.error(`click`, this.activePolicyIndex);
-          window.psAppGlobals.activity('Policies - open detail');
+          //console.error(`click`, this.activeFilteredSolutionIndex);
+          //console.error(`click`, this.activeSolutionIndex);
+          window.psAppGlobals.activity('Solutions - open detail');
         }}"
       >
-        ${policy.imageUrl
+        ${solution.imageUrl
           ? html`
               <div>
                 <img
-                  alt="${policy.imagePrompt}"
+                  alt="${solution.imagePrompt}"
                   loading="lazy"
-                  class="policyImage"
-                  height="${this.wide ? `365` : `200`}"
-                  src="${this.fixImageUrlIfNeeded(policy.imageUrl)}"
+                  class="solutionImage"
+                  height="${this.wide ? `250` : `200`}"
+                  src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
                 />
               </div>
             `
           : html``}
-        <div class="policyItemTitle" ?has-image="${policy.imageUrl}">
-          ${policy.title}
+        <div class="solutionItemTitle" ?has-image="${solution.imageUrl}">
+          ${solution.title}
         </div>
         <div
-          class="policyItemEloRating"
+          class="solutionItemEloRating"
           ?hidden="${this.activeGroupIndex === null}"
         >
-          ${YpFormattingHelpers.number(policy.eloRating)}
+          ${YpFormattingHelpers.number(solution.eloRating)}
         </div>
-        ${policy.similarityGroup?.isFirst !== undefined &&
-        policy.similarityGroup.isFirst
+        ${solution.similarityGroup?.isFirst !== undefined &&
+        solution.similarityGroup.isFirst
           ? html`
               <div
                 class="groupInfo layout ${this.wide
@@ -768,11 +751,11 @@ export class PsPolicies extends PsStageBase {
                 <md-outlined-icon-button
                   toggle
                   ?selected="${this.activeGroupIndex ===
-                  policy.similarityGroup.index}"
+                  solution.similarityGroup.index}"
                   class="groupButton"
                   @click="${(e: CustomEvent): void => {
                     e.stopPropagation();
-                    this.handleGroupButtonClick(policy.similarityGroup.index);
+                    this.handleGroupButtonClick(solution.similarityGroup.index);
                   }}"
                 >
                   <md-icon>unfold_more_double</md-icon>
@@ -780,7 +763,7 @@ export class PsPolicies extends PsStageBase {
                 </md-outlined-icon-button>
                 <div class="groupInfoText">
                   ${this.activeGroupIndex === null
-                    ? html`+${policy.similarityGroup.totalCount}`
+                    ? html`+${solution.similarityGroup.totalCount}`
                     : nothing}
                 </div>
               </div>
@@ -797,13 +780,13 @@ export class PsPolicies extends PsStageBase {
           ${this.renderSubProblem(subProblem, false, 0, true, true)}
         </div>
         <div class="layout horizontal center-center">
-          <div class="title">${this.t('Evolving Policies')}</div>
+          <div class="title">${this.t('Evolving Solutions')}</div>
         </div>
         <div class="generationContainer layout vertical center-center">
           ${this.renderChipSet(subProblem)}
-          <div id="policyList">
-            ${this.filteredPolicies.map((policy, index) =>
-              this.renderPolicyItem(policy, index)
+          <div id="solutionList">
+            ${this.filteredSolutions.map((solution, index) =>
+              this.renderSolutionItem(solution, index)
             )}
           </div>
         </div>
@@ -812,24 +795,26 @@ export class PsPolicies extends PsStageBase {
   }
 
   renderChipSet(subProblem: IEngineSubProblem) {
-    if (!subProblem.policies) {
+    if (!subProblem.solutions) {
       return nothing;
     }
 
-    if (subProblem.policies.populations) {
-      let firstItems, lastItems: PSPolicy[][], middleItems: PSPolicy[][];
+    if (subProblem.solutions.populations) {
+      let firstItems,
+        lastItems: IEngineSolution[][],
+        middleItems: IEngineSolution[][];
 
       if (!this.wide) {
-        firstItems = subProblem.policies.populations.slice(0, 1);
-        lastItems = subProblem.policies.populations.slice(-1);
-        middleItems = subProblem.policies.populations.slice(1, -1);
+        firstItems = subProblem.solutions.populations.slice(0, 1);
+        lastItems = subProblem.solutions.populations.slice(-1);
+        middleItems = subProblem.solutions.populations.slice(1, -1);
       } else {
-        firstItems = subProblem.policies.populations.slice(0, 3);
-        if (subProblem.policies.populations.length > 3) {
-          lastItems = subProblem.policies.populations.slice(3, 6);
-          if (subProblem.policies.populations.length > 6) {
-            lastItems = subProblem.policies.populations.slice(-3);
-            middleItems = subProblem.policies.populations.slice(3, -3);
+        firstItems = subProblem.solutions.populations.slice(0, 3);
+        if (subProblem.solutions.populations.length > 3) {
+          lastItems = subProblem.solutions.populations.slice(3, 6);
+          if (subProblem.solutions.populations.length > 6) {
+            lastItems = subProblem.solutions.populations.slice(-3);
+            middleItems = subProblem.solutions.populations.slice(3, -3);
           } else {
             middleItems = [];
           }
@@ -838,8 +823,8 @@ export class PsPolicies extends PsStageBase {
           middleItems = [];
         }
 
-        if (subProblem.policies.populations.length === 7) {
-          middleItems = subProblem.policies.populations.slice(3, 4);
+        if (subProblem.solutions.populations.length === 7) {
+          middleItems = subProblem.solutions.populations.slice(3, 4);
         }
       }
 
@@ -853,7 +838,7 @@ export class PsPolicies extends PsStageBase {
           ${this.renderDropdown(middleItems, firstItems.length)}
           ${this.renderFilterChips(
             lastItems,
-            subProblem.policies.populations.length - lastItems.length
+            subProblem.solutions.populations.length - lastItems.length
           )}
           <md-outlined-icon-button
             ?hidden="${this.isSearchVisible}"
@@ -871,7 +856,7 @@ export class PsPolicies extends PsStageBase {
 
   toggleSearchVisibility(): void {
     this.isSearchVisible = !this.isSearchVisible;
-    window.psAppGlobals.activity('Policies - toggle search');
+    window.psAppGlobals.activity('Solutions - toggle search');
   }
 
   renderSearchField() {
@@ -900,7 +885,7 @@ export class PsPolicies extends PsStageBase {
     }
   }
 
-  renderFilterChips(items: PSPolicy[][], startIndex: number) {
+  renderFilterChips(items: IEngineSolution[][], startIndex: number) {
     return items.map(
       (population, index) =>
         html`<md-filter-chip
@@ -911,7 +896,7 @@ export class PsPolicies extends PsStageBase {
           @click="${() => {
             this.activePopulationIndex = startIndex + index;
             this.resetDropdown();
-            window.psAppGlobals.activity('Policies - chose generation');
+            window.psAppGlobals.activity('Solutions - chose generation');
           }}"
         ></md-filter-chip> `
     );
@@ -929,8 +914,11 @@ export class PsPolicies extends PsStageBase {
     }
   }
 
-  toggleDropdownVisibility(): void {
-    window.psAppGlobals.activity('Policies - toggle dropdown');
+  async toggleDropdownVisibility() {
+    window.psAppGlobals.activity('Solutions - toggle dropdown');
+    this.isLoadingMiddle = true;
+    await this.loadMiddleData();
+    this.isLoadingMiddle = false;
     this.isDropdownVisible = !this.isDropdownVisible;
     if (this.isDropdownVisible) {
       // add check to ensure activePopulationIndex is valid
@@ -953,8 +941,10 @@ export class PsPolicies extends PsStageBase {
     }
   }
 
-  renderDropdown(middleItems: PSPolicy[][], startIndex: number) {
-    if (middleItems.length > 0 && !this.isDropdownVisible) {
+  renderDropdown(middleItems: IEngineSolution[][], startIndex: number) {
+    if (this.isLoadingMiddle) {
+      return html`<md-circular-progress indeterminate></md-circular-progress>`;
+    } else if (middleItems.length > 0 && !this.isDropdownVisible) {
       return html`
         <md-outlined-icon-button @click="${this.toggleDropdownVisibility}">
           <md-icon>expand_more</md-icon>
@@ -988,19 +978,19 @@ export class PsPolicies extends PsStageBase {
     return result.charAt(0).toUpperCase() + result.slice(1);
   }
 
-  renderRatings(policy: PSPolicy) {
+  renderRatings(solution: IEngineSolution) {
     return html`
-      <div class="ratings" hidden>
+      <div class="ratings">
         <div class="ratingsHeader eloRatings layout horizontal center-center">
           <div>
             ${this.t('Elo Rating')}:
-            ${YpFormattingHelpers.number(policy.eloRating)}
+            ${YpFormattingHelpers.number(solution.eloRating)}
           </div>
         </div>
 
-        ${policy.ratings
+        ${solution.ratings
           ? html`
-              ${Object.entries(policy.ratings).map(
+              ${Object.entries(solution.ratings).map(
                 ([category, ratings]) => html`
                   <div class="ratingsHeader">
                     ${this.camelCaseToRegular(category)}
@@ -1020,16 +1010,19 @@ export class PsPolicies extends PsStageBase {
     `;
   }
 
-  renderPolicyNavigationButtons(policyIndex: number, policies: PSPolicy[]) {
+  renderSolutionNavigationButtons(
+    solutionIndex: number,
+    solutions: IEngineSolution[]
+  ) {
     return html`
       <div class="layout horizontal center-center">
         <md-icon-button
           aria-label="Previous"
-          .disabled="${policyIndex === 0}"
+          .disabled="${solutionIndex === 0}"
           @click="${(): void => {
-            if (policyIndex > 0) {
-              this.activeFilteredPolicyIndex = policyIndex - 1;
-              window.psAppGlobals.activity('Policies - click previous policy');
+            if (solutionIndex > 0) {
+              this.activeFilteredSolutionIndex = solutionIndex - 1;
+              window.psAppGlobals.activity('Solutions - click previous solution');
             }
           }}"
         >
@@ -1037,11 +1030,11 @@ export class PsPolicies extends PsStageBase {
         </md-icon-button>
         <md-icon-button
           aria-label="Next"
-          .disabled="${policyIndex === policies.length - 1}"
+          .disabled="${solutionIndex === solutions.length - 1}"
           @click="${(): void => {
-            if (policyIndex < policies.length - 1) {
-              this.activeFilteredPolicyIndex = policyIndex + 1;
-              window.psAppGlobals.activity('Policies - click next policy');
+            if (solutionIndex < solutions.length - 1) {
+              this.activeFilteredSolutionIndex = solutionIndex + 1;
+              window.psAppGlobals.activity('Solutions - click next solution');
             }
           }}"
         >
@@ -1050,11 +1043,11 @@ export class PsPolicies extends PsStageBase {
         <md-icon-button
           aria-label="Close"
           @click="${(): void => {
-            this.activePolicyIndex = null;
-            this.activeFilteredPolicyIndex = null;
+            this.activeSolutionIndex = null;
+            this.activeFilteredSolutionIndex = null;
 
-            this.exitPolicyScreen();
-            window.psAppGlobals.activity('Policies - exit policy detail');
+            this.exitSolutionScreen();
+            window.psAppGlobals.activity('Solutions - exit solution detail');
           }}"
         >
           <md-icon>close</md-icon>
@@ -1063,7 +1056,7 @@ export class PsPolicies extends PsStageBase {
     `;
   }
 
-  getPolicyImgHeight() {
+  getSolutionImgHeight() {
     if (this.wide) {
       return 314;
     } else {
@@ -1071,7 +1064,7 @@ export class PsPolicies extends PsStageBase {
     }
   }
 
-  getPolicyImgWidth() {
+  getSolutionImgWidth() {
     if (this.wide) {
       return 550;
     } else {
@@ -1079,101 +1072,94 @@ export class PsPolicies extends PsStageBase {
     }
   }
 
-  renderPolicyImage(policy: PSPolicy) {
+  renderSolutionImage(solution: IEngineSolution) {
     return html`
-      <div class="policyImageContainer">
+      <div class="solutionImageContainer">
         <img
           loading="lazy"
-          alt="${policy.imagePrompt}"
-          title="${policy.imagePrompt}"
-          class="policyTopImage"
-          height="${this.getPolicyImgHeight()}"
-          width="${this.getPolicyImgWidth()}"
-          src="${this.fixImageUrlIfNeeded(policy.imageUrl)}"
-          .key="${policy.imageUrl}"
+          alt="${solution.imagePrompt}"
+          title="${solution.imagePrompt}"
+          class="solutionTopImage"
+          height="${this.getSolutionImgHeight()}"
+          width="${this.getSolutionImgWidth()}"
+          src="${this.fixImageUrlIfNeeded(solution.imageUrl)}"
+          .key="${solution.imageUrl}"
         />
       </div>
     `;
   }
 
-  renderPolicyScreen(policyIndex: number) {
-    const policies = this.filteredPolicies;
-    const policy = policies[policyIndex];
-    if (policy) {
+  renderSolutionScreen(solutionIndex: number) {
+    const solutions = this.filteredSolutions;
+    const solution = solutions[solutionIndex];
+    if (solution) {
       return html`
-        ${!policy.reaped
+        ${!solution.reaped
           ? html`
               <div class="topContainer layout vertical center-center">
-                ${this.renderPolicyNavigationButtons(policyIndex, policies)}
+                ${this.renderSolutionNavigationButtons(
+                  solutionIndex,
+                  solutions
+                )}
                 <div
-                  class="policy layout ${this.wide
+                  class="solution layout ${this.wide
                     ? 'horizontal'
                     : 'vertical'} center-cener"
                 >
-                  ${policy.imageUrl && !this.wide
-                    ? this.renderPolicyImage(policy)
+                  ${solution.imageUrl && !this.wide
+                    ? this.renderSolutionImage(solution)
                     : nothing}
 
-                  <div class="policyTitleDesc">
-                    <div class="policyTitle">${policy.title}</div>
-                    <div class="policyDescription">${policy.description}</div>
-                  </div>
-                  ${policy.imageUrl && this.wide
-                    ? this.renderPolicyImage(policy)
-                    : nothing}
-                </div>
-
-                <div
-                  class="layout vertical center-justified policyInfoContainer"
-                >
-                  <div
-                    class="policyDescription"
-                    ?hidden="${this.hideExtraPolicyInformation}"
-                  >
-                    <div class="policyAttributeHeader">
-                      ${this.t('Conditions for Success')}
+                  <div class="solutionTitleDesc">
+                    <div class="solutionTitle">${solution.title}</div>
+                    <div class="solutionDescription">
+                      ${solution.description}
                     </div>
-                    <div class="policyAttributes">
-                      ${policy.conditionsForSuccess.map(
-                        condition => html`<div>${condition}</div>`
+                  </div>
+                  ${solution.imageUrl && this.wide
+                    ? this.renderSolutionImage(solution)
+                    : nothing}
+                  <div
+                    class="solutionDescription"
+                    ?hidden="${this.hideExtraSolutionInformation}"
+                  >
+                    ${solution.mainBenefitOfSolution}
+                  </div>
+                  <div
+                    class="solutionDescription"
+                    ?hidden="${this.hideExtraSolutionInformation}"
+                  >
+                    ${solution.mainObstacleToSolutionAdoption}
+                  </div>
+                </div>
+                <div class="prosCons">
+                  <div class="solutionAttributes layout horizontal wrap">
+                    <div class="pros flexFactor layout vertical center-center">
+                      <div class="prosConsHeader">${this.t('Pros')}</div>
+                      ${(solution.pros as IEngineProCon[])?.map(
+                        pro =>
+                          html`<div class="proCon">${pro.description}</div>`
                       )}
                     </div>
-                  </div>
-                  <div
-                    class="policyDescription"
-                    ?hidden="${this.hideExtraPolicyInformation}"
-                  >
-                    <div class="policyAttributeHeader">
-                      ${this.t('Main Risks')}
-                    </div>
-                    <div class="policyAttributes">
-                      ${policy.mainRisks.map(risk => html`<div>${risk}</div>`)}
-                    </div>
-                  </div>
-                  <div
-                    class="policyDescription"
-                    ?hidden="${this.hideExtraPolicyInformation}"
-                  >
-                    <div class="policyAttributeHeader">
-                      ${this.t('Main Obstacles for Implemention')}
-                    </div>
-                    <div class="policyAttributes">
-                      ${policy.mainObstaclesForImplemention.map(
-                        mainObstaclesForImplemention =>
-                          html`<div>${mainObstaclesForImplemention}</div>`
+                    <div class="cons flexFactor layout vertical center-center">
+                      <div class="prosConsHeader">${this.t('Cons')}</div>
+                      ${(solution.cons as IEngineProCon[])?.map(
+                        con =>
+                          html`<div class="proCon">${con.description}</div>`
                       )}
                     </div>
                   </div>
                 </div>
-
-                ${this.renderRatings(policy)}
-
-                ${cache(html`<ps-raw-evidence
-                  .activeSubProblemIndex="${this.activeSubProblemIndex}"
-                  .policy="${policy}"
+                ${this.renderRatings(solution)}
+                ${this.renderSolutionNavigationButtons(
+                  solutionIndex,
+                  solutions
+                )}
+                <ps-family-tree
                   .memory="${this.memory}"
-                ></ps-raw-evidence>`)}
-                ${this.renderPolicyNavigationButtons(policyIndex, policies)}
+                  .subProblemIndex="${this.activeSubProblemIndex}"
+                  .solution="${solution}"
+                ></ps-family-tree>
               </div>
             `
           : html`<div class="reapedInfo layout horizontal center-center">

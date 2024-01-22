@@ -7,10 +7,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 //TDOO: Share from db config
 const maxNumberOfSubProblems = 7;
-let CpsEntities = class CpsEntities extends CpsStageBase {
+let PsEntities = class PsEntities extends PsStageBase {
     constructor() {
         super(...arguments);
         this.activeEntityIndex = null;
@@ -127,9 +127,9 @@ let CpsEntities = class CpsEntities extends CpsStageBase {
 };
 __decorate([
     property({ type: Number })
-], CpsEntities.prototype, "activeEntityIndex", void 0);
-CpsEntities = __decorate([
-    customElement('cps-entities')
-], CpsEntities);
-export { CpsEntities };
-//# sourceMappingURL=cps-entities.js.map
+], PsEntities.prototype, "activeEntityIndex", void 0);
+PsEntities = __decorate([
+    customElement('ps-entities')
+], PsEntities);
+export { PsEntities };
+//# sourceMappingURL=ps-entities.js.map

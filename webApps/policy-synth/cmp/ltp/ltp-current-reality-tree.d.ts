@@ -3,10 +3,10 @@ import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/iconbutton/filled-tonal-icon-button.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 import './ltp-current-reality-tree-node.js';
 import { LtpServerApi } from './LtpServerApi.js';
-export declare class LtpCurrentRealityTree extends CpsStageBase {
+export declare class LtpCurrentRealityTree extends PsStageBase {
     crtData?: LtpCurrentRealityTreeData;
     private graph;
     private paper;

@@ -10,7 +10,7 @@ import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/button/text-button.js';
 
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/ps-stage-base.js';
 import { Layouts } from '../flexbox-literals/classes.js';
 import { YpBaseElement } from '@yrpri/webapp';
 

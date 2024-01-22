@@ -1,6 +1,6 @@
 import { nothing } from 'lit';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -11,7 +11,7 @@ import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/chips/input-chip.js';
 import '@material/web/textfield/outlined-text-field.js';
 import './ps-family-tree.js';
-export declare class CpsSolutions extends CpsStageBase {
+export declare class PsSolutions extends PsStageBase {
     isDropdownVisible: boolean;
     searchText: string;
     activeFilteredSolutionIndex: number;
@@ -58,4 +58,4 @@ export declare class CpsSolutions extends CpsStageBase {
     renderSolutionImage(solution: IEngineSolution): import("lit-html").TemplateResult<1>;
     renderSolutionScreen(solutionIndex: number): import("lit-html").TemplateResult<1> | typeof nothing;
 }
-//# sourceMappingURL=cps-solutions.d.ts.map
+//# sourceMappingURL=ps-solutions.d.ts.map

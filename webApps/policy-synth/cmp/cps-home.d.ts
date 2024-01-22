@@ -1,6 +1,6 @@
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from './base/cps-stage-base.js';
-export declare class CpsHome extends CpsStageBase {
+import { PsStageBase } from './base/cps-stage-base.js';
+export declare class PsHome extends PsStageBase {
     connectedCallback(): Promise<void>;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
@@ -8,4 +8,4 @@ export declare class CpsHome extends CpsStageBase {
     renderProject(project: PsProjectData): import("lit-html").TemplateResult<1>;
     render(): import("lit-html").TemplateResult<1>;
 }
-//# sourceMappingURL=cps-home.d.ts.map
+//# sourceMappingURL=ps-home.d.ts.map

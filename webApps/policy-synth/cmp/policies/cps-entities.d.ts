@@ -1,6 +1,6 @@
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
-export declare class CpsEntities extends CpsStageBase {
+import { PsStageBase } from '../base/cps-stage-base.js';
+export declare class PsEntities extends PsStageBase {
     activeEntityIndex: number | null;
     maxNumberOfTopEntities: number;
     connectedCallback(): Promise<void>;
@@ -11,4 +11,4 @@ export declare class CpsEntities extends CpsStageBase {
     renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1>;
     renderEntityScreen(entity: IEngineAffectedEntity): import("lit-html").TemplateResult<1>;
 }
-//# sourceMappingURL=cps-entities.d.ts.map
+//# sourceMappingURL=ps-entities.d.ts.map

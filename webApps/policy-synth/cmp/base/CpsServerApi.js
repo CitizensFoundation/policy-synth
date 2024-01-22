@@ -1,5 +1,5 @@
 import { YpServerApi } from "@yrpri/webapp";
-export class CpsServerApi extends YpServerApi {
+export class PsServerApi extends YpServerApi {
     constructor(urlPath = '/api') {
         super();
         this.baseUrlPath = urlPath;
@@ -16,4 +16,4 @@ export class CpsServerApi extends YpServerApi {
             `/projects/${id}/${subProblemIndex}/${policyTitle}/rawEvidence`));
     }
 }
-//# sourceMappingURL=CpsServerApi.js.map
+//# sourceMappingURL=PsServerApi.js.map

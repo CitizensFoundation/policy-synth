@@ -8,7 +8,7 @@ import '@material/web/iconbutton/filled-tonal-icon-button.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/ps-stage-base.js';
 
 import './ltp-current-reality-tree-node.js';
 import { LtpServerApi } from './LtpServerApi.js';
@@ -116,7 +116,7 @@ class MyShape extends shapes.devs.Model {
 }
 
 @customElement('ltp-current-reality-tree')
-export class LtpCurrentRealityTree extends CpsStageBase {
+export class LtpCurrentRealityTree extends PsStageBase {
   @property({ type: Object }) crtData?: LtpCurrentRealityTreeData;
   private graph!: dia.Graph;
   private paper!: dia.Paper;
