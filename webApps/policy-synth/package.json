@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/webapp",
-  "version": "1.0.20",
+  "version": "1.0.22",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -24,8 +24,8 @@
     "tsc:watch": "tsc --watch"
   },
   "type": "module",
-  "typings": "./pso/all.d.ts",
-  "main": "./pso/all.js",
+  "typings": "./cmp/all.d.ts",
+  "main": "./cmp/all.js",
   "dependencies": {
     "@policysynth/agents": "^1.0.12",
     "@yrpri/webapp": "^9.0.8",
