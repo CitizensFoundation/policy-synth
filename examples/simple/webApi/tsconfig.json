@@ -4,6 +4,7 @@
     "target": "es2020",
     "module": "esnext",
     "outDir": "dist/",
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true
   },
