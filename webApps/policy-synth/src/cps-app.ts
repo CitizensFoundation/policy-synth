@@ -82,7 +82,7 @@ declare global {
 }
 
 @customElement('cps-app')
-export class CpsApp extends YpBaseElement {
+export class PolicySynthWebApp extends YpBaseElement {
   @property({ type: Number })
   currentProjectId: number | undefined = undefined;
 

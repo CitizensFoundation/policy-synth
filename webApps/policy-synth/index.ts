@@ -1,4 +1,4 @@
-export { CpsApp } from './src/cps-app';
+export { PolicySynthWebApp } from './src/cps-app';
 export { AcActivities } from './src/@yrpri/ac-activities/ac-activities';
 export { AcActivityPointNewsStory } from './src/@yrpri/ac-activities/ac-activity-point-news-story';
 export { AcActivityPoint } from './src/@yrpri/ac-activities/ac-activity-point';
