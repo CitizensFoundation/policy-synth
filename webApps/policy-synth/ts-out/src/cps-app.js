@@ -1245,6 +1245,7 @@ let CpsApp = class CpsApp extends YpBaseElement {
 
           <md-list>
             <md-list-item
+              type="button"
               class="${location.href.indexOf('/webResearch') > -1 &&
                 'selectedContainer'}"
 
@@ -1257,11 +1258,12 @@ let CpsApp = class CpsApp extends YpBaseElement {
 
             >
               <div slot="headline">${this.t('Web Research')}</div>
-              <div slot="supporting-text">${this.t('Automated research')}</div>
+              <div slot="supporting-text">${this.t('Automated')}</div>
               <md-icon slot="start">manage_search</md-icon>
             </md-list-item>
             <md-list-item
-            class="${location.href.indexOf('/solutions') > -1 && 'selectedContainer'}"
+              type="button"
+              class="${location.href.indexOf('/solutions') > -1 && 'selectedContainer'}"
 
               @click="${async () => {
                 this.openSolutions();
@@ -1280,6 +1282,7 @@ let CpsApp = class CpsApp extends YpBaseElement {
               <md-icon slot="start">online_prediction</md-icon>
             </md-list-item>
             <md-list-item hidden
+              type="button"
               class="${this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'}"
             >
@@ -1289,6 +1292,7 @@ let CpsApp = class CpsApp extends YpBaseElement {
             </md-list-item>
 
             <md-list-item
+              type="button"
               class="${this.pageIndex == PagesTypes.PolicyCategories &&
                 'selectedContainer'}"
 
@@ -1311,6 +1315,7 @@ let CpsApp = class CpsApp extends YpBaseElement {
 
             <md-list-divider></md-list-divider>
             <md-list-item
+              type="button"
               ?hidden="${true /*!this.isAdmin*/}"
               @keydown="${(e) => {
                 if (e.key === 'Enter') {
@@ -1324,6 +1329,7 @@ let CpsApp = class CpsApp extends YpBaseElement {
               <md-icon slot="start">monitoring</md-icon>
             </md-list-item>
             <md-list-item
+              type="button"
               ?hidden="${true /*!this.isAdmin*/}"
               @keydown="${(e) => {
                 if (e.key === 'Enter') {
@@ -1338,6 +1344,7 @@ let CpsApp = class CpsApp extends YpBaseElement {
             </md-list-item>
             <md-list-divider></md-list-divider>
             <md-list-item
+              type="button"
               @keydown="${(e) => {
                 if (e.key === 'Enter') {
                     this.openGitHub();
