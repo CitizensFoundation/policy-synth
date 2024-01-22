@@ -25,7 +25,8 @@
   },
   "type": "module",
   "dependencies": {
-    "@policysynth/webapp": "^1.0.11",
+    "@policysynth/webapp": "^1.0.12",
+    "marked": "^4.2.12",
     "lit": "^2.7.4"
   },
   "devDependencies": {
@@ -42,6 +43,9 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.2",
+    "@types/google.analytics": "0.0.42",
+    "@types/marked": "^6.0.0",
+    "@types/sanitize-html": "^2.9.5",
     "@typescript-eslint/eslint-plugin": "^5.34.0",
     "@typescript-eslint/parser": "^5.34.0",
     "@web/dev-server": "^0.4.1",
@@ -119,5 +123,4 @@
     "singleQuote": true,
     "arrowParens": "avoid"
   }
-
 }

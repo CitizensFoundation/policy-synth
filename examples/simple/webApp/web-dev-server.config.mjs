@@ -19,7 +19,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   mimeTypes: {
     '**/*.cjs': 'js',
   },
-  port: 9905,
+  port: 2900,
   plugins: [
 
     nodeResolve({
