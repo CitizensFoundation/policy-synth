@@ -29,3 +29,4 @@ export class AnalyticsController {
         this.router.post(this.path + "/createActivityFromApp", this.createActivityFromApp);
     }
 }
+//# sourceMappingURL=analyticsController.js.map

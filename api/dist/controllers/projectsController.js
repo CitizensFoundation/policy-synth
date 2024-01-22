@@ -228,3 +228,4 @@ export class ProjectsController {
         await redisClient.connect();
     }
 }
+//# sourceMappingURL=projectsController.js.map

@@ -28,3 +28,4 @@ process.env.DB_PASS, // password
 export const models = {
     sequelize
 };
+//# sourceMappingURL=index.js.map

@@ -1,10 +1,6 @@
-import './models/index.js';
-import { App } from './app.js';
-import { SimpleChatBotController } from './controllers/simpleChatBotController.js';
-import { ProjectsController } from './controllers/projectsController.js';
-import { TreeController } from './controllers/treeController.js';
+import { PolicySynthApiApp } from '@policysynth/api';
 
-const app = new App(
+const app = new PolicySynthApiApp(
   [
     simpleChatBotController,
   ],

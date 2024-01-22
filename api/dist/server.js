@@ -9,3 +9,4 @@ const app = new PolicySynthApiApp([
     TreeController,
 ], 8000);
 app.listen();
+//# sourceMappingURL=server.js.map

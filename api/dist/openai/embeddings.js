@@ -13,3 +13,4 @@ export const createEmbedding = async (text) => {
         totalTokens: response.usage.total_tokens
     };
 };
+//# sourceMappingURL=embeddings.js.map

@@ -69,3 +69,4 @@ Website.addHook("beforeUpdate", async (website) => {
     //TODO: add costs
 });
 export default Website;
+//# sourceMappingURL=website.js.map
