@@ -1,4 +1,4 @@
-import { YpServerApi } from '../@yrpri/common/YpServerApi.js';
+import { YpServerApi } from "@yrpri/webapp";
 
 export class BaseChatBotServerApi extends YpServerApi {
   baseLtpPath = '/ltp/crt/';

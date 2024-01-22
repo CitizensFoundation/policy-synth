@@ -1,7 +1,7 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
-import './@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 
 import { CpsStageBase } from './base/cps-stage-base.js';
 
@@ -28,7 +28,7 @@ const projects = [
 export class CpsHome extends CpsStageBase {
   async connectedCallback() {
     super.connectedCallback();
-    window.appGlobals.activity(`Home - open`);
+    window.psAppGlobals.activity(`Home - open`);
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -36,7 +36,7 @@ export class CpsHome extends CpsStageBase {
   }
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`Home - close`);
+    window.psAppGlobals.activity(`Home - close`);
   }
 
   static get styles() {

@@ -1,6 +1,6 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 import { CpsStageBase } from '../base/cps-stage-base.js';
 
 import '@material/web/chips/chip-set.js';
@@ -16,11 +16,11 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 import { IEngineConstants } from '../constants.js';
-import { YpFormattingHelpers } from '../@yrpri/common/YpFormattingHelpers.js';
 
 import './ps-family-tree.js';
 import './ps-raw-evidence.js';
 import { cache } from 'lit/directives/cache.js';
+import { YpFormattingHelpers } from '@yrpri/webapp';
 
 @customElement('ps-policies')
 export class PsPolicies extends CpsStageBase {
@@ -73,7 +73,7 @@ export class PsPolicies extends CpsStageBase {
 
     this.updateRoutes();
 
-    window.appGlobals.activity('Sub Problem - click');
+    window.psAppGlobals.activity('Sub Problem - click');
   }
 
   async handleGroupButtonClick(groupIndex: number): Promise<void> {
@@ -83,7 +83,7 @@ export class PsPolicies extends CpsStageBase {
       await this.updateComplete;
       window.scrollTo(0, this.groupListScrollPositionY);
       this.groupListScrollPositionY = null;
-      window.appGlobals.activity('Policies - deactive group filter');
+      window.psAppGlobals.activity('Policies - deactive group filter');
     } else {
       // Activating group filter
       this.groupListScrollPositionY = window.scrollY;
@@ -93,7 +93,7 @@ export class PsPolicies extends CpsStageBase {
       const rect = policyListElement.getBoundingClientRect();
       const docTop = window.pageYOffset;
       window.scrollTo(0, rect.top + docTop);
-      window.appGlobals.activity('Policies - activate group filter');
+      window.psAppGlobals.activity('Policies - activate group filter');
     }
   }
 
@@ -114,7 +114,7 @@ export class PsPolicies extends CpsStageBase {
   async connectedCallback() {
     super.connectedCallback();
     this.childType = 'policy';
-    window.appGlobals.activity(`Policies - open`);
+    window.psAppGlobals.activity(`Policies - open`);
 
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     this.addEventListener('touchstart', this.handleTouchStart.bind(this));
@@ -123,7 +123,7 @@ export class PsPolicies extends CpsStageBase {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`Policies - close`);
+    window.psAppGlobals.activity(`Policies - close`);
     document.removeEventListener('keydown', this.handleKeyDown);
     this.removeEventListener('touchstart', this.handleTouchStart.bind(this));
     this.removeEventListener('touchend', this.handleTouchEnd.bind(this));
@@ -139,14 +139,14 @@ export class PsPolicies extends CpsStageBase {
         this.activeFilteredPolicyIndex < this.filteredPolicies.length - 1
       ) {
         this.activeFilteredPolicyIndex += 1;
-        window.appGlobals.activity('Policies - swipe right');
+        window.psAppGlobals.activity('Policies - swipe right');
       } else if (
         this.activePolicyIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
       ) {
         this.activeSubProblemIndex += 1;
-        window.appGlobals.activity('Sub problem - swipe right');
+        window.psAppGlobals.activity('Sub problem - swipe right');
       }
     } else if (direction === 'left') {
       if (
@@ -154,14 +154,14 @@ export class PsPolicies extends CpsStageBase {
         this.activeFilteredPolicyIndex > 0
       ) {
         this.activeFilteredPolicyIndex -= 1;
-        window.appGlobals.activity('Policies - swipe left');
+        window.psAppGlobals.activity('Policies - swipe left');
       } else if (
         this.activePolicyIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex > 0
       ) {
         this.activeSubProblemIndex -= 1;
-        window.appGlobals.activity('Sub problem - swipe left');
+        window.psAppGlobals.activity('Sub problem - swipe left');
       }
     }
     this.setSubProblemColor(this.activeSubProblemIndex);
@@ -732,7 +732,7 @@ export class PsPolicies extends CpsStageBase {
           window.scrollTo(0, 0);
           //console.error(`click`, this.activeFilteredPolicyIndex);
           //console.error(`click`, this.activePolicyIndex);
-          window.appGlobals.activity('Policies - open detail');
+          window.psAppGlobals.activity('Policies - open detail');
         }}"
       >
         ${policy.imageUrl
@@ -871,7 +871,7 @@ export class PsPolicies extends CpsStageBase {
 
   toggleSearchVisibility(): void {
     this.isSearchVisible = !this.isSearchVisible;
-    window.appGlobals.activity('Policies - toggle search');
+    window.psAppGlobals.activity('Policies - toggle search');
   }
 
   renderSearchField() {
@@ -911,7 +911,7 @@ export class PsPolicies extends CpsStageBase {
           @click="${() => {
             this.activePopulationIndex = startIndex + index;
             this.resetDropdown();
-            window.appGlobals.activity('Policies - chose generation');
+            window.psAppGlobals.activity('Policies - chose generation');
           }}"
         ></md-filter-chip> `
     );
@@ -930,7 +930,7 @@ export class PsPolicies extends CpsStageBase {
   }
 
   toggleDropdownVisibility(): void {
-    window.appGlobals.activity('Policies - toggle dropdown');
+    window.psAppGlobals.activity('Policies - toggle dropdown');
     this.isDropdownVisible = !this.isDropdownVisible;
     if (this.isDropdownVisible) {
       // add check to ensure activePopulationIndex is valid
@@ -1029,7 +1029,7 @@ export class PsPolicies extends CpsStageBase {
           @click="${(): void => {
             if (policyIndex > 0) {
               this.activeFilteredPolicyIndex = policyIndex - 1;
-              window.appGlobals.activity('Policies - click previous policy');
+              window.psAppGlobals.activity('Policies - click previous policy');
             }
           }}"
         >
@@ -1041,7 +1041,7 @@ export class PsPolicies extends CpsStageBase {
           @click="${(): void => {
             if (policyIndex < policies.length - 1) {
               this.activeFilteredPolicyIndex = policyIndex + 1;
-              window.appGlobals.activity('Policies - click next policy');
+              window.psAppGlobals.activity('Policies - click next policy');
             }
           }}"
         >
@@ -1054,7 +1054,7 @@ export class PsPolicies extends CpsStageBase {
             this.activeFilteredPolicyIndex = null;
 
             this.exitPolicyScreen();
-            window.appGlobals.activity('Policies - exit policy detail');
+            window.psAppGlobals.activity('Policies - exit policy detail');
           }}"
         >
           <md-icon>close</md-icon>

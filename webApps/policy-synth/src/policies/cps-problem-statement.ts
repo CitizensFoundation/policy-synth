@@ -1,7 +1,7 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
@@ -12,7 +12,7 @@ import { CpsStageBase } from '../base/cps-stage-base.js';
 export class CpsProblemStatement extends CpsStageBase {
   async connectedCallback() {
     super.connectedCallback();
-    window.appGlobals.activity(`Problem Statment - open`);
+    window.psAppGlobals.activity(`Problem Statment - open`);
   }
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
@@ -21,7 +21,7 @@ export class CpsProblemStatement extends CpsStageBase {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`Problem Statment - close`);
+    window.psAppGlobals.activity(`Problem Statment - close`);
   }
 
   static get styles() {

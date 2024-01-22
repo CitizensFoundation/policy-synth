@@ -1,7 +1,7 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 
 import { CpsStageBase } from '../base/cps-stage-base.js';
 import { IEngineConstants } from '../constants.js';
@@ -12,7 +12,7 @@ export class CpsWebResearch extends CpsStageBase {
 
   async connectedCallback() {
     super.connectedCallback();
-    window.appGlobals.activity(`Web research - open`);
+    window.psAppGlobals.activity(`Web research - open`);
     if (this.memory.groupId === 1) {
       this.maxNumberOfTopEntities = 3;
     }
@@ -24,7 +24,7 @@ export class CpsWebResearch extends CpsStageBase {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`Web research - close`);
+    window.psAppGlobals.activity(`Web research - close`);
   }
 
   static get styles() {

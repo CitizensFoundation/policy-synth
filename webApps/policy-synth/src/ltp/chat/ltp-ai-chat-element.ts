@@ -2,7 +2,6 @@ import { TemplateResult, css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
 import { Layouts } from '../../flexbox-literals/classes';
-import { YpBaseElement } from '../../@yrpri/common/yp-base-element';
 import { resolveMarkdown } from '../../chatBot/litMarkdown.js';
 import '@material/web/icon/icon.js';
 import '@material/web/checkbox/checkbox.js';
@@ -13,7 +12,7 @@ import '@material/web/textfield/filled-text-field.js';
 
 import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
-import '../../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 import { LtpServerApi } from '../LtpServerApi';
 import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 import { PsAiChatElement } from '../../chatBot/ps-ai-chat-element';

@@ -1,5 +1,4 @@
-import { YpServerApi } from "../@yrpri/common/YpServerApi";
-import { YpAppUser } from "../@yrpri/yp-app/YpAppUser";
+import { YpAppUser, YpServerApi } from "@yrpri/webapp";
 
 export class CpsAppUser extends YpAppUser {
   constructor(serverApi: YpServerApi, skipRegularInit = false) {

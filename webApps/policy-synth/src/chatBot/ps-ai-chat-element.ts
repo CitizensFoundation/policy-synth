@@ -1,7 +1,6 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
-import { YpBaseElement } from '../@yrpri/common/yp-base-element';
 import { resolveMarkdown } from './litMarkdown.js';
 import '@material/web/icon/icon.js';
 import '@material/web/checkbox/checkbox.js';
@@ -12,9 +11,10 @@ import '@material/web/textfield/filled-text-field.js';
 
 import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 import { BaseChatBotServerApi } from './BaseChatBotApi';
+import { YpBaseElement } from '@yrpri/webapp';
 
 @customElement('ps-ai-chat-element')
 export class PsAiChatElement extends YpBaseElement {

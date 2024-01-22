@@ -1,4 +1,4 @@
-import { YpServerApi } from '../@yrpri/common/YpServerApi.js';
+import { YpServerApi } from "@yrpri/webapp";
 
 export class CpsServerApi extends YpServerApi {
   constructor(urlPath: string = '/api') {
@@ -81,11 +81,11 @@ export class CpsServerApi extends YpServerApi {
       `${window.location.protocol}//${window.location.host}${this.baseUrlPath}/questions/${questionId}/prompts/${promptId}/votes.js?locale=${locale}`
     );
 
-    Object.keys(window.appGlobals.originalQueryParameters).forEach(key => {
+    Object.keys(window.psAppGlobals.originalQueryParameters).forEach(key => {
       if (key.startsWith('utm_')) {
         url.searchParams.append(
           key,
-          window.appGlobals.originalQueryParameters[key]
+          window.psAppGlobals.originalQueryParameters[key]
         );
       }
     });

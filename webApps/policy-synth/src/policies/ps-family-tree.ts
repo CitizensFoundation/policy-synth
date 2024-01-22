@@ -1,11 +1,11 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 
 import { CpsStageBase } from '../base/cps-stage-base.js';
-import { YpBaseElement } from '../@yrpri/common/yp-base-element.js';
 import { Layouts } from '../flexbox-literals/classes.js';
+import { YpBaseElement } from '@yrpri/webapp';
 
 @customElement('ps-family-tree')
 export class PsFamilyTree extends YpBaseElement {
@@ -20,12 +20,12 @@ export class PsFamilyTree extends YpBaseElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    window.appGlobals.activity(`Family tree - open`);
+    window.psAppGlobals.activity(`Family tree - open`);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`Family tree - close`);
+    window.psAppGlobals.activity(`Family tree - close`);
   }
 
   static get styles() {
