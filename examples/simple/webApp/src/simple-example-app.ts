@@ -9,7 +9,7 @@ import './simple-chat-bot.js';
 export class SimpleExampleApp extends PolicySynthWebApp {
   override router: Router = new Router(this, [
     {
-      path: '/',
+      path: '/*',
       render: () => {
         return html`<simple-chat-bot></simple-chat-bot>`;
       },
