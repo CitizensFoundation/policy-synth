@@ -3,7 +3,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 import { marked } from 'marked';
 import sanitizeHTML from 'sanitize-html';
-import { YpBaseElement } from '../@yrpri/common/yp-base-element';
+import { YpBaseElement } from '@yrpri/webapp';
 marked.setOptions({
   // Enable table support
   gfm: true,

@@ -1,8 +1,6 @@
 import { PropertyValueMap, css, html } from 'lit';
 import { property, customElement, query, queryAll } from 'lit/decorators.js';
 
-import { YpBaseElement } from '../@yrpri/common/yp-base-element';
-
 import '@material/web/fab/fab.js';
 
 import '@material/web/radio/radio.js';
@@ -15,13 +13,15 @@ import '@material/web/icon/icon.js';
 
 import '@material/web/iconbutton/outlined-icon-button.js';
 
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 import { PsAiChatElement } from './ps-ai-chat-element.js';
 import { MdFilledTonalButton } from '@material/web/button/filled-tonal-button.js';
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
 
-import './ps-ai-chat-element.js';
+import { YpBaseElement } from '@yrpri/webapp';
+
 import { BaseChatBotServerApi } from './BaseChatBotApi';
+import './ps-ai-chat-element.js';
 
 const PROMPT_DEBUG = true;
 
@@ -689,3 +689,4 @@ export class PsChatAssistant extends YpBaseElement {
     `;
   }
 }
+

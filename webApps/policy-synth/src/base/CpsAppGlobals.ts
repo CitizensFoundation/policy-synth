@@ -1,4 +1,5 @@
-import { YpAppGlobals } from '../@yrpri/yp-app/YpAppGlobals.js';
+
+import { YpAppGlobals } from '@yrpri/webapp';
 import { CpsServerApi } from './CpsServerApi.js';
 
 export class CpsAppGlobals extends YpAppGlobals {
@@ -80,7 +81,7 @@ export class CpsAppGlobals extends YpAppGlobals {
     }
   }
 
-  activity = (type: string, object: any): void => {
+  activity = (type: string, object: any | undefined = undefined): void => {
     let actor: string;
 
     if (window.appUser && window.appUser.user) {

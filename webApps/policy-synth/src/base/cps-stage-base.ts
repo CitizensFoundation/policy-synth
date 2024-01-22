@@ -1,9 +1,7 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement, state } from 'lit/decorators.js';
 
-import '../@yrpri/common/yp-image.js';
-import { YpFormattingHelpers } from '../@yrpri/common/YpFormattingHelpers.js';
-import { YpBaseElement } from '../@yrpri/common/yp-base-element.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 
 import '@material/web/checkbox/checkbox.js';
 import { Checkbox } from '@material/web/checkbox/internal/checkbox.js';
@@ -11,7 +9,8 @@ import '@material/web/button/outlined-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/iconbutton/icon-button.js';
 import { MdIconButton } from '@material/web/iconbutton/icon-button.js';
-import { Router } from '@lit-labs/router';
+import { YpBaseElement } from '@yrpri/webapp';
+import { PsRouter } from './router/router.js';
 
 //TDOO: Share from db config
 const maxNumberOfSubProblems = 7;
@@ -42,13 +41,13 @@ export abstract class CpsStageBase extends YpBaseElement {
   firstTimeSubProblemClick = true;
 
   @property({ type: Number })
-  activeGroupIndex: number = null;
+  activeGroupIndex: number | null = null;
 
   @property({ type: Boolean })
   longDescriptions = false;
 
   @property({ type: Object })
-  router!: Router;
+  router!: PsRouter;
 
   @state()
   displayStates = new Map();
@@ -61,7 +60,7 @@ export abstract class CpsStageBase extends YpBaseElement {
   maxTopSearchQueries = 4;
   maxUsedSearchResults = 1000;
 
-  connectedCallback(): void {
+  override connectedCallback(): void {
     super.connectedCallback();
     if (this.memory) {
       if (this.memory.groupId == 2) {
@@ -96,7 +95,7 @@ export abstract class CpsStageBase extends YpBaseElement {
     });
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
     if (
       changedProperties.has('activeSolutionIndex') ||
@@ -134,7 +133,7 @@ export abstract class CpsStageBase extends YpBaseElement {
   toggleScores() {
     const checkbox = this.$$('#showScores') as Checkbox;
     this.showEloRatings = checkbox.checked;
-    window.appGlobals.activity(
+    window.psAppGlobals.activity(
       `View memory - toggle scores ${this.showEloRatings ? 'on' : 'off'}`
     );
   }
@@ -646,18 +645,18 @@ export abstract class CpsStageBase extends YpBaseElement {
 
     this.updateRoutes();
 
-    window.appGlobals.activity('Sub Problem - click');
+    window.psAppGlobals.activity('Sub Problem - click');
   }
 
   toggleDarkMode() {
     debugger;
     this.fire('yp-theme-dark-mode', !this.themeDarkMode);
-    window.appGlobals.activity('Solutions - toggle darkmode');
+    window.psAppGlobals.activity('Solutions - toggle darkmode');
     if (this.themeDarkMode) {
-      window.appGlobals.activity('Settings - dark mode');
+      window.psAppGlobals.activity('Settings - dark mode');
       localStorage.setItem('md3-ps-dark-mode', 'true');
     } else {
-      window.appGlobals.activity('Settings - light mode');
+      window.psAppGlobals.activity('Settings - light mode');
       localStorage.removeItem('md3-ps-dark-mode');
     }
   }
@@ -841,7 +840,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                           this.activeSubProblemIndex -= 1;
                           this.setSubProblemColor(this.activeSubProblemIndex);
                           this.activeGroupIndex = null;
-                          window.appGlobals.activity(
+                          window.psAppGlobals.activity(
                             'Sub Problem - click previous'
                           );
                         }
@@ -865,7 +864,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                           this.activeSubProblemIndex += 1;
                           this.setSubProblemColor(this.activeSubProblemIndex);
                           this.activeGroupIndex = null;
-                          window.appGlobals.activity(
+                          window.psAppGlobals.activity(
                             'Sub Problem - click next'
                           );
                         }
@@ -881,7 +880,7 @@ export abstract class CpsStageBase extends YpBaseElement {
                         this.fire('yp-theme-color', this.subProblemColors[7]);
                         this.exitSubProblemScreen();
                         this.activeGroupIndex = null;
-                        window.appGlobals.activity('Sub Problem - exit');
+                        window.psAppGlobals.activity('Sub Problem - exit');
                       }}"
                     >
                       <md-icon>close</md-icon>

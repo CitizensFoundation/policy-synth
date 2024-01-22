@@ -32,9 +32,6 @@ import { LtpServerApi } from "./LtpServerApi.js";
 import "./chat/ltp-chat-assistant.js";
 import { MdDialog } from "@material/web/dialog/dialog.js";
 import { LtpStreamingAIResponse } from "./LtpStreamingAIResponse.js";
-import { YpBaseElement } from "../@yrpri/common/yp-base-element.js";
-import { YpAccessHelpers } from "../@yrpri/common/YpAccessHelpers.js";
-import { YpNavHelpers } from "../@yrpri/common/YpNavHelpers.js";
 import { LtpCurrentRealityTree } from "./ltp-current-reality-tree.js";
 
 const TESTING = false;
@@ -771,12 +768,12 @@ export class LtpManageCrt extends CpsStageBase {
 
   toggleDarkMode() {
     this.fire('yp-theme-dark-mode', !this.themeDarkMode);
-    window.appGlobals.activity('Crt - toggle darkmode');
+    window.psAppGlobals.activity('Crt - toggle darkmode');
     if (this.themeDarkMode) {
-      window.appGlobals.activity('Settings - dark mode');
+      window.psAppGlobals.activity('Settings - dark mode');
       localStorage.setItem('md3-ps-dark-mode', 'true');
     } else {
-      window.appGlobals.activity('Settings - light mode');
+      window.psAppGlobals.activity('Settings - light mode');
       localStorage.removeItem('md3-ps-dark-mode');
     }
   }

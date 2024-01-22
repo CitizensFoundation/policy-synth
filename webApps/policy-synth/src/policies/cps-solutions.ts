@@ -1,6 +1,6 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 import { CpsStageBase } from '../base/cps-stage-base.js';
 
 import '@material/web/chips/chip-set.js';
@@ -16,9 +16,9 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 import { IEngineConstants } from '../constants.js';
-import { YpFormattingHelpers } from '../@yrpri/common/YpFormattingHelpers.js';
 
 import './ps-family-tree.js';
+import { YpFormattingHelpers } from '@yrpri/webapp';
 
 @customElement('cps-solutions')
 export class CpsSolutions extends CpsStageBase {
@@ -52,7 +52,7 @@ export class CpsSolutions extends CpsStageBase {
       await this.updateComplete;
       window.scrollTo(0, this.groupListScrollPositionY);
       this.groupListScrollPositionY = null;
-      window.appGlobals.activity('Solutions - deactive group filter');
+      window.psAppGlobals.activity('Solutions - deactive group filter');
     } else {
       // Activating group filter
       this.groupListScrollPositionY = window.scrollY;
@@ -63,7 +63,7 @@ export class CpsSolutions extends CpsStageBase {
       const rect = solutionListElement.getBoundingClientRect();
       const docTop = window.pageYOffset;
       window.scrollTo(0, rect.top + docTop);
-      window.appGlobals.activity('Solutions - activate group filter');
+      window.psAppGlobals.activity('Solutions - activate group filter');
     }
   }
 
@@ -83,7 +83,7 @@ export class CpsSolutions extends CpsStageBase {
 
   async connectedCallback() {
     super.connectedCallback();
-    window.appGlobals.activity(`Solutions - open`);
+    window.psAppGlobals.activity(`Solutions - open`);
 
     document.addEventListener('keydown', this.handleKeyDown.bind(this));
     this.addEventListener('touchstart', this.handleTouchStart.bind(this));
@@ -92,7 +92,7 @@ export class CpsSolutions extends CpsStageBase {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`Solutions - close`);
+    window.psAppGlobals.activity(`Solutions - close`);
     document.removeEventListener('keydown', this.handleKeyDown);
     this.removeEventListener('touchstart', this.handleTouchStart.bind(this));
     this.removeEventListener('touchend', this.handleTouchEnd.bind(this));
@@ -108,14 +108,14 @@ export class CpsSolutions extends CpsStageBase {
         this.activeFilteredSolutionIndex < this.filteredSolutions.length - 1
       ) {
         this.activeFilteredSolutionIndex += 1;
-        window.appGlobals.activity('Solutions - swipe right');
+        window.psAppGlobals.activity('Solutions - swipe right');
       } else if (
         this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
       ) {
         this.activeSubProblemIndex += 1;
-        window.appGlobals.activity('Sub problem - swipe right');
+        window.psAppGlobals.activity('Sub problem - swipe right');
       }
     } else if (direction === 'left') {
       if (
@@ -123,14 +123,14 @@ export class CpsSolutions extends CpsStageBase {
         this.activeFilteredSolutionIndex > 0
       ) {
         this.activeFilteredSolutionIndex -= 1;
-        window.appGlobals.activity('Solutions - swipe left');
+        window.psAppGlobals.activity('Solutions - swipe left');
       } else if (
         this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
         this.activeSubProblemIndex > 0
       ) {
         this.activeSubProblemIndex -= 1;
-        window.appGlobals.activity('Sub problem - swipe left');
+        window.psAppGlobals.activity('Sub problem - swipe left');
       }
     }
     this.setSubProblemColor(this.activeSubProblemIndex);
@@ -140,7 +140,7 @@ export class CpsSolutions extends CpsStageBase {
     console.log(`loadMiddleData`)
     try {
       for (let i = 0; i < IEngineConstants.maxSubProblems; i++) {
-        const middleData = await window.serverApi.getMiddleSolutions(this.memory.groupId, i);
+        const middleData = await window.psServerApi.getMiddleSolutions(this.memory.groupId, i);
 
         if (middleData && Array.isArray(middleData)) {
           // Check if your populations are already initialized and have more than 6 elements
@@ -715,7 +715,7 @@ export class CpsSolutions extends CpsStageBase {
           window.scrollTo(0, 0);
           //console.error(`click`, this.activeFilteredSolutionIndex);
           //console.error(`click`, this.activeSolutionIndex);
-          window.appGlobals.activity('Solutions - open detail');
+          window.psAppGlobals.activity('Solutions - open detail');
         }}"
       >
         ${solution.imageUrl
@@ -856,7 +856,7 @@ export class CpsSolutions extends CpsStageBase {
 
   toggleSearchVisibility(): void {
     this.isSearchVisible = !this.isSearchVisible;
-    window.appGlobals.activity('Solutions - toggle search');
+    window.psAppGlobals.activity('Solutions - toggle search');
   }
 
   renderSearchField() {
@@ -896,7 +896,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${() => {
             this.activePopulationIndex = startIndex + index;
             this.resetDropdown();
-            window.appGlobals.activity('Solutions - chose generation');
+            window.psAppGlobals.activity('Solutions - chose generation');
           }}"
         ></md-filter-chip> `
     );
@@ -915,7 +915,7 @@ export class CpsSolutions extends CpsStageBase {
   }
 
   async toggleDropdownVisibility() {
-    window.appGlobals.activity('Solutions - toggle dropdown');
+    window.psAppGlobals.activity('Solutions - toggle dropdown');
     this.isLoadingMiddle = true;
     await this.loadMiddleData();
     this.isLoadingMiddle = false;
@@ -1022,7 +1022,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${(): void => {
             if (solutionIndex > 0) {
               this.activeFilteredSolutionIndex = solutionIndex - 1;
-              window.appGlobals.activity('Solutions - click previous solution');
+              window.psAppGlobals.activity('Solutions - click previous solution');
             }
           }}"
         >
@@ -1034,7 +1034,7 @@ export class CpsSolutions extends CpsStageBase {
           @click="${(): void => {
             if (solutionIndex < solutions.length - 1) {
               this.activeFilteredSolutionIndex = solutionIndex + 1;
-              window.appGlobals.activity('Solutions - click next solution');
+              window.psAppGlobals.activity('Solutions - click next solution');
             }
           }}"
         >
@@ -1047,7 +1047,7 @@ export class CpsSolutions extends CpsStageBase {
             this.activeFilteredSolutionIndex = null;
 
             this.exitSolutionScreen();
-            window.appGlobals.activity('Solutions - exit solution detail');
+            window.psAppGlobals.activity('Solutions - exit solution detail');
           }}"
         >
           <md-icon>close</md-icon>

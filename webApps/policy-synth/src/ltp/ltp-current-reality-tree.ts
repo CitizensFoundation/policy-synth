@@ -136,7 +136,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
   override async connectedCallback() {
     super.connectedCallback();
-    window.appGlobals.activity(`CRT - open`);
+    window.psAppGlobals.activity(`CRT - open`);
 
     this.addEventListener('add-nodes', this.addNodesEvent as EventListener);
     this.addGlobalListener(
@@ -233,7 +233,7 @@ export class LtpCurrentRealityTree extends CpsStageBase {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`CRT - close`);
+    window.psAppGlobals.activity(`CRT - close`);
   }
 
   private handleNodeDoubleClick(element: dia.Element, zoomOut: boolean = false): void {

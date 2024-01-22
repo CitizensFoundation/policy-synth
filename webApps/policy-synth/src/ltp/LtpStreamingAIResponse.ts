@@ -10,8 +10,7 @@ import { CpsStageBase } from '../base/cps-stage-base.js';
 import { LtpServerApi } from './LtpServerApi.js';
 import { LtpCurrentRealityTree } from './ltp-current-reality-tree.js';
 import { MdMenu } from '@material/web/menu/menu.js';
-import { YpCodeBase } from '../@yrpri/common/YpCodeBaseclass.js';
-import { YpBaseElement } from '../@yrpri/common/yp-base-element.js';
+import { YpBaseElement, YpCodeBase } from '@yrpri/webapp';
 
 export class LtpStreamingAIResponse extends YpCodeBase {
   wsClientId!: string;

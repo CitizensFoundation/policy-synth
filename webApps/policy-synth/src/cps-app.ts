@@ -13,8 +13,6 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/mwc-snackbar/mwc-snackbar.js';
 
-import { Router } from '@lit-labs/router';
-
 import {
   applyTheme,
   argbFromHex,
@@ -24,8 +22,7 @@ import {
 import '@material/web/menu/menu.js';
 import { cache } from 'lit/directives/cache.js';
 
-import './@yrpri/common/yp-image.js';
-import { YpBaseElement } from './@yrpri/common/yp-base-element.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 
 //import './chat/yp-chat-assistant.js';
 import { Layouts } from './flexbox-literals/classes.js';
@@ -37,11 +34,7 @@ import { CpsAppGlobals } from './base/CpsAppGlobals.js';
 import { MdNavigationDrawer } from '@material/web/labs/navigationdrawer/navigation-drawer.js';
 import { Snackbar } from '@material/mwc-snackbar/mwc-snackbar.js';
 import { NavigationBar } from '@material/web/labs/navigationbar/internal/navigation-bar.js';
-import {
-  Scheme,
-  applyThemeWithContrast,
-  themeFromSourceColorWithContrast,
-} from './@yrpri/common/YpMaterialThemeHelper.js';
+
 import { CpsAppUser } from './base/CpsAppUser.js';
 
 import './cps-home.js';
@@ -55,7 +48,6 @@ import './policies/ps-policies.js';
 import './ltp/ltp-manage-crt.js';
 
 import { IEngineConstants } from './constants.js';
-import { YpFormattingHelpers } from './@yrpri/common/YpFormattingHelpers.js';
 import { CpsSolutions } from './policies/cps-solutions.js';
 import { TextField } from '@material/web/textfield/internal/text-field.js';
 import { Dialog } from '@material/web/dialog/internal/dialog.js';
@@ -64,6 +56,9 @@ import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import { debug } from 'console';
 import { PsPolicies } from './policies/ps-policies.js';
+import { YpBaseElement, YpFormattingHelpers } from '@yrpri/webapp';
+import { Scheme, applyThemeWithContrast, themeFromSourceColorWithContrast } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
+import { PsRouter } from './base/router/router.js';
 
 const PagesTypes = {
   ProblemStatement: 1,
@@ -76,8 +71,8 @@ const PagesTypes = {
 
 declare global {
   interface Window {
-    appGlobals: any /*CpsAppGlobals*/;
-    aoiServerApi: CpsServerApi;
+    psAppGlobals: CpsAppGlobals;
+    psServerApi: CpsServerApi;
   }
 }
 
@@ -184,9 +179,9 @@ export class PolicySynthWebApp extends YpBaseElement {
   constructor() {
     super();
 
-    window.serverApi = new CpsServerApi();
-    window.appGlobals = new CpsAppGlobals(window.aoiServerApi);
-    window.appUser = new CpsAppUser(window.aoiServerApi);
+    window.psServerApi = new CpsServerApi();
+    window.psAppGlobals = new CpsAppGlobals(window.psServerApi);
+    window.appUser = new CpsAppUser(window.psServerApi);
 
     // Set this.themeDarkMode from localStorage or otherwise to true
     const savedDarkMode = localStorage.getItem('md3-ps-dark-mode');
@@ -205,7 +200,7 @@ export class PolicySynthWebApp extends YpBaseElement {
       this.themeHighContrast = false;
     }
 
-    window.appGlobals.activity('pageview');
+    window.psAppGlobals.activity('pageview');
   }
 
   renderSolutionPage() {
@@ -307,7 +302,7 @@ export class PolicySynthWebApp extends YpBaseElement {
       : null;
   }
 
-  router: Router = new Router(
+  router: PsRouter = new PsRouter(
     this,
     [
       {
@@ -564,8 +559,8 @@ export class PolicySynthWebApp extends YpBaseElement {
   }
 
   async boot() {
-    window.appGlobals.activity('Boot - fetch start');
-    const firstBootResponse = (await window.serverApi.getProject(
+    window.psAppGlobals.activity('Boot - fetch start');
+    const firstBootResponse = (await window.psServerApi.getProject(
       this.currentProjectId,
       this.tempPassword,
       location.pathname.indexOf('refresh827cDb') > -1 ? '999' : undefined
@@ -575,7 +570,7 @@ export class PolicySynthWebApp extends YpBaseElement {
       if (this.tempPassword) {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
-      window.appGlobals.activity('Boot - needs trm');
+      window.psAppGlobals.activity('Boot - needs trm');
       this.openTempPassword();
     } else {
       const bootResponse = firstBootResponse as CpsBootResponse;
@@ -631,7 +626,7 @@ export class PolicySynthWebApp extends YpBaseElement {
         }
       }
 
-      window.appGlobals.activity('Boot - fetch end');
+      window.psAppGlobals.activity('Boot - fetch end');
     }
   }
 
@@ -761,10 +756,7 @@ export class PolicySynthWebApp extends YpBaseElement {
       'toggle-high-contrast-mode',
       this.toggleHighContrastMode.bind(this)
     );
-    this.addGlobalListener(
-      'yp-external-goal-trigger',
-      this.externalGoalTrigger.bind(this)
-    );
+
     window.addEventListener('popstate', () => {
       //console.error(`pop state ${window.location.pathname}`)
       this.router.goto(window.location.pathname);
@@ -780,38 +772,6 @@ export class PolicySynthWebApp extends YpBaseElement {
       'toggle-high-contrast-mode',
       this.toggleHighContrastMode.bind(this)
     );
-  }
-
-  externalGoalTrigger() {
-    try {
-      let triggerUrl = new URL(window.appGlobals.externalGoalTriggerUrl);
-
-      let whiteList = window.appGlobals.exernalGoalParamsWhiteList;
-
-      if (whiteList) {
-        whiteList = whiteList
-          .toLowerCase()
-          .split(',')
-          .map((param: string) => param.trim());
-      }
-
-      for (const key in window.appGlobals.originalQueryParameters) {
-        if (!whiteList || whiteList.includes(key.toLowerCase())) {
-          triggerUrl.searchParams.append(
-            key,
-            window.appGlobals.originalQueryParameters[key]
-          );
-        }
-      }
-
-      window.location.href = triggerUrl.toString();
-    } catch (error) {
-      console.error(
-        'Invalid URL:',
-        window.appGlobals.externalGoalTriggerUrl,
-        error
-      );
-    }
   }
 
   async updateActiveSolutionIndexes(event: CustomEvent) {
@@ -1141,7 +1101,7 @@ export class PolicySynthWebApp extends YpBaseElement {
 
   sendVoteAnalytics() {
     if (this.totalNumberOfVotes % 10 === 0) {
-      window.appGlobals.activity(`User voted ${this.totalNumberOfVotes} times`);
+      window.psAppGlobals.activity(`User voted ${this.totalNumberOfVotes} times`);
     }
   }
 
@@ -1156,10 +1116,10 @@ export class PolicySynthWebApp extends YpBaseElement {
   toggleDarkMode() {
     this.themeDarkMode = !this.themeDarkMode;
     if (this.themeDarkMode) {
-      window.appGlobals.activity('Settings - dark mode');
+      window.psAppGlobals.activity('Settings - dark mode');
       localStorage.setItem('md3-ps-dark-mode', 'true');
     } else {
-      window.appGlobals.activity('Settings - light mode');
+      window.psAppGlobals.activity('Settings - light mode');
       localStorage.removeItem('md3-ps-dark-mode');
     }
     this.themeChanged();
@@ -1168,10 +1128,10 @@ export class PolicySynthWebApp extends YpBaseElement {
   toggleHighContrastMode() {
     this.themeHighContrast = !this.themeHighContrast;
     if (this.themeHighContrast) {
-      window.appGlobals.activity('Settings - high contrast mode');
+      window.psAppGlobals.activity('Settings - high contrast mode');
       localStorage.setItem('md3-ps-high-contrast-mode', 'true');
     } else {
-      window.appGlobals.activity('Settings - non high contrast mode');
+      window.psAppGlobals.activity('Settings - non high contrast mode');
       localStorage.removeItem('md3-ps-high-contrast-mode');
     }
     this.themeChanged();

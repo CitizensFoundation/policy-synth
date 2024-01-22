@@ -1,7 +1,7 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement, eventOptions } from 'lit/decorators.js';
 
-import '../@yrpri/common/yp-image.js';
+import '@yrpri/webapp/cmp/common/yp-image.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
@@ -11,8 +11,8 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/button/text-button.js';
 
 import { CpsStageBase } from '../base/cps-stage-base.js';
-import { YpBaseElement } from '../@yrpri/common/yp-base-element.js';
 import { Layouts } from '../flexbox-literals/classes.js';
+import { YpBaseElement } from '@yrpri/webapp';
 
 @customElement('ps-raw-evidence')
 export class PsRawEvidence extends YpBaseElement {
@@ -52,7 +52,7 @@ export class PsRawEvidence extends YpBaseElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    window.appGlobals.activity(`Raw evidence - open`);
+    window.psAppGlobals.activity(`Raw evidence - open`);
     window.addEventListener('scroll', this.handleScroll.bind(this));
   }
 
@@ -104,7 +104,7 @@ export class PsRawEvidence extends YpBaseElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.appGlobals.activity(`Raw evidence - close`);
+    window.psAppGlobals.activity(`Raw evidence - close`);
     window.removeEventListener('scroll', this.handleScroll.bind(this));
   }
 
@@ -115,7 +115,7 @@ export class PsRawEvidence extends YpBaseElement {
   }
 
   async loadRawEvidence() {
-    const rawEvidence = (await window.serverApi.getRawEvidence(
+    const rawEvidence = (await window.psServerApi.getRawEvidence(
       this.memory.groupId,
       this.activeSubProblemIndex,
       this.policy.title
