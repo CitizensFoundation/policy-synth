@@ -2,7 +2,7 @@ import { YpServerApi } from "@yrpri/webapp";
 export class LtpServerApi extends YpServerApi {
     constructor(urlPath = '/api') {
         super();
-        this.baseLtpPath = '/ltp/crt/';
+        this.baseLtpPath = '/crt/';
         this.baseUrlPath = urlPath;
     }
     async getCrt(groupId) {

@@ -26,7 +26,7 @@ export declare class LtpChatAssistant extends PsChatAssistant {
     sendChatMessage(): Promise<void>;
     validateSelectedChoices(event: CustomEvent): Promise<void>;
     getSuggestionsFromValidation(agentName: string, validationResults: PsValidationAgentResult): Promise<void>;
-    renderChatInput(): import("lit-html").TemplateResult<1>;
-    render(): import("lit-html").TemplateResult<1>;
+    renderChatInput(): import("lit").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ltp-chat-assistant.d.ts.map

@@ -38,24 +38,24 @@ export declare class PsSolutions extends PsStageBase {
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
     get filteredSolutions(): IEngineSolution[];
-    render(): import("lit-html").TemplateResult<1> | typeof nothing;
-    renderSolutionItem(solution: IEngineSolution, index: number): import("lit-html").TemplateResult<1>;
-    renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1>;
-    renderChipSet(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1> | typeof nothing;
+    render(): import("lit").TemplateResult<1> | typeof nothing;
+    renderSolutionItem(solution: IEngineSolution, index: number): import("lit").TemplateResult<1>;
+    renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
+    renderChipSet(subProblem: IEngineSubProblem): import("lit").TemplateResult<1> | typeof nothing;
     toggleSearchVisibility(): void;
-    renderSearchField(): import("lit-html").TemplateResult<1>;
+    renderSearchField(): import("lit").TemplateResult<1>;
     handleSearchBlur(): void;
-    renderFilterChips(items: IEngineSolution[][], startIndex: number): import("lit-html").TemplateResult<1>[];
+    renderFilterChips(items: IEngineSolution[][], startIndex: number): import("lit").TemplateResult<1>[];
     handleDropdownChange(e: Event): void;
     toggleDropdownVisibility(): Promise<void>;
     resetDropdown(): void;
-    renderDropdown(middleItems: IEngineSolution[][], startIndex: number): import("lit-html").TemplateResult<1> | typeof nothing;
+    renderDropdown(middleItems: IEngineSolution[][], startIndex: number): import("lit").TemplateResult<1> | typeof nothing;
     camelCaseToRegular(text: string): string;
-    renderRatings(solution: IEngineSolution): import("lit-html").TemplateResult<1>;
-    renderSolutionNavigationButtons(solutionIndex: number, solutions: IEngineSolution[]): import("lit-html").TemplateResult<1>;
+    renderRatings(solution: IEngineSolution): import("lit").TemplateResult<1>;
+    renderSolutionNavigationButtons(solutionIndex: number, solutions: IEngineSolution[]): import("lit").TemplateResult<1>;
     getSolutionImgHeight(): 314 | 150;
     getSolutionImgWidth(): 550 | 263;
-    renderSolutionImage(solution: IEngineSolution): import("lit-html").TemplateResult<1>;
-    renderSolutionScreen(solutionIndex: number): import("lit-html").TemplateResult<1> | typeof nothing;
+    renderSolutionImage(solution: IEngineSolution): import("lit").TemplateResult<1>;
+    renderSolutionScreen(solutionIndex: number): import("lit").TemplateResult<1> | typeof nothing;
 }
 //# sourceMappingURL=ps-solutions.d.ts.map

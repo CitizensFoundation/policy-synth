@@ -6,8 +6,8 @@ export declare class PsWebResearch extends PsStageBase {
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
-    render(): import("lit-html").TemplateResult<1>;
-    renderEntities(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1>;
-    renderSubProblemsWithAll(): import("lit-html").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
+    renderEntities(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
+    renderSubProblemsWithAll(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-web-research.d.ts.map
