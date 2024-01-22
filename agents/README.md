@@ -4,7 +4,7 @@ The `@policysynth/agents` package is a core component of the Policy Synth ecosys
 
 ## API Documentation
 
-[API Documentation for Policy Synth Agents](docs/README.md)
+[API Documentation for Policy Synth Agents](https://github.com/CitizensFoundation/policy-synth/blob/main/agents/docs/README.md)
 
 ## Example Policy Synth Agent Configuration
 
