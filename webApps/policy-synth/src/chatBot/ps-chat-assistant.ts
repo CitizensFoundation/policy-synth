@@ -48,6 +48,9 @@ export class PsChatAssistant extends YpBaseElement {
   @property({ type: Boolean })
   inputIsFocused = false;
 
+  @property({ type: Boolean })
+  onlyUseTextField = false;
+
   @property({ type: Number })
   clusterId!: number;
 
@@ -537,7 +540,6 @@ export class PsChatAssistant extends YpBaseElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 10px;
         }
 
         @media (max-width: 600px) {
@@ -653,21 +655,42 @@ export class PsChatAssistant extends YpBaseElement {
 
   renderChatInput() {
     return html`
-      <md-outlined-text-field
-        class="textInput"
-        .type="${this.chatLog.length > 1 ? 'text' : 'textarea'}"
-        hasTrailingIcon
-        id="chatInput"
-        rows="${this.chatLog.length > 1 ? '1' : '3'}"
-        @focus="${() => (this.inputIsFocused = true)}"
-        @blur="${() => (this.inputIsFocused = true)}"
-        @keyup="${(e: KeyboardEvent) => {
-          if (e.key === 'Enter' && this.chatLog.length > 1) {
-            this.sendChatMessage();
-          }
-        }}"
-        .label="${this.textInputLabel}"
-      >
+      ${
+        !this.onlyUseTextField && this.chatLog.length > 1
+          ? html`
+              <md-outlined-text-field
+                class="textInput"
+                type="text"
+                hasTrailingIcon
+                id="chatInput"
+                rows="${this.chatLog.length > 1 ? '1' : '3'}"
+                @focus="${() => (this.inputIsFocused = true)}"
+                @blur="${() => (this.inputIsFocused = true)}"
+                @keyup="${(e: KeyboardEvent) => {
+                  if (e.key === 'Enter' && this.chatLog.length > 1) {
+                    this.sendChatMessage();
+                  }
+                }}"
+                .label="${this.textInputLabel}"
+              >
+              </md-outlined-text-field>
+            `
+          : html`<md-outlined-text-field
+              class="textInput"
+              type="textarea"
+              hasTrailingIcon
+              id="chatInput"
+              rows="${this.chatLog.length > 1 ? '1' : '3'}"
+              @focus="${() => (this.inputIsFocused = true)}"
+              @blur="${() => (this.inputIsFocused = true)}"
+              @keyup="${(e: KeyboardEvent) => {
+                if (e.key === 'Enter' && this.chatLog.length > 1) {
+                  this.sendChatMessage();
+                }
+              }}"
+              .label="${this.textInputLabel}"
+            ></md-outlined-text-field>`
+      }
         <md-icon
           class="sendIcon"
           @click="${this.sendChatMessage}"

@@ -26,6 +26,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         this.chatLog = [];
         this.defaultInfoMessage = "I'm your friendly chat assistant";
         this.inputIsFocused = false;
+        this.onlyUseTextField = false;
         this.userScrolled = false;
         this.currentFollowUpQuestions = '';
         this.programmaticScroll = false;
@@ -396,7 +397,6 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 10px;
         }
 
         @media (max-width: 600px) {
@@ -508,21 +508,40 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     renderChatInput() {
         return html `
-      <md-outlined-text-field
-        class="textInput"
-        .type="${this.chatLog.length > 1 ? 'text' : 'textarea'}"
-        hasTrailingIcon
-        id="chatInput"
-        rows="${this.chatLog.length > 1 ? '1' : '3'}"
-        @focus="${() => (this.inputIsFocused = true)}"
-        @blur="${() => (this.inputIsFocused = true)}"
-        @keyup="${(e) => {
-            if (e.key === 'Enter' && this.chatLog.length > 1) {
-                this.sendChatMessage();
-            }
-        }}"
-        .label="${this.textInputLabel}"
-      >
+      ${!this.onlyUseTextField && this.chatLog.length > 1
+            ? html `
+              <md-outlined-text-field
+                class="textInput"
+                type="text"
+                hasTrailingIcon
+                id="chatInput"
+                rows="${this.chatLog.length > 1 ? '1' : '3'}"
+                @focus="${() => (this.inputIsFocused = true)}"
+                @blur="${() => (this.inputIsFocused = true)}"
+                @keyup="${(e) => {
+                if (e.key === 'Enter' && this.chatLog.length > 1) {
+                    this.sendChatMessage();
+                }
+            }}"
+                .label="${this.textInputLabel}"
+              >
+              </md-outlined-text-field>
+            `
+            : html `<md-outlined-text-field
+              class="textInput"
+              type="textarea"
+              hasTrailingIcon
+              id="chatInput"
+              rows="${this.chatLog.length > 1 ? '1' : '3'}"
+              @focus="${() => (this.inputIsFocused = true)}"
+              @blur="${() => (this.inputIsFocused = true)}"
+              @keyup="${(e) => {
+                if (e.key === 'Enter' && this.chatLog.length > 1) {
+                    this.sendChatMessage();
+                }
+            }}"
+              .label="${this.textInputLabel}"
+            ></md-outlined-text-field>`}
         <md-icon
           class="sendIcon"
           @click="${this.sendChatMessage}"
@@ -590,6 +609,9 @@ __decorate([
 __decorate([
     property({ type: Boolean })
 ], PsChatAssistant.prototype, "inputIsFocused", void 0);
+__decorate([
+    property({ type: Boolean })
+], PsChatAssistant.prototype, "onlyUseTextField", void 0);
 __decorate([
     property({ type: Number })
 ], PsChatAssistant.prototype, "clusterId", void 0);

@@ -12,7 +12,7 @@ export class SimpleChatServerApi extends YpServerApi {
   ): Promise<void> {
 
     return this.fetchWrapper(
-      this.baseUrlPath + `simple_chat/`,
+      this.baseUrlPath + `/simple_chat/`,
       {
         method: 'PUT',
         body: JSON.stringify({ wsClientId, chatLog: chatLog }),

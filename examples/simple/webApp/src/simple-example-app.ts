@@ -13,7 +13,7 @@ export class SimpleExampleApp extends PolicySynthWebApp {
       css`
         simple-chat-bot {
           width: 100vw;
-          height: 80vh;
+          height: 100%;
         }
       `,
     ];

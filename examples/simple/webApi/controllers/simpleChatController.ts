@@ -1,7 +1,7 @@
 import { BaseController } from "@policysynth/api/dist/controllers/baseController.js";
 import express from "express";
 import WebSocket from "ws";
-import { BaseChatBot } from "../baseChatBot.js";
+import { SimpleChatBot } from "../simpleChatBot.js";
 
 export class SimpleChatController extends BaseController {
   public path = "/api/simple_chat";
@@ -12,18 +12,18 @@ export class SimpleChatController extends BaseController {
   }
 
   public async initializeRoutes() {
-    this.router.get(this.path, this.simpleChat);
+    this.router.put(this.path+"/", this.simpleChat);
   }
 
   simpleChat = async (req: express.Request, res: express.Response) => {
     const userQuestion = req.body.userQuestion;
-    const chatConversation = req.body.chatConversation;
+    const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
 
     try {
-      new BaseChatBot(
+      new SimpleChatBot(
         userQuestion,
-        chatConversation,
+        chatLog,
         wsClientId,
         this.wsClients
       );

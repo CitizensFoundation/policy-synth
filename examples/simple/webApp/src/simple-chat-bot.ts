@@ -1,4 +1,5 @@
 import { customElement, property } from 'lit/decorators.js';
+import { css } from 'lit';
 
 import { PsChatAssistant } from '@policysynth/webapp/cmp/chatBot/ps-chat-assistant.js';
 import { SimpleChatServerApi } from './SimpleServerApi';
@@ -8,6 +9,9 @@ export class SimpleChatBot extends PsChatAssistant {
   @property({ type: Number })
   defaultDevWsPort = 5011;
 
+  @property({ type: Boolean })
+  onlyUseTextField = true;
+
   serverApi: SimpleChatServerApi;
 
   override connectedCallback(): void {
@@ -16,10 +20,20 @@ export class SimpleChatBot extends PsChatAssistant {
     this.serverApi = new SimpleChatServerApi();
   }
 
-  override async sendChatMessage() {
-    super.sendChatMessage();
+  static override get styles() {
+    return [
+      ...super.styles,
+      css`
+        .chat-window {
+          height: 85vh;
+        }
+      `,
+    ];
+  }
 
+  override async sendChatMessage() {
     const userMessage = this.chatInputField!.value;
+    super.sendChatMessage();
 
     this.addChatBotElement({
       sender: 'you',
@@ -33,6 +47,6 @@ export class SimpleChatBot extends PsChatAssistant {
       message: '',
     });
 
-    await this.serverApi.conversation(this.simpleChatLog, this.wsClientId);
+    await this.serverApi.conversation(this.simplifiedChatLog, this.wsClientId);
   }
 }
