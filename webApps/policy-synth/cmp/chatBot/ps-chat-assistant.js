@@ -397,6 +397,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          padding: 8px;
         }
 
         @media (max-width: 600px) {
