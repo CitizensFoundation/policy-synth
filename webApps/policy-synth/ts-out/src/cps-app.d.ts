@@ -9,6 +9,7 @@ import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/mwc-snackbar/mwc-snackbar.js';
+import { Router } from '@lit-labs/router';
 import '@material/web/menu/menu.js';
 import './@yrpri/common/yp-image.js';
 import { YpBaseElement } from './@yrpri/common/yp-base-element.js';
@@ -71,7 +72,7 @@ export declare class PolicySynthWebApp extends YpBaseElement {
     renderPoliciesPage(): TemplateResult<1 | 2>;
     setupCurrentProjectFromRoute(newProjectId: number, clearAll?: boolean): void;
     parseAllActiveIndexes(params: any): void;
-    private router;
+    router: Router;
     renderCrtPage(treeId?: string | undefined): TemplateResult<1>;
     renderWebResearchPage(): TemplateResult<1 | 2>;
     getServerUrlFromClusterId(clusterId: number): "https://betrireykjavik.is/api" | "https://ypus.org/api" | "https://yrpri.org/api";
