@@ -30,6 +30,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     currentFollowUpQuestions: string;
     programmaticScroll: boolean;
     scrollStart: number;
+    defaultDevWsPort: number;
     sendButton?: MdFilledTonalButton;
     chatElements?: PsAiChatElement[];
     chatInputField?: MdOutlinedTextField;
@@ -37,7 +38,6 @@ export declare class PsChatAssistant extends YpBaseElement {
     chatMessagesElement?: HTMLElement;
     api: BaseChatBotServerApi;
     heartbeatInterval: number | undefined;
-    defaultDevWsPort: number;
     constructor();
     calcVH(): void;
     handleCtrlPKeyPress(event: KeyboardEvent): void;

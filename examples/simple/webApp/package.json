@@ -25,7 +25,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@policysynth/webapp": "^1.0.22",
+    "@policysynth/webapp": "^1.0.24",
     "marked": "^4.2.12"
   },
   "devDependencies": {
