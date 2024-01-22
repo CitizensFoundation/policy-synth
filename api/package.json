@@ -7,7 +7,8 @@
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/api"
   },
   "license": "MIT",
-  "main": "dist/server.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "start": "nodemon -e ts dist/server.js",
