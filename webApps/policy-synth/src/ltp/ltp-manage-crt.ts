@@ -965,7 +965,7 @@ export class LtpManageCrt extends PsStageBase {
     `;
   }
 
-  override render() {
+  render(): any {
     if (this.isFetchingCrt) {
       return html`<md-linear-progress indeterminate></md-linear-progress>`;
     } else {

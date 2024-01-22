@@ -1,7 +1,7 @@
 import { YpServerApi } from "@yrpri/webapp";
 
 export class LtpServerApi extends YpServerApi {
-  baseLtpPath = '/ltp/crt/';
+  baseLtpPath = '/crt/';
   constructor(urlPath: string = '/api') {
     super();
     this.baseUrlPath = urlPath;

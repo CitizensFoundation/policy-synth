@@ -47,8 +47,8 @@ export declare class LtpManageCrt extends PsStageBase {
     confirmDeleteNode(): Promise<void>;
     createDirectCauses(): void;
     closeDeleteConfirmationDialog(): void;
-    renderDeleteConfirmationDialog(): import("lit-html").TemplateResult<1>;
-    renderEditNodeDialog(): import("lit-html").TemplateResult<1>;
+    renderDeleteConfirmationDialog(): import("lit").TemplateResult<1>;
+    renderEditNodeDialog(): import("lit").TemplateResult<1>;
     updatePath(): void;
     addChildToCurrentNode(): Promise<void>;
     findNodeById(nodes: LtpCurrentRealityTreeDataNode[], id: string): LtpCurrentRealityTreeDataNode | null;
@@ -65,14 +65,14 @@ export declare class LtpManageCrt extends PsStageBase {
     createTree(): Promise<void>;
     toggleDarkMode(): void;
     randomizeTheme(): void;
-    renderAIConfigReview(): import("lit-html").TemplateResult<1>;
-    renderReviewAndSubmit(): import("lit-html").TemplateResult<1>;
-    renderThemeToggle(): import("lit-html").TemplateResult<1>;
-    renderConfiguration(): import("lit-html").TemplateResult<1>;
+    renderAIConfigReview(): import("lit").TemplateResult<1>;
+    renderReviewAndSubmit(): import("lit").TemplateResult<1>;
+    renderThemeToggle(): import("lit").TemplateResult<1>;
+    renderConfiguration(): import("lit").TemplateResult<1>;
     findNodeRecursively: (nodes: LtpCurrentRealityTreeDataNode[], nodeId: string) => LtpCurrentRealityTreeDataNode | undefined;
     openAddCauseDialog(event: CustomEvent): void;
     closeAddCauseDialog(): void;
-    renderAddCauseDialog(): import("lit-html").TemplateResult<1>;
-    render(): import("lit-html/directive.js").DirectiveResult<typeof import("lit-html/directives/cache.js").CacheDirective>;
+    renderAddCauseDialog(): import("lit").TemplateResult<1>;
+    render(): any;
 }
 //# sourceMappingURL=ltp-manage-crt.d.ts.map

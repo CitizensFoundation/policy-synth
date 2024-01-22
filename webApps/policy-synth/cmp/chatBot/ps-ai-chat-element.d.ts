@@ -27,17 +27,17 @@ export declare class PsAiChatElement extends YpBaseElement {
     handleJsonLoadingEnd: (event: any) => void;
     static get styles(): any[];
     get isError(): boolean;
-    renderCGImage(): import("lit-html").TemplateResult<1>;
-    renderRoboImage(): import("lit-html").TemplateResult<1>;
-    renderJson(): import("lit-html").TemplateResult<1>;
+    renderCGImage(): import("lit").TemplateResult<1>;
+    renderRoboImage(): import("lit").TemplateResult<1>;
+    renderJson(): import("lit").TemplateResult<1>;
     renderChatGPT(): any;
     parseFollowUpQuestions(): void;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
-    renderUser(): import("lit-html").TemplateResult<1>;
-    renderNoStreaming(): import("lit-html").TemplateResult<1>;
-    renderThinking(): import("lit-html").TemplateResult<1>;
+    renderUser(): import("lit").TemplateResult<1>;
+    renderNoStreaming(): import("lit").TemplateResult<1>;
+    renderThinking(): import("lit").TemplateResult<1>;
     getThinkingText(): "Mõeldes..." | "Hugsa..." | "Thinking...";
     renderMessage(): any;
-    render(): import("lit-html").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-ai-chat-element.d.ts.map

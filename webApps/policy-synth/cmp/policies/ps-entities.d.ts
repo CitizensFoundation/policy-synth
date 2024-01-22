@@ -7,8 +7,8 @@ export declare class PsEntities extends PsStageBase {
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
-    render(): import("lit-html").TemplateResult<1>;
-    renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1>;
-    renderEntityScreen(entity: IEngineAffectedEntity): import("lit-html").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
+    renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
+    renderEntityScreen(entity: IEngineAffectedEntity): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-entities.d.ts.map

@@ -50,6 +50,6 @@ export declare class LtpCurrentRealityTree extends PsStageBase {
     addNodes(parentNodeId: string, nodes: LtpCurrentRealityTreeDataNode[]): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
     pan(direction: string): void;
-    render(): import("lit-html").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ltp-current-reality-tree.d.ts.map

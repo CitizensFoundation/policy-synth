@@ -5,7 +5,7 @@ export declare class PsHome extends PsStageBase {
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
-    renderProject(project: PsProjectData): import("lit-html").TemplateResult<1>;
-    render(): import("lit-html").TemplateResult<1>;
+    renderProject(project: PsProjectData): import("lit").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-home.d.ts.map

@@ -9,6 +9,6 @@ export declare class PsFamilyTree extends YpBaseElement {
     static get styles(): any[];
     getParentSolution(parent: string): IEngineSolution;
     renderFamilyTree(currentSolution: IEngineSolution, first?: boolean, isMutatedFrom?: boolean): any;
-    render(): import("lit-html").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-family-tree.d.ts.map

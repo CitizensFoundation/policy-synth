@@ -24,15 +24,15 @@ export declare class PsRawEvidence extends YpBaseElement {
     formatSearchType(searchType: string): string;
     loadRawEvidence(): Promise<void>;
     static get styles(): any[];
-    renderHeader(evidence: PSEvidenceRawWebPageData): import("lit-html").TemplateResult<1>;
+    renderHeader(evidence: PSEvidenceRawWebPageData): import("lit").TemplateResult<1>;
     scrollToEvidenceType(evidenceType: string): void;
-    renderDropdown(): import("lit-html").TemplateResult<1>;
-    renderPieceOfEvidence(evidence: PSEvidenceRawWebPageData): import("lit-html").TemplateResult<1>;
+    renderDropdown(): import("lit").TemplateResult<1>;
+    renderPieceOfEvidence(evidence: PSEvidenceRawWebPageData): import("lit").TemplateResult<1>;
     camelCaseToRegular(text: string): string;
-    renderShortList(url: string, title: string, list: string[]): import("lit-html").TemplateResult<1> | typeof nothing;
+    renderShortList(url: string, title: string, list: string[]): import("lit").TemplateResult<1> | typeof nothing;
     toggleShowFullList(key: string): void;
-    renderActiveRawEvidence(): import("lit-html").TemplateResult<1>;
-    render(): import("lit-html").TemplateResult<1> | typeof nothing;
+    renderActiveRawEvidence(): import("lit").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1> | typeof nothing;
     static rawPolicyCache: Record<string, PSEvidenceRawWebPageData[]>;
 }
 //# sourceMappingURL=ps-raw-evidence.d.ts.map

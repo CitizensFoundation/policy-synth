@@ -22,6 +22,6 @@ export declare class LtpCurrentRealityTreeNode extends YpBaseElement {
     get crtTypeIconClass(): "typeIconUde" | "typeIconRoot" | "typeIcon";
     toggleMenu(): void;
     get crtTypeIcon(): "flag" | "bug_report" | "arrow_upward" | "link" | "question_mark" | "more_vert";
-    render(): import("lit-html").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ltp-current-reality-tree-node.d.ts.map
