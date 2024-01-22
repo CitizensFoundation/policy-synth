@@ -1,5 +1,5 @@
 import express from "express";
-import { WebSocketServer } from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 export declare class App {
     app: express.Application;
     port: number;
