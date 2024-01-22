@@ -3,7 +3,7 @@ import { property, customElement } from 'lit/decorators.js';
 
 import '@yrpri/webapp/cmp/common/yp-image.js';
 
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/ps-stage-base.js';
 import { Layouts } from '../flexbox-literals/classes.js';
 import { YpBaseElement } from '@yrpri/webapp';
 

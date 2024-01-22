@@ -22,15 +22,15 @@ import '@material/web/menu/menu.js';
 import '@yrpri/webapp/cmp/common/yp-image.js';
 //import './chat/yp-chat-assistant.js';
 import { Layouts } from './flexbox-literals/classes.js';
-import './policies/cps-web-research.js';
-import { CpsServerApi } from './base/CpsServerApi.js';
-import { CpsAppGlobals } from './base/CpsAppGlobals.js';
-import { CpsAppUser } from './base/CpsAppUser.js';
-import './cps-home.js';
-import './policies/cps-problem-statement.js';
-import './policies/cps-sub-problems.js';
-import './policies/cps-entities.js';
-import './policies/cps-solutions.js';
+import './policies/ps-web-research.js';
+import { PsServerApi } from './base/PsServerApi.js';
+import { PsAppGlobals } from './base/PsAppGlobals.js';
+import { PsAppUser } from './base/PsAppUser.js';
+import './ps-home.js';
+import './policies/ps-problem-statement.js';
+import './policies/ps-sub-problems.js';
+import './policies/ps-entities.js';
+import './policies/ps-solutions.js';
 import './policies/ps-policies.js';
 import './ltp/ltp-manage-crt.js';
 import { IEngineConstants } from './constants.js';
@@ -74,7 +74,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
             {
                 path: '/',
                 render: () => {
-                    return html `<cps-home .memory="${this.currentMemory}"></cps-home>`;
+                    return html `<ps-home .memory="${this.currentMemory}"></ps-home>`;
                 },
             },
             // Next two are depricated
@@ -263,9 +263,9 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
             save: IEngineConstants.createSubProblemsModel, // Not sure about this mapping
             done: IEngineConstants.createSubProblemsModel, // Not sure about this mapping
         };
-        window.psServerApi = new CpsServerApi();
-        window.psAppGlobals = new CpsAppGlobals(window.psServerApi);
-        window.appUser = new CpsAppUser(window.psServerApi);
+        window.psServerApi = new PsServerApi();
+        window.psAppGlobals = new PsAppGlobals(window.psServerApi);
+        window.appUser = new PsAppUser(window.psServerApi);
         // Set this.themeDarkMode from localStorage or otherwise to true
         const savedDarkMode = localStorage.getItem('md3-ps-dark-mode');
         if (savedDarkMode) {
@@ -292,14 +292,14 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
               <div class="rightPanel">
                 <main>
                   <div class="mainPageContainer">
-                    <cps-solutions
+                    <ps-solutions
                       .memory="${this.currentMemory}"
                       .activeSubProblemIndex="${this.activeSubProblemIndex}"
                       .activePopulationIndex="${this.activePopulationIndex}"
                       .activeSolutionIndex="${this.activeSolutionIndex}"
                       @update-route="${this.updateActiveSolutionIndexes}"
                       .router="${this.router}"
-                    ></cps-solutions>
+                    ></ps-solutions>
                   </div>
                 </main>
               </div>
@@ -396,10 +396,10 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
               <div class="rightPanel">
                 <main>
                   <div class="mainPageContainer">
-                    <cps-web-research
+                    <ps-web-research
                       .memory="${this.currentMemory}"
                       .router="${this.router}"
-                    ></cps-web-research>
+                    ></ps-web-research>
                   </div>
                 </main>
               </div>
@@ -1193,7 +1193,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
         this.activePopulationIndex = null;
         this.updateSolutionsRouter();
         await this.updateComplete;
-        this.$$('cps-solutions')?.reset();
+        this.$$('ps-solutions')?.reset();
     }
     async openPolicies() {
         this.activePolicyIndex = null;
@@ -1539,7 +1539,7 @@ __decorate([
     property({ type: Number })
 ], PolicySynthWebApp.prototype, "totalCons", void 0);
 PolicySynthWebApp = __decorate([
-    customElement('cps-app')
+    customElement('ps-app')
 ], PolicySynthWebApp);
 export { PolicySynthWebApp };
-//# sourceMappingURL=cps-app.js.map
+//# sourceMappingURL=ps-app.js.map

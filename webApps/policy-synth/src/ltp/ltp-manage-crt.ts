@@ -23,7 +23,7 @@ import "@material/web/button/filled-button.js";
 
 import { MdTabs } from "@material/web/tabs/tabs.js";
 
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/ps-stage-base.js';
 
 import "./ltp-current-reality-tree.js";
 import "./LtpServerApi.js";
@@ -48,7 +48,7 @@ const nodeTypes = [
 ];
 
 @customElement("ltp-manage-crt")
-export class LtpManageCrt extends CpsStageBase {
+export class LtpManageCrt extends PsStageBase {
   @property({ type: String })
   currentTreeId: string | number | undefined;
 

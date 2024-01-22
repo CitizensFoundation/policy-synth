@@ -6,7 +6,7 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/iconbutton/icon-button.js';
 import { YpBaseElement } from '@yrpri/webapp';
 import { PsRouter } from './router/router.js';
-export declare abstract class CpsStageBase extends YpBaseElement {
+export declare abstract class PsStageBase extends YpBaseElement {
     memory: IEngineInnovationMemoryData;
     childType: "solution" | "policy";
     showEloRatings: boolean;

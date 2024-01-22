@@ -7,8 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
-let CpsSubProblems = class CpsSubProblems extends CpsStageBase {
+import { PsStageBase } from '../base/cps-stage-base.js';
+let PsSubProblems = class PsSubProblems extends PsStageBase {
     async connectedCallback() {
         super.connectedCallback();
         window.psAppGlobals.activity(`Sub Problems - open`);
@@ -42,8 +42,8 @@ let CpsSubProblems = class CpsSubProblems extends CpsStageBase {
     `;
     }
 };
-CpsSubProblems = __decorate([
-    customElement('cps-sub-problems')
-], CpsSubProblems);
-export { CpsSubProblems };
-//# sourceMappingURL=cps-sub-problems.js.map
+PsSubProblems = __decorate([
+    customElement('ps-sub-problems')
+], PsSubProblems);
+export { PsSubProblems };
+//# sourceMappingURL=ps-sub-problems.js.map

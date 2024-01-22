@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -20,7 +20,7 @@ import '@material/web/textfield/outlined-text-field.js'; // import at the beginn
 import { IEngineConstants } from '../constants.js';
 import './ps-family-tree.js';
 import { YpFormattingHelpers } from '@yrpri/webapp';
-let CpsSolutions = class CpsSolutions extends CpsStageBase {
+let PsSolutions = class PsSolutions extends PsStageBase {
     constructor() {
         super(...arguments);
         this.isDropdownVisible = false;
@@ -1043,27 +1043,27 @@ let CpsSolutions = class CpsSolutions extends CpsStageBase {
 };
 __decorate([
     property({ type: Boolean })
-], CpsSolutions.prototype, "isDropdownVisible", void 0);
+], PsSolutions.prototype, "isDropdownVisible", void 0);
 __decorate([
     property({ type: String })
-], CpsSolutions.prototype, "searchText", void 0);
+], PsSolutions.prototype, "searchText", void 0);
 __decorate([
     property({ type: Number })
-], CpsSolutions.prototype, "activeFilteredSolutionIndex", void 0);
+], PsSolutions.prototype, "activeFilteredSolutionIndex", void 0);
 __decorate([
     property({ type: Boolean })
-], CpsSolutions.prototype, "isSearchVisible", void 0);
+], PsSolutions.prototype, "isSearchVisible", void 0);
 __decorate([
     property({ type: Boolean })
-], CpsSolutions.prototype, "hideExtraSolutionInformation", void 0);
+], PsSolutions.prototype, "hideExtraSolutionInformation", void 0);
 __decorate([
     property({ type: Boolean })
-], CpsSolutions.prototype, "isLoadingMiddle", void 0);
+], PsSolutions.prototype, "isLoadingMiddle", void 0);
 __decorate([
     property({ type: Number })
-], CpsSolutions.prototype, "groupListScrollPositionY", void 0);
-CpsSolutions = __decorate([
-    customElement('cps-solutions')
-], CpsSolutions);
-export { CpsSolutions };
-//# sourceMappingURL=cps-solutions.js.map
+], PsSolutions.prototype, "groupListScrollPositionY", void 0);
+PsSolutions = __decorate([
+    customElement('ps-solutions')
+], PsSolutions);
+export { PsSolutions };
+//# sourceMappingURL=ps-solutions.js.map

@@ -1,113 +1,155 @@
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 import { css, html, nothing } from 'lit';
-import { property, state } from 'lit/decorators.js';
+import { property, customElement, state } from 'lit/decorators.js';
+
 import '@yrpri/webapp/cmp/common/yp-image.js';
+
 import '@material/web/checkbox/checkbox.js';
+import { Checkbox } from '@material/web/checkbox/internal/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/iconbutton/icon-button.js';
+import { MdIconButton } from '@material/web/iconbutton/icon-button.js';
 import { YpBaseElement } from '@yrpri/webapp';
+import { PsRouter } from './router/router.js';
+
 //TDOO: Share from db config
 const maxNumberOfSubProblems = 7;
-export class PsStageBase extends YpBaseElement {
-    constructor() {
-        super(...arguments);
-        this.childType = "solution";
-        this.showEloRatings = false;
-        this.activeSubProblemIndex = null;
-        this.activeSolutionIndex = null;
-        this.activePolicyIndex = null;
-        this.activePopulationIndex = 0;
-        this.firstTimeSubProblemClick = true;
-        this.activeGroupIndex = null;
-        this.longDescriptions = false;
-        this.displayStates = new Map();
-        this.subProblemListScrollPositionX = 0;
-        this.subProblemListScrollPositionY = 0;
-        this.subProblemColors = [];
+
+export abstract class PsStageBase extends YpBaseElement {
+  @property({ type: Object })
+  memory: IEngineInnovationMemoryData;
+
+  @property({ type: String })
+  childType: "solution" | "policy" = "solution";
+
+  @property({ type: Boolean })
+  showEloRatings = false;
+
+  @property({ type: Number })
+  activeSubProblemIndex: number | null = null;
+
+  @property({ type: Number })
+  activeSolutionIndex: number | null = null;
+
+  @property({ type: Number })
+  activePolicyIndex: number | null = null;
+
+  @property({ type: Number })
+  activePopulationIndex = 0;
+
+  @property({ type: Boolean })
+  firstTimeSubProblemClick = true;
+
+  @property({ type: Number })
+  activeGroupIndex: number | null = null;
+
+  @property({ type: Boolean })
+  longDescriptions = false;
+
+  @property({ type: Object })
+  router!: PsRouter;
+
+  @state()
+  displayStates = new Map();
+
+  subProblemListScrollPositionX: number = 0;
+  subProblemListScrollPositionY: number = 0;
+
+  subProblemColors: string[] = [];
+
+  maxTopSearchQueries = 4;
+  maxUsedSearchResults = 1000;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    if (this.memory) {
+      if (this.memory.groupId == 2) {
         this.maxTopSearchQueries = 4;
         this.maxUsedSearchResults = 1000;
+      }
+      if (this.memory.groupId === 2) {
+        this.longDescriptions = true;
+      }
+      if (this.memory.subProblemClientColors) {
+        this.subProblemColors = this.memory.subProblemClientColors;
+      } else {
+        this.subProblemColors = [
+          '#0b60b9',
+          '#ee782d',
+          '#face2d',
+          '#50c363',
+          '#cf1103',
+          '#e9a633',
+          '#87559b',
+          '#3f5fce',
+        ];
+      }
     }
-    connectedCallback() {
-        super.connectedCallback();
-        if (this.memory) {
-            if (this.memory.groupId == 2) {
-                this.maxTopSearchQueries = 4;
-                this.maxUsedSearchResults = 1000;
-            }
-            if (this.memory.groupId === 2) {
-                this.longDescriptions = true;
-            }
-            if (this.memory.subProblemClientColors) {
-                this.subProblemColors = this.memory.subProblemClientColors;
-            }
-            else {
-                this.subProblemColors = [
-                    '#0b60b9',
-                    '#ee782d',
-                    '#face2d',
-                    '#50c363',
-                    '#cf1103',
-                    '#e9a633',
-                    '#87559b',
-                    '#3f5fce',
-                ];
-            }
-        }
+  }
+
+  updateRoutes() {
+    this.fire('update-route', {
+      activeSolutionIndex: this.activeSolutionIndex,
+      activeSubProblemIndex: this.activeSubProblemIndex,
+      activePopulationIndex: this.activePopulationIndex,
+    });
+  }
+
+  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
+    super.updated(changedProperties);
+    if (
+      changedProperties.has('activeSolutionIndex') ||
+      changedProperties.has('activePolicyIndex') ||
+      changedProperties.has('activeSubProblemIndex') ||
+      changedProperties.has('activePopulationIndex')
+    ) {
+      this.updateRoutes();
     }
-    updateRoutes() {
-        this.fire('update-route', {
-            activeSolutionIndex: this.activeSolutionIndex,
-            activeSubProblemIndex: this.activeSubProblemIndex,
-            activePopulationIndex: this.activePopulationIndex,
-        });
+
+    if (
+      changedProperties.has('activeSubProblemIndex') &&
+      this.activeSubProblemIndex !== null
+    ) {
+      this.setSubProblemColor(this.activeSubProblemIndex);
     }
-    updated(changedProperties) {
-        super.updated(changedProperties);
-        if (changedProperties.has('activeSolutionIndex') ||
-            changedProperties.has('activePolicyIndex') ||
-            changedProperties.has('activeSubProblemIndex') ||
-            changedProperties.has('activePopulationIndex')) {
-            this.updateRoutes();
-        }
-        if (changedProperties.has('activeSubProblemIndex') &&
-            this.activeSubProblemIndex !== null) {
-            this.setSubProblemColor(this.activeSubProblemIndex);
-        }
+  }
+
+  exitSubProblemScreen() {
+    window.scrollTo(
+      this.subProblemListScrollPositionX,
+      this.subProblemListScrollPositionY
+    );
+  }
+
+  async toggleDisplayState(title: string) {
+    const scrollPosition = window.scrollY;
+    const currentState = this.displayStates.get(title);
+    this.displayStates.set(title, !currentState);
+    this.requestUpdate();
+    await this.updateComplete;
+    window.scrollTo(0, scrollPosition);
+  }
+
+  toggleScores() {
+    const checkbox = this.$$('#showScores') as Checkbox;
+    this.showEloRatings = checkbox.checked;
+    window.psAppGlobals.activity(
+      `View memory - toggle scores ${this.showEloRatings ? 'on' : 'off'}`
+    );
+  }
+
+  fixImageUrlIfNeeded(url: string) {
+    if (url.startsWith('https')) {
+      return url;
+    } else {
+      return `https://${url}`;
     }
-    exitSubProblemScreen() {
-        window.scrollTo(this.subProblemListScrollPositionX, this.subProblemListScrollPositionY);
-    }
-    async toggleDisplayState(title) {
-        const scrollPosition = window.scrollY;
-        const currentState = this.displayStates.get(title);
-        this.displayStates.set(title, !currentState);
-        this.requestUpdate();
-        await this.updateComplete;
-        window.scrollTo(0, scrollPosition);
-    }
-    toggleScores() {
-        const checkbox = this.$$('#showScores');
-        this.showEloRatings = checkbox.checked;
-        window.psAppGlobals.activity(`View memory - toggle scores ${this.showEloRatings ? 'on' : 'off'}`);
-    }
-    fixImageUrlIfNeeded(url) {
-        if (url.startsWith('https')) {
-            return url;
-        }
-        else {
-            return `https://${url}`;
-        }
-    }
-    static get styles() {
-        return [
-            super.styles,
-            css `
+  }
+
+  static get styles() {
+    return [
+      super.styles,
+      css`
         .topContainer {
           margin-right: 32px;
           margin-top: 24px;
@@ -554,70 +596,82 @@ export class PsStageBase extends YpBaseElement {
           }
         }
       `,
-        ];
+    ];
+  }
+
+  isUsedSearch(result: IEngineSearchResultItem, index: number) {
+    if (
+      index < this.maxUsedSearchResults ||
+      (result.position && result.position <= this.maxUsedSearchResults) ||
+      (result.originalPosition &&
+        result.originalPosition <= this.maxUsedSearchResults)
+    ) {
+      return 'selectedSearchItem';
+    } else {
+      return ``;
     }
-    isUsedSearch(result, index) {
-        if (index < this.maxUsedSearchResults ||
-            (result.position && result.position <= this.maxUsedSearchResults) ||
-            (result.originalPosition &&
-                result.originalPosition <= this.maxUsedSearchResults)) {
-            return 'selectedSearchItem';
-        }
-        else {
-            return ``;
-        }
+  }
+
+  closeSubProblem(event: CustomEvent) {
+    this.activeSubProblemIndex = null;
+    event.stopPropagation();
+    this.fire('yp-theme-color', this.subProblemColors[7]);
+  }
+
+  setSubProblemColor(index: number) {
+    if (index < 7) {
+      this.fire('yp-theme-color', this.subProblemColors[index]);
     }
-    closeSubProblem(event) {
-        this.activeSubProblemIndex = null;
-        event.stopPropagation();
-        this.fire('yp-theme-color', this.subProblemColors[7]);
+  }
+
+  setSubProblem(index: number) {
+    this.activeSubProblemIndex = index;
+    this.subProblemListScrollPositionX = window.scrollX;
+    this.subProblemListScrollPositionY = window.scrollY;
+
+    window.scrollTo(0, 0);
+
+    if (this.firstTimeSubProblemClick || this.activePopulationIndex === null) {
+      this.firstTimeSubProblemClick = false;
+      if (
+        this.memory.subProblems.length > 0 &&
+        this.memory.subProblems[this.activeSubProblemIndex].solutions
+      ) {
+        this.activePopulationIndex =
+          this.memory.subProblems[this.activeSubProblemIndex].solutions
+            .populations.length - 1;
+      }
     }
-    setSubProblemColor(index) {
-        if (index < 7) {
-            this.fire('yp-theme-color', this.subProblemColors[index]);
-        }
+
+    this.updateRoutes();
+
+    window.psAppGlobals.activity('Sub Problem - click');
+  }
+
+  toggleDarkMode() {
+    debugger;
+    this.fire('yp-theme-dark-mode', !this.themeDarkMode);
+    window.psAppGlobals.activity('Solutions - toggle darkmode');
+    if (this.themeDarkMode) {
+      window.psAppGlobals.activity('Settings - dark mode');
+      localStorage.setItem('md3-ps-dark-mode', 'true');
+    } else {
+      window.psAppGlobals.activity('Settings - light mode');
+      localStorage.removeItem('md3-ps-dark-mode');
     }
-    setSubProblem(index) {
-        this.activeSubProblemIndex = index;
-        this.subProblemListScrollPositionX = window.scrollX;
-        this.subProblemListScrollPositionY = window.scrollY;
-        window.scrollTo(0, 0);
-        if (this.firstTimeSubProblemClick || this.activePopulationIndex === null) {
-            this.firstTimeSubProblemClick = false;
-            if (this.memory.subProblems.length > 0 &&
-                this.memory.subProblems[this.activeSubProblemIndex].solutions) {
-                this.activePopulationIndex =
-                    this.memory.subProblems[this.activeSubProblemIndex].solutions
-                        .populations.length - 1;
-            }
-        }
-        this.updateRoutes();
-        window.psAppGlobals.activity('Sub Problem - click');
-    }
-    toggleDarkMode() {
-        debugger;
-        this.fire('yp-theme-dark-mode', !this.themeDarkMode);
-        window.psAppGlobals.activity('Solutions - toggle darkmode');
-        if (this.themeDarkMode) {
-            window.psAppGlobals.activity('Settings - dark mode');
-            localStorage.setItem('md3-ps-dark-mode', 'true');
-        }
-        else {
-            window.psAppGlobals.activity('Settings - light mode');
-            localStorage.removeItem('md3-ps-dark-mode');
-        }
-    }
-    renderThemeToggle() {
-        return html `<div class="layout vertical center-center">
+  }
+
+  renderThemeToggle() {
+    return html`<div class="layout vertical center-center">
       ${!this.themeDarkMode
-            ? html `
+        ? html`
             <md-outlined-icon-button
               class="darkModeButton"
               @click="${this.toggleDarkMode}"
               ><md-icon>dark_mode</md-icon></md-outlined-icon-button
             >
           `
-            : html `
+        : html`
             <md-outlined-icon-button
               class="darkModeButton"
               @click="${this.toggleDarkMode}"
@@ -625,12 +679,13 @@ export class PsStageBase extends YpBaseElement {
             >
           `}
     </div> `;
-    }
-    renderProblemStatement(title = undefined) {
-        return html `
-      ${!this.wide ? html ` ${this.renderThemeToggle()} ` : nothing}
+  }
+
+  renderProblemStatement(title: string | undefined = undefined) {
+    return html`
+      ${!this.wide ? html` ${this.renderThemeToggle()} ` : nothing}
       ${this.memory.problemStatement.imageUrl
-            ? html `
+        ? html`
             <img
               class="problemStatementImage"
               alt="${this.memory.problemStatement.imagePrompt}"
@@ -640,7 +695,7 @@ export class PsStageBase extends YpBaseElement {
               src="${this.memory.problemStatement.imageUrl}"
             />
           `
-            : html `
+        : html`
             <div class="title">
               ${title ? title : this.t('Problem Statement')}
             </div>
@@ -651,9 +706,13 @@ export class PsStageBase extends YpBaseElement {
         </div>
       </div>
     `;
-    }
-    renderSubProblemList(subProblems, title = this.t('Sub Problems')) {
-        return html `
+  }
+
+  renderSubProblemList(
+    subProblems: IEngineSubProblem[],
+    title = this.t('Sub Problems')
+  ) {
+    return html`
       <div class="topContainer layout vertical center-center">
         ${this.renderProblemStatement()}
 
@@ -664,33 +723,37 @@ export class PsStageBase extends YpBaseElement {
           ${subProblems.map((subProblem, index) => {
             const isLessProminent = index >= maxNumberOfSubProblems;
             return this.renderSubProblem(subProblem, isLessProminent, index);
-        })}
+          })}
         </div>
       </div>
     `;
+  }
+
+  getImgHeight(renderCloseButton: boolean) {
+    if (this.wide) {
+      return renderCloseButton ? 170 : 275;
+    } else {
+      return renderCloseButton ? 177 : 193;
     }
-    getImgHeight(renderCloseButton) {
-        if (this.wide) {
-            return renderCloseButton ? 170 : 275;
-        }
-        else {
-            return renderCloseButton ? 177 : 193;
-        }
+  }
+
+  getImgWidth(renderCloseButton: boolean) {
+    if (this.wide) {
+      return renderCloseButton ? 298 : 481;
+    } else {
+      return renderCloseButton ? 310 : 350;
     }
-    getImgWidth(renderCloseButton) {
-        if (this.wide) {
-            return renderCloseButton ? 298 : 481;
-        }
-        else {
-            return renderCloseButton ? 310 : 350;
-        }
-    }
-    renderSubProblemImageUrl(renderCloseButton, subProblem) {
-        return html `
+  }
+
+  renderSubProblemImageUrl(
+    renderCloseButton: boolean,
+    subProblem: IEngineSubProblem
+  ) {
+    return html`
       <div
         class="layout horizontal ${renderCloseButton
-            ? ''
-            : 'center-center'} subProblemImage"
+          ? ''
+          : 'center-center'} subProblemImage"
       >
         <img
           loading="lazy"
@@ -705,24 +768,31 @@ export class PsStageBase extends YpBaseElement {
         />
       </div>
     `;
-    }
-    renderSubProblem(subProblem, isLessProminent, index, renderCloseButton = false, renderMoreInfo = false, hideAllButtons = false) {
-        return html `
+  }
+
+  renderSubProblem(
+    subProblem: IEngineSubProblem,
+    isLessProminent: boolean,
+    index: number,
+    renderCloseButton: boolean = false,
+    renderMoreInfo = false,
+    hideAllButtons = false
+  ) {
+    return html`
       <div
         ?is-wordy="${renderCloseButton && this.longDescriptions}"
         ?not-header="${!renderCloseButton}"
         ?is-header="${renderCloseButton}"
         class="subProblem ${isLessProminent ? 'lessProminent' : ''}"
         @click="${() => {
-            if (!renderCloseButton)
-                this.setSubProblem(index);
+          if (!renderCloseButton) this.setSubProblem(index);
         }}"
       >
         <div
           class="subProblemTitle layout ${renderCloseButton
             ? this.wide
-                ? 'horizontal'
-                : 'vertical'
+              ? 'horizontal'
+              : 'vertical'
             : 'vertical center-center'}"
         >
           ${(subProblem.imageUrl && !renderCloseButton) || !this.wide
@@ -733,8 +803,8 @@ export class PsStageBase extends YpBaseElement {
             ?is-header="${renderCloseButton}"
             ?not-header="${!renderCloseButton}"
             class="layout headerContainer ${renderCloseButton
-            ? 'horizontal'
-            : 'horizontal'}"
+              ? 'horizontal'
+              : 'horizontal'}"
           >
             <div class="layout vertical">
               <div
@@ -752,27 +822,29 @@ export class PsStageBase extends YpBaseElement {
               </div>
             </div>
             ${subProblem.imageUrl && renderCloseButton && this.wide
-            ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
-            : nothing}
+              ? this.renderSubProblemImageUrl(renderCloseButton, subProblem)
+              : nothing}
 
             <div
               ?is-header="${renderCloseButton}"
               class="navButton ${renderCloseButton ? 'horizontal flex' : ''}"
             >
               ${renderCloseButton && !hideAllButtons
-            ? html `
+                ? html`
                     <md-icon-button
                       aria-label="Previous"
                       .disabled="${this.activeSubProblemIndex === 0}"
-                      @click="${(e) => {
-                e.stopPropagation();
-                if (this.activeSubProblemIndex > 0) {
-                    this.activeSubProblemIndex -= 1;
-                    this.setSubProblemColor(this.activeSubProblemIndex);
-                    this.activeGroupIndex = null;
-                    window.psAppGlobals.activity('Sub Problem - click previous');
-                }
-            }}"
+                      @click="${(e: CustomEvent): void => {
+                        e.stopPropagation();
+                        if (this.activeSubProblemIndex > 0) {
+                          this.activeSubProblemIndex -= 1;
+                          this.setSubProblemColor(this.activeSubProblemIndex);
+                          this.activeGroupIndex = null;
+                          window.psAppGlobals.activity(
+                            'Sub Problem - click previous'
+                          );
+                        }
+                      }}"
                     >
                       <md-icon>navigate_before</md-icon>
                     </md-icon-button>
@@ -780,37 +852,41 @@ export class PsStageBase extends YpBaseElement {
                       id="nextButton"
                       aria-label="Next"
                       .disabled="${this.activeSubProblemIndex ===
-                maxNumberOfSubProblems - 1}"
-                      @click="${(e) => {
-                e.stopPropagation();
-                if (!this.$$('#nextButton')
-                    .disabled &&
-                    this.activeSubProblemIndex <
-                        maxNumberOfSubProblems - 1) {
-                    this.activeSubProblemIndex += 1;
-                    this.setSubProblemColor(this.activeSubProblemIndex);
-                    this.activeGroupIndex = null;
-                    window.psAppGlobals.activity('Sub Problem - click next');
-                }
-            }}"
+                      maxNumberOfSubProblems - 1}"
+                      @click="${(e: CustomEvent): void => {
+                        e.stopPropagation();
+                        if (
+                          !(this.$$('#nextButton') as MdIconButton)
+                            .disabled &&
+                          this.activeSubProblemIndex <
+                            maxNumberOfSubProblems - 1
+                        ) {
+                          this.activeSubProblemIndex += 1;
+                          this.setSubProblemColor(this.activeSubProblemIndex);
+                          this.activeGroupIndex = null;
+                          window.psAppGlobals.activity(
+                            'Sub Problem - click next'
+                          );
+                        }
+                      }}"
                     >
                       <md-icon>navigate_next</md-icon>
                     </md-icon-button>
                     <md-icon-button
                       aria-label="Close"
-                      @click="${(e) => {
-                e.stopPropagation();
-                this.activeSubProblemIndex = null;
-                this.fire('yp-theme-color', this.subProblemColors[7]);
-                this.exitSubProblemScreen();
-                this.activeGroupIndex = null;
-                window.psAppGlobals.activity('Sub Problem - exit');
-            }}"
+                      @click="${(e: CustomEvent): void => {
+                        e.stopPropagation();
+                        this.activeSubProblemIndex = null;
+                        this.fire('yp-theme-color', this.subProblemColors[7]);
+                        this.exitSubProblemScreen();
+                        this.activeGroupIndex = null;
+                        window.psAppGlobals.activity('Sub Problem - exit');
+                      }}"
                     >
                       <md-icon>close</md-icon>
                     </md-icon-button>
                   `
-            : nothing}
+                : nothing}
             </div>
           </div>
         </div>
@@ -819,25 +895,27 @@ export class PsStageBase extends YpBaseElement {
           ${subProblem.displayDescription || subProblem.description}
         </div>
         ${renderMoreInfo && !renderCloseButton
-            ? html `
+          ? html`
               <div class="subProblemStatement">
                 ${subProblem.whyIsSubProblemImportant}
               </div>
             `
-            : nothing}
+          : nothing}
       </div>
     `;
+  }
+
+  renderSearchQueries(title: string, searchQueries: IEngineSearchQueries) {
+    if (!searchQueries) {
+      return nothing;
     }
-    renderSearchQueries(title, searchQueries) {
-        if (!searchQueries) {
-            return nothing;
-        }
-        return html `
+
+    return html`
       <div
         class="title smallerTitle layout horizontal center-center"
-        @click="${(e) => {
-            e.stopPropagation();
-            this.toggleDisplayState(title);
+        @click="${(e: Event) => {
+          e.stopPropagation();
+          this.toggleDisplayState(title);
         }}"
       >
         <div class="flex"></div>
@@ -849,19 +927,20 @@ export class PsStageBase extends YpBaseElement {
       </div>
       <div class="searchResults layout vertical self-start">
         ${this.displayStates.get(title)
-            ? Object.entries(searchQueries).map(([type, queries]) => {
-                if (queries.length === 0) {
-                    return nothing;
-                }
-                return html `
+          ? Object.entries(searchQueries).map(([type, queries]) => {
+              if (queries.length === 0) {
+                return nothing;
+              }
+
+              return html`
                 <div class="queryType">${type}</div>
-                ${queries.map((query, index) => {
-                    return html `
+                ${queries.map((query: string, index: number) => {
+                  return html`
                     <div class="column">
                       <div
                         class="query ${index < this.maxTopSearchQueries
-                        ? `queryUsed`
-                        : ``}"
+                          ? `queryUsed`
+                          : ``}"
                       >
                         ${query}
                       </div>
@@ -870,28 +949,30 @@ export class PsStageBase extends YpBaseElement {
                 })}
               `;
             })
-            : nothing}
+          : nothing}
       </div>
     `;
+  }
+
+  getUrlInRightSize(url: string) {
+    if (!this.wide && url.length > 30) {
+      return `${url.substring(0, 30)}...`;
+    } else {
+      return url;
     }
-    getUrlInRightSize(url) {
-        if (!this.wide && url.length > 30) {
-            return `${url.substring(0, 30)}...`;
-        }
-        else {
-            return url;
-        }
+  }
+
+  renderSearchResults(title: string, searchResults: IEngineSearchResults) {
+    if (!searchResults || !searchResults.pages) {
+      return nothing;
     }
-    renderSearchResults(title, searchResults) {
-        if (!searchResults || !searchResults.pages) {
-            return nothing;
-        }
-        return html `
+
+    return html`
       <div
         class="title smallerTitle layout horizontal"
-        @click="${(e) => {
-            e.stopPropagation();
-            this.toggleDisplayState(title);
+        @click="${(e: Event) => {
+          e.stopPropagation();
+          this.toggleDisplayState(title);
         }}"
       >
         <div class="flex"></div>
@@ -903,15 +984,17 @@ export class PsStageBase extends YpBaseElement {
       </div>
       <div class="searchResults">
         ${this.displayStates.get(title)
-            ? Object.entries(searchResults.pages).map(([type, results]) => {
-                if (results.length === 0) {
-                    return nothing;
-                }
-                return html `
+          ? Object.entries(searchResults.pages).map(([type, results]) => {
+              if (results.length === 0) {
+                return nothing;
+              }
+
+              return html`
                 <div class="queryType">${type}</div>
                 <div class="card">
-                  ${results.map((result, index) => {
-                    return html `
+                  ${results.map(
+                    (result: IEngineSearchResultItem, index: number) => {
+                      return html`
                         <div
                           class="searchItem ${this.isUsedSearch(result, index)}"
                         >
@@ -922,54 +1005,20 @@ export class PsStageBase extends YpBaseElement {
                               href="${result.url || result.link}"
                               target="_blank"
                             >
-                              ${this.getUrlInRightSize(result.url || result.link)}
+                              ${this.getUrlInRightSize(
+                                result.url || result.link
+                              )}
                             </a>
                           </div>
                         </div>
                       `;
-                })}
+                    }
+                  )}
                 </div>
               `;
             })
-            : nothing}
+          : nothing}
       </div>
     `;
-    }
+  }
 }
-__decorate([
-    property({ type: Object })
-], PsStageBase.prototype, "memory", void 0);
-__decorate([
-    property({ type: String })
-], PsStageBase.prototype, "childType", void 0);
-__decorate([
-    property({ type: Boolean })
-], PsStageBase.prototype, "showEloRatings", void 0);
-__decorate([
-    property({ type: Number })
-], PsStageBase.prototype, "activeSubProblemIndex", void 0);
-__decorate([
-    property({ type: Number })
-], PsStageBase.prototype, "activeSolutionIndex", void 0);
-__decorate([
-    property({ type: Number })
-], PsStageBase.prototype, "activePolicyIndex", void 0);
-__decorate([
-    property({ type: Number })
-], PsStageBase.prototype, "activePopulationIndex", void 0);
-__decorate([
-    property({ type: Boolean })
-], PsStageBase.prototype, "firstTimeSubProblemClick", void 0);
-__decorate([
-    property({ type: Number })
-], PsStageBase.prototype, "activeGroupIndex", void 0);
-__decorate([
-    property({ type: Boolean })
-], PsStageBase.prototype, "longDescriptions", void 0);
-__decorate([
-    property({ type: Object })
-], PsStageBase.prototype, "router", void 0);
-__decorate([
-    state()
-], PsStageBase.prototype, "displayStates", void 0);
-//# sourceMappingURL=cps-stage-base.js.map

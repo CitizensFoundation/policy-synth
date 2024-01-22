@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -22,7 +22,7 @@ import './ps-family-tree.js';
 import './ps-raw-evidence.js';
 import { cache } from 'lit/directives/cache.js';
 import { YpFormattingHelpers } from '@yrpri/webapp';
-let PsPolicies = class PsPolicies extends CpsStageBase {
+let PsPolicies = class PsPolicies extends PsStageBase {
     constructor() {
         super(...arguments);
         this.isDropdownVisible = false;

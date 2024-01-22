@@ -10,8 +10,8 @@ import '@yrpri/webapp/cmp/common/yp-image.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/progress/circular-progress.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
-let CpsProblemStatement = class CpsProblemStatement extends CpsStageBase {
+import { PsStageBase } from '../base/cps-stage-base.js';
+let PsProblemStatement = class PsProblemStatement extends PsStageBase {
     async connectedCallback() {
         super.connectedCallback();
         window.psAppGlobals.activity(`Problem Statment - open`);
@@ -41,8 +41,8 @@ let CpsProblemStatement = class CpsProblemStatement extends CpsStageBase {
     `;
     }
 };
-CpsProblemStatement = __decorate([
-    customElement('cps-problem-statement')
-], CpsProblemStatement);
-export { CpsProblemStatement };
-//# sourceMappingURL=cps-problem-statement.js.map
+PsProblemStatement = __decorate([
+    customElement('ps-problem-statement')
+], PsProblemStatement);
+export { PsProblemStatement };
+//# sourceMappingURL=ps-problem-statement.js.map

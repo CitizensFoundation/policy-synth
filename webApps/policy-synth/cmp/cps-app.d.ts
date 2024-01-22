@@ -11,15 +11,15 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/mwc-snackbar/mwc-snackbar.js';
 import '@material/web/menu/menu.js';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import './policies/cps-web-research.js';
-import { CpsServerApi } from './base/CpsServerApi.js';
-import { CpsAppGlobals } from './base/CpsAppGlobals.js';
+import './policies/ps-web-research.js';
+import { PsServerApi } from './base/PsServerApi.js';
+import { PsAppGlobals } from './base/PsAppGlobals.js';
 import { MdNavigationDrawer } from '@material/web/labs/navigationdrawer/navigation-drawer.js';
-import './cps-home.js';
-import './policies/cps-problem-statement.js';
-import './policies/cps-sub-problems.js';
-import './policies/cps-entities.js';
-import './policies/cps-solutions.js';
+import './ps-home.js';
+import './policies/ps-problem-statement.js';
+import './policies/ps-sub-problems.js';
+import './policies/ps-entities.js';
+import './policies/ps-solutions.js';
 import './policies/ps-policies.js';
 import './ltp/ltp-manage-crt.js';
 import '@material/web/dialog/dialog.js';
@@ -30,8 +30,8 @@ import { Scheme } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
 declare global {
     interface Window {
-        psAppGlobals: CpsAppGlobals;
-        psServerApi: CpsServerApi;
+        psAppGlobals: PsAppGlobals;
+        psServerApi: PsServerApi;
     }
 }
 export declare class PolicySynthWebApp extends YpBaseElement {
@@ -172,4 +172,4 @@ export declare class PolicySynthWebApp extends YpBaseElement {
     renderTempLoginDialog(): TemplateResult<1>;
     render(): TemplateResult<1>;
 }
-//# sourceMappingURL=cps-app.d.ts.map
+//# sourceMappingURL=ps-app.d.ts.map

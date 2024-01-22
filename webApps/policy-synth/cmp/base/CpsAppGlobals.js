@@ -1,5 +1,5 @@
 import { YpAppGlobals } from '@yrpri/webapp';
-export class CpsAppGlobals extends YpAppGlobals {
+export class PsAppGlobals extends YpAppGlobals {
     constructor(serverApi) {
         super(serverApi, true);
         this.disableParentConstruction = true;
@@ -123,4 +123,4 @@ export class CpsAppGlobals extends YpAppGlobals {
         }
     }
 }
-//# sourceMappingURL=CpsAppGlobals.js.map
+//# sourceMappingURL=PsAppGlobals.js.map

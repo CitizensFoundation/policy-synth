@@ -1,6 +1,6 @@
 import { YpAppGlobals } from '@yrpri/webapp';
-import { CpsServerApi } from './CpsServerApi.js';
-export declare class CpsAppGlobals extends YpAppGlobals {
+import { PsServerApi } from './PsServerApi.js';
+export declare class PsAppGlobals extends YpAppGlobals {
     originalQueryParameters: any;
     originalReferrer: string;
     questionId: number;
@@ -9,7 +9,7 @@ export declare class CpsAppGlobals extends YpAppGlobals {
     earlName: string;
     disableParentConstruction: boolean;
     exernalGoalParamsWhiteList: string | undefined;
-    constructor(serverApi: CpsServerApi);
+    constructor(serverApi: PsServerApi);
     getEarlName: () => string | null;
     setIds: (e: CustomEvent) => void;
     parseQueryString: () => void;
@@ -17,4 +17,4 @@ export declare class CpsAppGlobals extends YpAppGlobals {
     getOriginalQueryString(): string;
     activity: (type: string, object?: any | undefined) => void;
 }
-//# sourceMappingURL=CpsAppGlobals.d.ts.map
+//# sourceMappingURL=PsAppGlobals.d.ts.map

@@ -7,9 +7,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 import { css, html, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@yrpri/webapp/cmp/common/yp-image.js';
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 import { IEngineConstants } from '../constants.js';
-let CpsWebResearch = class CpsWebResearch extends CpsStageBase {
+let PsWebResearch = class PsWebResearch extends PsStageBase {
     constructor() {
         super(...arguments);
         this.maxNumberOfTopEntities = 4;
@@ -147,8 +147,8 @@ let CpsWebResearch = class CpsWebResearch extends CpsStageBase {
     `;
     }
 };
-CpsWebResearch = __decorate([
-    customElement('cps-web-research')
-], CpsWebResearch);
-export { CpsWebResearch };
-//# sourceMappingURL=cps-web-research.js.map
+PsWebResearch = __decorate([
+    customElement('ps-web-research')
+], PsWebResearch);
+export { PsWebResearch };
+//# sourceMappingURL=ps-web-research.js.map

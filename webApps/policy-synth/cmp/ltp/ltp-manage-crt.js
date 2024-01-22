@@ -21,7 +21,7 @@ import "@material/web/checkbox/checkbox.js";
 import "@material/web/menu/menu.js";
 import "@material/web/menu/menu-item.js";
 import "@material/web/button/filled-button.js";
-import { CpsStageBase } from '../base/cps-stage-base.js';
+import { PsStageBase } from '../base/cps-stage-base.js';
 import "./ltp-current-reality-tree.js";
 import "./LtpServerApi.js";
 import { LtpServerApi } from "./LtpServerApi.js";
@@ -38,7 +38,7 @@ const nodeTypes = [
     "xor",
     "mag",
 ];
-let LtpManageCrt = class LtpManageCrt extends CpsStageBase {
+let LtpManageCrt = class LtpManageCrt extends PsStageBase {
     constructor() {
         super();
         this.isCreatingCrt = false;

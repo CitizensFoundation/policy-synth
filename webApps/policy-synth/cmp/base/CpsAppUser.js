@@ -1,7 +1,7 @@
 import { YpAppUser } from "@yrpri/webapp";
-export class CpsAppUser extends YpAppUser {
+export class PsAppUser extends YpAppUser {
     constructor(serverApi, skipRegularInit = false) {
         super(serverApi, true);
     }
 }
-//# sourceMappingURL=CpsAppUser.js.map
+//# sourceMappingURL=PsAppUser.js.map
