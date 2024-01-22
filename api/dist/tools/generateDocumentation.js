@@ -173,3 +173,4 @@ async function main() {
     generateDocsReadme();
 }
 main().then(() => console.log('Documentation generation complete.'));
+//# sourceMappingURL=generateDocumentation.js.map

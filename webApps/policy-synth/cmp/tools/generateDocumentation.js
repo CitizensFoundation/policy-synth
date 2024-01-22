@@ -56,7 +56,12 @@ function buildDirectoryTree(dir, basePath = '', isSrc = false) {
     let structure = [];
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     entries.forEach(entry => {
-        if (entry.name === 'cks' || entry.name === 'README.md' || entry.name.endsWith('.d.ts') || entry.name.startsWith('.')) {
+        if (entry.name === 'cks' ||
+            entry.name.endsWith('all.ts') ||
+            entry.name === 'README.md' ||
+            entry.name.endsWith('.d.ts') ||
+            entry.name.startsWith('.')) {
+            console.log(`Skipping ${entry.name}`);
             return; // skip cks directory, TypeScript declaration files, and hidden files
         }
         const relativePath = isSrc ? entry.name : path.join(basePath, entry.name);
@@ -71,7 +76,7 @@ function buildDirectoryTree(dir, basePath = '', isSrc = false) {
                     type: 'directory',
                     name: entry.name,
                     path: relativePath,
-                    children: children
+                    children: children,
                 });
             }
         }
@@ -79,7 +84,7 @@ function buildDirectoryTree(dir, basePath = '', isSrc = false) {
             structure.push({
                 type: 'file',
                 name: entry.name,
-                path: relativePath
+                path: relativePath,
             });
         }
     });
@@ -102,7 +107,7 @@ function generateMarkdownFromTree(tree, depth = 0) {
     return markdown;
 }
 function generateDocsReadme() {
-    const tree = buildDirectoryTree("docs/src");
+    const tree = buildDirectoryTree('docs/src');
     console.log(JSON.stringify(tree, null, 2));
     const markdown = generateMarkdownFromTree(tree);
     fs.writeFileSync(path.join(docsDir, 'README.md'), `${indexHeader}${markdown}`);
@@ -117,7 +122,10 @@ function findTSFiles(dir, fileList = []) {
         if (entry.isDirectory()) {
             findTSFiles(fullPath, fileList);
         }
-        else if (entry.isFile() && entry.name.endsWith('.ts') && entry.name !== 'index.ts') {
+        else if (entry.isFile() &&
+            entry.name.endsWith('.ts') &&
+            entry.name !== 'all.ts' &&
+            entry.name !== 'index.ts') {
             fileList.push(fullPath);
         }
     }
@@ -139,15 +147,20 @@ async function generateDocumentation(fileList, systemPrompt) {
             try {
                 console.log(`${file}:`);
                 const completion = await openaiClient.chat.completions.create({
-                    model: "gpt-4-1106-preview",
+                    model: 'gpt-4-1106-preview',
                     temperature: 0.0,
                     max_tokens: 4095,
-                    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: content }],
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: content },
+                    ],
                 });
                 let docContent = completion.choices[0].message.content;
                 console.log(docContent);
                 docContent = docContent.replace(/```markdown\s+/g, '');
-                const docFilePath = file.replace(rootDir, docsDir).replace('.ts', '.md');
+                const docFilePath = file
+                    .replace(rootDir, docsDir)
+                    .replace('.ts', '.md');
                 const docDirPath = path.dirname(docFilePath);
                 if (!fs.existsSync(docDirPath)) {
                     fs.mkdirSync(docDirPath, { recursive: true });

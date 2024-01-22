@@ -6,3 +6,4 @@ export class BaseController {
         this.wsClients = wsClients;
     }
 }
+//# sourceMappingURL=baseController.js.map

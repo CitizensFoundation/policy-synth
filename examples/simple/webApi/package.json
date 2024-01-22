@@ -18,6 +18,6 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@policysynth/api": "^1.0.6"
+    "@policysynth/api": "^1.0.7"
   }
 }
