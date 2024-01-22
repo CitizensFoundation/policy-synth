@@ -270,7 +270,7 @@ export const runValidationChain = async (
   wsClients: Map<string, WebSocket>,
   parentNode: LtpCurrentRealityTreeDataNode,
   currentUDE: string,
-  chatLog: LtpSimplifiedChatLog[],
+  chatLog: PsSimpleChatLog[],
   parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined,
   effect: string,
   causes: string[],

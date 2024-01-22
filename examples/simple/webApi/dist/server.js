@@ -1,5 +1,6 @@
 import { PolicySynthApiApp } from '@policysynth/api';
+import { SimpleChatController } from './controllers/simpleChatController.js';
 const app = new PolicySynthApiApp([
-    simpleChatBotController,
-], 8000);
+    SimpleChatController,
+], 5011);
 app.listen();

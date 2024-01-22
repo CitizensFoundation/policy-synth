@@ -210,7 +210,7 @@ export const getRefinedCauses = async (
   wsClients: Map<string, WebSocket>,
   parentNode: LtpCurrentRealityTreeDataNode,
   currentUDE: string,
-  chatLog: LtpSimplifiedChatLog[],
+  chatLog: PsSimpleChatLog[],
   parentNodes: LtpCurrentRealityTreeDataNode[] | undefined = undefined,
   customSystemPrompts: Map<number, string> | undefined = undefined,
   effect?: string,
@@ -233,7 +233,7 @@ export const getRefinedCauses = async (
 
   console.log(`nodeType: ${parentNodeType}`);
 
-  let messages: any[] = chatLog.map((message: LtpSimplifiedChatLog) => {
+  let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
     return {
       role: message.sender,
       content: message.message,
