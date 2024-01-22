@@ -2,7 +2,7 @@ import { __decorate } from "tslib";
 import { YpBaseElement } from '@policysynth/webapp';
 import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '@policysynth/webapp/ts-out/src/chatBot/ps-chat-assistant.js';
+import '@policysynth/webapp/pso/chatBot/ps-chat-assistant.js';
 let SimpleChatBot = class SimpleChatBot extends YpBaseElement {
     render() {
         return html `
