@@ -7,7 +7,7 @@ export { PsEntities } from './policies/ps-entities';
 export { PsHome } from './ps-home';
 export { PsProblemStatement } from './policies/ps-problem-statement';
 export { PsSolutions } from './policies/ps-solutions';
-export { PsStageBase } from './base/cps-stage-base';
+export { PsStageBase } from './base/ps-stage-base';
 export { PsSubProblems } from './policies/ps-sub-problems';
 export { PsWebResearch } from './policies/ps-web-research';
 export { LtpServerApi } from './ltp/LtpServerApi';
