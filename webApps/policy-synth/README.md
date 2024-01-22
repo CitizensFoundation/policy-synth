@@ -8,7 +8,7 @@ The `@policysynth/webapp` is part of the Policy Synth suite, which aims to integ
 
 ## API Documentation
 
-[API Documentation for Policy Synth WebApp](docs/README.md)
+[API Documentation for Policy Synth WebApp](https://github.com/CitizensFoundation/policy-synth/blob/main/webApps/policy-synth/docs/README.md)
 
 ## Features
 

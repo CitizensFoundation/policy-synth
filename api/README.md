@@ -4,7 +4,7 @@ Bringing together the best of collective and artificial intelligence, Policy Syn
 
 ## API Documentation
 
-[API Documentation for Policy Synth ExpressJS API](docs/README.md)
+[API Documentation for Policy Synth ExpressJS API](https://github.com/CitizensFoundation/policy-synth/blob/main/api/docs/README.md)
 
 ## Architecture Overview
 ![Policy Synth Architecture](https://github.com/CitizensFoundation/policy-synth/assets/43699/b7e1f10a-7438-4827-a576-b48ec5a672e6)
