@@ -307,7 +307,7 @@ export class PolicySynthWebApp extends YpBaseElement {
       : null;
   }
 
-  private router: Router = new Router(
+  router: Router = new Router(
     this,
     [
       {
