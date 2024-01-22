@@ -33,6 +33,6 @@ export class SimpleChatBot extends PsChatAssistant {
       message: '',
     });
 
-    await this.serverApi.conversation(this.chatLog, this.wsClientId);
+    await this.serverApi.conversation(this.simpleChatLog, this.wsClientId);
   }
 }

@@ -37,8 +37,7 @@ export class PsChatAssistant extends YpBaseElement {
   wsClientId!: string;
 
   @property({ type: String })
-  defaultInfoMessage: string =
-    "I'm your friendly chat assistant";
+  defaultInfoMessage: string = "I'm your friendly chat assistant";
 
   @property({ type: String })
   wsEndpoint!: string;
@@ -169,14 +168,19 @@ export class PsChatAssistant extends YpBaseElement {
     }
   }
 
-  protected override firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected override firstUpdated(
+    _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
+  ): void {
     // focus the text input
     setTimeout(() => {
       this.chatInputField!.focus();
     }, 420);
 
     setTimeout(() => {
-      this.chatMessagesElement!.addEventListener('scroll', this.handleScroll.bind(this));
+      this.chatMessagesElement!.addEventListener(
+        'scroll',
+        this.handleScroll.bind(this)
+      );
     }, 500);
   }
 
@@ -204,7 +208,9 @@ export class PsChatAssistant extends YpBaseElement {
     this.reset();
   }
 
-  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(
+    changedProperties: Map<string | number | symbol, unknown>
+  ): void {
     super.updated(changedProperties);
     if (changedProperties.has('themeDarkMode')) {
     }
@@ -216,13 +222,17 @@ export class PsChatAssistant extends YpBaseElement {
     }
 
     const currentScrollTop = this.chatMessagesElement!.scrollTop;
-    if (this.scrollStart === 0) { // Initial scroll
+    if (this.scrollStart === 0) {
+      // Initial scroll
       this.scrollStart = currentScrollTop;
     }
 
     const threshold = 10;
     const atBottom =
-      this.chatMessagesElement!.scrollHeight - currentScrollTop - this.chatMessagesElement!.clientHeight <= threshold;
+      this.chatMessagesElement!.scrollHeight -
+        currentScrollTop -
+        this.chatMessagesElement!.clientHeight <=
+      threshold;
 
     if (atBottom) {
       this.userScrolled = false;
@@ -233,7 +243,6 @@ export class PsChatAssistant extends YpBaseElement {
       // this.scrollStart = currentScrollTop;
     }
   }
-
 
   override disconnectedCallback(): void {
     //    this.ws.close();
@@ -283,7 +292,8 @@ export class PsChatAssistant extends YpBaseElement {
   scrollDown() {
     if (!this.userScrolled) {
       this.programmaticScroll = true; // Set the flag before scrolling
-      this.$$('#chat-messages')!.scrollTop = this.$$('#chat-messages')!.scrollHeight;
+      this.$$('#chat-messages')!.scrollTop =
+        this.$$('#chat-messages')!.scrollHeight;
       setTimeout(() => {
         this.programmaticScroll = false; // Reset the flag after scrolling
       }, 100);
@@ -447,6 +457,21 @@ export class PsChatAssistant extends YpBaseElement {
     setTimeout(() => {
       this.chatInputField!.blur();
     });
+  }
+
+  get simplifiedChatLog() {
+    const chatLog = this.chatLog.filter(
+      chatMessage =>
+        chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming'
+    );
+    return chatLog.map(chatMessage => {
+      return {
+        sender: chatMessage.sender == 'bot' ? 'assistant' : 'user',
+        message: chatMessage.rawMessage
+          ? chatMessage.rawMessage
+          : chatMessage.message,
+      };
+    }) as PsSimpleChatLog[];
   }
 
   static override get styles() {
@@ -692,4 +717,3 @@ export class PsChatAssistant extends YpBaseElement {
     `;
   }
 }
-

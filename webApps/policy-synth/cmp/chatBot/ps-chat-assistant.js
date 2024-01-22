@@ -131,11 +131,15 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
             return; // Skip handling if the scroll was initiated programmatically
         }
         const currentScrollTop = this.chatMessagesElement.scrollTop;
-        if (this.scrollStart === 0) { // Initial scroll
+        if (this.scrollStart === 0) {
+            // Initial scroll
             this.scrollStart = currentScrollTop;
         }
         const threshold = 10;
-        const atBottom = this.chatMessagesElement.scrollHeight - currentScrollTop - this.chatMessagesElement.clientHeight <= threshold;
+        const atBottom = this.chatMessagesElement.scrollHeight -
+            currentScrollTop -
+            this.chatMessagesElement.clientHeight <=
+            threshold;
         if (atBottom) {
             this.userScrolled = false;
             this.scrollStart = 0; // Reset scroll start
@@ -180,7 +184,8 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     scrollDown() {
         if (!this.userScrolled) {
             this.programmaticScroll = true; // Set the flag before scrolling
-            this.$$('#chat-messages').scrollTop = this.$$('#chat-messages').scrollHeight;
+            this.$$('#chat-messages').scrollTop =
+                this.$$('#chat-messages').scrollHeight;
             setTimeout(() => {
                 this.programmaticScroll = false; // Reset the flag after scrolling
             }, 100);
@@ -315,6 +320,17 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         //this.sendButton!.innerHTML = this.t('Thinking...');
         setTimeout(() => {
             this.chatInputField.blur();
+        });
+    }
+    get simplifiedChatLog() {
+        const chatLog = this.chatLog.filter(chatMessage => chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming');
+        return chatLog.map(chatMessage => {
+            return {
+                sender: chatMessage.sender == 'bot' ? 'assistant' : 'user',
+                message: chatMessage.rawMessage
+                    ? chatMessage.rawMessage
+                    : chatMessage.message,
+            };
         });
     }
     static get styles() {

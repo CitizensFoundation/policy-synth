@@ -56,6 +56,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     addChatBotElement(data: PsAiChatWsMessage): void;
     addChatUserElement(data: PsAiChatWsMessage): void;
     sendChatMessage(): Promise<void>;
+    get simplifiedChatLog(): PsSimpleChatLog[];
     static get styles(): any[];
     followUpQuestion(event: CustomEvent): void;
     reset(): void;
