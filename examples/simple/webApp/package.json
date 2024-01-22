@@ -25,11 +25,11 @@
   },
   "type": "module",
   "dependencies": {
-    "@policysynth/webapp": "^1.0.21",
-    "marked": "^4.2.12",
-    "rollup-plugin-copy": "^3.5.0"
+    "@policysynth/webapp": "^1.0.22",
+    "marked": "^4.2.12"
   },
   "devDependencies": {
+    "rollup-plugin-copy": "^3.5.0",  
     "@babel/plugin-transform-runtime": "^7.18.10",
     "@babel/preset-env": "^7.16.6",
     "@babel/runtime": "^7.18.9",
