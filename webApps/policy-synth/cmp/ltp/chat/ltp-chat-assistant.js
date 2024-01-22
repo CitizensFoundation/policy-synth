@@ -5,7 +5,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { html } from 'lit';
-import { property, customElement } from 'lit/decorators.js';
+import { property, customElement, queryAll } from 'lit/decorators.js';
 import '@material/web/fab/fab.js';
 import '@material/web/radio/radio.js';
 import '@material/web/button/elevated-button.js';
@@ -25,6 +25,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
         super();
         this.defaultInfoMessage = "I'm your Current Reality Tree assistant. I'm here to help to identify direct causes of: ";
         this.lastChainCompletedAsValid = false;
+        this.defaultDevWsPort = 8000;
         this.api = new LtpServerApi();
     }
     connectedCallback() {
@@ -294,6 +295,9 @@ __decorate([
 __decorate([
     property({ type: Boolean })
 ], LtpChatAssistant.prototype, "lastChainCompletedAsValid", void 0);
+__decorate([
+    queryAll('ltp-ai-chat-element')
+], LtpChatAssistant.prototype, "chatElements", void 0);
 __decorate([
     property({ type: Array })
 ], LtpChatAssistant.prototype, "lastCausesToValidate", void 0);

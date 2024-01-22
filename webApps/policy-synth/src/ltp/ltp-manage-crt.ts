@@ -397,10 +397,10 @@ export class LtpManageCrt extends PsStageBase {
   }
 
   updatePath() {
-    const dontDoIt = true;
+    const dontDoIt = false;
     if (!dontDoIt) {
       if (this.crt && this.crt.id) {
-        window.history.pushState({}, "", `/group/${this.crt.id}`);
+        window.history.pushState({}, "", `/crt/${this.crt.id}`);
       } else {
         console.error("Could not fetch current tree: " + this.currentTreeId);
       }

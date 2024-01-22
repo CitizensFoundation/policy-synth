@@ -88,6 +88,8 @@ export class PsChatAssistant extends YpBaseElement {
   api: BaseChatBotServerApi;
   heartbeatInterval: number | undefined;
 
+  defaultDevWsPort = 9292;
+
   constructor() {
     super();
     this.api = new BaseChatBotServerApi();
@@ -153,7 +155,7 @@ export class PsChatAssistant extends YpBaseElement {
       window.location.hostname === 'localhost' ||
       window.location.hostname === '192.1.168'
     ) {
-      wsEndpoint = `ws://${window.location.hostname}:9292`;
+      wsEndpoint = `ws://${window.location.hostname}:${this.defaultDevWsPort}`;
     } else {
       wsEndpoint = `wss://${window.location.hostname}:443`;
     }

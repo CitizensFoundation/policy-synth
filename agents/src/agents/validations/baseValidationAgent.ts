@@ -86,6 +86,8 @@ export class PsBaseValidationAgent extends Base {
       console.log(
         `Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`
       );
+
+      result.nextAgent = result.nextAgent || this.options.nextAgent;
     } catch (e) {
       //TODO: Send airbrake error
       console.error("Unkown system error in validation agent")
@@ -96,8 +98,6 @@ export class PsBaseValidationAgent extends Base {
         nextAgent: this.options.nextAgent,
       };
     }
-
-    result.nextAgent = result.nextAgent || this.options.nextAgent;
 
     await this.afterExecute(result);
 

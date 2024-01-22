@@ -37,6 +37,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     chatMessagesElement?: HTMLElement;
     api: BaseChatBotServerApi;
     heartbeatInterval: number | undefined;
+    defaultDevWsPort: number;
     constructor();
     calcVH(): void;
     handleCtrlPKeyPress(event: KeyboardEvent): void;
