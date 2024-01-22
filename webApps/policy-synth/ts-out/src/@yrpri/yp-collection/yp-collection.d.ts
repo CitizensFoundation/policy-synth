@@ -34,9 +34,9 @@ export declare abstract class YpCollection extends YpBaseElement {
     _getHelpPages(collectionTypeOverride?: string | undefined, collectionIdOverride?: number | undefined): Promise<void>;
     get collectionTabLabel(): string;
     static get styles(): any[];
-    renderHeader(): typeof nothing | TemplateResult<1>;
+    renderHeader(): TemplateResult<1> | typeof nothing;
     renderNewsAndMapTabs(): TemplateResult<1>;
-    renderTabs(): typeof nothing | TemplateResult<1>;
+    renderTabs(): TemplateResult<1> | typeof nothing;
     renderCurrentTabPage(): TemplateResult | undefined;
     render(): TemplateResult<1>;
     collectionIdChanged(): void;
