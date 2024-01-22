@@ -29,10 +29,10 @@ export declare class PsRawEvidence extends YpBaseElement {
     renderDropdown(): import("lit-html").TemplateResult<1>;
     renderPieceOfEvidence(evidence: PSEvidenceRawWebPageData): import("lit-html").TemplateResult<1>;
     camelCaseToRegular(text: string): string;
-    renderShortList(url: string, title: string, list: string[]): import("lit-html").TemplateResult<1> | typeof nothing;
+    renderShortList(url: string, title: string, list: string[]): typeof nothing | import("lit-html").TemplateResult<1>;
     toggleShowFullList(key: string): void;
     renderActiveRawEvidence(): import("lit-html").TemplateResult<1>;
-    render(): import("lit-html").TemplateResult<1> | typeof nothing;
+    render(): typeof nothing | import("lit-html").TemplateResult<1>;
     static rawPolicyCache: Record<string, PSEvidenceRawWebPageData[]>;
 }
 //# sourceMappingURL=ps-raw-evidence.d.ts.map
