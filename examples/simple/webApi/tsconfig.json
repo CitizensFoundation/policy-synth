@@ -2,7 +2,8 @@
   "extends": "@tsconfig/node18/tsconfig.json",
   "compilerOptions": {
     "target": "es2020",
-    "module": "esnext",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     "outDir": "dist/",
     "allowSyntheticDefaultImports": true,
     "declaration": true,
