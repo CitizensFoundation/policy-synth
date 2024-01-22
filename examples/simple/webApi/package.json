@@ -1,0 +1,23 @@
+{
+  "name": "@policysynth/simple-api-example",
+  "version": "1.0.0",
+  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/api"
+  },
+  "license": "MIT",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon -e ts dist/server.js",
+    "watch-start": "tsc --project ./ --outDir ./dist -w & nodemon -q ./dist/server.js",
+    "dev": "nodemon --config nodemon.json ./dist/server.js",
+    "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",
+    "build": "tsc --project ./ --outDir ./dist",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@policysynth/api": "^1.0.6"
+  }
+}

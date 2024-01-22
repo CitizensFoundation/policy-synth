@@ -1,61 +1,74 @@
 import express from "express";
 import bodyParser from "body-parser";
 import * as path from "path";
+import * as url from "url";
 import { createServer } from "http";
+import { Server, Socket } from "socket.io";
 import { createClient } from "redis";
 import RedisStore from "connect-redis";
 import session from "express-session";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import fs from "fs";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import fs from 'fs';
 import { v4 as uuidv4 } from "uuid";
-import WebSocket, { WebSocketServer } from "ws";
+import WebSocket, { WebSocketServer } from 'ws'
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-export class PolicySynthApiApp {
+// Initialize client.
+let redisClient;
+if (process.env.REDIS_URL) {
+  redisClient = createClient({
+    url: process.env.REDIS_URL,
+    socket: {
+      tls: true,
+    },
+  });
+} else {
+  redisClient = createClient({
+    url: "redis://localhost:6379",
+  });
+}
+
+redisClient.connect().catch(console.error);
+
+// Initialize store.
+let redisStore = new RedisStore({
+  client: redisClient,
+  prefix: "cps:",
+});
+
+const app = express();
+
+const httpServer = createServer(app);
+
+export class App {
   public app: express.Application;
   public port: number;
-  public httpServer: any;
   public ws: WebSocketServer;
-  public redisClient: any;
   public wsClients = new Map<string, WebSocket>();
 
-  constructor(controllers: Array<any>, port: number | undefined = undefined) {
-    this.app = express();
-    this.httpServer = createServer(this.app);
-    this.port = port || parseInt(process.env.PORT || "8000");
-    this.ws = new WebSocketServer({ server: this.httpServer });
+  constructor(controllers: Array<any>, port: number) {
+    this.app = app;
+    this.port = parseInt(process.env.PORT || "8000");
+    this.ws = new WebSocketServer({ server: httpServer });
 
-    if (process.env.REDIS_URL) {
-      this.redisClient = createClient({
-        url: process.env.REDIS_URL,
-        socket: {
-          tls: true,
-        },
-      });
-    } else {
-      this.redisClient = createClient({
-        url: "redis://localhost:6379",
-      });
-    }
-
-    this.redisClient.connect().catch(console.error);
-
-    this.ws.on("connection", (ws: WebSocket) => {
-      console.log(`Connection established`);
+    this.ws.on('connection', (ws: WebSocket) => {
+      console.log(`Connection established`)
       const clientId = uuidv4();
       this.wsClients.set(clientId, ws);
       ws.send(JSON.stringify({ clientId }));
 
-      ws.on("message", (message) => {
+      ws.on('message', (message) => {
         // Process incoming messages
       });
 
-      ws.on("close", () => {
+      ws.on('close', () => {
         this.wsClients.delete(clientId);
         console.log(`Connection closed for client ${clientId}`);
       });
 
-      ws.on("error", () => {
+      ws.on('error', () => {
         this.wsClients.delete(clientId);
         console.log(`Connection error for client ${clientId}`);
       });
@@ -66,9 +79,6 @@ export class PolicySynthApiApp {
   }
 
   private initializeMiddlewares() {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-
     this.app.use(bodyParser.json());
     const staticHomeHTMLPath = path.join(__dirname, "../../staticHomeHTML");
     if (fs.existsSync(staticHomeHTMLPath)) {
@@ -85,40 +95,51 @@ export class PolicySynthApiApp {
     }
 
     this.app.use(
-      express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
+      express.static(
+        path.join(__dirname, "../../webApps/policy-synth/dist")
+      )
     );
 
     this.app.use(
       "/projects*",
-      express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
+      express.static(
+        path.join(__dirname, "../../webApps/policy-synth/dist")
+      )
     );
 
     this.app.use(
       "/crt*",
-      express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
+      express.static(
+        path.join(__dirname, "../../webApps/policy-synth/dist")
+      )
     );
 
     this.app.use(
       "/webResearch*",
-      express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
+      express.static(
+        path.join(__dirname, "../../webApps/policy-synth/dist")
+      )
     );
 
     this.app.use(
       "/policies*",
-      express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
+      express.static(
+        path.join(__dirname, "../../webApps/policy-synth/dist")
+      )
     );
 
     this.app.use(
       "/solutions*",
-      express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
+      express.static(
+        path.join(__dirname, "../../webApps/policy-synth/dist")
+      )
     );
 
-    this.app.use(
+
+
+    app.use(
       session({
-        store: new RedisStore({
-          client: this.redisClient,
-          prefix: "ps:",
-        }),
+        store: redisStore,
         secret: process.env.SESSION_SECRET
           ? process.env.SESSION_SECRET
           : "not so secret... use env var.",
@@ -151,7 +172,7 @@ export class PolicySynthApiApp {
   }
 
   public listen() {
-    this.httpServer.listen(this.port, () => {
+    httpServer.listen(this.port, () => {
       console.log(`App listening on the port ${this.port}`);
     });
   }

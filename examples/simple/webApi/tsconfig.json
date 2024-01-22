@@ -1,0 +1,18 @@
+{
+  "extends": "@tsconfig/node18/tsconfig.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "outDir": "dist/",
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": [
+    "**/*.ts",
+    "./node_modules/@policysynth/agents/src/ltp.d.ts",
+    "./node_modules/@policysynth/agents/src/types.d.ts",
+    "./node_modules/@policysynth/agents/src/policy.d.ts",
+    "./node_modules/@policysynth/agents/src/rootCauses.d.ts",
+    "./node_modules/@policysynth/agents/src/validation.d.ts",
+  ]
+}
