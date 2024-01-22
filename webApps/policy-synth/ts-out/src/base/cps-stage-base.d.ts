@@ -44,8 +44,8 @@ export declare abstract class CpsStageBase extends YpBaseElement {
     getImgWidth(renderCloseButton: boolean): 298 | 481 | 310 | 350;
     renderSubProblemImageUrl(renderCloseButton: boolean, subProblem: IEngineSubProblem): import("lit-html").TemplateResult<1>;
     renderSubProblem(subProblem: IEngineSubProblem, isLessProminent: boolean, index: number, renderCloseButton?: boolean, renderMoreInfo?: boolean, hideAllButtons?: boolean): import("lit-html").TemplateResult<1>;
-    renderSearchQueries(title: string, searchQueries: IEngineSearchQueries): import("lit-html").TemplateResult<1> | typeof nothing;
+    renderSearchQueries(title: string, searchQueries: IEngineSearchQueries): typeof nothing | import("lit-html").TemplateResult<1>;
     getUrlInRightSize(url: string): string;
-    renderSearchResults(title: string, searchResults: IEngineSearchResults): import("lit-html").TemplateResult<1> | typeof nothing;
+    renderSearchResults(title: string, searchResults: IEngineSearchResults): typeof nothing | import("lit-html").TemplateResult<1>;
 }
 //# sourceMappingURL=cps-stage-base.d.ts.map
