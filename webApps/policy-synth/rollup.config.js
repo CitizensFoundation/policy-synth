@@ -7,8 +7,9 @@ import { terser } from 'rollup-plugin-terser';
 //import { generateSW } from 'rollup-plugin-workbox';
 //import analyze from 'rollup-plugin-analyzer';
 import replace from '@rollup/plugin-replace';
-import pkg from './package.json' assert { type: 'json' };
+import pkg from './package.json';
 const commonjs = require('rollup-plugin-commonjs');
+import json from '@rollup/plugin-json';
 
 function getCustomVersion(version) {
   const date = new Date();
@@ -37,6 +38,7 @@ export default {
   preserveEntrySignatures: false,
 
   plugins: [
+    json(),
     commonjs(),
 
     /** Enable using HTML as rollup entrypoint */
