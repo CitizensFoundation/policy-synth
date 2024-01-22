@@ -172,7 +172,7 @@ export class TreeController  extends BaseController {
       validationResults,
     }: {
       crtNodeId: string;
-      chatLog: LtpSimplifiedChatLog[];
+      chatLog: PsSimpleChatLog[];
       wsClientId: string;
       effect: string;
       causes: string[];
@@ -240,7 +240,7 @@ export class TreeController  extends BaseController {
       validationResults,
     }: {
       crtNodeId: string;
-      chatLog: LtpSimplifiedChatLog[];
+      chatLog: PsSimpleChatLog[];
       wsClientId: string;
       effect?: string;
       causes?: string[];

@@ -73,7 +73,7 @@ interface PsAiChatWsMessage {
   hidden?: boolean;
 }
 
-interface LtpSimplifiedChatLog {
+interface PsSimpleChatLog {
   sender: string;
   message: string;
 }

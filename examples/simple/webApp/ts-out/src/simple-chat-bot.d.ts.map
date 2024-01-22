@@ -1,1 +1,1 @@
-{"version":3,"file":"simple-chat-bot.d.ts","sourceRoot":"","sources":["../../src/simple-chat-bot.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,eAAe,CAAC;AAI9C,OAAO,sDAAsD,CAAC;AAE9D,qBACa,aAAc,SAAQ,aAAa;IAC9C,MAAM;CAMP"}
+{"version":3,"file":"simple-chat-bot.d.ts","sourceRoot":"","sources":["../../src/simple-chat-bot.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,eAAe,EAAE,MAAM,sDAAsD,CAAC;AACvF,OAAO,EAAE,mBAAmB,EAAE,MAAM,mBAAmB,CAAC;AAExD,qBACa,aAAc,SAAQ,eAAe;IAEhD,gBAAgB,SAAQ;IAExB,SAAS,EAAE,mBAAmB,CAAC;IAEtB,iBAAiB,IAAI,IAAI;IAMnB,eAAe;CAmB/B"}

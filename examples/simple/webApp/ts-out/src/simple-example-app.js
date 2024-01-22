@@ -11,8 +11,7 @@ let SimpleExampleApp = class SimpleExampleApp extends PolicySynthWebApp {
             {
                 path: '/*',
                 render: () => {
-                    return html `
-        <div class="layout vertical center-center">
+                    return html ` <div class="layout vertical center-center">
           <simple-chat-bot></simple-chat-bot>
           <div class="layout horizontal center-center">
             ${this.renderThemeToggle()}
@@ -30,7 +29,7 @@ let SimpleExampleApp = class SimpleExampleApp extends PolicySynthWebApp {
           width: 100vw;
           height: 80vh;
         }
-      `
+      `,
         ];
     }
 };

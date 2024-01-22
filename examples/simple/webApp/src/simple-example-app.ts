@@ -7,7 +7,6 @@ import './simple-chat-bot.js';
 
 @customElement('simple-example-app')
 export class SimpleExampleApp extends PolicySynthWebApp {
-
   static override get styles() {
     return [
       ...super.styles,
@@ -16,7 +15,7 @@ export class SimpleExampleApp extends PolicySynthWebApp {
           width: 100vw;
           height: 80vh;
         }
-      `
+      `,
     ];
   }
 
@@ -24,8 +23,7 @@ export class SimpleExampleApp extends PolicySynthWebApp {
     {
       path: '/*',
       render: () => {
-        return html`
-        <div class="layout vertical center-center">
+        return html` <div class="layout vertical center-center">
           <simple-chat-bot></simple-chat-bot>
           <div class="layout horizontal center-center">
             ${this.renderThemeToggle()}
