@@ -1,65 +1,64 @@
 # PsChatAssistant
 
-PsChatAssistant is a custom web component that acts as a chat interface for interacting with a chatbot. It manages the chat log, user input, and communication with a WebSocket server to send and receive messages.
+The `PsChatAssistant` class is a web component that provides a chat interface for users to interact with a chatbot. It extends the `YpBaseElement` class and manages the chat log, WebSocket connection, and user input.
 
 ## Properties
 
-| Name                  | Type                          | Description                                           |
-|-----------------------|-------------------------------|-------------------------------------------------------|
-| chatLog               | PsAiChatWsMessage[]           | An array of chat messages exchanged in the session.   |
-| infoMessage           | string                        | A message providing information to the user.          |
-| wsClientId            | string                        | The client ID for the WebSocket connection.           |
-| defaultInfoMessage    | string                        | The default message displayed by the chat assistant.  |
-| wsEndpoint            | string                        | The WebSocket endpoint URL.                           |
-| ws                    | WebSocket                     | The WebSocket connection instance.                    |
-| inputIsFocused        | boolean                       | Indicates if the chat input is focused.               |
-| clusterId             | number                        | The cluster ID associated with the chat session.      |
-| userScrolled          | boolean                       | Indicates if the user has scrolled the chat window.   |
-| communityId           | number                        | The community ID associated with the chat session.    |
-| textInputLabel        | string                        | The label for the chat input field.                   |
-| currentFollowUpQuestions | string                    | The current follow-up questions in the chat.          |
-| programmaticScroll    | boolean                       | Indicates if the scroll was initiated programmatically. |
-| scrollStart           | number                        | The starting point of a scroll action.                |
-| defaultDevWsPort      | number                        | The default WebSocket port for development.           |
+| Name                   | Type                             | Description                                                                 |
+|------------------------|----------------------------------|-----------------------------------------------------------------------------|
+| chatLog                | PsAiChatWsMessage[]              | An array of chat messages exchanged with the chatbot.                       |
+| infoMessage            | string                           | A message that provides information to the user.                            |
+| wsClientId             | string                           | The client ID used for the WebSocket connection.                            |
+| defaultInfoMessage     | string                           | The default message displayed by the chat assistant.                        |
+| wsEndpoint             | string                           | The WebSocket endpoint URL.                                                 |
+| ws                     | WebSocket                        | The WebSocket connection instance.                                          |
+| inputIsFocused         | boolean                          | Indicates whether the chat input field is focused.                          |
+| onlyUseTextField       | boolean                          | A flag to determine if only the text field should be used for input.        |
+| clusterId              | number                           | The ID of the cluster where the chatbot is running.                         |
+| userScrolled           | boolean                          | Indicates whether the user has manually scrolled the chat window.           |
+| communityId            | number                           | The ID of the community associated with the chat.                           |
+| textInputLabel         | string                           | The label for the chat input field.                                         |
+| currentFollowUpQuestions | string                         | The current follow-up questions provided by the chatbot.                    |
+| programmaticScroll     | boolean                          | Indicates if the scroll action was initiated programmatically.              |
+| scrollStart            | number                           | The starting scroll position when the user begins to scroll.                |
+| defaultDevWsPort       | number                           | The default WebSocket port used during development.                         |
 
 ## Methods
 
-| Name                   | Parameters                   | Return Type | Description                                      |
-|------------------------|------------------------------|-------------|--------------------------------------------------|
-| calcVH                 | -                            | void        | Calculates the viewport height for the chat window. |
-| handleCtrlPKeyPress    | event: KeyboardEvent         | void        | Handles the key press event for debug actions.   |
-| copyLatestDebugInfoToClipboard | -                    | void        | Copies the latest debug information to the clipboard. |
-| connectedCallback      | -                            | void        | Lifecycle method called when the component is added to the DOM. |
-| initWebSockets         | -                            | void        | Initializes the WebSocket connection.            |
-| sendHeartbeat          | -                            | void        | Sends a heartbeat message through the WebSocket. |
-| onWsOpen               | -                            | void        | Handler for when the WebSocket connection opens. |
-| updated                | changedProperties: Map<string \| number \| symbol, unknown> | void | Lifecycle method called after the component updates. |
-| handleScroll           | -                            | void        | Handles the scroll event in the chat messages element. |
-| disconnectedCallback   | -                            | void        | Lifecycle method called when the component is removed from the DOM. |
-| onMessage              | event: MessageEvent          | Promise<void> | Handles incoming WebSocket messages.          |
-| scrollDown             | -                            | void        | Scrolls the chat messages element down.          |
-| addToChatLogWithMessage | data: PsAiChatWsMessage, message?: string, changeButtonDisabledState?: boolean, changeButtonLabelTo?: string, refinedCausesSuggestions?: string[], rawMessage?: string | void | Adds a message to the chat log with additional options. |
-| addChatBotElement      | data: PsAiChatWsMessage      | void        | Adds a chat bot element to the chat log.         |
-| addChatUserElement     | data: PsAiChatWsMessage      | void        | Adds a chat user element to the chat log.        |
-| sendChatMessage        | -                            | Promise<void> | Sends the user's chat message.                 |
-| followUpQuestion       | event: CustomEvent           | void        | Handles a follow-up question event.             |
-| reset                  | -                            | void        | Resets the chat session.                         |
-| toggleDarkMode         | -                            | void        | Toggles the dark mode theme.                     |
-| renderChatInput        | -                            | TemplateResult | Renders the chat input field.                 |
+| Name                   | Parameters                      | Return Type | Description                                                                 |
+|------------------------|---------------------------------|-------------|-----------------------------------------------------------------------------|
+| calcVH                 |                                 | void        | Calculates the viewport height and sets it for the chat window.             |
+| handleCtrlPKeyPress    | event: KeyboardEvent            | void        | Handles the key press event to copy debug information to the clipboard.     |
+| copyLatestDebugInfoToClipboard |                           | void        | Copies the latest debug information to the clipboard.                       |
+| connectedCallback      |                                 | void        | Lifecycle method that is called when the component is added to the document.|
+| initWebSockets         |                                 | void        | Initializes the WebSocket connection.                                       |
+| sendHeartbeat          |                                 | void        | Sends a heartbeat message through the WebSocket connection.                 |
+| onWsOpen               |                                 | void        | Callback for when the WebSocket connection is opened.                       |
+| updated                | changedProperties: Map          | void        | Lifecycle method called after the component's properties have changed.      |
+| handleScroll           |                                 | void        | Handles the scroll event in the chat messages element.                      |
+| disconnectedCallback   |                                 | void        | Lifecycle method that is called when the component is removed from the document. |
+| onMessage              | event: MessageEvent             | Promise<void> | Handles incoming WebSocket messages.                                       |
+| scrollDown             |                                 | void        | Scrolls the chat messages element down to the latest message.               |
+| addToChatLogWithMessage | data: PsAiChatWsMessage, ...   | void        | Adds a message to the chat log with additional options.                     |
+| addChatBotElement      | data: PsAiChatWsMessage         | void        | Adds a chatbot message element to the chat log.                             |
+| addChatUserElement     | data: PsAiChatWsMessage         | void        | Adds a user message element to the chat log.                                |
+| sendChatMessage        |                                 | Promise<void> | Sends the user's chat message through the WebSocket connection.            |
+| simplifiedChatLog      |                                 | PsSimpleChatLog[] | Returns a simplified version of the chat log.                              |
+| followUpQuestion       | event: CustomEvent              | void        | Handles the follow-up question event.                                       |
+| reset                  |                                 | void        | Resets the chat log and sends a reset message through the WebSocket.        |
+| toggleDarkMode         |                                 | void        | Toggles the dark mode theme for the chat interface.                         |
+| renderChatInput        |                                 | TemplateResult | Renders the chat input field.                                              |
+| render                 |                                 | TemplateResult | Renders the chat assistant component.                                      |
 
-## Events
+## Events (if any)
 
 - **theme-dark-mode**: Emitted when the dark mode theme is toggled.
 
 ## Examples
 
 ```typescript
-// Example usage of the PsChatAssistant component
-const chatAssistant = document.createElement('ps-chat-assistant');
-document.body.appendChild(chatAssistant);
-
-// To send a message programmatically
-chatAssistant.sendChatMessage();
+// Example usage of the PsChatAssistant web component
+<ps-chat-assistant></ps-chat-assistant>
 ```
 
-Please note that the actual implementation of the `PsAiChatWsMessage`, `PsAgentStartWsOptions`, `PsAgentCompletedWsOptions`, and other custom types or interfaces used in the component are not provided in the documentation. They should be documented separately based on their definitions.
+Please note that the actual implementation of the `PsChatAssistant` class may require additional context, such as the definitions for `PsAiChatWsMessage`, `PsAgentStartWsOptions`, `PsAgentCompletedWsOptions`, and `PsSimpleChatLog`, which are not provided in the documentation above.
