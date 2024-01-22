@@ -29,11 +29,8 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
 
   ],
   middleware: [
-    /*proxy('/api/', {
-      target: 'http://localhost:4242/',
-    }),*/
     proxy('/api/', {
-      target: 'http://localhost:8000/',
+      target: 'http://localhost:5011/',
       //changeOrigin: true
     })
   ],

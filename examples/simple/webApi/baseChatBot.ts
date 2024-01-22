@@ -54,8 +54,6 @@ export class BaseChatBot {
     wsClients: Map<string, WebSocket>,
     chatLog: PsSimpleChatLog[],
   ) => {
-    console.log("conversation model called");
-
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
       return {
         role: message.sender,
@@ -63,11 +61,9 @@ export class BaseChatBot {
       };
     });
 
-    let systemPrompt;
-
     const systemMessage = {
       role: "system",
-      content: systemPrompt,
+      content: this.renderSystemPrompt(),
     };
 
     messages.unshift(systemMessage);

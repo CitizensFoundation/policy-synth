@@ -3,17 +3,15 @@ const DEBUGGING = true;
 export class BaseChatBot {
     constructor(userQuestion, chatConversation, clientId, wsClients) {
         this.conversation = async (clientId, wsClients, chatLog) => {
-            console.log("conversation model called");
             let messages = chatLog.map((message) => {
                 return {
                     role: message.sender,
                     content: message.message,
                 };
             });
-            let systemPrompt;
             const systemMessage = {
                 role: "system",
-                content: systemPrompt,
+                content: this.renderSystemPrompt(),
             };
             messages.unshift(systemMessage);
             const openai = new OpenAI({

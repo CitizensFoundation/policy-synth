@@ -23,6 +23,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     wsEndpoint: string;
     ws: WebSocket;
     inputIsFocused: boolean;
+    onlyUseTextField: boolean;
     clusterId: number;
     userScrolled: boolean;
     communityId: number;
