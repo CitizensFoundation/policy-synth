@@ -120,7 +120,10 @@ export class LtpChatAssistant extends PsChatAssistant {
           (completedOptions.results.validationErrors &&
             completedOptions.results.validationErrors.length > 0)
         ) {
-          this.getSuggestionsFromValidation(completedOptions.name, completedOptions.results);
+          this.getSuggestionsFromValidation(
+            completedOptions.name,
+            completedOptions.results
+          );
         }
         if (
           completedOptions.results.isValid &&
@@ -283,7 +286,7 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
       userMessage += `Cause ${index + 1}: ${cause}\n`;
     });
 
-    userMessage+=`Expert Validation Results:\n`;
+    userMessage += `Expert Validation Results:\n`;
 
     userMessage += JSON.stringify(validationResults, null, 2);
 
@@ -311,21 +314,43 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
 
   renderChatInput() {
     return html`
-      <md-outlined-text-field
-        class="textInput"
-        .type="${this.chatLog.length > 1 ? 'text' : 'textarea'}"
-        hasTrailingIcon
-        id="chatInput"
-        rows="${this.chatLog.length > 1 ? '1' : '3'}"
-        @focus="${() => (this.inputIsFocused = true)}"
-        @blur="${() => (this.inputIsFocused = true)}"
-        @keyup="${(e: KeyboardEvent) => {
-          if (e.key === 'Enter' && this.chatLog.length > 1) {
-            this.sendChatMessage();
-          }
-        }}"
-        .label="${this.textInputLabel}"
-      >
+    ${
+      this.chatLog.length > 1
+        ? html`
+            <md-outlined-text-field
+              class="textInput"
+              type="text"
+              hasTrailingIcon
+              id="chatInput"
+              rows="${this.chatLog.length > 1 ? '1' : '3'}"
+              @focus="${() => (this.inputIsFocused = true)}"
+              @blur="${() => (this.inputIsFocused = true)}"
+              @keyup="${(e: KeyboardEvent) => {
+                if (e.key === 'Enter' && this.chatLog.length > 1) {
+                  this.sendChatMessage();
+                }
+              }}"
+              .label="${this.textInputLabel}"
+            >
+            </md-outlined-text-field>
+          `
+        : html`<md-outlined-text-field
+            class="textInput"
+            type="textarea"
+            hasTrailingIcon
+            id="chatInput"
+            rows="${this.chatLog.length > 1 ? '1' : '3'}"
+            @focus="${() => (this.inputIsFocused = true)}"
+            @blur="${() => (this.inputIsFocused = true)}"
+            @keyup="${(e: KeyboardEvent) => {
+              if (e.key === 'Enter' && this.chatLog.length > 1) {
+                this.sendChatMessage();
+              }
+            }}"
+            .label="${this.textInputLabel}"
+          ></md-outlined-text-field>`
+    }
+
         <md-icon
           class="sendIcon"
           @click="${this.sendChatMessage}"
@@ -343,7 +368,7 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
           <ltp-ai-chat-element
-            class="bot-chat-element"
+            class="chatElement bot-chat-element"
             .detectedLanguage="${this.language}"
             .message="${this.defaultInfoMessage}"
             type="info"
@@ -359,7 +384,7 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
                   @followup-question="${this.followUpQuestion}"
                   @validate-selected-causes="${this.validateSelectedChoices}"
                   .clusterId="${this.clusterId}"
-                  class="${chatElement.sender}-chat-element"
+                  class="chatElement ${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
                   .message="${chatElement.message}"
                   @scroll-down-enabled="${() => (this.userScrolled = false)}"
