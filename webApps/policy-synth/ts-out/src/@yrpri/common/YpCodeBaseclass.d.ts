@@ -1,12 +1,10 @@
 import { LitElement } from 'lit';
-import { YpAppUser } from '../yp-app/YpAppUser.js';
-import { CpsServerApi } from '../../base/CpsServerApi.js';
 declare global {
     interface Window {
         appGlobals: any;
-        appUser: YpAppUser;
+        appUser: any;
         appDialogs: any;
-        serverApi: CpsServerApi;
+        serverApi: any;
         app: any;
         locale: string;
         MSStream: any;
