@@ -17,6 +17,7 @@ export { PsAiChatElement } from './chatBot/ps-ai-chat-element';
 export { PsChatAssistant } from './chatBot/ps-chat-assistant';
 export { LtpAiChatElement } from './ltp/chat/ltp-ai-chat-element';
 export { LtpChatAssistant } from './ltp/chat/ltp-chat-assistant';
+export { LtpCurrentRealityTreeConnector } from './ltp/ltp-current-reality-tree-connector';
 export { LtpCurrentRealityTreeNode } from './ltp/ltp-current-reality-tree-node';
 export { LtpCurrentRealityTree } from './ltp/ltp-current-reality-tree';
 export { LtpManageCrt } from './ltp/ltp-manage-crt';

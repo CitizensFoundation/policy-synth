@@ -11,6 +11,8 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import { PsStageBase } from '../base/ps-stage-base.js';
 
 import './ltp-current-reality-tree-node.js';
+import "./ltp-current-reality-tree-connector.js";
+
 import { LtpServerApi } from './LtpServerApi.js';
 
 type Cell = dia.Element | dia.Link;

@@ -554,7 +554,7 @@ export class PsChatAssistant extends YpBaseElement {
           width: 650px;
         }
 
-        ps-ai-chat-element[thinking] {
+        .chatElement[thinking] {
           margin-top: 8px;
           margin-bottom: 0px;
         }
@@ -659,7 +659,7 @@ export class PsChatAssistant extends YpBaseElement {
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
           <ps-ai-chat-element
-            class="bot-chat-element"
+            class="chatElement bot-chat-element"
             .detectedLanguage="${this.language}"
             .message="${this.defaultInfoMessage}"
             type="info"
@@ -674,7 +674,7 @@ export class PsChatAssistant extends YpBaseElement {
                   chatElement.type === 'noStreaming'}"
                   @followup-question="${this.followUpQuestion}"
                   .clusterId="${this.clusterId}"
-                  class="${chatElement.sender}-chat-element"
+                  class="chatElement ${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
                   .message="${chatElement.message}"
                   @scroll-down-enabled="${() => (this.userScrolled = false)}"
