@@ -30,7 +30,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         this.currentFollowUpQuestions = '';
         this.programmaticScroll = false;
         this.scrollStart = 0;
-        this.defaultDevWsPort = 9292;
+        this.defaultDevWsPort = 8000;
         this.api = new BaseChatBotServerApi();
     }
     calcVH() {
@@ -595,6 +595,9 @@ __decorate([
 __decorate([
     property({ type: Number })
 ], PsChatAssistant.prototype, "scrollStart", void 0);
+__decorate([
+    property({ type: Number })
+], PsChatAssistant.prototype, "defaultDevWsPort", void 0);
 __decorate([
     query('#sendButton')
 ], PsChatAssistant.prototype, "sendButton", void 0);

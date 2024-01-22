@@ -70,6 +70,9 @@ export class PsChatAssistant extends YpBaseElement {
   @property({ type: Number })
   scrollStart: number = 0;
 
+  @property({ type: Number })
+  defaultDevWsPort = 8000;
+
   @query('#sendButton')
   sendButton?: MdFilledTonalButton;
 
@@ -87,8 +90,6 @@ export class PsChatAssistant extends YpBaseElement {
 
   api: BaseChatBotServerApi;
   heartbeatInterval: number | undefined;
-
-  defaultDevWsPort = 9292;
 
   constructor() {
     super();

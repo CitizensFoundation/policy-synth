@@ -6,12 +6,9 @@ import '@policysynth/webapp/cmp/chatBot/ps-chat-assistant.js';
 let SimpleChatBot = class SimpleChatBot extends YpBaseElement {
     render() {
         return html `
-      <ps-chat-assistant .textInputLabel="${this.t("What's your question?")}">
+      <ps-chat-assistant defaultDevWsPort="8000" .textInputLabel="${this.t("What's your question?")}">
       </ps-chat-assistant>
     `;
-    }
-    something() {
-        const a = this.$$("ps-chat-assistant");
     }
 };
 SimpleChatBot = __decorate([
