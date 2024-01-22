@@ -39,6 +39,9 @@ export class LtpChatAssistant extends PsChatAssistant {
   @property({ type: Boolean })
   lastChainCompletedAsValid = false;
 
+  @queryAll('ltp-ai-chat-element')
+  chatElements?: LtpAiChatElement[];
+
   @property({ type: Array })
   lastCausesToValidate: string[] | undefined;
 
@@ -47,6 +50,8 @@ export class LtpChatAssistant extends PsChatAssistant {
 
   api: LtpServerApi;
   heartbeatInterval: number | undefined;
+
+  defaultDevWsPort = 8000;
 
   constructor() {
     super();
@@ -60,6 +65,7 @@ export class LtpChatAssistant extends PsChatAssistant {
 
   addChatBotElement(data: PsAiChatWsMessage) {
     const lastElement = this.chatElements![this.chatElements!.length - 1];
+
     switch (data.type) {
       case 'hello_message':
         this.addToChatLogWithMessage(data);

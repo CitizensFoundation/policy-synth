@@ -30,6 +30,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         this.currentFollowUpQuestions = '';
         this.programmaticScroll = false;
         this.scrollStart = 0;
+        this.defaultDevWsPort = 9292;
         this.api = new BaseChatBotServerApi();
     }
     calcVH() {
@@ -76,7 +77,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         let wsEndpoint;
         if (window.location.hostname === 'localhost' ||
             window.location.hostname === '192.1.168') {
-            wsEndpoint = `ws://${window.location.hostname}:9292`;
+            wsEndpoint = `ws://${window.location.hostname}:${this.defaultDevWsPort}`;
         }
         else {
             wsEndpoint = `wss://${window.location.hostname}:443`;

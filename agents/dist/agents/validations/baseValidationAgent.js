@@ -62,6 +62,7 @@ export class PsBaseValidationAgent extends Base {
         try {
             result = await this.performExecute();
             console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`);
+            result.nextAgent = result.nextAgent || this.options.nextAgent;
         }
         catch (e) {
             //TODO: Send airbrake error
@@ -73,7 +74,6 @@ export class PsBaseValidationAgent extends Base {
                 nextAgent: this.options.nextAgent,
             };
         }
-        result.nextAgent = result.nextAgent || this.options.nextAgent;
         await this.afterExecute(result);
         return result;
     }
