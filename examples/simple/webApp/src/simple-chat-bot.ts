@@ -2,8 +2,8 @@ import { YpBaseElement } from '@policysynth/webapp';
 import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-import '@policysynth/webapp/src/chatBot/ps-chat-assistant.js';
-import { PsChatAssistant } from '@policysynth/webapp/src/chatBot/ps-chat-assistant.js';
+import '@policysynth/webapp/ts-out/src/chatBot/ps-chat-assistant.js';
+import { PsChatAssistant } from '@policysynth/webapp/ts-out/src/chatBot/ps-chat-assistant.js';
 
 @customElement('simple-chat-bot')
 export class SimpleChatBot extends YpBaseElement {

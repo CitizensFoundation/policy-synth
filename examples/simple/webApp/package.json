@@ -44,7 +44,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-replace": "^5.0.2",
     "@types/google.analytics": "0.0.42",
-    "@types/marked": "^6.0.0",
+    "@types/marked": "^4.0.8",
     "@types/sanitize-html": "^2.9.5",
     "@typescript-eslint/eslint-plugin": "^5.34.0",
     "@typescript-eslint/parser": "^5.34.0",
