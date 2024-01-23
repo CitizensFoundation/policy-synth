@@ -546,7 +546,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 @focus="${() => (this.inputIsFocused = true)}"
                 @blur="${() => (this.inputIsFocused = true)}"
                 @keyup="${(e) => {
-                if (e.key === 'Enter' && this.chatLog.length > 1) {
+                if (e.key === 'Enter') {
                     this.sendChatMessage();
                 }
             }}"
@@ -559,14 +559,9 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
               type="textarea"
               hasTrailingIcon
               id="chatInput"
-              rows="${this.chatLog.length > 1 ? '1' : '3'}"
+              rows="3"
               @focus="${() => (this.inputIsFocused = true)}"
               @blur="${() => (this.inputIsFocused = true)}"
-              @keyup="${(e) => {
-                if (e.key === 'Enter' && this.chatLog.length > 1) {
-                    this.sendChatMessage();
-                }
-            }}"
               .label="${this.textInputLabel}"
             ></md-outlined-text-field>`}
         <md-icon

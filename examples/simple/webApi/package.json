@@ -10,7 +10,7 @@
   "main": "dist/server.js",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.0.14"
+    "@policysynth/api": "^1.0.15"
   },
   "scripts": {
     "start": "nodemon -e ts dist/server.js",
