@@ -1,21 +1,45 @@
-import  {PolicySynthAgentBase} from '@policysynth/agents';
+import { PolicySynthAgentBase, IEngineConstants } from "@policysynth/agents";
+import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "langchain/schema";
 
 export class SearchQueriesGenerator extends PolicySynthAgentBase {
-  generateSearchQueriesPrompt: string;
+  systemPrompt: string;
+  userPrompt: string;
 
-  constructor(generateSearchQueriesPrompt: string) {
-    this.generateSearchQueriesPrompt = generateSearchQueriesPrompt;
+  constructor(
+    numberOfQueriesToGenerate: number,
+    question: string,
+    overRideSystemPrompt?: string,
+    overRideUserPrompt?: string
+  ) {
+    super();
+    this.systemPrompt =
+      overRideSystemPrompt ||
+      `
+      Given the question below, generate ${numberOfQueriesToGenerate} high quality search queries that would be useful for answering the question.
+    `;
+    this.userPrompt = overRideUserPrompt || `Research Question: ${question}`;
+
+    this.chat = new ChatOpenAI({
+      temperature: IEngineConstants.createSearchQueriesModel.temperature,
+      maxTokens: IEngineConstants.createSearchQueriesModel.maxOutputTokens,
+      modelName: IEngineConstants.createSearchQueriesModel.name,
+      verbose: IEngineConstants.createSearchQueriesModel.verbose,
+    });
   }
 
-  async generateSearchQueries() {
-    const searchQueries = await this.openaiClient.search.completions.create({
-      engine: "davinci",
-      prompt: this.generateSearchQueriesPrompt,
-      max_tokens: 4000,
-      temperature: 0.7,
-      stop: ["\n"],
-    });
+  async renderMessages() {
+    return [
+      new SystemMessage(this.systemPrompt),
+      new HumanMessage(this.userPrompt),
+    ];
+  }
 
-    return searchQueries;
+  async generateSearchQueries(): Promise<string[]> {
+    return await this.callLLM(
+      "create-search-queries",
+      IEngineConstants.createSearchQueriesModel,
+      await this.renderMessages()
+    );
   }
 }
