@@ -5,7 +5,7 @@ export declare class PsBaseChatBot {
     clientId: string;
     clientSocket: WebSocket;
     openaiClient: OpenAI;
-    constructor(chatLog: PsSimpleChatLog[], clientId: string, wsClients: Map<string, WebSocket>);
+    constructor(clientId: string, wsClients: Map<string, WebSocket>);
     renderSystemPrompt(): string;
     sendToClient(sender: string, message: string, type?: string): void;
     streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;

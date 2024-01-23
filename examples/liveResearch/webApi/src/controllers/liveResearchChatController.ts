@@ -12,9 +12,10 @@ export class LiveResearchChatController extends BaseController {
   }
 
   public async initializeRoutes() {
-    this.router.put(this.path+"/", this.simpleChat);
+    this.router.put(this.path+"/", this.liveResearchChat);
   }
-  simpleChat = async (req: express.Request, res: express.Response) => {
+
+  liveResearchChat = async (req: express.Request, res: express.Response) => {
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
 
@@ -29,7 +30,7 @@ export class LiveResearchChatController extends BaseController {
       res.sendStatus(500);
     }
 
-    console.log(`SimpleChatController for id ${wsClientId} initialized`);
+    console.log(`LiveResearchChatController for id ${wsClientId} initialized`);
 
     res.sendStatus(200);
   };

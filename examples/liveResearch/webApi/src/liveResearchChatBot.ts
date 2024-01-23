@@ -18,6 +18,15 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     }
   `;
 
+  constructor(
+    chatLog: PsSimpleChatLog[],
+    clientId: string,
+    wsClients: Map<string, WebSocket>
+  ) {
+    super(chatLog, clientId, wsClients);
+    console.log(`LiveResearchChatBot for id ${clientId} initialized`);
+  }
+
   sendAgentStart(name: string, hasNoStreaming = true) {
     const botMessage = {
       sender: "bot",
@@ -123,12 +132,15 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   }
 
   conversation = async (chatLog: PsSimpleChatLog[]) => {
+    console.log("In LIVE RESEARH conversation")
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
       return {
         role: message.sender,
         content: message.message,
       };
     });
+
+    console.log(`messages: ${JSON.stringify(messages, null, 2)}`);
 
     if (messages.length === 1) {
       this.doLiveResearch(messages[0].content);
