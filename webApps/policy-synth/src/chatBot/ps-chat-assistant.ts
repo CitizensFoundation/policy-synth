@@ -384,7 +384,7 @@ export class PsChatAssistant extends YpBaseElement {
         break;
       case 'agentStart':
       case 'validationAgentStart':
-        console.log('agentStart')
+        console.log('agentStart');
         if (lastElement) {
           lastElement.active = false;
         }
@@ -410,16 +410,27 @@ export class PsChatAssistant extends YpBaseElement {
         break;
       case 'agentCompleted':
       case 'validationAgentCompleted':
-        console.log('agentCompleted')
-        if (lastElement) {
-          lastElement.active = false;
-        } else {
-          console.error('No last element on agentCompleted');
-        }
-
+        console.log('agentCompleted');
         const completedOptions =
           data.message as unknown as PsAgentCompletedWsOptions;
 
+        if (lastElement) {
+          lastElement.active = false;
+          lastElement.message = completedOptions.name;
+          this.addToChatLogWithMessage(data, this.t('Thinking...'));
+          if (!this.chatLog[this.chatLog.length - 1].message)
+            this.chatLog[this.chatLog.length - 1].message = '';
+        } else {
+          console.error('No last element on agentCompleted');
+        }
+        break;
+      case 'agentUpdated':
+        console.log('agentUpdated');
+        if (lastElement) {
+          lastElement.updateMessage = data.message;
+        } else {
+          console.error('No last element on agentUpdated');
+        }
         break;
       case 'start':
         if (lastElement) {
@@ -688,7 +699,7 @@ export class PsChatAssistant extends YpBaseElement {
 
   reset() {
     this.chatLog = [];
-    this.ws.send('<|--reset-chat--|>');
+    this.requestUpdate();
   }
 
   toggleDarkMode() {

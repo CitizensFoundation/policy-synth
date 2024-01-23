@@ -7,9 +7,11 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 
 export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
   searchQuestion: string | undefined;
+  progressFunction: Function | undefined;
 
-  constructor() {
+  constructor(progressFunction: Function | undefined = undefined) {
     super(undefined as any, undefined as any);
+    this.progressFunction = progressFunction;
   }
 
   async voteOnPromptPair(
@@ -88,7 +90,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
       verbose: IEngineConstants.searchQueryRankingsModel.verbose,
     });
 
-    this.setupRankingPrompts(-1, queriesToRank, maxPrompts);
+    this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
     await this.performPairwiseRanking(-1);
     return this.getOrderedListOfItems(-1) as IEngineSearchResultItem[];
   }

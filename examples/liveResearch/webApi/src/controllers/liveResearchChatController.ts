@@ -12,19 +12,24 @@ export class LiveResearchChatController extends BaseController {
   }
 
   public async initializeRoutes() {
-    this.router.put(this.path+"/", this.liveResearchChat);
+    this.router.put(this.path + "/", this.liveResearchChat);
   }
 
   liveResearchChat = async (req: express.Request, res: express.Response) => {
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
+    const numberOfSelectQueries = req.body.numberOfSelectQueries;
+    const percentOfTopQueriesToSearch = req.body.percentOfTopQueriesToSearch;
+    const percentOfTopResultsToScan = req.body.percentOfTopResultsToScan;
 
     try {
-      const bot = new LiveResearchChatBot(
-        wsClientId,
-        this.wsClients
+      const bot = new LiveResearchChatBot(wsClientId, this.wsClients);
+      bot.researchConversation(
+        chatLog,
+        numberOfSelectQueries,
+        percentOfTopQueriesToSearch,
+        percentOfTopResultsToScan
       );
-      bot.conversation(chatLog);
     } catch (error) {
       console.log(error);
       res.sendStatus(500);

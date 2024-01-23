@@ -9,12 +9,21 @@ export class LiveResearchChatBot extends PsChatAssistant {
   @property({ type: Number })
   defaultDevWsPort = 5021;
 
+  @property({ type: Number })
+  numberOfSelectQueries = 5;
+
+  @property({ type: Number })
+  percentOfTopQueriesToSearch = 0.25;
+
+  @property({ type: Number })
+  percentOfTopResultsToScan = 0.25;
+
   serverApi: ResearchServerApi;
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this.defaultInfoMessage = this.t("I'm your helpful web research assistant")
-    this.textInputLabel = this.t("Please state your research question.");
+    this.defaultInfoMessage = this.t("I'm your helpful web research assistant");
+    this.textInputLabel = this.t('Please state your research question.');
     this.serverApi = new ResearchServerApi();
   }
 
@@ -50,7 +59,7 @@ export class LiveResearchChatBot extends PsChatAssistant {
         break;
       case 'agentStart':
       case 'validationAgentStart':
-        console.log('agentStart')
+        console.log('agentStart');
         if (lastElement) {
           lastElement.active = false;
         }
@@ -76,16 +85,27 @@ export class LiveResearchChatBot extends PsChatAssistant {
         break;
       case 'agentCompleted':
       case 'validationAgentCompleted':
-        console.log('agentCompleted')
-        if (lastElement) {
-          lastElement.active = false;
-        } else {
-          console.error('No last element on agentCompleted');
-        }
-
+        console.log('agentCompleted');
         const completedOptions =
           data.message as unknown as PsAgentCompletedWsOptions;
 
+        if (lastElement) {
+          lastElement.active = false;
+          lastElement.message = completedOptions.name;
+          this.addToChatLogWithMessage(data, this.t('Thinking...'));
+          if (!this.chatLog[this.chatLog.length - 1].message)
+            this.chatLog[this.chatLog.length - 1].message = '';
+        } else {
+          console.error('No last element on agentCompleted');
+        }
+        break;
+      case 'agentUpdated':
+        console.log('agentUpdated');
+        if (lastElement) {
+          lastElement.updateMessage = data.message;
+        } else {
+          console.error('No last element on agentUpdated');
+        }
         break;
       case 'start':
         if (lastElement) {
@@ -160,6 +180,12 @@ export class LiveResearchChatBot extends PsChatAssistant {
 
     this.addUserChatBotMessage(userMessage);
 
-    await this.serverApi.conversation(this.simplifiedChatLog, this.wsClientId);
+    await this.serverApi.conversation(
+      this.simplifiedChatLog,
+      this.wsClientId,
+      this.numberOfSelectQueries,
+      this.percentOfTopQueriesToSearch,
+      this.percentOfTopResultsToScan
+    );
   }
 }

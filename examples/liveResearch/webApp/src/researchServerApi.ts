@@ -1,4 +1,4 @@
-import { YpServerApi } from "@yrpri/webapp";
+import { YpServerApi } from '@yrpri/webapp';
 
 export class ResearchServerApi extends YpServerApi {
   constructor(urlPath: string = '/api') {
@@ -9,16 +9,23 @@ export class ResearchServerApi extends YpServerApi {
   public conversation(
     chatLog: PsSimpleChatLog[],
     wsClientId: string,
+    numberOfSelectQueries: number,
+    percentOfTopQueriesToSearch: number,
+    percentOfTopResultsToScan: number
   ): Promise<void> {
-
     return this.fetchWrapper(
       this.baseUrlPath + `/live_research_chat/`,
       {
         method: 'PUT',
-        body: JSON.stringify({ wsClientId, chatLog: chatLog }),
+        body: JSON.stringify({
+          wsClientId,
+          chatLog: chatLog,
+          numberOfSelectQueries,
+          percentOfTopQueriesToSearch,
+          percentOfTopResultsToScan,
+        }),
       },
       false
     ) as Promise<void>;
   }
-
 }
