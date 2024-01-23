@@ -27,6 +27,8 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
   KFactors: Record<number, Record<number, number>> = {};
   eloRatings: Record<number, Record<number, number>> = {};
 
+  progressFunction: Function | undefined = undefined;
+
   fisherYatesShuffle(array: any[]) {
     if (array && array.length > 0) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -49,8 +51,11 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
       | string[]
       | IEngineProCon[]
       | IEngineAffectedEntity[],
-    maxPrompts: number | undefined = undefined
+    maxPrompts: number | undefined = undefined,
+    updateFunction: Function | undefined = undefined
   ) {
+    this.progressFunction = updateFunction;
+
     this.logger.info(
       `Item count for sub-problem ${subProblemIndex}: ${allItems.length}`
     );
@@ -207,6 +212,9 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
         this.logger.info(
           `Prompt ${p + 1} of ${this.prompts[subProblemIndex].length}`
         );
+        if (this.progressFunction) {
+          this.progressFunction(`${p + 1}/${this.prompts[subProblemIndex].length}`)
+        }
         const promptPair = this.prompts[subProblemIndex][p];
         this.logger.debug(`Prompt pair: ${promptPair}`);
         const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(

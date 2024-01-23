@@ -6,8 +6,11 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
 export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
-  constructor() {
+  progressFunction: Function | undefined;
+
+  constructor(progressFunction: Function | undefined = undefined) {
     super(undefined as any, undefined as any);
+    this.progressFunction = progressFunction;
   }
 
   searchQuestion: string | undefined;
