@@ -11,7 +11,7 @@
   "type": "module",
   "dependencies": {
     "@langchain/openai": "^0.0.12",
-    "@policysynth/api": "^1.0.18"
+    "@policysynth/api": "^1.0.19"
   },
   "scripts": {
     "start": "nodemon -e ts dist/server.js",

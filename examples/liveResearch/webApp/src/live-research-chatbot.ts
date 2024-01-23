@@ -13,6 +13,7 @@ export class LiveResearchChatBot extends PsChatAssistant {
 
   override connectedCallback(): void {
     super.connectedCallback();
+    this.defaultInfoMessage = this.t("I'm your helpful web research assistant")
     this.textInputLabel = this.t("Please state your research question.");
     this.serverApi = new ResearchServerApi();
   }
@@ -34,8 +35,6 @@ export class LiveResearchChatBot extends PsChatAssistant {
     super.sendChatMessage();
 
     this.addUserChatBotMessage(userMessage);
-
-    this.addThinkingChatBotMessage();
 
     await this.serverApi.conversation(this.simplifiedChatLog, this.wsClientId);
   }
