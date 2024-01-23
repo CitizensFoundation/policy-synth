@@ -20,5 +20,4 @@ export class SimpleChatServerApi extends YpServerApi {
       false
     ) as Promise<void>;
   }
-
 }

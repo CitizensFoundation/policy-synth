@@ -1,69 +1,41 @@
-# ioredis
+# RedisProjectMemoryManager
 
-Brief description of the ioredis import, which is a robust, performance-focused, and full-featured Redis client for Node.js.
-
-# fs
-
-Brief description of the fs import, which provides an API for interacting with the file system in a manner closely modeled around standard POSIX functions.
-
-# redis
-
-Instance of ioredis client.
+This class is responsible for managing project memory data in a Redis database. It connects to Redis, retrieves and updates project memory data based on a given project ID.
 
 ## Properties
 
-| Name   | Type   | Description               |
-|--------|--------|---------------------------|
-| redis  | ioredis.Redis | Instance of ioredis connected to Redis server. |
-
-# projectId
-
-The project identifier obtained from the command line arguments.
-
-## Properties
-
-| Name       | Type   | Description               |
-|------------|--------|---------------------------|
-| projectId  | string | The project ID parsed from command line arguments. |
-
-# loadProject
-
-Function to load a project's data from Redis and update it.
+No properties are documented for this class.
 
 ## Methods
 
-| Name        | Parameters | Return Type | Description                 |
-|-------------|------------|-------------|-----------------------------|
-| loadProject | -          | Promise<void> | Loads and updates project data from Redis. |
+| Name         | Parameters        | Return Type | Description                                      |
+|--------------|-------------------|-------------|--------------------------------------------------|
+| loadProject  |                   | Promise<void> | Loads the project data from Redis, updates it, and saves it back to Redis. |
 
 ## Examples
 
 ```typescript
-// Example usage of loadProject function
+import ioredis from 'ioredis';
+
+// Assuming environment variable REDIS_MEMORY_URL is set or defaults to 'redis://localhost:6379'
+const redis = new ioredis.default();
+
+const projectId = 'your_project_id_here'; // Replace with your actual project ID
+
+const loadProject = async (): Promise<void> => {
+  if (projectId) {
+    const output = await redis.get(`st_mem:${projectId}:id`);
+    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+    memory.subProblems[4].imageUrl = undefined;
+    await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memory));
+    process.exit(0);
+  } else {
+    console.log('No project id provided - delete sub problem image');
+    process.exit(1);
+  }
+};
+
 loadProject().catch(console.error);
 ```
 
-# IEngineInnovationMemoryData
-
-Interface representing the structure of the memory data for a project.
-
-## Properties
-
-| Name          | Type   | Description               |
-|---------------|--------|---------------------------|
-| subProblems   | Array<{ imageUrl: string | undefined }> | Array of sub-problems with optional image URLs. |
-
-## Examples
-
-```typescript
-// Example of IEngineInnovationMemoryData usage
-const memory: IEngineInnovationMemoryData = {
-  subProblems: [
-    { imageUrl: 'http://example.com/image1.png' },
-    // ... other sub-problems
-    { imageUrl: undefined }
-  ]
-};
-```
-
-(Note: The actual TypeScript interface `IEngineInnovationMemoryData` is not fully detailed here as the provided code snippet does not include its definition. The properties and types should be adjusted according to the actual interface definition.)
+Please note that the example assumes that the `IEngineInnovationMemoryData` type is already defined in your codebase and that the Redis server is accessible through the provided URL. The `projectId` should be replaced with the actual ID of the project you wish to manage in Redis.

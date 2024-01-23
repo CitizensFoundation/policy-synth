@@ -1,64 +1,49 @@
 # EvidenceWebPageVectorStore
 
-The `EvidenceWebPageVectorStore` class is responsible for interacting with a Weaviate instance to manage the schema and data for evidence web pages. It provides methods to add, update, delete, and query evidence web pages in the Weaviate database.
+The `EvidenceWebPageVectorStore` class extends the `PolicySynthAgentBase` class and provides methods for interacting with a Weaviate instance to manage evidence web pages. It includes methods for adding schemas, manipulating data, and querying evidence web pages.
 
 ## Properties
 
-| Name   | Type            | Description                                      |
-|--------|-----------------|--------------------------------------------------|
-| client | WeaviateClient  | Static Weaviate client instance.                 |
+| Name   | Type            | Description |
+|--------|-----------------|-------------|
+| client | WeaviateClient  | A static instance of `WeaviateClient` configured with environment variables for the scheme and host. |
 
 ## Methods
 
-| Name                      | Parameters                                             | Return Type | Description                                                                 |
-|---------------------------|--------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| addSchema                 |                                                        | Promise     | Reads a schema from a file and adds it to the Weaviate instance.             |
-| showScheme                |                                                        | Promise     | Retrieves and logs the current schema from the Weaviate instance.            |
-| deleteScheme              |                                                        | Promise     | Deletes the "EvidenceWebPage" class from the Weaviate schema.                |
-| testQuery                 |                                                        | Promise     | Performs a test query on the "EvidenceWebPage" class.                        |
-| postWebPage               | webPageAnalysis: PSEvidenceRawWebPageData              | Promise     | Posts a new web page analysis to the Weaviate instance.                      |
-| updateWebPage             | id: string, webPageAnalysis: PSEvidenceRawWebPageData  | Promise     | Updates an existing web page analysis in the Weaviate instance.              |
-| updateWebSolutions        | id: string, evidenceType: string, evidence: string[], quiet: boolean | Promise | Updates evidence solutions for a web page.                                   |
-| saveWebPageMetadata       | id: string, metadata: PSWebPageMetadata, quiet: boolean | Promise    | Saves metadata for a web page.                                               |
-| updateRefinedAnalysis     | id: string, refinedEvidence: PSRefinedPolicyEvidence, quiet: boolean | Promise | Updates refined evidence analysis for a web page.                            |
-| updateScores              | id: string, scores: PSPolicyRating, quiet: boolean     | Promise     | Updates scores for a web page.                                               |
-| getWebPage                | id: string                                             | Promise     | Retrieves a web page analysis by ID.                                         |
-| getTopPagesForProcessing  | groupId: number, subProblemIndex: number \| undefined \| null, policyTitle: string \| undefined, searchType: string \| undefined, limit: number | Promise | Retrieves top pages for processing based on various filters.                  |
-| getTopWebPagesForProcessing | groupId: number, subProblemIndex: number \| undefined \| null, searchType: string \| undefined, policyTitle: string \| undefined, limit: number, offset: number, evidenceCountLimit: number \| undefined, onlyRefined: boolean | Promise | Retrieves top web pages for processing with additional filters and pagination. |
-| getWebPagesForProcessing  | groupId: number, subProblemIndex: number \| undefined \| null, searchType: string \| undefined, policyTitle: string \| undefined, limit: number, offset: number, evidenceCountLimit: number \| undefined | Promise | Retrieves web pages for processing with filters and pagination.               |
-| webPageExist              | groupId: number, url: string, searchType: PSEvidenceWebPageTypes, subProblemIndex: number \| undefined, entityIndex: number \| undefined | Promise | Checks if a web page exists in the Weaviate instance.                        |
-| searchWebPages            | query: string, groupId: number \| undefined, subProblemIndex: number \| undefined, searchType: PSEvidenceWebPageTypes \| undefined | Promise | Searches for web pages based on a query and filters.                          |
+| Name                         | Parameters                                             | Return Type | Description |
+|------------------------------|--------------------------------------------------------|-------------|-------------|
+| addSchema                    |                                                        | Promise<void> | Reads a JSON schema from a file and adds it to the Weaviate schema. |
+| showScheme                   |                                                        | Promise<void> | Retrieves and logs the current schema from Weaviate. |
+| deleteScheme                 |                                                        | Promise<void> | Deletes the "EvidenceWebPage" class from the Weaviate schema. |
+| testQuery                    |                                                        | Promise<any> | Executes a test query against Weaviate and logs the results. |
+| postWebPage                  | webPageAnalysis: PSEvidenceRawWebPageData              | Promise<any> | Posts a web page analysis to Weaviate. |
+| updateWebPage                | id: string, webPageAnalysis: PSEvidenceRawWebPageData  | Promise<any> | Updates a web page analysis in Weaviate by ID. |
+| updateWebSolutions           | id: string, evidenceType: string, evidence: string[], quiet: boolean | Promise<any> | Merges new evidence into an existing web page in Weaviate. |
+| saveWebPageMetadata          | id: string, metadata: PSWebPageMetadata, quiet: boolean | Promise<any> | Merges new metadata into an existing web page in Weaviate. |
+| updateRefinedAnalysis        | id: string, refinedEvidence: PSRefinedPolicyEvidence, quiet: boolean | Promise<any> | Merges refined evidence into an existing web page in Weaviate. |
+| updateScores                 | id: string, scores: PSPolicyRating, quiet: boolean    | Promise<any> | Updates the scores of an existing web page in Weaviate. |
+| getWebPage                   | id: string                                             | Promise<PSEvidenceRawWebPageData> | Retrieves a web page from Weaviate by ID. |
+| getTopPagesForProcessing     | groupId: number, subProblemIndex: number \| undefined \| null, policyTitle: string \| undefined, searchType: string \| undefined, limit: number | Promise<PSEvidenceWebPageGraphQlResults> | Retrieves top pages for processing based on various filters and sorting by total score. |
+| getTopWebPagesForProcessing  | groupId: number, subProblemIndex: number \| undefined \| null, searchType: string \| undefined, policyTitle: string \| undefined, limit: number, offset: number, evidenceCountLimit: number \| undefined, onlyRefined: boolean | Promise<PSEvidenceWebPageGraphQlResults> | Retrieves top web pages for processing with additional filters and pagination. |
+| getWebPagesForProcessing     | groupId: number, subProblemIndex: number \| undefined \| null, searchType: string \| undefined, policyTitle: string \| undefined, limit: number, offset: number, evidenceCountLimit: number \| undefined | Promise<PSEvidenceWebPageGraphQlResults> | Retrieves web pages for processing with filters and pagination. |
+| webPageExist                 | groupId: number, url: string, searchType: PSEvidenceWebPageTypes, subProblemIndex: number \| undefined, entityIndex: number \| undefined | Promise<Boolean> | Checks if a web page exists in Weaviate based on various criteria. |
+| searchWebPages               | query: string, groupId: number \| undefined, subProblemIndex: number \| undefined, searchType: PSEvidenceWebPageTypes \| undefined | Promise<PSEvidenceWebPageGraphQlResults> | Searches for web pages in Weaviate using a text query and filters. |
 
 ## Examples
 
 ```typescript
-// Example usage of adding a schema to the Weaviate instance
+// Example usage of adding a schema to Weaviate
 const evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
 await evidenceWebPageVectorStore.addSchema();
-```
 
-```typescript
-// Example usage of posting a new web page analysis
-const webPageAnalysis = {
-  // ... web page analysis data
-};
+// Example usage of posting a web page analysis to Weaviate
+const webPageAnalysis = { /* ... */ };
 await evidenceWebPageVectorStore.postWebPage(webPageAnalysis);
+
+// Example usage of updating scores for a web page in Weaviate
+const id = "some-id";
+const scores = { evidenceQualityScore: 0.9, /* ... */ };
+await evidenceWebPageVectorStore.updateScores(id, scores);
 ```
 
-```typescript
-// Example usage of updating scores for a web page
-const scores = {
-  evidenceQualityScore: 0.9,
-  evidenceRelevanceToPolicyProposalScore: 0.8,
-  // ... other scores
-};
-await evidenceWebPageVectorStore.updateScores("webPageId", scores);
-```
-
-```typescript
-// Example usage of checking if a web page exists
-const exists = await evidenceWebPageVectorStore.webPageExist(1, "http://example.com", "Research", undefined, undefined);
-console.log(exists); // Outputs: true or false
-```
-
-Please note that the actual implementation of `PSEvidenceRawWebPageData`, `PSWebPageMetadata`, `PSRefinedPolicyEvidence`, `PSPolicyRating`, `PSEvidenceWebPageGraphQlResults`, `PSEvidenceWebPageTypes`, `IEngineWebPageGraphQlSingleResult`, `IEngineWebPageAnalysisData`, and `IEngineConstants` are not included in the documentation as they are not part of the main class.
+Note: The actual types for parameters such as `PSEvidenceRawWebPageData`, `PSWebPageMetadata`, `PSRefinedPolicyEvidence`, `PSPolicyRating`, and `PSEvidenceWebPageGraphQlResults` are not defined within the provided code and should be documented separately based on their definitions. Additionally, the `IEngineWebPageGraphQlSingleResult` and `IEngineWebPageAnalysisData` types used in the `getWebPage` and `webPageExist` methods respectively are also not defined in the provided code.

@@ -1,23 +1,30 @@
 # BingSearchApi
 
-The `BingSearchApi` class is responsible for performing searches using the Bing Search API and caching the results in Redis. It extends the `Base` class and requires the `AZURE_BING_SEARCH_KEY` environment variable to be set.
+The `BingSearchApi` class extends the `PolicySynthAgentBase` class and is responsible for searching queries using the Bing Search API. It requires an Azure Bing Search API key to be set in the environment variables. The class also implements caching of search results using Redis.
 
 ## Properties
 
 | Name              | Type   | Description                                   |
 |-------------------|--------|-----------------------------------------------|
-| SUBSCRIPTION_KEY  | string \| undefined | The subscription key for the Bing Search API, obtained from the environment variable. |
+| SUBSCRIPTION_KEY  | string \| undefined | The subscription key for the Bing Search API, obtained from the environment variable `AZURE_BING_SEARCH_KEY`. |
 
 ## Methods
 
-| Name    | Parameters        | Return Type                         | Description                                                                 |
-|---------|-------------------|-------------------------------------|-----------------------------------------------------------------------------|
-| search  | query: string     | Promise<IEngineSearchResultItem[]>  | Performs a search with the given query string and returns search results.   |
+| Name    | Parameters       | Return Type                        | Description                                                                                   |
+|---------|------------------|------------------------------------|-----------------------------------------------------------------------------------------------|
+| search  | query: string    | Promise<IEngineSearchResultItem[]> | Performs a search using the Bing Search API with the provided query and returns search results. |
 
 ## Examples
 
 ```typescript
-// Example usage of BingSearchApi
+// Example usage of the BingSearchApi class
 const bingSearchApi = new BingSearchApi();
-const searchResults = await bingSearchApi.search('example query');
+
+bingSearchApi.search("example query")
+  .then(results => {
+    console.log(results);
+  })
+  .catch(error => {
+    console.error(error);
+  });
 ```

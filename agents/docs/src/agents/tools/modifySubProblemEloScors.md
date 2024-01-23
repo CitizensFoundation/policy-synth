@@ -1,63 +1,50 @@
-# IEngineInnovationMemoryData
+# RedisProjectMemoryManager
 
-This interface represents the structure of the memory data for an engine innovation project.
-
-## Properties
-
-| Name          | Type                                  | Description               |
-|---------------|---------------------------------------|---------------------------|
-| subProblems   | ISubProblemData[]                     | Array of sub problem data.|
-
-## ISubProblemData
-
-This interface represents the structure of the sub problem data within an engine innovation project.
+This class is responsible for managing project memory data in a Redis database. It connects to Redis, retrieves and updates project memory data based on a given project ID.
 
 ## Properties
 
-| Name          | Type                                  | Description               |
-|---------------|---------------------------------------|---------------------------|
-| eloRating     | number \| undefined                   | The ELO rating of the sub problem.|
+No public properties are documented for this class.
 
 ## Methods
 
-No methods are defined for these interfaces.
+| Name         | Parameters            | Return Type | Description                                      |
+|--------------|-----------------------|-------------|--------------------------------------------------|
+| loadProject  | -                     | Promise<void> | Loads the project data, updates sub problem elo ratings, and saves the updated data back to Redis. |
 
 ## Examples
 
 ```typescript
-// Example usage of the IEngineInnovationMemoryData interface
-const memory: IEngineInnovationMemoryData = {
-  subProblems: [
-    {
-      eloRating: 1080
-    },
-    {
-      eloRating: 1070
-    }
-  ]
+import ioredis from 'ioredis';
+
+// Assuming environment variable REDIS_MEMORY_URL is set or defaulting to 'redis://localhost:6379'
+const redis = new ioredis.default();
+
+// Example usage of the RedisProjectMemoryManager
+const projectId = 'your_project_id_here';
+
+const loadProject = async (): Promise<void> => {
+  if (projectId) {
+    const output = await redis.get(`st_mem:${projectId}:id`);
+    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+
+    // Update eloRating for specific subProblems
+    memory.subProblems[11].eloRating = 1080;
+    memory.subProblems[18].eloRating = 1070;
+
+    // Reorder sub problems by eloRating
+    memory.subProblems.sort((a, b) => {
+      return b.eloRating! - a.eloRating!;
+    });
+
+    // Save the updated memory back to Redis
+    await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memory));
+  } else {
+    console.log('No project id provided - modify sub problem elo scores');
+  }
 };
 
-// Example of sorting subProblems by eloRating
-memory.subProblems.sort((a, b) => {
-  return (b.eloRating || 0) - (a.eloRating || 0);
-});
-```
-
-# loadProject
-
-This function loads a project's memory data from Redis, updates the ELO ratings for specific sub problems, sorts the sub problems by their ELO ratings, and then saves the updated memory data back to Redis.
-
-## Methods
-
-| Name          | Parameters        | Return Type | Description                 |
-|---------------|-------------------|-------------|-----------------------------|
-| loadProject   | -                 | Promise<void> | Loads and updates project memory data. |
-
-## Examples
-
-```typescript
-// Example usage of the loadProject function
 loadProject().catch(console.error);
 ```
 
-Note: The actual TypeScript file provided does not include the explicit definitions for `IEngineInnovationMemoryData` or `ISubProblemData`. The properties and methods for these interfaces are assumed based on the usage within the provided code snippet. If these interfaces are defined elsewhere, the documentation should be updated accordingly to reflect their actual structure.
+Please note that the actual class name `RedisProjectMemoryManager` is inferred as it is not explicitly defined in the provided code snippet. The example assumes that the environment variable `REDIS_MEMORY_URL` is set, otherwise it defaults to connecting to Redis at 'redis://localhost:6379'. The `projectId` should be replaced with the actual project ID when using this code.
