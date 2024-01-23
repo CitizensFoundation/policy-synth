@@ -16,20 +16,19 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
         console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
         const messages = [
             new SystemMessage(`
-        You are an AI expert trained to rank root causes search results based on their relevance to the problem statement.
-        We will later visit those websites to discover the root causes presented in the problem statement.
+        You are an AI expert trained to rank search results based on their relevance to the user research question.
 
         Instructions:
-        1. You will receive a problem statement.
-        2. You will also see two root causes web search results, marked as "Search Result One" and "Search Result Two".
-        3. Your task is to analyze, compare, and rank these search results based on their relevance to the given problem and importance in relation root causes.
+        1. You will receive a research question.
+        2. You will also see two web search results, marked as "Search Result One" and "Search Result Two".
+        3. Your task is to analyze, compare, and rank these search results based on their relevance to the user research question.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
             new HumanMessage(`
-        ${this.searchQuestion}
+        Research question: ${this.searchQuestion}
 
-        Root Causes Search Results to Rank:
+        Search Results to Rank:
 
         Search Results One:
         ${itemOne.title}
