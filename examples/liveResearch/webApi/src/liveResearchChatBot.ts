@@ -6,6 +6,26 @@ const DEBUGGING = true;
 
 import { PsBaseChatBot } from "@policysynth/api";
 
+class SearchQueriesGenerator {
+  generateSearchQueriesPrompt: string;
+
+  constructor(generateSearchQueriesPrompt: string) {
+    this.generateSearchQueriesPrompt = generateSearchQueriesPrompt;
+  }
+
+  async generateSearchQueries() {
+    const searchQueries = await this.openaiClient.search.completions.create({
+      engine: "davinci",
+      prompt: this.generateSearchQueriesPrompt,
+      max_tokens: 4000,
+      temperature: 0.7,
+      stop: ["\n"],
+    });
+
+    return searchQueries;
+  }
+}
+
 export class LiveResearchChatBot extends PsBaseChatBot {
   jsonWebPageResearchSchema = `
     {
@@ -15,9 +35,66 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       authors: string,
       relevanceScore: number,
     }
-  `
+  `;
 
   async doLiveResearch(question: string) {
+    const numberOfQueriesToGenerate = 10;
+    const percentOfQueriesToSearch = 0.5;
+    const percentOfResultsToScan = 0.5;
+
+    const generateSearchQueriesPrompt = `
+      Given the question below, generate a list of ${numberOfQueriesToGenerate} search queries that would be useful for answering the question.
+
+      Question: ${question}
+    `;
+
+    const searchQueriesGenerator = new SearchQueriesGenerator(generateSearchQueriesPrompt);
+    const searchQueries = await searchQueriesGenerator.generateSearchQueries();
+
+    const searchQueriesRanker = new SearchQueriesRanker(searchQueries, numberOfQueriesToGenerate, percentOfQueriesToSearch);
+    const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries();
+
+    const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch));
+
+    const webSearch = new WebSearch(queriesToSearch);
+    const searchResults = await webSearch.search();
+
+    const searchResultsRanker = new SearchResultsRanker(searchResults);
+    const rankedSearchResults = await searchResultsRanker.rankSearchResults();
+
+    const searchResultsToScan = rankedSearchResults.slice(0, Math.floor(rankedSearchResults.length * percentOfResultsToScan));
+
+    const webPageResearch = new WebPageResearch(searchResultsToScan, this.jsonWebPageResearchSchema);
+    const research = await webPageResearch.research();
+
+    const summarySystemPrompt = `Please review the web research below and give the user a full report.
+      Analyze the results step by step and output your results in markdown.
+    `
+
+    const summaryUserPrompt = `
+      Results from the web research:
+      ${JSON.stringify(research, null, 2)}
+    `;
+
+    const messages: any[] = [
+      {
+      role: "system",
+      content: summarySystemPrompt,
+    },
+    {
+      role: "user",
+      content: summaryUserPrompt,
+    }]
+
+    const stream = await this.openaiClient.chat.completions.create({
+      model: "gpt-4-1106-preview",
+      messages,
+      max_tokens: 4000,
+      temperature: 0.45,
+      stream: true,
+    });
+
+    this.streamWebSocketResponses(stream);
   }
 
   conversation = async (chatLog: PsSimpleChatLog[]) => {
@@ -38,10 +115,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       messages.unshift(systemMessage);
 
-      const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-
       if (DEBUGGING) {
         console.log("=====================");
         console.log(JSON.stringify(messages, null, 2));
@@ -56,13 +129,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
         stream: true,
       });
 
-      if (this.wsClients.get(this.clientId)) {
-        this.streamWebSocketResponses(stream);
-      } else {
-        console.error(`WS Client ${this.clientId} not found`);
-        // TODO: Implement this when available
-        //stream.cancel();
-      }
+      this.streamWebSocketResponses(stream);
     }
   };
 }

@@ -249,6 +249,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 }
                 this.addToChatLogWithMessage(data, data.message);
                 break;
+            case 'agentStart':
             case 'validationAgentStart':
                 if (lastElement) {
                     lastElement.active = false;
@@ -270,6 +271,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 }
                 this.requestUpdate();
                 break;
+            case 'agentCompleted':
             case 'validationAgentCompleted':
                 if (lastElement) {
                     lastElement.active = false;
