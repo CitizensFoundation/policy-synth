@@ -1,53 +1,51 @@
 # TreeController
 
-TreeController is a controller class that manages operations related to the manipulation of tree data structures within an application. It provides endpoints for creating, updating, retrieving, and deleting nodes in a tree, as well as running validation chains and refining causes.
+TreeController is a controller class that manages operations related to the manipulation of tree data structures, particularly for the purpose of representing current reality trees (CRTs). It extends the BaseController and interacts with a Redis database for persistence.
 
 ## Properties
 
-| Name   | Type                      | Description                                   |
-|--------|---------------------------|-----------------------------------------------|
-| path   | string                    | The base path for the controller's endpoints. |
+| Name          | Type                         | Description               |
+|---------------|------------------------------|---------------------------|
+| path          | string                       | The base path for the controller's routes. |
 
 ## Methods
 
-| Name                   | Parameters                                  | Return Type | Description                                                                 |
-|------------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| initializeRoutes       | -                                           | void        | Initializes the routes for the controller.                                  |
-| updateNode             | req: express.Request, res: express.Response | Promise     | Updates a node in the tree.                                                 |
-| updateNodeChildren     | req: express.Request, res: express.Response | Promise     | Updates the children of a node in the tree.                                 |
-| deleteNode             | req: express.Request, res: express.Response | Promise     | Deletes a node from the tree.                                               |
-| runValidationChain     | req: express.Request, res: express.Response | Promise     | Runs a validation chain for a node in the tree.                             |
-| getRefinedCauses       | req: express.Request, res: express.Response | Promise     | Retrieves refined causes for a node in the tree.                            |
-| addDirectCauses        | req: express.Request, res: express.Response | Promise     | Adds direct causes to a node in the tree.                                   |
-| getTree                | req: express.Request, res: express.Response | Promise     | Retrieves the tree data for a given ID.                                     |
-| addNode                | req: express.Request, res: express.Response | Promise     | Adds a new node to the tree.                                                |
-| reviewTreeConfiguration | req: express.Request, res: express.Response | Promise     | Reviews the configuration of a tree.                                        |
-| createTree             | req: express.Request, res: express.Response | Promise     | Creates a new tree with the given context and undesirable effects.          |
-| createDirectCauses     | req: express.Request, res: express.Response | Promise     | Creates direct causes for a node in the tree.                               |
-| getData                | key: string \| number                       | Promise     | Retrieves data from the storage by key.                                     |
-| setData                | key: string \| number, value: string        | Promise     | Sets data in the storage by key.                                            |
-| createData             | value: string \| any                        | Promise     | Creates a new data entry in the storage and returns the generated key.      |
-| deleteData             | key: string \| number                       | Promise     | Deletes data from the storage by key.                                       |
-| getParentNodes         | nodes: LtpCurrentRealityTreeDataNode[], childId: string | LtpCurrentRealityTreeDataNode[] | Retrieves the parent nodes of a given child node. |
-| findNearestUde         | nodes: LtpCurrentRealityTreeDataNode[], nodeId: string | LtpCurrentRealityTreeDataNode \| null | Finds the nearest UDE node to the given node ID. |
-| findParentNode         | nodes: LtpCurrentRealityTreeDataNode[], childId: string | LtpCurrentRealityTreeDataNode \| null | Finds the parent node of the given child node ID. |
-| isParentNode           | node: LtpCurrentRealityTreeDataNode, childId: string | boolean | Checks if the given node is a parent of the child node with the specified ID. |
-| findNode               | nodes: LtpCurrentRealityTreeDataNode[], id: string | LtpCurrentRealityTreeDataNode \| null | Finds a node in the tree by its ID. |
+| Name                  | Parameters                                  | Return Type | Description                 |
+|-----------------------|---------------------------------------------|-------------|-----------------------------|
+| initializeRoutes      | -                                           | void        | Initializes the routes for the controller. |
+| updateNode            | req: express.Request, res: express.Response | Promise<void> | Updates a node in the tree. |
+| updateNodeChildren    | req: express.Request, res: express.Response | Promise<void> | Updates the children of a node in the tree. |
+| deleteNode            | req: express.Request, res: express.Response | Promise<void> | Deletes a node from the tree. |
+| runValidationChain    | req: express.Request, res: express.Response | Promise<void> | Runs a validation chain on a node. |
+| getRefinedCauses      | req: express.Request, res: express.Response | Promise<void> | Retrieves refined causes for a node. |
+| addDirectCauses       | req: express.Request, res: express.Response | Promise<void> | Adds direct causes to a node. |
+| getTree               | req: express.Request, res: express.Response | Promise<void> | Retrieves a tree by its ID. |
+| addNode               | req: express.Request, res: express.Response | Promise<void> | Adds a new node to the tree. |
+| reviewTreeConfiguration| req: express.Request, res: express.Response | Promise<void> | Reviews the configuration of a tree. |
+| createTree            | req: express.Request, res: express.Response | Promise<void> | Creates a new tree. |
+| createDirectCauses    | req: express.Request, res: express.Response | Promise<void> | Creates direct causes for a node. |
+| getData               | key: string \| number                       | Promise<LtpCurrentRealityTreeData \| null> | Retrieves data from the Redis database. |
+| setData               | key: string \| number, value: string       | Promise<void> | Sets data in the Redis database. |
+| createData            | value: string \| any                        | Promise<number \| string> | Creates a new data entry in the Redis database. |
+| deleteData            | key: string \| number                       | Promise<void> | Deletes data from the Redis database. |
+| getParentNodes        | nodes: LtpCurrentRealityTreeDataNode[], childId: string | LtpCurrentRealityTreeDataNode[] | Retrieves the parent nodes of a given child node. |
+| findNearestUde        | nodes: LtpCurrentRealityTreeDataNode[], nodeId: string | LtpCurrentRealityTreeDataNode \| null | Finds the nearest UDE (Undesirable Effect) node to a given node. |
+| findParentNode        | nodes: LtpCurrentRealityTreeDataNode[], childId: string | LtpCurrentRealityTreeDataNode \| null | Finds the parent node of a given child node. |
+| isParentNode          | node: LtpCurrentRealityTreeDataNode, childId: string | boolean | Checks if a node is the parent of a given child node. |
+| findNode              | nodes: LtpCurrentRealityTreeDataNode[], id: string | LtpCurrentRealityTreeDataNode \| null | Finds a node by its ID. |
 
 ## Routes
 
-| Method | Route                                    | Action                     |
-|--------|------------------------------------------|----------------------------|
-| GET    | /api/crt/:id                            | Retrieves a tree by ID.    |
-| POST   | /api/crt                                | Creates a new tree.        |
-| POST   | /api/crt/:id/createDirectCauses         | Creates direct causes.     |
-| POST   | /api/crt/:id/addDirectCauses            | Adds direct causes.        |
-| POST   | /api/crt/:id/getRefinedCauses           | Retrieves refined causes.  |
-| POST   | /api/crt/:id/runValidationChain         | Runs a validation chain.   |
-| PUT    | /api/crt/reviewConfiguration            | Reviews tree configuration.|
-| PUT    | /api/crt/:id/updateChildren             | Updates node children.     |
-| DELETE | /api/crt/:id                            | Deletes a node.            |
-| PUT    | /api/crt/:id                            | Updates a node.            |
+- GET `/api/crt/:id`: Retrieves a tree by its ID.
+- POST `/api/crt`: Creates a new tree.
+- POST `/api/crt/:id/createDirectCauses`: Creates direct causes for a node.
+- POST `/api/crt/:id/addDirectCauses`: Adds direct causes to a node.
+- POST `/api/crt/:id/getRefinedCauses`: Retrieves refined causes for a node.
+- POST `/api/crt/:id/runValidationChain`: Runs a validation chain on a node.
+- PUT `/api/crt/reviewConfiguration`: Reviews the configuration of a tree.
+- PUT `/api/crt/:id/updateChildren`: Updates the children of a node in the tree.
+- DELETE `/api/crt/:id`: Deletes a node from the tree.
+- PUT `/api/crt/:id`: Updates a node in the tree.
 
 ## Examples
 
@@ -57,15 +55,10 @@ const wsClients = new Map<string, WebSocket>();
 const treeController = new TreeController(wsClients);
 
 // Example of updating a node
-const expressRequest = {
-  params: { id: 'nodeId' },
-  body: { description: 'Updated node description' }
-} as express.Request;
+treeController.updateNode(req, res);
 
-const expressResponse = {
-  sendStatus: (code: number) => console.log(`Status: ${code}`),
-  send: (data: any) => console.log(data)
-} as express.Response;
-
-treeController.updateNode(expressRequest, expressResponse);
+// Example of adding a new node
+treeController.addNode(req, res);
 ```
+
+Note: The actual implementation of the methods would require proper request and response objects, as well as handling of asynchronous operations. The examples above are for illustrative purposes only.
