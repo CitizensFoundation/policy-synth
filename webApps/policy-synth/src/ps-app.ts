@@ -57,7 +57,11 @@ import '@material/web/textfield/outlined-text-field.js';
 import { debug } from 'console';
 import { PsPolicies } from './policies/ps-policies.js';
 import { YpBaseElement, YpFormattingHelpers } from '@yrpri/webapp';
-import { Scheme, applyThemeWithContrast, themeFromSourceColorWithContrast } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
+import {
+  Scheme,
+  applyThemeWithContrast,
+  themeFromSourceColorWithContrast,
+} from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
 
 const PagesTypes = {
@@ -122,6 +126,9 @@ export class PolicySynthWebApp extends YpBaseElement {
 
   @property({ type: String })
   tempPassword: string | undefined;
+
+  @property({ type: String })
+  localStorageThemeColorKey = 'md3-ps-theme-color';
 
   @property({ type: String })
   themeColor = '#3f5fce';
@@ -544,7 +551,7 @@ export class PolicySynthWebApp extends YpBaseElement {
     super.connectedCallback();
     this._setupEventListeners();
 
-    const savedColor = localStorage.getItem('md3-ps-theme-color');
+    const savedColor = localStorage.getItem(this.localStorageThemeColorKey);
     if (savedColor) {
       this.fireGlobal('yp-theme-color', savedColor);
     }
@@ -653,7 +660,7 @@ export class PolicySynthWebApp extends YpBaseElement {
     let themeCss = {} as any;
 
     // Save this.themeColor to locale storage
-    localStorage.setItem('md3-ps-theme-color', this.themeColor);
+    localStorage.setItem(this.localStorageThemeColorKey, this.themeColor);
 
     const isDark =
       this.themeDarkMode === undefined
@@ -1101,7 +1108,9 @@ export class PolicySynthWebApp extends YpBaseElement {
 
   sendVoteAnalytics() {
     if (this.totalNumberOfVotes % 10 === 0) {
-      window.psAppGlobals.activity(`User voted ${this.totalNumberOfVotes} times`);
+      window.psAppGlobals.activity(
+        `User voted ${this.totalNumberOfVotes} times`
+      );
     }
   }
 
@@ -1156,7 +1165,9 @@ export class PolicySynthWebApp extends YpBaseElement {
       this.themeHighContrast = false;
     }
 
-    const savedThemeColor = localStorage.getItem('md3-ps-theme-color');
+    const savedThemeColor = localStorage.getItem(
+      this.localStorageThemeColorKey
+    );
     if (savedThemeColor) {
       this.themeColor = savedThemeColor;
     }

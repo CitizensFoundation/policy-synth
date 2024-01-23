@@ -50,6 +50,7 @@ export declare class PolicySynthWebApp extends YpBaseElement {
     currentError: string | undefined;
     forceGetBackupForProject: string | undefined;
     tempPassword: string | undefined;
+    localStorageThemeColorKey: string;
     themeColor: string;
     themePrimaryColor: string;
     themeSecondaryColor: string;
