@@ -1,8 +1,8 @@
 import { OpenAI } from "openai";
 const DEBUGGING = true;
 export class PsBaseChatBot {
-    constructor(chatConversation, clientId, wsClients) {
-        this.conversation = async (clientId, wsClients, chatLog) => {
+    constructor(chatLog, clientId, wsClients) {
+        this.conversation = async (chatLog) => {
             let messages = chatLog.map((message) => {
                 return {
                     role: message.sender,
@@ -29,26 +29,28 @@ export class PsBaseChatBot {
                 temperature: 0.7,
                 stream: true,
             });
-            if (wsClients.get(clientId)) {
-                this.streamWebSocketResponses(stream, clientId, wsClients);
+            if (this.wsClients.get(this.clientId)) {
+                this.streamWebSocketResponses(stream);
             }
             else {
-                console.error(`WS Client ${clientId} not found`);
+                console.error(`WS Client ${this.clientId} not found`);
                 // TODO: Implement this when available
                 //stream.cancel();
             }
         };
-        this.conversation(clientId, wsClients, chatConversation);
+        this.clientId = clientId;
+        this.wsClients = wsClients;
+        this.conversation(chatLog);
     }
     renderSystemPrompt() {
-        return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day`;
+        return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day. Lots of emojis`;
     }
     async streamWebSocketResponses(
     //@ts-ignore
-    stream, clientId, wsClients) {
-        const wsClient = wsClients.get(clientId);
+    stream) {
+        const wsClient = this.wsClients.get(this.clientId);
         if (!wsClient) {
-            console.error(`WS Client ${clientId} not found in streamWebSocketResponses`);
+            console.error(`WS Client ${this.clientId} not found in streamWebSocketResponses`);
             return;
         }
         wsClient.send(JSON.stringify({ sender: "bot", type: "start" }));

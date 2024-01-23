@@ -2,9 +2,11 @@ import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
 export declare class PsBaseChatBot {
-    constructor(chatConversation: PsSimpleChatLog[], clientId: string, wsClients: Map<string, WebSocket>);
+    clientId: string;
+    wsClients: Map<string, WebSocket>;
+    constructor(chatLog: PsSimpleChatLog[], clientId: string, wsClients: Map<string, WebSocket>);
     renderSystemPrompt(): string;
-    streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>, clientId: string, wsClients: Map<string, WebSocket>): Promise<void>;
-    conversation: (clientId: string, wsClients: Map<string, WebSocket>, chatLog: PsSimpleChatLog[]) => Promise<void>;
+    streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;
+    conversation: (chatLog: PsSimpleChatLog[]) => Promise<void>;
 }
 //# sourceMappingURL=baseChatBot.d.ts.map
