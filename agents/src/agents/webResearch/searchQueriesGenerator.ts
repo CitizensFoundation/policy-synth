@@ -1,6 +1,7 @@
-import { PolicySynthAgentBase, IEngineConstants } from "@policysynth/agents";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
+import { PolicySynthAgentBase } from "../../base.js";
+import { IEngineConstants } from "../../constants.js";
 
 export class SearchQueriesGenerator extends PolicySynthAgentBase {
   systemPrompt: string;
