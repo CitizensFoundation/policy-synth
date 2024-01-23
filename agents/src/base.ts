@@ -24,7 +24,7 @@ const logger = winston.createLogger({
   ],
 });
 
-export class Base {
+export class PolicySynthAgentBase {
   memory?: IEngineInnovationMemoryData;
   logger: winston.Logger;
   timeStart: number = Date.now();

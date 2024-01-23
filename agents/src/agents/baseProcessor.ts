@@ -1,5 +1,5 @@
 import { Job } from "bullmq";
-import { Base } from "../base.js";
+import { PolicySynthAgentBase } from "../base.js";
 import {
   BaseMessage,
   ChatMessage,
@@ -9,7 +9,7 @@ import {
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { IEngineConstants } from "../constants.js";
 
-export abstract class BaseProcessor extends Base {
+export abstract class BaseProcessor extends PolicySynthAgentBase {
   override memory: IEngineInnovationMemoryData;
   job!: Job;
   currentSubProblemIndex: number | undefined;

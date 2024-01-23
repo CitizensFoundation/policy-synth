@@ -21,7 +21,7 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProcesso
     }>;
     getUpdatedKFactor(numComparisons: number): number;
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
-    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProCon | IEngineSolution | IEngineAffectedEntity | IEngineProblemStatement | IEngineSearchResultItem)[];
+    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProblemStatement | IEngineSolution | IEngineAffectedEntity | IEngineSearchResultItem | IEngineProCon)[];
     process(): Promise<void>;
 }
 //# sourceMappingURL=basePairwiseRanking.d.ts.map

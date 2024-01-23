@@ -1,7 +1,7 @@
 import ioredis from "ioredis";
-import { Base } from "../base.js";
+import { PolicySynthAgentBase } from "../base.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class BaseAgent extends Base {
+export class BaseAgent extends PolicySynthAgentBase {
     constructor() {
         super(...arguments);
         this.defaultStages = {

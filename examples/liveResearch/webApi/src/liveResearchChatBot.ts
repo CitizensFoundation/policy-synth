@@ -6,25 +6,7 @@ const DEBUGGING = true;
 
 import { PsBaseChatBot } from "@policysynth/api";
 
-class SearchQueriesGenerator {
-  generateSearchQueriesPrompt: string;
 
-  constructor(generateSearchQueriesPrompt: string) {
-    this.generateSearchQueriesPrompt = generateSearchQueriesPrompt;
-  }
-
-  async generateSearchQueries() {
-    const searchQueries = await this.openaiClient.search.completions.create({
-      engine: "davinci",
-      prompt: this.generateSearchQueriesPrompt,
-      max_tokens: 4000,
-      temperature: 0.7,
-      stop: ["\n"],
-    });
-
-    return searchQueries;
-  }
-}
 
 export class LiveResearchChatBot extends PsBaseChatBot {
   jsonWebPageResearchSchema = `
@@ -37,6 +19,35 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     }
   `;
 
+  sendAgentStart(name: string, hasNoStreaming = true) {
+    const botMessage = {
+      sender: "bot",
+      type: "agentStart",
+      message: {
+        name: name,
+        noStreaming: hasNoStreaming,
+      } as PsAgentStartWsOptions,
+    };
+    this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
+  sendAgentCompleted(name: string, lastAgent = false, error: string | undefined = undefined) {
+    const botMessage = {
+      sender: "bot",
+      type: "agentCompleted",
+      message: {
+        name: name,
+        results: {
+          isValid: true,
+          validationErrors: error,
+          lastAgent: lastAgent
+        } as PsValidationAgentResult,
+      } as PsAgentCompletedWsOptions,
+    };
+
+    this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
   async doLiveResearch(question: string) {
     const numberOfQueriesToGenerate = 10;
     const percentOfQueriesToSearch = 0.5;
@@ -48,24 +59,34 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       Question: ${question}
     `;
 
+    this.sendAgentStart("Generate search queries");
     const searchQueriesGenerator = new SearchQueriesGenerator(generateSearchQueriesPrompt);
     const searchQueries = await searchQueriesGenerator.generateSearchQueries();
+    this.sendAgentCompleted("Generate search queries");
 
+    this.sendAgentStart("Rank search queries");
     const searchQueriesRanker = new SearchQueriesRanker(searchQueries, numberOfQueriesToGenerate, percentOfQueriesToSearch);
     const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries();
+    this.sendAgentCompleted("Rank search queries");
 
     const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch));
 
+    this.sendAgentStart("Search the web");
     const webSearch = new WebSearch(queriesToSearch);
     const searchResults = await webSearch.search();
+    this.sendAgentCompleted("Search the web");
 
+    this.sendAgentStart("Rank search results");
     const searchResultsRanker = new SearchResultsRanker(searchResults);
     const rankedSearchResults = await searchResultsRanker.rankSearchResults();
+    this.sendAgentCompleted("Rank search results");
 
     const searchResultsToScan = rankedSearchResults.slice(0, Math.floor(rankedSearchResults.length * percentOfResultsToScan));
 
+    this.sendAgentStart("Scan and Research Web pages");
     const webPageResearch = new WebPageResearch(searchResultsToScan, this.jsonWebPageResearchSchema);
     const research = await webPageResearch.research();
+    this.sendAgentCompleted("Scan and Research Web pages", true);
 
     const summarySystemPrompt = `Please review the web research below and give the user a full report.
       Analyze the results step by step and output your results in markdown.

@@ -1,8 +1,8 @@
 import axios from "axios";
-import { Base } from "../../../base.js";
+import { PolicySynthAgentBase } from "../../../base.js";
 import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class GoogleSearchApi extends Base {
+export class GoogleSearchApi extends PolicySynthAgentBase {
     async search(query) {
         const outResults = [];
         try {

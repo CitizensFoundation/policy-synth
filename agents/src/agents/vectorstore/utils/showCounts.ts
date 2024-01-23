@@ -1,4 +1,4 @@
-import { Base } from "../../../base.js";
+import { PolicySynthAgentBase } from "../../../base.js";
 import { IEngineConstants } from "../../../constants.js";
 import { BaseProcessor } from "../../baseProcessor.js";
 import { WebPageVectorStore } from "../webPage.js";

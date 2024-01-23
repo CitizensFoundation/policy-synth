@@ -57,5 +57,5 @@ export { PsParallelValidationAgent } from './agents/validations/parallelAgent.js
 export { EvidenceWebPageVectorStore } from './agents/vectorstore/evidenceWebPage.js';
 export { RootCauseWebPageVectorStore } from './agents/vectorstore/rootCauseWebPage.js';
 export { WebPageVectorStore } from './agents/vectorstore/webPage.js';
-export { Base } from './base.js';
+export { PolicySynthAgentBase } from './base.js';
 export { IEngineConstants } from './constants.js';

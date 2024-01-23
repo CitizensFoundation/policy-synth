@@ -1,8 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { Base } from "../../base.js";
+import { PolicySynthAgentBase } from "../../base.js";
 import { IEngineConstants } from "../../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
-export class PsBaseValidationAgent extends Base {
+export class PsBaseValidationAgent extends PolicySynthAgentBase {
     constructor(name, options = {}) {
         super();
         this.name = name;

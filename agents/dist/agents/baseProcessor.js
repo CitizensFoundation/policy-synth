@@ -1,6 +1,6 @@
-import { Base } from "../base.js";
+import { PolicySynthAgentBase } from "../base.js";
 import { IEngineConstants } from "../constants.js";
-export class BaseProcessor extends Base {
+export class BaseProcessor extends PolicySynthAgentBase {
     constructor(job, memory) {
         super();
         this.job = job;
