@@ -15,6 +15,6 @@
     "./node_modules/@policysynth/agents/src/types.d.ts",
     "./node_modules/@policysynth/agents/src/policy.d.ts",
     "./node_modules/@policysynth/agents/src/rootCauses.d.ts",
-    "./node_modules/@policysynth/agents/src/validation.d.ts", "../../../agents/src/agents/webResearch/searchQueriesRanker.ts", "../../../agents/src/agents/webResearch/searchQueriesGenerator.ts", "../../../agents/src/agents/webResearch/searchResultsRanker.ts", "../../../agents/src/agents/webResearch/searchWebSanner.ts", "../../../agents/src/agents/webResearch/webPageScanner.ts",
+    "./node_modules/@policysynth/agents/src/validation.d.ts"
   ]
 }
