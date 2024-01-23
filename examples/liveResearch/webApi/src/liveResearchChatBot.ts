@@ -6,100 +6,17 @@ import {
   SearchResultsRanker,
   WebPageScanner,
 } from "@policysynth/agents";
-import { v4 as uuidv4 } from "uuid";
 
 export class LiveResearchChatBot extends PsBaseChatBot {
   numberOfQueriesToGenerate = 7;
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.25;
-  memory!: IEngineInnovationMemoryData;
 
   summarySystemPrompt = `Please review the web research below and give the user a full report.
     Take all the information provided and highlight the main points to answer the users question in detail.
     Do not output the analysis on an article by article basis, it needs to go deeper and wider than that to answer the users question.
     Provide links to the original webpages, if they are relevant, in markdown format as citations.
   `;
-
-  getEmptyMemory() {
-    return {
-      redisKey: `webResearch-${uuidv4}`,
-      groupId: 1,
-      communityId: 2,
-      domainId: 1,
-      stage: "create-sub-problems",
-      currentStage: "create-sub-problems",
-      stages: {
-        "create-root-causes-search-queries": {},
-        "web-search-root-causes": {},
-        "web-get-root-causes-pages": {},
-        "rank-web-root-causes": {},
-        "rate-web-root-causes": {},
-        "web-get-refined-root-causes": {},
-        "get-metadata-for-top-root-causes": {},
-        "create-problem-statement-image": {},
-        "create-sub-problems": {},
-        "rank-sub-problems": {},
-        "policies-seed": {},
-        "policies-create-images": {},
-        "create-entities": {},
-        "rank-entities": {},
-        "reduce-sub-problems": {},
-        "create-search-queries": {},
-        "rank-root-causes-search-results": {},
-        "rank-root-causes-search-queries": {},
-        "create-sub-problem-images": {},
-        "rank-search-queries": {},
-        "web-search": {},
-        "rank-web-solutions": {},
-        "rate-solutions": {},
-        "rank-search-results": {},
-        "web-get-pages": {},
-        "create-seed-solutions": {},
-        "create-pros-cons": {},
-        "create-solution-images": {},
-        "rank-pros-cons": {},
-        "rank-solutions": {},
-        "group-solutions": {},
-        "evolve-create-population": {},
-        "evolve-mutate-population": {},
-        "evolve-recombine-population": {},
-        "evolve-reap-population": {},
-        "topic-map-solutions": {},
-        "evolve-rank-population": {},
-        "analyse-external-solutions": {},
-        "create-evidence-search-queries": {},
-        "web-get-evidence-pages": {},
-        "web-search-evidence": {},
-        "rank-web-evidence": {},
-        "rate-web-evidence": {},
-        "web-get-refined-evidence": {},
-        "get-metadata-for-top-evidence": {},
-        "validation-agent": {},
-      },
-      timeStart: Date.now(),
-      totalCost: 0,
-      customInstructions: {},
-      problemStatement: {
-        description: "problemStatement",
-        searchQueries: {
-          general: [],
-          scientific: [],
-          news: [],
-          openData: [],
-        },
-        searchResults: {
-          pages: {
-            general: [],
-            scientific: [],
-            news: [],
-            openData: [],
-          },
-        },
-      },
-      subProblems: [],
-      currentStageData: undefined,
-    } as IEngineInnovationMemoryData;
-  }
 
   // For directing the LLMs to focus on the most relevant parts of each web page
   jsonWebPageResearchSchema = `
@@ -114,16 +31,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   renderSystemPrompt() {
     return `Please provide thoughtful answers to the users followup questions.
        `;
-  }
-
-  sendAgentUpdate(message: string) {
-    const botMessage = {
-      sender: "bot",
-      type: "agentUpdated",
-      message: message,
-    };
-
-    this.clientSocket.send(JSON.stringify(botMessage));
   }
 
   async doLiveResearch(question: string) {
@@ -230,8 +137,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     this.numberOfQueriesToGenerate = numberOfSelectQueries;
     this.percentOfQueriesToSearch = percentOfTopQueriesToSearch;
     this.percentOfResultsToScan = percentOfTopResultsToScan;
-
-    this.memory = this.getEmptyMemory();
 
     console.log("In LIVE RESEARH conversation");
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
