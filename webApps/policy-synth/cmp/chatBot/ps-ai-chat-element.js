@@ -413,7 +413,8 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
           </svg>`
             : html `<md-icon class="doneIcon">done</md-icon>`}
       <div class="thinkingText" ?active="${this.active}">
-        ${this.message} ${this.updateMessage}
+        ${this.message}
+        ${this.updateMessage ? html `- ${this.updateMessage}` : nothing}
       </div> `;
     }
     renderThinking() {

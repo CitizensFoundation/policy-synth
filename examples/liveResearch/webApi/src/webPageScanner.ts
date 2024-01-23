@@ -123,6 +123,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
       const textAnalysis = await this.getTextAnalysis(text);
 
       if (textAnalysis) {
+        textAnalysis.url = url;
         this.collectedWebPages.push(textAnalysis);
 
         this.logger.debug(
@@ -193,6 +194,9 @@ export class WebPageScanner extends GetWebPagesProcessor {
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
     for (let i = 0; i < listOfUrls.length; i++) {
+      if (this.progressFunction) {
+        this.progressFunction(`${i+1}/${listOfUrls.length}`);
+      }
       await this.getAndProcessPage(
         5021,
         listOfUrls[i],
@@ -200,9 +204,6 @@ export class WebPageScanner extends GetWebPagesProcessor {
         "news",
         undefined
       );
-      if (this.progressFunction) {
-        this.progressFunction(`${i+1}/${listOfUrls.length}`);
-      }
     }
 
     await browser.close();
