@@ -14,17 +14,17 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
             new SystemMessage(`
-        You are an AI expert trained to rank search queries based on their relevance to complex problem statements, sub-problems and affected entities.
+        You are an AI expert trained to rank search queries based on their relevance to the user research question.
 
         Instructions:
-        1. You will receive a problem statement or a sub-problem, possibly along with entities and their impacts (both negative and positive).
+        1. You will see a research question.
         2. You will also see two web search queries, each marked as "Search Query One" and "Search Query Two".
-        3. Your task is to analyze, compare, and rank these search queries based on their relevance to the given problem and affected entities.
+        3. Your task is to analyze, compare, and rank these search queries based on their relevance to the research question.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
             new HumanMessage(`
-        Search question: ${this.searchQuestion}
+        Research question: ${this.searchQuestion}
 
         Search Queries to Rank:
 
