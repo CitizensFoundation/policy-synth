@@ -2,7 +2,7 @@ import { BaseMessage } from "langchain/schema";
 import winston from "winston";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Callbacks } from "langchain/callbacks";
-export declare class Base {
+export declare class PolicySynthAgentBase {
     memory?: IEngineInnovationMemoryData;
     logger: winston.Logger;
     timeStart: number;

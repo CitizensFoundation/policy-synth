@@ -13,7 +13,7 @@ const logger = winston.createLogger({
         }),
     ],
 });
-export class Base {
+export class PolicySynthAgentBase {
     constructor() {
         this.timeStart = Date.now();
         this.rateLimits = {};

@@ -1,6 +1,6 @@
 import { Job } from "bullmq";
-import { Base } from "../base.js";
-export declare abstract class BaseProcessor extends Base {
+import { PolicySynthAgentBase } from "../base.js";
+export declare abstract class BaseProcessor extends PolicySynthAgentBase {
     memory: IEngineInnovationMemoryData;
     job: Job;
     currentSubProblemIndex: number | undefined;
