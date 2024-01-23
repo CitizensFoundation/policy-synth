@@ -82,7 +82,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
   ]);
 
   reset() {
-    (this.$$('live-research-chat-bot') as LiveResearchChatBot).reset();
+    //(this.$$('live-research-chat-bot') as LiveResearchChatBot).reset();
   }
 
   updateNumberOfQueries(event: any) {
