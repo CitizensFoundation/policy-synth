@@ -14,58 +14,50 @@ export class PsBaseChatBot {
                 content: this.renderSystemPrompt(),
             };
             messages.unshift(systemMessage);
-            const openai = new OpenAI({
-                apiKey: process.env.OPENAI_API_KEY,
-            });
             if (DEBUGGING) {
                 console.log("=====================");
                 console.log(JSON.stringify(messages, null, 2));
                 console.log("=====================");
             }
-            const stream = await openai.chat.completions.create({
+            const stream = await this.openaiClient.chat.completions.create({
                 model: "gpt-4-1106-preview",
                 messages,
                 max_tokens: 4000,
                 temperature: 0.7,
                 stream: true,
             });
-            if (this.wsClients.get(this.clientId)) {
-                this.streamWebSocketResponses(stream);
-            }
-            else {
-                console.error(`WS Client ${this.clientId} not found`);
-                // TODO: Implement this when available
-                //stream.cancel();
-            }
+            this.streamWebSocketResponses(stream);
         };
         this.clientId = clientId;
-        this.wsClients = wsClients;
-        this.conversation(chatLog);
+        this.clientSocket = wsClients.get(this.clientId);
+        this.openaiClient = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+        if (!this.clientSocket) {
+            console.error(`WS Client ${this.clientId} not found in streamWebSocketResponses`);
+        }
+        else {
+            this.conversation(chatLog);
+        }
     }
     renderSystemPrompt() {
         return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day. Lots of emojis`;
     }
+    sendToClient(sender, message, type = "stream") {
+        this.clientSocket.send(JSON.stringify({
+            sender,
+            type: type,
+            message,
+        }));
+    }
     async streamWebSocketResponses(
     //@ts-ignore
     stream) {
-        const wsClient = this.wsClients.get(this.clientId);
-        if (!wsClient) {
-            console.error(`WS Client ${this.clientId} not found in streamWebSocketResponses`);
-            return;
-        }
-        wsClient.send(JSON.stringify({ sender: "bot", type: "start" }));
+        this.sendToClient("bot", "", "start");
         for await (const part of stream) {
-            wsClient.send(JSON.stringify({
-                sender: "bot",
-                type: "stream",
-                message: part.choices[0].delta.content,
-            }));
-            //console.log(part.choices[0].delta);
+            this.sendToClient("bot", part.choices[0].delta.content);
         }
-        wsClient.send(JSON.stringify({
-            sender: "bot",
-            type: "end",
-        }));
+        this.sendToClient("bot", "", "end");
     }
 }
 //# sourceMappingURL=baseChatBot.js.map
