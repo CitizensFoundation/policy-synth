@@ -7,8 +7,6 @@ import {
   WebPageScanner,
 } from "@policysynth/agents";
 
-const DEBUGGING = true;
-
 export class LiveResearchChatBot extends PsBaseChatBot {
   numberOfQueriesToGenerate = 7;
   percentOfQueriesToSearch = 0.25;
@@ -20,6 +18,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     Provide links to the original webpages, if they are relevant, in markdown format as citations.
   `;
 
+  // For directing the LLMs to focus on the most relevant parts of each web page
   jsonWebPageResearchSchema = `
     {
       mostRelevantParagraphs: string[],
@@ -139,7 +138,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     this.streamWebSocketResponses(stream);
   }
 
-
   researchConversation = async (
     chatLog: PsSimpleChatLog[],
     numberOfSelectQueries: number,
@@ -168,12 +166,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       };
 
       messages.unshift(systemMessage);
-
-      if (DEBUGGING) {
-        console.log("=====================");
-        console.log(JSON.stringify(messages, null, 2));
-        console.log("=====================");
-      }
 
       const stream = await this.openaiClient.chat.completions.create({
         model: "gpt-4-1106-preview",
