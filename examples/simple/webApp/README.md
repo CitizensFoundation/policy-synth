@@ -1,4 +1,4 @@
-# @policysynth/webapp Simple Chatbot Demo - Web App
+# Simple Chatbot Demo - Web App
 
 ## To run (will open browser)
 ```
