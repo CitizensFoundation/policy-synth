@@ -325,6 +325,12 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     | undefined;
 }
 
+interface PsWebResearchMemory extends IEngineInnovationMemoryData {
+  webResearch?: {
+    chatLog?: PsSimpleChatLog[];
+  }
+}
+
 type IEngineWebPageTypes = "general" | "scientific" | "openData" | "news";
 type IEngineWebPageTargets = "problemStatement" | "subProblem" | "entity";
 

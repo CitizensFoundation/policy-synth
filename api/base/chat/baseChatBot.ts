@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
+import { v4 as uuidv4 } from "uuid";
 
 const DEBUGGING = true;
 
@@ -8,11 +9,9 @@ export class PsBaseChatBot {
   clientId: string;
   clientSocket: WebSocket;
   openaiClient: OpenAI;
+  memory!: IEngineInnovationMemoryData;
 
-  constructor(
-    clientId: string,
-    wsClients: Map<string, WebSocket>
-  ) {
+  constructor(clientId: string, wsClients: Map<string, WebSocket>) {
     this.clientId = clientId;
     this.clientSocket = wsClients.get(this.clientId)!;
     this.openaiClient = new OpenAI({
@@ -23,6 +22,7 @@ export class PsBaseChatBot {
         `WS Client ${this.clientId} not found in streamWebSocketResponses`
       );
     }
+    this.memory = this.getEmptyMemory();
   }
 
   renderSystemPrompt() {
@@ -70,6 +70,97 @@ export class PsBaseChatBot {
     };
 
     this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
+  sendAgentUpdate(message: string) {
+    const botMessage = {
+      sender: "bot",
+      type: "agentUpdated",
+      message: message,
+    };
+
+    this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
+  getEmptyMemory() {
+    return {
+      redisKey: `webResearch-${uuidv4}`,
+      groupId: 1,
+      communityId: 2,
+      domainId: 1,
+      stage: "create-sub-problems",
+      currentStage: "create-sub-problems",
+      stages: {
+        "create-root-causes-search-queries": {},
+        "web-search-root-causes": {},
+        "web-get-root-causes-pages": {},
+        "rank-web-root-causes": {},
+        "rate-web-root-causes": {},
+        "web-get-refined-root-causes": {},
+        "get-metadata-for-top-root-causes": {},
+        "create-problem-statement-image": {},
+        "create-sub-problems": {},
+        "rank-sub-problems": {},
+        "policies-seed": {},
+        "policies-create-images": {},
+        "create-entities": {},
+        "rank-entities": {},
+        "reduce-sub-problems": {},
+        "create-search-queries": {},
+        "rank-root-causes-search-results": {},
+        "rank-root-causes-search-queries": {},
+        "create-sub-problem-images": {},
+        "rank-search-queries": {},
+        "web-search": {},
+        "rank-web-solutions": {},
+        "rate-solutions": {},
+        "rank-search-results": {},
+        "web-get-pages": {},
+        "create-seed-solutions": {},
+        "create-pros-cons": {},
+        "create-solution-images": {},
+        "rank-pros-cons": {},
+        "rank-solutions": {},
+        "group-solutions": {},
+        "evolve-create-population": {},
+        "evolve-mutate-population": {},
+        "evolve-recombine-population": {},
+        "evolve-reap-population": {},
+        "topic-map-solutions": {},
+        "evolve-rank-population": {},
+        "analyse-external-solutions": {},
+        "create-evidence-search-queries": {},
+        "web-get-evidence-pages": {},
+        "web-search-evidence": {},
+        "rank-web-evidence": {},
+        "rate-web-evidence": {},
+        "web-get-refined-evidence": {},
+        "get-metadata-for-top-evidence": {},
+        "validation-agent": {},
+      },
+      timeStart: Date.now(),
+      totalCost: 0,
+      customInstructions: {},
+      problemStatement: {
+        description: "problemStatement",
+        searchQueries: {
+          general: [],
+          scientific: [],
+          news: [],
+          openData: [],
+        },
+        searchResults: {
+          pages: {
+            general: [],
+            scientific: [],
+            news: [],
+            openData: [],
+          },
+        },
+      },
+      subProblems: [],
+      currentStageData: undefined,
+    } as IEngineInnovationMemoryData;
   }
 
   async streamWebSocketResponses(
