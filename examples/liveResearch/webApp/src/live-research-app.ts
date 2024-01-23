@@ -39,7 +39,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
         }
 
         md-slider {
-          width: 200px;
+          width: 220px;
         }
 
         .sliderTitle {
@@ -144,7 +144,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
               .valueLabel="${this.numberOfSelectQueries.toString()}"
               @change="${this.updateNumberOfQueries}"
             ></md-slider>
-            <div class="sliderTitle">${this.t('Number of search queries')}</div>
+            <div class="sliderTitle">${this.t('Number of search queries')} - ${this.numberOfSelectQueries.toString()}</div>
           </div>
           <div class="layout vertical">
             <md-slider
@@ -158,7 +158,9 @@ export class LiveResearchApp extends PolicySynthWebApp {
               @change="${this.updatePercentOfQueries}"
             ></md-slider>
             <div class="sliderTitle">
-              ${this.t('Use % of top search queries')}
+              ${this.t('Use % of top search queries')} - ${Math.round(
+                this.percentOfTopQueriesToSearch * 100
+              )}%
             </div>
           </div>
           <div class="layout vertical">
@@ -171,7 +173,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
               @change="${this.updatePercentOfResults}"
             ></md-slider>
             <div class="sliderTitle">
-              ${this.t('Use % of top search results')}
+              ${this.t('Use % of top search results')} - ${Math.round(this.percentOfTopResultsToScan * 100)}%
             </div>
           </div>
         </div>
