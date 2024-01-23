@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "langchain/schema";
-import { BaseProcessor } from "./baseProcessor.js";
-export declare abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
+import { PolicySynthAgentBase } from "../base.js";
+export declare abstract class BasePairwiseRankingsCore extends PolicySynthAgentBase {
     prompts: Record<number, number[][]>;
     allItems: Record<number, (IEngineSearchResultItem[] | IEngineSolution[] | IEngineProblemStatement[] | IEngineAffectedEntity[] | IEngineProCon[] | string[]) | undefined>;
     INITIAL_ELO_RATING: number;
@@ -23,4 +23,4 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProcesso
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
     getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineSearchResultItem | IEngineSolution | IEngineProblemStatement | IEngineAffectedEntity | IEngineProCon)[];
 }
-//# sourceMappingURL=basePairwiseRanking.d.ts.map
+//# sourceMappingURL=basePairwiseRankingCore.d.ts.map

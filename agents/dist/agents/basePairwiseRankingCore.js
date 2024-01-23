@@ -1,6 +1,6 @@
-import { BaseProcessor } from "./baseProcessor.js";
 import { IEngineConstants } from "../constants.js";
-export class BasePairwiseRankingsProcessor extends BaseProcessor {
+import { PolicySynthAgentBase } from "../base.js";
+export class BasePairwiseRankingsCore extends PolicySynthAgentBase {
     constructor() {
         super(...arguments);
         this.prompts = {};
@@ -201,4 +201,4 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
         return items;
     }
 }
-//# sourceMappingURL=basePairwiseRanking.js.map
+//# sourceMappingURL=basePairwiseRankingCore.js.map

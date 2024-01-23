@@ -4,6 +4,7 @@ import WebSocket from "ws";
 
 import { PsBaseChatBot } from "@policysynth/api";
 import { SearchQueriesGenerator } from "./searchQueriesGenerator.js";
+import { SearchQueriesRanker } from "./searchQueriesRanker.js";
 
 const DEBUGGING = true;
 
@@ -62,12 +63,13 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       question
     );
     const searchQueries = await searchQueriesGenerator.generateSearchQueries();
-    console.log(`${JSON.stringify(searchQueries, null, 2)}`);
     this.sendAgentCompleted("Generate search queries");
+    console.log(`Search queries: ${JSON.stringify(searchQueries, null, 2)}`);
 
-    /*this.sendAgentStart("Rank search queries");
-    const searchQueriesRanker = new SearchQueriesRanker(searchQueries, numberOfQueriesToGenerate, percentOfQueriesToSearch);
-    const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries();
+    this.sendAgentStart("Rank search queries");
+    const searchQueriesRanker = new SearchQueriesRanker(undefined as any, undefined as any);
+    const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(searchQueries, question);
+    console.log(`Ranked: ${JSON.stringify(rankedSearchQueries, null, 2)}`);
     this.sendAgentCompleted("Rank search queries");
 
     const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch));
@@ -76,7 +78,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     const webSearch = new WebSearch(queriesToSearch);
     const searchResults = await webSearch.search();
     this.sendAgentCompleted("Search the web");
-
+/*
     this.sendAgentStart("Rank search results");
     const searchResultsRanker = new SearchResultsRanker(searchResults);
     const rankedSearchResults = await searchResultsRanker.rankSearchResults();
@@ -89,7 +91,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     const research = await webPageResearch.research();
     this.sendAgentCompleted("Scan and Research Web pages", true);
   */
-    const research = searchQueries;
+    const research = rankedSearchQueries;
 
     const summarySystemPrompt = `Please review the web research below and give the user a full report.
       Analyze the results step by step and output your results in markdown.

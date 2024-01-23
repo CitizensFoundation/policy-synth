@@ -24,6 +24,7 @@ export class LiveResearchChatBot extends PsChatAssistant {
       css`
         .chat-window {
           height: 85vh;
+          width: 100vw;
         }
       `,
     ];

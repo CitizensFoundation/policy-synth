@@ -7,7 +7,8 @@ import './live-research-chatbot.js';
 
 @customElement('live-research-app')
 export class LiveResearchApp extends PolicySynthWebApp {
-  themeColor = "#c30930";
+  themeColor = "#88f940";
+  localStorageThemeColorKey = "md3-live-research-theme-color3";
 
   static override get styles() {
     return [
@@ -19,7 +20,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
         }
 
         .themeToggle {
-          margin-bottom: 8px;
+          margin-bottom: 12px;
         }
       `,
     ];

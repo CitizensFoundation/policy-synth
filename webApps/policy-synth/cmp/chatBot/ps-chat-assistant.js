@@ -251,6 +251,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 break;
             case 'agentStart':
             case 'validationAgentStart':
+                console.log('agentStart');
                 if (lastElement) {
                     lastElement.active = false;
                 }
@@ -273,8 +274,12 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 break;
             case 'agentCompleted':
             case 'validationAgentCompleted':
+                console.log('agentCompleted');
                 if (lastElement) {
                     lastElement.active = false;
+                }
+                else {
+                    console.error('No last element on agentCompleted');
                 }
                 const completedOptions = data.message;
                 break;

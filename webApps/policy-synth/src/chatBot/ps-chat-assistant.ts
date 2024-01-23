@@ -384,7 +384,8 @@ export class PsChatAssistant extends YpBaseElement {
         break;
       case 'agentStart':
       case 'validationAgentStart':
-          if (lastElement) {
+        console.log('agentStart')
+        if (lastElement) {
           lastElement.active = false;
         }
         const startOptions = data.message as unknown as PsAgentStartWsOptions;
@@ -409,8 +410,11 @@ export class PsChatAssistant extends YpBaseElement {
         break;
       case 'agentCompleted':
       case 'validationAgentCompleted':
+        console.log('agentCompleted')
         if (lastElement) {
           lastElement.active = false;
+        } else {
+          console.error('No last element on agentCompleted');
         }
 
         const completedOptions =
