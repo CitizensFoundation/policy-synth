@@ -217,7 +217,7 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
     }
     renderChatInput() {
         return html `
-    ${this.chatLog.length > 1
+    ${(this.onlyUseTextField || this.chatLog.length > 1)
             ? html `
             <md-outlined-text-field
               class="textInput"
@@ -228,7 +228,7 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
               @focus="${() => (this.inputIsFocused = true)}"
               @blur="${() => (this.inputIsFocused = true)}"
               @keyup="${(e) => {
-                if (e.key === 'Enter' && this.chatLog.length > 1) {
+                if (e.key === 'Enter') {
                     this.sendChatMessage();
                 }
             }}"
@@ -244,11 +244,6 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
             rows="${this.chatLog.length > 1 ? '1' : '3'}"
             @focus="${() => (this.inputIsFocused = true)}"
             @blur="${() => (this.inputIsFocused = true)}"
-            @keyup="${(e) => {
-                if (e.key === 'Enter' && this.chatLog.length > 1) {
-                    this.sendChatMessage();
-                }
-            }}"
             .label="${this.textInputLabel}"
           ></md-outlined-text-field>`}
 
