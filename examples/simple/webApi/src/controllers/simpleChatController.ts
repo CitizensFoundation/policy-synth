@@ -16,13 +16,11 @@ export class SimpleChatController extends BaseController {
   }
 
   simpleChat = async (req: express.Request, res: express.Response) => {
-    const userQuestion = req.body.userQuestion;
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
 
     try {
       new SimpleChatBot(
-        userQuestion,
         chatLog,
         wsClientId,
         this.wsClients
@@ -32,7 +30,7 @@ export class SimpleChatController extends BaseController {
       res.sendStatus(500);
     }
 
-    console.log(`SimpleChatController: ${userQuestion}`);
+    console.log(`SimpleChatController for id ${wsClientId} initialized`);
 
     res.sendStatus(200);
   };

@@ -7,13 +7,13 @@
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/api"
   },
   "license": "MIT",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon -e ts dist/server.js",
-    "watch-start": "tsc --project ./ --outDir ./dist -w & nodemon -q ./dist/server.js",
-    "dev": "nodemon --config nodemon.json ./dist/server.js",
-    "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",
+    "start": "nodemon -e ts dist/src/server.js",
+    "watch-start": "tsc --project ./ --outDir ./dist -w & nodemon -q ./dist/src/server.js",
+    "dev": "nodemon --config nodemon.json ./dist/src/server.js",
+    "dev:debug": "nodemon --config nodemon.json --inspect-brk ./dist/src/server.js",
     "build": "tsc --project ./ --outDir ./dist",
     "prepublishOnly": "npm run build"
   },
