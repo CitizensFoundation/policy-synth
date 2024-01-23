@@ -20,6 +20,8 @@ export class WebPageScanner extends GetWebPagesProcessor {
   systemPromptOverride: string | undefined;
   collectedWebPages: any[] = [];
 
+  progressFunction: Function | undefined;
+
   constructor() {
     super(undefined as any, undefined as any);
   }
@@ -51,6 +53,44 @@ export class WebPageScanner extends GetWebPagesProcessor {
         `
       ),
     ];
+  }
+
+  async getTokenCount(text: string, subProblemIndex: number | undefined) {
+    const words = text.split(" ");
+    const tokenCount = words.length*1.25
+    const promptTokenCount = { totalCount: 500, countPerMessage: [] };
+    const totalTokenCount =
+      tokenCount + 500 +
+      IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+
+    return { totalTokenCount, promptTokenCount };
+  }
+
+  async getAIAnalysis(
+    text: string,
+    subProblemIndex?: number,
+    entityIndex?: number
+  ) {
+    this.logger.info("Get AI Analysis");
+    const messages = this.renderScanningPrompt(
+      "" as any,
+      text,
+      subProblemIndex,
+      entityIndex
+    );
+
+    console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
+
+    const analysis = await this.callLLM(
+      "web-get-pages",
+      IEngineConstants.getSolutionsPagesAnalysisModel,
+      messages,
+      true,
+      true
+    ) as IEngineWebPageAnalysisData;
+
+    console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
+    return analysis;
   }
 
   getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined) {
@@ -121,34 +161,23 @@ export class WebPageScanner extends GetWebPagesProcessor {
     return true;
   }
 
-  async processProblemStatement(
-    searchQueryType: IEngineWebPageTypes,
-    browserPage: Page
-  ) {
-    this.logger.info(
-      `Ranking Problem Statement for ${searchQueryType} search results`
-    );
-
-    const urlsToGet = this.getUrlsToFetch(
-      this.memory.problemStatement.searchResults!.pages[searchQueryType]
-    );
-
-    this.logger.debug(`Got ${urlsToGet.length} URLs`);
-
-    this.memory.problemStatement.haveScannedWeb = true;
-
-    this.logger.info(
-      `Ranking Problem Statement for ${searchQueryType} search results complete`
-    );
-  }
-
   async scan(
     listOfUrls: string[],
     jsonSchemaForResults: string,
-    scanSystemPrompt: string | undefined = undefined
+    scanSystemPrompt: string | undefined = undefined,
+    progressFunction: Function | undefined = undefined
   ) {
     this.jsonSchemaForResults = jsonSchemaForResults;
     this.systemPromptOverride = scanSystemPrompt;
+    this.progressFunction = progressFunction;
+
+    this.chat = new ChatOpenAI({
+      temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
+      maxTokens: IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+      modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
+      verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
+    });
+
 
     this.logger.info("Web Pages Scanner");
 
@@ -171,6 +200,9 @@ export class WebPageScanner extends GetWebPagesProcessor {
         "news",
         undefined
       );
+      if (this.progressFunction) {
+        this.progressFunction(`${i+1}/${listOfUrls.length}`);
+      }
     }
 
     await browser.close();

@@ -14,11 +14,10 @@ const DEBUGGING = true;
 export class LiveResearchChatBot extends PsBaseChatBot {
   jsonWebPageResearchSchema = `
     {
-      shortSummary: string,
       mostRelevantParagraphs: string[],
-      typesOfPlantsMentioned: string[],
-      authors: string,
-      relevanceScore: number,
+      summary: string,
+      howThisIsRelevant: string,
+      relevanceScore: number
     }
   `;
 
@@ -27,10 +26,20 @@ export class LiveResearchChatBot extends PsBaseChatBot {
        `;
   }
 
+  sendAgentUpdate(message: string) {
+    const botMessage = {
+      sender: "bot",
+      type: "agentUpdate",
+      message: message,
+    };
+
+    this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
   async doLiveResearch(question: string) {
-    const numberOfQueriesToGenerate = 5;
-    const percentOfQueriesToSearch = 0.2;
-    const percentOfResultsToScan = 0.2;
+    const numberOfQueriesToGenerate = 10;
+    const percentOfQueriesToSearch = 0.3;
+    const percentOfResultsToScan = 0.3;
 
     this.sendAgentStart("Generate search queries");
     const searchQueriesGenerator = new SearchQueriesGenerator(
@@ -77,16 +86,23 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     const webPageResearch = new WebPageScanner();
     const webScan = await webPageResearch.scan(
       searchResultsToScan.map((i) => i.url),
-      this.jsonWebPageResearchSchema
+      this.jsonWebPageResearchSchema,
+      undefined,
+      this.sendAgentUpdate.bind(this)
     );
     this.sendAgentCompleted("Scan and Research Web pages", true);
+
+    console.log(
+      `webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`
+    );
 
     this.renderResultsToUser(webScan);
   }
 
   async renderResultsToUser(research: object[]) {
     const summarySystemPrompt = `Please review the web research below and give the user a full report.
-      Analyze the results step by step and output your results in markdown.
+    Take all the information provided and highlight the main points to answer the users question
+    Do not output the analysis on an article by article basis, it needs to go deeper and wider than that.
     `;
 
     const summaryUserPrompt = `

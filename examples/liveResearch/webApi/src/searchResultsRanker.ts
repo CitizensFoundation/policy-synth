@@ -19,8 +19,12 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![itemOneIndex] as IEngineSearchResultItem;
-    const itemTwo = this.allItems![index]![itemTwoIndex] as IEngineSearchResultItem;
+    const itemOne = this.allItems![index]![
+      itemOneIndex
+    ] as IEngineSearchResultItem;
+    const itemTwo = this.allItems![index]![
+      itemTwoIndex
+    ] as IEngineSearchResultItem;
 
     console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
     console.log(`itemTwo: ${JSON.stringify(itemOne, null, 2)}`);
@@ -70,7 +74,11 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     );
   }
 
-  async rankSearchResults(queriesToRank: IEngineSearchResultItem[], searchQuestion: string) {
+  async rankSearchResults(
+    queriesToRank: IEngineSearchResultItem[],
+    searchQuestion: string,
+    maxPrompts = 100
+  ) {
     this.searchQuestion = searchQuestion;
 
     this.chat = new ChatOpenAI({
@@ -80,7 +88,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
       verbose: IEngineConstants.searchQueryRankingsModel.verbose,
     });
 
-    this.setupRankingPrompts(-1, queriesToRank);
+    this.setupRankingPrompts(-1, queriesToRank, maxPrompts);
     await this.performPairwiseRanking(-1);
     return this.getOrderedListOfItems(-1) as IEngineSearchResultItem[];
   }

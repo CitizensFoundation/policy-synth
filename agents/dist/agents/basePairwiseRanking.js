@@ -13,6 +13,7 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
         this.numComparisons = {};
         this.KFactors = {};
         this.eloRatings = {};
+        this.progressFunction = undefined;
     }
     fisherYatesShuffle(array) {
         if (array && array.length > 0) {
@@ -27,7 +28,8 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
             return array;
         }
     }
-    setupRankingPrompts(subProblemIndex, allItems, maxPrompts = undefined) {
+    setupRankingPrompts(subProblemIndex, allItems, maxPrompts = undefined, updateFunction = undefined) {
+        this.progressFunction = updateFunction;
         this.logger.info(`Item count for sub-problem ${subProblemIndex}: ${allItems.length}`);
         allItems = this.fisherYatesShuffle(allItems);
         this.allItems[subProblemIndex] = allItems;
@@ -134,6 +136,9 @@ export class BasePairwiseRankingsProcessor extends BaseProcessor {
         try {
             for (let p = 0; p < this.prompts[subProblemIndex].length; p++) {
                 this.logger.info(`Prompt ${p + 1} of ${this.prompts[subProblemIndex].length}`);
+                if (this.progressFunction) {
+                    this.progressFunction(`${p + 1}/${this.prompts[subProblemIndex].length}`);
+                }
                 const promptPair = this.prompts[subProblemIndex][p];
                 this.logger.debug(`Prompt pair: ${promptPair}`);
                 const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(subProblemIndex, promptPair, additionalData);

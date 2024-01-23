@@ -11,7 +11,7 @@
   "type": "module",
   "dependencies": {
     "@langchain/openai": "^0.0.12",
-    "@policysynth/api": "^1.0.22",
+    "@policysynth/api": "^1.0.23",
     "@types/html-to-text": "^9.0.4",
     "html-to-text": "^9.0.5"
   },
