@@ -192,6 +192,20 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
             }, 100);
         }
     }
+    addUserChatBotMessage(userMessage) {
+        this.addChatBotElement({
+            sender: 'you',
+            type: 'start',
+            message: userMessage,
+        });
+    }
+    addThinkingChatBotMessage() {
+        this.addChatBotElement({
+            sender: 'bot',
+            type: 'thinking',
+            message: '',
+        });
+    }
     addToChatLogWithMessage(data, message = undefined, changeButtonDisabledState = undefined, changeButtonLabelTo = undefined, refinedCausesSuggestions = undefined, rawMessage = undefined) {
         this.infoMessage = message;
         data.refinedCausesSuggestions = refinedCausesSuggestions || [];

@@ -33,19 +33,12 @@ export class SimpleChatBot extends PsChatAssistant {
 
   override async sendChatMessage() {
     const userMessage = this.chatInputField!.value;
+
     super.sendChatMessage();
 
-    this.addChatBotElement({
-      sender: 'you',
-      type: 'start',
-      message: userMessage,
-    });
+    this.addUserChatBotMessage(userMessage);
 
-    this.addChatBotElement({
-      sender: 'bot',
-      type: 'thinking',
-      message: '',
-    });
+    this.addThinkingChatBotMessage();
 
     await this.serverApi.conversation(this.simplifiedChatLog, this.wsClientId);
   }
