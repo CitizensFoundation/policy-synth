@@ -7,6 +7,8 @@ import './live-research-chatbot.js';
 
 @customElement('live-research-app')
 export class LiveResearchApp extends PolicySynthWebApp {
+  themeColor = "#c30930";
+
   static override get styles() {
     return [
       ...super.styles,
@@ -14,6 +16,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
         simple-chat-bot {
           width: 100vw;
           height: 100%;
+        }
+
+        .themeToggle {
+          margin-bottom: 8px;
         }
       `,
     ];
@@ -23,8 +29,9 @@ export class LiveResearchApp extends PolicySynthWebApp {
     {
       path: '/*',
       render: () => {
-        return html`<div class="layout vertical center-center">
-          <div class="layout horizontal center-center">
+        return html`
+        <div class="layout vertical center-center">
+          <div class="layout horizontal center-center themeToggle">
             ${this.renderThemeToggle()}
           </div>
           <live-research-chat-bot></live-research-chat-bot>

@@ -38,7 +38,7 @@ import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import { YpBaseElement, YpFormattingHelpers } from '@yrpri/webapp';
-import { applyThemeWithContrast, themeFromSourceColorWithContrast } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
+import { applyThemeWithContrast, themeFromSourceColorWithContrast, } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
 const PagesTypes = {
     ProblemStatement: 1,
@@ -56,6 +56,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
         this.totalNumberOfVotes = 0;
         this.showAllCosts = false;
         this.collectionType = 'domain';
+        this.localStorageThemeColorKey = 'md3-ps-theme-color';
         this.themeColor = '#3f5fce';
         this.themePrimaryColor = '#000000';
         this.themeSecondaryColor = '#000000';
@@ -422,7 +423,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
     connectedCallback() {
         super.connectedCallback();
         this._setupEventListeners();
-        const savedColor = localStorage.getItem('md3-ps-theme-color');
+        const savedColor = localStorage.getItem(this.localStorageThemeColorKey);
         if (savedColor) {
             this.fireGlobal('yp-theme-color', savedColor);
         }
@@ -513,7 +514,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
     themeChanged(target = undefined) {
         let themeCss = {};
         // Save this.themeColor to locale storage
-        localStorage.setItem('md3-ps-theme-color', this.themeColor);
+        localStorage.setItem(this.localStorageThemeColorKey, this.themeColor);
         const isDark = this.themeDarkMode === undefined
             ? window.matchMedia('(prefers-color-scheme: dark)').matches
             : this.themeDarkMode;
@@ -958,7 +959,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
         else {
             this.themeHighContrast = false;
         }
-        const savedThemeColor = localStorage.getItem('md3-ps-theme-color');
+        const savedThemeColor = localStorage.getItem(this.localStorageThemeColorKey);
         if (savedThemeColor) {
             this.themeColor = savedThemeColor;
         }
@@ -1487,6 +1488,9 @@ __decorate([
 __decorate([
     property({ type: String })
 ], PolicySynthWebApp.prototype, "tempPassword", void 0);
+__decorate([
+    property({ type: String })
+], PolicySynthWebApp.prototype, "localStorageThemeColorKey", void 0);
 __decorate([
     property({ type: String })
 ], PolicySynthWebApp.prototype, "themeColor", void 0);
