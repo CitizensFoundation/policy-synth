@@ -4,7 +4,7 @@ import { customElement, property, query } from 'lit/decorators.js';
 import { PsRouter } from '@policysynth/webapp/cmp/base/router/router.js';
 
 import '@material/web/slider/slider.js';
-import '@material/web/iconbutton/icon-button.js';
+import '@material/web/iconbutton/outlined-icon-button.js';
 
 import './live-research-chatbot.js';
 import { LiveResearchChatBot } from './live-research-chatbot.js';
@@ -43,13 +43,19 @@ export class LiveResearchApp extends PolicySynthWebApp {
         }
 
         .sliderTitle {
-          font-size: 14px;
+          font-size: 12px;
           padding-left: 16px;
           margin-bottom: 8px;
         }
 
-        .sliderScopes {
-          margin-top: 32px;
+        .sliderScopes, .estTime {
+          font-size: 12px;
+          color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .estTime {
+          margin-top: 16px;
+          margin-bottom: 8px;
         }
       `,
     ];
@@ -61,8 +67,8 @@ export class LiveResearchApp extends PolicySynthWebApp {
       render: () => {
         return html` <div class="layout vertical center-center">
           <div class="layout horizontal center-center themeToggle">
-            <md-icon-button @click="${this.reset}"
-              ><md-icon>restart_alt</md-icon></md-icon-button
+            <md-outlined-icon-button @click="${this.reset}"
+              ><md-icon>restart_alt</md-icon></md-outlined-icon-button
             >${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
           </div>
           <live-research-chat-bot
@@ -112,11 +118,11 @@ export class LiveResearchApp extends PolicySynthWebApp {
     let formattedTime;
 
     if (hours > 0) {
-      formattedTime = `${hours}h ${minutes}m ${seconds}s`;
+      formattedTime = `${hours} hours ${minutes} minutes ${seconds} seconds`;
     } else if (minutes > 0) {
-      formattedTime = `${minutes}m ${seconds}s`;
+      formattedTime = `${minutes} minutes ${seconds} seconds`;
     } else {
-      formattedTime = `${seconds}s`;
+      formattedTime = `${seconds} seconds`;
     }
 
     return formattedTime;
@@ -124,45 +130,49 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
   renderScopeSliders() {
     return html`
-      <div class="layout horizontal sliderScopes">
-        <div class="layout vertical">
-          <md-slider
-            min="5"
-            max="50"
-            value="10"
-            labeled
-            .valueLabel="${this.numberOfSelectQueries.toString()}"
-            @change="${this.updateNumberOfQueries}"
-          ></md-slider>
-          <div class="sliderTitle">
-            ${this.t('Number of search queries')} (${this.estimatedTotalTime})
-          </div>
+      <div class="layout vertical">
+        <div class="layout horizontal center-center estTime">
+          ${this.t('Estimated time to run')}: ${this.estimatedTotalTime}
         </div>
-        <div class="layout vertical">
-          <md-slider
-            min="10"
-            max="100"
-            value="25"
-            labeled
-            .valueLabel="${this.percentOfTopQueriesToSearch * 100}%"
-            @change="${this.updatePercentOfQueries}"
-          ></md-slider>
-          <div class="sliderTitle">
-            ${this.t('Use % of top search queries')}
-            (${this.totalSearchResults})
+        <div class="layout horizontal sliderScopes">
+          <div class="layout vertical">
+            <md-slider
+              min="5"
+              max="50"
+              value="5"
+              labeled
+              .valueLabel="${this.numberOfSelectQueries.toString()}"
+              @change="${this.updateNumberOfQueries}"
+            ></md-slider>
+            <div class="sliderTitle">${this.t('Number of search queries')}</div>
           </div>
-        </div>
-        <div class="layout vertical">
-          <md-slider
-            min="10"
-            max="100"
-            labeled
-            value="25"
-            .valueLabel="${this.percentOfTopResultsToScan * 100}%"
-            @change="${this.updatePercentOfResults}"
-          ></md-slider>
-          <div class="sliderTitle">
-            ${this.t('Use % of top search results')} (${this.totalPagesToGet})
+          <div class="layout vertical">
+            <md-slider
+              min="10"
+              max="100"
+              value="25"
+              labeled
+              .valueLabel="${Math.round(
+                this.percentOfTopQueriesToSearch * 100
+              )}%"
+              @change="${this.updatePercentOfQueries}"
+            ></md-slider>
+            <div class="sliderTitle">
+              ${this.t('Use % of top search queries')}
+            </div>
+          </div>
+          <div class="layout vertical">
+            <md-slider
+              min="10"
+              max="100"
+              labeled
+              value="25"
+              .valueLabel="${Math.round(this.percentOfTopResultsToScan * 100)}%"
+              @change="${this.updatePercentOfResults}"
+            ></md-slider>
+            <div class="sliderTitle">
+              ${this.t('Use % of top search results')}
+            </div>
           </div>
         </div>
       </div>

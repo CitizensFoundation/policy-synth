@@ -79,7 +79,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
   async rankSearchResults(
     queriesToRank: IEngineSearchResultItem[],
     searchQuestion: string,
-    maxPrompts = 100
+    maxPrompts = 150
   ) {
     this.searchQuestion = searchQuestion;
 

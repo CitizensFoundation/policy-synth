@@ -65,7 +65,11 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     );
   }
 
-  async rankSearchQueries(queriesToRank: string[], searchQuestion: string) {
+  async rankSearchQueries(
+    queriesToRank: string[],
+    searchQuestion: string,
+    maxPrompts = 120
+  ) {
     this.searchQuestion = searchQuestion;
 
     this.chat = new ChatOpenAI({
@@ -75,7 +79,12 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
       verbose: IEngineConstants.searchQueryRankingsModel.verbose,
     });
 
-    this.setupRankingPrompts(-1, queriesToRank, undefined, this.progressFunction);
+    this.setupRankingPrompts(
+      -1,
+      queriesToRank,
+      maxPrompts,
+      this.progressFunction
+    );
     await this.performPairwiseRanking(-1);
     return this.getOrderedListOfItems(-1) as string[];
   }

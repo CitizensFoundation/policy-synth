@@ -6,6 +6,7 @@ marked.setOptions({
     // Enable table support
     gfm: true,
 });
+//TODO: Add target = _blank to links
 /**
  * An async directive to render markdown in a LitElement's render function.
  * Images can be included or removed in the executor's options.
