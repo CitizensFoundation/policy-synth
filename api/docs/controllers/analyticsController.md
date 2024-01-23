@@ -4,33 +4,40 @@ The `AnalyticsController` class is responsible for handling analytics-related ro
 
 ## Properties
 
-| Name       | Type                        | Description                                   |
-|------------|-----------------------------|-----------------------------------------------|
-| path       | string                      | The base path for analytics routes.           |
-| router     | express.Router              | The router object for handling routes.        |
-| wsClients  | Map<string, WebSocket>      | A map to store WebSocket clients by some key. |
+| Name       | Type                          | Description                                      |
+|------------|-------------------------------|--------------------------------------------------|
+| path       | string                        | The base path for analytics routes.              |
+| router     | express.Router                | The router object from Express.                  |
+| wsClients  | Map<string, WebSocket>        | A map to store WebSocket clients by some key.    |
 
 ## Methods
 
-| Name               | Parameters                        | Return Type | Description                                 |
-|--------------------|-----------------------------------|-------------|---------------------------------------------|
-| initializeRoutes   |                                   | void        | Initializes the routes for the controller.  |
+| Name                | Parameters                        | Return Type | Description                                 |
+|---------------------|-----------------------------------|-------------|---------------------------------------------|
+| initializeRoutes    |                                   | void        | Initializes the routes for the controller.  |
 | createActivityFromApp | req: express.Request, res: express.Response | Promise<void> | Handles the creation of an activity from an app. |
 
 ## Routes
 
-- POST `/api/analytics/createActivityFromApp`: Endpoint to create an activity from an application.
+### POST /api/analytics/createActivityFromApp
+
+Handles the creation of an activity from an application. It responds with a status code of 200.
 
 ## Examples
 
 ```typescript
-// Example usage of initializing the AnalyticsController with WebSocket clients
+import express from 'express';
+import { AnalyticsController } from './path-to-analytics-controller';
+import WebSocket from 'ws';
+
+const app = express();
 const wsClients = new Map<string, WebSocket>();
+
 const analyticsController = new AnalyticsController(wsClients);
 
-// Example of adding the AnalyticsController routes to an Express application
-const app = express();
 app.use(analyticsController.router);
-```
 
-Please note that the actual implementation of the `createActivityFromApp` method is not provided in the documentation, as it is an asynchronous function that currently only sends a 200 status code in response to a request.
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
+});
+```

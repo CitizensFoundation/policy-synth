@@ -4,73 +4,57 @@ This class provides methods to interact with the OpenAI API.
 
 ## Properties
 
-| Name     | Type   | Description               |
-|----------|--------|---------------------------|
-| config   | object | Configuration for OpenAI. |
+No properties are documented for this class.
 
 ## Methods
 
-| Name                    | Parameters                                       | Return Type | Description                                                                 |
-|-------------------------|--------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| renderUserPrompt        | crt: LtpCurrentRealityTreeData                   | string      | Generates a user prompt string based on the current reality tree data.      |
-| renderSystemPrompt      | None                                             | string      | Generates a system prompt string for setting up a context and UDEs.         |
-| getConfigurationReview  | crt: LtpCurrentRealityTreeData, clientId: string, wsClients: Map<string, WebSocket> | Promise<void> | Initiates a review process for the current reality tree configuration.      |
+| Name                     | Parameters                                      | Return Type | Description                                                                 |
+|--------------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| renderUserPrompt         | crt: LtpCurrentRealityTreeData                  | string      | Generates a user prompt string based on the provided Current Reality Tree data. |
+| renderSystemPrompt       | None                                            | string      | Generates a system prompt string for reviewing a Current Reality Tree.      |
+| getConfigurationReview   | crt: LtpCurrentRealityTreeData, clientId: string, wsClients: Map<string, WebSocket> | Promise<void> | Initiates a review of the Current Reality Tree configuration and streams the response to the WebSocket client. |
 
 ## Examples
 
 ```typescript
 // Example usage of the OpenAI class methods
-const crtData: LtpCurrentRealityTreeData = {
-  context: "Example context",
-  undesirableEffects: ["UDE1", "UDE2"]
-};
 
-const clientId = uuidv4();
+// Assuming LtpCurrentRealityTreeData is already defined and instantiated as `crtData`
+const clientId = "some-unique-client-id";
 const wsClients = new Map<string, WebSocket>();
 
-// Example of rendering a user prompt
+// Example usage of renderUserPrompt
 const userPrompt = renderUserPrompt(crtData);
 console.log(userPrompt);
 
-// Example of rendering a system prompt
+// Example usage of renderSystemPrompt
 const systemPrompt = renderSystemPrompt();
 console.log(systemPrompt);
 
-// Example of initiating a configuration review
+// Example usage of getConfigurationReview
 await getConfigurationReview(crtData, clientId, wsClients);
 ```
 
 # LtpCurrentRealityTreeData
 
-This type represents the data structure for the current reality tree.
+This type represents the data structure for the Current Reality Tree in the Logical Thinking Process.
 
 ## Properties
 
-| Name               | Type     | Description                                   |
-|--------------------|----------|-----------------------------------------------|
-| context            | string   | The context for the current reality tree.     |
-| undesirableEffects | string[] | A list of undesirable effects to be reviewed. |
-
-# WebSocket
-
-This class is used to create a WebSocket connection.
-
-## Properties
-
-No properties are documented for the WebSocket class.
-
-## Methods
-
-No methods are documented for the WebSocket class.
+| Name               | Type     | Description                                       |
+|--------------------|----------|---------------------------------------------------|
+| context            | string   | The context or background for the Current Reality Tree. |
+| undesirableEffects | string[] | A list of undesirable effects identified in the Current Reality Tree. |
 
 ## Examples
 
 ```typescript
-// Example usage of the WebSocket class
-const ws = new WebSocket('ws://www.host.com/path');
-ws.on('open', function open() {
-  ws.send('something');
-});
+// Example usage of LtpCurrentRealityTreeData
+
+const crtData: LtpCurrentRealityTreeData = {
+  context: "The context of the problem or situation.",
+  undesirableEffects: ["Undesirable effect 1", "Undesirable effect 2"]
+};
 ```
 
-Please note that the `WebSocket` class is not fully documented here as it is a standard class from the "ws" library and its usage is well-known. For detailed documentation, refer to the official "ws" library documentation.
+Please note that the actual implementation of the `LtpCurrentRealityTreeData` type and its usage in the `renderUserPrompt` and `getConfigurationReview` methods are not shown in the provided code snippet. The example assumes that such a type is defined elsewhere in the codebase.
