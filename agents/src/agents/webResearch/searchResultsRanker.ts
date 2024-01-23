@@ -28,7 +28,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     ] as IEngineSearchResultItem;
 
     console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
-    console.log(`itemTwo: ${JSON.stringify(itemOne, null, 2)}`);
+    console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
 
     const messages = [
       new SystemMessage(

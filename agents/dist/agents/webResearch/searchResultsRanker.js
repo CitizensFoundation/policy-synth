@@ -13,7 +13,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
-        console.log(`itemTwo: ${JSON.stringify(itemOne, null, 2)}`);
+        console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
         const messages = [
             new SystemMessage(`
         You are an AI expert trained to rank root causes search results based on their relevance to the problem statement.
