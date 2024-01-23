@@ -7,7 +7,8 @@ import axios from "axios";
 
 import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
-import { writeFile, readFile, existsSync, mkdirSync } from "fs";
+import { writeFile, readFile, existsSync, mkdirSync, statSync } from "fs";
+import { join } from "path";
 
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
@@ -444,17 +445,18 @@ export class GetWebPagesProcessor extends BaseProcessor {
         let finalText = "";
         let pdfBuffer;
 
-        const filePath = `webPagesCache/${
-          this.memory ? this.memory.groupId : `webResarchId${subProblemIndex}`
-        }/${encodeURIComponent(url)}.gz`;
+        const directoryPath = `webPagesCache/${this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`}`;
+        const fileName = encodeURIComponent(url) + '.gz';
+        const fullPath = join(directoryPath, fileName);
 
-        if (!existsSync(filePath)) {
-          mkdirSync(filePath, { recursive: true });
+        // Create the directory if it doesn't exist
+        if (!existsSync(directoryPath)) {
+            mkdirSync(directoryPath, { recursive: true });
         }
 
-        if (existsSync(filePath)) {
+        if (existsSync(fullPath) && statSync(fullPath).isFile()) {
           this.logger.info("Got cached PDF");
-          const cachedPdf = await readFileAsync(filePath);
+          const cachedPdf = await readFileAsync(fullPath);
           pdfBuffer = gunzipSync(cachedPdf);
         } else {
           const sleepingForMs =
@@ -475,7 +477,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
           if (pdfBuffer) {
             this.logger.debug(`Caching PDF response`);
             const gzipData = gzipSync(pdfBuffer);
-            await writeFileAsync(filePath, gzipData);
+            await writeFileAsync(fullPath, gzipData);
             this.logger.debug("Have cached PDF response");
           }
         }
@@ -544,17 +546,18 @@ export class GetWebPagesProcessor extends BaseProcessor {
 
       this.logger.debug(`Getting HTML for ${url}`);
 
-      const filePath = `webPagesCache/${
-        this.memory ? this.memory.groupId : `webResarchId${subProblemIndex}`
-      }/${encodeURIComponent(url)}.gz`;
+      const directoryPath = `webPagesCache/${this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`}`;
+      const fileName = encodeURIComponent(url) + '.gz';
+      const fullPath = join(directoryPath, fileName);
 
-      if (!existsSync(filePath)) {
-        mkdirSync(filePath, { recursive: true });
+      // Create the directory if it doesn't exist
+      if (!existsSync(directoryPath)) {
+          mkdirSync(directoryPath, { recursive: true });
       }
 
-      if (existsSync(filePath)) {
+      if (existsSync(fullPath) && statSync(fullPath).isFile()) {
         this.logger.info("Got cached HTML");
-        const cachedData = await readFileAsync(filePath);
+        const cachedData = await readFileAsync(fullPath);
         htmlText = gunzipSync(cachedData).toString();
       } else {
         const sleepingForMs =
@@ -574,7 +577,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
           if (htmlText) {
             this.logger.debug(`Caching response`);
             const gzipData = gzipSync(Buffer.from(htmlText));
-            await writeFileAsync(filePath, gzipData);
+            await writeFileAsync(fullPath, gzipData);
           }
         }
       }
