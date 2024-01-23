@@ -445,7 +445,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         let pdfBuffer;
 
         const filePath = `webPagesCache/${
-          this.memory.groupId
+          this.memory ? this.memory.groupId : `webResarchId${subProblemIndex}`
         }/${encodeURIComponent(url)}.gz`;
 
         if (!existsSync(filePath)) {
@@ -545,7 +545,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
       this.logger.debug(`Getting HTML for ${url}`);
 
       const filePath = `webPagesCache/${
-        this.memory.groupId
+        this.memory ? this.memory.groupId : `webResarchId${subProblemIndex}`
       }/${encodeURIComponent(url)}.gz`;
 
       if (!existsSync(filePath)) {
