@@ -1,4 +1,3 @@
-import { GetWebPagesProcessor, IEngineConstants } from "@policysynth/agents";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { HTTPResponse, Page } from "puppeteer";
@@ -10,6 +9,8 @@ import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
 import { writeFile, readFile, existsSync } from "fs";
 import { htmlToText } from "html-to-text";
+import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
+import { IEngineConstants } from "../../constants.js";
 
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);

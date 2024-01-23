@@ -56,6 +56,11 @@ export { PsClassificationAgent } from './agents/validations/classificationAgent.
 export { PsParallelValidationAgent } from './agents/validations/parallelAgent.js';
 export { EvidenceWebPageVectorStore } from './agents/vectorstore/evidenceWebPage.js';
 export { RootCauseWebPageVectorStore } from './agents/vectorstore/rootCauseWebPage.js';
+export { SearchQueriesGenerator } from './agents/webResearch/searchQueriesGenerator.js';
+export { SearchQueriesRanker } from './agents/webResearch/searchQueriesRanker.js';
+export { SearchResultsRanker } from './agents/webResearch/searchResultsRanker.js';
+export { WebPageScanner } from './agents/webResearch/webPageScanner.js';
+export { ResearchWeb } from './agents/webResearch/researchWeb.js';
 export { WebPageVectorStore } from './agents/vectorstore/webPage.js';
 export { PolicySynthAgentBase } from './base.js';
 export { IEngineConstants } from './constants.js';

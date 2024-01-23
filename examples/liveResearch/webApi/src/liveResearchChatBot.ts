@@ -3,11 +3,11 @@ import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
 
 import { PsBaseChatBot } from "@policysynth/api";
-import { SearchQueriesGenerator } from "./searchQueriesGenerator.js";
-import { SearchQueriesRanker } from "./searchQueriesRanker.js";
-import { SearchWebScanner } from "./searchWebSanner.js";
-import { SearchResultsRanker } from "./searchResultsRanker.js";
-import { WebPageScanner } from "./webPageScanner.js";
+import { SearchQueriesGenerator } from "../../../../agents/src/agents/webResearch/searchQueriesGenerator.js";
+import { SearchQueriesRanker } from "../../../../agents/src/agents/webResearch/searchQueriesRanker.js";
+import { SearchWebScanner } from "../../../../agents/src/agents/webResearch/searchWebSanner.js";
+import { SearchResultsRanker } from "../../../../agents/src/agents/webResearch/searchResultsRanker.js";
+import { WebPageScanner } from "../../../../agents/src/agents/webResearch/webPageScanner.js";
 
 const DEBUGGING = true;
 

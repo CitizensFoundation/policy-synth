@@ -1,6 +1,6 @@
-import { SearchWebProcessor } from "@policysynth/agents";
+import { SearchWebProcessor } from "../solutions/web/searchWeb.js";
 
-export class SearchWebScanner extends SearchWebProcessor {
+export class ResearchWeb extends SearchWebProcessor {
   constructor() {
     super(undefined as any, undefined as any);
   }
