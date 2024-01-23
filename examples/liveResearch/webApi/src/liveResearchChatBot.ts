@@ -5,6 +5,7 @@ import WebSocket from "ws";
 import { PsBaseChatBot } from "@policysynth/api";
 import { SearchQueriesGenerator } from "./searchQueriesGenerator.js";
 import { SearchQueriesRanker } from "./searchQueriesRanker.js";
+import { SearchWebScanner } from "./searchWebSanner.js";
 
 const DEBUGGING = true;
 
@@ -19,37 +20,9 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     }
   `;
 
-  sendAgentStart(name: string, hasNoStreaming = true) {
-    const botMessage = {
-      sender: "bot",
-      type: "agentStart",
-      message: {
-        name: name,
-        noStreaming: hasNoStreaming,
-      } as PsAgentStartWsOptions,
-    };
-    this.clientSocket.send(JSON.stringify(botMessage));
-  }
-
-  sendAgentCompleted(
-    name: string,
-    lastAgent = false,
-    error: string | undefined = undefined
-  ) {
-    const botMessage = {
-      sender: "bot",
-      type: "agentCompleted",
-      message: {
-        name: name,
-        results: {
-          isValid: true,
-          validationErrors: error,
-          lastAgent: lastAgent,
-        } as PsValidationAgentResult,
-      } as PsAgentCompletedWsOptions,
-    };
-
-    this.clientSocket.send(JSON.stringify(botMessage));
+  renderSystemPrompt() {
+    return `Please provide thoughtful answers to the users followup questions.
+       `;
   }
 
   async doLiveResearch(question: string) {
@@ -67,18 +40,27 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     console.log(`Search queries: ${JSON.stringify(searchQueries, null, 2)}`);
 
     this.sendAgentStart("Rank search queries");
-    const searchQueriesRanker = new SearchQueriesRanker(undefined as any, undefined as any);
-    const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(searchQueries, question);
+    const searchQueriesRanker = new SearchQueriesRanker(
+      undefined as any,
+      undefined as any
+    );
+    const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
+      searchQueries,
+      question
+    );
     console.log(`Ranked: ${JSON.stringify(rankedSearchQueries, null, 2)}`);
     this.sendAgentCompleted("Rank search queries");
 
-    const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch));
+    const queriesToSearch = rankedSearchQueries.slice(
+      0,
+      Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch)
+    );
 
     this.sendAgentStart("Search the web");
-    const webSearch = new WebSearch(queriesToSearch);
-    const searchResults = await webSearch.search();
+    const webSearch = new SearchWebScanner(undefined as any, undefined as any);
+    const searchResults = await webSearch.search(queriesToSearch);
     this.sendAgentCompleted("Search the web");
-/*
+    /*
     this.sendAgentStart("Rank search results");
     const searchResultsRanker = new SearchResultsRanker(searchResults);
     const rankedSearchResults = await searchResultsRanker.rankSearchResults();
@@ -91,7 +73,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     const research = await webPageResearch.research();
     this.sendAgentCompleted("Scan and Research Web pages", true);
   */
-    const research = rankedSearchQueries;
+    const research = searchResults;
 
     const summarySystemPrompt = `Please review the web research below and give the user a full report.
       Analyze the results step by step and output your results in markdown.
@@ -125,7 +107,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   }
 
   conversation = async (chatLog: PsSimpleChatLog[]) => {
-    console.log("In LIVE RESEARH conversation")
+    console.log("In LIVE RESEARH conversation");
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
       return {
         role: message.sender,

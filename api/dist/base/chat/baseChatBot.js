@@ -47,6 +47,32 @@ export class PsBaseChatBot {
             message,
         }));
     }
+    sendAgentStart(name, hasNoStreaming = true) {
+        const botMessage = {
+            sender: "bot",
+            type: "agentStart",
+            message: {
+                name: name,
+                noStreaming: hasNoStreaming,
+            },
+        };
+        this.clientSocket.send(JSON.stringify(botMessage));
+    }
+    sendAgentCompleted(name, lastAgent = false, error = undefined) {
+        const botMessage = {
+            sender: "bot",
+            type: "agentCompleted",
+            message: {
+                name: name,
+                results: {
+                    isValid: true,
+                    validationErrors: error,
+                    lastAgent: lastAgent,
+                },
+            },
+        };
+        this.clientSocket.send(JSON.stringify(botMessage));
+    }
     async streamWebSocketResponses(
     //@ts-ignore
     stream) {
