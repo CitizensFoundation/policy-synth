@@ -19,11 +19,12 @@ export class SimpleChatController extends BaseController {
     const wsClientId = req.body.wsClientId;
 
     try {
-      new SimpleChatBot(
-        chatLog,
+      const bot = new SimpleChatBot(
         wsClientId,
         this.wsClients
       );
+
+      bot.conversation(chatLog);
     } catch (error) {
       console.log(error);
       res.sendStatus(500);
