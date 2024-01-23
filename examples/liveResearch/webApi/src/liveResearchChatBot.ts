@@ -81,8 +81,10 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     );
     this.sendAgentCompleted("Scan and Research Web pages", true);
 
-    const research = webScan;
+    this.renderResultsToUser(webScan);
+  }
 
+  async renderResultsToUser(research: object[]) {
     const summarySystemPrompt = `Please review the web research below and give the user a full report.
       Analyze the results step by step and output your results in markdown.
     `;

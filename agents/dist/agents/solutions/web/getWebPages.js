@@ -258,7 +258,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
             try {
                 let finalText = "";
                 let pdfBuffer;
-                const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
+                const filePath = `webPagesCache/${this.memory ? this.memory.groupId : `webResarchId${subProblemIndex}`}/${encodeURIComponent(url)}.gz`;
                 if (!existsSync(filePath)) {
                     mkdirSync(filePath, { recursive: true });
                 }
@@ -330,7 +330,7 @@ export class GetWebPagesProcessor extends BaseProcessor {
         try {
             let finalText, htmlText;
             this.logger.debug(`Getting HTML for ${url}`);
-            const filePath = `webPagesCache/${this.memory.groupId}/${encodeURIComponent(url)}.gz`;
+            const filePath = `webPagesCache/${this.memory ? this.memory.groupId : `webResarchId${subProblemIndex}`}/${encodeURIComponent(url)}.gz`;
             if (!existsSync(filePath)) {
                 mkdirSync(filePath, { recursive: true });
             }
