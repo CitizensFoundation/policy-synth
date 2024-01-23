@@ -4,7 +4,7 @@ import WebSocket from "ws";
 
 const DEBUGGING = true;
 
-export class BaseChatBot {
+export class PsBaseChatBot {
   constructor(
     chatConversation: PsSimpleChatLog[],
     clientId: string,

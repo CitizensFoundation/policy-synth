@@ -1,4 +1,4 @@
-import { BaseChatBot } from "./baseChatBot.js";
+import { BaseChatBot } from "../baseChatBot.js";
 
 export class SimpleChatBot extends BaseChatBot {
   renderSystemPrompt(): string {
