@@ -64,6 +64,8 @@ interface PsAiChatWsMessage {
     | "validationAgentCompleted"
     | "agentStart"
     | "agentCompleted"
+    | "agentUpdated"
+    | "agentError"
     | "thinking"
     | "start_followup"
     | "end_followup"
