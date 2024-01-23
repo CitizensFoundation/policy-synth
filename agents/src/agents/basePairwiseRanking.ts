@@ -300,8 +300,4 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProcessor {
 
     return items;
   }
-
-  async process() {
-    super.process();
-  }
 }
