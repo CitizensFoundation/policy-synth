@@ -5,27 +5,30 @@ import WebSocket from "ws";
 const DEBUGGING = true;
 
 export class PsBaseChatBot {
+  clientId: string;
+  wsClients: Map<string, WebSocket>;
+
   constructor(
-    chatConversation: PsSimpleChatLog[],
+    chatLog: PsSimpleChatLog[],
     clientId: string,
     wsClients: Map<string, WebSocket>) {
-    this.conversation(clientId, wsClients, chatConversation);
+    this.clientId = clientId;
+    this.wsClients = wsClients;
+    this.conversation(chatLog);
   }
 
   renderSystemPrompt() {
-    return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day`;
+    return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day. Lots of emojis`;
   }
 
   async streamWebSocketResponses(
     //@ts-ignore
-    stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>,
-    clientId: string,
-    wsClients: Map<string, WebSocket>
+    stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
   ) {
-    const wsClient = wsClients.get(clientId);
+    const wsClient = this.wsClients.get(this.clientId);
     if (!wsClient) {
       console.error(
-        `WS Client ${clientId} not found in streamWebSocketResponses`
+        `WS Client ${this.clientId} not found in streamWebSocketResponses`
       );
       return;
     }
@@ -50,8 +53,6 @@ export class PsBaseChatBot {
   }
 
   conversation = async (
-    clientId: string,
-    wsClients: Map<string, WebSocket>,
     chatLog: PsSimpleChatLog[],
   ) => {
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
@@ -86,14 +87,12 @@ export class PsBaseChatBot {
       stream: true,
     });
 
-    if (wsClients.get(clientId)) {
+    if (this.wsClients.get(this.clientId)) {
       this.streamWebSocketResponses(
-        stream,
-        clientId,
-        wsClients
+        stream
       );
     } else {
-      console.error(`WS Client ${clientId} not found`);
+      console.error(`WS Client ${this.clientId} not found`);
       // TODO: Implement this when available
       //stream.cancel();
     }
