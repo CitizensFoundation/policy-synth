@@ -41,6 +41,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     const percentOfQueriesToSearch = 0.3;
     const percentOfResultsToScan = 0.3;
 
+    // Generate search queries
     this.sendAgentStart("Generate search queries");
     const searchQueriesGenerator = new SearchQueriesGenerator(
       numberOfQueriesToGenerate,
@@ -50,8 +51,9 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     this.sendAgentCompleted("Generate search queries");
     console.log(`Search queries: ${JSON.stringify(searchQueries, null, 2)}`);
 
+    // Rank search queries
     this.sendAgentStart("Rank search queries");
-    const searchQueriesRanker = new SearchQueriesRanker();
+    const searchQueriesRanker = new SearchQueriesRanker(this.sendAgentUpdate.bind(this));
     const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
       searchQueries,
       question
@@ -64,11 +66,13 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch)
     );
 
+    // Search the web
     this.sendAgentStart("Search the web");
     const webSearch = new SearchWebScanner();
     const searchResults = await webSearch.search(queriesToSearch);
     this.sendAgentCompleted("Search the web");
 
+    // Rank search results
     this.sendAgentStart("Rank search results");
     const searchResultsRanker = new SearchResultsRanker();
     const rankedSearchResults = await searchResultsRanker.rankSearchResults(
@@ -81,6 +85,8 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       0,
       Math.floor(rankedSearchResults.length * percentOfResultsToScan)
     );
+
+    // Scan and Research Web pages
     this.sendAgentStart("Scan and Research Web pages");
 
     const webPageResearch = new WebPageScanner();
