@@ -165,7 +165,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     for (let i = 0; i < listOfUrls.length; i++) {
       await this.getAndProcessPage(
-        undefined,
+        5021,
         listOfUrls[i],
         browserPage,
         "news",
