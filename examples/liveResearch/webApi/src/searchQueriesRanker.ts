@@ -75,7 +75,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
       verbose: IEngineConstants.searchQueryRankingsModel.verbose,
     });
 
-    this.setupRankingPrompts(-1, queriesToRank);
+    this.setupRankingPrompts(-1, queriesToRank, undefined, this.progressFunction);
     await this.performPairwiseRanking(-1);
     return this.getOrderedListOfItems(-1) as string[];
   }
