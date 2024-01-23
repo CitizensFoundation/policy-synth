@@ -53,6 +53,8 @@ export declare class PsChatAssistant extends YpBaseElement {
     disconnectedCallback(): void;
     onMessage(event: MessageEvent): Promise<void>;
     scrollDown(): void;
+    addUserChatBotMessage(userMessage: string): void;
+    addThinkingChatBotMessage(): void;
     addToChatLogWithMessage(data: PsAiChatWsMessage, message?: string | undefined, changeButtonDisabledState?: boolean | undefined, changeButtonLabelTo?: string | undefined, refinedCausesSuggestions?: string[] | undefined, rawMessage?: string | undefined): void;
     addChatBotElement(data: PsAiChatWsMessage): void;
     addChatUserElement(data: PsAiChatWsMessage): void;

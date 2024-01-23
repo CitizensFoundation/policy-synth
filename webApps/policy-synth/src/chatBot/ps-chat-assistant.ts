@@ -303,6 +303,23 @@ export class PsChatAssistant extends YpBaseElement {
     }
   }
 
+
+  addUserChatBotMessage(userMessage: string) {
+    this.addChatBotElement({
+      sender: 'you',
+      type: 'start',
+      message: userMessage,
+    });
+  }
+
+  addThinkingChatBotMessage() {
+    this.addChatBotElement({
+      sender: 'bot',
+      type: 'thinking',
+      message: '',
+    });
+  }
+
   addToChatLogWithMessage(
     data: PsAiChatWsMessage,
     message: string | undefined = undefined,
