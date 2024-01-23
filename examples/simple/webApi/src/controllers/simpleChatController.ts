@@ -14,7 +14,6 @@ export class SimpleChatController extends BaseController {
   public async initializeRoutes() {
     this.router.put(this.path+"/", this.simpleChat);
   }
-
   simpleChat = async (req: express.Request, res: express.Response) => {
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;

@@ -19,6 +19,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     chatLog: PsAiChatWsMessage[];
     infoMessage: string;
     wsClientId: string;
+    webSocketsErrorCount: number;
     defaultInfoMessage: string;
     wsEndpoint: string;
     ws: WebSocket;

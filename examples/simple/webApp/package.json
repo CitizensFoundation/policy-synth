@@ -7,6 +7,9 @@
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/webApps/policy-synth"
   },
   "license": "MIT",
+  "dependencies": {
+    "@policysynth/webapp": "^1.0.30"
+  },
   "scripts": {
     "start": "concurrently --kill-others --names tsc,web-dev-server \"npm run tsc:watch\" \"web-dev-server --app-index index.html --node-resolve --open --watch\"",
     "build": "rimraf dist && tsc && rollup -c rollup.config.js",
@@ -24,12 +27,8 @@
     "tsc:watch": "tsc --watch"
   },
   "type": "module",
-  "dependencies": {
-    "@policysynth/webapp": "^1.0.28",
-    "marked": "^4.2.12"
-  },
   "devDependencies": {
-    "rollup-plugin-copy": "^3.5.0",  
+    "rollup-plugin-copy": "^3.5.0",
     "@babel/plugin-transform-runtime": "^7.18.10",
     "@babel/preset-env": "^7.16.6",
     "@babel/runtime": "^7.18.9",
