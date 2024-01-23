@@ -217,7 +217,7 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
     }
     renderChatInput() {
         return html `
-    ${(this.onlyUseTextField || this.chatLog.length > 1)
+      ${this.onlyUseTextField || this.chatLog.length > 1
             ? html `
             <md-outlined-text-field
               class="textInput"
@@ -233,7 +233,14 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
                 }
             }}"
               .label="${this.textInputLabel}"
-            >
+              ><md-icon
+                class="sendIcon"
+                @click="${this.sendChatMessage}"
+                slot="trailing-icon"
+                id="sendButton"
+                ?input-is-focused="${this.inputIsFocused}"
+                >send</md-icon
+              >
             </md-outlined-text-field>
           `
             : html `<md-outlined-text-field
@@ -245,17 +252,15 @@ Effect: ${this.nodeToAddCauseTo?.description}\n`;
             @focus="${() => (this.inputIsFocused = true)}"
             @blur="${() => (this.inputIsFocused = true)}"
             .label="${this.textInputLabel}"
-          ></md-outlined-text-field>`}
-
-        <md-icon
-          class="sendIcon"
-          @click="${this.sendChatMessage}"
-          slot="trailing-icon"
-          id="sendButton"
-          ?input-is-focused="${this.inputIsFocused}"
-          >send</md-icon
-        >
-      </md-outlined-text-field>
+            ><md-icon
+              class="sendIcon"
+              @click="${this.sendChatMessage}"
+              slot="trailing-icon"
+              id="sendButton"
+              ?input-is-focused="${this.inputIsFocused}"
+              >send</md-icon
+            ></md-outlined-text-field
+          >`}
     `;
     }
     render() {
