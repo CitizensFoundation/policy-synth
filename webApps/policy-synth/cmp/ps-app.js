@@ -1134,7 +1134,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
         });
         return `Built on ${formattedDate} CET`;
     }
-    renderThemeToggle() {
+    renderThemeToggle(hideText = false) {
         return html `<div class="layout vertical center-center lightDarkContainer">
         ${!this.themeDarkMode
             ? html `
@@ -1151,7 +1151,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
                 ><md-icon>light_mode</md-icon></md-outlined-icon-button
               >
             `}
-        <div>${this.t('Light/Dark')}</div>
+        <div ?hidden="${hideText}">${this.t('Light/Dark')}</div>
       </div>
 
       <div
@@ -1173,7 +1173,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
                 ><md-icon>contrast_rtl_off</md-icon></md-outlined-icon-button
               >
             `}
-        <div>${this.t('Contrast')}</div>
+        <div ?hidden="${hideText}">${this.t('Contrast')}</div>
       </div>`;
     }
     renderLogo() {

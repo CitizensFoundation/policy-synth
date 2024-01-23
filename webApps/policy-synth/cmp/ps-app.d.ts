@@ -163,7 +163,7 @@ export declare class PolicySynthWebApp extends YpBaseElement {
     renderContentOrLoader(content: TemplateResult): TemplateResult;
     handleShowMore(event: CustomEvent): void;
     getCustomVersion(version: string): string;
-    renderThemeToggle(): TemplateResult<1>;
+    renderThemeToggle(hideText?: boolean): TemplateResult<1>;
     renderLogo(): TemplateResult<1>;
     openSolutions(): Promise<void>;
     openPolicies(): Promise<void>;

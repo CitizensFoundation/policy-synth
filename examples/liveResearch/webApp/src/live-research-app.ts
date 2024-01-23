@@ -63,7 +63,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
           <div class="layout horizontal center-center themeToggle">
             <md-icon-button @click="${this.reset}"
               ><md-icon>restart_alt</md-icon></md-icon-button
-            >${this.renderThemeToggle()} ${this.renderScopeSliders()}
+            >${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
           </div>
           <live-research-chat-bot
             .numberOfSelectQueries=${this.numberOfSelectQueries}
