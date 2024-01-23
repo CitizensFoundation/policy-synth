@@ -1,5 +1,5 @@
 import { PolicySynthAgentBase, IEngineConstants } from "@policysynth/agents";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
 export class SearchQueriesGenerator extends PolicySynthAgentBase {

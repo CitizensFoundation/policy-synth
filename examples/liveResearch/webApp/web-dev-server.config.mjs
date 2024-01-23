@@ -19,7 +19,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   mimeTypes: {
     '**/*.cjs': 'js',
   },
-  port: 2940,
+  port: 2960,
   plugins: [
 
     nodeResolve({
@@ -30,7 +30,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   ],
   middleware: [
     proxy('/api/', {
-      target: 'http://localhost:5011/',
+      target: 'http://localhost:5021/',
       //changeOrigin: true
     })
   ],

@@ -1,12 +1,12 @@
 import { AnalyticsController, PolicySynthApiApp } from '@policysynth/api';
-import { SimpleChatController } from './controllers/simpleChatController.js';
+import { LiveResearchChatController } from './controllers/liveResearchChatController.js';
 
 const app = new PolicySynthApiApp(
   [
     AnalyticsController,
-    SimpleChatController,
+    LiveResearchChatController
   ],
-  5011,
+  5021,
 );
 
 app.listen();

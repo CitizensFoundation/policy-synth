@@ -1,7 +1,7 @@
 import { OpenAI } from "openai";
 const DEBUGGING = true;
 export class PsBaseChatBot {
-    constructor(chatLog, clientId, wsClients) {
+    constructor(clientId, wsClients) {
         this.conversation = async (chatLog) => {
             let messages = chatLog.map((message) => {
                 return {
@@ -35,9 +35,6 @@ export class PsBaseChatBot {
         });
         if (!this.clientSocket) {
             console.error(`WS Client ${this.clientId} not found in streamWebSocketResponses`);
-        }
-        else {
-            this.conversation(chatLog);
         }
     }
     renderSystemPrompt() {

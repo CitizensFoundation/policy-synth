@@ -10,7 +10,6 @@ export class PsBaseChatBot {
   openaiClient: OpenAI;
 
   constructor(
-    chatLog: PsSimpleChatLog[],
     clientId: string,
     wsClients: Map<string, WebSocket>
   ) {
@@ -23,8 +22,6 @@ export class PsBaseChatBot {
       console.error(
         `WS Client ${this.clientId} not found in streamWebSocketResponses`
       );
-    } else {
-      this.conversation(chatLog);
     }
   }
 

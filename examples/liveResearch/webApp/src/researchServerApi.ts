@@ -1,6 +1,6 @@
 import { YpServerApi } from "@yrpri/webapp";
 
-export class SimpleChatServerApi extends YpServerApi {
+export class ResearchServerApi extends YpServerApi {
   constructor(urlPath: string = '/api') {
     super();
     this.baseUrlPath = urlPath;
