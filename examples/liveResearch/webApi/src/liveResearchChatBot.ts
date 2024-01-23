@@ -2,11 +2,10 @@ import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
 
-const DEBUGGING = true;
-
 import { PsBaseChatBot } from "@policysynth/api";
+import { SearchQueriesGenerator } from "./searchQueriesGenerator.js";
 
-
+const DEBUGGING = true;
 
 export class LiveResearchChatBot extends PsBaseChatBot {
   jsonWebPageResearchSchema = `
@@ -31,7 +30,11 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     this.clientSocket.send(JSON.stringify(botMessage));
   }
 
-  sendAgentCompleted(name: string, lastAgent = false, error: string | undefined = undefined) {
+  sendAgentCompleted(
+    name: string,
+    lastAgent = false,
+    error: string | undefined = undefined
+  ) {
     const botMessage = {
       sender: "bot",
       type: "agentCompleted",
@@ -40,7 +43,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
         results: {
           isValid: true,
           validationErrors: error,
-          lastAgent: lastAgent
+          lastAgent: lastAgent,
         } as PsValidationAgentResult,
       } as PsAgentCompletedWsOptions,
     };
@@ -53,18 +56,16 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     const percentOfQueriesToSearch = 0.5;
     const percentOfResultsToScan = 0.5;
 
-    const generateSearchQueriesPrompt = `
-      Given the question below, generate a list of ${numberOfQueriesToGenerate} search queries that would be useful for answering the question.
-
-      Question: ${question}
-    `;
-
     this.sendAgentStart("Generate search queries");
-    const searchQueriesGenerator = new SearchQueriesGenerator(generateSearchQueriesPrompt);
+    const searchQueriesGenerator = new SearchQueriesGenerator(
+      numberOfQueriesToGenerate,
+      question
+    );
     const searchQueries = await searchQueriesGenerator.generateSearchQueries();
+    console.log(`searchQueries: ${JSON.stringify(searchQueries, null, 2)}`);
     this.sendAgentCompleted("Generate search queries");
 
-    this.sendAgentStart("Rank search queries");
+    /*this.sendAgentStart("Rank search queries");
     const searchQueriesRanker = new SearchQueriesRanker(searchQueries, numberOfQueriesToGenerate, percentOfQueriesToSearch);
     const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries();
     this.sendAgentCompleted("Rank search queries");
@@ -87,10 +88,12 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     const webPageResearch = new WebPageResearch(searchResultsToScan, this.jsonWebPageResearchSchema);
     const research = await webPageResearch.research();
     this.sendAgentCompleted("Scan and Research Web pages", true);
+  */
+    const research = searchQueries;
 
     const summarySystemPrompt = `Please review the web research below and give the user a full report.
       Analyze the results step by step and output your results in markdown.
-    `
+    `;
 
     const summaryUserPrompt = `
       Results from the web research:
@@ -99,13 +102,14 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
     const messages: any[] = [
       {
-      role: "system",
-      content: summarySystemPrompt,
-    },
-    {
-      role: "user",
-      content: summaryUserPrompt,
-    }]
+        role: "system",
+        content: summarySystemPrompt,
+      },
+      {
+        role: "user",
+        content: summaryUserPrompt,
+      },
+    ];
 
     const stream = await this.openaiClient.chat.completions.create({
       model: "gpt-4-1106-preview",
