@@ -7,7 +7,7 @@ import axios from "axios";
 
 import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
-import { writeFile, readFile, existsSync } from "fs";
+import { writeFile, readFile, existsSync, mkdirSync } from "fs";
 
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
@@ -448,6 +448,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
           this.memory.groupId
         }/${encodeURIComponent(url)}.gz`;
 
+        if (!existsSync(filePath)) {
+          mkdirSync(filePath, { recursive: true });
+        }
+
         if (existsSync(filePath)) {
           this.logger.info("Got cached PDF");
           const cachedPdf = await readFileAsync(filePath);
@@ -543,6 +547,10 @@ export class GetWebPagesProcessor extends BaseProcessor {
       const filePath = `webPagesCache/${
         this.memory.groupId
       }/${encodeURIComponent(url)}.gz`;
+
+      if (!existsSync(filePath)) {
+        mkdirSync(filePath, { recursive: true });
+      }
 
       if (existsSync(filePath)) {
         this.logger.info("Got cached HTML");

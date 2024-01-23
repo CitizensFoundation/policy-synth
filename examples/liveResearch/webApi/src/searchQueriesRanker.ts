@@ -6,6 +6,10 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
 export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
+  constructor() {
+    super(undefined as any, undefined as any);
+  }
+
   searchQuestion: string | undefined;
 
   async voteOnPromptPair(
