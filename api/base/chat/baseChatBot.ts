@@ -39,6 +39,39 @@ export class PsBaseChatBot {
     );
   }
 
+  sendAgentStart(name: string, hasNoStreaming = true) {
+    const botMessage = {
+      sender: "bot",
+      type: "agentStart",
+      message: {
+        name: name,
+        noStreaming: hasNoStreaming,
+      } as PsAgentStartWsOptions,
+    };
+    this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
+  sendAgentCompleted(
+    name: string,
+    lastAgent = false,
+    error: string | undefined = undefined
+  ) {
+    const botMessage = {
+      sender: "bot",
+      type: "agentCompleted",
+      message: {
+        name: name,
+        results: {
+          isValid: true,
+          validationErrors: error,
+          lastAgent: lastAgent,
+        } as PsValidationAgentResult,
+      } as PsAgentCompletedWsOptions,
+    };
+
+    this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
   async streamWebSocketResponses(
     //@ts-ignore
     stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
