@@ -28,7 +28,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   }
 
   async doLiveResearch(question: string) {
-    const numberOfQueriesToGenerate = 6;
+    const numberOfQueriesToGenerate = 5;
     const percentOfQueriesToSearch = 0.2;
     const percentOfResultsToScan = 0.2;
 
