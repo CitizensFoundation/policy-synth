@@ -24,6 +24,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     constructor() {
         super();
         this.chatLog = [];
+        this.webSocketsErrorCount = 0;
         this.defaultInfoMessage = "I'm your friendly chat assistant";
         this.inputIsFocused = false;
         this.onlyUseTextField = false;
@@ -62,17 +63,6 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
             document.addEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
         }
         this.initWebSockets();
-        this.ws.onmessage = this.onMessage.bind(this);
-        this.ws.onopen = this.onWsOpen.bind(this);
-        this.ws.onerror = error => {
-            //TODO: Try to resend the last message
-            console.error('WebSocket Error ' + error);
-            setTimeout(() => this.initWebSockets(), 500);
-        };
-        this.ws.onclose = error => {
-            console.error('WebSocket Close ' + error);
-            setTimeout(() => this.initWebSockets(), 500);
-        };
     }
     initWebSockets() {
         let wsEndpoint;
@@ -85,10 +75,29 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         }
         try {
             this.ws = new WebSocket(wsEndpoint);
+            console.error('WebSocket Opened');
+            this.ws.onmessage = this.onMessage.bind(this);
+            this.ws.onopen = this.onWsOpen.bind(this);
+            this.ws.onerror = error => {
+                //TODO: Try to resend the last message
+                this.webSocketsErrorCount++;
+                console.error('WebSocket Error ' + error);
+                setTimeout(() => this.initWebSockets(), this.webSocketsErrorCount > 1
+                    ? this.webSocketsErrorCount * 1000
+                    : 2000);
+            };
+            this.ws.onclose = error => {
+                console.error('WebSocket Close ' + error);
+                this.webSocketsErrorCount++;
+                setTimeout(() => this.initWebSockets(), this.webSocketsErrorCount > 1
+                    ? this.webSocketsErrorCount * 1000
+                    : 2000);
+            };
         }
         catch (error) {
             console.error('WebSocket Error ' + error);
-            setTimeout(() => this.initWebSockets(), 2500);
+            this.webSocketsErrorCount++;
+            setTimeout(() => this.initWebSockets(), this.webSocketsErrorCount > 1 ? this.webSocketsErrorCount * 1000 : 1500);
         }
     }
     firstUpdated(_changedProperties) {
@@ -104,9 +113,12 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         if (this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify({ type: 'heartbeat' }));
         }
+        else {
+            console.error('WebSocket not open');
+        }
     }
     onWsOpen() {
-        console.error('WebSocket Open');
+        console.error('WebSocket onWsOpen');
         this.sendHeartbeat();
         //@ts-ignore
         this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 55000);
@@ -115,12 +127,12 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
             if (data.clientId) {
                 this.wsClientId = data.clientId;
                 this.ws.onmessage = this.onMessage.bind(this);
+                console.error(`WebSocket clientId: ${this.wsClientId}`);
             }
             else {
                 console.error('Error: No clientId received from server!');
             }
         };
-        this.reset();
     }
     updated(changedProperties) {
         super.updated(changedProperties);
@@ -612,6 +624,9 @@ __decorate([
 __decorate([
     property({ type: String })
 ], PsChatAssistant.prototype, "wsClientId", void 0);
+__decorate([
+    property({ type: Number })
+], PsChatAssistant.prototype, "webSocketsErrorCount", void 0);
 __decorate([
     property({ type: String })
 ], PsChatAssistant.prototype, "defaultInfoMessage", void 0);

@@ -36,6 +36,9 @@ export class PsChatAssistant extends YpBaseElement {
   @property({ type: String })
   wsClientId!: string;
 
+  @property({ type: Number })
+  webSocketsErrorCount = 0;
+
   @property({ type: String })
   defaultInfoMessage: string = "I'm your friendly chat assistant";
 
@@ -137,18 +140,6 @@ export class PsChatAssistant extends YpBaseElement {
     }
 
     this.initWebSockets();
-
-    this.ws.onmessage = this.onMessage.bind(this);
-    this.ws.onopen = this.onWsOpen.bind(this);
-    this.ws.onerror = error => {
-      //TODO: Try to resend the last message
-      console.error('WebSocket Error ' + error);
-      setTimeout(() => this.initWebSockets(), 500);
-    };
-    this.ws.onclose = error => {
-      console.error('WebSocket Close ' + error);
-      setTimeout(() => this.initWebSockets(), 500);
-    };
   }
 
   initWebSockets() {
@@ -165,9 +156,37 @@ export class PsChatAssistant extends YpBaseElement {
 
     try {
       this.ws = new WebSocket(wsEndpoint);
+      console.error('WebSocket Opened');
+      this.ws.onmessage = this.onMessage.bind(this);
+      this.ws.onopen = this.onWsOpen.bind(this);
+      this.ws.onerror = error => {
+        //TODO: Try to resend the last message
+        this.webSocketsErrorCount++;
+        console.error('WebSocket Error ' + error);
+        setTimeout(
+          () => this.initWebSockets(),
+          this.webSocketsErrorCount > 1
+            ? this.webSocketsErrorCount * 1000
+            : 2000
+        );
+      };
+      this.ws.onclose = error => {
+        console.error('WebSocket Close ' + error);
+        this.webSocketsErrorCount++;
+        setTimeout(
+          () => this.initWebSockets(),
+          this.webSocketsErrorCount > 1
+            ? this.webSocketsErrorCount * 1000
+            : 2000
+        );
+      };
     } catch (error) {
       console.error('WebSocket Error ' + error);
-      setTimeout(() => this.initWebSockets(), 2500);
+      this.webSocketsErrorCount++;
+      setTimeout(
+        () => this.initWebSockets(),
+        this.webSocketsErrorCount > 1 ? this.webSocketsErrorCount * 1000 : 1500
+      );
     }
   }
 
@@ -190,11 +209,13 @@ export class PsChatAssistant extends YpBaseElement {
   sendHeartbeat() {
     if (this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'heartbeat' }));
+    } else {
+      console.error('WebSocket not open');
     }
   }
 
   onWsOpen() {
-    console.error('WebSocket Open');
+    console.error('WebSocket onWsOpen');
     this.sendHeartbeat();
 
     //@ts-ignore
@@ -204,11 +225,11 @@ export class PsChatAssistant extends YpBaseElement {
       if (data.clientId) {
         this.wsClientId = data.clientId;
         this.ws.onmessage = this.onMessage.bind(this);
+        console.error(`WebSocket clientId: ${this.wsClientId}`);
       } else {
         console.error('Error: No clientId received from server!');
       }
     };
-    this.reset();
   }
 
   override updated(
@@ -302,7 +323,6 @@ export class PsChatAssistant extends YpBaseElement {
       }, 100);
     }
   }
-
 
   addUserChatBotMessage(userMessage: string) {
     this.addChatBotElement({
