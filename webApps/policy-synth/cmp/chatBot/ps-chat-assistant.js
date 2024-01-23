@@ -535,7 +535,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     renderChatInput() {
         return html `
-      ${!this.onlyUseTextField && this.chatLog.length > 1
+      ${(this.onlyUseTextField || this.chatLog.length > 1)
             ? html `
               <md-outlined-text-field
                 class="textInput"
