@@ -1,37 +1,30 @@
-# IEngineInnovationMemoryData
+# RedisMemoryManager
 
-Represents the memory data structure for an engine innovation project.
-
-## Properties
-
-| Name           | Type                      | Description                                   |
-|----------------|---------------------------|-----------------------------------------------|
-| subProblems    | ISubProblemData[]         | Array of sub-problem data objects.            |
-
-## ISubProblemData
-
-Represents the data structure for a sub-problem within an engine innovation project.
+This class is responsible for managing memory data in a Redis database, particularly for adding custom search URLs to a project's memory data.
 
 ## Properties
 
-| Name             | Type     | Description                                   |
-|------------------|----------|-----------------------------------------------|
-| customSearchUrls | string[] | Array of custom URLs related to the sub-problem. |
+No properties are documented for this class.
 
 ## Methods
 
-| Name          | Parameters            | Return Type | Description                                 |
-|---------------|-----------------------|-------------|---------------------------------------------|
-| addCustomUrls | projectId: string     | void        | Adds custom URLs to the sub-problems memory |
+| Name           | Parameters        | Return Type | Description                                                                 |
+|----------------|-------------------|-------------|-----------------------------------------------------------------------------|
+| addCustomUrls  |                   | Promise<void> | Adds custom search URLs to the memory data of a given project in Redis. |
 
 ## Examples
 
 ```typescript
-// Example usage of adding custom URLs to a sub-problem
-const projectId = 'example-project-id';
-addCustomUrls(projectId).then(() => {
-  console.log('Custom URLs added successfully.');
+import ioredis from 'ioredis';
+
+// Initialize RedisMemoryManager with a Redis connection string
+const redisMemoryManager = new RedisMemoryManager('redis://localhost:6379');
+
+// Example usage of adding custom URLs
+const projectId = 'exampleProjectId';
+redisMemoryManager.addCustomUrls(projectId).then(() => {
+  console.log('Custom search URLs added successfully.');
 }).catch(console.error);
 ```
 
-Please note that the provided TypeScript file does not include type definitions for `IEngineInnovationMemoryData` or `ISubProblemData`. These types should be defined elsewhere in the project for the above documentation to be accurate.
+**Note:** The example assumes the existence of a `RedisMemoryManager` class with a constructor accepting a Redis connection string and a method `addCustomUrls(projectId)`. The actual implementation may differ based on the context and usage within the provided code snippet.

@@ -1,6 +1,6 @@
 # Queue
 
-The `Queue` class from the `bullmq` library is used to create and manage a queue of jobs. It provides methods to add jobs to the queue, process them, and maintain the queue, such as draining and cleaning.
+The `Queue` class from the `bullmq` library is used to create and manage a queue of jobs. It provides various methods to interact with the queue, such as adding jobs, draining the queue, cleaning jobs in different states, and completely obliterating the queue.
 
 ## Properties
 
@@ -11,32 +11,32 @@ This class instance does not explicitly define properties in the provided code s
 | Name       | Parameters                  | Return Type | Description                                      |
 |------------|-----------------------------|-------------|--------------------------------------------------|
 | drain      | -                           | Promise<void> | Drains the queue, removing all jobs.             |
-| clean      | grace: number, limit: number, status: string | Promise<number[]> | Cleans jobs from a queue depending on the provided status. |
-| obliterate | -                           | Promise<void> | Completely removes the queue and all of its data. |
+| clean      | grace: number, limit: number, status: 'active' \| 'failed' \| 'completed' \| 'wait' \| 'delayed' | Promise<number[]> | Cleans jobs from the queue based on their status. |
+| obliterate | -                           | Promise<void> | Completely obliterates the queue.                |
 
 ## Examples
 
 ```typescript
 import { Queue } from "bullmq";
 
-// Create a new queue instance
+// Create a new Queue instance
 const myQueue = new Queue("agent-solutions");
 
-// Drain the queue
+// Drain the queue, removing all jobs
 await myQueue.drain();
 
-// Clean the queue by removing jobs based on their status
+// Clean jobs in various states from the queue
 await myQueue.clean(0, 10000, "active");
 await myQueue.clean(0, 10000, "failed");
 await myQueue.clean(0, 10000, "completed");
 await myQueue.clean(0, 10000, "wait");
 await myQueue.clean(0, 10000, "delayed");
 
-// Obliterate the queue
+// Completely obliterate the queue
 await myQueue.obliterate();
 
 // Exit the process
 process.exit(0);
 ```
 
-Please note that the actual `Queue` class from `bullmq` may have more properties and methods than what is shown in the provided code snippet. The documentation above is based solely on the usage example given.
+Please note that the provided code snippet does not include the full implementation of the `Queue` class, and the actual class may contain additional properties and methods not listed here. The documentation above is based solely on the usage shown in the snippet.

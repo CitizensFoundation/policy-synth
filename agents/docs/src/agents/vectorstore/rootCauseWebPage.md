@@ -1,57 +1,55 @@
 # RootCauseWebPageVectorStore
 
-The `RootCauseWebPageVectorStore` class is responsible for managing the storage and retrieval of web page vectors related to root causes. It interacts with a Weaviate instance to perform operations such as adding schemas, querying data, and updating records.
+The `RootCauseWebPageVectorStore` class extends `PolicySynthAgentBase` and is responsible for managing the storage and retrieval of web page vectors related to root causes. It interacts with a Weaviate instance to perform operations such as adding schemas, querying, and updating data related to web pages.
 
 ## Properties
 
-| Name              | Type   | Description                                           |
-|-------------------|--------|-------------------------------------------------------|
-| fieldsToExtract   | string | A string containing the fields to extract from queries. |
-| client            | WeaviateClient | An instance of the Weaviate client for making API requests. |
+| Name              | Type   | Description               |
+|-------------------|--------|---------------------------|
+| fieldsToExtract   | string | A static string containing the fields to extract during queries. |
+| client            | WeaviateClient | A static instance of the Weaviate client configured with the scheme and host. |
 
 ## Methods
 
-| Name                     | Parameters                                      | Return Type | Description                                                                 |
-|--------------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| addSchema                | -                                               | Promise<void> | Reads a schema from a file and adds it to the Weaviate instance.             |
-| showScheme               | -                                               | Promise<void> | Retrieves and logs the current schema from the Weaviate instance.            |
-| deleteScheme             | -                                               | Promise<void> | Deletes the schema for the class `RootCauseWebPage` from the Weaviate instance. |
-| testQuery                | -                                               | Promise<any> | Performs a test query on the Weaviate instance and logs the results.        |
-| postWebPage              | webPageAnalysis: PSRootCauseRawWebPageData      | Promise<any> | Posts a web page analysis to the Weaviate instance.                         |
-| updateWebPage            | id: string, webPageAnalysis: PSRootCauseRawWebPageData | Promise<any> | Updates a web page analysis in the Weaviate instance.                       |
-| updateWebRootCause       | id: string, rootCauseType: string, rootCauses: string[], quiet: boolean | Promise<any> | Updates the root causes for a web page in the Weaviate instance.            |
-| saveWebPageMetadata      | id: string, metadata: PSWebPageMetadata, quiet: boolean | Promise<any> | Saves metadata for a web page in the Weaviate instance.                     |
-| updateRefinedAnalysis    | id: string, refinedRootCause: PSRefinedRootCause, quiet: boolean | Promise<any> | Updates the refined analysis for a root cause in the Weaviate instance.     |
-| updateScores             | id: string, scores: PSRootCauseRating, quiet: boolean | Promise<any> | Updates the scores for a root cause in the Weaviate instance.                |
-| getWebPage               | id: string                                      | Promise<PSRootCauseRawWebPageData> | Retrieves a web page by ID from the Weaviate instance.                      |
-| getTopPagesForProcessing | groupId: number, searchType: string, limit: number | Promise<PSRootCauseWebPageGraphQlResults> | Retrieves the top pages for processing based on the total score.             |
-| getTopWebPagesForProcessing | groupId: number, searchType: string, limit: number, offset: number, rootCauseCountLimit: number, onlyRefined: boolean | Promise<PSRootCauseWebPageGraphQlResults> | Retrieves the top web pages for processing with additional filters.          |
-| getWebPagesForProcessing | groupId: number, searchType: string, limit: number, offset: number, rootCauseCountLimit: number | Promise<PSRootCauseWebPageGraphQlResults> | Retrieves web pages for processing with specified filters.                   |
-| webPageExist             | groupId: number, url: string, searchType: PSRootCauseWebPageTypes | Promise<Boolean> | Checks if a web page exists in the Weaviate instance.                       |
-| searchWebPages           | query: string, groupId: number, searchType: PSRootCauseWebPageTypes | Promise<PSRootCauseWebPageGraphQlResults> | Searches for web pages in the Weaviate instance based on a query and filters. |
+| Name                      | Parameters                                      | Return Type | Description                 |
+|---------------------------|-------------------------------------------------|-------------|-----------------------------|
+| addSchema                 | -                                               | Promise<void> | Reads a JSON schema from a file and adds it to the Weaviate schema. |
+| showScheme                | -                                               | Promise<void> | Retrieves and logs the current Weaviate schema. |
+| deleteScheme              | -                                               | Promise<void> | Deletes the "RootCauseWebPage" class from the Weaviate schema. |
+| testQuery                 | -                                               | Promise<any> | Performs a test query on the "RootCauseWebPage" class. |
+| postWebPage               | webPageAnalysis: PSRootCauseRawWebPageData      | Promise<any> | Posts a web page analysis to Weaviate. |
+| updateWebPage             | id: string, webPageAnalysis: PSRootCauseRawWebPageData | Promise<any> | Updates a web page analysis in Weaviate. |
+| updateWebRootCause        | id: string, rootCauseType: string, rootCauses: string[], quiet: boolean | Promise<any> | Updates the root cause information for a web page in Weaviate. |
+| saveWebPageMetadata       | id: string, metadata: PSWebPageMetadata, quiet: boolean | Promise<any> | Saves metadata for a web page in Weaviate. |
+| updateRefinedAnalysis     | id: string, refinedRootCause: PSRefinedRootCause, quiet: boolean | Promise<any> | Updates the refined root cause analysis for a web page in Weaviate. |
+| updateScores              | id: string, scores: PSRootCauseRating, quiet: boolean | Promise<any> | Updates the scores for a web page's root cause analysis in Weaviate. |
+| getWebPage                | id: string                                      | Promise<PSRootCauseRawWebPageData> | Retrieves a web page's analysis from Weaviate. |
+| getTopPagesForProcessing  | groupId: number, searchType: string, limit: number | Promise<PSRootCauseWebPageGraphQlResults> | Retrieves the top pages for processing based on the total score. |
+| getTopWebPagesForProcessing | groupId: number, searchType: string, limit: number, offset: number, rootCauseCountLimit: number, onlyRefined: boolean | Promise<PSRootCauseWebPageGraphQlResults> | Retrieves the top web pages for processing with additional filtering options. |
+| getWebPagesForProcessing  | groupId: number, searchType: string, limit: number, offset: number, rootCauseCountLimit: number | Promise<PSRootCauseWebPageGraphQlResults> | Retrieves web pages for processing with filtering options. |
+| webPageExist              | groupId: number, url: string, searchType: PSRootCauseWebPageTypes | Promise<Boolean> | Checks if a web page already exists in Weaviate. |
+| searchWebPages            | query: string, groupId: number, searchType: PSRootCauseWebPageTypes | Promise<PSRootCauseWebPageGraphQlResults> | Searches for web pages in Weaviate based on a query and optional filters. |
 
 ## Examples
 
 ```typescript
-// Example usage of the RootCauseWebPageVectorStore class
+// Example usage of adding a schema
 const vectorStore = new RootCauseWebPageVectorStore();
-
-// Adding a schema to the Weaviate instance
 await vectorStore.addSchema();
 
-// Posting a web page analysis
+// Example usage of posting a web page analysis
 const webPageAnalysis = {
   // ... web page analysis data
 };
 await vectorStore.postWebPage(webPageAnalysis);
 
-// Updating a web page analysis
-const webPageId = "some-id";
-await vectorStore.updateWebPage(webPageId, webPageAnalysis);
+// Example usage of updating a web page analysis
+const id = "some-id";
+await vectorStore.updateWebPage(id, webPageAnalysis);
 
-// Retrieving a web page by ID
-const retrievedWebPage = await vectorStore.getWebPage(webPageId);
+// Example usage of retrieving a web page analysis
+const retrievedWebPage = await vectorStore.getWebPage(id);
 console.log(retrievedWebPage);
 ```
 
-Note: The `PSRootCauseRawWebPageData`, `PSWebPageMetadata`, `PSRefinedRootCause`, `PSRootCauseRating`, and `PSRootCauseWebPageGraphQlResults` types are not defined in the provided code snippet and should be defined elsewhere in the codebase. The `IEngineWebPageGraphQlSingleResult` and `IEngineWebPageAnalysisData` types are also referenced but not defined in the snippet.
+Note: The actual implementation of `PSRootCauseRawWebPageData`, `PSWebPageMetadata`, `PSRefinedRootCause`, `PSRootCauseRating`, `PSRootCauseWebPageGraphQlResults`, and `PSRootCauseWebPageTypes` are not provided in the documentation. These are expected to be defined elsewhere in the codebase.

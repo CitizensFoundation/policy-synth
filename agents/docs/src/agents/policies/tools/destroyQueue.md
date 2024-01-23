@@ -1,42 +1,42 @@
 # Queue
 
-The `Queue` class from the `bullmq` library is used to create and manage a queue of jobs. It provides various methods to interact with the queue, such as adding jobs, draining the queue, cleaning jobs in different states, and completely obliterating the queue.
+The `Queue` class from the `bullmq` library is used to create and manage a queue of jobs. It provides methods to add jobs to the queue, process them, and maintain the queue, such as draining and cleaning jobs in various states.
 
 ## Properties
 
-This class does not expose public properties for direct access in the provided code snippet.
+This class instance does not explicitly define custom properties in the provided code snippet. It utilizes properties from the `bullmq` library's `Queue` class.
 
 ## Methods
 
-| Name       | Parameters                        | Return Type | Description                                             |
-|------------|-----------------------------------|-------------|---------------------------------------------------------|
-| drain      |                                   | Promise<void> | Drains the queue, removing all jobs.                    |
-| clean      | grace: number, limit: number, status: 'active' \| 'failed' \| 'completed' \| 'wait' \| 'delayed' | Promise<number[]> | Cleans jobs from the queue based on their status.       |
-| obliterate |                                   | Promise<void> | Completely removes the queue and all of its contents.   |
+| Name       | Parameters                  | Return Type | Description                                      |
+|------------|-----------------------------|-------------|--------------------------------------------------|
+| drain      | -                           | Promise<void> | Drains the queue, removing all jobs.             |
+| clean      | grace: number, limit: number, status: string | Promise<void> | Cleans jobs from the queue based on their status and other parameters. |
+| obliterate | -                           | Promise<void> | Completely removes the queue and all of its contents. |
 
 ## Examples
 
 ```typescript
 import { Queue } from "bullmq";
 
-// Create a new queue instance
+// Create a new Queue instance
 const myQueue = new Queue("agent-policies");
 
 // Drain the queue, removing all jobs
 await myQueue.drain();
 
-// Clean jobs in various states from the queue
+// Clean jobs in various states with a grace period and limit
 await myQueue.clean(0, 10000, "active");
 await myQueue.clean(0, 10000, "failed");
 await myQueue.clean(0, 10000, "completed");
 await myQueue.clean(0, 10000, "wait");
 await myQueue.clean(0, 10000, "delayed");
 
-// Completely obliterate the queue
+// Obliterate the queue, removing it completely
 await myQueue.obliterate();
 
 // Exit the process
 process.exit(0);
 ```
 
-Please note that the actual `Queue` class from `bullmq` may have more properties and methods than what is shown in the provided code snippet. The documentation above is based solely on the usage in the snippet.
+Please note that the actual implementation of the `Queue` class and its methods are part of the `bullmq` library, and the provided code snippet only shows usage examples. The documentation for the `Queue` class should be consulted in the `bullmq` library documentation for more detailed information.

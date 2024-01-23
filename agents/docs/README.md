@@ -127,6 +127,12 @@
       - [updateEvidenceWebPageSchema](src/agents/vectorstore/utils/updateEvidenceWebPageSchema.md)
       - [updateWebPageSchema](src/agents/vectorstore/utils/updateWebPageSchema.md)
     - [webPage](src/agents/vectorstore/webPage.md)
+  - webResearch
+    - [researchWeb](src/agents/webResearch/researchWeb.md)
+    - [searchQueriesGenerator](src/agents/webResearch/searchQueriesGenerator.md)
+    - [searchQueriesRanker](src/agents/webResearch/searchQueriesRanker.md)
+    - [searchResultsRanker](src/agents/webResearch/searchResultsRanker.md)
+    - [webPageScanner](src/agents/webResearch/webPageScanner.md)
 - [base](src/base.md)
 - [constants](src/constants.md)
 - [queue](src/queue.md)

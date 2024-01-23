@@ -1,16 +1,16 @@
 # RedisProjectSaver
 
-The `RedisProjectSaver` class is responsible for retrieving project data from a Redis database and saving it to a local file. It uses the `ioredis` library to connect to Redis and the `fs/promises` module to write the data to the filesystem.
+This class is responsible for saving project data from Redis to a local file. It connects to a Redis instance, retrieves data associated with a given project ID, and writes the data to a JSON file.
 
 ## Properties
 
-No properties are explicitly defined in this script.
+No properties are documented for this script.
 
 ## Methods
 
-| Name         | Parameters        | Return Type | Description                                             |
-|--------------|-------------------|-------------|---------------------------------------------------------|
-| saveProject  | None              | Promise<void> | Retrieves project data from Redis and saves it to a file. |
+| Name         | Parameters        | Return Type | Description                                      |
+|--------------|-------------------|-------------|--------------------------------------------------|
+| saveProject  |                   | Promise<void> | Saves the project data from Redis to a local file. |
 
 ## Examples
 
@@ -38,7 +38,7 @@ const saveProject = async (): Promise<void> => {
     console.log(`Project data has been saved to ${fileName}`);
     process.exit(0);
   } else {
-    console.log('No project id provided');
+    console.log('No project id provided - save project');
     process.exit(1);
   }
 };
@@ -46,4 +46,4 @@ const saveProject = async (): Promise<void> => {
 saveProject().catch(console.error);
 ```
 
-Please note that the class name `RedisProjectSaver` is inferred as the script does not explicitly define a class. The `saveProject` function is treated as a method of this conceptual class for the purpose of this documentation.
+Note: The script is not encapsulated in a class, but rather is a standalone script that is executed with a project ID as a command-line argument. The `saveProject` function is the main method that performs the operation.
