@@ -9,6 +9,7 @@ import { BaseChatBotServerApi } from './BaseChatBotApi';
 import { YpBaseElement } from '@yrpri/webapp';
 export declare class PsAiChatElement extends YpBaseElement {
     message: string;
+    updateMessage: string;
     sender: 'you' | 'bot';
     detectedLanguage: string;
     clusterId: number;

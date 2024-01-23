@@ -22,6 +22,9 @@ export class PsAiChatElement extends YpBaseElement {
   message!: string;
 
   @property({ type: String })
+  updateMessage: string;
+
+  @property({ type: String })
   sender!: 'you' | 'bot';
 
   @property({ type: String })
@@ -98,7 +101,9 @@ export class PsAiChatElement extends YpBaseElement {
     this.jsonLoading = false;
     let jsonContentParsed: CrtRefinedCausesReply | undefined = undefined;
     try {
-      jsonContentParsed = JSON.parse(jsonContent.jsonContent) as CrtRefinedCausesReply;
+      jsonContentParsed = JSON.parse(
+        jsonContent.jsonContent
+      ) as CrtRefinedCausesReply;
     } catch (e) {
       console.error('Error parsing JSON content:', e);
       try {
@@ -367,7 +372,6 @@ export class PsAiChatElement extends YpBaseElement {
     ];
   }
 
-
   get isError() {
     return this.type == 'error' || this.type == 'moderation_error';
   }
@@ -439,7 +443,9 @@ export class PsAiChatElement extends YpBaseElement {
     );
   }
 
-  override updated(changedProperties: Map<string | number | symbol, unknown>): void {
+  override updated(
+    changedProperties: Map<string | number | symbol, unknown>
+  ): void {
     super.updated(changedProperties);
     if (
       changedProperties.has('followUpQuestionsRaw') &&
@@ -474,7 +480,7 @@ export class PsAiChatElement extends YpBaseElement {
           </svg>`
         : html`<md-icon class="doneIcon">done</md-icon>`}
       <div class="thinkingText" ?active="${this.active}">
-        ${this.message}
+        ${this.message} ${this.updateMessage}
       </div> `;
   }
 

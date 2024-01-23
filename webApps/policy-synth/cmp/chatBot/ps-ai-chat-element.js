@@ -413,7 +413,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
           </svg>`
             : html `<md-icon class="doneIcon">done</md-icon>`}
       <div class="thinkingText" ?active="${this.active}">
-        ${this.message}
+        ${this.message} ${this.updateMessage}
       </div> `;
     }
     renderThinking() {
@@ -468,6 +468,9 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
 __decorate([
     property({ type: String })
 ], PsAiChatElement.prototype, "message", void 0);
+__decorate([
+    property({ type: String })
+], PsAiChatElement.prototype, "updateMessage", void 0);
 __decorate([
     property({ type: String })
 ], PsAiChatElement.prototype, "sender", void 0);
