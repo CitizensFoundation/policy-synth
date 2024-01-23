@@ -18,15 +18,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     }
   `;
 
-  constructor(
-    chatLog: PsSimpleChatLog[],
-    clientId: string,
-    wsClients: Map<string, WebSocket>
-  ) {
-    super(chatLog, clientId, wsClients);
-    console.log(`LiveResearchChatBot for id ${clientId} initialized`);
-  }
-
   sendAgentStart(name: string, hasNoStreaming = true) {
     const botMessage = {
       sender: "bot",
@@ -71,7 +62,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       question
     );
     const searchQueries = await searchQueriesGenerator.generateSearchQueries();
-    console.log(`searchQueries: ${JSON.stringify(searchQueries, null, 2)}`);
+    console.log(`${JSON.stringify(searchQueries, null, 2)}`);
     this.sendAgentCompleted("Generate search queries");
 
     /*this.sendAgentStart("Rank search queries");

@@ -17,6 +17,9 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
       overRideSystemPrompt ||
       `
       Given the question below, generate ${numberOfQueriesToGenerate} high quality search queries that would be useful for answering the question.
+
+      Always output as a JSON array of strings, where each string is a search query:
+        [searchQuery1, searchQuery2, ...]
     `;
     this.userPrompt = overRideUserPrompt || `Research Question: ${question}`;
 

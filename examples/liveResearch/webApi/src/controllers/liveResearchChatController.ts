@@ -20,11 +20,11 @@ export class LiveResearchChatController extends BaseController {
     const wsClientId = req.body.wsClientId;
 
     try {
-      new LiveResearchChatBot(
-        chatLog,
+      const bot = new LiveResearchChatBot(
         wsClientId,
         this.wsClients
       );
+      bot.conversation(chatLog);
     } catch (error) {
       console.log(error);
       res.sendStatus(500);
