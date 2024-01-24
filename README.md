@@ -4,6 +4,12 @@
 
 Policy Synth is a Typescript class-based library for creating AI agent logic flows, API's and state of the art realtime web applications.
 
+## NPM Modules
+
+- [@policysynth/agents](agents/README.md)
+- [@policysynth/api](api/README.md)
+- [@policysynth/webApp](webApps/policy-synth/README.md)
+- 
 ## The drive & passion behind Policy Synth
 ### Bringing together the best of collective and artificial intelligence
 
@@ -16,12 +22,6 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 <h2 align="center">
   <a href="https://policy-synth.ai/projects/1/"><strong>Open Test Results: Democracy in Distress</strong></a><br>
 </h2>
-
-## NPM SDK Modules
-
-- [@policysynth/agents](agents/README.md)
-- [@policysynth/api](api/README.md)
-- [@policysynth/webApp](webApps/policy-synth/README.md)
 
 ## Example Policy Synth Agent Configuration
 ![Policy Synth v 43](https://github.com/CitizensFoundation/policy-synth/assets/43699/6956d011-4899-4d5e-ab59-b75556982f44)
