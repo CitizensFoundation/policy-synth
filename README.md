@@ -9,7 +9,7 @@ Policy Synth is a Typescript class-based library for creating AI agent logic flo
 - [@policysynth/agents](agents/README.md)
 - [@policysynth/api](api/README.md)
 - [@policysynth/webApp](webApps/policy-synth/README.md)
-- 
+
 ## The drive & passion behind Policy Synth
 ### Bringing together the best of collective and artificial intelligence
 
