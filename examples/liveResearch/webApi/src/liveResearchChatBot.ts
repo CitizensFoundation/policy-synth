@@ -91,7 +91,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       undefined,
       this.sendAgentUpdate.bind(this)
     );
-    this.sendAgentCompleted("Website Scaning Completed", true);
+    this.sendAgentCompleted("Website Scanning Completed", true);
 
     console.log(
       `webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`
