@@ -3,7 +3,7 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { LtpServerApi } from './LtpServerApi.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class LtpCurrentRealityTreeNode extends YpBaseElement {
     nodeId: string;
     crtNodeType: CrtNodeType;

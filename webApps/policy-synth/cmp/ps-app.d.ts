@@ -10,7 +10,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/mwc-snackbar/mwc-snackbar.js';
 import '@material/web/menu/menu.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import './policies/ps-web-research.js';
 import { PsServerApi } from './base/PsServerApi.js';
 import { PsAppGlobals } from './base/PsAppGlobals.js';
@@ -25,9 +25,9 @@ import './ltp/ltp-manage-crt.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
-import { Scheme } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
+import { Scheme } from '@yrpri/webapp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 declare global {
     interface Window {
         psAppGlobals: PsAppGlobals;

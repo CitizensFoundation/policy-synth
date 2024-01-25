@@ -8,7 +8,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@policysynth/webapp": "^1.0.42"
+    "@policysynth/webapp": "^1.0.43"
   },
   "scripts": {
     "start": "concurrently --kill-others --names tsc,web-dev-server \"npm run tsc:watch\" \"web-dev-server --app-index index.html --node-resolve --open --watch\"",

@@ -1,4 +1,4 @@
-import { YpAppGlobals } from '@yrpri/webapp/cmp/yp-app/YpAppGlobals.js';
+import { YpAppGlobals } from '@yrpri/webapp/yp-app/YpAppGlobals.js';
 export class PsAppGlobals extends YpAppGlobals {
     constructor(serverApi) {
         super(serverApi, true);

@@ -22,7 +22,7 @@ import {
 import '@material/web/menu/menu.js';
 import { cache } from 'lit/directives/cache.js';
 
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 
 //import './chat/yp-chat-assistant.js';
 import { Layouts } from './flexbox-literals/classes.js';
@@ -59,10 +59,10 @@ import { PsPolicies } from './policies/ps-policies.js';import {
   Scheme,
   applyThemeWithContrast,
   themeFromSourceColorWithContrast,
-} from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
+} from '@yrpri/webapp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
-import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
+import { YpFormattingHelpers } from '@yrpri/webapp/common/YpFormattingHelpers.js';
 
 const PagesTypes = {
   ProblemStatement: 1,

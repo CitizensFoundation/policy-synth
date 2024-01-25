@@ -1,7 +1,7 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';

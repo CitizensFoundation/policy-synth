@@ -3,7 +3,7 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { LtpServerApi } from './LtpServerApi.js';
-import { YpCodeBase } from '@yrpri/webapp/cmp/common/YpCodeBaseclass.js';
+import { YpCodeBase } from '@yrpri/webapp/common/YpCodeBaseclass.js';
 export class LtpStreamingAIResponse extends YpCodeBase {
     constructor(caller, targetContainer = undefined) {
         super();

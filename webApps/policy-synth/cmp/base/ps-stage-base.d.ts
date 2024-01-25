@@ -1,11 +1,11 @@
 import { nothing } from 'lit';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/iconbutton/icon-button.js';
 import { PsRouter } from './router/router.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare abstract class PsStageBase extends YpBaseElement {
     memory: IEngineInnovationMemoryData;
     childType: "solution" | "policy";

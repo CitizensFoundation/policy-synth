@@ -6,12 +6,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { css, html, nothing } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/iconbutton/icon-button.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 //TDOO: Share from db config
 const maxNumberOfSubProblems = 7;
 export class PsStageBase extends YpBaseElement {

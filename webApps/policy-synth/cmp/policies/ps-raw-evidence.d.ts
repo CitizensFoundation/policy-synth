@@ -1,12 +1,12 @@
 import { nothing } from 'lit';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/button/text-button.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsRawEvidence extends YpBaseElement {
     memory: IEngineInnovationMemoryData;
     policy: PSPolicy;

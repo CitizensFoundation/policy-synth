@@ -6,7 +6,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { PsStageBase } from '../base/ps-stage-base.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
@@ -19,7 +19,7 @@ import '@material/web/chips/input-chip.js';
 import '@material/web/textfield/outlined-text-field.js'; // import at the beginning of your file
 import { IEngineConstants } from '../constants.js';
 import './ps-family-tree.js';
-import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
+import { YpFormattingHelpers } from '@yrpri/webapp/common/YpFormattingHelpers.js';
 let PsSolutions = class PsSolutions extends PsStageBase {
     constructor() {
         super(...arguments);

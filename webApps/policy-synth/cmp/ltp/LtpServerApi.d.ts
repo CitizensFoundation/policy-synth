@@ -1,4 +1,4 @@
-import { YpServerApi } from "@yrpri/webapp/cmp/common/YpServerApi";
+import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
 export declare class LtpServerApi extends YpServerApi {
     baseLtpPath: string;
     constructor(urlPath?: string);

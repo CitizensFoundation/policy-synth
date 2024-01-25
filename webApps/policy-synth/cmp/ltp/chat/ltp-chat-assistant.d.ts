@@ -7,7 +7,7 @@ import '@material/web/button/filled-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { LtpAiChatElement } from './ltp-ai-chat-element.js';
 import './ltp-ai-chat-element.js';
 import { LtpServerApi } from '../LtpServerApi';

@@ -1,5 +1,5 @@
 import { nothing } from 'lit';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { PsStageBase } from '../base/ps-stage-base.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
