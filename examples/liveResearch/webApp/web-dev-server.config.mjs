@@ -13,7 +13,7 @@ const nodeResolve = fromRollup(resolve);
 
 export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   open: '/',
-  watch: false,
+  watch: true,
   /** Resolve bare module imports */
   nodeResolve: false,
   mimeTypes: {
