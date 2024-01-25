@@ -3,8 +3,8 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { BasePairwiseRankingsProcessor } from "../basePairwiseRanking.js";
 import { IEngineConstants } from "../../constants.js";
 export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
-    constructor(progressFunction = undefined) {
-        super(undefined, undefined);
+    constructor(memory, progressFunction = undefined) {
+        super(undefined, memory);
         this.progressFunction = progressFunction;
     }
     async voteOnPromptPair(index, promptPair) {

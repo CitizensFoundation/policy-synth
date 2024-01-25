@@ -55,14 +55,14 @@ import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import { debug } from 'console';
-import { PsPolicies } from './policies/ps-policies.js';
-import { YpBaseElement, YpFormattingHelpers } from '@yrpri/webapp';
-import {
+import { PsPolicies } from './policies/ps-policies.js';import {
   Scheme,
   applyThemeWithContrast,
   themeFromSourceColorWithContrast,
 } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
 
 const PagesTypes = {
   ProblemStatement: 1,

@@ -1,4 +1,4 @@
-import { YpAppGlobals } from '@yrpri/webapp';
+import { YpAppGlobals } from '@yrpri/webapp/cmp/yp-app/YpAppGlobals.js';
 import { PsServerApi } from './PsServerApi.js';
 export declare class PsAppGlobals extends YpAppGlobals {
     originalQueryParameters: any;

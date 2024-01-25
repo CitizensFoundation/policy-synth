@@ -8,8 +8,9 @@ export declare class PolicySynthAgentBase {
     timeStart: number;
     chat: ChatOpenAI | undefined;
     private rateLimits;
-    constructor();
+    constructor(memory?: IEngineInnovationMemoryData | undefined);
     getJsonBlock(text: string): string;
+    get fullLLMCostsForMemory(): number;
     getRepairedJson(text: string): any;
     callLLM(stage: IEngineStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Callbacks): Promise<any>;
     private updateRateLimits;

@@ -2,6 +2,7 @@ import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
+import { PolicySynthAgentBase } from "@policysynth/agents";
 
 const DEBUGGING = true;
 
@@ -10,6 +11,13 @@ export class PsBaseChatBot {
   clientSocket: WebSocket;
   openaiClient: OpenAI;
   memory!: IEngineInnovationMemoryData;
+  currentAgent: PolicySynthAgentBase | undefined;
+  broadcastingLiveCosts = false;
+  liveCostsBroadcastTimeout: NodeJS.Timeout | undefined = undefined;
+  liveCostsBroadcastInterval = 1000;
+  liveCostsInactivityTimeout = 1000 * 60 * 10;
+  liveCostsBoadcastStartAt: Date | undefined;
+  lastSentToUserAt: Date | undefined;
 
   constructor(clientId: string, wsClients: Map<string, WebSocket>) {
     this.clientId = clientId;
@@ -37,6 +45,7 @@ export class PsBaseChatBot {
         message,
       })
     );
+    this.lastSentToUserAt = new Date();
   }
 
   sendAgentStart(name: string, hasNoStreaming = true) {
@@ -80,6 +89,49 @@ export class PsBaseChatBot {
     };
 
     this.clientSocket.send(JSON.stringify(botMessage));
+  }
+
+  startBroadcastingLiveCosts() {
+    this.stopBroadcastingLiveCosts();
+    this.liveCostsBoadcastStartAt = new Date();
+
+    this.broadcastingLiveCosts = true;
+  }
+
+  broadCastLiveCosts() {
+    if (this.broadcastingLiveCosts) {
+      if (this.currentAgent) {
+        const botMessage = {
+          sender: "bot",
+          type: "liveLlmCosts",
+          message: this.currentAgent.fullLLMCostsForMemory,
+        };
+        this.clientSocket.send(JSON.stringify(botMessage));
+      }
+      let timePassedSinceBroadcastStartActivity = 0;
+      if (this.liveCostsBoadcastStartAt && this.lastSentToUserAt) {
+        timePassedSinceBroadcastStartActivity =
+          this.lastSentToUserAt.getTime() -
+          this.liveCostsBoadcastStartAt.getTime();
+      }
+
+      if (
+        timePassedSinceBroadcastStartActivity < this.liveCostsInactivityTimeout
+      ) {
+        this.liveCostsBroadcastTimeout = setTimeout(() => {
+          this.broadCastLiveCosts();
+        }, this.liveCostsBroadcastInterval);
+      }
+    } else {
+      this.stopBroadcastingLiveCosts();
+    }
+  }
+
+  stopBroadcastingLiveCosts() {
+    if (this.liveCostsBroadcastTimeout) {
+      clearTimeout(this.liveCostsBroadcastTimeout);
+    }
+    this.broadcastingLiveCosts = false;
   }
 
   getEmptyMemory() {

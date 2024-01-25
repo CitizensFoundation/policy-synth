@@ -25,9 +25,9 @@ import './ltp/ltp-manage-crt.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
-import { YpBaseElement } from '@yrpri/webapp';
 import { Scheme } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
 declare global {
     interface Window {
         psAppGlobals: PsAppGlobals;

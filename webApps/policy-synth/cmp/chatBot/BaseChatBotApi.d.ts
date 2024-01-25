@@ -1,4 +1,4 @@
-import { YpServerApi } from "@yrpri/webapp";
+import { YpServerApi } from "@yrpri/webapp/cmp/common/YpServerApi";
 export declare class BaseChatBotServerApi extends YpServerApi {
     baseLtpPath: string;
     constructor(urlPath?: string);

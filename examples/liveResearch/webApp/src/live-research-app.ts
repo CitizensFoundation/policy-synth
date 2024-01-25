@@ -1,4 +1,3 @@
-import { PolicySynthWebApp } from '@policysynth/webapp';
 import { html, css } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { PsRouter } from '@policysynth/webapp/cmp/base/router/router.js';
@@ -7,7 +6,7 @@ import '@material/web/slider/slider.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 
 import './live-research-chatbot.js';
-import { LiveResearchChatBot } from './live-research-chatbot.js';
+import { PolicySynthWebApp } from '@policysynth/webapp/cmp/ps-app.js';
 
 @customElement('live-research-app')
 export class LiveResearchApp extends PolicySynthWebApp {
@@ -24,6 +23,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
   percentOfTopResultsToScan = 0.25;
 
   estimatedSecondsPerPage = 75;
+
+  constructor() {
+    super();
+  }
 
   static override get styles() {
     return [

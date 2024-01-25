@@ -14,9 +14,12 @@ const logger = winston.createLogger({
     ],
 });
 export class PolicySynthAgentBase {
-    constructor() {
+    constructor(memory = undefined) {
         this.timeStart = Date.now();
         this.rateLimits = {};
+        if (memory) {
+            this.memory = memory;
+        }
         this.logger = logger;
     }
     getJsonBlock(text) {
@@ -30,6 +33,17 @@ export class PolicySynthAgentBase {
         else {
             throw new Error("Unable to find JSON block");
         }
+    }
+    get fullLLMCostsForMemory() {
+        let totalCost = 0;
+        if (this.memory && this.memory.stages) {
+            Object.values(this.memory.stages).forEach(stage => {
+                if (stage.tokensInCost && stage.tokensOutCost) {
+                    totalCost += stage.tokensInCost + stage.tokensOutCost;
+                }
+            });
+        }
+        return totalCost;
     }
     getRepairedJson(text) {
         let repaired;

@@ -34,70 +34,88 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   }
 
   async doLiveResearch(question: string) {
-    // Generate search queries
-    this.sendAgentStart("Generate search queries");
-    const searchQueriesGenerator = new SearchQueriesGenerator(
-      this.numberOfQueriesToGenerate,
-      question
-    );
-    const searchQueries = await searchQueriesGenerator.generateSearchQueries();
-    this.sendAgentCompleted(`Generated ${searchQueries.length} search queries`);
+    try {
+      this.startBroadcastingLiveCosts();
 
-    // Rank search queries
-    this.sendAgentStart("Pairwise Ranking Search Queries");
-    const searchQueriesRanker = new SearchQueriesRanker(
-      this.sendAgentUpdate.bind(this)
-    );
-    const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
-      searchQueries,
-      question
-    );
-    this.sendAgentCompleted("Pairwise Ranking Completed");
+      // Generate search queries
+      this.sendAgentStart("Generate search queries");
+      const searchQueriesGenerator = (this.currentAgent =
+        new SearchQueriesGenerator(
+          this.memory,
+          this.numberOfQueriesToGenerate,
+          question
+        ));
+      const searchQueries =
+        await searchQueriesGenerator.generateSearchQueries();
+      this.sendAgentCompleted(
+        `Generated ${searchQueries.length} search queries`
+      );
 
-    const queriesToSearch = rankedSearchQueries.slice(
-      0,
-      Math.floor(rankedSearchQueries.length * this.percentOfQueriesToSearch)
-    );
+      // Rank search queries
+      this.sendAgentStart("Pairwise Ranking Search Queries");
+      const searchQueriesRanker = (this.currentAgent = new SearchQueriesRanker(
+        this.memory,
+        this.sendAgentUpdate.bind(this)
+      ));
 
-    // Search the web
-    this.sendAgentStart("Searching the Web...");
-    const webSearch = new ResearchWeb();
-    const searchResults = await webSearch.search(queriesToSearch);
-    this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
+      const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
+        searchQueries,
+        question
+      );
+      this.sendAgentCompleted("Pairwise Ranking Completed");
 
-    // Rank search results
-    this.sendAgentStart("Pairwise Ranking Search Results");
-    const searchResultsRanker = new SearchResultsRanker(
-      this.sendAgentUpdate.bind(this)
-    );
-    const rankedSearchResults = await searchResultsRanker.rankSearchResults(
-      searchResults,
-      question
-    );
-    this.sendAgentCompleted("Pairwise Ranking Completed");
+      const queriesToSearch = rankedSearchQueries.slice(
+        0,
+        Math.floor(rankedSearchQueries.length * this.percentOfQueriesToSearch)
+      );
 
-    const searchResultsToScan = rankedSearchResults.slice(
-      0,
-      Math.floor(rankedSearchResults.length * this.percentOfResultsToScan)
-    );
+      // Search the web
+      this.sendAgentStart("Searching the Web...");
+      const webSearch = this.currentAgent = new ResearchWeb();
+      const searchResults = await webSearch.search(queriesToSearch);
+      this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
 
-    // Scan and Research Web pages
-    this.sendAgentStart("Scan and Research Web pages");
+      // Rank search results
+      this.sendAgentStart("Pairwise Ranking Search Results");
+      const searchResultsRanker = this.currentAgent = new SearchResultsRanker(
+        this.memory,
+        this.sendAgentUpdate.bind(this)
+      );
+      const rankedSearchResults =  await searchResultsRanker.rankSearchResults(
+        searchResults,
+        question
+      );
+      this.sendAgentCompleted("Pairwise Ranking Completed");
 
-    const webPageResearch = new WebPageScanner();
-    const webScan = await webPageResearch.scan(
-      searchResultsToScan.map((i) => i.url),
-      this.jsonWebPageResearchSchema,
-      undefined,
-      this.sendAgentUpdate.bind(this)
-    );
-    this.sendAgentCompleted("Website Scanning Completed", true);
+      const searchResultsToScan = rankedSearchResults.slice(
+        0,
+        Math.floor(rankedSearchResults.length * this.percentOfResultsToScan)
+      );
 
-    console.log(
-      `webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`
-    );
+      // Scan and Research Web pages
+      this.sendAgentStart("Scan and Research Web pages");
 
-    this.renderResultsToUser(webScan);
+      const webPageResearch = this.currentAgent = new WebPageScanner();
+      const webScan = await webPageResearch.scan(
+        searchResultsToScan.map((i) => i.url),
+        this.jsonWebPageResearchSchema,
+        undefined,
+        this.sendAgentUpdate.bind(this)
+      );
+      this.sendAgentCompleted("Website Scanning Completed", true);
+
+      this.stopBroadcastingLiveCosts();
+
+      console.log(
+        `webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`
+      );
+
+      this.renderResultsToUser(webScan);
+    } catch (err) {
+      console.error(`Error in doLiveResearch: ${err}`);
+    } finally {
+      this.stopBroadcastingLiveCosts();
+    }
   }
 
   async renderResultsToUser(research: object[]) {

@@ -1,4 +1,4 @@
-import { YpServerApi } from "@yrpri/webapp";
+import { YpServerApi } from "@yrpri/webapp/cmp/common/YpServerApi";
 
 export class LtpServerApi extends YpServerApi {
   baseLtpPath = '/crt/';

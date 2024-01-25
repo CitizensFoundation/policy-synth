@@ -18,7 +18,7 @@ import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
 import { IEngineConstants } from '../constants.js';
 
 import './ps-family-tree.js';
-import { YpFormattingHelpers } from '@yrpri/webapp';
+import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
 
 @customElement('ps-solutions')
 export class PsSolutions extends PsStageBase {

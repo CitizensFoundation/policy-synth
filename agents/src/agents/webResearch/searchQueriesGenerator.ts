@@ -8,12 +8,13 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
   userPrompt: string;
 
   constructor(
+    memory: PsWebResearchMemory,
     numberOfQueriesToGenerate: number,
     question: string,
     overRideSystemPrompt?: string,
     overRideUserPrompt?: string
   ) {
-    super();
+    super(memory);
     this.systemPrompt =
       overRideSystemPrompt ||
       `

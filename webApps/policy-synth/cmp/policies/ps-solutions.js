@@ -19,7 +19,7 @@ import '@material/web/chips/input-chip.js';
 import '@material/web/textfield/outlined-text-field.js'; // import at the beginning of your file
 import { IEngineConstants } from '../constants.js';
 import './ps-family-tree.js';
-import { YpFormattingHelpers } from '@yrpri/webapp';
+import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
 let PsSolutions = class PsSolutions extends PsStageBase {
     constructor() {
         super(...arguments);

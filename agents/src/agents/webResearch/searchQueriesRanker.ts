@@ -5,14 +5,15 @@ import { BasePairwiseRankingsProcessor } from "../basePairwiseRanking.js";
 import { IEngineConstants } from "../../constants.js";
 
 export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
-  progressFunction: Function | undefined;
+  searchQuestion: string | undefined;
 
-  constructor(progressFunction: Function | undefined = undefined) {
-    super(undefined as any, undefined as any);
+  constructor(
+    memory: PsWebResearchMemory,
+    progressFunction: Function | undefined = undefined
+  ) {
+    super(undefined as any, memory);
     this.progressFunction = progressFunction;
   }
-
-  searchQuestion: string | undefined;
 
   async voteOnPromptPair(
     index: number,

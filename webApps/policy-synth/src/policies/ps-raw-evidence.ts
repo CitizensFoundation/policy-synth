@@ -12,7 +12,7 @@ import '@material/web/button/text-button.js';
 
 import { PsStageBase } from '../base/ps-stage-base.js';
 import { Layouts } from '../flexbox-literals/classes.js';
-import { YpBaseElement } from '@yrpri/webapp';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
 
 @customElement('ps-raw-evidence')
 export class PsRawEvidence extends YpBaseElement {
