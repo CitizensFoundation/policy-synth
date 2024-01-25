@@ -28,7 +28,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     }
   `;
 
-  renderSystemPrompt() {
+  renderFollowupSystemPrompt() {
     return `Please provide thoughtful answers to the users followup questions.
        `;
   }
@@ -171,7 +171,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     } else {
       const systemMessage = {
         role: "system",
-        content: this.renderSystemPrompt(),
+        content: this.renderFollowupSystemPrompt(),
       };
 
       messages.unshift(systemMessage);
