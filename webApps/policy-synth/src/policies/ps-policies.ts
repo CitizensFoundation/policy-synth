@@ -1,6 +1,6 @@
 import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { PsStageBase } from '../base/ps-stage-base.js';
 
 import '@material/web/chips/chip-set.js';
@@ -20,7 +20,7 @@ import { IEngineConstants } from '../constants.js';
 import './ps-family-tree.js';
 import './ps-raw-evidence.js';
 import { cache } from 'lit/directives/cache.js';
-import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
+import { YpFormattingHelpers } from '@yrpri/webapp/common/YpFormattingHelpers.js';
 
 @customElement('ps-policies')
 export class PsPolicies extends PsStageBase {

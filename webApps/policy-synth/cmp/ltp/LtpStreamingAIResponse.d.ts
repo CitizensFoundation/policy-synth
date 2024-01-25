@@ -3,8 +3,8 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { LtpServerApi } from './LtpServerApi.js';
-import { YpCodeBase } from '@yrpri/webapp/cmp/common/YpCodeBaseclass.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpCodeBase } from '@yrpri/webapp/common/YpCodeBaseclass.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class LtpStreamingAIResponse extends YpCodeBase {
     wsClientId: string;
     targetContainer: HTMLElement | HTMLInputElement | undefined;

@@ -6,9 +6,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { css, html } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { Layouts } from '../flexbox-literals/classes.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 let PsFamilyTree = class PsFamilyTree extends YpBaseElement {
     async connectedCallback() {
         super.connectedCallback();

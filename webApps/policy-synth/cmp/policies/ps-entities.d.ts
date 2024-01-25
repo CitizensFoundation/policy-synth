@@ -1,4 +1,4 @@
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { PsStageBase } from '../base/ps-stage-base.js';
 export declare class PsEntities extends PsStageBase {
     activeEntityIndex: number | null;

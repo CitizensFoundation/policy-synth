@@ -4,9 +4,9 @@ import '@material/web/button/outlined-button.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/progress/circular-progress.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { BaseChatBotServerApi } from './BaseChatBotApi';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsAiChatElement extends YpBaseElement {
     message: string;
     updateMessage: string;

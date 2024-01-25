@@ -13,14 +13,14 @@ import '@material/web/icon/icon.js';
 
 import '@material/web/iconbutton/outlined-icon-button.js';
 
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { PsAiChatElement } from './ps-ai-chat-element.js';
 import { MdFilledTonalButton } from '@material/web/button/filled-tonal-button.js';
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
 
 import { BaseChatBotServerApi } from './BaseChatBotApi';
 import './ps-ai-chat-element.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 
 const PROMPT_DEBUG = true;
 

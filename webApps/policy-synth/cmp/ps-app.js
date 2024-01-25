@@ -19,7 +19,7 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/mwc-snackbar/mwc-snackbar.js';
 import { applyTheme, argbFromHex, themeFromSourceColor, } from '@material/material-color-utilities';
 import '@material/web/menu/menu.js';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 //import './chat/yp-chat-assistant.js';
 import { Layouts } from './flexbox-literals/classes.js';
 import './policies/ps-web-research.js';
@@ -37,10 +37,10 @@ import { IEngineConstants } from './constants.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
-import { applyThemeWithContrast, themeFromSourceColorWithContrast, } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
+import { applyThemeWithContrast, themeFromSourceColorWithContrast, } from '@yrpri/webapp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
-import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
+import { YpFormattingHelpers } from '@yrpri/webapp/common/YpFormattingHelpers.js';
 const PagesTypes = {
     ProblemStatement: 1,
     SubProblems: 2,

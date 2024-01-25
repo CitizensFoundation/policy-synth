@@ -1,4 +1,4 @@
-import { YpServerApi } from "@yrpri/webapp/cmp/common/YpServerApi";
+import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
 export class PsServerApi extends YpServerApi {
     constructor(urlPath = '/api') {
         super();
