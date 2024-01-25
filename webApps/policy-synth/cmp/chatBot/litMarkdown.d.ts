@@ -1,5 +1,5 @@
 import { AsyncDirective } from 'lit/async-directive.js';
-import { YpBaseElement } from '@yrpri/webapp';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element';
 type Options = typeof MarkdownDirective.defaultOptions;
 /**
  * An async directive to render markdown in a LitElement's render function.

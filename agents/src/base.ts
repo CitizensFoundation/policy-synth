@@ -32,7 +32,10 @@ export class PolicySynthAgentBase {
 
   private rateLimits: IEngineRateLimits = {};
 
-  constructor() {
+  constructor(memory: IEngineInnovationMemoryData | undefined = undefined) {
+    if (memory) {
+      this.memory = memory;
+    }
     this.logger = logger;
   }
 
@@ -46,6 +49,18 @@ export class PolicySynthAgentBase {
     } else {
       throw new Error("Unable to find JSON block");
     }
+  }
+
+  get fullLLMCostsForMemory() {
+    let totalCost = 0;
+    if (this.memory && this.memory.stages) {
+      Object.values(this.memory.stages).forEach(stage => {
+        if (stage.tokensInCost && stage.tokensOutCost) {
+          totalCost += stage.tokensInCost + stage.tokensOutCost;
+        }
+      });
+    }
+    return totalCost;
   }
 
   getRepairedJson(text: string) {

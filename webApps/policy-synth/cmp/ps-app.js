@@ -37,9 +37,10 @@ import { IEngineConstants } from './constants.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
-import { YpBaseElement, YpFormattingHelpers } from '@yrpri/webapp';
 import { applyThemeWithContrast, themeFromSourceColorWithContrast, } from '@yrpri/webapp/cmp/common/YpMaterialThemeHelper.js';
 import { PsRouter } from './base/router/router.js';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
 const PagesTypes = {
     ProblemStatement: 1,
     SubProblems: 2,

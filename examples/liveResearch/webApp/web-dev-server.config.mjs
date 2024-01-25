@@ -13,13 +13,13 @@ const nodeResolve = fromRollup(resolve);
 
 export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
   open: '/',
-  watch: !hmr,
+  watch: false,
   /** Resolve bare module imports */
   nodeResolve: false,
   mimeTypes: {
     '**/*.cjs': 'js',
   },
-  port: 2960,
+  port: 2965,
   plugins: [
 
     nodeResolve({

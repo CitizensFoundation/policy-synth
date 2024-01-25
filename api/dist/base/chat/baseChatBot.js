@@ -3,6 +3,10 @@ import { v4 as uuidv4 } from "uuid";
 const DEBUGGING = true;
 export class PsBaseChatBot {
     constructor(clientId, wsClients) {
+        this.broadcastingLiveCosts = false;
+        this.liveCostsBroadcastTimeout = undefined;
+        this.liveCostsBroadcastInterval = 1000;
+        this.liveCostsInactivityTimeout = 1000 * 60 * 10;
         this.conversation = async (chatLog) => {
             let messages = chatLog.map((message) => {
                 return {
@@ -48,6 +52,7 @@ export class PsBaseChatBot {
             type: type,
             message,
         }));
+        this.lastSentToUserAt = new Date();
     }
     sendAgentStart(name, hasNoStreaming = true) {
         const botMessage = {
@@ -82,6 +87,43 @@ export class PsBaseChatBot {
             message: message,
         };
         this.clientSocket.send(JSON.stringify(botMessage));
+    }
+    startBroadcastingLiveCosts() {
+        this.stopBroadcastingLiveCosts();
+        this.liveCostsBoadcastStartAt = new Date();
+        this.broadcastingLiveCosts = true;
+    }
+    broadCastLiveCosts() {
+        if (this.broadcastingLiveCosts) {
+            if (this.currentAgent) {
+                const botMessage = {
+                    sender: "bot",
+                    type: "liveLlmCosts",
+                    message: this.currentAgent.fullLLMCostsForMemory,
+                };
+                this.clientSocket.send(JSON.stringify(botMessage));
+            }
+            let timePassedSinceBroadcastStartActivity = 0;
+            if (this.liveCostsBoadcastStartAt && this.lastSentToUserAt) {
+                timePassedSinceBroadcastStartActivity =
+                    this.lastSentToUserAt.getTime() -
+                        this.liveCostsBoadcastStartAt.getTime();
+            }
+            if (timePassedSinceBroadcastStartActivity < this.liveCostsInactivityTimeout) {
+                this.liveCostsBroadcastTimeout = setTimeout(() => {
+                    this.broadCastLiveCosts();
+                }, this.liveCostsBroadcastInterval);
+            }
+        }
+        else {
+            this.stopBroadcastingLiveCosts();
+        }
+    }
+    stopBroadcastingLiveCosts() {
+        if (this.liveCostsBroadcastTimeout) {
+            clearTimeout(this.liveCostsBroadcastTimeout);
+        }
+        this.broadcastingLiveCosts = false;
     }
     getEmptyMemory() {
         return {

@@ -15,7 +15,7 @@ import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/button/text-button.js';
 import { Layouts } from '../flexbox-literals/classes.js';
-import { YpBaseElement } from '@yrpri/webapp';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
 let PsRawEvidence = PsRawEvidence_1 = class PsRawEvidence extends YpBaseElement {
     constructor() {
         super(...arguments);

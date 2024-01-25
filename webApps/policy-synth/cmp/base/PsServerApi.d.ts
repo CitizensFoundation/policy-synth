@@ -1,4 +1,4 @@
-import { YpServerApi } from "@yrpri/webapp";
+import { YpServerApi } from "@yrpri/webapp/cmp/common/YpServerApi";
 export declare class PsServerApi extends YpServerApi {
     constructor(urlPath?: string);
     getProject(id: number, tempPassword?: string, forceGetBackupForProject?: string): Promise<CpsBootResponse>;

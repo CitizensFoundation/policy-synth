@@ -14,7 +14,7 @@ import { jsonrepair } from 'jsonrepair';
 import '@yrpri/webapp/cmp/common/yp-image.js';
 import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 import { BaseChatBotServerApi } from './BaseChatBotApi';
-import { YpBaseElement } from '@yrpri/webapp';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
 
 @customElement('ps-ai-chat-element')
 export class PsAiChatElement extends YpBaseElement {

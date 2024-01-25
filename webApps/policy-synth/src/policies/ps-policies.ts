@@ -20,7 +20,7 @@ import { IEngineConstants } from '../constants.js';
 import './ps-family-tree.js';
 import './ps-raw-evidence.js';
 import { cache } from 'lit/directives/cache.js';
-import { YpFormattingHelpers } from '@yrpri/webapp';
+import { YpFormattingHelpers } from '@yrpri/webapp/cmp/common/YpFormattingHelpers.js';
 
 @customElement('ps-policies')
 export class PsPolicies extends PsStageBase {

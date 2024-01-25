@@ -327,6 +327,8 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
 
 interface PsWebResearchMemory extends IEngineInnovationMemoryData {
   webResearch?: {
+    lastRunStartedAt?: number;
+    lastRunEndedAt?: number;
     chatLog?: PsSimpleChatLog[];
   }
 }

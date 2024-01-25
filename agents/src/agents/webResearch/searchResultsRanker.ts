@@ -6,10 +6,12 @@ import { IEngineConstants } from "../../constants.js";
 
 export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
   searchQuestion: string | undefined;
-  progressFunction: Function | undefined;
 
-  constructor(progressFunction: Function | undefined = undefined) {
-    super(undefined as any, undefined as any);
+  constructor(
+    memory: PsWebResearchMemory,
+    progressFunction: Function | undefined = undefined
+  ) {
+    super(undefined as any, memory);
     this.progressFunction = progressFunction;
   }
 

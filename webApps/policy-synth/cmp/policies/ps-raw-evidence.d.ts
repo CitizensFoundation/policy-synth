@@ -6,7 +6,7 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/button/text-button.js';
-import { YpBaseElement } from '@yrpri/webapp';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
 export declare class PsRawEvidence extends YpBaseElement {
     memory: IEngineInnovationMemoryData;
     policy: PSPolicy;

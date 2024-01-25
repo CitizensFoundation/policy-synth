@@ -9,8 +9,8 @@ import '@material/web/button/outlined-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/iconbutton/icon-button.js';
 import { MdIconButton } from '@material/web/iconbutton/icon-button.js';
-import { YpBaseElement } from '@yrpri/webapp';
 import { PsRouter } from './router/router.js';
+import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
 
 //TDOO: Share from db config
 const maxNumberOfSubProblems = 7;

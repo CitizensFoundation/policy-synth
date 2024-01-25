@@ -3,8 +3,8 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { PolicySynthAgentBase } from "../../base.js";
 import { IEngineConstants } from "../../constants.js";
 export class SearchQueriesGenerator extends PolicySynthAgentBase {
-    constructor(numberOfQueriesToGenerate, question, overRideSystemPrompt, overRideUserPrompt) {
-        super();
+    constructor(memory, numberOfQueriesToGenerate, question, overRideSystemPrompt, overRideUserPrompt) {
+        super(memory);
         this.systemPrompt =
             overRideSystemPrompt ||
                 `
