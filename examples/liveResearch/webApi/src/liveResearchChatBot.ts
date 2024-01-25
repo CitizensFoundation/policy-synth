@@ -29,8 +29,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   `;
 
   renderFollowupSystemPrompt() {
-    return `Please provide thoughtful answers to the users followup questions.
-       `;
+    return `Please provide thoughtful answers to the users followup questions.`;
   }
 
   async doLiveResearch(question: string) {
