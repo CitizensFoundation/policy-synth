@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/api",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -9,6 +9,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "publish": "npm publish",
+    "publish_local": "npm publish --registry http://localhost:4873",
     "start": "nodemon -e ts ts-out/server.js",
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/server.js",
     "dev": "nodemon --config nodemon.json ./ts-out/server.js",
