@@ -6,5 +6,4 @@ export class BaseChatBotServerApi extends YpServerApi {
     super();
     this.baseUrlPath = urlPath;
   }
-
 }

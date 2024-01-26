@@ -1,6 +1,6 @@
 # CreateProsConsProcessor
 
-The `CreateProsConsProcessor` class is responsible for generating and refining pros and cons for solution components related to subproblems. It extends the `BaseProcessor` class.
+The `CreateProsConsProcessor` class is responsible for generating and refining pros and cons for solution components related to subproblems. It extends the `BaseProlemSolvingAgent` class.
 
 ## Properties
 

@@ -75,7 +75,7 @@ No methods.
 
 ```typescript
 // Example usage of IEngineConstants
-import { IEngineConstants } from "../../../../constants.js";
+import { IEngineConstants } from "../../../constants.js";
 
 console.log(IEngineConstants.maxSubProblems);
 ```

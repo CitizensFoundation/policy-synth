@@ -1,6 +1,6 @@
 # ReduceSubProblemsProcessor
 
-The `ReduceSubProblemsProcessor` class is responsible for reducing a list of sub-problems by selecting the top sub-problems that are not duplicates and represent a wide range of issues. It extends the `BaseProcessor` class.
+The `ReduceSubProblemsProcessor` class is responsible for reducing a list of sub-problems by selecting the top sub-problems that are not duplicates and represent a wide range of issues. It extends the `BaseProlemSolvingAgent` class.
 
 ## Properties
 

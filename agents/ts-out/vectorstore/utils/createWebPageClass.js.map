@@ -1,0 +1,1 @@
+{"version":3,"file":"createWebPageClass.js","sourceRoot":"","sources":["../../../src/vectorstore/utils/createWebPageClass.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAAE,MAAM,eAAe,CAAC;AAEnD,KAAK,UAAU,GAAG;IACd,MAAM,KAAK,GAAG,IAAI,kBAAkB,EAAE,CAAC;IACvC,MAAM,KAAK,CAAC,SAAS,EAAE,CAAC;AAC5B,CAAC;AAED,GAAG,EAAE,CAAC"}

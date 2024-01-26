@@ -1,6 +1,6 @@
 # RateWebRootCausesProcessor
 
-The `RateWebRootCausesProcessor` class is responsible for rating web root causes. It extends the `BaseProcessor` class and utilizes the `RootCauseWebPageVectorStore` to store and process web page data related to root causes.
+The `RateWebRootCausesProcessor` class is responsible for rating web root causes. It extends the `BaseProlemSolvingAgent` class and utilizes the `RootCauseWebPageVectorStore` to store and process web page data related to root causes.
 
 ## Properties
 

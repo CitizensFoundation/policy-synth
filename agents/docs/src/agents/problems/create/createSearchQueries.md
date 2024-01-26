@@ -1,6 +1,6 @@
 # CreateSearchQueriesProcessor
 
-The `CreateSearchQueriesProcessor` class is responsible for generating search queries based on problem statements and affected entities. It extends the `BaseProcessor` class and utilizes the `ChatOpenAI` model for generating queries.
+The `CreateSearchQueriesProcessor` class is responsible for generating search queries based on problem statements and affected entities. It extends the `BaseProlemSolvingAgent` class and utilizes the `ChatOpenAI` model for generating queries.
 
 ## Properties
 

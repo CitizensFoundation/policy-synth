@@ -1,4 +1,4 @@
-const systemPrompt = `
+const renderSystemPrompt = (path: string) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
 
 Example markdown format:
@@ -22,15 +22,19 @@ Brief description of the class.
 
 ## Examples
 
+The fullpath to this file is ${path}, use only the last parts of the path see this example:
+{ PsBaseChatBot } from '@policysynth/api/base/chat/baseChatBot.js';
+
 \`\`\`typescript
 // Example usage of the web component
+{ PsBaseChatBot } from '@policysynth/api/base/chat/baseChatBot.js';
 \`\`\`
 
 For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
 
-Do not output other sections
+Do not output other sections.
 
-Only output the routes if controllers
+Only output the routes if controllers.
 
 You MUST output the full detailed documentation for the typescript file the user submits.
 `
@@ -142,7 +146,7 @@ function generateChecksum(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
-async function generateDocumentation(fileList: string[], systemPrompt: string): Promise<void> {
+async function generateDocumentation(fileList: string[]): Promise<void> {
   for (const file of fileList) {
     const content = fs.readFileSync(file, 'utf8');
     const checksum = generateChecksum(content);
@@ -160,7 +164,7 @@ async function generateDocumentation(fileList: string[], systemPrompt: string): 
           model: "gpt-4-1106-preview",
           temperature: 0.0,
           max_tokens: 4095,
-          messages: [{ role: "system", content: systemPrompt }, { role: "user", content: content }],
+          messages: [{ role: "system", content: renderSystemPrompt(file) }, { role: "user", content: content }],
         });
 
         let docContent = completion.choices[0].message.content;
@@ -191,7 +195,7 @@ async function generateDocumentation(fileList: string[], systemPrompt: string): 
 async function main(): Promise<void> {
   const tsFiles = findTSFiles(rootDir);
   generateDocsReadme();
-  await generateDocumentation(tsFiles, systemPrompt);
+  await generateDocumentation(tsFiles);
   generateDocsReadme();
 }
 

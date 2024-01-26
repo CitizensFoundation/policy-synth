@@ -1,6 +1,6 @@
 # CountWebEvidenceProcessor
 
-The `CountWebEvidenceProcessor` class extends the `BaseProcessor` and is responsible for counting all web evidence related to a given policy. It utilizes the `EvidenceWebPageVectorStore` to retrieve web pages and count various metrics such as the total number of web pages, the number of refined web pages, and the counts of evidence and recommendations within those pages.
+The `CountWebEvidenceProcessor` class extends the `BaseProlemSolvingAgent` and is responsible for counting all web evidence related to a given policy. It utilizes the `EvidenceWebPageVectorStore` to retrieve web pages and count various metrics such as the total number of web pages, the number of refined web pages, and the counts of evidence and recommendations within those pages.
 
 ## Properties
 

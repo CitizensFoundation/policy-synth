@@ -1,6 +1,6 @@
 # RankWebSolutionsProcessor
 
-The `RankWebSolutionsProcessor` class extends the `BaseProcessor` class and is responsible for ranking web solutions related to specific problems. It uses a `WebPageVectorStore` to retrieve and update web pages, and a `ChatOpenAI` instance to interact with an AI model for ranking solutions.
+The `RankWebSolutionsProcessor` class extends the `BaseProlemSolvingAgent` class and is responsible for ranking web solutions related to specific problems. It uses a `WebPageVectorStore` to retrieve and update web pages, and a `ChatOpenAI` instance to interact with an AI model for ranking solutions.
 
 ## Properties
 

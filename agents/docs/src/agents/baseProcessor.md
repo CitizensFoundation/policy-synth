@@ -1,6 +1,6 @@
-# BaseProcessor
+# BaseProlemSolvingAgent
 
-BaseProcessor is an abstract class that extends the PolicySynthAgentBase class. It is responsible for processing data related to a job and maintaining a memory state for the engine's innovation process.
+BaseProlemSolvingAgent is an abstract class that extends the PolicySynthAgentBase class. It is responsible for processing data related to a job and maintaining a memory state for the engine's innovation process.
 
 ## Properties
 
@@ -31,8 +31,8 @@ BaseProcessor is an abstract class that extends the PolicySynthAgentBase class. 
 ## Examples
 
 ```typescript
-// Example usage of BaseProcessor
-class MyProcessor extends BaseProcessor {
+// Example usage of BaseProlemSolvingAgent
+class MyProcessor extends BaseProlemSolvingAgent {
   async process() {
     // Custom processing logic
     console.log(this.renderProblemStatement());

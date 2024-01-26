@@ -1,6 +1,6 @@
 # ReapSolutionsProcessor
 
-The `ReapSolutionsProcessor` class is responsible for assessing and reaping solution components that do not fit given requirements within a problem-solving engine. It extends the `BaseProcessor` class.
+The `ReapSolutionsProcessor` class is responsible for assessing and reaping solution components that do not fit given requirements within a problem-solving engine. It extends the `BaseProlemSolvingAgent` class.
 
 ## Properties
 

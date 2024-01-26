@@ -1,6 +1,6 @@
 # RateWebEvidenceProcessor
 
-The `RateWebEvidenceProcessor` class extends the `BaseProcessor` and is responsible for rating web evidence related to policy proposals. It utilizes a vector store to retrieve and update web page data, and it interacts with a language model to generate ratings.
+The `RateWebEvidenceProcessor` class extends the `BaseProlemSolvingAgent` and is responsible for rating web evidence related to policy proposals. It utilizes a vector store to retrieve and update web page data, and it interacts with a language model to generate ratings.
 
 ## Properties
 

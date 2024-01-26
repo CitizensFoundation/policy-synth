@@ -1,6 +1,6 @@
 # AgentProblems
 
-AgentProblems is a class that extends the BaseAgent class and is responsible for processing various stages of problem-solving tasks. It maintains a memory state and processes tasks based on the current stage of the problem-solving process.
+AgentProblems is a class that extends the BaseProcessingAgent class and is responsible for processing various stages of problem-solving tasks. It maintains a memory state and processes tasks based on the current stage of the problem-solving process.
 
 ## Properties
 
