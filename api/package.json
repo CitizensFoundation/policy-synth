@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/api",
-  "version": "1.0.30",
+  "version": "1.0.31",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -8,6 +8,9 @@
   },
   "license": "MIT",
   "type": "module",
+  "files": [
+    "ts-out/**/*"
+  ],
   "scripts": {
     "publish": "npm publish",
     "publish_local": "npm publish --registry http://localhost:4873",
