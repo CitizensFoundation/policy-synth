@@ -10,8 +10,8 @@ const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 export class WebPageScanner extends GetWebPagesProcessor {
-    constructor() {
-        super(undefined, undefined);
+    constructor(memory) {
+        super(undefined, memory);
         this.collectedWebPages = [];
     }
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {

@@ -11,7 +11,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.25;
 
-  summarySystemPrompt = `Please review the web research below and give the user a full report.
+  summarySystemPrompt = `Please review the web research below and give the user a full report length.
     Take all the information provided and highlight the main points to answer the users question in detail.
     Do not output the analysis on an article by article basis, it needs to go deeper and wider than that to answer the users question.
     Provide links to the original webpages, if they are relevant, in markdown format as citations.
@@ -35,9 +35,9 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     try {
       this.startBroadcastingLiveCosts();
 
-      console.log(`In doLiveResearch: ${question}`)
+      console.log(`In doLiveResearch: ${question}`);
 
-      console.log(`this.memory: ${JSON.stringify(this.memory, null, 2)}`)
+      console.log(`this.memory: ${JSON.stringify(this.memory, null, 2)}`);
 
       // Generate search queries
       this.sendAgentStart("Generate search queries");
@@ -73,17 +73,17 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       // Search the web
       this.sendAgentStart("Searching the Web...");
-      const webSearch = this.currentAgent = new ResearchWeb();
+      const webSearch = (this.currentAgent = new ResearchWeb(this.memory));
       const searchResults = await webSearch.search(queriesToSearch);
       this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
 
       // Rank search results
       this.sendAgentStart("Pairwise Ranking Search Results");
-      const searchResultsRanker = this.currentAgent = new SearchResultsRanker(
+      const searchResultsRanker = (this.currentAgent = new SearchResultsRanker(
         this.memory,
         this.sendAgentUpdate.bind(this)
-      );
-      const rankedSearchResults =  await searchResultsRanker.rankSearchResults(
+      ));
+      const rankedSearchResults = await searchResultsRanker.rankSearchResults(
         searchResults,
         question
       );
@@ -97,7 +97,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Scan and Research Web pages
       this.sendAgentStart("Scan and Research Web pages");
 
-      const webPageResearch = this.currentAgent = new WebPageScanner();
+      const webPageResearch = (this.currentAgent = new WebPageScanner(this.memory));
       const webScan = await webPageResearch.scan(
         searchResultsToScan.map((i) => i.url),
         this.jsonWebPageResearchSchema,
@@ -112,7 +112,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
         `webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`
       );
 
-      this.renderResultsToUser(webScan);
+      await this.renderResultsToUser(webScan, question);
     } catch (err) {
       console.error(`Error in doLiveResearch: ${err}`);
     } finally {
@@ -120,8 +120,10 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     }
   }
 
-  async renderResultsToUser(research: object[]) {
+  async renderResultsToUser(research: object[], question: string) {
     const summaryUserPrompt = `
+      Research Question: ${question}
+
       Results from the web research:
       ${JSON.stringify(research, null, 2)}
     `;
@@ -145,7 +147,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       stream: true,
     });
 
-    this.streamWebSocketResponses(stream);
+    await this.streamWebSocketResponses(stream);
   }
 
   researchConversation = async (

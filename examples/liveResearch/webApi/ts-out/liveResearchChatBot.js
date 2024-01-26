@@ -10,7 +10,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
         this.numberOfQueriesToGenerate = 7;
         this.percentOfQueriesToSearch = 0.25;
         this.percentOfResultsToScan = 0.25;
-        this.summarySystemPrompt = `Please review the web research below and give the user a full report.
+        this.summarySystemPrompt = `Please review the web research below and give the user a full report length.
     Take all the information provided and highlight the main points to answer the users question in detail.
     Do not output the analysis on an article by article basis, it needs to go deeper and wider than that to answer the users question.
     Provide links to the original webpages, if they are relevant, in markdown format as citations.
@@ -78,23 +78,23 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * this.percentOfQueriesToSearch));
             // Search the web
             this.sendAgentStart("Searching the Web...");
-            const webSearch = this.currentAgent = new ResearchWeb();
+            const webSearch = (this.currentAgent = new ResearchWeb(this.memory));
             const searchResults = await webSearch.search(queriesToSearch);
             this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
             // Rank search results
             this.sendAgentStart("Pairwise Ranking Search Results");
-            const searchResultsRanker = this.currentAgent = new SearchResultsRanker(this.memory, this.sendAgentUpdate.bind(this));
+            const searchResultsRanker = (this.currentAgent = new SearchResultsRanker(this.memory, this.sendAgentUpdate.bind(this)));
             const rankedSearchResults = await searchResultsRanker.rankSearchResults(searchResults, question);
             this.sendAgentCompleted("Pairwise Ranking Completed");
             const searchResultsToScan = rankedSearchResults.slice(0, Math.floor(rankedSearchResults.length * this.percentOfResultsToScan));
             // Scan and Research Web pages
             this.sendAgentStart("Scan and Research Web pages");
-            const webPageResearch = this.currentAgent = new WebPageScanner();
+            const webPageResearch = (this.currentAgent = new WebPageScanner(this.memory));
             const webScan = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.jsonWebPageResearchSchema, undefined, this.sendAgentUpdate.bind(this));
             this.sendAgentCompleted("Website Scanning Completed", true);
             this.stopBroadcastingLiveCosts();
             console.log(`webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`);
-            this.renderResultsToUser(webScan);
+            await this.renderResultsToUser(webScan, question);
         }
         catch (err) {
             console.error(`Error in doLiveResearch: ${err}`);
@@ -103,8 +103,10 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             this.stopBroadcastingLiveCosts();
         }
     }
-    async renderResultsToUser(research) {
+    async renderResultsToUser(research, question) {
         const summaryUserPrompt = `
+      Research Question: ${question}
+
       Results from the web research:
       ${JSON.stringify(research, null, 2)}
     `;
@@ -125,6 +127,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             temperature: 0.45,
             stream: true,
         });
-        this.streamWebSocketResponses(stream);
+        await this.streamWebSocketResponses(stream);
     }
 }

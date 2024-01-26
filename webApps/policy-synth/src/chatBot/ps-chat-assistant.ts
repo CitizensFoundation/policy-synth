@@ -409,6 +409,9 @@ export class PsChatAssistant extends YpBaseElement {
         }
         this.requestUpdate();
         break;
+      case 'liveLlmCosts':
+        this.fire('llm-total-cost-update', data.message);
+        break;
       case 'agentCompleted':
       case 'validationAgentCompleted':
         console.log('agentCompleted');

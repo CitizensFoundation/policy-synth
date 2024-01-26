@@ -10,7 +10,7 @@ export declare class PolicySynthAgentBase {
     private rateLimits;
     constructor(memory?: IEngineInnovationMemoryData | undefined);
     getJsonBlock(text: string): string;
-    get fullLLMCostsForMemory(): number;
+    get fullLLMCostsForMemory(): number | undefined;
     getRepairedJson(text: string): any;
     callLLM(stage: IEngineStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Callbacks): Promise<any>;
     private updateRateLimits;
