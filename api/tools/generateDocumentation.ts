@@ -197,8 +197,8 @@ async function generateDocumentation(fileList: string[]): Promise<void> {
       existingChecksum = fs.readFileSync(checksumFile, 'utf8');
     }
 
-    let relativePath = file.replace(rootDir, '').replace("/src/","");
-    relativePath = `@policysynth/api/${relativePath}`;
+    let relativePath = file.replace(rootDir, '').replace("/src/","").replace(".ts",".js");
+    relativePath = `@policysynth/api${relativePath}`;
 
     console.log(`REL PATH TO USE: ${relativePath}`);
 

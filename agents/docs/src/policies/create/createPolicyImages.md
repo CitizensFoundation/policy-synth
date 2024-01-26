@@ -4,45 +4,20 @@ This class extends `CreateSolutionImagesProcessor` to specifically handle the cr
 
 ## Methods
 
-| Name                           | Parameters                                      | Return Type | Description                                                                 |
-|--------------------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| renderCreatePolicyImagePrompt  | subProblemIndex: number, policy: PSPolicy, injectText?: string | Promise<SystemMessage[] \| HumanMessage[]> | Generates the prompt messages for creating Dall-E 2 image prompts based on policy components. |
-| createPolicyImages             |                                                 | Promise<void> | Iterates over sub-problems and their respective policies to create and upload images. |
-| process                        |                                                 | Promise<void> | Initializes the chat model and starts the image creation process for policies. |
+| Name                          | Parameters                                      | Return Type | Description                                                                 |
+|-------------------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| renderCreatePolicyImagePrompt | subProblemIndex: number, policy: PSPolicy, injectText?: string | Promise<SystemMessage[] \| HumanMessage[]> | Generates the prompt for creating an image based on a policy component.     |
+| createPolicyImages            |                                                 | Promise<void> | Iterates over policies to create images for each, handling file operations and API interactions. |
+| process                       |                                                 | Promise<void> | Orchestrates the process of generating images for policies.                 |
 
 ## Example
 
-```typescript
-import { CreatePolicyImagesProcessor } from '@policysynth/agents/policies/create/createPolicyImages.ts';
-import { IEngineConstants } from '../../constants.js';
+```javascript
+import { CreatePolicyImagesProcessor } from '@policysynth/agents/policies/create/createPolicyImages.js';
 
 const processor = new CreatePolicyImagesProcessor();
 
-processor.memory = {
-  subProblems: [
-    {
-      policies: {
-        populations: [
-          [
-            {
-              title: "Policy Title",
-              description: "Policy Description",
-              imagePrompt: "Existing Image Prompt",
-              imageUrl: undefined,
-            },
-          ],
-        ],
-      },
-    },
-  ],
-  groupId: "example-group-id",
-};
-
-processor.process().then(() => {
-  console.log("Finished creating policy images.");
-}).catch(error => {
-  console.error("Error during policy image creation:", error);
-});
+processor.process()
+  .then(() => console.log('Finished creating policy images.'))
+  .catch(error => console.error('Error creating policy images:', error));
 ```
-
-This example demonstrates how to instantiate and use the `CreatePolicyImagesProcessor` to generate and upload images for policy components. It assumes that the necessary environment variables and configurations are set up, including access to image generation APIs and S3 for image storage.

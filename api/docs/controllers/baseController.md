@@ -1,26 +1,33 @@
 # BaseController
 
-Brief description of the class.
+This class serves as an abstract base for controllers within the application. It initializes with WebSocket clients and provides a router for express applications.
 
 ## Properties
 
-| Name                 | Type                                         | Description               |
-|----------------------|----------------------------------------------|---------------------------|
-| router               | express.Router                               | Express router for the controller. |
-| wsClients            | Map<string, WebSocket>                       | Map of WebSocket clients keyed by a string identifier. |
-| basePromptOverrides  | Map<number, string> \| undefined             | Optional map for prompt overrides, keyed by a numeric identifier. |
+| Name                | Type                                      | Description                                      |
+|---------------------|-------------------------------------------|--------------------------------------------------|
+| router              | express.Router                            | Express router for handling HTTP routes.         |
+| wsClients           | Map<string, WebSocket>                    | A map of WebSocket clients identified by string. |
+| basePromptOverrides | Map<number, string> \| undefined          | Optional map for base prompt overrides.          |
 
 ## Methods
 
-No public methods documented.
-
-## Routes
-
-Since `BaseController` is an abstract class, specific routes are to be defined in the subclasses that extend `BaseController`.
+This class does not explicitly define any methods, as it is an abstract class meant to be extended by other controllers.
 
 ## Examples
 
-```typescript
-// Example usage of BaseController is not provided as it is an abstract class.
-// Subclasses should implement their own usage examples.
+```
+// Example usage within an express application
+import { BaseController } from '@policysynth/api/controllers/baseController.js';
+
+class ChatController extends BaseController {
+  constructor(wsClients) {
+    super(wsClients);
+    this.router.get('/', this.handleChat.bind(this));
+  }
+
+  handleChat(req, res) {
+    // Implementation for handling chat
+  }
+}
 ```

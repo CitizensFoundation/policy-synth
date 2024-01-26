@@ -1,18 +1,18 @@
 # runPolicyStage
 
-This script is designed to interact with a Redis instance and a BullMQ queue to manage the processing of policy stages for a given project. It retrieves a project's current memory state from Redis, updates it, and then adds a job to a BullMQ queue for further processing.
+This script is responsible for updating the memory state of a project in Redis and adding a job to a BullMQ queue for further processing based on the project ID provided as a command-line argument.
 
 ## Properties
 
-This script does not define any classes or properties in the traditional sense, as it is a standalone script rather than a class definition.
+No properties are directly defined in this script.
 
 ## Methods
 
-This script does not define any methods in the traditional sense, as it is a standalone script rather than a class or object-oriented structure.
+No methods are directly defined in this script.
 
 ## Example
 
-```typescript
+```javascript
 // Example usage of runPolicyStage
 import { Queue } from "bullmq";
 import ioredis from "ioredis";
@@ -47,9 +47,7 @@ if (projectId) {
   console.log("After adding job to queue");
   process.exit(0);
 } else {
-  console.log("Usage: node @policysynth/agents/policies/tools/runPolicyStage.ts <projectId>");
+  console.log("Usage: node @policysynth/agents/policies/tools/runPolicyStage.js <projectId>");
   process.exit(0);
 }
 ```
-
-This example demonstrates how to use the script to add a job to the "agent-policies" queue after retrieving and updating a project's memory state from Redis. It requires the project ID as a command-line argument.
