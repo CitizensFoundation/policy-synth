@@ -1,11 +1,10 @@
-import { PsBaseChatBot } from "@policysynth/api";
-import {
-  SearchQueriesGenerator,
-  SearchQueriesRanker,
-  ResearchWeb,
-  SearchResultsRanker,
-  WebPageScanner,
-} from "@policysynth/agents";
+import { PsBaseChatBot } from "@policysynth/api/base/chat/baseChatBot.js";
+
+import { SearchQueriesRanker } from "@policysynth/agents/webResearch/searchQueriesRanker.js";
+import { SearchQueriesGenerator } from "@policysynth/agents/webResearch/searchQueriesGenerator.js";
+import { ResearchWeb } from "@policysynth/agents/webResearch/researchWeb.js";
+import { SearchResultsRanker } from "@policysynth/agents/webResearch/searchResultsRanker.js";
+import { WebPageScanner } from "@policysynth/agents/webResearch/webPageScanner.js";
 
 export class LiveResearchChatBot extends PsBaseChatBot {
   numberOfQueriesToGenerate = 7;
