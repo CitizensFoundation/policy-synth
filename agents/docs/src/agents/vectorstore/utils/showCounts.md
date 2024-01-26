@@ -1,6 +1,6 @@
 # ShowCounts
 
-ShowCounts is a processor class that extends the BaseProcessor class. It is designed to count various statistics related to web pages and solutions identified within those web pages. It interacts with a web page vector store to retrieve web page data and performs counts on the number of web pages, solutions found, empty solutions, and non-empty solutions. It also keeps track of unique web page IDs and URLs.
+ShowCounts is a processor class that extends the BaseProlemSolvingAgent class. It is designed to count various statistics related to web pages and solutions identified within those web pages. It interacts with a web page vector store to retrieve web page data and performs counts on the number of web pages, solutions found, empty solutions, and non-empty solutions. It also keeps track of unique web page IDs and URLs.
 
 ## Properties
 

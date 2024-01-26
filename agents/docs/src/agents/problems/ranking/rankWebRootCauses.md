@@ -1,6 +1,6 @@
 # RankWebRootCausesProcessor
 
-The `RankWebRootCausesProcessor` class is responsible for filtering, ranking, and updating root causes related to web pages. It extends the `BaseProcessor` class and utilizes a vector store to retrieve and update web page data.
+The `RankWebRootCausesProcessor` class is responsible for filtering, ranking, and updating root causes related to web pages. It extends the `BaseProlemSolvingAgent` class and utilizes a vector store to retrieve and update web page data.
 
 ## Properties
 

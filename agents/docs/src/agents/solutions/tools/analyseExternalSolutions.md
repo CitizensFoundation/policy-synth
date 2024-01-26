@@ -1,6 +1,6 @@
 # AnalyseExternalSolutions
 
-This class is responsible for analyzing external solutions against specific requirements and generating a report in CSV format. It extends the `BaseProcessor` class.
+This class is responsible for analyzing external solutions against specific requirements and generating a report in CSV format. It extends the `BaseProlemSolvingAgent` class.
 
 ## Properties
 

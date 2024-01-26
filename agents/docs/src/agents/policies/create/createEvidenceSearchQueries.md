@@ -1,6 +1,6 @@
 # CreateEvidenceSearchQueriesProcessor
 
-The `CreateEvidenceSearchQueriesProcessor` class extends the `BaseProcessor` class and is responsible for generating, refining, and ranking search queries based on a given problem statement and policy proposal. It utilizes a set of guidelines to ensure the search queries are high quality and evidence-focused.
+The `CreateEvidenceSearchQueriesProcessor` class extends the `BaseProlemSolvingAgent` class and is responsible for generating, refining, and ranking search queries based on a given problem statement and policy proposal. It utilizes a set of guidelines to ensure the search queries are high quality and evidence-focused.
 
 ## Properties
 

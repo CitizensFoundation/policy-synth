@@ -23,4 +23,4 @@ const searchProcessor = new SearchWebForEvidenceProcessor();
 await searchProcessor.process();
 ```
 
-**Note:** The `PSPolicy` type and other related types are not defined in the provided code snippet. To generate complete documentation, these types should be provided. Additionally, the `logger`, `memory`, `seenUrls`, and `lastPopulationIndex` members are used within the methods but are not defined in the provided code snippet. They are likely inherited from the `SearchWebProcessor` or `BaseProcessor` classes.
+**Note:** The `PSPolicy` type and other related types are not defined in the provided code snippet. To generate complete documentation, these types should be provided. Additionally, the `logger`, `memory`, `seenUrls`, and `lastPopulationIndex` members are used within the methods but are not defined in the provided code snippet. They are likely inherited from the `SearchWebProcessor` or `BaseProlemSolvingAgent` classes.

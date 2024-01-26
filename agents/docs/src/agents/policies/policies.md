@@ -1,6 +1,6 @@
 # AgentPolicies
 
-AgentPolicies is a class that extends the BaseAgent class and is responsible for managing the policy creation process. It handles different stages of policy creation, such as seeding policies, creating images, searching for evidence, and ranking web evidence.
+AgentPolicies is a class that extends the BaseProcessingAgent class and is responsible for managing the policy creation process. It handles different stages of policy creation, such as seeding policies, creating images, searching for evidence, and ranking web evidence.
 
 ## Properties
 

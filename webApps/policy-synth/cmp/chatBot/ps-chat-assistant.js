@@ -59,6 +59,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     connectedCallback() {
         super.connectedCallback();
+        const a = { name: 'test' };
         if (PROMPT_DEBUG) {
             document.addEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
         }

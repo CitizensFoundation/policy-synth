@@ -1,6 +1,6 @@
 # AgentSolutions
 
-AgentSolutions is a class that extends the BaseAgent class and is responsible for processing various stages of solution generation and evaluation within an innovation engine. It manages the memory state for the innovation process and delegates tasks to specific processors based on the current stage.
+AgentSolutions is a class that extends the BaseProcessingAgent class and is responsible for processing various stages of solution generation and evaluation within an innovation engine. It manages the memory state for the innovation process and delegates tasks to specific processors based on the current stage.
 
 ## Properties
 

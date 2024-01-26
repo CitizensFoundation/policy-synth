@@ -1,6 +1,6 @@
 # BasePairwiseRankingsProcessor
 
-The `BasePairwiseRankingsProcessor` class is an abstract class that extends the `BaseProcessor` class. It is designed to handle the ranking of items using the Elo rating system in a pairwise comparison manner.
+The `BasePairwiseRankingsProcessor` class is an abstract class that extends the `BaseProlemSolvingAgent` class. It is designed to handle the ranking of items using the Elo rating system in a pairwise comparison manner.
 
 ## Properties
 

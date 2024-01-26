@@ -1,6 +1,6 @@
 # RateSolutionsProcessor
 
-The `RateSolutionsProcessor` class is responsible for rating solution components to problems on multiple attributes. It extends the `BaseProcessor` class.
+The `RateSolutionsProcessor` class is responsible for rating solution components to problems on multiple attributes. It extends the `BaseProlemSolvingAgent` class.
 
 ## Properties
 

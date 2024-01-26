@@ -1,6 +1,6 @@
 # RankWebEvidenceProcessor
 
-The `RankWebEvidenceProcessor` class extends the `BaseProcessor` and is responsible for ranking web evidence related to policy proposals. It filters irrelevant and duplicate evidence, ranks the evidence by importance, and updates the evidence store with the ranked evidence.
+The `RankWebEvidenceProcessor` class extends the `BaseProlemSolvingAgent` and is responsible for ranking web evidence related to policy proposals. It filters irrelevant and duplicate evidence, ranks the evidence by importance, and updates the evidence store with the ranked evidence.
 
 ## Properties
 

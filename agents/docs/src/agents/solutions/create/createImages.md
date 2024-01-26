@@ -1,6 +1,6 @@
 # CreateSolutionImagesProcessor
 
-This class is responsible for creating images for solutions to sub-problems using AI image generation services like Stability AI and DALL-E 3. It extends the `BaseProcessor` class and includes methods for downloading images, generating image prompts, and uploading images to AWS S3.
+This class is responsible for creating images for solutions to sub-problems using AI image generation services like Stability AI and DALL-E 3. It extends the `BaseProlemSolvingAgent` class and includes methods for downloading images, generating image prompts, and uploading images to AWS S3.
 
 ## Properties
 

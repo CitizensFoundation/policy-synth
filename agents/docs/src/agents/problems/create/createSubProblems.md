@@ -1,6 +1,6 @@
 # CreateSubProblemsProcessor
 
-The `CreateSubProblemsProcessor` class is responsible for analyzing problem statements and identifying root causes in the form of sub-problems. It extends the `BaseProcessor` class.
+The `CreateSubProblemsProcessor` class is responsible for analyzing problem statements and identifying root causes in the form of sub-problems. It extends the `BaseProlemSolvingAgent` class.
 
 ## Properties
 

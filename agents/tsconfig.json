@@ -6,7 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "./dist"
+    "outDir": "ts-out"
   },
   "exclude": ["node_modules", "**/*.spec.ts"],
   "include": ["src/**/*.ts"]

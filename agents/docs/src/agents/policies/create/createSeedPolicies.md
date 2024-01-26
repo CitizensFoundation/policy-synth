@@ -1,6 +1,6 @@
 # CreateSeedPoliciesProcessor
 
-The `CreateSeedPoliciesProcessor` class is responsible for generating policy proposals based on solutions to sub-problems. It extends the `BaseProcessor` class and utilizes language models to create, refine, and choose policy proposals.
+The `CreateSeedPoliciesProcessor` class is responsible for generating policy proposals based on solutions to sub-problems. It extends the `BaseProlemSolvingAgent` class and utilizes language models to create, refine, and choose policy proposals.
 
 ## Properties
 

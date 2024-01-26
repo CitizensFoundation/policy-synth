@@ -134,6 +134,8 @@ export class PsChatAssistant extends YpBaseElement {
   override connectedCallback() {
     super.connectedCallback();
 
+    const a = { name: 'test' } as YpGroupConfiguration;
+
     if (PROMPT_DEBUG) {
       document.addEventListener('keydown', this.handleCtrlPKeyPress.bind(this));
     }

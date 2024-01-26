@@ -1,6 +1,6 @@
-# BaseAgent
+# BaseProcessingAgent
 
-BaseAgent is an abstract class that extends from PolicySynthAgentBase and provides a structure for agents that interact with a Redis database to manage memory state. It includes methods for setting up the agent with job data, initializing memory, processing tasks, and saving memory state back to Redis.
+BaseProcessingAgent is an abstract class that extends from PolicySynthAgentBase and provides a structure for agents that interact with a Redis database to manage memory state. It includes methods for setting up the agent with job data, initializing memory, processing tasks, and saving memory state back to Redis.
 
 ## Properties
 
@@ -22,5 +22,5 @@ BaseAgent is an abstract class that extends from PolicySynthAgentBase and provid
 ## Examples
 
 ```typescript
-// Example usage of BaseAgent is not provided as it is an abstract class and cannot be instantiated directly.
+// Example usage of BaseProcessingAgent is not provided as it is an abstract class and cannot be instantiated directly.
 ```

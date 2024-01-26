@@ -1,6 +1,6 @@
 # SearchWebProcessor
 
-The `SearchWebProcessor` class extends the `BaseProcessor` to perform web searches using either Google or Bing search APIs and process the results.
+The `SearchWebProcessor` class extends the `BaseProlemSolvingAgent` to perform web searches using either Google or Bing search APIs and process the results.
 
 ## Properties
 

@@ -1,6 +1,6 @@
 # GroupSolutionsProcessor
 
-The `GroupSolutionsProcessor` class is responsible for grouping solutions that share the same core ideas. It extends the `BaseProcessor` class and utilizes a language model to assist in the grouping process.
+The `GroupSolutionsProcessor` class is responsible for grouping solutions that share the same core ideas. It extends the `BaseProlemSolvingAgent` class and utilizes a language model to assist in the grouping process.
 
 ## Properties
 

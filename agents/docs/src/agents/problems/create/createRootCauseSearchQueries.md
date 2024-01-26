@@ -1,6 +1,6 @@
 # CreateRootCausesSearchQueriesProcessor
 
-The `CreateRootCausesSearchQueriesProcessor` class is responsible for generating, refining, and ranking search queries based on a problem statement to identify root causes. It extends the `BaseProcessor` class.
+The `CreateRootCausesSearchQueriesProcessor` class is responsible for generating, refining, and ranking search queries based on a problem statement to identify root causes. It extends the `BaseProlemSolvingAgent` class.
 
 ## Properties
 

@@ -2,7 +2,8 @@ import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
-import { PolicySynthAgentBase } from "@policysynth/agents";
+
+import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 
 const DEBUGGING = true;
 
