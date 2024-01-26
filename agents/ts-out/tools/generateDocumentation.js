@@ -139,7 +139,7 @@ async function generateDocumentation(fileList) {
         if (fs.existsSync(checksumFile)) {
             existingChecksum = fs.readFileSync(checksumFile, 'utf8');
         }
-        let relativePath = file.replace(rootDir, '').replace("/src/", "");
+        let relativePath = file.replace(rootDir, '').replace("/src/", "").replace(".ts", ".js");
         relativePath = `@policysynth/agents/${relativePath}`;
         console.log(`REL: ${relativePath}`);
         if (checksum !== existingChecksum) {

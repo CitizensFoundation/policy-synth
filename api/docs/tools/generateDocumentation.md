@@ -1,16 +1,34 @@
-The provided TypeScript code is a script designed to generate Markdown documentation for TypeScript files in an ExpressJS API project. It uses the OpenAI API to generate the documentation content. The script performs the following steps:
+# Policy Synth ExpressJS API Documentation
 
-1. It checks for the existence of the `docs` and `checksum` directories and creates them if they don't exist.
-2. It builds a directory tree of the Markdown files in the `docs` directory, excluding certain files and directories.
-3. It generates a `README.md` file in the `docs` directory with links to all other Markdown files, representing the documentation structure.
-4. It finds all TypeScript files in the project, excluding `index.ts` and declaration files (`.d.ts`).
-5. It generates a SHA-256 checksum for each TypeScript file to determine if the file has changed since the last documentation generation.
-6. If a file has changed, it uses the OpenAI API to generate new documentation content based on the system prompt and the file content.
-7. It writes the generated documentation to corresponding Markdown files in the `docs` directory and updates the checksum file.
-8. It regenerates the `README.md` file to reflect any new or updated documentation.
+This script is designed to automate the generation of documentation for TypeScript files within a project. It leverages the OpenAI API to generate detailed markdown documentation based on the content of each TypeScript file. The script also includes functionality to avoid regenerating documentation for files that have not changed since the last documentation generation, using SHA-256 checksums for comparison.
 
-The script is intended to be run as a Node.js application and relies on the `fs`, `path`, and `crypto` modules from the Node.js standard library, as well as the `openai` module from npm.
+## Properties
 
-Please note that the actual generation of documentation content using the OpenAI API is not shown in the code, as it is handled by the `openaiClient.chat.completions.create` method call. The response from this call is expected to contain the generated documentation in Markdown format, which is then processed and saved to the appropriate files.
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| openaiClient  | OpenAI | Instance of the OpenAI client initialized with an API key. |
+| rootDir       | string | The current working directory of the project. |
+| docsDir       | string | The directory where generated documentation will be stored. |
+| checksumDir   | string | The directory where checksums of TypeScript files are stored to detect changes. |
 
-To generate the documentation for the TypeScript file you submit, you would need to include the file in the project directory structure, run this script, and ensure that your OpenAI API key is correctly set in the environment variable `OPENAI_API_KEY`. The script would then automatically generate and update the documentation for the TypeScript file if it has changed since the last run.
+## Methods
+
+| Name                      | Parameters                  | Return Type | Description                 |
+|---------------------------|-----------------------------|-------------|-----------------------------|
+| buildDirectoryTree        | dir: string, basePath: string = '', isSrc: boolean = false | any[] | Recursively builds a tree structure of the project's directories and markdown files. |
+| generateMarkdownFromTree  | tree: any, depth: number = 0 | string | Generates markdown content from the directory tree structure. |
+| generateDocsReadme        | -                            | void | Generates a README.md file in the docs directory with links to all generated documentation. |
+| findTSFiles               | dir: string, fileList: string[] = [] | string[] | Recursively finds all TypeScript files in the project, excluding declaration files and index.ts. |
+| generateChecksum          | content: string              | string | Generates a SHA-256 checksum for the given content. |
+| generateDocumentation     | fileList: string[]          | Promise<void> | Generates markdown documentation for each TypeScript file in the fileList, if the file has changed since the last generation. |
+| main                      | -                            | Promise<void> | The main function that orchestrates the documentation generation process. |
+
+## Examples
+
+```
+// Example usage of API
+{ PolicySynthExpressJSDocumentation } from '@policysynth/api/tools/generateDocumentation.js';
+
+// Assuming an environment setup with the necessary directories and an OpenAI API key
+main().then(() => console.log('Documentation generation complete.'));
+```

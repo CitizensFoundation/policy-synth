@@ -1,48 +1,47 @@
 # BasePairwiseRankingsProcessor
 
-This class is an abstract extension of `BaseProblemSolvingAgent` designed for processing pairwise rankings of items. It manages the setup and execution of ranking prompts, shuffling of items, and calculation of Elo ratings based on pairwise comparisons.
+This abstract class extends `BaseProlemSolvingAgent` to process pairwise rankings of items. It shuffles items, sets up ranking prompts, and performs pairwise ranking to order items based on their Elo ratings.
 
 ## Properties
 
-| Name                      | Type                                                                 | Description                                                                                   |
-|---------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| prompts                   | Record<number, number[][]>                                           | Stores the prompts for comparisons.                                                           |
-| allItems                  | Record<number, IEngineItemTypes[] \| undefined>                     | Stores all items to be ranked, categorized by sub-problem index.                              |
-| INITIAL_ELO_RATING        | number                                                               | The initial Elo rating for all items.                                                         |
-| K_FACTOR_INITIAL          | number                                                               | The initial K-factor value used in Elo rating calculations.                                   |
-| K_FACTOR_MIN              | number                                                               | The minimum K-factor value used in Elo rating calculations.                                   |
-| NUM_COMPARISONS_FOR_MIN_K | number                                                               | The number of comparisons after which the K-factor reaches its minimum value.                 |
-| maxNumberOfPrompts        | number                                                               | The maximum number of prompts to be generated for pairwise ranking.                           |
-| numComparisons            | Record<number, Record<number, number>>                               | Tracks the number of comparisons made for each item, by sub-problem index and item index.    |
-| KFactors                  | Record<number, Record<number, number>>                               | Stores the K-factor for each item, used in Elo rating calculations.                           |
-| eloRatings                | Record<number, Record<number, number>>                               | Stores the current Elo ratings for each item, by sub-problem index and item index.            |
-| progressFunction          | Function \| undefined                                                | An optional function to report progress during the ranking process.                          |
+| Name                     | Type                                                                 | Description                                                                 |
+|--------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| prompts                  | Record<number, number[][]>                                           | Stores prompts for comparisons.                                             |
+| allItems                 | Record<number, IEngineSearchResultItem[] \| IEngineSolution[] \| IEngineProblemStatement[] \| IEngineAffectedEntity[] \| IEngineProCon[] \| string[] \| undefined> | Stores all items to be ranked.                                              |
+| INITIAL_ELO_RATING       | number                                                               | The initial Elo rating for items.                                           |
+| K_FACTOR_INITIAL         | number                                                               | The initial K-factor for Elo rating calculations.                           |
+| K_FACTOR_MIN             | number                                                               | The minimum K-factor for Elo rating calculations.                           |
+| NUM_COMPARISONS_FOR_MIN_K| number                                                               | The number of comparisons for the K-factor to reach its minimum.            |
+| maxNumberOfPrompts       | number                                                               | The maximum number of prompts for pairwise ranking.                         |
+| numComparisons           | Record<number, Record<number, number>>                               | Tracks the number of comparisons for each item.                             |
+| KFactors                 | Record<number, Record<number, number>>                               | Stores K-factors for each item.                                             |
+| eloRatings               | Record<number, Record<number, number>>                               | Stores Elo ratings for each item.                                           |
+| progressFunction         | Function \| undefined                                                | An optional function to report progress.                                    |
 
 ## Methods
 
-| Name                      | Parameters                                                                                      | Return Type                                      | Description                                                                                   |
-|---------------------------|-------------------------------------------------------------------------------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| fisherYatesShuffle        | array: any[]                                                                                    | any[]                                            | Shuffles the given array using the Fisher-Yates algorithm.                                    |
-| setupRankingPrompts       | subProblemIndex: number, allItems: IEngineItemTypes[], maxPrompts?: number, updateFunction?: Function | void                                             | Sets up the ranking prompts for a given sub-problem, shuffling items and initializing ratings.|
-| voteOnPromptPair          | subProblemIndex: number, promptPair: number[], additionalData?: any                            | Promise<IEnginePairWiseVoteResults>              | Abstract method to be implemented by subclasses for voting on a prompt pair.                  |
-| getResultsFromLLM         | subProblemIndex: number, stageName: IEngineStageTypes, modelConstant: IEngineBaseAIModelConstants, messages: (HumanMessage \| SystemMessage)[], itemOneIndex: number, itemTwoIndex: number | Promise<{subProblemIndex: number, wonItemIndex: number, lostItemIndex: number}> | Retrieves results from a language model for a given prompt pair.                              |
-| getUpdatedKFactor         | numComparisons: number                                                                           | number                                            | Calculates the updated K-factor based on the number of comparisons made.                      |
-| performPairwiseRanking    | subProblemIndex: number, additionalData?: any                                                   | Promise<void>                                    | Performs the pairwise ranking process for a given sub-problem.                                |
-| getOrderedListOfItems     | subProblemIndex: number, returnEloRatings: boolean = false                                      | any[]                                            | Returns the list of items ordered by their Elo ratings.                                       |
+| Name                     | Parameters                                                                                                                                                                                                 | Return Type                             | Description                                                                                   |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|-----------------------------------------------------------------------------------------------|
+| fisherYatesShuffle       | array: any[]                                                                                                                                                                                                 | any[]                                   | Shuffles an array using the Fisher-Yates algorithm.                                           |
+| setupRankingPrompts      | subProblemIndex: number, allItems: IEngineSearchResultItem[] \| IEngineSolution[] \| IEngineProblemStatement[] \| string[] \| IEngineProCon[] \| IEngineAffectedEntity[], maxPrompts: number \| undefined, updateFunction: Function \| undefined | void                                    | Sets up ranking prompts for a given sub-problem.                                              |
+| voteOnPromptPair         | subProblemIndex: number, promptPair: number[], additionalData?: any                                                                                                                                          | Promise<IEnginePairWiseVoteResults>    | Abstract method to be implemented by subclasses for voting on a prompt pair.                 |
+| getResultsFromLLM        | subProblemIndex: number, stageName: IEngineStageTypes, modelConstant: IEngineBaseAIModelConstants, messages: (HumanMessage \| SystemMessage)[], itemOneIndex: number, itemTwoIndex: number                   | Promise<{ subProblemIndex: number, wonItemIndex: number, lostItemIndex: number }> | Gets results from a language model for a given prompt pair.                                   |
+| getUpdatedKFactor        | numComparisons: number                                                                                                                                                                                       | number                                  | Calculates the updated K-factor based on the number of comparisons.                           |
+| performPairwiseRanking   | subProblemIndex: number, additionalData?: any                                                                                                                                                                | Promise<void>                           | Performs pairwise ranking for all items in a given sub-problem.                               |
+| getOrderedListOfItems    | subProblemIndex: number, returnEloRatings: boolean = false                                                                                                                                                    | any[]                                   | Returns the ordered list of items based on Elo ratings, optionally including the ratings.    |
 
 ## Example
 
-```typescript
+```
 // Example usage of BasePairwiseRankingsProcessor
-import { BasePairwiseRankingsProcessor } from '@policysynth/agents/basePairwiseRanking.ts';
+import { BasePairwiseRankingsProcessor } from '@policysynth/agents/basePairwiseRanking.js';
 
 class CustomRankingsProcessor extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<IEnginePairWiseVoteResults> {
-    // Implementation of voting logic
+    // Implementation for voting on a prompt pair
   }
 }
 
 const processor = new CustomRankingsProcessor();
-processor.setupRankingPrompts(0, items);
-// Further usage of processor to perform rankings and get ordered list of items
+processor.setupRankingPrompts(0, [...items], undefined, (progress) => console.log(progress));
 ```

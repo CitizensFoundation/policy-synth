@@ -1,39 +1,41 @@
 # AgentPolicies
 
-AgentPolicies extends BaseAgentProcessor to handle various stages of policy processing, including seeding policies, creating images, searching for evidence, and ranking evidence.
+AgentPolicies extends BaseAgentProcessor to handle various stages of policy processing, including seed creation, image generation, evidence search, and evidence ranking.
 
 ## Properties
 
-| Name    | Type                                  | Description |
-|---------|---------------------------------------|-------------|
+| Name    | Type                                  | Description               |
+|---------|---------------------------------------|---------------------------|
 | memory  | IEngineInnovationMemoryData           | Holds the state and data relevant to the current job being processed. |
 
 ## Methods
 
-| Name               | Parameters                  | Return Type | Description |
-|--------------------|-----------------------------|-------------|-------------|
-| initializeMemory   | job: Job                    | Promise<void> | Initializes the memory with job data and sets the initial stage to "policies-seed". |
-| setStage           | stage: IEngineStageTypes    | Promise<void> | Sets the current stage in the memory and updates the start time for the stage. |
-| process            |                             | Promise<void> | Processes the job based on the current stage in the memory. It may involve creating seed policies, creating policy images, creating evidence search queries, searching the web for evidence, getting evidence web pages, ranking web evidence, rating web evidence, getting refined evidence, or getting metadata for top evidence. |
+| Name                | Parameters                  | Return Type | Description                                                                 |
+|---------------------|-----------------------------|-------------|-----------------------------------------------------------------------------|
+| initializeMemory    | job: Job                    | Promise<void> | Initializes the memory with job data and sets the initial processing stage. |
+| setStage            | stage: IEngineStageTypes    | Promise<void> | Updates the current stage in memory and records the start time.             |
+| process             | None                        | Promise<void> | Processes the job based on the current stage set in memory.                  |
 
 ## Example
 
-```typescript
-import { Job } from "bullmq";
-import { AgentPolicies } from '@policysynth/agents/policies/policies.ts';
+```javascript
+// Example usage of AgentPolicies
+import { Worker, Job } from "bullmq";
+import { AgentPolicies } from '@policysynth/agents/policies/policies.js';
 
-async function processJob(job: Job) {
-  console.log(`Processing job ${job.id}`);
-  const agentPolicies = new AgentPolicies();
-  await agentPolicies.setup(job);
-  await agentPolicies.process();
-  return job.data;
-}
+const agent = new Worker(
+  "agent-policies",
+  async (job: Job) => {
+    console.log(`Agent Policies Processing job ${job.id}`);
+    const agent = new AgentPolicies();
+    await agent.setup(job);
+    await agent.process();
+    return job.data;
+  },
+  { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") }
+);
 
-const job = new Job(); // Assuming job is already defined and populated
-processJob(job).then((data) => {
-  console.log("Job processed with data:", data);
-}).catch((error) => {
-  console.error("Error processing job:", error);
+process.on("SIGINT", async () => {
+  await agent.close();
 });
 ```

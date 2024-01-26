@@ -27,7 +27,7 @@
   ],
   "scripts": {
     "prepublishOnly": "npm pack && node repack",
-    "publish": "node publish.js https://registry.npmjs.org/",
+    "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
     "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
     "test": "gulp test:local",
     "start": "nodemon -q ts-out/queue.js",
