@@ -1,4 +1,4 @@
-import { BaseController } from "@policysynth/api/dist/controllers/baseController.js";
+import { BaseController } from "@policysynth/api/controllers/baseController.js";
 import express from "express";
 import WebSocket from "ws";
 import { LiveResearchChatBot } from "../liveResearchChatBot.js";
