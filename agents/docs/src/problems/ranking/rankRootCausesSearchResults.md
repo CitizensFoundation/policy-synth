@@ -4,25 +4,18 @@ This class extends `RankRootCausesSearchQueriesProcessor` to rank root causes se
 
 ## Methods
 
-| Name             | Parameters                        | Return Type                     | Description                                                                 |
-|------------------|-----------------------------------|---------------------------------|-----------------------------------------------------------------------------|
+| Name             | Parameters                          | Return Type                     | Description                                                                 |
+|------------------|-------------------------------------|---------------------------------|-----------------------------------------------------------------------------|
 | voteOnPromptPair | index: number, promptPair: number[] | Promise<IEnginePairWiseVoteResults> | Ranks a pair of search results based on their relevance to the problem statement. |
-| process          |                                   | Promise<void>                   | Processes the ranking of root causes search results.                        |
+| process          |                                     | Promise<void>                   | Processes and ranks all root causes search results.                         |
 
 ## Example
 
 ```typescript
-import { RankRootCausesSearchResultsProcessor } from '@policysynth/agents/problems/ranking/rankRootCausesSearchResults.ts';
+import { RankRootCausesSearchResultsProcessor } from '@policysynth/agents/problems/ranking/rankRootCausesSearchResults.js';
 
-// Initialize the processor with necessary parameters
 const rankRootCausesSearchResultsProcessor = new RankRootCausesSearchResultsProcessor();
 
-// Example usage of voteOnPromptPair method
-const index = 0;
-const promptPair = [1, 2];
-const voteResults = await rankRootCausesSearchResultsProcessor.voteOnPromptPair(index, promptPair);
-console.log(voteResults);
-
-// Example usage of process method
+// Assuming necessary setup and initialization steps have been performed
 await rankRootCausesSearchResultsProcessor.process();
 ```
