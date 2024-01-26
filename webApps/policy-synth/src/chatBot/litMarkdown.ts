@@ -33,6 +33,10 @@ export class MarkdownDirective extends AsyncDirective {
   handleJsonBlocks(rawMarkdown: string, targetElement: YpBaseElement) {
     const startJsonBlockRegex = /```json/g;
     let startIndex, endIndex;
+
+    if (!rawMarkdown)
+      return
+
     startIndex = rawMarkdown.indexOf("```json");
 
     if (!this.inJsonBlock) {

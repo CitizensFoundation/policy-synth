@@ -92,10 +92,12 @@ export class PsBaseChatBot {
         this.stopBroadcastingLiveCosts();
         this.liveCostsBoadcastStartAt = new Date();
         this.broadcastingLiveCosts = true;
+        this.broadCastLiveCosts();
     }
     broadCastLiveCosts() {
         if (this.broadcastingLiveCosts) {
             if (this.currentAgent) {
+                console.log(`Broadcasting live costs: ${this.currentAgent.fullLLMCostsForMemory}`);
                 const botMessage = {
                     sender: "bot",
                     type: "liveLlmCosts",
@@ -124,10 +126,11 @@ export class PsBaseChatBot {
             clearTimeout(this.liveCostsBroadcastTimeout);
         }
         this.broadcastingLiveCosts = false;
+        console.log("Stopped broadcasting live costs");
     }
     getEmptyMemory() {
         return {
-            redisKey: `webResearch-${uuidv4}`,
+            redisKey: `webResearch-${uuidv4()}`,
             groupId: 1,
             communityId: 2,
             domainId: 1,
