@@ -1,6 +1,17 @@
 const renderSystemPrompt = (path) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
 
+Important Instructions
+For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
+
+Do not output other sections.
+
+Only output the routes if controllers.
+
+The fullpath to this file is ${path} use that to inform the example path you output.
+
+You MUST output the full detailed documentation for the typescript file the user submits.
+
 Example markdown format:
 # ClassName
 
@@ -18,16 +29,43 @@ Brief description of the class.
 |------------|-------------------|-------------|-----------------------------|
 | methodName | param1: type, ... | returnType  | Brief description of method |
 
-## Routes
+## Example
+
+\`\`\`
+// Example usage of API
+{ PsBaseChatBot } from '@policysynth/api/base/chat/baseChatBot.js';
+
+...example...
+\`\`\`
+
+
+
+You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
+
+Example markdown format:
+# ClassName
+
+Brief description of the class.
+
+## Properties
+
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| propertyName  | type   | Brief description.        |
+
+## Methods
+
+| Name       | Parameters        | Return Type | Description                 |
+|------------|-------------------|-------------|-----------------------------|
+| methodName | param1: type, ... | returnType  | Brief description of method |
 
 ## Examples
 
-The fullpath to this file is ${path}, use only the last parts of the path see this example:
-{ PsBaseChatBot } from '@policysynth/api/base/chat/baseChatBot.js';
-
-\`\`\`typescript
+\`\`\`
 // Example usage of the web component
 { PsBaseChatBot } from '@policysynth/api/base/chat/baseChatBot.js';
+
+...example...
 \`\`\`
 
 For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
@@ -35,6 +73,8 @@ For Type use the Typescript definition like for currentMemory use IEngineInnovat
 Do not output other sections.
 
 Only output the routes if controllers.
+
+The fullpath to this file is ${path}, use only the last parts of the path in the example you output.
 
 You MUST output the full detailed documentation for the typescript file the user submits.
 `;
@@ -139,14 +179,17 @@ async function generateDocumentation(fileList) {
         if (fs.existsSync(checksumFile)) {
             existingChecksum = fs.readFileSync(checksumFile, 'utf8');
         }
+        let relativePath = file.replace(rootDir, '').replace("/src/", "");
+        relativePath = `@policysynth/api/${relativePath}`;
+        console.log(`REL PATH TO USE: ${relativePath}`);
         if (checksum !== existingChecksum) {
             try {
                 console.log(`${file}:`);
                 const completion = await openaiClient.chat.completions.create({
-                    model: "gpt-4-1106-preview",
+                    model: "gpt-4-0125-preview",
                     temperature: 0.0,
                     max_tokens: 4095,
-                    messages: [{ role: "system", content: renderSystemPrompt(file) }, { role: "user", content: content }],
+                    messages: [{ role: "system", content: renderSystemPrompt(relativePath) }, { role: "user", content: content }],
                 });
                 let docContent = completion.choices[0].message.content;
                 console.log(docContent);

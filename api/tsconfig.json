@@ -11,10 +11,6 @@
   },
   "include": [
     "**/*.ts",
-    "./node_modules/@policysynth/agents/ltp.d.ts",
-    "./node_modules/@policysynth/agents/types.d.ts",
-    "./node_modules/@policysynth/agents/policy.d.ts",
-    "./node_modules/@policysynth/agents/rootCauses.d.ts",
-    "./node_modules/@policysynth/agents/validation.d.ts",
+    "./node_modules/@policysynth/agents/**/*.d.ts"
   ]
 }

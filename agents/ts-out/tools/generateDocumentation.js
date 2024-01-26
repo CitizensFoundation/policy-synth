@@ -1,5 +1,16 @@
-const systemPromptWebApp = `
+const renderSystemPrompt = (path) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
+
+Important Instructions
+For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
+
+Do not output other sections.
+
+Only output the routes if controllers.
+
+The fullpath to this file is ${path.replace("/src", "")} use that to inform the example path you output.
+
+You MUST output the full detailed documentation for the typescript file the user submits.
 
 Example markdown format:
 # ClassName
@@ -18,22 +29,16 @@ Brief description of the class.
 |------------|-------------------|-------------|-----------------------------|
 | methodName | param1: type, ... | returnType  | Brief description of method |
 
+## Example
 
-## Examples
-
-\`\`\`typescript
-// Example usage of the web component
 \`\`\`
+// Example usage of agents
+{ BaseProblemSolvingAgent } from '@policysynth/agents/baseProblemSolvingAgent.js';
 
-For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
-
-Do not output other sections
-
-Only output analysis on the main class not any classes that the main class or module uses.
-
-You MUST output the full detailed documentation for the typescript file the user submits.
+...example...
+\`\`\`
 `;
-const indexHeader = '# Policy Synth Agents API Documentation\n\n';
+const indexHeader = '# Policy Agents API Documentation\n\n';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
@@ -94,14 +99,14 @@ function generateMarkdownFromTree(tree, depth = 0) {
         }
         else if (item.type === 'file') {
             // Correct the path for files directly under 'src'
-            const filePath = depth === 0 ? `src/${item.path}` : `src/${item.path}`;
+            const filePath = depth === 0 ? `${item.path}` : item.path;
             markdown += `${indent}- [${item.name.replace('.md', '')}](${filePath})\n`;
         }
     });
     return markdown;
 }
 function generateDocsReadme() {
-    const tree = buildDirectoryTree("docs/src");
+    const tree = buildDirectoryTree(docsDir);
     console.log(JSON.stringify(tree, null, 2));
     const markdown = generateMarkdownFromTree(tree);
     fs.writeFileSync(path.join(docsDir, 'README.md'), `${indexHeader}${markdown}`);
@@ -125,7 +130,7 @@ function findTSFiles(dir, fileList = []) {
 function generateChecksum(content) {
     return crypto.createHash('sha256').update(content).digest('hex');
 }
-async function generateDocumentation(fileList, systemPrompt) {
+async function generateDocumentation(fileList) {
     for (const file of fileList) {
         const content = fs.readFileSync(file, 'utf8');
         const checksum = generateChecksum(content);
@@ -134,14 +139,17 @@ async function generateDocumentation(fileList, systemPrompt) {
         if (fs.existsSync(checksumFile)) {
             existingChecksum = fs.readFileSync(checksumFile, 'utf8');
         }
+        let relativePath = file.replace(rootDir, '').replace("/src/", "");
+        relativePath = `@policysynth/agents/${relativePath}`;
+        console.log(`REL: ${relativePath}`);
         if (checksum !== existingChecksum) {
             try {
                 console.log(`${file}:`);
                 const completion = await openaiClient.chat.completions.create({
-                    model: "gpt-4-1106-preview",
+                    model: "gpt-4-0125-preview",
                     temperature: 0.0,
                     max_tokens: 4095,
-                    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: content }],
+                    messages: [{ role: "system", content: renderSystemPrompt(relativePath) }, { role: "user", content: content }],
                 });
                 let docContent = completion.choices[0].message.content;
                 console.log(docContent);
@@ -167,7 +175,8 @@ async function generateDocumentation(fileList, systemPrompt) {
 }
 async function main() {
     const tsFiles = findTSFiles(rootDir);
-    await generateDocumentation(tsFiles, systemPromptWebApp);
+    generateDocsReadme();
+    await generateDocumentation(tsFiles);
     generateDocsReadme();
 }
 main().then(() => console.log('Documentation generation complete.'));

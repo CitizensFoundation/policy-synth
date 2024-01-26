@@ -249,7 +249,7 @@ export class PsBaseChatBot {
     }
 
     const stream = await this.openaiClient.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4-0125-preview",
       messages,
       max_tokens: 4000,
       temperature: 0.7,
