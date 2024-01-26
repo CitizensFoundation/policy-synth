@@ -7,10 +7,9 @@
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/api"
   },
   "license": "MIT",
-  "main": "ts-out/server.js",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.0.33",
+    "@policysynth/api": "^1.0.34",
     "@langchain/openai": "^0.0.12",
     "@types/html-to-text": "^9.0.4",
     "html-to-text": "^9.0.5"
