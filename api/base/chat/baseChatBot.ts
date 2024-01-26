@@ -102,8 +102,10 @@ export class PsBaseChatBot {
 
   broadCastLiveCosts() {
     if (this.broadcastingLiveCosts) {
-      if (this.currentAgent) {
-        console.log(`Broadcasting live costs: ${this.currentAgent.fullLLMCostsForMemory}`)
+      if (this.currentAgent && this.currentAgent.fullLLMCostsForMemory) {
+        console.log(
+          `Broadcasting live costs: ${this.currentAgent.fullLLMCostsForMemory}`
+        );
         const botMessage = {
           sender: "bot",
           type: "liveLlmCosts",
@@ -223,11 +225,21 @@ export class PsBaseChatBot {
     //@ts-ignore
     stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
   ) {
-    this.sendToClient("bot", "", "start");
-    for await (const part of stream) {
-      this.sendToClient("bot", part.choices[0].delta.content!);
-    }
-    this.sendToClient("bot", "", "end");
+    return new Promise<void>(async (resolve, reject) => {
+      this.sendToClient("bot", "", "start");
+      try {
+        for await (const part of stream) {
+          this.sendToClient("bot", part.choices[0].delta.content!);
+        }
+      } catch (error) {
+        console.error(error);
+        this.sendToClient("bot", "", "error");
+        reject();
+      } finally {
+        this.sendToClient("bot", "", "end");
+      }
+      resolve();
+    });
   }
 
   conversation = async (chatLog: PsSimpleChatLog[]) => {

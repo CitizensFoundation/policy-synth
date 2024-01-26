@@ -35,8 +35,9 @@ export class PolicySynthAgentBase {
         }
     }
     get fullLLMCostsForMemory() {
-        let totalCost = 0;
+        let totalCost = undefined;
         if (this.memory && this.memory.stages) {
+            totalCost = 0;
             Object.values(this.memory.stages).forEach(stage => {
                 if (stage.tokensInCost && stage.tokensOutCost) {
                     totalCost += stage.tokensInCost + stage.tokensOutCost;

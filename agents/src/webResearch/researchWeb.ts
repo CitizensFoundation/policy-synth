@@ -1,8 +1,8 @@
 import { SearchWebProcessor } from "../solutions/web/searchWeb.js";
 
 export class ResearchWeb extends SearchWebProcessor {
-  constructor() {
-    super(undefined as any, undefined as any);
+  constructor(memory: IEngineInnovationMemoryData) {
+    super(undefined as any, memory);
   }
 
   async search(searchQueries: string[]) {
