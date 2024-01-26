@@ -1,4 +1,4 @@
-import { PsBaseChatBot } from '@policysynth/api';
+import { PsBaseChatBot } from '@policysynth/api/base/chat/baseChatBot.js';
 
 export class SimpleChatBot extends PsBaseChatBot {
   renderSystemPrompt(): string {

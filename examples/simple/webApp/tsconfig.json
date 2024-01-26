@@ -29,14 +29,10 @@
     "strictNullChecks": false,
     "target": "es2020"
   },
-  "include": [
+   "include": [
     "src/**/*.ts",
-    "./node_modules/@policysynth/webapp/src/@yrpri/types.d.ts",
-    "./node_modules/@policysynth/agents/src/ltp.d.ts",
-    "./node_modules/@policysynth/agents/src/types.d.ts",
-    "./node_modules/@policysynth/agents/src/policy.d.ts",
-    "./node_modules/@policysynth/agents/src/rootCauses.d.ts",
-    "./node_modules/@policysynth/agents/src/validation.d.ts",
+    "./node_modules/@policysynth/webapp/@yrpri/types.d.ts",
+    "./node_modules/@policysynth/agents/**/*.d.ts",
     "./node_modules/@policysynth/webapp/src/types.d.ts"
 , "types.d.ts"  ],
   "importHelpers": true,
