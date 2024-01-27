@@ -28,7 +28,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@policysynth/agents": "^1.0.39",
+    "@policysynth/agents": "^1.1.0",
     "@yrpri/webapp": "^9.0.14"
   },
   "files": [
