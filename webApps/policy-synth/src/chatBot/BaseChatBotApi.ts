@@ -1,4 +1,4 @@
-import { YpServerApi } from "@yrpri/webapp/cmp/common/YpServerApi";
+import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
 
 export class BaseChatBotServerApi extends YpServerApi {
   baseLtpPath = '/ltp/crt/';
@@ -6,5 +6,4 @@ export class BaseChatBotServerApi extends YpServerApi {
     super();
     this.baseUrlPath = urlPath;
   }
-
 }

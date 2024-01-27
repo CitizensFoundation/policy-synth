@@ -1,47 +1,54 @@
-# Policy Synth WebApp API Documentation
+# Policy Webapp API Documentation Generator
 
-This documentation provides a detailed overview of the classes, methods, properties, and events for the Policy Synth WebApp API.
-
-## OpenAI
-
-The `OpenAI` class is responsible for interacting with the OpenAI API.
+This script is designed to automate the generation of API documentation for TypeScript files within the Policy Webapp project. It leverages the OpenAI API to generate detailed documentation in Markdown format, ensuring that the documentation remains up-to-date with the source code.
 
 ## Properties
 
-| Name          | Type   | Description               |
-|---------------|--------|---------------------------|
-| apiKey        | string | The API key for OpenAI.   |
+This script does not define properties in the traditional sense, as it is a procedural script rather than a class-based module.
 
 ## Methods
 
-| Name       | Parameters        | Return Type | Description                 |
-|------------|-------------------|-------------|-----------------------------|
-| constructor | options: { apiKey: string } | OpenAI | Initializes a new instance of the OpenAI class with the provided options. |
-| chat.completions.create | options: { model: string, temperature: number, max_tokens: number, messages: Array<{ role: string, content: string }> } | Promise<any> | Sends a request to the OpenAI API to create a chat completion based on the provided options. |
+| Name                    | Parameters        | Return Type | Description                                                                 |
+|-------------------------|-------------------|-------------|-----------------------------------------------------------------------------|
+| `buildDirectoryTree`    | dir: string, basePath: string = '', isSrc: boolean = false | Array      | Recursively builds a tree structure of the directory contents, excluding certain files and directories. |
+| `generateMarkdownFromTree` | tree: any, depth: number = 0 | string      | Generates a Markdown representation of the directory tree for the README file. |
+| `generateDocsReadme`    | None              | void        | Generates the README.md file in the docs directory based on the directory tree. |
+| `findTSFiles`           | dir: string, fileList: string[] = [] | string[]    | Recursively finds all TypeScript files in a directory, excluding certain files. |
+| `generateChecksum`      | content: string   | string      | Generates a SHA256 checksum for a given string content. |
+| `generateDocumentation` | fileList: string[] | Promise<void> | Generates documentation for each TypeScript file in the provided list, if changes are detected. |
+| `main`                  | None              | Promise<void> | The main function that orchestrates the documentation generation process. |
 
-## Examples
+## Events
+
+This script does not emit events as it operates in a procedural manner.
+
+## Example
 
 ```typescript
+// Assuming the script is located at @policysynth/webapp/tools/generateDocumentation.js
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import { OpenAI } from 'openai';
+
+// Configuration and initialization
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+const rootDir = process.cwd();
+const docsDir = path.join(rootDir, 'docs');
+const checksumDir = path.join(docsDir, 'cks');
 
-async function getCompletion() {
-  const completion = await openaiClient.chat.completions.create({
-    model: 'gpt-4-1106-preview',
-    temperature: 0.0,
-    max_tokens: 4095,
-    messages: [
-      { role: 'system', content: 'Your system prompt here' },
-      { role: 'user', content: 'Your user message here' },
-    ],
-  });
-  console.log(completion.choices[0].message.content);
+// Ensure necessary directories exist
+if (!fs.existsSync(docsDir)) {
+  fs.mkdirSync(docsDir, { recursive: true });
+}
+if (!fs.existsSync(checksumDir)) {
+  fs.mkdirSync(checksumDir, { recursive: true });
 }
 
-getCompletion();
+// Main function call
+main().then(() => console.log('Documentation generation complete.'));
 ```
 
----
-
-Please note that the above code is a simplified example and may not cover all aspects of the `OpenAI` class. The actual implementation may include additional methods, properties, and error handling to ensure robust interaction with the OpenAI API.
+This example outlines the initialization and execution of the documentation generation script. It demonstrates how to configure the OpenAI client, ensure the existence of necessary directories, and invoke the main function to start the documentation generation process.

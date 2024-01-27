@@ -1,18 +1,17 @@
-import { PsBaseChatBot } from "@policysynth/api";
-import {
-  SearchQueriesGenerator,
-  SearchQueriesRanker,
-  ResearchWeb,
-  SearchResultsRanker,
-  WebPageScanner,
-} from "@policysynth/agents";
+import { PsBaseChatBot } from "@policysynth/api/base/chat/baseChatBot.js";
+
+import { SearchQueriesRanker } from "@policysynth/agents/webResearch/searchQueriesRanker.js";
+import { SearchQueriesGenerator } from "@policysynth/agents/webResearch/searchQueriesGenerator.js";
+import { ResearchWeb } from "@policysynth/agents/webResearch/researchWeb.js";
+import { SearchResultsRanker } from "@policysynth/agents/webResearch/searchResultsRanker.js";
+import { WebPageScanner } from "@policysynth/agents/webResearch/webPageScanner.js";
 
 export class LiveResearchChatBot extends PsBaseChatBot {
   numberOfQueriesToGenerate = 7;
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.25;
 
-  summarySystemPrompt = `Please review the web research below and give the user a full report.
+  summarySystemPrompt = `Please review the web research below and give the user a full report length.
     Take all the information provided and highlight the main points to answer the users question in detail.
     Do not output the analysis on an article by article basis, it needs to go deeper and wider than that to answer the users question.
     Provide links to the original webpages, if they are relevant, in markdown format as citations.
@@ -35,6 +34,10 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   async doLiveResearch(question: string) {
     try {
       this.startBroadcastingLiveCosts();
+
+      console.log(`In doLiveResearch: ${question}`);
+
+      console.log(`this.memory: ${JSON.stringify(this.memory, null, 2)}`);
 
       // Generate search queries
       this.sendAgentStart("Generate search queries");
@@ -70,17 +73,17 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       // Search the web
       this.sendAgentStart("Searching the Web...");
-      const webSearch = this.currentAgent = new ResearchWeb();
+      const webSearch = (this.currentAgent = new ResearchWeb(this.memory));
       const searchResults = await webSearch.search(queriesToSearch);
       this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
 
       // Rank search results
       this.sendAgentStart("Pairwise Ranking Search Results");
-      const searchResultsRanker = this.currentAgent = new SearchResultsRanker(
+      const searchResultsRanker = (this.currentAgent = new SearchResultsRanker(
         this.memory,
         this.sendAgentUpdate.bind(this)
-      );
-      const rankedSearchResults =  await searchResultsRanker.rankSearchResults(
+      ));
+      const rankedSearchResults = await searchResultsRanker.rankSearchResults(
         searchResults,
         question
       );
@@ -94,7 +97,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Scan and Research Web pages
       this.sendAgentStart("Scan and Research Web pages");
 
-      const webPageResearch = this.currentAgent = new WebPageScanner();
+      const webPageResearch = (this.currentAgent = new WebPageScanner(this.memory));
       const webScan = await webPageResearch.scan(
         searchResultsToScan.map((i) => i.url),
         this.jsonWebPageResearchSchema,
@@ -103,13 +106,11 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       );
       this.sendAgentCompleted("Website Scanning Completed", true);
 
-      this.stopBroadcastingLiveCosts();
-
       console.log(
         `webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`
       );
 
-      this.renderResultsToUser(webScan);
+      await this.renderResultsToUser(webScan, question);
     } catch (err) {
       console.error(`Error in doLiveResearch: ${err}`);
     } finally {
@@ -117,11 +118,15 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     }
   }
 
-  async renderResultsToUser(research: object[]) {
+  async renderResultsToUser(research: object[], question: string) {
     const summaryUserPrompt = `
+      Research Question: ${question}
+
       Results from the web research:
       ${JSON.stringify(research, null, 2)}
     `;
+
+    this.addToExternalSolutionsMemoryCosts(summaryUserPrompt+this.summarySystemPrompt,"in");
 
     const messages: any[] = [
       {
@@ -135,14 +140,14 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     ];
 
     const stream = await this.openaiClient.chat.completions.create({
-      model: "gpt-4-1106-preview",
+      model: "gpt-4-0125-preview",
       messages,
       max_tokens: 4000,
       temperature: 0.45,
       stream: true,
     });
 
-    this.streamWebSocketResponses(stream);
+    await this.streamWebSocketResponses(stream);
   }
 
   researchConversation = async (
@@ -176,7 +181,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       messages.unshift(systemMessage);
 
       const stream = await this.openaiClient.chat.completions.create({
-        model: "gpt-4-1106-preview",
+        model: "gpt-4-0125-preview",
         messages,
         max_tokens: 4000,
         temperature: 0.7,

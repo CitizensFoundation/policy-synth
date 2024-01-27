@@ -1,46 +1,34 @@
 # ProjectsController
 
-The `ProjectsController` class is responsible for handling HTTP requests related to project data. It provides endpoints for retrieving project details, middle solutions of sub-problems, and raw evidence for policies. It also manages WebSocket clients for real-time communication and interacts with a Redis client for caching.
+This class is responsible for handling project-related routes in the application. It interacts with Redis for caching, manages WebSocket clients, and processes project data, including fetching and filtering project information and evidence.
 
 ## Properties
 
-| Name                         | Type                                      | Description                                                                 |
-|------------------------------|-------------------------------------------|-----------------------------------------------------------------------------|
-| path                         | string                                    | The base path for the controller's routes.                                  |
-| router                       | express.Router                            | The router object from Express used to define routes.                       |
-| evidenceWebPageVectorStore   | EvidenceWebPageVectorStore                | An instance of EvidenceWebPageVectorStore for managing evidence data.       |
-| wsClients                    | Map<string, WebSocket>                    | A map to store WebSocket clients, indexed by a string identifier.           |
+| Name                         | Type                                             | Description                                      |
+|------------------------------|--------------------------------------------------|--------------------------------------------------|
+| path                         | string                                           | Base path for project-related routes.            |
+| router                       | express.Router                                   | Express router for handling HTTP requests.       |
+| evidenceWebPageVectorStore   | EvidenceWebPageVectorStore                       | Store for managing evidence web page vectors.    |
+| wsClients                    | Map<string, WebSocket>                           | Map of WebSocket clients by some identifier.     |
 
 ## Methods
 
-| Name                 | Parameters                  | Return Type       | Description                                                                                   |
-|----------------------|-----------------------------|-------------------|-----------------------------------------------------------------------------------------------|
-| initializeRoutes     | -                           | Promise<void>     | Initializes the routes for the controller and connects to the Redis client.                   |
-| getMiddleSolutions   | req: express.Request, res: express.Response | Promise<void>     | Retrieves and sends the middle solutions for a given sub-problem of a project.                |
-| getRawEvidence       | req: express.Request, res: express.Response | Promise<void>     | Retrieves and sends the raw evidence for a given policy within a sub-problem of a project.    |
-| getProject           | req: express.Request, res: express.Response | Promise<void>     | Retrieves and sends the project data, including handling of memory cache and backup retrieval.|
-
-## Routes
-
-### GET /api/projects/:id/:forceBackupReloadId
-Retrieves the project data for a given project ID, with an option to force reload from a backup.
-
-### GET /api/projects/:id
-Retrieves the project data for a given project ID.
-
-### GET /api/projects/:id/:subProblemIndex/middle/solutions
-Retrieves the middle solutions for a given sub-problem index within a project.
-
-### GET /api/projects/:id/:subProblemIndex/:policyTitle/rawEvidence
-Retrieves the raw evidence for a given policy title within a sub-problem of a project.
+| Name                | Parameters                                  | Return Type            | Description                                                                 |
+|---------------------|---------------------------------------------|------------------------|-----------------------------------------------------------------------------|
+| initializeRoutes    | -                                           | Promise<void>          | Initializes the routes for project-related endpoints.                       |
+| getMiddleSolutions  | req: express.Request, res: express.Response | Promise<void>          | Fetches and returns the middle solutions for a given project and subproblem.|
+| getRawEvidence      | req: express.Request, res: express.Response | Promise<void>          | Fetches and returns raw evidence for a given project, subproblem, and policy.|
+| getProject          | req: express.Request, res: express.Response | Promise<void>          | Fetches and returns project data, handling caching and data filtering.      |
 
 ## Examples
 
-```typescript
-// Example usage of ProjectsController
-const expressApp = express();
+```
+import express from "express";
+import { ProjectsController } from '@policysynth/api/controllers/projectsController.js';
+
+const app = express();
 const wsClients = new Map<string, WebSocket>();
 const projectsController = new ProjectsController(wsClients);
 
-expressApp.use('/', projectsController.router);
+app.use('/api', projectsController.router);
 ```

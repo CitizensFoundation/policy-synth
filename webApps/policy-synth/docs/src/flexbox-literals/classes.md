@@ -1,104 +1,42 @@
-# Layouts
+# Flexbox Literals
 
-The `Layouts` class provides CSS template literals for common layout styles.
-
-## Properties
-
-No properties.
-
-## Methods
-
-No methods.
-
-## Examples
-
-```typescript
-import { Layouts } from './path-to-styles';
-
-// Use Layouts in a LitElement component
-static styles = [Layouts];
-```
-
-# Factors
-
-The `Factors` class provides CSS template literals for flex factors.
+This TypeScript file defines a series of CSS template literals for flexbox layouts, factors, reverse layouts, positioning, and alignment. These literals are designed to be used with the `lit` library for defining component styles in LitElement-based web components.
 
 ## Properties
 
-No properties.
+There are no explicit properties defined in this file as it primarily exports CSS template literals.
 
 ## Methods
 
-No methods.
+There are no methods defined in this file.
 
-## Examples
+## Events
 
-```typescript
-import { Factors } from './path-to-styles';
+There are no events defined in this file.
 
-// Use Factors in a LitElement component
-static styles = [Factors];
-```
-
-# ReverseLayouts
-
-The `ReverseLayouts` class provides CSS template literals for reverse layout styles.
-
-## Properties
-
-No properties.
-
-## Methods
-
-No methods.
-
-## Examples
+## Example
 
 ```typescript
-import { ReverseLayouts } from './path-to-styles';
+import { Layouts, Factors, ReverseLayouts, Positioning, Alignment } from '@policysynth/webapp/flexbox-literals/classes.js';
 
-// Use ReverseLayouts in a LitElement component
-static styles = [ReverseLayouts];
+// Example of using the exported CSS in a LitElement
+import { LitElement, html } from 'lit';
+import { customElement } from 'lit/decorators.js';
+
+@customElement('my-flex-element')
+class MyFlexElement extends LitElement {
+  static styles = [Layouts, Factors, ReverseLayouts, Positioning, Alignment];
+
+  render() {
+    return html`
+      <div class="layout horizontal">
+        <div class="flex">Item 1</div>
+        <div class="flex">Item 2</div>
+        <div class="flex">Item 3</div>
+      </div>
+    `;
+  }
+}
 ```
 
-# Positioning
-
-The `Positioning` class provides CSS template literals for various positioning styles.
-
-## Properties
-
-No properties.
-
-## Methods
-
-No methods.
-
-## Examples
-
-```typescript
-import { Positioning } from './path-to-styles';
-
-// Use Positioning in a LitElement component
-static styles = [Positioning];
-```
-
-# Alignment
-
-The `Alignment` class provides CSS template literals for alignment styles.
-
-## Properties
-
-No properties.
-
-## Methods
-
-No methods.
-
-## Examples
-
-```typescript
-import { Alignment } from './path-to-styles';
-
-// Use Alignment in a LitElement component
-static styles = [Alignment];
-```
+This example demonstrates how to import and use the CSS template literals defined in the file within a LitElement component. The `Layouts`, `Factors`, `ReverseLayouts`, `Positioning`, and `Alignment` CSS literals are imported and applied as styles to the component. The `render` method then defines a simple flexbox layout with three items.

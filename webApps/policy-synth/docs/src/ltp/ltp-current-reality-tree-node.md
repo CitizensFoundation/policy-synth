@@ -1,50 +1,53 @@
 # LtpCurrentRealityTreeNode
 
-This class represents a node within a current reality tree structure. It extends from `YpBaseElement` and is used to display and interact with individual nodes of the tree.
+This class represents a node within the Current Reality Tree (CRT) in the LTP (Logical Thinking Process) application. It extends `YpBaseElement` to leverage common functionalities and lifecycle hooks provided by the base element. The node is responsible for displaying cause descriptions, managing its state (e.g., whether it's a root cause or creating causes), and interacting with the `LtpServerApi` for data operations.
 
 ## Properties
 
-| Name               | Type                      | Description                                           |
-|--------------------|---------------------------|-------------------------------------------------------|
-| nodeId             | string                    | The unique identifier for the node.                   |
-| crtNodeType        | CrtNodeType               | The type of the current reality tree node.            |
-| crtId              | string                    | The identifier for the current reality tree.          |
-| isRootCause        | boolean                   | Indicates if the node is a root cause.                |
-| causeDescription   | string                    | The description of the cause represented by the node. |
-| isCreatingCauses   | boolean                   | Indicates if the node is in the process of creating causes. |
-| api                | LtpServerApi              | An instance of `LtpServerApi` to interact with the server. |
+| Name              | Type    | Description                                                                 |
+|-------------------|---------|-----------------------------------------------------------------------------|
+| nodeId            | String  | The unique identifier of the node.                                          |
+| crtNodeType       | String  | The type of the CRT node (e.g., 'ude', 'directCause', 'intermediateCause'). |
+| crtId             | String  | The identifier of the CRT this node belongs to.                             |
+| isRootCause       | Boolean | Indicates if the node is a root cause.                                      |
+| causeDescription  | String  | The description of the cause represented by this node.                      |
+| isCreatingCauses  | Boolean | Indicates if the node is in the process of creating direct causes.          |
+| api               | LtpServerApi | An instance of `LtpServerApi` for server interactions.                    |
 
 ## Methods
 
-| Name                  | Parameters                  | Return Type | Description                                             |
-|-----------------------|-----------------------------|-------------|---------------------------------------------------------|
-| connectedCallback     |                             | void        | Lifecycle method called when the element is connected to the DOM. |
-| updated               | changedProperties: PropertyValueMap | void | Lifecycle method called after the element's properties have been updated. |
-| disconnectedCallback  |                             | void        | Lifecycle method called when the element is disconnected from the DOM. |
-| createDirectCauses    |                             | Promise<void> | Asynchronously creates direct causes for the node.      |
-| editNode              |                             | void        | Emits an event to edit the node.                        |
-| crtTypeIconClass      |                             | string      | Returns the class for the type icon based on the node type. |
-| toggleMenu            |                             | void        | Toggles the visibility of the menu.                     |
-| crtTypeIcon           |                             | string      | Returns the icon name based on the node type.           |
-| render                |                             | TemplateResult | Renders the HTML template for the component.           |
+| Name                  | Parameters | Return Type | Description                                                                 |
+|-----------------------|------------|-------------|-----------------------------------------------------------------------------|
+| createDirectCauses    | -          | Promise<void> | Initiates the creation of direct causes for this node.                     |
+| editNode              | -          | void        | Triggers the edit node event with node details.                             |
+| crtTypeIconClass      | -          | String      | Computes the CSS class for the node type icon based on the `crtNodeType`.   |
+| toggleMenu            | -          | void        | Toggles the visibility of the node's menu.                                  |
+| crtTypeIcon           | -          | String      | Determines the icon to display based on the node type and `isRootCause`.    |
+| render                | -          | TemplateResult | Renders the node's HTML structure with Lit's `html` template function.   |
 
 ## Events
 
-- **add-nodes**: Emitted when new nodes are added to the tree.
-- **edit-node**: Emitted when a node is to be edited.
-- **open-add-cause-dialog**: Emitted when the dialog to add a new cause is to be opened.
+- `add-nodes`: Fired when new nodes are added as a result of creating direct causes.
+- `edit-node`: Fired when the node is to be edited, providing the node ID and element reference.
+- `open-add-cause-dialog`: Fired to request opening the dialog to add a new cause, providing the parent node ID.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the LtpCurrentRealityTreeNode component
-const nodeElement = document.createElement('ltp-current-reality-tree-node');
-nodeElement.nodeId = 'node123';
-nodeElement.crtNodeType = 'ude';
-nodeElement.crtId = 'crt456';
-nodeElement.isRootCause = false;
-nodeElement.causeDescription = 'Example cause description';
-document.body.appendChild(nodeElement);
+import '@policysynth/webapp/ltp/ltp-current-reality-tree-node.js';
+
+// Usage within a LitElement component
+render() {
+  return html`
+    <ltp-current-reality-tree-node
+      nodeId="123"
+      crtNodeType="ude"
+      crtId="crt1"
+      isRootCause=${false}
+      causeDescription="Example cause description."
+    ></ltp-current-reality-tree-node>
+  `;
+}
 ```
 
-Note: The `CrtNodeType` type is not defined within the provided code snippet, so it is assumed to be a custom type defined elsewhere in the application.
+This example demonstrates how to use the `ltp-current-reality-tree-node` custom element within another LitElement component. It sets the necessary properties such as `nodeId`, `crtNodeType`, `crtId`, `isRootCause`, and `causeDescription` to display a node of the Current Reality Tree.

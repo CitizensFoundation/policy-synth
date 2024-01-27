@@ -4,7 +4,7 @@
     "target": "es2020",
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
-    "outDir": "dist/",
+    "outDir": "ts-out",
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true

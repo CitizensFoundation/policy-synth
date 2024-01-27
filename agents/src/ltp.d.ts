@@ -48,40 +48,6 @@ interface CrtResponse {
   crt: LtpCurrentRealityTreeData;
 }
 
-interface PsAiChatWsMessage {
-  sender: string;
-  type:
-    | "hello_message"
-    | "moderation_error"
-    | "start"
-    | "message"
-    | "end"
-    | "stream"
-    | "noStreaming"
-    | "error"
-    | "info"
-    | "validationAgentStart"
-    | "validationAgentCompleted"
-    | "agentStart"
-    | "agentCompleted"
-    | "agentUpdated"
-    | "agentError"
-    | "thinking"
-    | "start_followup"
-    | "end_followup"
-    | "stream_followup";
-  message: string;
-  rawMessage?: string;
-  refinedCausesSuggestions?: string[];
-  debug?: CrtDebugData;
-  hidden?: boolean;
-}
-
-interface PsSimpleChatLog {
-  sender: string;
-  message: string;
-}
-
 interface LtpChatBotCrtMessage {
   message: string;
   rawMessage: string;

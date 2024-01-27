@@ -11,10 +11,10 @@ import '@material/web/textfield/filled-text-field.js';
 
 import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
-import '@yrpri/webapp/cmp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image.js';
 import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 import { BaseChatBotServerApi } from './BaseChatBotApi';
-import { YpBaseElement } from '@yrpri/webapp/cmp/common/yp-base-element.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 
 @customElement('ps-ai-chat-element')
 export class PsAiChatElement extends YpBaseElement {

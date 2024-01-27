@@ -1,32 +1,34 @@
-The provided TypeScript code is a script for generating API documentation for TypeScript files in a project. It uses the OpenAI API to generate the documentation based on the content of the TypeScript files. The script also manages checksums to avoid regenerating documentation for files that haven't changed. Below is the API documentation for the main class or module in the provided script, assuming it represents a TypeScript file.
+# PolicySynthAgentBase
 
-# DocumentationGenerator
-
-This class is responsible for generating API documentation for TypeScript files in a project. It uses the OpenAI API to create detailed documentation and manages checksums to detect changes in files.
+This class serves as the base for policy synthesis agents.
 
 ## Properties
 
-No public properties are defined in the script.
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| openaiClient  | OpenAI | The OpenAI client instance used for generating completions. |
+| rootDir       | string | The root directory of the project. |
+| docsDir       | string | The directory where documentation files are stored. |
+| checksumDir   | string | The directory where checksum files for documentation are stored. |
 
 ## Methods
 
-| Name                  | Parameters        | Return Type | Description                                                                 |
-|-----------------------|-------------------|-------------|-----------------------------------------------------------------------------|
-| buildDirectoryTree    | dir: string, basePath: string = '', isSrc: boolean = false | any[] | Recursively builds a tree structure representing the directory contents.    |
-| generateMarkdownFromTree | tree: any, depth: number = 0 | string | Generates markdown text from the directory tree structure.                   |
-| generateDocsReadme    | -                 | void        | Generates a README.md file in the docs directory with the documentation tree.|
-| findTSFiles           | dir: string, fileList: string[] = [] | string[] | Recursively finds all TypeScript files in a directory, excluding certain files. |
-| generateChecksum      | content: string   | string      | Generates a SHA256 checksum for the given content.                           |
-| generateDocumentation | fileList: string[], systemPrompt: string | Promise<void> | Generates documentation for a list of TypeScript files using the OpenAI API. |
-| main                  | -                 | Promise<void> | The main function that finds TypeScript files and generates documentation.   |
+| Name                  | Parameters                                    | Return Type | Description                 |
+|-----------------------|-----------------------------------------------|-------------|-----------------------------|
+| buildDirectoryTree    | dir: string, basePath: string, isSrc: boolean | any[]       | Builds a tree structure of the directory for documentation purposes. |
+| generateMarkdownFromTree | tree: any, depth: number                     | string      | Generates markdown documentation from the directory tree. |
+| generateDocsReadme    |                                               | void        | Generates the README.md file for the documentation directory. |
+| findTSFiles           | dir: string, fileList: string[]               | string[]    | Finds all TypeScript files in the given directory, excluding certain files. |
+| generateChecksum      | content: string                               | string      | Generates a SHA256 checksum for the given content. |
+| generateDocumentation | fileList: string[]                            | Promise<void> | Generates documentation for each TypeScript file in the list. |
+| main                  |                                               | Promise<void> | The main function to run the documentation generation process. |
 
-## Examples
+## Example
 
-```typescript
-// Example usage of the DocumentationGenerator
-const tsFiles = findTSFiles(rootDir);
-await generateDocumentation(tsFiles, systemPromptWebApp);
-generateDocsReadme();
 ```
+// Example usage of PolicySynthAgentBase
+import { PolicySynthAgentBase } from '@policysynth/agents/baseAgent.js';
 
-Please note that the actual implementation details such as private methods, internal logic, and helper functions are not documented here as they are not part of the public API.
+const agentBase = new PolicySynthAgentBase();
+agentBase.main().then(() => console.log('Documentation generation complete.'));
+```

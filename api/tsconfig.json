@@ -4,17 +4,13 @@
     "target": "es2020",
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
-    "outDir": "dist/",
+    "outDir": "ts-out/",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
   },
   "include": [
     "**/*.ts",
-    "./node_modules/@policysynth/agents/src/ltp.d.ts",
-    "./node_modules/@policysynth/agents/src/types.d.ts",
-    "./node_modules/@policysynth/agents/src/policy.d.ts",
-    "./node_modules/@policysynth/agents/src/rootCauses.d.ts",
-    "./node_modules/@policysynth/agents/src/validation.d.ts",
+    "./node_modules/@policysynth/agents/**/*.d.ts"
   ]
 }

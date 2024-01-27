@@ -1,7 +1,7 @@
 import { customElement, property } from 'lit/decorators.js';
 import { css } from 'lit';
 
-import { PsChatAssistant } from '@policysynth/webapp/cmp/chatBot/ps-chat-assistant.js';
+import { PsChatAssistant } from '@policysynth/webapp/chatBot/ps-chat-assistant.js';
 import { ResearchServerApi } from './researchServerApi.js';
 
 @customElement('live-research-chat-bot')
@@ -41,7 +41,9 @@ export class LiveResearchChatBot extends PsChatAssistant {
 
   override async sendChatMessage() {
     const userMessage = this.chatInputField!.value;
-
+    if (this.chatLog.length === 0) {
+      this.fire('start-process');
+    }
     super.sendChatMessage();
 
     this.addUserChatBotMessage(userMessage);
