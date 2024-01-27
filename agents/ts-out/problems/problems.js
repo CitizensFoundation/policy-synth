@@ -17,6 +17,7 @@ import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
 import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
 import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
 import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
+import { PolicySynthAgentBase } from "../baseAgent.js";
 export class AgentProblems extends BaseAgentProcessor {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -26,7 +27,7 @@ export class AgentProblems extends BaseAgentProcessor {
             communityId: jobData.communityId,
             domainId: jobData.domainId,
             currentStage: "create-sub-problems",
-            stages: this.defaultStages,
+            stages: PolicySynthAgentBase.emptyStages,
             timeStart: Date.now(),
             totalCost: 0,
             customInstructions: {},
