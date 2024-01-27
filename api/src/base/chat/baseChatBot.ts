@@ -6,8 +6,6 @@ import { v4 as uuidv4 } from "uuid";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 
-const DEBUGGING = true;
-
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 
@@ -24,6 +22,7 @@ export class PsBaseChatBot {
   liveCostsBoadcastStartAt: Date | undefined;
   lastSentToUserAt: Date | undefined;
   lastBroacastedCosts: number | undefined;
+  redisMemoryKey = "chatbot-memory";
 
   constructor(clientId: string, wsClients: Map<string, WebSocket>) {
     this.clientId = clientId;
@@ -153,60 +152,13 @@ export class PsBaseChatBot {
 
   getEmptyMemory() {
     return {
-      redisKey: `webResearch-${uuidv4()}`,
+      redisKey: `${this.redisMemoryKey}-${uuidv4()}`,
       groupId: 1,
       communityId: 2,
       domainId: 1,
       stage: "create-sub-problems",
       currentStage: "create-sub-problems",
-      stages: {
-        "create-root-causes-search-queries": {},
-        "web-search-root-causes": {},
-        "web-get-root-causes-pages": {},
-        "rank-web-root-causes": {},
-        "rate-web-root-causes": {},
-        "web-get-refined-root-causes": {},
-        "get-metadata-for-top-root-causes": {},
-        "create-problem-statement-image": {},
-        "create-sub-problems": {},
-        "rank-sub-problems": {},
-        "policies-seed": {},
-        "policies-create-images": {},
-        "create-entities": {},
-        "rank-entities": {},
-        "reduce-sub-problems": {},
-        "create-search-queries": {},
-        "rank-root-causes-search-results": {},
-        "rank-root-causes-search-queries": {},
-        "create-sub-problem-images": {},
-        "rank-search-queries": {},
-        "web-search": {},
-        "rank-web-solutions": {},
-        "rate-solutions": {},
-        "rank-search-results": {},
-        "web-get-pages": {},
-        "create-seed-solutions": {},
-        "create-pros-cons": {},
-        "create-solution-images": {},
-        "rank-pros-cons": {},
-        "rank-solutions": {},
-        "group-solutions": {},
-        "evolve-create-population": {},
-        "evolve-mutate-population": {},
-        "evolve-recombine-population": {},
-        "evolve-reap-population": {},
-        "topic-map-solutions": {},
-        "evolve-rank-population": {},
-        "analyse-external-solutions": {},
-        "create-evidence-search-queries": {},
-        "web-get-evidence-pages": {},
-        "web-search-evidence": {},
-        "rank-web-evidence": {},
-        "rate-web-evidence": {},
-        "web-get-refined-evidence": {},
-        "get-metadata-for-top-evidence": {},
-        "validation-agent": {},
-      },
+      stages: this.getEmptyStages(),
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},
@@ -334,12 +286,6 @@ export class PsBaseChatBot {
     };
 
     messages.unshift(systemMessage);
-
-    if (DEBUGGING) {
-      console.log("=====================");
-      console.log(JSON.stringify(messages, null, 2));
-      console.log("=====================");
-    }
 
     const stream = await this.openaiClient.chat.completions.create({
       model: "gpt-4-0125-preview",

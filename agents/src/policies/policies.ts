@@ -9,6 +9,7 @@ import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
 import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
 import { GetRefinedEvidenceProcessor } from "./web/getRefinedEvidence.js";
 import { GetMetaDataForTopWebEvidenceProcessor } from "./web/getMetaDataForTopWebEvidence.js";
+import { PolicySynthAgentBase } from "../baseAgent.js";
 
 export class AgentPolicies extends BaseAgentProcessor {
   declare memory: IEngineInnovationMemoryData;
@@ -22,7 +23,7 @@ export class AgentPolicies extends BaseAgentProcessor {
       communityId: jobData.communityId,
       domainId: jobData.domainId,
       currentStage: "policies-seed",
-      stages: this.defaultStages,
+      stages: PolicySynthAgentBase.emptyStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},
