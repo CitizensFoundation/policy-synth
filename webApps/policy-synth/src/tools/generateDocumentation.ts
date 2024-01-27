@@ -1,5 +1,16 @@
-const systemPromptWebApp = `
+const renderSystemPrompt = (path: string, type: "customElement" | "class") => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
+
+Important Instructions
+For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
+
+Look at the markdown sections below and always output those with your detailed documentation.
+
+Only output the routes if controllers.
+
+The fullpath to this file is ${path.replace("/src","")} use that to inform the example path you output.
+
+You MUST output the full detailed documentation for the typescript file the user submits.
 
 Example markdown format:
 # ClassName
@@ -18,24 +29,28 @@ Brief description of the class.
 |------------|-------------------|-------------|-----------------------------|
 | methodName | param1: type, ... | returnType  | Brief description of method |
 
-## Events (if any)
+## Events
 
-- **eventName**: Description of when and why the event is emitted.
+## Example
 
-## Examples
-
+${type === "customElement" ? `
 \`\`\`typescript
-// Example usage of the web component
+// Custom element example
+{ BaseProblemSolvingAgent } from '@policysynth/webapp/ps-app.js';
+
+...Lit Element Example...
+\`\`\`
+` : ``}
+\`\`\`typescript
+// Class example
+{ PsAppUser } from '@policysynth/webapp/base/PsAppUser.js';
+
+...Class Example...
 \`\`\`
 
-For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
+`
 
-Do not output other sections
-
-You MUST output the full detailed documentation for the typescript file the user submits.
-`;
-
-const indexHeader = '# Policy Synth WebApp API Documentation\n\n';
+const indexHeader = '# Policy Webapp API Documentation\n\n'
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -62,74 +77,61 @@ function buildDirectoryTree(dir: string, basePath = '', isSrc = false) {
 
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   entries.forEach(entry => {
-    if (
-      entry.name === 'cks' ||
-      entry.name.endsWith('all.ts') ||
-      entry.name === 'README.md' ||
-      entry.name.endsWith('.d.ts') ||
-      entry.name.startsWith('.')
-    ) {
-      console.log(`Skipping ${entry.name}`)
-      return; // skip cks directory, TypeScript declaration files, and hidden files
-    }
-
-    const relativePath = isSrc ? entry.name : path.join(basePath, entry.name);
-
-    if (entry.isDirectory()) {
-      // Flatten the 'src' directory into the top level
-      const children = buildDirectoryTree(
-        path.join(dir, entry.name),
-        relativePath,
-        isSrc || entry.name === 'src'
-      );
-      if (entry.name === 'src') {
-        structure = structure.concat(children);
-      } else {
-        structure.push({
-          type: 'directory',
-          name: entry.name,
-          path: relativePath,
-          children: children,
-        });
+      if (entry.name === 'cks' || entry.name === 'README.md' || entry.name.endsWith('.d.ts') || entry.name.startsWith('.')) {
+          return; // skip cks directory, TypeScript declaration files, and hidden files
       }
-    } else if (entry.isFile() && entry.name.endsWith('.md')) {
-      structure.push({
-        type: 'file',
-        name: entry.name,
-        path: relativePath,
-      });
-    }
+
+      const relativePath = isSrc ? entry.name : path.join(basePath, entry.name);
+
+      if (entry.isDirectory()) {
+          // Flatten the 'src' directory into the top level
+          const children = buildDirectoryTree(path.join(dir, entry.name), relativePath, isSrc || entry.name === 'src');
+          if (entry.name === 'src') {
+              structure = structure.concat(children);
+          } else {
+              structure.push({
+                  type: 'directory',
+                  name: entry.name,
+                  path: relativePath,
+                  children: children
+              });
+          }
+      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+          structure.push({
+              type: 'file',
+              name: entry.name,
+              path: relativePath
+          });
+      }
   });
 
   return structure;
 }
+
 
 function generateMarkdownFromTree(tree: any, depth = 0) {
   let markdown = '';
   const indent = '  '.repeat(depth);
 
   tree.forEach((item: any) => {
-    if (item.type === 'directory') {
-      markdown += `${indent}- ${item.name}\n`;
-      markdown += generateMarkdownFromTree(item.children, depth + 1);
-    } else if (item.type === 'file') {
-      // Correct the path for files directly under 'src'
-      const filePath = depth === 0 ? `src/${item.path}` : `src/${item.path}`;
-      markdown += `${indent}- [${item.name.replace('.md', '')}](${filePath})\n`;
-    }
+      if (item.type === 'directory') {
+          markdown += `${indent}- ${item.name}\n`;
+          markdown += generateMarkdownFromTree(item.children, depth + 1);
+      } else if (item.type === 'file') {
+          // Correct the path for files directly under 'src'
+          const filePath = depth === 0 ? `${item.path}` : item.path;
+          markdown += `${indent}- [${item.name.replace('.md', '')}](${filePath})\n`;
+      }
   });
 
   return markdown;
 }
 
 function generateDocsReadme() {
-  const tree = buildDirectoryTree('docs/src');
+  const tree = buildDirectoryTree(docsDir);
   console.log(JSON.stringify(tree, null, 2));
   const markdown = generateMarkdownFromTree(tree);
-  fs.writeFileSync(
-    path.join(docsDir, 'README.md'),
-    `${indexHeader}${markdown}`
-  );
+  fs.writeFileSync(path.join(docsDir, 'README.md'), `${indexHeader}${markdown}`);
 }
 
 function findTSFiles(dir: string, fileList: string[] = []): string[] {
@@ -143,12 +145,7 @@ function findTSFiles(dir: string, fileList: string[] = []): string[] {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       findTSFiles(fullPath, fileList);
-    } else if (
-      entry.isFile() &&
-      entry.name.endsWith('.ts') &&
-      entry.name !== 'all.ts' &&
-      entry.name !== 'index.ts'
-    ) {
+    } else if (entry.isFile() && entry.name.endsWith('.ts') && entry.name !== 'index.ts') {
       fileList.push(fullPath);
     }
   }
@@ -160,10 +157,7 @@ function generateChecksum(content: string): string {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
-async function generateDocumentation(
-  fileList: string[],
-  systemPrompt: string
-): Promise<void> {
+async function generateDocumentation(fileList: string[]): Promise<void> {
   for (const file of fileList) {
     const content = fs.readFileSync(file, 'utf8');
     const checksum = generateChecksum(content);
@@ -174,27 +168,29 @@ async function generateDocumentation(
       existingChecksum = fs.readFileSync(checksumFile, 'utf8');
     }
 
+    let relativePath = file.replace(rootDir, '').replace("/src/","").replace(".ts",".js");
+    relativePath = `@policysynth/webapp/${relativePath}`;
+
+    console.log(`REL: ${relativePath}`);
+
+    const type = content.includes('@customElement') ? "customElement" : "class";
+
     if (checksum !== existingChecksum) {
       try {
         console.log(`${file}:`);
         const completion = await openaiClient.chat.completions.create({
-          model: 'gpt-4-1106-preview',
+          model: "gpt-4-0125-preview",
           temperature: 0.0,
           max_tokens: 4095,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: content },
-          ],
+          messages: [{ role: "system", content: renderSystemPrompt(relativePath, type ) }, { role: "user", content: content }],
         });
 
         let docContent = completion.choices[0].message.content;
 
         console.log(docContent);
-        docContent = docContent.replace(/```markdown\s+/g, '');
+        docContent = docContent!.replace(/```markdown\s+/g, '');
 
-        const docFilePath = file
-          .replace(rootDir, docsDir)
-          .replace('.ts', '.md');
+        const docFilePath = file.replace(rootDir, docsDir).replace('.ts', '.md');
         const docDirPath = path.dirname(docFilePath);
 
         if (!fs.existsSync(docDirPath)) {
@@ -209,9 +205,7 @@ async function generateDocumentation(
         process.exit(1);
       }
     } else {
-      console.log(
-        `Skipping documentation generation for ${file}, no changes detected.`
-      );
+      console.log(`Skipping documentation generation for ${file}, no changes detected.`);
     }
   }
 }
@@ -219,7 +213,7 @@ async function generateDocumentation(
 async function main(): Promise<void> {
   const tsFiles = findTSFiles(rootDir);
   generateDocsReadme();
-  await generateDocumentation(tsFiles, systemPromptWebApp);
+  await generateDocumentation(tsFiles);
   generateDocsReadme();
 }
 

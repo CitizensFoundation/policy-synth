@@ -1,34 +1,38 @@
 # PsServerApi
 
-The `PsServerApi` class extends the `YpServerApi` class and provides methods to interact with a server API, specifically for fetching project data, middle solutions, and raw evidence.
+`PsServerApi` extends `YpServerApi` to provide API methods for interacting with projects, solutions, and evidence data. It allows fetching project details, middle solutions, and raw evidence for a given policy title within a project. It also includes commented-out methods for interacting with surveys, voting, and idea submission.
 
 ## Properties
 
-| Name         | Type   | Description                        |
-|--------------|--------|------------------------------------|
-| baseUrlPath  | string | The base URL path for the API.     |
+| Name        | Type   | Description                                   |
+|-------------|--------|-----------------------------------------------|
+| baseUrlPath | string | The base URL path for the API endpoints.      |
 
 ## Methods
 
-| Name                | Parameters                                             | Return Type                 | Description                                                                                   |
-|---------------------|--------------------------------------------------------|-----------------------------|-----------------------------------------------------------------------------------------------|
-| constructor         | urlPath: string = '/api'                               |                             | Initializes a new instance of `PsServerApi` with an optional `urlPath`.                      |
-| getProject          | id: number, tempPassword?: string, forceGetBackupForProject?: string | Promise<CpsBootResponse>   | Fetches project data by ID, with optional temporary password and force backup retrieval flag. |
-| getMiddleSolutions  | id: number, subProblemIndex: number                   | Promise<IEngineSolution[][]>| Fetches middle solutions for a given sub-problem index within a project.                      |
-| getRawEvidence      | id: number, subProblemIndex: number, policyTitle: string | Promise<PSEvidenceRawWebPageData[]> | Fetches raw evidence data for a given policy within a sub-problem of a project.               |
+| Name                | Parameters                                                                 | Return Type                  | Description                                                                                   |
+|---------------------|----------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------------------------|
+| constructor         | urlPath: string = '/api'                                                   | void                         | Initializes the API with an optional base URL path.                                          |
+| getProject          | id: number, tempPassword?: string, forceGetBackupForProject?: string      | Promise<CpsBootResponse>    | Fetches project details. Optionally uses a temporary password and can force backup retrieval.|
+| getMiddleSolutions  | id: number, subProblemIndex: number                                       | Promise<IEngineSolution[][]> | Fetches middle solutions for a given sub-problem within a project.                           |
+| getRawEvidence      | id: number, subProblemIndex: number, policyTitle: string                  | Promise<PSEvidenceRawWebPageData[]> | Fetches raw evidence for a given policy title within a sub-problem of a project.             |
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of PsServerApi to get a project
-const psServerApi = new PsServerApi();
-const projectData = await psServerApi.getProject(123);
+import { PsServerApi } from '@policysynth/webapp/base/PsServerApi.js';
 
-// Example usage of PsServerApi to get middle solutions
-const middleSolutions = await psServerApi.getMiddleSolutions(123, 1);
+const api = new PsServerApi();
 
-// Example usage of PsServerApi to get raw evidence
-const rawEvidence = await psServerApi.getRawEvidence(123, 1, 'PolicyTitle');
+// Example usage of getProject
+const projectDetails = await api.getProject(1);
+console.log(projectDetails);
+
+// Example usage of getMiddleSolutions
+const middleSolutions = await api.getMiddleSolutions(1, 0);
+console.log(middleSolutions);
+
+// Example usage of getRawEvidence
+const rawEvidence = await api.getRawEvidence(1, 0, 'PolicyTitle');
+console.log(rawEvidence);
 ```
-
-Please note that the actual types `CpsBootResponse`, `IEngineSolution`, and `PSEvidenceRawWebPageData` are not defined in the provided code snippet. They should be defined elsewhere in your codebase.
