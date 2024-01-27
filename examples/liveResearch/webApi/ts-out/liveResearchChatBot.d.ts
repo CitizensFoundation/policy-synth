@@ -6,8 +6,8 @@ export declare class LiveResearchChatBot extends PsBaseChatBot {
     summarySystemPrompt: string;
     jsonWebPageResearchSchema: string;
     renderFollowupSystemPrompt(): string;
-    doLiveResearch(question: string): any;
-    renderResultsToUser(research: object[], question: string): any;
-    researchConversation: (chatLog: PsSimpleChatLog[], numberOfSelectQueries: number, percentOfTopQueriesToSearch: number, percentOfTopResultsToScan: number) => any;
+    doLiveResearch(question: string): Promise<void>;
+    renderResultsToUser(research: object[], question: string): Promise<void>;
+    researchConversation: (chatLog: PsSimpleChatLog[], numberOfSelectQueries: number, percentOfTopQueriesToSearch: number, percentOfTopResultsToScan: number) => Promise<void>;
 }
 //# sourceMappingURL=liveResearchChatBot.d.ts.map
