@@ -1,7 +1,7 @@
 import { customElement, property } from 'lit/decorators.js';
 import { css } from 'lit';
 
-import { PsChatAssistant } from '@policysynth/webapp/cmp/chatBot/ps-chat-assistant.js';
+import { PsChatAssistant } from '@policysynth/webapp/chatBot/ps-chat-assistant.js';
 import { SimpleChatServerApi } from './SimpleServerApi';
 
 @customElement('simple-chat-bot')
