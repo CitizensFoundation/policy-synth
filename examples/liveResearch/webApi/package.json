@@ -9,7 +9,7 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.0.42",
+    "@policysynth/api": "^1.1.0",
     "@langchain/openai": "^0.0.12",
     "@types/html-to-text": "^9.0.4",
     "html-to-text": "^9.0.5"
