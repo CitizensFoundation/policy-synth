@@ -85,7 +85,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
       render: () => {
         return html` <div class="layout vertical center-center">
           <div class="layout horizontal center-center themeToggle">
-            <md-outlined-icon-button @click="${this.reset}"
+            <md-outlined-icon-button hidden @click="${this.reset}"
               ><md-icon>restart_alt</md-icon></md-outlined-icon-button
             >${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
           </div>

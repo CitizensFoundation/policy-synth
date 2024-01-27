@@ -4,8 +4,12 @@ import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { IEngineConstants } from "@policysynth/agents/constants.js";
 
 const DEBUGGING = true;
+
+//TODO: Use tiktoken
+const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 
 export class PsBaseChatBot {
   clientId: string;
@@ -19,6 +23,7 @@ export class PsBaseChatBot {
   liveCostsInactivityTimeout = 1000 * 60 * 10;
   liveCostsBoadcastStartAt: Date | undefined;
   lastSentToUserAt: Date | undefined;
+  lastBroacastedCosts: number | undefined;
 
   constructor(clientId: string, wsClients: Map<string, WebSocket>) {
     this.clientId = clientId;
@@ -95,6 +100,7 @@ export class PsBaseChatBot {
   startBroadcastingLiveCosts() {
     this.stopBroadcastingLiveCosts();
     this.liveCostsBoadcastStartAt = new Date();
+    this.lastBroacastedCosts = undefined;
 
     this.broadcastingLiveCosts = true;
     this.broadCastLiveCosts();
@@ -103,15 +109,20 @@ export class PsBaseChatBot {
   broadCastLiveCosts() {
     if (this.broadcastingLiveCosts) {
       if (this.currentAgent && this.currentAgent.fullLLMCostsForMemory) {
-        console.log(
-          `Broadcasting live costs: ${this.currentAgent.fullLLMCostsForMemory}`
-        );
-        const botMessage = {
-          sender: "bot",
-          type: "liveLlmCosts",
-          message: this.currentAgent.fullLLMCostsForMemory,
-        };
-        this.clientSocket.send(JSON.stringify(botMessage));
+        if (
+          this.lastBroacastedCosts != this.currentAgent.fullLLMCostsForMemory
+        ) {
+          console.log(
+            `Broadcasting live costs: ${this.currentAgent.fullLLMCostsForMemory}`
+          );
+          const botMessage = {
+            sender: "bot",
+            type: "liveLlmCosts",
+            message: this.currentAgent.fullLLMCostsForMemory,
+          };
+          this.clientSocket.send(JSON.stringify(botMessage));
+          this.lastBroacastedCosts = this.currentAgent.fullLLMCostsForMemory;
+        }
       }
       let timePassedSinceBroadcastStartActivity = 0;
       if (this.liveCostsBoadcastStartAt && this.lastSentToUserAt) {
@@ -230,16 +241,83 @@ export class PsBaseChatBot {
       try {
         for await (const part of stream) {
           this.sendToClient("bot", part.choices[0].delta.content!);
+          this.addToExternalSolutionsMemoryCosts(
+            part.choices[0].delta.content!,
+            "out"
+          );
         }
       } catch (error) {
         console.error(error);
-        this.sendToClient("bot", "", "error");
+        this.sendToClient(
+          "bot",
+          "There has been an error, please retry",
+          "error"
+        );
         reject();
       } finally {
         this.sendToClient("bot", "", "end");
       }
       resolve();
     });
+  }
+
+  getTokenCosts(estimateTokens: number, type: "in" | "out") {
+    if (type == "in") {
+      return (
+        IEngineConstants.analyseExternalSolutionsModel.inTokenCostUSD *
+        estimateTokens
+      );
+    } else {
+      return (
+        IEngineConstants.analyseExternalSolutionsModel.outTokenCostUSD *
+        estimateTokens
+      );
+    }
+  }
+
+  addToExternalSolutionsMemoryCosts(text: string, type: "in" | "out") {
+    if (text) {
+      const parts = text.split(" ").filter((part) => part != "");
+      const estimateTokens = parts.length * WORDS_TO_TOKENS_MAGIC_CONSTANT;
+
+      if (this.currentAgent && this.currentAgent.memory) {
+        if (type == "in") {
+          if (
+            this.memory.stages["analyse-external-solutions"].tokensInCost ===
+              undefined ||
+            this.memory.stages["analyse-external-solutions"].tokensIn ===
+              undefined
+          ) {
+            this.memory.stages["analyse-external-solutions"].tokensInCost = 0;
+            this.memory.stages["analyse-external-solutions"].tokensIn = 0;
+          }
+          this.memory.stages["analyse-external-solutions"].tokensIn +=
+            estimateTokens;
+          this.memory.stages["analyse-external-solutions"].tokensInCost +=
+            this.getTokenCosts(estimateTokens, type);
+        } else {
+          if (
+            this.memory.stages["analyse-external-solutions"].tokensOutCost ===
+              undefined ||
+            this.memory.stages["analyse-external-solutions"].tokensOut ===
+              undefined
+          ) {
+            this.memory.stages["analyse-external-solutions"].tokensOutCost = 0;
+            this.memory.stages["analyse-external-solutions"].tokensOut = 0;
+          }
+          this.memory.stages["analyse-external-solutions"].tokensOut +=
+            estimateTokens;
+          this.memory.stages["analyse-external-solutions"].tokensOutCost +=
+            this.getTokenCosts(estimateTokens, type);
+        }
+      } else {
+        console.warn(
+          `No current agent or memory found to add external solutions costs`
+        );
+      }
+    } else {
+      console.warn(`No text found to add external solutions costs`);
+    }
   }
 
   conversation = async (chatLog: PsSimpleChatLog[]) => {

@@ -92,7 +92,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             const webPageResearch = (this.currentAgent = new WebPageScanner(this.memory));
             const webScan = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.jsonWebPageResearchSchema, undefined, this.sendAgentUpdate.bind(this));
             this.sendAgentCompleted("Website Scanning Completed", true);
-            this.stopBroadcastingLiveCosts();
             console.log(`webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`);
             await this.renderResultsToUser(webScan, question);
         }
@@ -110,6 +109,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       Results from the web research:
       ${JSON.stringify(research, null, 2)}
     `;
+        this.addToExternalSolutionsMemoryCosts(summaryUserPrompt + this.summarySystemPrompt, "in");
         const messages = [
             {
                 role: "system",
