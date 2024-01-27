@@ -4,29 +4,31 @@ A root-level router that installs global event listeners to intercept navigation
 
 ## Properties
 
-No public properties.
+No public properties are documented for this class.
 
 ## Methods
 
-| Name              | Parameters        | Return Type | Description                                                                 |
-|-------------------|-------------------|-------------|-----------------------------------------------------------------------------|
-| hostConnected     |                   | void        | Sets up global event listeners for click and popstate events and navigates to the current URL. |
-| hostDisconnected  |                   | void        | Removes global event listeners for click and popstate events.               |
-| _onClick          | e: MouseEvent     | void        | Handles click events on anchor elements to navigate without a page reload.  |
-| _onPopState       | _e: PopStateEvent | void        | Handles popstate events to navigate to the current URL without a page reload. |
+| Name              | Parameters        | Return Type | Description                                                                                   |
+|-------------------|-------------------|-------------|-----------------------------------------------------------------------------------------------|
+| hostConnected     | -                 | void        | Overrides the `hostConnected` method to add event listeners for click and popstate events.   |
+| hostDisconnected  | -                 | void        | Overrides the `hostDisconnected` method to remove event listeners for click and popstate events. |
+| _onClick          | e: MouseEvent     | void        | Private method to handle click events and navigate accordingly.                              |
+| _onPopState       | _e: PopStateEvent | void        | Private method to handle popstate events and navigate to the current URL path.               |
 
 ## Events
 
-No events.
+No events are documented for this class.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of PsRouter
+import { PsRouter } from '@policysynth/webapp/base/router/router.js';
+
+// Example of creating a new PsRouter instance
 const router = new PsRouter();
-router.hostConnected(); // Call this method to set up the router when the host is connected.
-// ... later on, when the host is disconnected
-router.hostDisconnected(); // Call this method to clean up the router.
+
+// Assuming `Routes` class has been properly configured with routes,
+// PsRouter will handle navigation through global event listeners.
 ```
 
-Please note that the `_onClick` and `_onPopState` methods are private and are not intended to be called directly. They are used internally by the `PsRouter` class to handle navigation events.
+This example demonstrates how to import and potentially instantiate a `PsRouter` class. Note that the actual route configuration and usage would depend on the setup of the `Routes` class and the specific needs of your application.

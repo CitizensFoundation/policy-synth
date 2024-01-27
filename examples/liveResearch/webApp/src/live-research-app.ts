@@ -32,7 +32,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
   startTime: Date | undefined;
 
-  estimatedSecondsPerPage = 75;
+  estimatedSecondsPerPage = 40;
 
   constructor() {
     super();
@@ -74,6 +74,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
         .topInfoItem {
           margin-right: 16px;
+        }
+
+        .scopeSliders {
+          margin-left: 32px;
         }
       `,
     ];
@@ -172,11 +176,11 @@ export class LiveResearchApp extends PolicySynthWebApp {
     let formattedTime;
 
     if (hours > 0) {
-      formattedTime = `${hours} hours ${minutes} minutes ${seconds} seconds`;
+      formattedTime = `${hours}h ${minutes}m ${seconds}s`;
     } else if (minutes > 0) {
-      formattedTime = `${minutes} minutes ${seconds} seconds`;
+      formattedTime = `${minutes}m ${seconds}s`;
     } else {
-      formattedTime = `${seconds} seconds`;
+      formattedTime = `${seconds}s`;
     }
 
     return formattedTime;
@@ -184,7 +188,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
   renderScopeSliders() {
     return html`
-      <div class="layout vertical">
+      <div class="layout vertical scopeSliders">
         <div class="layout horizontal center-center estTime">
           <div class="topInfoItem">${this.t('Estimated')}: ${this.estimatedTotalTime}</div>
           <div class="topInfoItem">Running Time: ${this.runningTime}</div>

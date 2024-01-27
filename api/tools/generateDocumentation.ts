@@ -29,9 +29,11 @@ Brief description of the class.
 |------------|-------------------|-------------|-----------------------------|
 | methodName | param1: type, ... | returnType  | Brief description of method |
 
+${path.includes("controllers") ? '## Routes' : ''}
+
 ## Example
 
-\`\`\`
+\`\`\`typescript
 // Example usage of API
 { PsBaseChatBot } from '@policysynth/api/base/chat/baseChatBot.js';
 
