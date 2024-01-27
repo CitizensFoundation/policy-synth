@@ -1,34 +1,38 @@
 # PsEntities
 
-`PsEntities` is a custom web component that extends `PsStageBase` and is responsible for rendering and managing sub-problems and entities within a problem-solving application. It allows users to view and interact with sub-problems and their associated entities, including their negative and positive effects, search queries, and search results.
+`PsEntities` is a custom element that extends `PsStageBase` to manage and display entities related to sub-problems within a problem-solving stage. It handles the rendering of sub-problems and their associated entities, including their positive and negative effects, and integrates with the global activity logger.
 
 ## Properties
 
-| Name               | Type                  | Description                                           |
-|--------------------|-----------------------|-------------------------------------------------------|
-| activeEntityIndex  | number \| null        | The index of the currently active entity, if any.     |
-| maxNumberOfTopEntities | number            | The maximum number of top entities to display.        |
+| Name               | Type                | Description                                                                 |
+|--------------------|---------------------|-----------------------------------------------------------------------------|
+| activeEntityIndex  | number \| null      | The index of the currently active entity. Can be null if no entity is active. |
+| maxNumberOfTopEntities | number            | The maximum number of top entities to display prominently.                  |
 
 ## Methods
 
-| Name                 | Parameters                                  | Return Type | Description                                             |
-|----------------------|---------------------------------------------|-------------|---------------------------------------------------------|
-| connectedCallback    |                                             | void        | Lifecycle method called when the component is connected to the DOM. |
-| updated              | changedProperties: Map<string \| number \| symbol, unknown> | void | Lifecycle method called when the component's properties have changed. |
-| disconnectedCallback |                                             | void        | Lifecycle method called when the component is disconnected from the DOM. |
-| render               |                                             | unknown     | Renders the component based on the current state.        |
-| renderSubProblemScreen | subProblem: IEngineSubProblem             | unknown     | Renders the screen for a specific sub-problem.           |
-| renderEntityScreen   | entity: IEngineAffectedEntity              | unknown     | Renders the screen for a specific entity.                |
+| Name                 | Parameters                                  | Return Type | Description                                                                 |
+|----------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| connectedCallback    |                                             | void        | Extends the base connectedCallback to set the maximum number of top entities based on group ID and log activity. |
+| updated              | changedProperties: Map<string \| number \| symbol, unknown> | void        | Extends the base updated method.                                            |
+| disconnectedCallback |                                             | void        | Extends the base disconnectedCallback to log activity.                      |
+| render               |                                             | unknown     | Renders the current state of the element, based on the active entity or sub-problem index. |
+| renderSubProblemScreen | subProblem: IEngineSubProblem             | unknown     | Renders the screen for a specific sub-problem, including its entities and their effects. |
+| renderEntityScreen   | entity: IEngineAffectedEntity               | unknown     | Renders the screen for a specific entity, including the problem statement and sub-problems. |
 
 ## Events
 
-- **No custom events are defined in this component.**
+None specified.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the PsEntities component
-<ps-entities></ps-entities>
+import '@policysynth/webapp/policies/ps-entities.js';
+
+// Usage within a LitElement template
+html`
+  <ps-entities .memory=${this.problemMemory}></ps-entities>
+`;
 ```
 
-**Note:** The actual usage of the component would depend on the context within the application where it is integrated. The component relies on properties and methods inherited from `PsStageBase` and expects certain data structures like `IEngineSubProblem` and `IEngineAffectedEntity` to be defined elsewhere in the application.
+This example demonstrates how to use the `ps-entities` custom element within another LitElement component, passing the problem memory data to it.

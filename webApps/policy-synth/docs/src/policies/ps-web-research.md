@@ -1,36 +1,37 @@
 # PsWebResearch
 
-PsWebResearch is a custom web component that extends the PsStageBase class. It is responsible for rendering the web research stage of a problem-solving application. The component displays problem statements, search queries, search results, and entities related to sub-problems.
+`PsWebResearch` is a custom element that extends `PsStageBase` to provide functionality for web research within a policy synthesis platform. It is designed to render and manage the display of problem statements, search queries, search results, and entities related to sub-problems in the context of automated web research.
 
 ## Properties
 
-| Name                   | Type   | Description                                           |
-|------------------------|--------|-------------------------------------------------------|
-| maxNumberOfTopEntities | number | The maximum number of top entities to be displayed.   |
+| Name                   | Type   | Description                                                                 |
+|------------------------|--------|-----------------------------------------------------------------------------|
+| maxNumberOfTopEntities | number | The maximum number of top entities to display prominently. Default is 4.    |
 
 ## Methods
 
-| Name                | Parameters                                  | Return Type | Description                                                                 |
-|---------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| connectedCallback   | -                                           | void        | Lifecycle method that runs when the component is added to the DOM.          |
-| updated             | changedProperties: Map<string \| number \| symbol, unknown> | void        | Lifecycle method that runs when the component's properties have changed.    |
-| disconnectedCallback| -                                           | void        | Lifecycle method that runs when the component is removed from the DOM.      |
-| render              | -                                           | TemplateResult | Renders the HTML template for the component.                                |
-| renderEntities      | subProblem: IEngineSubProblem               | TemplateResult | Renders the entities associated with a given sub-problem.                   |
-| renderSubProblemsWithAll | -                                       | TemplateResult | Renders all sub-problems with their associated entities, search queries, and results. |
+| Name                  | Parameters                                  | Return Type | Description                                                                                   |
+|-----------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------------------------|
+| connectedCallback     |                                             | void        | Lifecycle method that runs when the element is added to the document's DOM.                   |
+| updated               | changedProperties: Map<string \| number \| symbol, unknown> | void        | Lifecycle method that runs when the element's properties or attributes change.                |
+| disconnectedCallback  |                                             | void        | Lifecycle method that runs when the element is removed from the document's DOM.               |
+| render                |                                             | TemplateResult | Renders the web research content including problem statements, search queries, and results.   |
+| renderEntities        | subProblem: IEngineSubProblem               | TemplateResult | Renders entities related to a given sub-problem.                                              |
+| renderSubProblemsWithAll |                                             | TemplateResult | Renders all sub-problems along with their related entities, search queries, and results.      |
 
 ## Events
 
-- No custom events are emitted by this component.
+No custom events are defined in this class.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the PsWebResearch component
-import { PsWebResearch } from './path-to-ps-web-research';
+import '@policysynth/webapp/policies/ps-web-research.js';
 
-// Assuming 'ps-web-research' is registered as a custom element and 'memory' is an object with the required structure
-<ps-web-research .memory=${memory}></ps-web-research>
+// Usage in a LitElement template
+html`
+  <ps-web-research .memory="${this.memory}"></ps-web-research>
+`;
 ```
 
-Note: The actual usage of the component would depend on the context within a larger application, and the example assumes that the necessary imports and context are provided.
+This example demonstrates how to use the `ps-web-research` custom element within a LitElement-based component. The `.memory` property is bound to the component's `memory` property, which should contain the necessary data for rendering the web research content, including problem statements, sub-problems, and entities.
