@@ -5,7 +5,7 @@ export declare class PsBaseValidationAgent extends PolicySynthAgentBase {
     options: PsBaseValidationAgentOptions;
     constructor(name: string, options?: PsBaseValidationAgentOptions);
     set nextAgent(agent: PsValidationAgent);
-    protected renderPrompt(): Promise<(HumanMessage | SystemMessage)[]>;
+    protected renderPrompt(): Promise<(SystemMessage | HumanMessage)[]>;
     runValidationLLM(): Promise<PsValidationAgentResult>;
     execute(): Promise<PsValidationAgentResult>;
     protected beforeExecute(): Promise<void>;

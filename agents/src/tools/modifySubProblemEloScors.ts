@@ -11,7 +11,7 @@ const projectId = process.argv[2];
 const loadProject = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+    const memory = JSON.parse(output!) as PsBaseMemoryData;
 
     memory.subProblems[11].eloRating = 1080;
     memory.subProblems[18].eloRating = 1070;

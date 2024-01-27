@@ -8,7 +8,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
   searchQuestion: string | undefined;
 
   constructor(
-    memory: PsWebResearchMemory,
+    memory: PsBaseMemoryData,
     progressFunction: Function | undefined = undefined
   ) {
     super(undefined as any, memory);

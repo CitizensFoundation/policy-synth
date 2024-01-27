@@ -6,7 +6,7 @@
 
 | Name             | Type                             | Description                                                                 |
 |------------------|----------------------------------|-----------------------------------------------------------------------------|
-| memory           | IEngineInnovationMemoryData      | Holds the memory data related to the engine's innovation process.           |
+| memory           | PsBaseMemoryData      | Holds the memory data related to the engine's innovation process.           |
 | subProblemIndex  | number                           | Index of the current sub-problem being visualized in the family tree.       |
 | solution         | IEngineSolution                  | The solution for which the family tree is being visualized.                 |
 

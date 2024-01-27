@@ -18,12 +18,21 @@ export class LiveResearchChatController extends BaseController {
   liveResearchChat = async (req: express.Request, res: express.Response) => {
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
+    const memoryId = req.body.memoryId;
     const numberOfSelectQueries = req.body.numberOfSelectQueries;
     const percentOfTopQueriesToSearch = req.body.percentOfTopQueriesToSearch;
     const percentOfTopResultsToScan = req.body.percentOfTopResultsToScan;
 
+    let saveChatLog: PsSimpleChatLog[] | undefined;
+
     try {
-      const bot = new LiveResearchChatBot(wsClientId, this.wsClients);
+      const bot = new LiveResearchChatBot(wsClientId, this.wsClients, memoryId);
+      if (memoryId) {
+        const memory = await bot.getLoadedMemory();
+        if (memory) {
+          saveChatLog = memory.chatLog;
+        }
+      }
       bot.researchConversation(
         chatLog,
         numberOfSelectQueries,
@@ -35,8 +44,14 @@ export class LiveResearchChatController extends BaseController {
       res.sendStatus(500);
     }
 
-    console.log(`LiveResearchChatController for id ${wsClientId} initialized`);
+    console.log(
+      `LiveResearchChatController for id ${wsClientId} initialized chatLog of length ${chatLog?.length}`
+    );
 
-    res.sendStatus(200);
+    if (saveChatLog) {
+      res.send(saveChatLog);
+    } else {
+      res.sendStatus(200);
+    }
   };
 }

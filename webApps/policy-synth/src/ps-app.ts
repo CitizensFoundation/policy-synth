@@ -101,7 +101,7 @@ export class PolicySynthWebApp extends YpBaseElement {
   pageIndex = PagesTypes.Solutions;
 
   @property({ type: Object })
-  currentMemory: IEngineInnovationMemoryData | undefined;
+  currentMemory: PsBaseMemoryData | undefined;
 
   @property({ type: Number })
   totalNumberOfVotes = 0;

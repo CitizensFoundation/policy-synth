@@ -7,7 +7,7 @@ import '@material/web/iconbutton/icon-button.js';
 import { PsRouter } from './router/router.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare abstract class PsStageBase extends YpBaseElement {
-    memory: IEngineInnovationMemoryData;
+    memory: PsBaseMemoryData;
     childType: "solution" | "policy";
     showEloRatings: boolean;
     activeSubProblemIndex: number | null;

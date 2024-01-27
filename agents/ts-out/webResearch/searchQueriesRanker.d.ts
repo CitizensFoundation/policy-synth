@@ -1,7 +1,7 @@
 import { BasePairwiseRankingsProcessor } from "../basePairwiseRanking.js";
 export declare class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     searchQuestion: string | undefined;
-    constructor(memory: PsWebResearchMemory, progressFunction?: Function | undefined);
+    constructor(memory: PsBaseMemoryData, progressFunction?: Function | undefined);
     voteOnPromptPair(index: number, promptPair: number[]): Promise<IEnginePairWiseVoteResults>;
     rankSearchQueries(queriesToRank: string[], searchQuestion: string, maxPrompts?: number): Promise<string[]>;
 }

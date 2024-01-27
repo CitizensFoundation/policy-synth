@@ -27,7 +27,7 @@ const loadProject = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
     // Parse the memory data
-    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+    const memory = JSON.parse(output!) as PsBaseMemoryData;
 
     // Define the indexes for the sub-problem and generation to search
     const subProblemIndex = 0;

@@ -29,7 +29,7 @@ async function exampleRun() {
   const folderPath = './analysisReports';
   const projectId = 'your_project_id_here';
   const redisOutput = await redis.get(`st_mem:${projectId}:id`);
-  const memory = JSON.parse(redisOutput) as IEngineInnovationMemoryData;
+  const memory = JSON.parse(redisOutput) as PsBaseMemoryData;
 
   const analysis = new AnalyseExternalSolutions({} as any, memory);
   await analysis.processAnalysis(folderPath);

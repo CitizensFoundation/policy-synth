@@ -6,7 +6,7 @@ This class is an abstract base class for problem-solving agents, extending the f
 
 | Name                   | Type                                      | Description                                      |
 |------------------------|-------------------------------------------|--------------------------------------------------|
-| memory                 | IEngineInnovationMemoryData               | The memory structure containing problem details. |
+| memory                 | PsBaseMemoryData               | The memory structure containing problem details. |
 | job                    | Job                                       | The job instance associated with the agent.      |
 | currentSubProblemIndex | number \| undefined                       | The index of the current sub-problem being processed. |
 

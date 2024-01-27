@@ -3,7 +3,7 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export declare class RankWebRootCausesProcessor extends BaseProlemSolvingAgent {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
-    renderProblemPrompt(rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData): Promise<(HumanMessage | SystemMessage)[]>;
+    renderProblemPrompt(rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData): Promise<(SystemMessage | HumanMessage)[]>;
     rankWebRootCauses(): Promise<void>;
     process(): Promise<void>;
 }

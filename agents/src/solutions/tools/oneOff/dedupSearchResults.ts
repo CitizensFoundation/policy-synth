@@ -7,12 +7,12 @@ const redis = new ioredis.default(
 );
 
 class DeduplicateSearchProcessor {
-  memory: IEngineInnovationMemoryData;
+  memory: PsBaseMemoryData;
   deduplicatedCount: number;
   totalCount: number;
   seenUrls: Map<string, Set<string>>;
 
-  constructor(memory: IEngineInnovationMemoryData) {
+  constructor(memory: PsBaseMemoryData) {
     this.memory = memory;
     this.deduplicatedCount = 0;
     this.totalCount = 0;
@@ -147,7 +147,7 @@ const projectId = process.argv[2];
 const dedup = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+    const memory = JSON.parse(output!) as PsBaseMemoryData;
 
     const dedupper = new DeduplicateSearchProcessor(memory);
     dedupper.process();

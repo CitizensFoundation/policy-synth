@@ -13,7 +13,7 @@ const main = async () => {
 ​
   if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
-    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as IEngineInnovationMemoryData;
+    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as PsBaseMemoryData;
 ​
     let outCsvFile = `Description,Title,"Why important","Elo Rating","Search type"`;
     // trim this.memory.subProblems with newLength

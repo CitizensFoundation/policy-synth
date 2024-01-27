@@ -25,14 +25,14 @@ const logger = winston.createLogger({
 });
 
 export class PolicySynthAgentBase {
-  memory?: IEngineInnovationMemoryData;
+  memory?: PsBaseMemoryData;
   logger: winston.Logger;
   timeStart: number = Date.now();
   chat: ChatOpenAI | undefined;
 
   private rateLimits: IEngineRateLimits = {};
 
-  constructor(memory: IEngineInnovationMemoryData | undefined = undefined) {
+  constructor(memory: PsBaseMemoryData | undefined = undefined) {
     if (memory) {
       this.memory = memory;
     }
@@ -138,7 +138,7 @@ export class PolicySynthAgentBase {
   }
 
   async callLLM(
-    stage: IEngineStageTypes,
+    stage: PsMemoryStageTypes,
     modelConstants: IEngineBaseAIModelConstants,
     messages: BaseMessage[],
     parseJson = true,

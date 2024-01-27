@@ -6,14 +6,14 @@ AgentSolutions extends the functionality of BaseAgentProcessor to handle various
 
 | Name    | Type                                      | Description |
 |---------|-------------------------------------------|-------------|
-| memory  | IEngineInnovationMemoryData               | Holds the current state and data of the processing job, including stages, problem statements, and other relevant information. |
+| memory  | PsBaseMemoryData               | Holds the current state and data of the processing job, including stages, problem statements, and other relevant information. |
 
 ## Methods
 
 | Name              | Parameters            | Return Type | Description |
 |-------------------|-----------------------|-------------|-------------|
 | initializeMemory  | job: Job              | Promise<void> | Initializes the memory property with job data and sets up the initial state for processing. |
-| setStage          | stage: IEngineStageTypes | Promise<void> | Updates the current stage in memory and records the start time for the stage. |
+| setStage          | stage: PsMemoryStageTypes | Promise<void> | Updates the current stage in memory and records the start time for the stage. |
 | process           | None                  | Promise<void> | Processes the current stage by instantiating and invoking the appropriate processor based on the current stage. |
 
 ## Example

@@ -17,7 +17,7 @@ const maxNumberOfSubProblems = 7;
 
 export abstract class PsStageBase extends YpBaseElement {
   @property({ type: Object })
-  memory: IEngineInnovationMemoryData;
+  memory: PsBaseMemoryData;
 
   @property({ type: String })
   childType: "solution" | "policy" = "solution";

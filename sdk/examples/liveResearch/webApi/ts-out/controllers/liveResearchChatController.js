@@ -7,19 +7,32 @@ export class LiveResearchChatController extends BaseController {
         this.liveResearchChat = async (req, res) => {
             const chatLog = req.body.chatLog;
             const wsClientId = req.body.wsClientId;
+            const memoryId = req.body.memoryId;
             const numberOfSelectQueries = req.body.numberOfSelectQueries;
             const percentOfTopQueriesToSearch = req.body.percentOfTopQueriesToSearch;
             const percentOfTopResultsToScan = req.body.percentOfTopResultsToScan;
+            let saveChatLog;
             try {
-                const bot = new LiveResearchChatBot(wsClientId, this.wsClients);
+                const bot = new LiveResearchChatBot(wsClientId, this.wsClients, memoryId);
+                if (memoryId) {
+                    const memory = await bot.getLoadedMemory();
+                    if (memory) {
+                        saveChatLog = memory.chatLog;
+                    }
+                }
                 bot.researchConversation(chatLog, numberOfSelectQueries, percentOfTopQueriesToSearch, percentOfTopResultsToScan);
             }
             catch (error) {
                 console.log(error);
                 res.sendStatus(500);
             }
-            console.log(`LiveResearchChatController for id ${wsClientId} initialized`);
-            res.sendStatus(200);
+            console.log(`LiveResearchChatController for id ${wsClientId} initialized chatLog of length ${chatLog?.length}`);
+            if (saveChatLog) {
+                res.send(saveChatLog);
+            }
+            else {
+                res.sendStatus(200);
+            }
         };
         this.initializeRoutes();
     }

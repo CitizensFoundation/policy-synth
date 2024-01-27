@@ -17,7 +17,7 @@ import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 @customElement('ps-raw-evidence')
 export class PsRawEvidence extends YpBaseElement {
   @property({ type: Object })
-  memory: IEngineInnovationMemoryData;
+  memory: PsBaseMemoryData;
 
   @property({ type: Object })
   policy!: PSPolicy;

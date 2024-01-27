@@ -12,7 +12,7 @@ This class represents the main web application for Policy Synth. It extends `YpB
 | activeSolutionIndex         | number \| undefined                               | The index of the active solution within the current population.             |
 | activePolicyIndex           | number \| undefined                               | The index of the active policy within the current population.               |
 | pageIndex                   | number                                            | The index of the current page being displayed.                              |
-| currentMemory               | IEngineInnovationMemoryData \| undefined          | The current memory state of the engine innovation process.                  |
+| currentMemory               | PsBaseMemoryData \| undefined          | The current memory state of the engine innovation process.                  |
 | totalNumberOfVotes          | number                                            | The total number of votes cast in the current session.                      |
 | showAllCosts                | boolean                                           | Flag to show all costs associated with the policy synthesis process.        |
 | lastSnackbarText            | string \| undefined                               | The text to be displayed in the last snackbar message.                      |

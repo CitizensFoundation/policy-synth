@@ -18,6 +18,9 @@
     "start": "nodemon -e ts ts-out/server.js",
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/server.js",
     "dev": "nodemon --config nodemon.json ./ts-out/server.js",
+    "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
+    "copyInLocalApi": "cp -R ../../../../api/ts-out/* ./node_modules/@policysynth/api/;cp ../../../../api/src/*.d.ts ./node_modules/@policysynth/api/;",
+    "copyInLocalDeps": "npm run copyInLocalAgents;npm run copyInLocalApi;",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk ./ts-out/server.js",
     "build": "tsc --project ./ --outDir ./ts-out",
     "prepublishOnly": "npm run build"

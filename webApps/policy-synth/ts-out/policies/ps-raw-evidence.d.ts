@@ -8,7 +8,7 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/button/text-button.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsRawEvidence extends YpBaseElement {
-    memory: IEngineInnovationMemoryData;
+    memory: PsBaseMemoryData;
     policy: PSPolicy;
     activeSubProblemIndex: number;
     activeRawEvidence: PSEvidenceRawWebPageData[];

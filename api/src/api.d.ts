@@ -1,10 +1,10 @@
-type PSChatBotStageTypes = IEngineStageTypes | "chatbot-conversation";
+type PSChatBotMemoryStageTypes = PsMemoryStageTypes | "chatbot-conversation";
 
-interface PsChatBotMemoryData extends IEngineInnovationMemoryData {
-  stages: Record<PSChatBotStageTypes, IEngineInnovationStagesData>;
+interface PsChatBotMemoryData extends PsBaseMemoryData {
+  stages: Record<PSChatBotMemoryStageTypes, IEngineInnovationStagesData>;
   chatLog?: PsSimpleChatLog[];
   problemStatement?: PsProblemStatement;
-  currentStage: PSChatBotStageTypes;
+  currentStage: PSChatBotMemoryStageTypes;
   groupId?: number;
   communityId?: number;
   domainId?: number;

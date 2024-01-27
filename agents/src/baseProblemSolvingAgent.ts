@@ -10,11 +10,11 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { IEngineConstants } from "./constants.js";
 
 export abstract class BaseProlemSolvingAgent extends PolicySynthAgentBase {
-  override memory: IEngineInnovationMemoryData;
+  override memory: PsBaseMemoryData;
   job!: Job;
   currentSubProblemIndex: number | undefined;
 
-  constructor(job: Job, memory: IEngineInnovationMemoryData) {
+  constructor(job: Job, memory: PsBaseMemoryData) {
     super();
     this.job = job;
     this.memory = memory;

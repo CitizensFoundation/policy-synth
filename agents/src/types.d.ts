@@ -174,7 +174,7 @@ interface IEEngineSearchResultData {
   pages: IEEngineSearchResultPage[];
 }
 
-type IEngineStageTypes =
+type PsMemoryStageTypes =
   | "create-root-causes-search-queries"
   | "rank-root-causes-search-queries"
   | "web-search-root-causes"
@@ -300,9 +300,9 @@ interface IEngineSearchResults {
   };
 }
 
-interface IEngineInnovationMemoryData extends IEngineMemoryData {
-  currentStage: IEngineStageTypes;
-  stages: Record<IEngineStageTypes, IEngineInnovationStagesData>;
+interface PsBaseMemoryData extends IEngineMemoryData {
+  currentStage: PsMemoryStageTypes;
+  stages: Record<PsMemoryStageTypes, IEngineInnovationStagesData>;
   problemStatement: IEngineProblemStatement;
   customInstructions: {
     createRootCause?: string;

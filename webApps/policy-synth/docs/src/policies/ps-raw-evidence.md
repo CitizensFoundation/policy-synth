@@ -6,7 +6,7 @@ This class represents a custom element that displays raw evidence related to pol
 
 | Name                   | Type                                                         | Description                                                                 |
 |------------------------|--------------------------------------------------------------|-----------------------------------------------------------------------------|
-| memory                 | IEngineInnovationMemoryData                                  | Holds memory data related to engine innovation.                             |
+| memory                 | PsBaseMemoryData                                  | Holds memory data related to engine innovation.                             |
 | policy                 | PSPolicy                                                     | The policy object associated with the current evidence.                     |
 | activeSubProblemIndex  | number                                                       | Index of the active sub-problem.                                            |
 | activeRawEvidence      | PSEvidenceRawWebPageData[]                                   | Array of raw evidence data for the active policy and sub-problem.           |

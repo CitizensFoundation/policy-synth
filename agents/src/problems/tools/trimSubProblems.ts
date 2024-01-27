@@ -11,7 +11,7 @@ const main = async () => {
 ​
   if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
-    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as IEngineInnovationMemoryData;
+    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as PsBaseMemoryData;
 ​
     // trim this.memory.subProblems with newLength
     currentProject.subProblems = currentProject.subProblems.slice(0, parseInt(newLength));

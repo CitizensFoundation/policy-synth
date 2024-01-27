@@ -8,7 +8,7 @@ This TypeScript file does not directly define a class, properties, or methods in
 
 ## Types
 
-### IEngineInnovationMemoryData
+### PsBaseMemoryData
 
 This type is mentioned but not defined within the provided script. Based on usage, it likely includes the following properties:
 
@@ -18,7 +18,7 @@ This type is mentioned but not defined within the provided script. Based on usag
 
 ### ISubProblem
 
-This type is implied from the usage within `IEngineInnovationMemoryData`. It likely includes the following properties:
+This type is implied from the usage within `PsBaseMemoryData`. It likely includes the following properties:
 
 | Name                      | Type   | Description               |
 |---------------------------|--------|---------------------------|

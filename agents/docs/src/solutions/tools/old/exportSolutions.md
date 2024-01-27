@@ -9,7 +9,7 @@ This script reads a memory JSON file, processes it to generate an HTML document 
 | maxFullDetailSolutions   | number                                           | Maximum number of solutions to detail fully. |
 | filePath                 | string                                           | Path to the memory JSON file.                |
 | memoryData               | string                                           | Raw data read from the memory JSON file.     |
-| memory                   | IEngineInnovationMemoryData                     | Parsed memory data.                          |
+| memory                   | PsBaseMemoryData                     | Parsed memory data.                          |
 | html                     | string                                           | HTML content being generated.                |
 
 ## Methods

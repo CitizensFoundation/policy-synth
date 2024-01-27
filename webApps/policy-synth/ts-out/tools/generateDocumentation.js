@@ -2,7 +2,7 @@ const renderSystemPrompt = (path, type) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
 
 Important Instructions
-For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
+For Type use the Typescript definition like for currentMemory use PsBaseMemoryData | undefined
 
 Look at the markdown sections below and always output those with your detailed documentation.
 
@@ -36,7 +36,7 @@ Brief description of the class.
 ${type === "customElement" ? `
 \`\`\`typescript
 // Custom element example
-import '@policysynth/webapp/chatBot/ps-chat-assistant.js';
+import '@policysynth/webapp/base/chatBot/ps-chat-assistant.js';
 
 ...Lit v2 Example with @customElement @property (at least one) and render() with html showing the component...
 \`\`\`

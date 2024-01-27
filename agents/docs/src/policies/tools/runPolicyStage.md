@@ -29,7 +29,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
   const output = await redis.get(redisKey);
 
-  const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+  const memory = JSON.parse(output!) as PsBaseMemoryData;
 
   await redis.set(redisKey, JSON.stringify(memory));
 
