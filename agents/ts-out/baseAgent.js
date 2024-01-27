@@ -22,7 +22,7 @@ export class PolicySynthAgentBase {
         }
         this.logger = logger;
     }
-    static get emptyStages() {
+    static get emptyDefaultStages() {
         return {
             "create-root-causes-search-queries": {},
             "web-search-root-causes": {},

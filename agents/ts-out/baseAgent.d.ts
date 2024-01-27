@@ -9,7 +9,7 @@ export declare class PolicySynthAgentBase {
     chat: ChatOpenAI | undefined;
     private rateLimits;
     constructor(memory?: IEngineInnovationMemoryData | undefined);
-    static get emptyStages(): {
+    static get emptyDefaultStages(): {
         "create-root-causes-search-queries": {};
         "web-search-root-causes": {};
         "web-get-root-causes-pages": {};

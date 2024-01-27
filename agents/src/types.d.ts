@@ -213,7 +213,6 @@ type IEngineStageTypes =
   | "analyse-external-solutions"
   | "policies-create-images"
   | "policies-seed"
-
   | "create-evidence-search-queries"
   | "web-search-evidence"
   | "web-get-evidence-pages"
@@ -323,14 +322,6 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     | IEEngineSearchResultData
     | IEEngineSearchResultPage
     | undefined;
-}
-
-interface PsWebResearchMemory extends IEngineInnovationMemoryData {
-  webResearch?: {
-    lastRunStartedAt?: number;
-    lastRunEndedAt?: number;
-    chatLog?: PsSimpleChatLog[];
-  }
 }
 
 type IEngineWebPageTypes = "general" | "scientific" | "openData" | "news";

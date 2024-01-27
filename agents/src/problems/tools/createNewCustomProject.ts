@@ -27,7 +27,7 @@ if (projectId) {
       domainId: 1,
       stage: "create-sub-problems",
       currentStage: "create-sub-problems",
-      stages: PolicySynthAgentBase.emptyStages,
+      stages: PolicySynthAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {

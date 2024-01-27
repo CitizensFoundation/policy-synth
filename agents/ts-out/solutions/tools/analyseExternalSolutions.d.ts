@@ -2,7 +2,7 @@ import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 export declare class AnalyseExternalSolutions extends BaseProlemSolvingAgent {
     folderPath: string;
-    renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<(SystemMessage | HumanMessage)[]>;
+    renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<(HumanMessage | SystemMessage)[]>;
     compareSolutionToExternal(solutionDescription: string, requirement: string): Promise<IEngineExternalSolutionAnalysisResults>;
     analyze(): Promise<void>;
     toCSV(analysisResult: IEngineExternalSolutionAnalysis): string;
