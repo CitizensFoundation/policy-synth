@@ -15,6 +15,7 @@ export declare class PsBaseChatBot {
     liveCostsInactivityTimeout: number;
     liveCostsBoadcastStartAt: Date | undefined;
     lastSentToUserAt: Date | undefined;
+    lastBroacastedCosts: number | undefined;
     constructor(clientId: string, wsClients: Map<string, WebSocket>);
     renderSystemPrompt(): string;
     sendToClient(sender: string, message: string, type?: string): void;
@@ -26,6 +27,8 @@ export declare class PsBaseChatBot {
     stopBroadcastingLiveCosts(): void;
     getEmptyMemory(): IEngineInnovationMemoryData;
     streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;
+    getTokenCosts(estimateTokens: number, type: "in" | "out"): number;
+    addToExternalSolutionsMemoryCosts(text: string, type: "in" | "out"): void;
     conversation: (chatLog: PsSimpleChatLog[]) => Promise<void>;
 }
 //# sourceMappingURL=baseChatBot.d.ts.map

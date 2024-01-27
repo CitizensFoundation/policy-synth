@@ -106,8 +106,6 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       );
       this.sendAgentCompleted("Website Scanning Completed", true);
 
-      this.stopBroadcastingLiveCosts();
-
       console.log(
         `webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`
       );
@@ -127,6 +125,8 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       Results from the web research:
       ${JSON.stringify(research, null, 2)}
     `;
+
+    this.addToExternalSolutionsMemoryCosts(summaryUserPrompt+this.summarySystemPrompt,"in");
 
     const messages: any[] = [
       {
