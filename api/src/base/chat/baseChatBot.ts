@@ -9,6 +9,11 @@ import { IEngineConstants } from "@policysynth/agents/constants.js";
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 
+//@ts-ignore
+const redis = new ioredis.default(
+  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+);
+
 export class PsBaseChatBot {
   clientId: string;
   clientSocket: WebSocket;
@@ -23,8 +28,33 @@ export class PsBaseChatBot {
   lastSentToUserAt: Date | undefined;
   lastBroacastedCosts: number | undefined;
   redisMemoryKey = "chatbot-memory";
+  tempeture = 0.7;
+  maxTokens = 4000;
+  llmModel = "gpt-4-0125-preview";
+  persistMemory = false;
 
-  constructor(clientId: string, wsClients: Map<string, WebSocket>) {
+  loadMemory(id: string) {
+    return new Promise<PsChatBotMemoryData>(async (resolve, reject) => {
+      try {
+        const memoryString = await redis.get(`${this.redisMemoryKey}-${id}`);
+        if (memoryString) {
+          const memory = JSON.parse(memoryString);
+          resolve(memory);
+        } else {
+          resolve(this.getEmptyMemory());
+        }
+      } catch (error) {
+        console.error("Can't load memory from redis", error);
+        resolve(this.getEmptyMemory());
+      }
+    });
+  }
+
+  constructor(
+    clientId: string,
+    wsClients: Map<string, WebSocket>,
+    memoryId: string | undefined = undefined
+  ) {
     this.clientId = clientId;
     this.clientSocket = wsClients.get(this.clientId)!;
     this.openaiClient = new OpenAI({
@@ -35,7 +65,26 @@ export class PsBaseChatBot {
         `WS Client ${this.clientId} not found in streamWebSocketResponses`
       );
     }
+    this.setupMemory(memoryId);
+  }
+
+  async setupMemory(memoryId: string | undefined = undefined) {
+    if (memoryId) {
+      this.memory = await this.loadMemory(memoryId);
+    }
     this.memory = this.getEmptyMemory();
+  }
+
+  async saveMemory() {
+    if (this.memory) {
+      try {
+        await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+      } catch (error) {
+        console.log("Can't save memory to redis", error);
+      }
+    } else {
+      console.error("Memory is not initialized");
+    }
   }
 
   renderSystemPrompt() {
@@ -150,48 +199,27 @@ export class PsBaseChatBot {
     console.log("Stopped broadcasting live costs");
   }
 
-  emptyChatBotStagesData() {
+  get emptyChatBotStagesData() {
     return {
       "chatbot-conversation": {
         tokensInCost: 0,
         tokensOutCost: 0,
         tokensIn: 0,
         tokensOut: 0,
-      } as IEngineInnovationStagesData
-    } as  Record<PSChatBotStageTypes, IEngineInnovationStagesData>;
+      } as IEngineInnovationStagesData,
+    } as Record<PSChatBotStageTypes, IEngineInnovationStagesData>;
   }
 
   getEmptyMemory() {
     return {
       redisKey: `${this.redisMemoryKey}-${uuidv4()}`,
-      groupId: 1,
-      communityId: 2,
-      domainId: 1,
-      stage: "create-sub-problems",
-      currentStage: "create-sub-problems",
-      stages: this.emptyChatBotStagesData(),
-      timeStart: Date.now(),
-      totalCost: 0,
-      customInstructions: {},
-      problemStatement: {
-        description: "problemStatement",
-        searchQueries: {
-          general: [],
-          scientific: [],
-          news: [],
-          openData: [],
-        },
-        searchResults: {
-          pages: {
-            general: [],
-            scientific: [],
-            news: [],
-            openData: [],
-          },
-        },
+      currentStage: "chatbot-conversation",
+      stages: {
+        ...PolicySynthAgentBase.emptyDefaultStages,
+        ...this.emptyChatBotStagesData,
       },
-      subProblems: [],
-      currentStageData: undefined,
+      timeStart: Date.now(),
+      chatLog: []
     } as PsChatBotMemoryData;
   }
 
@@ -208,6 +236,8 @@ export class PsBaseChatBot {
             part.choices[0].delta.content!,
             "out"
           );
+          console.log(JSON.stringify(part, null, 2));
+          // chatLog.push({})
         }
       } catch (error) {
         console.error(error);
@@ -248,22 +278,19 @@ export class PsBaseChatBot {
           if (
             this.memory.stages["chatbot-conversation"].tokensInCost ===
               undefined ||
-            this.memory.stages["chatbot-conversation"].tokensIn ===
-              undefined
+            this.memory.stages["chatbot-conversation"].tokensIn === undefined
           ) {
             this.memory.stages["chatbot-conversation"].tokensInCost = 0;
             this.memory.stages["chatbot-conversation"].tokensIn = 0;
           }
-          this.memory.stages["chatbot-conversation"].tokensIn +=
-            estimateTokens;
+          this.memory.stages["chatbot-conversation"].tokensIn += estimateTokens;
           this.memory.stages["chatbot-conversation"].tokensInCost +=
             this.getTokenCosts(estimateTokens, type);
         } else {
           if (
             this.memory.stages["chatbot-conversation"].tokensOutCost ===
               undefined ||
-            this.memory.stages["chatbot-conversation"].tokensOut ===
-              undefined
+            this.memory.stages["chatbot-conversation"].tokensOut === undefined
           ) {
             this.memory.stages["chatbot-conversation"].tokensOutCost = 0;
             this.memory.stages["chatbot-conversation"].tokensOut = 0;
@@ -284,6 +311,12 @@ export class PsBaseChatBot {
   }
 
   conversation = async (chatLog: PsSimpleChatLog[]) => {
+    this.memory.chatLog = chatLog;
+
+    if (this.persistMemory) {
+      await this.saveMemory();
+    }
+
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
       return {
         role: message.sender,
@@ -299,10 +332,10 @@ export class PsBaseChatBot {
     messages.unshift(systemMessage);
 
     const stream = await this.openaiClient.chat.completions.create({
-      model: "gpt-4-0125-preview",
+      model: this.llmModel,
       messages,
-      max_tokens: 4000,
-      temperature: 0.7,
+      max_tokens: this.maxTokens,
+      temperature: this.tempeture,
       stream: true,
     });
 

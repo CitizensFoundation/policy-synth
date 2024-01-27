@@ -417,7 +417,11 @@ export class PolicySynthAgentBase {
 
   async saveMemory() {
     if (this.memory) {
-      await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+      try {
+        await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+      } catch (error) {
+        this.logger.error("Can't save memory to redis", error);
+      }
     } else {
       this.logger.warn("Memory is not initialized");
     }
