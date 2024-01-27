@@ -56,7 +56,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Rank search queries
       this.sendAgentStart("Pairwise Ranking Search Queries");
       const searchQueriesRanker = (this.currentAgent = new SearchQueriesRanker(
-        this.memory,
+        this.memory as PsBaseMemoryData,
         this.sendAgentUpdate.bind(this)
       ));
 

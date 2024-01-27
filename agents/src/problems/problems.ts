@@ -22,7 +22,7 @@ import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSe
 import { PolicySynthAgentBase } from "../baseAgent.js";
 
 export class AgentProblems extends BaseAgentProcessor {
-  declare memory: IEngineInnovationMemoryData;
+  declare memory: PsBaseMemoryData;
 
   override async initializeMemory(job: Job) {
     const jobData = job.data as IEngineWorkerData;
@@ -56,11 +56,11 @@ export class AgentProblems extends BaseAgentProcessor {
       },
       subProblems: [],
       currentStageData: undefined,
-    } as IEngineInnovationMemoryData;
+    } as PsBaseMemoryData;
     await this.saveMemory();
   }
 
-  async setStage(stage: IEngineStageTypes) {
+  async setStage(stage: PsMemoryStageTypes) {
     this.memory.currentStage = stage;
     this.memory.stages[stage].timeStart = Date.now();
 

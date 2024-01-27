@@ -23,7 +23,7 @@ const main = async () => {
 
   if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
-    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as IEngineInnovationMemoryData;
+    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as PsBaseMemoryData;
 
     const foundDescriptions = new Set<string>();
     const newSubProblems: IEngineSubProblem[] = [];
@@ -54,4 +54,4 @@ main().catch(err => {
 });
 ```
 
-Note: This example assumes the existence of `IEngineInnovationMemoryData` and `IEngineSubProblem` types, which are not defined in the provided script. These types should be defined elsewhere in your project to use this script as intended.
+Note: This example assumes the existence of `PsBaseMemoryData` and `IEngineSubProblem` types, which are not defined in the provided script. These types should be defined elsewhere in your project to use this script as intended.

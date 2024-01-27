@@ -6,14 +6,14 @@ AgentPolicies extends BaseAgentProcessor to handle various stages of policy proc
 
 | Name    | Type                                  | Description               |
 |---------|---------------------------------------|---------------------------|
-| memory  | IEngineInnovationMemoryData           | Holds the state and data relevant to the current job being processed. |
+| memory  | PsBaseMemoryData           | Holds the state and data relevant to the current job being processed. |
 
 ## Methods
 
 | Name                | Parameters                  | Return Type | Description                                                                 |
 |---------------------|-----------------------------|-------------|-----------------------------------------------------------------------------|
 | initializeMemory    | job: Job                    | Promise<void> | Initializes the memory with job data and sets the initial processing stage. |
-| setStage            | stage: IEngineStageTypes    | Promise<void> | Updates the current stage in memory and records the start time.             |
+| setStage            | stage: PsMemoryStageTypes    | Promise<void> | Updates the current stage in memory and records the start time.             |
 | process             | None                        | Promise<void> | Processes the job based on the current stage set in memory.                  |
 
 ## Example

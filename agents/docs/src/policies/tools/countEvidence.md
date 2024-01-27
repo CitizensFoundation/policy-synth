@@ -29,7 +29,7 @@ async function run() {
 
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!); // Assuming IEngineInnovationMemoryData type
+    const memory = JSON.parse(output!); // Assuming PsBaseMemoryData type
 
     const counts = new CountWebEvidenceProcessor({} as any, memory);
     await counts.process();

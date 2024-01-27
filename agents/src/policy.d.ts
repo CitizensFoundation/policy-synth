@@ -2,7 +2,7 @@ interface PSImplentingEntity extends IEngineAffectedEntity {}
 
 interface PSDependentEntity extends IEngineAffectedEntity {}
 
-interface PSMemoryData extends IEngineInnovationMemoryData {}
+interface PSMemoryData extends PsBaseMemoryData {}
 
 interface PSPolicyFeedback {
   source: "AI" | "Policymaker" | "Citizen";

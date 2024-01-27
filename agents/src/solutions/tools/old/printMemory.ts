@@ -6,7 +6,7 @@ const redis = new ioredis.default(
 
 const output = await redis.get("st_mem:1:id");
 
-const memory = JSON.parse(output!) as IEngineInnovationMemoryData
+const memory = JSON.parse(output!) as PsBaseMemoryData
 
 console.log("output", JSON.stringify(memory, null, 2));
 

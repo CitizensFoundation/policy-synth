@@ -2,6 +2,7 @@ import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
+import ioredis from "ioredis";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
@@ -15,28 +16,36 @@ const redis = new ioredis.default(
 );
 
 export class PsBaseChatBot {
-  clientId: string;
-  clientSocket: WebSocket;
+  wsClientId: string;
+  wsClientSocket: WebSocket;
   openaiClient: OpenAI;
   memory!: PsChatBotMemoryData;
   currentAgent: PolicySynthAgentBase | undefined;
   broadcastingLiveCosts = false;
-  liveCostsBroadcastTimeout: NodeJS.Timeout | undefined = undefined;
   liveCostsBroadcastInterval = 1000;
   liveCostsInactivityTimeout = 1000 * 60 * 10;
-  liveCostsBoadcastStartAt: Date | undefined;
-  lastSentToUserAt: Date | undefined;
-  lastBroacastedCosts: number | undefined;
-  redisMemoryKey = "chatbot-memory";
+  redisMemoryKeyPrefix = "chatbot-memory";
   tempeture = 0.7;
   maxTokens = 4000;
   llmModel = "gpt-4-0125-preview";
   persistMemory = false;
+  memoryId: string | undefined = undefined;
 
-  loadMemory(id: string) {
+  liveCostsBroadcastTimeout: NodeJS.Timeout | undefined = undefined;
+  liveCostsBoadcastStartAt: Date | undefined;
+  lastSentToUserAt: Date | undefined;
+  lastBroacastedCosts: number | undefined;
+
+  get redisKey(){
+    return `${this.redisMemoryKeyPrefix}-${this.memoryId}`
+  }
+
+  loadMemory() {
     return new Promise<PsChatBotMemoryData>(async (resolve, reject) => {
       try {
-        const memoryString = await redis.get(`${this.redisMemoryKey}-${id}`);
+        const memoryString = await redis.get(
+          this.redisKey
+        );
         if (memoryString) {
           const memory = JSON.parse(memoryString);
           resolve(memory);
@@ -51,18 +60,18 @@ export class PsBaseChatBot {
   }
 
   constructor(
-    clientId: string,
+    wsClientId: string,
     wsClients: Map<string, WebSocket>,
     memoryId: string | undefined = undefined
   ) {
-    this.clientId = clientId;
-    this.clientSocket = wsClients.get(this.clientId)!;
+    this.wsClientId = wsClientId;
+    this.wsClientSocket = wsClients.get(this.wsClientId)!;
     this.openaiClient = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    if (!this.clientSocket) {
+    if (!this.wsClientSocket) {
       console.error(
-        `WS Client ${this.clientId} not found in streamWebSocketResponses`
+        `WS Client ${this.wsClientId} not found in streamWebSocketResponses`
       );
     }
     this.setupMemory(memoryId);
@@ -70,15 +79,32 @@ export class PsBaseChatBot {
 
   async setupMemory(memoryId: string | undefined = undefined) {
     if (memoryId) {
-      this.memory = await this.loadMemory(memoryId);
+      this.memoryId = memoryId;
+      this.memory = await this.loadMemory();
     }
+    this.memoryId = uuidv4();
     this.memory = this.getEmptyMemory();
+    this.sendMemoryId();
+  }
+
+  async getLoadedMemory() {
+    return await this.loadMemory();
+  }
+
+  sendMemoryId() {
+    const botMessage = {
+      sender: "bot",
+      type: "memoryIdCreated",
+      message: this.memoryId
+    };
+
+    this.wsClientSocket.send(JSON.stringify(botMessage));
   }
 
   async saveMemory() {
     if (this.memory) {
       try {
-        await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+        await redis.set(this.redisKey, JSON.stringify(this.memory));
       } catch (error) {
         console.log("Can't save memory to redis", error);
       }
@@ -92,7 +118,7 @@ export class PsBaseChatBot {
   }
 
   sendToClient(sender: string, message: string, type = "stream") {
-    this.clientSocket.send(
+    this.wsClientSocket.send(
       JSON.stringify({
         sender,
         type: type,
@@ -111,7 +137,7 @@ export class PsBaseChatBot {
         noStreaming: hasNoStreaming,
       } as PsAgentStartWsOptions,
     };
-    this.clientSocket.send(JSON.stringify(botMessage));
+    this.wsClientSocket.send(JSON.stringify(botMessage));
   }
 
   sendAgentCompleted(
@@ -132,7 +158,7 @@ export class PsBaseChatBot {
       } as PsAgentCompletedWsOptions,
     };
 
-    this.clientSocket.send(JSON.stringify(botMessage));
+    this.wsClientSocket.send(JSON.stringify(botMessage));
   }
 
   sendAgentUpdate(message: string) {
@@ -142,7 +168,7 @@ export class PsBaseChatBot {
       message: message,
     };
 
-    this.clientSocket.send(JSON.stringify(botMessage));
+    this.wsClientSocket.send(JSON.stringify(botMessage));
   }
 
   startBroadcastingLiveCosts() {
@@ -168,7 +194,7 @@ export class PsBaseChatBot {
             type: "liveLlmCosts",
             message: this.currentAgent.fullLLMCostsForMemory,
           };
-          this.clientSocket.send(JSON.stringify(botMessage));
+          this.wsClientSocket.send(JSON.stringify(botMessage));
           this.lastBroacastedCosts = this.currentAgent.fullLLMCostsForMemory;
         }
       }
@@ -207,19 +233,19 @@ export class PsBaseChatBot {
         tokensIn: 0,
         tokensOut: 0,
       } as IEngineInnovationStagesData,
-    } as Record<PSChatBotStageTypes, IEngineInnovationStagesData>;
+    } as Record<PSChatBotMemoryStageTypes, IEngineInnovationStagesData>;
   }
 
   getEmptyMemory() {
     return {
-      redisKey: `${this.redisMemoryKey}-${uuidv4()}`,
+      redisKey: this.redisKey,
       currentStage: "chatbot-conversation",
       stages: {
         ...PolicySynthAgentBase.emptyDefaultStages,
         ...this.emptyChatBotStagesData,
       },
       timeStart: Date.now(),
-      chatLog: []
+      chatLog: [],
     } as PsChatBotMemoryData;
   }
 
@@ -310,12 +336,16 @@ export class PsBaseChatBot {
     }
   }
 
-  conversation = async (chatLog: PsSimpleChatLog[]) => {
+  async setChatLog(chatLog: PsSimpleChatLog[]) {
     this.memory.chatLog = chatLog;
 
     if (this.persistMemory) {
       await this.saveMemory();
     }
+  }
+
+  conversation = async (chatLog: PsSimpleChatLog[]) => {
+    this.setChatLog(chatLog);
 
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
       return {

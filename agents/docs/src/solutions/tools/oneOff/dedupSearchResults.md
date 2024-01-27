@@ -6,7 +6,7 @@ This class is responsible for deduplicating search results based on a specified 
 
 | Name               | Type                                            | Description                                                                 |
 |--------------------|-------------------------------------------------|-----------------------------------------------------------------------------|
-| memory             | IEngineInnovationMemoryData                     | The memory data structure containing search results to be deduplicated.     |
+| memory             | PsBaseMemoryData                     | The memory data structure containing search results to be deduplicated.     |
 | deduplicatedCount  | number                                          | The count of unique search results after deduplication.                     |
 | totalCount         | number                                          | The total count of search results before deduplication.                     |
 | seenUrls           | Map<string, Set<string>>                        | A map tracking seen URLs to assist in deduplication.                        |
@@ -34,7 +34,7 @@ const projectId = process.argv[2];
 const dedup = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+    const memory = JSON.parse(output!) as PsBaseMemoryData;
 
     const dedupper = new DeduplicateSearchProcessor(memory);
     dedupper.process();

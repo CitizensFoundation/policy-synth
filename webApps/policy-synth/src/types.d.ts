@@ -1,5 +1,5 @@
 interface CpsBootResponse {
-  currentMemory: IEngineInnovationMemoryData;
+  currentMemory: PsBaseMemoryData;
   configuration: any; //TODO: Add types for this
   isAdmin: boolean;
   name: string;

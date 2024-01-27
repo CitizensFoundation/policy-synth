@@ -42,7 +42,7 @@
     "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
     "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
     "start": "nodemon -e ts ts-out/server.js",
-    "copyLatestAgents": "cp -R ../agents/ts-out/* ./node_modules/@policysynth/agents/",
+    "copyInLocalAgents": "cp -R ../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/server.js",
     "dev": "nodemon --config nodemon.json ./ts-out/server.js",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",

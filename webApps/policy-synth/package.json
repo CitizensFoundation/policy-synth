@@ -8,6 +8,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "copyInLocalAgents": "cp -R ../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
     "prepublishOnly": "npm pack && node repack",
     "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
     "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",

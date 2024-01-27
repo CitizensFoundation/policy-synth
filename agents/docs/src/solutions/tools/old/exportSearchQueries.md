@@ -17,10 +17,10 @@ No properties are documented as this script does not define a class or object st
 
 ```javascript
 // Example usage of exportSearchQueries
-import { IEngineInnovationMemoryData } from '@policysynth/agents/solutions/tools/old/exportSearchQueries.js';
+import { PsBaseMemoryData } from '@policysynth/agents/solutions/tools/old/exportSearchQueries.js';
 
 const memoryData = fs.readFileSync("/path/to/currentMemory.json", "utf-8");
-const memory = JSON.parse(memoryData) as IEngineInnovationMemoryData;
+const memory = JSON.parse(memoryData) as PsBaseMemoryData;
 
 // Format ELO
 const formattedElo = formatElo(memory.subProblems[0].eloRating);

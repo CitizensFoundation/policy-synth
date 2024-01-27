@@ -9,7 +9,7 @@ This class represents a base chatbot for the PolicySynth platform, handling inte
 | clientId                      | string                                          | Unique identifier for the client.                                           |
 | clientSocket                  | WebSocket                                       | WebSocket connection for the client.                                        |
 | openaiClient                  | OpenAI                                          | Client for interacting with OpenAI's API.                                   |
-| memory                        | IEngineInnovationMemoryData                     | Memory data for the engine's innovation process.                            |
+| memory                        | PsBaseMemoryData                     | Memory data for the engine's innovation process.                            |
 | currentAgent                  | PolicySynthAgentBase \| undefined               | The current agent handling the chat, if any.                                |
 | broadcastingLiveCosts         | boolean                                         | Flag indicating if live costs are being broadcasted.                        |
 | liveCostsBroadcastTimeout     | NodeJS.Timeout \| undefined                     | Timeout for broadcasting live costs.                                        |
@@ -30,7 +30,7 @@ This class represents a base chatbot for the PolicySynth platform, handling inte
 | startBroadcastingLiveCosts  |                                                                            | void                   | Starts the process of broadcasting live costs to the client.                                 |
 | broadCastLiveCosts          |                                                                            | void                   | Broadcasts live costs to the client, if broadcasting is active.                               |
 | stopBroadcastingLiveCosts   |                                                                            | void                   | Stops broadcasting live costs to the client.                                                 |
-| getEmptyMemory              |                                                                            | IEngineInnovationMemoryData | Returns a new, empty memory data structure for the engine's innovation process.              |
+| getEmptyMemory              |                                                                            | PsBaseMemoryData | Returns a new, empty memory data structure for the engine's innovation process.              |
 | streamWebSocketResponses    | stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>                | Promise<void>          | Streams responses from OpenAI's chat completions to the client.                              |
 | conversation                | chatLog: PsSimpleChatLog[]                                                 | Promise<void>          | Initiates a conversation with the client, using OpenAI's chat completions for responses.     |
 

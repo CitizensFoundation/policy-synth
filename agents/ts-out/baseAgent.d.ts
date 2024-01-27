@@ -3,12 +3,12 @@ import winston from "winston";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Callbacks } from "langchain/callbacks";
 export declare class PolicySynthAgentBase {
-    memory?: IEngineInnovationMemoryData;
+    memory?: PsBaseMemoryData;
     logger: winston.Logger;
     timeStart: number;
     chat: ChatOpenAI | undefined;
     private rateLimits;
-    constructor(memory?: IEngineInnovationMemoryData | undefined);
+    constructor(memory?: PsBaseMemoryData | undefined);
     static get emptyDefaultStages(): {
         "create-root-causes-search-queries": {};
         "web-search-root-causes": {};
@@ -60,7 +60,7 @@ export declare class PolicySynthAgentBase {
     getJsonBlock(text: string): string;
     get fullLLMCostsForMemory(): number | undefined;
     getRepairedJson(text: string): any;
-    callLLM(stage: IEngineStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Callbacks): Promise<any>;
+    callLLM(stage: PsMemoryStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Callbacks): Promise<any>;
     private updateRateLimits;
     private checkRateLimits;
     formatNumber(number: number, fractions?: number): string;

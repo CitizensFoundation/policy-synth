@@ -11,6 +11,9 @@
     "@policysynth/webapp": "^1.1.0"
   },
   "scripts": {
+    "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
+    "copyInLocalWebapp": "cp -R ../../../../webApps/policy-synth/ts-out/* ./node_modules/@policysynth/webapp/;cp ../../../../webApps/policy-synth/src/*.d.ts ./node_modules/@policysynth/webapp/;",
+    "copyInLocalDeps": "npm run copyInLocalAgents;npm run copyInLocalWebapp;",
     "start": "concurrently --kill-others --names tsc,web-dev-server \"npm run tsc:watch\" \"web-dev-server --app-index index.html --node-resolve --open --watch\"",
     "build": "rimraf dist && tsc && rollup -c rollup.config.js",
     "lint:eslint": "eslint --ext .ts,.html . --ignore-path .gitignore",

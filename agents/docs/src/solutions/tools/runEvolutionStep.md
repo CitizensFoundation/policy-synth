@@ -10,8 +10,8 @@ No properties are directly defined in this script.
 
 | Name               | Parameters                  | Return Type                     | Description                                                                 |
 |--------------------|-----------------------------|---------------------------------|-----------------------------------------------------------------------------|
-| getInnovationData  |                             | Promise<IEngineInnovationMemoryData> | Retrieves the innovation memory data from Redis for the specified project. |
-| runStages          | startStage: IEngineStageTypes | Promise<void>                   | Runs the specified stages for the evolution process, starting from the given stage. |
+| getInnovationData  |                             | Promise<PsBaseMemoryData> | Retrieves the innovation memory data from Redis for the specified project. |
+| runStages          | startStage: PsMemoryStageTypes | Promise<void>                   | Runs the specified stages for the evolution process, starting from the given stage. |
 
 ## Example
 

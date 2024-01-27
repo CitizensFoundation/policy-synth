@@ -52,7 +52,7 @@ if (projectId) {
       },
       subProblems: [],
       currentStageData: undefined,
-    } as IEngineInnovationMemoryData;
+    } as PsBaseMemoryData;
 
 
     await redis.set(redisKey, JSON.stringify(project));

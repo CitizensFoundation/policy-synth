@@ -12,7 +12,7 @@ import { GetMetaDataForTopWebEvidenceProcessor } from "./web/getMetaDataForTopWe
 import { PolicySynthAgentBase } from "../baseAgent.js";
 
 export class AgentPolicies extends BaseAgentProcessor {
-  declare memory: IEngineInnovationMemoryData;
+  declare memory: PsBaseMemoryData;
 
   override async initializeMemory(job: Job) {
     const jobData = job.data as IEngineWorkerData;
@@ -50,7 +50,7 @@ export class AgentPolicies extends BaseAgentProcessor {
     await this.saveMemory();
   }
 
-  async setStage(stage: IEngineStageTypes) {
+  async setStage(stage: PsMemoryStageTypes) {
     this.memory.currentStage = stage;
     this.memory.stages[stage].timeStart = Date.now();
 

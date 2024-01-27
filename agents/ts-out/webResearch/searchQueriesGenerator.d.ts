@@ -3,7 +3,7 @@ import { PolicySynthAgentBase } from "../baseAgent.js";
 export declare class SearchQueriesGenerator extends PolicySynthAgentBase {
     systemPrompt: string;
     userPrompt: string;
-    constructor(memory: PsWebResearchMemory, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string);
+    constructor(memory: PsBaseMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string);
     renderMessages(): Promise<(SystemMessage | HumanMessage)[]>;
     generateSearchQueries(): Promise<string[]>;
 }

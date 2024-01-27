@@ -1,10 +1,10 @@
 import { Job } from "bullmq";
 import { PolicySynthAgentBase } from "./baseAgent.js";
 export declare abstract class BaseProlemSolvingAgent extends PolicySynthAgentBase {
-    memory: IEngineInnovationMemoryData;
+    memory: PsBaseMemoryData;
     job: Job;
     currentSubProblemIndex: number | undefined;
-    constructor(job: Job, memory: IEngineInnovationMemoryData);
+    constructor(job: Job, memory: PsBaseMemoryData);
     getProCons(prosCons: IEngineProCon[] | undefined): string[];
     process(): Promise<void>;
     lastPopulationIndex(subProblemIndex: number): number;
