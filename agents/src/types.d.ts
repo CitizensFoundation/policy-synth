@@ -422,3 +422,39 @@ interface IEngineReapingResults {
 }
 
 type IEngineMutationRates = "low" | "medium" | "high";
+
+interface PsAiChatWsMessage {
+  sender: string;
+  type:
+    | "hello_message"
+    | "moderation_error"
+    | "start"
+    | "message"
+    | "end"
+    | "stream"
+    | "noStreaming"
+    | "error"
+    | "info"
+    | "validationAgentStart"
+    | "validationAgentCompleted"
+    | "agentStart"
+    | "agentCompleted"
+    | "agentUpdated"
+    | "agentError"
+    | "liveLlmCosts"
+    | "thinking"
+    | "start_followup"
+    | "end_followup"
+    | "stream_followup";
+  message: string;
+  rawMessage?: string;
+  refinedCausesSuggestions?: string[];
+  debug?: CrtDebugData;
+  hidden?: boolean;
+}
+
+interface PsSimpleChatLog {
+  sender: string;
+  message: string;
+}
+

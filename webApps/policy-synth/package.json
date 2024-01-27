@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/webapp",
-  "version": "1.0.42",
+  "version": "1.1.0",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -8,6 +8,9 @@
   },
   "license": "MIT",
   "scripts": {
+    "prepublishOnly": "npm pack && node repack",
+    "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
+    "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
     "lint:eslint": "eslint --ext .ts,.html . --ignore-path .gitignore",
     "format:eslint": "eslint --ext .ts,.html . --fix --ignore-path .gitignore",
     "lint:prettier": "prettier \"**/*.js\" \"**/*.ts\" --check --ignore-path .gitignore",
@@ -24,14 +27,14 @@
     "tsc:watch": "tsc --watch"
   },
   "type": "module",
-  "typings": "./cmp/all.d.ts",
-  "main": "./cmp/all.js",
   "dependencies": {
-    "@policysynth/agents": "^1.0.28",
-    "@yrpri/webapp": "^9.0.11",
-    "element-internals-polyfill": "^1.3.10",
-    "urlpattern-polyfill": "^9.0.0"
+    "@policysynth/agents": "^1.1.0",
+    "@yrpri/webapp": "^9.0.14"
   },
+  "files": [
+    "ts-out/**/*",
+    "src/*.d.ts"
+  ],
   "overrides": {
     "@lit/reactive-element": "^2.0.0"
   },

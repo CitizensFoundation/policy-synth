@@ -1,61 +1,61 @@
 # PsAiChatElement
 
-A custom web component that represents a chat interface for AI conversations, including features like message rendering, follow-up questions, and loading indicators.
+This class extends `YpBaseElement` to create a custom chat element for AI interactions. It handles the display of messages, loading states, and follow-up questions within a chat interface.
 
 ## Properties
 
-| Name                   | Type                                      | Description                                                                 |
-|------------------------|-------------------------------------------|-----------------------------------------------------------------------------|
-| message                | String                                    | The message content to be displayed.                                        |
-| sender                 | 'you' \| 'bot'                            | The sender of the message, either 'you' for the user or 'bot' for the AI.   |
-| detectedLanguage       | String                                    | The language detected in the conversation.                                  |
-| clusterId              | Number                                    | An identifier for the cluster of messages or conversation context.          |
-| type                   | 'start' \| 'error' \| 'moderation_error' \| 'info' \| 'message' \| 'thinking' \| 'noStreaming' \| undefined | The type of message or status being represented.                            |
-| active                 | Boolean                                   | Indicates whether the chat element is active or not.                        |
-| fullReferencesOpen     | Boolean                                   | Flag to toggle the visibility of full references.                           |
-| followUpQuestionsRaw   | String                                    | Raw string containing follow-up questions, possibly with special markers.   |
-| followUpQuestions      | String[]                                  | An array of follow-up questions parsed from the raw string.                 |
-| jsonLoading            | Boolean                                   | Indicates whether a JSON content is currently being loaded.                 |
-| api                    | BaseChatBotServerApi                      | An instance of the BaseChatBotServerApi for API interactions.               |
+| Name                  | Type                                              | Description                                                                 |
+|-----------------------|---------------------------------------------------|-----------------------------------------------------------------------------|
+| message               | String                                            | The message to be displayed.                                                |
+| updateMessage         | String                                            | An additional message that can be updated dynamically.                      |
+| sender                | 'you' \| 'bot'                                    | The sender of the message. Can be either 'you' or 'bot'.                    |
+| detectedLanguage      | String                                            | The language detected in the message.                                       |
+| clusterId             | Number                                            | The ID of the cluster associated with the message.                          |
+| type                  | 'start' \| 'error' \| 'moderation_error' \| 'info' \| 'message' \| 'thinking' \| 'noStreaming' \| undefined | The type of message being displayed.                                        |
+| active                | Boolean                                           | Indicates whether the chat element is active.                               |
+| fullReferencesOpen    | Boolean                                           | Indicates whether full references are open.                                 |
+| followUpQuestionsRaw  | String                                            | Raw string containing follow-up questions.                                  |
+| followUpQuestions     | String[]                                          | An array of follow-up questions parsed from `followUpQuestionsRaw`.         |
+| jsonLoading           | Boolean                                           | Indicates whether JSON content is currently loading.                        |
 
 ## Methods
 
-| Name                     | Parameters | Return Type | Description                                                                 |
-|--------------------------|------------|-------------|-----------------------------------------------------------------------------|
-| connectedCallback        |            | void        | Lifecycle method that runs when the element is added to the DOM.            |
-| disconnectedCallback     |            | void        | Lifecycle method that runs when the element is removed from the DOM.        |
-| stopJsonLoading          |            | void        | Method to stop the JSON loading indicator.                                  |
-| handleJsonLoadingStart   |            | void        | Event handler for the start of JSON loading.                                |
-| handleJsonLoadingEnd     | event: any | void        | Event handler for the end of JSON loading, processes the loaded JSON data.  |
-| get styles               |            | CSSResult[] | Static method that returns the styles applied to the chat element.          |
-| isError                  |            | Boolean     | Getter that determines if the current message type is an error.             |
-| renderCGImage            |            | TemplateResult | Method to render the chatbot's image.                                      |
-| renderRoboImage          |            | TemplateResult | Method to render the user's image.                                         |
-| renderJson               |            | TemplateResult | Method to render JSON content if applicable.                               |
-| renderChatGPT            |            | TemplateResult | Method to render the chatbot's message along with any special content.    |
-| parseFollowUpQuestions   |            | void        | Method to parse follow-up questions from the raw string.                    |
-| updated                  | changedProperties: Map<string \| number \| symbol, unknown> | void | Lifecycle method that runs when the element's properties change. |
-| renderUser               |            | TemplateResult | Method to render the user's message.                                       |
-| renderNoStreaming        |            | TemplateResult | Method to render the no streaming status message.                          |
-| renderThinking           |            | TemplateResult | Method to render the thinking status message.                              |
-| getThinkingText          |            | String      | Method to get the localized thinking text based on the detected language.   |
-| renderMessage            |            | TemplateResult | Method to render the appropriate message based on the sender and type.    |
-| render                   |            | TemplateResult | Lifecycle method that renders the element's HTML template.                 |
+| Name                    | Parameters | Return Type | Description                                                                 |
+|-------------------------|------------|-------------|-----------------------------------------------------------------------------|
+| stopJsonLoading         |            | void        | Stops the JSON loading animation.                                           |
+| handleJsonLoadingStart  |            | void        | Handles the start of JSON loading, setting `jsonLoading` to true.          |
+| handleJsonLoadingEnd    | event: any | void        | Handles the end of JSON loading, parsing the JSON content if possible.     |
+| isError                 |            | boolean     | Checks if the current message type is an error.                             |
+| renderCGImage           |            | TemplateResult | Renders the CG image icon.                                                  |
+| renderRoboImage         |            | TemplateResult | Renders the robot image icon.                                               |
+| renderJson              |            | TemplateResult | Renders JSON content.                                                       |
+| renderChatGPT           |            | TemplateResult | Renders the ChatGPT dialog with the message and optional follow-up questions. |
+| parseFollowUpQuestions  |            | void        | Parses follow-up questions from the raw string.                            |
+| renderUser              |            | TemplateResult | Renders the user's message dialog.                                          |
+| renderNoStreaming       |            | TemplateResult | Renders the no streaming message or icon.                                   |
+| renderThinking          |            | TemplateResult | Renders the thinking animation or done icon.                                |
+| getThinkingText         |            | String      | Returns the thinking text based on the detected language.                   |
+| renderMessage           |            | TemplateResult | Renders the appropriate message based on the sender and type.               |
 
-## Events (if any)
+## Events
 
-- **jsonLoadingStart**: Emitted when JSON loading starts.
-- **jsonLoadingEnd**: Emitted when JSON loading ends, with the JSON content details.
+- `jsonLoadingStart`: Fired when JSON loading starts.
+- `jsonLoadingEnd`: Fired when JSON loading ends, with the JSON content as detail.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the PsAiChatElement
-const chatElement = document.createElement('ps-ai-chat-element');
-chatElement.message = 'Hello, how can I help you today?';
-chatElement.sender = 'bot';
-chatElement.type = 'message';
-document.body.appendChild(chatElement);
+import '@policysynth/webapp/chatBot/ps-ai-chat-element.js';
+
+// Usage in a LitElement template
+html`
+  <ps-ai-chat-element
+    .message=${"Hello, World!"}
+    .sender=${"bot"}
+    .type=${"message"}
+    .active=${true}
+  ></ps-ai-chat-element>
+`;
 ```
 
-Note: The actual usage of the `PsAiChatElement` would typically involve more complex interactions and handling of events, especially for dynamic conversations with an AI chatbot.
+This example demonstrates how to use the `ps-ai-chat-element` in a LitElement template, setting the message, sender, type, and active state.

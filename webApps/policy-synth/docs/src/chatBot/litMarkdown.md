@@ -4,44 +4,35 @@ An async directive to render markdown in a LitElement's render function. Images 
 
 ## Properties
 
-| Name                     | Type                                      | Description               |
-|--------------------------|-------------------------------------------|---------------------------|
-| defaultOptions           | Options                                   | Default options for the directive. |
-| inJsonBlock              | boolean                                   | Indicates if currently inside a JSON block. |
-| hasCompletedJsonParsing  | boolean                                   | Indicates if JSON parsing has completed. |
+| Name                     | Type                                      | Description |
+|--------------------------|-------------------------------------------|-------------|
+| `defaultOptions`         | `Options`                                 | Static property containing the default options for the directive. |
+| `inJsonBlock`            | `boolean`                                 | Indicates if the current processing is within a JSON block. |
+| `hasCompletedJsonParsing`| `boolean`                                 | Indicates if JSON parsing within a block has been completed. |
 
 ## Methods
 
-| Name                     | Parameters                                | Return Type | Description                 |
-|--------------------------|-------------------------------------------|-------------|-----------------------------|
-| handleJsonBlocks         | rawMarkdown: string, targetElement: YpBaseElement | string      | Handles JSON blocks within the markdown, firing events on the target element. |
-| sanitizeHTMLWithOptions  | rawHTML: string, options: Options         | string      | Sanitizes the HTML with the given options. |
-| closeCodeBlockIfNeeded   | rawMarkdown: string                       | string      | Closes code blocks if they are not properly closed in the markdown. |
-| removeCitations          | rawMarkdown: string                       | string      | Removes citations from the markdown. |
-| render                   | rawMarkdown: string, options?: Partial<Options> | unknown    | Renders the markdown with the given options, returning a sanitized HTML or a placeholder. |
+| Name                      | Parameters                               | Return Type | Description |
+|---------------------------|------------------------------------------|-------------|-------------|
+| `handleJsonBlocks`        | `rawMarkdown: string, targetElement: YpBaseElement` | `string` | Processes markdown to handle JSON blocks, emitting events to the target element. |
+| `sanitizeHTMLWithOptions` | `rawHTML: string, options: Options`      | `string`    | Sanitizes the HTML content based on the provided options. Currently returns the raw HTML without sanitization. |
+| `closeCodeBlockIfNeeded`  | `rawMarkdown: string`                    | `string`    | Ensures that code blocks are properly closed by adding a closing delimiter if needed. |
+| `removeCitations`         | `rawMarkdown: string`                    | `string`    | Removes citations from the markdown content. Currently not used in the `render` method. |
+| `render`                  | `rawMarkdown: string, options?: Partial<Options>` | `TemplateResult` | Processes the markdown content, applies markdown parsing, and returns the rendered HTML as a Lit template result. |
 
 ## Events
 
-- **jsonLoadingStart**: Emitted when a JSON block starts loading.
-- **jsonLoadingEnd**: Emitted when a JSON block has finished loading, with the JSON content.
-- **jsonPartialContent**: Emitted with partial JSON content if the end of a JSON block is not found.
+- `jsonLoadingStart`: Fired when a JSON block starts being processed.
+- `jsonLoadingEnd`: Fired when a JSON block has been fully processed, with the JSON content as detail.
+- `jsonPartialContent`: Fired when a part of a JSON block is processed, with the partial JSON content as detail.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the MarkdownDirective within a LitElement's render function
 import { html } from 'lit';
-import { resolveMarkdown } from './path-to-markdown-directive';
+import { resolveMarkdown } from '@policysynth/webapp/chatBot/litMarkdown.js';
 
-class MyCustomElement extends LitElement {
-  render() {
-    const rawMarkdown = `# Hello World`;
-    return html`<article>${resolveMarkdown(rawMarkdown)}</article>`;
-  }
-}
-
-// Example with options
-class MyCustomElementWithOptions extends LitElement {
+class MyElement extends LitElement {
   render() {
     const rawMarkdown = `# Hello World
     ![image.jpeg](https://host.com/image.jpeg "image.jpeg")`;
@@ -50,36 +41,14 @@ class MyCustomElementWithOptions extends LitElement {
 }
 ```
 
-# resolveMarkdown
-
-An async directive used to render markdown in a LitElement's render function.
-
-## Methods
-
-| Name       | Parameters                                | Return Type | Description                 |
-|------------|-------------------------------------------|-------------|-----------------------------|
-| directive  | MarkdownDirective                         | Function    | Returns a function that can be used in a LitElement's render method to render markdown content. |
-
-## Examples
-
 ```typescript
-// Example usage of resolveMarkdown in a LitElement's render function
 import { html } from 'lit';
-import { resolveMarkdown } from './path-to-markdown-directive';
+import { resolveMarkdown } from '@policysynth/webapp/chatBot/litMarkdown.js';
 
-class MyCustomElement extends LitElement {
+class AnotherElement extends LitElement {
   render() {
     const rawMarkdown = `# Hello World`;
     return html`<article>${resolveMarkdown(rawMarkdown)}</article>`;
-  }
-}
-
-// Example with options
-class MyCustomElementWithOptions extends LitElement {
-  render() {
-    const rawMarkdown = `# Hello World
-    ![image.jpeg](https://host.com/image.jpeg "image.jpeg")`;
-    return html`<article>${resolveMarkdown(rawMarkdown, { includeImages: true, includeCodeBlockClassNames: true, loadingHTML: "<loading-icon></loading-icon>" })}</article>`;
   }
 }
 ```

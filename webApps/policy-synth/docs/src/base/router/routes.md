@@ -4,96 +4,63 @@ A reactive controller that performs location-based routing using a configuration
 
 ## Properties
 
-| Name        | Type                      | Description                                                                 |
-|-------------|---------------------------|-----------------------------------------------------------------------------|
-| routes      | Array<RouteConfig>        | The currently installed set of routes in precedence order.                  |
-| fallback    | BaseRouteConfig \| undefined | A default fallback route which will always be matched if none of the routes match. |
+| Name          | Type                                      | Description |
+|---------------|-------------------------------------------|-------------|
+| routes        | Array<RouteConfig>                        | The currently installed set of routes in precedence order. |
+| fallback      | BaseRouteConfig \| undefined              | A default fallback route which will always be matched if none of the routes match. |
 
 ## Methods
 
-| Name       | Parameters            | Return Type | Description                                                                 |
-|------------|-----------------------|-------------|-----------------------------------------------------------------------------|
-| link       | pathname?: string     | string      | Returns a URL string of the current route, including parent routes.         |
-| goto       | pathname: string      | Promise<void> | Navigates this routes controller to `pathname`.                            |
-| outlet     | -                     | unknown     | The result of calling the current route's render() callback.                |
-| params     | -                     | {[key: string]: string \| undefined} | The current parsed route parameters.                                       |
-| hostConnected | -                 | void        | Lifecycle method called when the controller's host is connected.            |
-| hostDisconnected | -             | void        | Lifecycle method called when the controller's host is disconnected.         |
+| Name            | Parameters                          | Return Type | Description |
+|-----------------|-------------------------------------|-------------|-------------|
+| link            | pathname?: string                   | string      | Returns a URL string of the current route, including parent routes, optionally replacing the local path with `pathname`. |
+| goto            | pathname: string                    | Promise<void> | Navigates this routes controller to `pathname`. |
+| outlet          |                                     | unknown     | The result of calling the current route's render() callback. |
+| params          |                                     | {[key: string]: string \| undefined} | The current parsed route parameters. |
+| hostConnected   |                                     | void        | Callback to call when this controller is connected. |
+| hostDisconnected|                                     | void        | Callback to call when this controller is disconnected. |
 
 ## Events
 
-- **lit-routes-connected**: Fired from Routes controllers when their host is connected to announce the child route and potentially connect to a parent routes controller.
-
-## Examples
+## Example
 
 ```typescript
-// Example usage of Routes
-const routes = new Routes(hostElement, [
+import { Routes, RouteConfig, BaseRouteConfig } from '@policysynth/webapp/base/router/routes.js';
+
+const routes: Array<RouteConfig> = [
   {
     path: '/home',
-    render: () => html`<home-page></home-page>`,
+    render: (params) => `Render Home with params: ${JSON.stringify(params)}`,
   },
   {
     path: '/about',
-    render: () => html`<about-page></about-page>`,
+    render: (params) => `Render About with params: ${JSON.stringify(params)}`,
   },
-]);
+];
 
-// Navigate to a specific route
-routes.goto('/home');
-
-// Get the current route's URL
-const currentUrl = routes.link();
-
-// Get the current route's parameters
-const params = routes.params;
-
-// Render the current route's content
-const content = routes.outlet();
-```
-
-# RouteConfig
-
-A description of a route, which path or pattern to match against, and a render() callback used to render a match to the outlet.
-
-## Properties
-
-| Name        | Type                      | Description                                                                 |
-|-------------|---------------------------|-----------------------------------------------------------------------------|
-| name        | string \| undefined       | Optional name for the route.                                                |
-| render      | ((params: {[key: string]: string \| undefined}) => unknown) \| undefined | Optional render callback for the route.                                     |
-| enter       | ((params: {[key: string]: string \| undefined}) => Promise<boolean> \| boolean) \| undefined | Optional enter callback for the route.                                      |
-| path        | string                    | Pathname pattern to match against (only for PathRouteConfig).               |
-| pattern     | URLPattern                | URLPattern to match against (only for URLPatternRouteConfig).               |
-
-## Examples
-
-```typescript
-// Example usage of RouteConfig
-const pathRouteConfig: PathRouteConfig = {
-  name: 'home',
-  path: '/home',
-  render: (params) => html`<home-page></home-page>`,
+const fallback: BaseRouteConfig = {
+  render: () => `Render Fallback`,
 };
 
-const urlPatternRouteConfig: URLPatternRouteConfig = {
-  name: 'about',
-  pattern: new URLPattern({ pathname: '/about' }),
-  render: (params) => html`<about-page></about-page>`,
-};
+const routesController = new Routes(document.body, routes, { fallback });
+
+// Example of navigating to a route
+routesController.goto('/home').then(() => {
+  console.log('Navigation to /home completed');
+});
 ```
 
 # BaseRouteConfig
 
-Base configuration for a route.
+Interface for basic route configuration.
 
 ## Properties
 
-| Name        | Type                      | Description                                                                 |
-|-------------|---------------------------|-----------------------------------------------------------------------------|
-| name        | string \| undefined       | Optional name for the route.                                                |
-| render      | ((params: {[key: string]: string \| undefined}) => unknown) \| undefined | Optional render callback for the route.                                     |
-| enter       | ((params: {[key: string]: string \| undefined}) => Promise<boolean> \| boolean) \| undefined | Optional enter callback for the route.                                      |
+| Name   | Type                                            | Description |
+|--------|-------------------------------------------------|-------------|
+| name   | string \| undefined                             | Optional name for the route. |
+| render | (params: {[key: string]: string \| undefined}) => unknown | Optional render function for the route. |
+| enter  | (params: {[key: string]: string \| undefined}) => Promise<boolean> \| boolean | Optional enter function that can prevent navigation if it returns false. |
 
 # PathRouteConfig
 
@@ -101,9 +68,11 @@ A RouteConfig that matches against a `path` string.
 
 ## Properties
 
-| Name        | Type                      | Description                                                                 |
-|-------------|---------------------------|-----------------------------------------------------------------------------|
-| path        | string                    | Pathname pattern to match against.                                          |
+| Name   | Type   | Description |
+|--------|--------|-------------|
+| path   | string | A `URLPattern` compatible pathname pattern. |
+
+Inherits properties from `BaseRouteConfig`.
 
 # URLPatternRouteConfig
 
@@ -111,26 +80,27 @@ A RouteConfig that matches against a given `URLPattern`.
 
 ## Properties
 
-| Name        | Type                      | Description                                                                 |
-|-------------|---------------------------|-----------------------------------------------------------------------------|
-| pattern     | URLPattern                | URLPattern to match against.                                                |
+| Name    | Type       | Description |
+|---------|------------|-------------|
+| pattern | URLPattern | The URLPattern to match against. |
+
+Inherits properties from `BaseRouteConfig`.
 
 # RoutesConnectedEvent
 
-This event is fired from Routes controllers when their host is connected.
+Event fired from Routes controllers when their host is connected to announce the child route and potentially connect to a parent routes controller.
 
 ## Properties
 
-| Name        | Type                      | Description                                                                 |
-|-------------|---------------------------|-----------------------------------------------------------------------------|
-| routes      | Routes                    | The Routes instance associated with the event.                              |
-| onDisconnect| (() => void) \| undefined | Callback to call when the Routes instance is disconnected.                  |
+| Name         | Type       | Description |
+|--------------|------------|-------------|
+| routes       | Routes     | The Routes instance that fired the event. |
+| onDisconnect | () => void | Optional callback to call when the event source is disconnected. |
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of RoutesConnectedEvent
-hostElement.addEventListener(RoutesConnectedEvent.eventName, (event) => {
-  // Handle the event
+document.body.addEventListener(RoutesConnectedEvent.eventName, (event) => {
+  console.log('Routes connected:', event.routes);
 });
 ```

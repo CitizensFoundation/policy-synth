@@ -1,21 +1,25 @@
 # BaseChatBotServerApi
 
-The `BaseChatBotServerApi` class extends the `YpServerApi` class to provide a base API for chatbot services. It sets a default base path for long-term processes (LTP) and allows for a custom API base URL path.
+This class extends the `YpServerApi` to provide functionalities specific to the Base Chat Bot Server API, including setting a base path for API requests.
 
 ## Properties
 
-| Name         | Type   | Description                                      |
-|--------------|--------|--------------------------------------------------|
-| baseLtpPath  | string | The base path for long-term processes (LTP).     |
-| baseUrlPath  | string | The base URL path for the API endpoints.         |
+| Name        | Type   | Description                                   |
+|-------------|--------|-----------------------------------------------|
+| baseLtpPath | string | The base path for LTP (Language Technology Platform) related requests. |
 
 ## Methods
 
-This class does not define any new methods beyond those inherited from `YpServerApi`.
+| Name       | Parameters         | Return Type | Description |
+|------------|--------------------|-------------|-------------|
+| constructor| urlPath: string = '/api' | void      | Initializes the BaseChatBotServerApi with an optional URL path for the base URL. |
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of BaseChatBotServerApi
-const chatBotApi = new BaseChatBotServerApi('/custom/api/path');
+import { BaseChatBotServerApi } from '@policysynth/webapp/chatBot/BaseChatBotApi.js';
+
+const chatBotApi = new BaseChatBotServerApi();
+// or with a custom API path
+const customChatBotApi = new BaseChatBotServerApi('/custom/api/path');
 ```

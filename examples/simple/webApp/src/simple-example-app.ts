@@ -1,9 +1,9 @@
 import { html, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { PsRouter } from '@policysynth/webapp/cmp/base/router/router.js';
+import { PsRouter } from '@policysynth/webapp/base/router/router.js';
 
 import './simple-chat-bot.js';
-import { PolicySynthWebApp } from '@policysynth/webapp/cmp/ps-app.js';
+import { PolicySynthWebApp } from '@policysynth/webapp/ps-app.js';
 
 @customElement('simple-example-app')
 export class SimpleExampleApp extends PolicySynthWebApp {

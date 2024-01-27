@@ -1,1 +1,0 @@
-{"version":3,"file":"googleSearchApi.d.ts","sourceRoot":"","sources":["../../../../src/agents/solutions/web/googleSearchApi.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,oBAAoB,EAAE,MAAM,kBAAkB,CAAC;AAOxD,qBAAa,eAAgB,SAAQ,oBAAoB;IAC1C,MAAM,CAAC,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,uBAAuB,EAAE,CAAC;CAqCvE"}

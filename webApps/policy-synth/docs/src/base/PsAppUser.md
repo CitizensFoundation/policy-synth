@@ -1,30 +1,30 @@
 # PsAppUser
 
-`PsAppUser` is an extension of the `YpAppUser` class, designed to interface with a `YpServerApi` instance. It may optionally skip the regular initialization process.
+This class extends `YpAppUser` from the `@yrpri/webapp/yp-app/YpAppUser` package. It is designed to initialize a user with the option to skip regular initialization processes.
 
 ## Properties
 
-No additional properties are documented for `PsAppUser`.
+No public properties are defined in `PsAppUser` that are different from those in `YpAppUser`.
 
 ## Methods
 
-| Name       | Parameters                        | Return Type | Description                 |
-|------------|-----------------------------------|-------------|-----------------------------|
-| constructor | serverApi: YpServerApi, skipRegularInit: boolean = false | void        | Initializes a new instance of `PsAppUser`, optionally skipping the regular initialization by passing `true` for `skipRegularInit`. |
+| Name       | Parameters                          | Return Type | Description                                                                 |
+|------------|-------------------------------------|-------------|-----------------------------------------------------------------------------|
+| constructor| serverApi: YpServerApi, skipRegularInit: boolean = false | void        | Initializes a new instance of `PsAppUser`, optionally skipping regular initialization. |
 
 ## Events
 
-No events are documented for `PsAppUser`.
+No events are defined in `PsAppUser`.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of PsAppUser
-import { YpServerApi } from "@yrpri/webapp";
+import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
+import { PsAppUser } from '@policysynth/webapp/base/PsAppUser.js';
 
-// Assuming you have an instance of YpServerApi
 const serverApi = new YpServerApi();
+const skipRegularInit = true;
+const user = new PsAppUser(serverApi, skipRegularInit);
 
-// Create a new instance of PsAppUser
-const user = new PsAppUser(serverApi);
+// Use the `user` instance as needed
 ```

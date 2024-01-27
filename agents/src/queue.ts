@@ -1,8 +1,8 @@
 import winston from 'winston';
 
-import './agents/problems/problems.js'
-import './agents/solutions/solutions.js'
-import './agents/policies/policies.js'
+import './problems/problems.js'
+import './solutions/solutions.js'
+import './policies/policies.js'
 
 const logger = winston.createLogger({
   level: process.env.WORKER_LOG_LEVEL || 'debug',

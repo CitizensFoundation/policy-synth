@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.0.30",
+  "version": "1.1.0",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -21,12 +21,17 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
-  "types": "dist/index.d.ts",
-  "main": "dist/index.js",
+  "files": [
+    "ts-out/**/*",
+    "src/*.d.ts"
+  ],
   "scripts": {
+    "prepublishOnly": "npm pack && node repack",
+    "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
+    "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
     "test": "gulp test:local",
-    "start": "nodemon -q dist/queue.js",
-    "watch-start": "tsc --project ./ --outDir ./dist -w & nodemon -q dist/queue.js"
+    "start": "nodemon -q ts-out/queue.js",
+    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ts-out/queue.js"
   },
   "cacheDirectories": [
     "node_modules"

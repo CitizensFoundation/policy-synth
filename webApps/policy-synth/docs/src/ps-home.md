@@ -1,40 +1,60 @@
 # PsHome
 
-PsHome is a custom element that extends the PsStageBase class, designed to render the home page of the Policy Synth platform. It displays a list of projects, a welcome title, and additional information about the platform's goals and invitation to collaborate on GitHub.
+`PsHome` is a custom element that extends `PsStageBase` to display a home page for the Policy Synth web application. It showcases various projects related to policy synthesis, integrating both human insights and artificial intelligence to address complex policy issues. The class is responsible for rendering the home page layout, including project listings and additional information about the project's goals and invitation for collaboration.
 
 ## Properties
 
-| Name   | Type            | Description                                      |
-|--------|-----------------|--------------------------------------------------|
-| wide   | boolean         | Indicates if the layout should be wide or not.   |
+| Name       | Type   | Description               |
+|------------|--------|---------------------------|
+| wide       | boolean | Indicates if the layout should be rendered in a wide format. This affects the sizing of images and layout responsiveness. |
 
 ## Methods
 
-| Name                | Parameters                                  | Return Type | Description                                                                 |
-|---------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| connectedCallback   | none                                        | void        | Lifecycle method that runs when the element is added to the document's DOM. |
-| updated             | changedProperties: Map<string \| number \| symbol, unknown> | void        | Lifecycle method that runs when the element's properties have changed.      |
-| disconnectedCallback| none                                        | void        | Lifecycle method that runs when the element is removed from the document's DOM. |
-| renderProject       | project: PsProjectData                      | TemplateResult | Renders a single project item.                                             |
-| render              | none                                        | TemplateResult | Renders the home page content.                                             |
+| Name                 | Parameters                                  | Return Type | Description                 |
+|----------------------|---------------------------------------------|-------------|-----------------------------|
+| connectedCallback    | None                                        | void        | Invoked when the element is added to the document's DOM. It performs initial setup such as setting up event listeners and fetching data. |
+| updated              | changedProperties: Map<string \| number \| symbol, unknown> | void        | Invoked after the element’s properties have been updated. Useful for reacting to changes. |
+| disconnectedCallback | None                                        | void        | Invoked when the element is removed from the document's DOM. It performs cleanup tasks. |
+| renderProject        | project: PsProjectData                     | TemplateResult | Renders a single project item. |
+| render               | None                                        | TemplateResult | Renders the entire home page content, including project listings and additional information sections. |
 
 ## Events
 
-- **None specified**
+No custom events are emitted by this class.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the PsHome custom element
-import { PsHome } from './path/to/ps-home.js';
+import '@policysynth/webapp/ps-home.js';
 
-// Assuming 'projects' is an array of PsProjectData objects and 'wide' is a boolean
-const homeElement = new PsHome();
-homeElement.wide = true; // Set to false for a narrower layout
-document.body.appendChild(homeElement);
-
-// To render a project item (assuming 'project' is a PsProjectData object)
-homeElement.renderProject(project);
+// Usage in a LitElement
+render() {
+  return html`
+    <ps-home></ps-home>
+  `;
+}
 ```
 
-**Note:** The actual usage would typically involve including the `ps-home` element in an HTML file and the properties and methods would be used within the context of the LitElement lifecycle and data flow.
+## Additional Types
+
+### PsProjectData
+
+This type represents the data structure for a project displayed on the home page.
+
+| Name        | Type   | Description               |
+|-------------|--------|---------------------------|
+| id          | number | The unique identifier for the project. |
+| title       | string | The title of the project. |
+| imageUrl    | string | The URL to the project's image. |
+| description | string | A brief description of the project. |
+
+### Example PsProjectData
+
+```typescript
+const projectExample: PsProjectData = {
+  id: 1,
+  title: 'Democracy in Distress',
+  imageUrl: 'https://cps-images.citizens.is/projects/1/problemStatement/images/916898992.png',
+  description: 'The first test run is entirely automated except for the problem statement provided by us. All sub problems, entities and solutions with pros & cons are generated using GPT-4 & GPT-3.5. The context for solutions is obtained through curated web searches. This setup allows us to explore how human and AI-driven insights can work together to solve complex problems.'
+};
+```
