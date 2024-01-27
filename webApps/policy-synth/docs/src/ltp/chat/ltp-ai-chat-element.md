@@ -1,46 +1,41 @@
 # LtpAiChatElement
 
-LtpAiChatElement is a custom web component that extends PsAiChatElement, designed to handle the chat interface for a specific application. It includes functionality for loading and parsing JSON content, managing suggestions for causes, and interacting with an API to add selected causes and assumptions.
+`LtpAiChatElement` extends `PsAiChatElement` to provide a custom chat element for the LTP (Logical Thinking Process) application. It includes functionality for handling JSON content related to causes and suggestions, rendering UI components for user interaction, and communicating with the LTP server API for data processing and updates.
 
 ## Properties
 
-| Name                        | Type                      | Description                                                                 |
-|-----------------------------|---------------------------|-----------------------------------------------------------------------------|
-| parentNodeId                | String                    | The ID of the parent node in the context of the chat.                       |
-| crtId                       | String \| Number          | The ID of the current reality tree being used.                              |
-| refinedCausesSuggestions    | String[] \| undefined     | An array of refined cause suggestions.                                      |
-| lastChainCompletedAsValid   | Boolean                   | Indicates whether the last chain of actions was completed as valid.         |
-| lastValidateCauses          | String[] \| undefined     | An array of the last validated causes.                                      |
-| isCreatingCauses            | Boolean                   | Indicates whether the component is currently in the process of creating causes. |
+| Name                      | Type                        | Description                                                                 |
+|---------------------------|-----------------------------|-----------------------------------------------------------------------------|
+| parentNodeId              | String                      | The ID of the parent node in the current reality tree.                      |
+| crtId                     | String \| Number            | The ID of the current reality tree.                                         |
+| refinedCausesSuggestions  | String[] \| undefined       | An array of refined causes suggestions.                                     |
+| lastChainCompletedAsValid | Boolean                     | Indicates if the last chain of causes was completed as valid.               |
+| lastValidateCauses        | String[] \| undefined       | An array of the last validated causes.                                      |
+| isCreatingCauses          | Boolean                     | Indicates if the process of creating causes is currently happening.         |
+| api                       | LtpServerApi                | An instance of `LtpServerApi` for communicating with the LTP server.       |
 
 ## Methods
 
 | Name                | Parameters | Return Type | Description                                                                                   |
 |---------------------|------------|-------------|-----------------------------------------------------------------------------------------------|
-| handleJsonLoadingEnd| event: any | void        | Handles the end of JSON loading, parsing the content and updating suggestions if applicable.  |
-| addSelected         |            | Promise<void> | Adds the selected causes and assumptions to the current reality tree.                        |
-| isError             |            | Boolean     | Returns true if the type of the element is 'error' or 'moderation_error'.                     |
-| renderJson          |            | TemplateResult | Renders the JSON content into the chat interface, including suggestions and actions.        |
+| handleJsonLoadingEnd| event: any | void        | Handles the end of JSON loading, parsing the JSON content and updating the causes suggestions.|
+| addSelected         |            | Promise<void> | Processes the selected causes and assumptions, updating the current reality tree accordingly. |
+| isError             |            | Boolean     | Checks if the current type is an error or moderation error.                                   |
+| renderJson          |            | TemplateResult | Overrides the `renderJson` method to render the UI components for causes suggestions.        |
 
-## Events (if any)
+## Events
 
-- **add-nodes**: Emitted when new nodes are added to the current reality tree.
-- **close-add-cause-dialog**: Emitted when the dialog for adding causes should be closed.
-- **validate-selected-causes**: Emitted when selected causes need to be validated.
-- **scroll-down-enabled**: Emitted to enable scrolling down in the chat interface.
+This class does not explicitly define custom events but utilizes inherited events from `PsAiChatElement` and may fire global events for communication with other components.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the LtpAiChatElement
-const ltpAiChatElement = document.createElement('ltp-ai-chat-element');
-ltpAiChatElement.parentNodeId = '123';
-ltpAiChatElement.crtId = '456';
-ltpAiChatElement.refinedCausesSuggestions = ['Cause 1', 'Cause 2'];
-ltpAiChatElement.lastChainCompletedAsValid = true;
-ltpAiChatElement.lastValidateCauses = ['Validated Cause 1'];
-ltpAiChatElement.isCreatingCauses = false;
-document.body.appendChild(ltpAiChatElement);
+import '@policysynth/webapp/ltp/chat/ltp-ai-chat-element.js';
+
+// Usage in HTML
+<ltp-ai-chat-element parentNodeId="123" crtId="456"></ltp-ai-chat-element>
+
+// Interaction with the element can be done through its public properties and methods.
 ```
 
-Note: The above example assumes that the custom element 'ltp-ai-chat-element' has been defined and registered in the custom elements registry.
+This example demonstrates how to use the `LtpAiChatElement` in an HTML document. The element is imported, and then used within the HTML with its attributes like `parentNodeId` and `crtId` set to interact with the LTP application's current reality tree.
