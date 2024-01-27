@@ -1,48 +1,54 @@
-# Documentation Generation Script
+# Policy Webapp API Documentation Generator
 
-This script is designed to automatically generate Markdown documentation for TypeScript files within a project. It leverages the OpenAI API to create detailed documentation based on the content of each TypeScript file. The script also manages documentation updates by comparing file checksums to detect changes.
+This script is designed to automate the generation of API documentation for TypeScript files within the Policy Webapp project. It leverages the OpenAI API to generate detailed documentation in Markdown format, ensuring that the documentation remains up-to-date with the source code.
 
 ## Properties
 
-No properties are explicitly defined in this script as it primarily consists of functions.
+This script does not define properties in the traditional sense, as it is a procedural script rather than a class-based module.
 
 ## Methods
 
-| Name                    | Parameters            | Return Type            | Description                                                                 |
-|-------------------------|-----------------------|------------------------|-----------------------------------------------------------------------------|
-| `buildDirectoryTree`    | dir: string, basePath: string = '', isSrc: boolean = false | any[] | Builds a hierarchical structure of the project's directories and Markdown files. |
-| `generateMarkdownFromTree` | tree: any, depth: number = 0 | string | Generates Markdown content representing the directory tree structure. |
-| `generateDocsReadme`    | None                  | void                   | Generates a README.md file in the docs directory with a structured list of all documentation files. |
-| `findTSFiles`           | dir: string, fileList: string[] = [] | string[] | Recursively searches for TypeScript files in the specified directory, excluding `node_modules` and declaration files. |
-| `generateChecksum`      | content: string       | string                 | Generates a SHA-256 checksum for the given file content. |
-| `generateDocumentation` | fileList: string[]    | Promise<void>          | Generates Markdown documentation for each TypeScript file in the provided list, if changes are detected. |
-| `main`                  | None                  | Promise<void>          | The main function that orchestrates the documentation generation process. |
+| Name                    | Parameters        | Return Type | Description                                                                 |
+|-------------------------|-------------------|-------------|-----------------------------------------------------------------------------|
+| `buildDirectoryTree`    | dir: string, basePath: string = '', isSrc: boolean = false | Array      | Recursively builds a tree structure of the directory contents, excluding certain files and directories. |
+| `generateMarkdownFromTree` | tree: any, depth: number = 0 | string      | Generates a Markdown representation of the directory tree for the README file. |
+| `generateDocsReadme`    | None              | void        | Generates the README.md file in the docs directory based on the directory tree. |
+| `findTSFiles`           | dir: string, fileList: string[] = [] | string[]    | Recursively finds all TypeScript files in a directory, excluding certain files. |
+| `generateChecksum`      | content: string   | string      | Generates a SHA256 checksum for a given string content. |
+| `generateDocumentation` | fileList: string[] | Promise<void> | Generates documentation for each TypeScript file in the provided list, if changes are detected. |
+| `main`                  | None              | Promise<void> | The main function that orchestrates the documentation generation process. |
 
 ## Events
 
-This script does not define or use any events.
+This script does not emit events as it operates in a procedural manner.
 
 ## Example
 
 ```typescript
-// Class example
+// Assuming the script is located at @policysynth/webapp/tools/generateDocumentation.js
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { OpenAI } from 'openai';
 
+// Configuration and initialization
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+const rootDir = process.cwd();
+const docsDir = path.join(rootDir, 'docs');
+const checksumDir = path.join(docsDir, 'cks');
 
-async function main(): Promise<void> {
-  // Example usage of functions within the script
-  const rootDir = process.cwd();
-  const tsFiles = findTSFiles(rootDir);
-  await generateDocumentation(tsFiles);
+// Ensure necessary directories exist
+if (!fs.existsSync(docsDir)) {
+  fs.mkdirSync(docsDir, { recursive: true });
+}
+if (!fs.existsSync(checksumDir)) {
+  fs.mkdirSync(checksumDir, { recursive: true });
 }
 
+// Main function call
 main().then(() => console.log('Documentation generation complete.'));
 ```
 
-This example demonstrates how to use the script's functions to generate documentation. It initializes the OpenAI client with an API key, finds TypeScript files within the project, and generates documentation for them.
+This example outlines the initialization and execution of the documentation generation script. It demonstrates how to configure the OpenAI client, ensure the existence of necessary directories, and invoke the main function to start the documentation generation process.

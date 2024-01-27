@@ -1,33 +1,39 @@
 # PsProblemStatement
 
-`PsProblemStatement` is a custom element that extends `PsStageBase`. It is responsible for rendering the problem statement section of the application. This component is part of the policy synthesis web application and is used to display the problem statement, search queries related to the problem statement, and the search results for solutions to the problem statement.
+`PsProblemStatement` is a custom element that extends `PsStageBase`. It is responsible for rendering the problem statement section of a web application. This component is part of the policy synthesis web application and is designed to display the problem statement, search queries related to the problem statement, and the search results for solutions to the problem statement.
 
 ## Properties
 
-No public properties are defined in this class beyond those inherited from its parent class, `PsStageBase`.
+No properties are explicitly defined in this class. However, it inherits properties from `PsStageBase`.
 
 ## Methods
 
 | Name                  | Parameters                                  | Return Type | Description                                                                 |
 |-----------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| connectedCallback     | None                                        | void        | Called when the element is added to the document's DOM.                    |
-| updated               | changedProperties: Map<string \| number \| symbol, unknown> | void        | Called after the element’s properties have been updated.                   |
+| connectedCallback     | None                                        | void        | Called when the element is added to the document's DOM.                     |
+| updated               | changedProperties: Map<string \| number \| symbol, unknown> | void        | Called after the element’s properties have been updated.                    |
 | disconnectedCallback  | None                                        | void        | Called when the element is removed from the document's DOM.                 |
-| render                | None                                        | TemplateResult | Responsible for rendering the element's HTML structure.                     |
+| styles                | None                                        | CSSResult[] | Static getter for the component's styles.                                   |
+| render                | None                                        | TemplateResult | Responsible for rendering the element's HTML structure. |
 
 ## Events
 
-No custom events are emitted by this class.
+No custom events are defined in this class.
 
 ## Example
 
 ```typescript
 import '@policysynth/webapp/policies/ps-problem-statement.js';
 
-// Usage in HTML
-<ps-problem-statement></ps-problem-statement>
-
-// Assuming you have defined the necessary properties and methods in your application to support this element.
+// Usage in a LitElement
+class ExampleElement extends LitElement {
+  render() {
+    return html`
+      <ps-problem-statement></ps-problem-statement>
+    `;
+  }
+}
+customElements.define('example-element', ExampleElement);
 ```
 
-This example demonstrates how to import and use the `PsProblemStatement` custom element within a web application. It assumes that the necessary infrastructure and supporting methods (such as `renderProblemStatement`, `renderSearchQueries`, and `renderSearchResults`) are implemented elsewhere in your application, as these are referenced within the `render` method of `PsProblemStatement`.
+This example demonstrates how to use the `ps-problem-statement` custom element within another LitElement-based component. It shows the basic setup required to incorporate the problem statement section into a web application.

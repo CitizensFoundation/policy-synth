@@ -36,16 +36,16 @@ Brief description of the class.
 ${type === "customElement" ? `
 \`\`\`typescript
 // Custom element example
-{ BaseProblemSolvingAgent } from '@policysynth/webapp/ps-app.js';
+import '@policysynth/webapp/base/chatBot/ps-chat-assistant.js';
 
-...Lit Element Example...
+...Lit v2 Example with @customElement @property (at least one) and render() with html showing the component...
 \`\`\`
 ` : ``}
 \`\`\`typescript
 // Class example
 { PsAppUser } from '@policysynth/webapp/base/PsAppUser.js';
 
-...Class Example...
+...Class Extend Example...
 \`\`\`
 
 `
