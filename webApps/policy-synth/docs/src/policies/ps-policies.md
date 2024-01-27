@@ -1,63 +1,64 @@
 # PsPolicies
 
-`PsPolicies` is a custom element that extends `PsStageBase` and is responsible for displaying and managing policies within a problem-solving application. It allows users to view policies, filter them by generation, search, and navigate through policy details.
+`PsPolicies` is a custom element that extends `PsStageBase` to manage and display policies within a policy synthesis web application. It provides functionalities such as displaying a list of policies, filtering policies based on search criteria, handling policy group interactions, and navigating through policies.
 
 ## Properties
 
 | Name                        | Type    | Description                                                                 |
 |-----------------------------|---------|-----------------------------------------------------------------------------|
-| isDropdownVisible           | Boolean | Indicates if the dropdown for selecting policy generations is visible.      |
-| searchText                  | String  | The current text used for filtering policies.                               |
+| isDropdownVisible           | Boolean | Indicates if the dropdown for selecting policy generations is visible.     |
+| searchText                  | String  | The text used for filtering policies based on their titles and descriptions.|
 | activeFilteredPolicyIndex   | Number  | The index of the currently active policy after filtering.                   |
-| isSearchVisible             | Boolean | Indicates if the search input is visible.                                   |
+| isSearchVisible             | Boolean | Indicates if the search input field is visible.                             |
 | hideExtraPolicyInformation  | Boolean | Determines whether to hide additional policy information.                   |
-| groupListScrollPositionY    | Number  | The Y scroll position of the group list.                                    |
-| lastKeys                    | any[]   | An array storing the last pressed keys to detect certain key combinations.  |
-| findBarProbablyOpen         | Boolean | A flag indicating if the find bar is likely open based on key presses.      |
-| touchStartX                 | Number  | The X position where a touch event started.                                 |
-| minSwipeDistance            | Number  | The minimum distance to consider a touch movement a swipe.                  |
-| policyListScrollPositionX   | Number  | The X scroll position of the policy list.                                   |
-| policyListScrollPositionY   | Number  | The Y scroll position of the policy list.                                   |
+| groupListScrollPositionY    | Number  | The vertical scroll position of the group list.                             |
+| lastKeys                    | any[]   | Stores the last pressed keys to detect specific key combinations.           |
+| findBarProbablyOpen         | Boolean | Indicates if the find bar is likely open based on key presses.              |
+| touchStartX                 | Number  | The starting X position of a touch event for swipe detection.               |
+| minSwipeDistance            | Number  | The minimum distance to consider a touch movement as a swipe.               |
+| policyListScrollPositionX   | Number  | The horizontal scroll position of the policy list.                          |
+| policyListScrollPositionY   | Number  | The vertical scroll position of the policy list.                            |
 
 ## Methods
 
-| Name                    | Parameters        | Return Type | Description                                                                                   |
-|-------------------------|-------------------|-------------|-----------------------------------------------------------------------------------------------|
-| updateRoutes            | None              | void        | Updates the application's routing based on the current policy, sub-problem, and population.   |
-| setSubProblem           | index: number     | void        | Sets the active sub-problem to the one at the specified index.                                |
-| handleGroupButtonClick  | groupIndex: number| Promise<void>| Handles the logic when a group button is clicked, toggling the filter for that group.         |
-| reset                   | None              | void        | Resets the search text, visibility flags, and active indices.                                 |
-| connectedCallback       | None              | void        | Lifecycle callback that runs when the element is added to the DOM.                            |
-| disconnectedCallback    | None              | void        | Lifecycle callback that runs when the element is removed from the DOM.                        |
-| updateSwipeIndex        | direction: string | void        | Updates the index of the active policy or sub-problem based on swipe direction.               |
-| handleKeyDown           | e: KeyboardEvent  | void        | Handles key down events for navigation and interaction within the component.                  |
-| exitPolicyScreen        | None              | void        | Handles the logic to exit the policy detail screen.                                           |
-| handleTouchStart        | e: TouchEvent     | void        | Records the start position of a touch event.                                                  |
-| handleTouchEnd          | e: TouchEvent     | void        | Handles the end of a touch event to determine swipe actions.                                  |
-| updated                 | changedProperties: Map<string \| number \| symbol, unknown> | void | Lifecycle callback that runs after the element's properties have changed.                    |
-| toggleSearchVisibility  | None              | void        | Toggles the visibility of the search input.                                                   |
-| handleSearchBlur        | None              | void        | Handles the blur event on the search field, potentially hiding it if the search text is empty.|
-| handleDropdownChange    | e: Event          | void        | Handles changes to the dropdown selection for policy generations.                             |
-| toggleDropdownVisibility| None              | void        | Toggles the visibility of the dropdown for selecting policy generations.                      |
-| resetDropdown           | None              | void        | Resets the dropdown to its default state.                                                     |
-| camelCaseToRegular      | text: string      | string      | Converts a camelCase string to regular sentence case.                                         |
-| renderRatings           | policy: PSPolicy  | TemplateResult | Renders the ratings for a given policy.                                                      |
-| renderPolicyNavigationButtons | policyIndex: number, policies: PSPolicy[] | TemplateResult | Renders navigation buttons for policy detail view.                                           |
-| getPolicyImgHeight      | None              | number      | Returns the height for policy images based on the current screen width.                       |
-| getPolicyImgWidth       | None              | number      | Returns the width for policy images based on the current screen width.                        |
-| renderPolicyImage       | policy: PSPolicy  | TemplateResult | Renders the image for a given policy.                                                        |
-| renderPolicyScreen      | policyIndex: number | TemplateResult | Renders the detail view for a given policy.                                                  |
+| Name                    | Parameters                | Return Type | Description                                                                 |
+|-------------------------|---------------------------|-------------|-----------------------------------------------------------------------------|
+| updateRoutes            | None                      | void        | Updates the application route based on the current policy navigation state. |
+| setSubProblem           | index: number             | void        | Sets the active sub-problem to the specified index.                         |
+| handleGroupButtonClick  | groupIndex: number        | Promise<void>| Handles click events on policy group buttons.                                |
+| reset                   | None                      | void        | Resets the component to its initial state.                                  |
+| connectedCallback       | None                      | void        | Lifecycle callback that runs when the element is added to the document.    |
+| disconnectedCallback    | None                      | void        | Lifecycle callback that runs when the element is removed from the document. |
+| updateSwipeIndex        | direction: string         | void        | Updates the index of the active policy based on swipe direction.            |
+| handleKeyDown           | e: KeyboardEvent          | void        | Handles key down events for navigation and interaction.                     |
+| exitPolicyScreen        | None                      | void        | Handles the exit action from the policy detail screen.                      |
+| handleTouchStart        | e: TouchEvent             | void        | Handles the start of a touch event for swipe detection.                     |
+| handleTouchEnd          | e: TouchEvent             | void        | Handles the end of a touch event for swipe detection.                       |
+| updated                 | changedProperties: Map<string \| number \| symbol, unknown> | void | Lifecycle callback that runs after the element’s properties have changed.  |
+| toggleSearchVisibility  | None                      | void        | Toggles the visibility of the search input field.                           |
+| handleSearchBlur        | None                      | void        | Handles the blur event of the search input field.                           |
+| handleDropdownChange    | e: Event                  | void        | Handles changes in the dropdown for selecting policy generations.           |
+| toggleDropdownVisibility| None                      | void        | Toggles the visibility of the dropdown for selecting policy generations.    |
+| resetDropdown           | None                      | void        | Resets the dropdown to its initial state.                                   |
+| camelCaseToRegular      | text: string              | string      | Converts camelCase text to regular sentence case.                           |
+| renderRatings           | policy: PSPolicy          | TemplateResult | Renders the ratings section for a policy.                                   |
+| renderPolicyNavigationButtons | policyIndex: number, policies: PSPolicy[] | TemplateResult | Renders navigation buttons for policy detail view.                          |
+| getPolicyImgHeight      | None                      | number      | Returns the height for policy images based on the screen width.             |
+| getPolicyImgWidth       | None                      | number      | Returns the width for policy images based on the screen width.              |
+| renderPolicyImage       | policy: PSPolicy          | TemplateResult | Renders the image for a policy.                                             |
+| renderPolicyScreen      | policyIndex: number       | TemplateResult | Renders the policy detail screen for the specified policy index.            |
 
 ## Events
 
-- **update-route**: Emitted when the route needs to be updated based on the active indices.
-- **yp-theme-color**: Emitted when the theme color needs to be updated based on the active sub-problem.
+This component fires custom events such as `update-route`, `yp-theme-color`, and various activity tracking events using `window.psAppGlobals.activity`.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the PsPolicies component
+import '@policysynth/webapp/policies/ps-policies.js';
+
+// Example of using the PsPolicies element in HTML
 <ps-policies></ps-policies>
 ```
 
-Note: The `PSPolicy` and `IEngineSubProblem` types are not defined in the provided context. They are assumed to be part of the application's type definitions.
+This example demonstrates how to import and use the `PsPolicies` custom element within a web application.

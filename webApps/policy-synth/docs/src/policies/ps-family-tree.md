@@ -1,42 +1,43 @@
 # PsFamilyTree
 
-The `PsFamilyTree` class is a custom web component that extends the `YpBaseElement` class. It is designed to visualize the family tree of solutions within an evolutionary algorithm context. The component displays the relationships between solutions, including parent-child relationships, mutation rates, and seed URLs.
+`PsFamilyTree` is a custom web component that extends `YpBaseElement` to display a family tree visualization for solutions within an evolutionary algorithm context. It visualizes the relationships between solutions, including parentage and mutation rates, and provides an interactive way to explore the evolution of solutions over generations.
 
 ## Properties
 
 | Name             | Type                             | Description                                                                 |
 |------------------|----------------------------------|-----------------------------------------------------------------------------|
-| memory           | IEngineInnovationMemoryData      | The memory data of the engine innovation, containing the family tree data.  |
-| subProblemIndex  | number                           | The index of the sub-problem within the memory data to visualize.           |
-| solution         | IEngineSolution                  | The solution data to be visualized as the root of the family tree.          |
+| memory           | IEngineInnovationMemoryData      | The memory object containing data about the evolutionary process.          |
+| subProblemIndex  | number                           | The index of the sub-problem within the evolutionary process being viewed. |
+| solution         | IEngineSolution                  | The current solution for which the family tree is being rendered.          |
 
 ## Methods
 
-| Name                  | Parameters        | Return Type | Description                                                                                   |
-|-----------------------|-------------------|-------------|-----------------------------------------------------------------------------------------------|
-| connectedCallback     |                   | void        | Lifecycle method that runs when the component is added to the DOM.                            |
-| disconnectedCallback  |                   | void        | Lifecycle method that runs when the component is removed from the DOM.                         |
-| getParentSolution     | parent: string    | IEngineSolution | Retrieves the parent solution based on the provided identifier.                               |
-| renderFamilyTree      | currentSolution: IEngineSolution, first: boolean, isMutatedFrom: boolean | TemplateResult | Renders the family tree structure for the given solution, marking the first and mutated solutions. |
-| render                |                   | TemplateResult | Renders the family tree component with the title and the root solution's family tree.         |
+| Name              | Parameters                  | Return Type      | Description                                                                                   |
+|-------------------|-----------------------------|------------------|-----------------------------------------------------------------------------------------------|
+| connectedCallback |                             | void             | Lifecycle method that runs when the component is added to the document's DOM.                |
+| disconnectedCallback |                         | void             | Lifecycle method that runs when the component is removed from the document's DOM.            |
+| getParentSolution | parent: string              | IEngineSolution  | Retrieves the parent solution based on a given parent identifier.                            |
+| renderFamilyTree  | currentSolution: IEngineSolution, first: boolean = false, isMutatedFrom: boolean = false | TemplateResult | Renders the family tree structure for a given solution.                                       |
+| render            |                             | TemplateResult   | Renders the component's HTML template.                                                       |
 
 ## Events
 
-- No custom events are emitted by this component.
+None.
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of the PsFamilyTree web component
-import { PsFamilyTree } from './path-to-ps-family-tree';
+import '@policysynth/webapp/policies/ps-family-tree.js';
 
-// Assuming 'memoryData' is an instance of IEngineInnovationMemoryData and 'solutionData' is an instance of IEngineSolution
-const familyTreeElement = document.createElement('ps-family-tree') as PsFamilyTree;
-familyTreeElement.memory = memoryData;
-familyTreeElement.subProblemIndex = 0; // Index of the sub-problem to visualize
-familyTreeElement.solution = solutionData; // Root solution to start the family tree from
+// Assuming you have an instance of PsFamilyTree in your HTML
+const psFamilyTreeElement = document.querySelector('ps-family-tree');
 
-document.body.appendChild(familyTreeElement);
+// Setting the memory, subProblemIndex, and solution properties
+psFamilyTreeElement.memory = yourMemoryData;
+psFamilyTreeElement.subProblemIndex = yourSubProblemIndex;
+psFamilyTreeElement.solution = yourSolutionData;
+
+// The component will automatically render the family tree based on the provided data.
 ```
 
-Note: The `IEngineInnovationMemoryData` and `IEngineSolution` types should be defined elsewhere in the codebase, as they are not included within the provided snippet.
+This example demonstrates how to use the `PsFamilyTree` component within a web application. It involves importing the component, selecting it from the DOM, and setting its properties with relevant data from the evolutionary algorithm's process. The component then visualizes the family tree for the specified solution.

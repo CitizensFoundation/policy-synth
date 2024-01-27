@@ -44,7 +44,6 @@ const repackPackage = async () => {
 
     // Move files from 'ts-out' and 'src' directories to 'new-folder'
     moveAndRemove(path.join(tmpDir, 'package', 'ts-out'), newDir);
-    moveAndRemove(path.join(tmpDir, 'package', 'src'), newDir);
 
     // Create a new tarball from 'new-folder'
     const newPackageName = path.join(tmpDir, `${safePackageName}-${packageJson.version}.tgz`);
