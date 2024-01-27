@@ -9,7 +9,8 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "ts-out/**/*"
+    "ts-out/**/*",
+    "src/api.d.ts"
   ],
   "dependencies": {
     "@policysynth/agents": "^1.1.0",
