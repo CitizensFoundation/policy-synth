@@ -1,1 +1,1 @@
-{"version":3,"file":"generateDocumentation.d.ts","sourceRoot":"","sources":["../../tools/generateDocumentation.ts"],"names":[],"mappings":""}
+{"version":3,"file":"generateDocumentation.d.ts","sourceRoot":"","sources":["../../src/tools/generateDocumentation.ts"],"names":[],"mappings":""}
