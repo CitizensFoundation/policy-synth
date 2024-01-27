@@ -4,7 +4,7 @@ import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js
 export declare class RateWebEvidenceProcessor extends BaseProlemSolvingAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
     simplifyEvidenceType(evidenceType: string): string;
-    renderProblemPrompt(subProblemIndex: number | null, policy: PSPolicy, rawWebData: PSEvidenceRawWebPageData, evidenceToRank: string[], evidenceType: keyof PSEvidenceRawWebPageData): Promise<(SystemMessage | HumanMessage)[]>;
+    renderProblemPrompt(subProblemIndex: number | null, policy: PSPolicy, rawWebData: PSEvidenceRawWebPageData, evidenceToRank: string[], evidenceType: keyof PSEvidenceRawWebPageData): Promise<(HumanMessage | SystemMessage)[]>;
     rateWebEvidence(policy: PSPolicy, subProblemIndex: number): Promise<void>;
     process(): Promise<void>;
 }

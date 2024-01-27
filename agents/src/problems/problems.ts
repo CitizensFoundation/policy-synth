@@ -33,7 +33,7 @@ export class AgentProblems extends BaseAgentProcessor {
       communityId: jobData.communityId,
       domainId: jobData.domainId,
       currentStage: "create-sub-problems",
-      stages: PolicySynthAgentBase.emptyStages,
+      stages: PolicySynthAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},

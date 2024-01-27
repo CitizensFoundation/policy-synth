@@ -13,7 +13,7 @@ export class PsBaseChatBot {
   clientId: string;
   clientSocket: WebSocket;
   openaiClient: OpenAI;
-  memory!: IEngineInnovationMemoryData;
+  memory!: PsChatBotMemoryData;
   currentAgent: PolicySynthAgentBase | undefined;
   broadcastingLiveCosts = false;
   liveCostsBroadcastTimeout: NodeJS.Timeout | undefined = undefined;
@@ -150,6 +150,17 @@ export class PsBaseChatBot {
     console.log("Stopped broadcasting live costs");
   }
 
+  emptyChatBotStagesData() {
+    return {
+      "chatbot-conversation": {
+        tokensInCost: 0,
+        tokensOutCost: 0,
+        tokensIn: 0,
+        tokensOut: 0,
+      } as IEngineInnovationStagesData
+    } as  Record<PSChatBotStageTypes, IEngineInnovationStagesData>;
+  }
+
   getEmptyMemory() {
     return {
       redisKey: `${this.redisMemoryKey}-${uuidv4()}`,
@@ -158,7 +169,7 @@ export class PsBaseChatBot {
       domainId: 1,
       stage: "create-sub-problems",
       currentStage: "create-sub-problems",
-      stages: this.getEmptyStages(),
+      stages: this.emptyChatBotStagesData(),
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},
@@ -181,7 +192,7 @@ export class PsBaseChatBot {
       },
       subProblems: [],
       currentStageData: undefined,
-    } as IEngineInnovationMemoryData;
+    } as PsChatBotMemoryData;
   }
 
   async streamWebSocketResponses(
@@ -235,31 +246,31 @@ export class PsBaseChatBot {
       if (this.currentAgent && this.currentAgent.memory) {
         if (type == "in") {
           if (
-            this.memory.stages["analyse-external-solutions"].tokensInCost ===
+            this.memory.stages["chatbot-conversation"].tokensInCost ===
               undefined ||
-            this.memory.stages["analyse-external-solutions"].tokensIn ===
+            this.memory.stages["chatbot-conversation"].tokensIn ===
               undefined
           ) {
-            this.memory.stages["analyse-external-solutions"].tokensInCost = 0;
-            this.memory.stages["analyse-external-solutions"].tokensIn = 0;
+            this.memory.stages["chatbot-conversation"].tokensInCost = 0;
+            this.memory.stages["chatbot-conversation"].tokensIn = 0;
           }
-          this.memory.stages["analyse-external-solutions"].tokensIn +=
+          this.memory.stages["chatbot-conversation"].tokensIn +=
             estimateTokens;
-          this.memory.stages["analyse-external-solutions"].tokensInCost +=
+          this.memory.stages["chatbot-conversation"].tokensInCost +=
             this.getTokenCosts(estimateTokens, type);
         } else {
           if (
-            this.memory.stages["analyse-external-solutions"].tokensOutCost ===
+            this.memory.stages["chatbot-conversation"].tokensOutCost ===
               undefined ||
-            this.memory.stages["analyse-external-solutions"].tokensOut ===
+            this.memory.stages["chatbot-conversation"].tokensOut ===
               undefined
           ) {
-            this.memory.stages["analyse-external-solutions"].tokensOutCost = 0;
-            this.memory.stages["analyse-external-solutions"].tokensOut = 0;
+            this.memory.stages["chatbot-conversation"].tokensOutCost = 0;
+            this.memory.stages["chatbot-conversation"].tokensOut = 0;
           }
-          this.memory.stages["analyse-external-solutions"].tokensOut +=
+          this.memory.stages["chatbot-conversation"].tokensOut +=
             estimateTokens;
-          this.memory.stages["analyse-external-solutions"].tokensOutCost +=
+          this.memory.stages["chatbot-conversation"].tokensOutCost +=
             this.getTokenCosts(estimateTokens, type);
         }
       } else {
