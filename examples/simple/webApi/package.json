@@ -10,7 +10,7 @@
   "main": "ts-out/server.js",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.0.34"
+    "@policysynth/api": "^1.1.0"
   },
   "scripts": {
     "start": "nodemon -e ts ts-out/server.js",
