@@ -1,103 +1,121 @@
 # IEngineConstants
 
-The `IEngineConstants` class provides a collection of constants and static methods related to the configuration of AI models, pricing, and operational parameters for an AI engine.
+This class encapsulates constants and configurations used across various AI models for engine operations. It includes settings for AI model parameters such as temperature, token limits, cost per token, and rate limits for transactions and requests per minute. Additionally, it contains utility methods for simplifying evidence and root cause types.
 
 ## Properties
 
-| Name                                             | Type                  | Description                                                                 |
-|--------------------------------------------------|-----------------------|-----------------------------------------------------------------------------|
-| createSubProblemsModel                           | IEngineBaseAIModelConstants | Configuration constants for the sub-problems model.                         |
-| policiesSeedModel                                | IEngineBaseAIModelConstants | Configuration constants for the policies seed model.                        |
-| analyseExternalSolutionsModel                    | IEngineBaseAIModelConstants | Configuration constants for the external solutions analysis model.          |
-| createEntitiesModel                              | IEngineBaseAIModelConstants | Configuration constants for the entities creation model.                    |
-| topicMapSolutionsModel                           | object                | Contains inTokenCostsUSD for the topic map solutions model.                 |
-| createSolutionImagesModel                        | IEngineBaseAIModelConstants | Configuration constants for the solution images creation model.             |
-| createSearchQueriesModel                         | IEngineBaseAIModelConstants | Configuration constants for the search queries creation model.              |
-| createEvidenceSearchQueriesModel                 | IEngineBaseAIModelConstants | Configuration constants for the evidence search queries creation model.     |
-| createRootCauseSearchQueriesModel                | IEngineBaseAIModelConstants | Configuration constants for the root cause search queries creation model.   |
-| searchQueryRankingsModel                         | IEngineBaseAIModelConstants | Configuration constants for the search query rankings model.                |
-| searchResultsRankingsModel                       | IEngineBaseAIModelConstants | Configuration constants for the search results rankings model.              |
-| subProblemsRankingsModel                         | IEngineBaseAIModelConstants | Configuration constants for the sub-problems rankings model.                |
-| entitiesRankingsModel                            | IEngineBaseAIModelConstants | Configuration constants for the entities rankings model.                    |
-| solutionsRankingsModel                           | IEngineBaseAIModelConstants | Configuration constants for the solutions rankings model.                   |
-| prosConsRankingsModel                            | IEngineBaseAIModelConstants | Configuration constants for the pros and cons rankings model.               |
-| getPageAnalysisModel                             | IEngineBaseAIModelConstants | Configuration constants for the page analysis model.                        |
-| getSolutionsPagesAnalysisModel                   | IEngineBaseAIModelConstants | Configuration constants for the solutions pages analysis model.             |
-| rankWebSolutionsModel                            | IEngineBaseAIModelConstants | Configuration constants for the web solutions ranking model.                |
-| reduceSubProblemsModel                           | IEngineBaseAIModelConstants | Configuration constants for the sub-problems reduction model.               |
-| rateWebEvidenceModel                             | IEngineBaseAIModelConstants | Configuration constants for the web evidence rating model.                  |
-| rateWebRootCausesModel                           | IEngineBaseAIModelConstants | Configuration constants for the web root causes rating model.               |
-| rankWebEvidenceModel                             | IEngineBaseAIModelConstants | Configuration constants for the web evidence ranking model.                 |
-| rankWebRootCausesModel                           | IEngineBaseAIModelConstants | Configuration constants for the web root causes ranking model.              |
-| getRefinedEvidenceModel                          | IEngineBaseAIModelConstants | Configuration constants for the refined evidence model.                     |
-| getRefinedRootCausesModel                        | IEngineBaseAIModelConstants | Configuration constants for the refined root causes model.                  |
-| reapSolutionsModel                               | IEngineBaseAIModelConstants | Configuration constants for the solutions reaping model.                    |
-| groupSolutionsModel                              | IEngineBaseAIModelConstants | Configuration constants for the solutions grouping model.                   |
-| rateSolutionsModel                               | IEngineBaseAIModelConstants | Configuration constants for the solutions rating model.                     |
-| createSolutionsModel                             | IEngineBaseAIModelConstants | Configuration constants for the solutions creation model.                   |
-| evolveSolutionsModel                             | IEngineBaseAIModelConstants | Configuration constants for the solutions evolution model.                  |
-| createProsConsModel                              | IEngineBaseAIModelConstants | Configuration constants for the pros and cons creation model.               |
-| evolutionMutateModel                             | IEngineBaseAIModelConstants | Configuration constants for the evolution mutation model.                   |
-| evolutionRecombineModel                          | IEngineBaseAIModelConstants | Configuration constants for the evolution recombination model.              |
-| validationModel                                  | IEngineBaseAIModelConstants | Configuration constants for the validation model.                           |
-| getPageCacheExpiration                           | number                | Cache expiration time for page analysis in seconds.                         |
-| maxSubProblems                                   | number                | Maximum number of sub-problems allowed.                                     |
-| maxNumberGeneratedOfEntities                     | number                | Maximum number of entities that can be generated.                           |
-| maxStabilityRetryCount                           | number                | Maximum number of stability retries.                                        |
-| mainLLMmaxRetryCount                             | number                | Maximum number of retries for the main LLM.                                 |
-| limitedLLMmaxRetryCount                          | number                | Maximum number of retries for the limited LLM.                              |
-| rankingLLMmaxRetryCount                          | number                | Maximum number of retries for the ranking LLM.                              |
-| maxTopEntitiesToSearch                           | number                | Maximum number of top entities to search.                                   |
-| maxTopEntitiesToRender                           | number                | Maximum number of top entities to render.                                   |
-| maxTopQueriesToSearchPerType                     | number                | Maximum number of top queries to search per type.                           |
-| maxTopEvidenceQueriesToSearchPerType             | number                | Maximum number of top evidence queries to search per type.                  |
-| maxTopRootCauseQueriesToSearchPerType            | number                | Maximum number of top root cause queries to search per type.                |
-| maxRootCausePercentOfSearchResultWebPagesToGet   | number                | Maximum percentage of search result web pages to get for root causes.       |
-| maxRootCausesToUseForRatingRootCauses            | number                | Maximum number of root causes to use for rating.                            |
-| topWebPagesToGetForRefineRootCausesScan          | number                | Number of top web pages to get for refining root causes scan.               |
-| mainSearchRetryCount                             | number                | Maximum number of retries for the main search.                              |
-| maxDalleRetryCount                               | number                | Maximum number of retries for DALL-E.                                       |
-| maxTopWebPagesToGet                              | number                | Maximum number of top web pages to get.                                     |
-| maxBingSearchResults                             | number                | Maximum number of Bing search results.                                      |
-| maxTopProsConsUsedForRating                      | number                | Maximum number of top pros and cons used for rating.                        |
-| maxNumberGeneratedProsConsForSolution            | number                | Maximum number of generated pros and cons for a solution.                   |
-| minSleepBeforeBrowserRequest                     | number                | Minimum sleep time before a browser request in milliseconds.                |
-| maxAdditionalRandomSleepBeforeBrowserRequest     | number                | Maximum additional random sleep time before a browser request in milliseconds. |
-| numberOfSearchTypes                              | number                | Number of search types.                                                     |
-| webPageNavTimeout                                | number                | Web page navigation timeout in milliseconds.                                |
-| subProblemsRankingMinNumberOfMatches             | number                | Minimum number of matches for sub-problems ranking.                         |
-| currentUserAgent                                 | string                | Current user agent string.                                                  |
-| topItemsToKeepForTopicClusterPruning             | number                | Number of top items to keep for topic cluster pruning.                      |
-| chances                                          | object                | Probabilities and chances for various operations in solution creation.      |
-| maxTopSearchQueriesForSolutionCreation           | number                | Maximum number of top search queries for solution creation.                 |
-| maxPercentOfSolutionsWebPagesToGet               | number                | Maximum percentage of solutions web pages to get.                           |
-| limits                                           | object                | Limits for various operations in the AI engine.                             |
-| enable                                           | object                | Flags to enable or disable certain refinements.                             |
-| evolution                                        | object                | Parameters for the evolution process.                                       |
-| maxPercentOfEloMatched                           | number                | Maximum percentage of ELO matched.                                          |
-| minimumNumberOfPairwiseVotesForPopulation        | number                | Minimum number of pairwise votes for population.                            |
-| maxNumberOfPairwiseRankingPrompts                | number                | Maximum number of pairwise ranking prompts.                                 |
-| maxTopSolutionsToCreatePolicies                  | number                | Maximum number of top solutions to create policies.                         |
-| maxTopPoliciesToProcess                          | number                | Maximum number of top policies to process.                                  |
-| maxEvidenceToUseForRatingEvidence                | number                | Maximum evidence to use for rating evidence.                                |
-| policyEvidenceFieldTypes                         | string[]              | Array of policy evidence field types.                                       |
-| rootCauseFieldTypes                              | string[]              | Array of root cause field types.                                            |
+| Name                                           | Type    | Description |
+|------------------------------------------------|---------|-------------|
+| gpt4InTokenPrice                               | number  | The cost per input token for GPT-4. |
+| gpt4OutTokenPrice                              | number  | The cost per output token for GPT-4. |
+| gpt35_16kInTokenPrice                          | number  | The cost per input token for GPT-3.5 on 16k models. |
+| gpt35_16kOutTokenPrice                         | number  | The cost per output token for GPT-3.5 on 16k models. |
+| gpt4TotalTokenLimit                            | number  | The total token limit for GPT-4 models. |
+| adaInTokenPrice                                | number  | The cost per input token for Ada models. |
+| gpt35_16k_TPM                                  | number  | Transactions per minute limit for GPT-3.5 on 16k models. |
+| gpt35_16k_RPM                                  | number  | Requests per minute limit for GPT-3.5 on 16k models. |
+| gpt35_TPM                                      | number  | Transactions per minute limit for GPT-3.5 models. |
+| gpt35_RPM                                      | number  | Requests per minute limit for GPT-3.5 models. |
+| gpt4_TPM                                       | number  | Transactions per minute limit for GPT-4 models. |
+| gpt4_RPM                                       | number  | Requests per minute limit for GPT-4 models. |
+| createSubProblemsModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in creating sub-problems. |
+| policiesSeedModel                              | IEngineBaseAIModelConstants | Configuration for the AI model used in seeding policies. |
+| analyseExternalSolutionsModel                  | IEngineBaseAIModelConstants | Configuration for the AI model used in analyzing external solutions. |
+| createEntitiesModel                            | IEngineBaseAIModelConstants | Configuration for the AI model used in creating entities. |
+| topicMapSolutionsModel                         | object  | Configuration related to topic mapping solutions. |
+| createSolutionImagesModel                      | IEngineBaseAIModelConstants | Configuration for the AI model used in creating solution images. |
+| createSearchQueriesModel                       | IEngineBaseAIModelConstants | Configuration for the AI model used in creating search queries. |
+| createEvidenceSearchQueriesModel               | IEngineBaseAIModelConstants | Configuration for the AI model used in creating evidence search queries. |
+| createRootCauseSearchQueriesModel              | IEngineBaseAIModelConstants | Configuration for the AI model used in creating root cause search queries. |
+| searchQueryRankingsModel                       | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking search queries. |
+| searchResultsRankingsModel                     | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking search results. |
+| subProblemsRankingsModel                       | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking sub-problems. |
+| entitiesRankingsModel                          | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking entities. |
+| solutionsRankingsModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking solutions. |
+| prosConsRankingsModel                          | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking pros and cons. |
+| getPageAnalysisModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in page analysis. |
+| getSolutionsPagesAnalysisModel                 | IEngineBaseAIModelConstants | Configuration for the AI model used in analyzing solutions pages. |
+| rankWebSolutionsModel                          | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking web solutions. |
+| reduceSubProblemsModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in reducing sub-problems. |
+| rateWebEvidenceModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in rating web evidence. |
+| rateWebRootCausesModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in rating web root causes. |
+| rankWebEvidenceModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking web evidence. |
+| rankWebRootCausesModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking web root causes. |
+| getRefinedEvidenceModel                        | IEngineBaseAIModelConstants | Configuration for the AI model used in refining evidence. |
+| getRefinedRootCausesModel                      | IEngineBaseAIModelConstants | Configuration for the AI model used in refining root causes. |
+| reapSolutionsModel                             | IEngineBaseAIModelConstants | Configuration for the AI model used in reaping solutions. |
+| groupSolutionsModel                            | IEngineBaseAIModelConstants | Configuration for the AI model used in grouping solutions. |
+| rateSolutionsModel                             | IEngineBaseAIModelConstants | Configuration for the AI model used in rating solutions. |
+| createSolutionsModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in creating solutions. |
+| evolveSolutionsModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in evolving solutions. |
+| createProsConsModel                            | IEngineBaseAIModelConstants | Configuration for the AI model used in creating pros and cons. |
+| evolutionMutateModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in mutation during evolution. |
+| evolutionRecombineModel                        | IEngineBaseAIModelConstants | Configuration for the AI model used in recombination during evolution. |
+| validationModel                                | IEngineBaseAIModelConstants | Configuration for the AI model used in validation. |
+| getPageCacheExpiration                         | number  | The expiration time for page cache in seconds. |
+| maxSubProblems                                 | number  | The maximum number of sub-problems. |
+| maxNumberGeneratedOfEntities                   | number  | The maximum number of entities generated. |
+| maxStabilityRetryCount                         | number  | The maximum number of retries for stability. |
+| mainLLMmaxRetryCount                           | number  | The maximum number of retries for the main LLM. |
+| limitedLLMmaxRetryCount                        | number  | The maximum number of retries for the limited LLM. |
+| rankingLLMmaxRetryCount                        | number  | The maximum number of retries for the ranking LLM. |
+| maxTopEntitiesToSearch                         | number  | The maximum number of top entities to search. |
+| maxTopEntitiesToRender                         | number  | The maximum number of top entities to render. |
+| maxTopQueriesToSearchPerType                   | number  | The maximum number of top queries to search per type. |
+| maxTopEvidenceQueriesToSearchPerType           | number  | The maximum number of top evidence queries to search per type. |
+| maxTopRootCauseQueriesToSearchPerType          | number  | The maximum number of top root cause queries to search per type. |
+| maxRootCausePercentOfSearchResultWebPagesToGet | number  | The maximum percentage of search result web pages to get for root causes. |
+| maxRootCausesToUseForRatingRootCauses          | number  | The maximum number of root causes to use for rating. |
+| topWebPagesToGetForRefineRootCausesScan        | number  | The number of top web pages to get for refining root causes scan. |
+| mainSearchRetryCount                           | number  | The maximum number of retries for the main search. |
+| maxDalleRetryCount                             | number  | The maximum number of retries for DALL·E. |
+| maxTopWebPagesToGet                            | number  | The maximum number of top web pages to get. |
+| maxBingSearchResults                           | number  | The maximum number of Bing search results. |
+| maxTopProsConsUsedForRating                    | number  | The maximum number of top pros and cons used for rating. |
+| maxNumberGeneratedProsConsForSolution          | number  | The maximum number of generated pros and cons for a solution. |
+| minSleepBeforeBrowserRequest                   | number  | The minimum sleep time before a browser request in milliseconds. |
+| maxAdditionalRandomSleepBeforeBrowserRequest   | number  | The maximum additional random sleep time before a browser request in milliseconds. |
+| numberOfSearchTypes                            | number  | The number of search types. |
+| webPageNavTimeout                              | number  | The web page navigation timeout in milliseconds. |
+| subProblemsRankingMinNumberOfMatches           | number  | The minimum number of matches for sub-problems ranking. |
+| currentUserAgent                               | string  | The current user agent string. |
+| topItemsToKeepForTopicClusterPruning           | number  | The number of top items to keep for topic cluster pruning. |
+| chances                                        | object  | Configuration for various probabilities used in solution creation. |
+| maxTopSearchQueriesForSolutionCreation         | number  | The maximum number of top search queries for solution creation. |
+| maxPercentOfSolutionsWebPagesToGet             | number  | The maximum percentage of solutions web pages to get. |
+| limits                                         | object  | Configuration for various limits used in solution creation. |
+| enable                                         | object  | Configuration for enabling various refinement processes. |
+| evolution                                      | object  | Configuration for the evolution process. |
+| maxPercentOfEloMatched                         | number  | The maximum percentage of ELO matched. |
+| minimumNumberOfPairwiseVotesForPopulation      | number  | The minimum number of pairwise votes for the population. |
+| maxNumberOfPairwiseRankingPrompts              | number  | The maximum number of pairwise ranking prompts. |
+| maxTopSolutionsToCreatePolicies                | number  | The maximum number of top solutions to create policies. |
+| maxTopPoliciesToProcess                        | number  | The maximum number of top policies to process. |
+| maxEvidenceToUseForRatingEvidence              | number  | The maximum evidence to use for rating evidence. |
+| policyEvidenceFieldTypes                       | string[] | The field types for policy evidence. |
+| rootCauseFieldTypes                            | string[] | The field types for root causes. |
 
 ## Methods
 
-| Name                     | Parameters        | Return Type | Description                                                                 |
-|--------------------------|-------------------|-------------|-----------------------------------------------------------------------------|
-| simplifyEvidenceType     | evidenceType: string | string      | Simplifies the evidence type string by removing prefixes and suffixes.       |
-| simplifyRootCauseType    | rootCauseType: string | string      | Simplifies the root cause type string by removing prefixes and suffixes.     |
+| Name                     | Parameters                  | Return Type | Description |
+|--------------------------|-----------------------------|-------------|-------------|
+| simplifyEvidenceType     | evidenceType: string        | string      | Simplifies the evidence type string by removing prefixes and suffixes, and converting to camel case. |
+| simplifyRootCauseType    | rootCauseType: string       | string      | Simplifies the root cause type string by removing prefixes and suffixes, converting to camel case, and ensuring singular form except for specific cases. |
 
-## Examples
+## Example
 
 ```typescript
-// Example usage of simplifying evidence type
-const simplifiedEvidenceType = IEngineConstants.simplifyEvidenceType("allPossiblePositiveEvidenceIdentifiedInTextContext");
-console.log(simplifiedEvidenceType); // Outputs: positiveEvidence
+import { IEngineConstants } from '@policysynth/webapp/constants.js';
 
-// Example usage of simplifying root cause type
+// Example usage of IEngineConstants
+const modelConfig = IEngineConstants.createSubProblemsModel;
+console.log(modelConfig.name); // Output: gpt-4-1106-preview
+
+// Simplifying evidence type
+const simplifiedEvidenceType = IEngineConstants.simplifyEvidenceType("allPossibleScientificEvidenceIdentifiedInTextContext");
+console.log(simplifiedEvidenceType); // Output: scientificEvidence
+
+// Simplifying root cause type
 const simplifiedRootCauseType = IEngineConstants.simplifyRootCauseType("allPossibleEconomicRootCausesIdentifiedInTextContext");
-console.log(simplifiedRootCauseType); // Outputs: economicRootCause
+console.log(simplifiedRootCauseType); // Output: economicRootCause
 ```
