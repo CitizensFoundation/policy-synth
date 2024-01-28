@@ -1,46 +1,51 @@
-This TypeScript file does not directly define a class, properties, or methods in the traditional object-oriented programming sense. Instead, it's a script that primarily interacts with Redis to fetch data and then processes and exports that data to a CSV file. Given the nature of the script, the documentation will focus on the main functional aspects and the types involved in the process.
+# exportSubProblems
 
-## Functions
+This script exports sub-problems of a project from Redis to a CSV file. It requires a project ID and an output file path as command-line arguments.
 
-| Name  | Parameters | Return Type | Description |
-|-------|------------|-------------|-------------|
-| main  | None       | Promise<void> | The main function of the script. It fetches project data from Redis and exports sub-problems to a CSV file. |
+## Methods
 
-## Types
-
-### PsBaseMemoryData
-
-This type is mentioned but not defined within the provided script. Based on usage, it likely includes the following properties:
-
-| Name          | Type                         | Description               |
-|---------------|------------------------------|---------------------------|
-| subProblems   | ISubProblem[]                | An array of sub-problems associated with the project. |
-
-### ISubProblem
-
-This type is implied from the usage within `PsBaseMemoryData`. It likely includes the following properties:
-
-| Name                      | Type   | Description               |
-|---------------------------|--------|---------------------------|
-| description               | string | A brief description of the sub-problem. |
-| title                     | string | The title of the sub-problem. |
-| whyIsSubProblemImportant  | string | Explanation of why the sub-problem is important. |
-| eloRating                 | string | The Elo rating of the sub-problem. |
-| fromSearchType            | string | The search type from which the sub-problem originated. |
+| Name       | Parameters        | Return Type | Description                 |
+|------------|-------------------|-------------|-----------------------------|
+| main       | None              | void        | Main function that exports sub-problems to a CSV file. |
 
 ## Example
 
 ```typescript
-// Example usage to export sub-problems to a CSV file
-import { main } from '@policysynth/agents/problems/tools/exportSubProblems.js';
+import { Queue } from "bullmq";
+import ioredis from "ioredis";
+import fs from "fs/promises";
 
-// Assuming the environment is correctly set up with REDIS_MEMORY_URL
-// and the necessary command line arguments are provided:
-// node exportSubProblems.js <projectId> <outputFilePath>
+const redis = new ioredis.default(
+  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+);
+
+const main = async () => {
+  const projectId = process.argv[2];
+  const outFilePath = process.argv[3];
+
+  if (projectId) {
+    const redisKey = `st_mem:${projectId}:id`;
+    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as PsBaseMemoryData;
+
+    let outCsvFile = `Description,Title,"Why important","Elo Rating","Search type"`;
+    currentProject.subProblems.forEach((subProblem) => {
+      outCsvFile += `\n"${subProblem.description}","${subProblem.title}","${subProblem.whyIsSubProblemImportant}","${subProblem.eloRating}","${subProblem.fromSearchType}"`;
+    });
+
+    await fs.writeFile(outFilePath, outCsvFile);
+
+    console.log("Sub problems exported successfully");
+    process.exit(0);
+  } else {
+    console.error("Project id is required");
+    process.exit(1);
+  }
+};
 
 main().catch(err => {
   console.error(err);
+  process.exit(1);
 });
 ```
 
-Note: This example assumes that the script is modularized to export the `main` function, which is not directly reflected in the provided script. Adjustments to the script might be necessary for this example to be applicable.
+This example demonstrates how to use the `exportSubProblems` script to export sub-problems from Redis to a CSV file. It utilizes the `ioredis` package for Redis operations and the `fs/promises` module for file system operations.

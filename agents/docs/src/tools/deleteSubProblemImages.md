@@ -6,16 +6,15 @@ This script is designed to delete the image URL of the fifth sub-problem (index 
 
 | Name         | Parameters | Return Type | Description                                                                                   |
 |--------------|------------|-------------|-----------------------------------------------------------------------------------------------|
-| loadProject  |            | Promise<void> | Main function that loads the project's memory data, updates it, and saves it back to Redis. |
+| loadProject  |            | Promise<void> | Fetches the project's memory data from Redis, updates it, and saves the changes back to Redis. |
 
 ## Example
 
-```javascript
-// Example usage to delete sub problem image
-import '@policysynth/agents/tools/deleteSubProblemImages.js';
+```typescript
+import { deleteSubProblemImages } from '@policysynth/agents/tools/deleteSubProblemImages.js';
 
-// Assuming the script is executed with a project ID as an argument
-// node deleteSubProblemImages.js <projectId>
+// Assuming the project ID is passed as a command line argument
+const projectId = process.argv[2];
+
+deleteSubProblemImages.loadProject(projectId).catch(console.error);
 ```
-
-Note: This script requires a project ID to be passed as a command-line argument. It utilizes the `ioredis` package for Redis operations and the `fs/promises` module, although the latter is not used in the provided code snippet.
