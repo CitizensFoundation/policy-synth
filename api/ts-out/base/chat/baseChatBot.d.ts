@@ -2,17 +2,15 @@
 import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 export declare class PsBaseChatBot {
     wsClientId: string;
     wsClientSocket: WebSocket;
     openaiClient: OpenAI;
     memory: PsChatBotMemoryData;
-    currentAgent: PolicySynthAgentBase | undefined;
     broadcastingLiveCosts: boolean;
     liveCostsBroadcastInterval: number;
     liveCostsInactivityTimeout: number;
-    redisMemoryKeyPrefix: string;
+    static redisMemoryKeyPrefix: string;
     tempeture: number;
     maxTokens: number;
     llmModel: string;
@@ -23,9 +21,12 @@ export declare class PsBaseChatBot {
     lastSentToUserAt: Date | undefined;
     lastBroacastedCosts: number | undefined;
     get redisKey(): string;
+    static loadMemoryFromRedis(memoryId: string): Promise<PsChatBotMemoryData | undefined>;
+    static getFullCostOfMemory(memory: PsChatBotMemoryData): number | undefined;
     loadMemory(): Promise<PsChatBotMemoryData>;
     constructor(wsClientId: string, wsClients: Map<string, WebSocket>, memoryId?: string | undefined);
     setupMemory(memoryId?: string | undefined): Promise<void>;
+    get fullLLMCostsForMemory(): number | undefined;
     getLoadedMemory(): Promise<PsChatBotMemoryData>;
     sendMemoryId(): void;
     saveMemory(): Promise<void>;

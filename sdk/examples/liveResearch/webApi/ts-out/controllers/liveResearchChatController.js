@@ -6,14 +6,18 @@ export class LiveResearchChatController extends BaseController {
         this.path = "/api/live_research_chat";
         this.getChatLog = async (req, res) => {
             const memoryId = req.params.memoryId;
-            let saveChatLog;
+            let chatLog;
+            let totalCosts;
             try {
-                //TODO: this is a hack to get the chat log from the memory, find a better way
-                const bot = new LiveResearchChatBot("-1", this.wsClients, memoryId);
                 if (memoryId) {
-                    const memory = await bot.getLoadedMemory();
+                    const memory = await LiveResearchChatBot.loadMemoryFromRedis(memoryId);
                     if (memory) {
-                        saveChatLog = memory.chatLog;
+                        console.log(`memory loaded: ${JSON.stringify(memory, null, 2)}`);
+                        chatLog = memory.chatLog;
+                        totalCosts = LiveResearchChatBot.getFullCostOfMemory(memory);
+                    }
+                    else {
+                        console.log(`memory not found for id ${memoryId}`);
                     }
                 }
             }
@@ -21,7 +25,12 @@ export class LiveResearchChatController extends BaseController {
                 console.log(error);
                 res.sendStatus(500);
             }
-            res.send(saveChatLog);
+            if (chatLog) {
+                res.send({ chatLog, totalCosts });
+            }
+            else {
+                res.sendStatus(404);
+            }
         };
         this.liveResearchChat = async (req, res) => {
             const chatLog = req.body.chatLog;

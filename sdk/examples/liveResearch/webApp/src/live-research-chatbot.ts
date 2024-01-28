@@ -61,6 +61,7 @@ export class LiveResearchChatBot extends PsChatAssistant {
     this.addUserChatBotMessage(userMessage);
 
     await this.serverApi.conversation(
+      this.serverMemoryId,
       this.simplifiedChatLog,
       this.wsClientId,
       this.numberOfSelectQueries,
