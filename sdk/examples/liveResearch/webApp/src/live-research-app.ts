@@ -239,6 +239,8 @@ export class LiveResearchApp extends PolicySynthWebApp {
   private loadChatLog(serverMemoryId: string): void {
     this.serverMemoryId = serverMemoryId;
     this.getChatLogFromServer();
+    const path = `/${this.serverMemoryId}`;
+    history.pushState({}, '', path);
   }
 
   renderApp() {
