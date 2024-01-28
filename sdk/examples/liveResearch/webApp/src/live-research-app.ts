@@ -102,7 +102,9 @@ export class LiveResearchApp extends PolicySynthWebApp {
     },
   ]);
 
-  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+  protected firstUpdated(
+    _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
+  ): void {
     // Get the server memory id from the url
     const path = window.location.pathname;
     if (path.length > 1) {
@@ -122,12 +124,11 @@ export class LiveResearchApp extends PolicySynthWebApp {
       chatBotElemement.chatLog.length == 0 &&
       this.serverMemoryId
     ) {
-      const {chatLog, totalCosts} = await this.serverApi.getChatLogFromServer(
+      const { chatLog, totalCosts } = await this.serverApi.getChatLogFromServer(
         this.serverMemoryId
       );
       if (totalCosts) {
-        const cost = totalCosts.toFixed(3);
-        this.llmTotalCost = `$${cost}`;
+        this.setCost(totalCosts);
       }
       if (chatLog) {
         //TODO: Fix this sender hack, should be consistent
@@ -135,7 +136,9 @@ export class LiveResearchApp extends PolicySynthWebApp {
           return {
             ...chatLogItem,
             date: new Date(chatLogItem.date),
-            sender:['assistant','bot'].includes(chatLogItem.sender) ? 'bot' : 'you',
+            sender: ['assistant', 'bot'].includes(chatLogItem.sender)
+              ? 'bot'
+              : 'you',
           };
         });
       } else {
@@ -155,9 +158,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
   renderApp() {
     return html` <div class="layout vertical center-center">
       <div class="layout horizontal center-center themeToggle">
-        <md-outlined-icon-button hidden @click="${this.reset}"
-          ><md-icon>restart_alt</md-icon></md-outlined-icon-button
-        >${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
+        ${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
       </div>
       <live-research-chat-bot
         @llm-total-cost-update=${this.handleCostUpdate}
@@ -207,12 +208,19 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
   reset() {
     (this.$$('live-research-chat-bot') as LiveResearchChatBot).reset();
-    history.pushState({}, '', "");
+    this.serverMemoryId = undefined;
+    this.chatLogFromServer = undefined;
+    history.pushState({}, '', '');
+    this.setCost(0);
+  }
+
+  setCost(cost: number) {
+    const costString = cost.toFixed(3);
+    this.llmTotalCost = `$${costString}`;
   }
 
   handleCostUpdate(event: CustomEvent) {
-    const cost = parseFloat(event.detail).toFixed(3);
-    this.llmTotalCost = `$${cost}`;
+    this.setCost(event.detail);
   }
 
   updateNumberOfQueries(event: any) {
