@@ -20,11 +20,10 @@ export class PsBaseChatBot {
   wsClientSocket: WebSocket;
   openaiClient: OpenAI;
   memory!: PsChatBotMemoryData;
-  currentAgent: PolicySynthAgentBase | undefined;
   broadcastingLiveCosts = false;
   liveCostsBroadcastInterval = 1000;
   liveCostsInactivityTimeout = 1000 * 60 * 10;
-  redisMemoryKeyPrefix = "chatbot-memory";
+  static redisMemoryKeyPrefix = "chatbot-memory";
   tempeture = 0.7;
   maxTokens = 4000;
   llmModel = "gpt-4-0125-preview";
@@ -36,16 +35,48 @@ export class PsBaseChatBot {
   lastSentToUserAt: Date | undefined;
   lastBroacastedCosts: number | undefined;
 
-  get redisKey(){
-    return `${this.redisMemoryKeyPrefix}-${this.memoryId}`
+  get redisKey() {
+    return `${PsBaseChatBot.redisMemoryKeyPrefix}-${this.memoryId}`;
+  }
+
+  static loadMemoryFromRedis(memoryId: string) {
+    return new Promise<PsChatBotMemoryData | undefined>(
+      async (resolve, reject) => {
+        try {
+          const memoryString = await redis.get(
+            `${PsBaseChatBot.redisMemoryKeyPrefix}-${memoryId}`
+          );
+          if (memoryString) {
+            const memory = JSON.parse(memoryString);
+            resolve(memory);
+          } else {
+            resolve(undefined);
+          }
+        } catch (error) {
+          console.error("Can't load memory from redis", error);
+          resolve(undefined);
+        }
+      }
+    );
+  }
+
+  static getFullCostOfMemory(memory: PsChatBotMemoryData) {
+    let totalCost: number | undefined = undefined;
+    if (memory && memory.stages) {
+      totalCost = 0;
+      Object.values(memory.stages).forEach((stage) => {
+        if (stage.tokensInCost && stage.tokensOutCost) {
+          totalCost! += stage.tokensInCost + stage.tokensOutCost;
+        }
+      });
+    }
+    return totalCost;
   }
 
   loadMemory() {
     return new Promise<PsChatBotMemoryData>(async (resolve, reject) => {
       try {
-        const memoryString = await redis.get(
-          this.redisKey
-        );
+        const memoryString = await redis.get(this.redisKey);
         if (memoryString) {
           const memory = JSON.parse(memoryString);
           resolve(memory);
@@ -81,13 +112,22 @@ export class PsBaseChatBot {
     if (memoryId) {
       this.memoryId = memoryId;
       this.memory = await this.loadMemory();
-    }
-    this.memoryId = uuidv4();
-    this.memory = this.getEmptyMemory();
-    if (this.wsClientSocket) {
-      this.sendMemoryId();
     } else {
-      console.error("No wsClientSocket found");
+      this.memoryId = uuidv4();
+      this.memory = this.getEmptyMemory();
+      if (this.wsClientSocket) {
+        this.sendMemoryId();
+      } else {
+        console.error("No wsClientSocket found");
+      }
+    }
+  }
+
+  get fullLLMCostsForMemory() {
+    if (this.memory && this.memory.stages) {
+      return PsBaseChatBot.getFullCostOfMemory(this.memory);
+    } else {
+      return undefined;
     }
   }
 
@@ -99,7 +139,7 @@ export class PsBaseChatBot {
     const botMessage = {
       sender: "bot",
       type: "memoryIdCreated",
-      data: this.memoryId
+      data: this.memoryId,
     } as PsAiChatWsMessage;
 
     this.wsClientSocket.send(JSON.stringify(botMessage));
@@ -109,7 +149,7 @@ export class PsBaseChatBot {
     if (this.memory) {
       try {
         await redis.set(this.redisKey, JSON.stringify(this.memory));
-        console.log(`Saved memory to redis: ${this.redisKey}`)
+        console.log(`Saved memory to redis: ${this.redisKey}`);
       } catch (error) {
         console.log("Can't save memory to redis", error);
       }
@@ -187,20 +227,16 @@ export class PsBaseChatBot {
 
   broadCastLiveCosts() {
     if (this.broadcastingLiveCosts) {
-      if (this.currentAgent && this.currentAgent.fullLLMCostsForMemory) {
-        if (
-          this.lastBroacastedCosts != this.currentAgent.fullLLMCostsForMemory
-        ) {
-          console.log(
-            `Broadcasting live costs: ${this.currentAgent.fullLLMCostsForMemory}`
-          );
+      if (this.memory) {
+        if (this.lastBroacastedCosts != this.fullLLMCostsForMemory) {
+          console.log(`Broadcasting live costs: ${this.fullLLMCostsForMemory}`);
           const botMessage = {
             sender: "bot",
             type: "liveLlmCosts",
-            data: this.currentAgent.fullLLMCostsForMemory,
+            data: this.fullLLMCostsForMemory,
           } as PsAiChatWsMessage;
           this.wsClientSocket.send(JSON.stringify(botMessage));
-          this.lastBroacastedCosts = this.currentAgent.fullLLMCostsForMemory;
+          this.lastBroacastedCosts = this.fullLLMCostsForMemory;
         }
       }
       let timePassedSinceBroadcastStartActivity = 0;
@@ -293,12 +329,10 @@ export class PsBaseChatBot {
             "out"
           );
           if (part.choices[0].finish_reason == "stop") {
-            this.memory.chatLog!.push(
-              {
-                sender: "bot",
-                message: botMessage,
-              } as PsSimpleChatLog
-            );
+            this.memory.chatLog!.push({
+              sender: "bot",
+              message: botMessage,
+            } as PsSimpleChatLog);
 
             await this.saveMemoryIfNeeded();
           }
@@ -337,7 +371,7 @@ export class PsBaseChatBot {
       const parts = text.split(" ").filter((part) => part != "");
       const estimateTokens = parts.length * WORDS_TO_TOKENS_MAGIC_CONSTANT;
 
-      if (this.currentAgent && this.currentAgent.memory) {
+      if (this.memory) {
         if (type == "in") {
           if (
             this.memory.stages["chatbot-conversation"].tokensInCost ===
@@ -365,9 +399,7 @@ export class PsBaseChatBot {
             this.getTokenCosts(estimateTokens, type);
         }
       } else {
-        console.warn(
-          `No current agent or memory found to add external solutions costs`
-        );
+        console.warn(`No memory found to add external solutions costs`);
       }
     } else {
       console.warn(`No text found to add external solutions costs`);

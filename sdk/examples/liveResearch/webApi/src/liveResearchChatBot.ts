@@ -42,12 +42,12 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       // Generate search queries
       this.sendAgentStart("Generate search queries");
-      const searchQueriesGenerator = (this.currentAgent =
+      const searchQueriesGenerator =
         new SearchQueriesGenerator(
           this.memory as PsBaseMemoryData,
           this.numberOfQueriesToGenerate,
           question
-        ));
+        );
       const searchQueries =
         await searchQueriesGenerator.generateSearchQueries();
       this.sendAgentCompleted(
@@ -56,10 +56,10 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       // Rank search queries
       this.sendAgentStart("Pairwise Ranking Search Queries");
-      const searchQueriesRanker = (this.currentAgent = new SearchQueriesRanker(
+      const searchQueriesRanker = new SearchQueriesRanker(
         this.memory as PsBaseMemoryData,
         this.sendAgentUpdate.bind(this)
-      ));
+      );
 
       const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
         searchQueries,
@@ -74,18 +74,18 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       // Search the web
       this.sendAgentStart("Searching the Web...");
-      const webSearch = (this.currentAgent = new ResearchWeb(
+      const webSearch = new ResearchWeb(
         this.memory as PsBaseMemoryData
-      ));
+      );
       const searchResults = await webSearch.search(queriesToSearch);
       this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
 
       // Rank search results
       this.sendAgentStart("Pairwise Ranking Search Results");
-      const searchResultsRanker = (this.currentAgent = new SearchResultsRanker(
+      const searchResultsRanker = new SearchResultsRanker(
         this.memory as PsBaseMemoryData,
         this.sendAgentUpdate.bind(this)
-      ));
+      );
       const rankedSearchResults = await searchResultsRanker.rankSearchResults(
         searchResults,
         question
@@ -100,9 +100,9 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Scan and Research Web pages
       this.sendAgentStart("Scan and Research Web pages");
 
-      const webPageResearch = (this.currentAgent = new WebPageScanner(
+      const webPageResearch = new WebPageScanner(
         this.memory as PsBaseMemoryData
-      ));
+      );
       const webScan = await webPageResearch.scan(
         searchResultsToScan.map((i) => i.url),
         this.jsonWebPageResearchSchema,
@@ -183,6 +183,8 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     if (messages.length === 1) {
       this.doLiveResearch(messages[0].content);
     } else {
+      this.startBroadcastingLiveCosts();
+
       const systemMessage = {
         role: "system",
         content: this.renderFollowupSystemPrompt(),
@@ -190,15 +192,20 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       messages.unshift(systemMessage);
 
-      const stream = await this.openaiClient.chat.completions.create({
-        model: "gpt-4-0125-preview",
-        messages,
-        max_tokens: 4000,
-        temperature: 0.7,
-        stream: true,
-      });
-
-      this.streamWebSocketResponses(stream);
+      try {
+        const stream = await this.openaiClient.chat.completions.create({
+          model: "gpt-4-0125-preview",
+          messages,
+          max_tokens: 4000,
+          temperature: 0.7,
+          stream: true,
+        });
+        await this.streamWebSocketResponses(stream);
+      } catch (err) {
+        console.error(`Error in doLiveResearch: ${err}`);
+      } finally {
+        this.stopBroadcastingLiveCosts();
+      }
     }
   };
 }

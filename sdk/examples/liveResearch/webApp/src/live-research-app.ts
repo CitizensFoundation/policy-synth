@@ -122,12 +122,16 @@ export class LiveResearchApp extends PolicySynthWebApp {
       chatBotElemement.chatLog.length == 0 &&
       this.serverMemoryId
     ) {
-      const chatLogSimple = await this.serverApi.getChatLogFromServer(
+      const {chatLog, totalCosts} = await this.serverApi.getChatLogFromServer(
         this.serverMemoryId
       );
-      if (chatLogSimple) {
+      if (totalCosts) {
+        const cost = totalCosts.toFixed(3);
+        this.llmTotalCost = `$${cost}`;
+      }
+      if (chatLog) {
         //TODO: Fix this sender hack, should be consistent
-        this.chatLogFromServer = chatLogSimple.map((chatLogItem: any) => {
+        this.chatLogFromServer = chatLog.map((chatLogItem: any) => {
           return {
             ...chatLogItem,
             date: new Date(chatLogItem.date),

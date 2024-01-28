@@ -8,13 +8,14 @@ export class ResearchServerApi extends YpServerApi {
 
   public async getChatLogFromServer(
     memoryId: string
-  ): Promise<PsSimpleChatLog[]> {
+  ): Promise<{chatLog: PsSimpleChatLog[], totalCosts: number}> {
     return (await this.fetchWrapper(
       this.baseUrlPath + `/live_research_chat/${memoryId}`
-    )) as PsSimpleChatLog[];
+    )) as {chatLog: PsSimpleChatLog[], totalCosts: number};
   }
 
   public conversation(
+    memoryId: string | undefined,
     chatLog: PsSimpleChatLog[],
     wsClientId: string,
     numberOfSelectQueries: number,
@@ -31,6 +32,7 @@ export class ResearchServerApi extends YpServerApi {
           numberOfSelectQueries,
           percentOfTopQueriesToSearch,
           percentOfTopResultsToScan,
+          memoryId
         }),
       },
       false

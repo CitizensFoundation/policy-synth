@@ -42,19 +42,28 @@ export class LiveResearchChatBot extends PsBaseChatBot {
                 this.doLiveResearch(messages[0].content);
             }
             else {
+                this.startBroadcastingLiveCosts();
                 const systemMessage = {
                     role: "system",
                     content: this.renderFollowupSystemPrompt(),
                 };
                 messages.unshift(systemMessage);
-                const stream = await this.openaiClient.chat.completions.create({
-                    model: "gpt-4-0125-preview",
-                    messages,
-                    max_tokens: 4000,
-                    temperature: 0.7,
-                    stream: true,
-                });
-                this.streamWebSocketResponses(stream);
+                try {
+                    const stream = await this.openaiClient.chat.completions.create({
+                        model: "gpt-4-0125-preview",
+                        messages,
+                        max_tokens: 4000,
+                        temperature: 0.7,
+                        stream: true,
+                    });
+                    await this.streamWebSocketResponses(stream);
+                }
+                catch (err) {
+                    console.error(`Error in doLiveResearch: ${err}`);
+                }
+                finally {
+                    this.stopBroadcastingLiveCosts();
+                }
             }
         };
     }
@@ -68,30 +77,29 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             console.log(`this.memory: ${JSON.stringify(this.memory, null, 2)}`);
             // Generate search queries
             this.sendAgentStart("Generate search queries");
-            const searchQueriesGenerator = (this.currentAgent =
-                new SearchQueriesGenerator(this.memory, this.numberOfQueriesToGenerate, question));
+            const searchQueriesGenerator = new SearchQueriesGenerator(this.memory, this.numberOfQueriesToGenerate, question);
             const searchQueries = await searchQueriesGenerator.generateSearchQueries();
             this.sendAgentCompleted(`Generated ${searchQueries.length} search queries`);
             // Rank search queries
             this.sendAgentStart("Pairwise Ranking Search Queries");
-            const searchQueriesRanker = (this.currentAgent = new SearchQueriesRanker(this.memory, this.sendAgentUpdate.bind(this)));
+            const searchQueriesRanker = new SearchQueriesRanker(this.memory, this.sendAgentUpdate.bind(this));
             const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(searchQueries, question);
             this.sendAgentCompleted("Pairwise Ranking Completed");
             const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * this.percentOfQueriesToSearch));
             // Search the web
             this.sendAgentStart("Searching the Web...");
-            const webSearch = (this.currentAgent = new ResearchWeb(this.memory));
+            const webSearch = new ResearchWeb(this.memory);
             const searchResults = await webSearch.search(queriesToSearch);
             this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
             // Rank search results
             this.sendAgentStart("Pairwise Ranking Search Results");
-            const searchResultsRanker = (this.currentAgent = new SearchResultsRanker(this.memory, this.sendAgentUpdate.bind(this)));
+            const searchResultsRanker = new SearchResultsRanker(this.memory, this.sendAgentUpdate.bind(this));
             const rankedSearchResults = await searchResultsRanker.rankSearchResults(searchResults, question);
             this.sendAgentCompleted("Pairwise Ranking Completed");
             const searchResultsToScan = rankedSearchResults.slice(0, Math.floor(rankedSearchResults.length * this.percentOfResultsToScan));
             // Scan and Research Web pages
             this.sendAgentStart("Scan and Research Web pages");
-            const webPageResearch = (this.currentAgent = new WebPageScanner(this.memory));
+            const webPageResearch = new WebPageScanner(this.memory);
             const webScan = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.jsonWebPageResearchSchema, undefined, this.sendAgentUpdate.bind(this));
             this.sendAgentCompleted("Website Scanning Completed", true);
             console.log(`webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`);
