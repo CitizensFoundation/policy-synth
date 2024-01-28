@@ -246,6 +246,29 @@ export class PsBaseChatBot {
       },
       timeStart: Date.now(),
       chatLog: [],
+      groupId: 1,
+      communityId: 1,
+      domainId: 1,
+      totalCost: 0,
+      customInstructions: {},
+      problemStatement: {
+        description: "",
+        searchQueries: {
+          general: [],
+          scientific: [],
+          news: [],
+          openData: [],
+        },
+        searchResults: {
+          pages: {
+            general: [],
+            scientific: [],
+            news: [],
+            openData: [],
+          },
+        },
+      },
+      subProblems: [],
     } as PsChatBotMemoryData;
   }
 

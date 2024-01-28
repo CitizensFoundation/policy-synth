@@ -2,9 +2,9 @@ import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 export declare class CreateSeedPoliciesProcessor extends BaseProlemSolvingAgent {
     renderCurrentSolution(solution: IEngineSolution): string;
-    renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution): Promise<(SystemMessage | HumanMessage)[]>;
-    renderRefinePrompt(subProblemIndex: number, solution: IEngineSolution, policyProposalsToRefine: PSPolicy[]): Promise<(SystemMessage | HumanMessage)[]>;
-    renderChoosePrompt(subProblemIndex: number, solution: IEngineSolution, policyProposalsToChooseFrom: PSPolicy[]): Promise<(SystemMessage | HumanMessage)[]>;
+    renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution): Promise<(HumanMessage | SystemMessage)[]>;
+    renderRefinePrompt(subProblemIndex: number, solution: IEngineSolution, policyProposalsToRefine: PSPolicy[]): Promise<(HumanMessage | SystemMessage)[]>;
+    renderChoosePrompt(subProblemIndex: number, solution: IEngineSolution, policyProposalsToChooseFrom: PSPolicy[]): Promise<(HumanMessage | SystemMessage)[]>;
     createSeedPolicyForSolution(populationIndex: number, subProblemIndex: number, solution: IEngineSolution, solutionIndex: number): Promise<PSPolicy>;
     createSeedPolicies(): Promise<void>;
     process(): Promise<void>;
