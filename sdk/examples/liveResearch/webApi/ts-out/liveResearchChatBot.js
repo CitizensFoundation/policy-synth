@@ -10,6 +10,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
         this.numberOfQueriesToGenerate = 7;
         this.percentOfQueriesToSearch = 0.25;
         this.percentOfResultsToScan = 0.25;
+        this.persistMemory = true;
         this.summarySystemPrompt = `Please review the web research below and give the user a full report length.
     Take all the information provided and highlight the main points to answer the users question in detail.
     Do not output the analysis on an article by article basis, it needs to go deeper and wider than that to answer the users question.
@@ -28,6 +29,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             this.numberOfQueriesToGenerate = numberOfSelectQueries;
             this.percentOfQueriesToSearch = percentOfTopQueriesToSearch;
             this.percentOfResultsToScan = percentOfTopResultsToScan;
+            this.setChatLog(chatLog);
             console.log("In LIVE RESEARH conversation");
             let messages = chatLog.map((message) => {
                 return {

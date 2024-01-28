@@ -32,6 +32,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     currentFollowUpQuestions: string;
     programmaticScroll: boolean;
     scrollStart: number;
+    serverMemoryId: string | undefined;
     defaultDevWsPort: number;
     sendButton?: MdFilledTonalButton;
     chatElements?: PsAiChatElement[];
@@ -57,7 +58,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     addUserChatBotMessage(userMessage: string): void;
     addThinkingChatBotMessage(): void;
     addToChatLogWithMessage(data: PsAiChatWsMessage, message?: string | undefined, changeButtonDisabledState?: boolean | undefined, changeButtonLabelTo?: string | undefined, refinedCausesSuggestions?: string[] | undefined, rawMessage?: string | undefined): void;
-    addChatBotElement(data: PsAiChatWsMessage): void;
+    addChatBotElement(wsMessage: PsAiChatWsMessage): void;
     addChatUserElement(data: PsAiChatWsMessage): void;
     sendChatMessage(): Promise<void>;
     get simplifiedChatLog(): PsSimpleChatLog[];

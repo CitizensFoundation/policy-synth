@@ -42,6 +42,7 @@ export declare class PsBaseChatBot {
     streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;
     getTokenCosts(estimateTokens: number, type: "in" | "out"): number;
     addToExternalSolutionsMemoryCosts(text: string, type: "in" | "out"): void;
+    saveMemoryIfNeeded(): Promise<void>;
     setChatLog(chatLog: PsSimpleChatLog[]): Promise<void>;
     conversation: (chatLog: PsSimpleChatLog[]) => Promise<void>;
 }

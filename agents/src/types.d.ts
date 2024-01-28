@@ -433,11 +433,13 @@ interface PsAiChatWsMessage {
     | "agentUpdated"
     | "agentError"
     | "liveLlmCosts"
+    | "memoryIdCreated"
     | "thinking"
     | "start_followup"
     | "end_followup"
     | "stream_followup";
   message: string;
+  data?: string | number | object;
   rawMessage?: string;
   refinedCausesSuggestions?: string[];
   debug?: CrtDebugData;
