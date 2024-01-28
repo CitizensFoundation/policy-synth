@@ -45,7 +45,7 @@ export class PsAiChatElement extends YpBaseElement {
     | undefined;
 
   @property({ type: Boolean })
-  active = true;
+  spinnerActive = false;
 
   @property({ type: Boolean })
   fullReferencesOpen = false;
@@ -306,7 +306,7 @@ export class PsAiChatElement extends YpBaseElement {
           color: var(--md-sys-color-secondary);
         }
 
-        .thinkingText[active] {
+        .thinkingText[spinnerActive] {
           color: var(--md-sys-color-primary);
         }
 
@@ -465,11 +465,11 @@ export class PsAiChatElement extends YpBaseElement {
   }
 
   renderNoStreaming() {
-    return html`${this.active
+    return html`${this.spinnerActive
         ? html`<svg class="progress-ring" width="28" height="28">
             <circle
               class="progress-ring__circle"
-              ?active="${this.active}"
+              ?spinnerActive="${this.spinnerActive}"
               stroke="blue"
               stroke-width="2"
               fill="transparent"
@@ -479,18 +479,18 @@ export class PsAiChatElement extends YpBaseElement {
             />
           </svg>`
         : html`<md-icon class="doneIcon">done</md-icon>`}
-      <div class="thinkingText" ?active="${this.active}">
+      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
         ${this.message}
         ${this.updateMessage ? html`- ${this.updateMessage}` : nothing}
       </div> `;
   }
 
   renderThinking() {
-    return html`${this.active
+    return html`${this.spinnerActive
         ? html`<svg class="progress-ring" width="28" height="28">
             <circle
               class="progress-ring__circle"
-              ?active="${this.active}"
+              ?spinnerActive="${this.spinnerActive}"
               stroke="blue"
               stroke-width="2"
               fill="transparent"
@@ -500,7 +500,7 @@ export class PsAiChatElement extends YpBaseElement {
             />
           </svg>`
         : html`<md-icon class="doneIcon">done</md-icon>`}
-      <div class="thinkingText" ?active="${this.active}">
+      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
         ${this.getThinkingText()}
       </div> `;
   }

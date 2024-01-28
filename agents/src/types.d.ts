@@ -174,7 +174,7 @@ interface IEEngineSearchResultData {
   pages: IEEngineSearchResultPage[];
 }
 
-type IEngineStageTypes =
+type PsMemoryStageTypes =
   | "create-root-causes-search-queries"
   | "rank-root-causes-search-queries"
   | "web-search-root-causes"
@@ -213,7 +213,6 @@ type IEngineStageTypes =
   | "analyse-external-solutions"
   | "policies-create-images"
   | "policies-seed"
-
   | "create-evidence-search-queries"
   | "web-search-evidence"
   | "web-get-evidence-pages"
@@ -301,9 +300,9 @@ interface IEngineSearchResults {
   };
 }
 
-interface IEngineInnovationMemoryData extends IEngineMemoryData {
-  currentStage: IEngineStageTypes;
-  stages: Record<IEngineStageTypes, IEngineInnovationStagesData>;
+interface PsBaseMemoryData extends IEngineMemoryData {
+  currentStage: PsMemoryStageTypes;
+  stages: Record<PsMemoryStageTypes, IEngineInnovationStagesData>;
   problemStatement: IEngineProblemStatement;
   customInstructions: {
     createRootCause?: string;
@@ -323,14 +322,6 @@ interface IEngineInnovationMemoryData extends IEngineMemoryData {
     | IEEngineSearchResultData
     | IEEngineSearchResultPage
     | undefined;
-}
-
-interface PsWebResearchMemory extends IEngineInnovationMemoryData {
-  webResearch?: {
-    lastRunStartedAt?: number;
-    lastRunEndedAt?: number;
-    chatLog?: PsSimpleChatLog[];
-  }
 }
 
 type IEngineWebPageTypes = "general" | "scientific" | "openData" | "news";
@@ -442,11 +433,13 @@ interface PsAiChatWsMessage {
     | "agentUpdated"
     | "agentError"
     | "liveLlmCosts"
+    | "memoryIdCreated"
     | "thinking"
     | "start_followup"
     | "end_followup"
     | "stream_followup";
   message: string;
+  data?: string | number | object;
   rawMessage?: string;
   refinedCausesSuggestions?: string[];
   debug?: CrtDebugData;

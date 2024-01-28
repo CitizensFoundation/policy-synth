@@ -15,13 +15,13 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProlemSo
     fisherYatesShuffle(array: any[]): any[];
     setupRankingPrompts(subProblemIndex: number, allItems: IEngineSearchResultItem[] | IEngineSolution[] | IEngineProblemStatement[] | string[] | IEngineProCon[] | IEngineAffectedEntity[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
     abstract voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<IEnginePairWiseVoteResults>;
-    getResultsFromLLM(subProblemIndex: number, stageName: IEngineStageTypes, modelConstant: IEngineBaseAIModelConstants, messages: (HumanMessage | SystemMessage)[], itemOneIndex: number, itemTwoIndex: number): Promise<{
+    getResultsFromLLM(subProblemIndex: number, stageName: PsMemoryStageTypes, modelConstant: IEngineBaseAIModelConstants, messages: (HumanMessage | SystemMessage)[], itemOneIndex: number, itemTwoIndex: number): Promise<{
         subProblemIndex: number;
         wonItemIndex: number | undefined;
         lostItemIndex: number | undefined;
     }>;
     getUpdatedKFactor(numComparisons: number): number;
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
-    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProCon | IEngineSolution | IEngineAffectedEntity | IEngineProblemStatement | IEngineSearchResultItem)[];
+    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProblemStatement | IEngineSearchResultItem | IEngineProCon | IEngineSolution | IEngineAffectedEntity)[];
 }
 //# sourceMappingURL=basePairwiseRanking.d.ts.map

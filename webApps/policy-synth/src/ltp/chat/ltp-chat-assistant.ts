@@ -63,7 +63,7 @@ export class LtpChatAssistant extends PsChatAssistant {
     this.defaultInfoMessage += `**${this.nodeToAddCauseTo.description}**`;
   }
 
-  addChatBotElement(data: PsAiChatWsMessage) {
+  async addChatBotElement(data: PsAiChatWsMessage) {
     const lastElement = this.chatElements![this.chatElements!.length - 1];
 
     switch (data.type) {
@@ -72,19 +72,19 @@ export class LtpChatAssistant extends PsChatAssistant {
         break;
       case 'thinking':
         if (lastElement) {
-          lastElement.active = false;
+          lastElement.spinnerActive = false;
         }
         this.addToChatLogWithMessage(data, this.t('Thinking...'));
         break;
       case 'noStreaming':
         if (lastElement) {
-          lastElement.active = true;
+          lastElement.spinnerActive = true;
         }
         this.addToChatLogWithMessage(data, data.message);
         break;
       case 'validationAgentStart':
         if (lastElement) {
-          lastElement.active = false;
+          lastElement.spinnerActive = false;
         }
         const startOptions = data.message as unknown as PsAgentStartWsOptions;
 
@@ -108,7 +108,7 @@ export class LtpChatAssistant extends PsChatAssistant {
         break;
       case 'validationAgentCompleted':
         if (lastElement) {
-          lastElement.active = false;
+          lastElement.spinnerActive = false;
         }
         this.lastChainCompletedAsValid = false;
         this.lastValidatedCauses = undefined;
@@ -135,7 +135,7 @@ export class LtpChatAssistant extends PsChatAssistant {
         break;
       case 'start':
         if (lastElement) {
-          lastElement.active = false;
+          lastElement.spinnerActive = false;
         }
         this.addToChatLogWithMessage(data, this.t('Thinking...'));
         if (!this.chatLog[this.chatLog.length - 1].message)
@@ -168,7 +168,7 @@ export class LtpChatAssistant extends PsChatAssistant {
         break;
       case 'message':
         if (lastElement) {
-          lastElement.active = false;
+          lastElement.spinnerActive = false;
         }
         this.addToChatLogWithMessage(
           data,

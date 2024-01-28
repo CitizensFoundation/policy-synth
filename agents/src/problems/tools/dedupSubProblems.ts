@@ -9,7 +9,7 @@ const main = async () => {
 ​
   if (projectId) {
     const redisKey = `st_mem:${projectId}:id`;
-    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as IEngineInnovationMemoryData;
+    const currentProject =  JSON.parse(await redis.get(redisKey) || "") as PsBaseMemoryData;
 ​
     const foundDescriptions = new Set<string>();
     const newSubProblems: IEngineSubProblem[] = [];

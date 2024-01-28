@@ -1,50 +1,57 @@
 # BaseProlemSolvingAgent
 
-This class is an abstract base class for problem-solving agents, extending the functionality of `PolicySynthAgentBase`. It is designed to handle and process sub-problems, solutions, and entities related to a given problem, utilizing a memory structure to store and manipulate this information.
+This class is an abstract base class for problem-solving agents, extending the functionality of `PolicySynthAgentBase`. It includes methods for processing and rendering information about problems, sub-problems, solutions, and entities based on the agent's memory.
 
 ## Properties
 
-| Name                   | Type                                      | Description                                      |
-|------------------------|-------------------------------------------|--------------------------------------------------|
-| memory                 | IEngineInnovationMemoryData               | The memory structure containing problem details. |
-| job                    | Job                                       | The job instance associated with the agent.      |
-| currentSubProblemIndex | number \| undefined                       | The index of the current sub-problem being processed. |
+| Name                   | Type                        | Description                                      |
+|------------------------|-----------------------------|--------------------------------------------------|
+| memory                 | PsBaseMemoryData            | The memory of the agent, containing problem-solving data. |
+| job                    | Job                         | The job associated with the agent's current task. |
+| currentSubProblemIndex | number \| undefined         | The index of the current sub-problem the agent is focusing on. |
 
 ## Methods
 
-| Name                                  | Parameters                                      | Return Type                  | Description                                                                                   |
-|---------------------------------------|-------------------------------------------------|------------------------------|-----------------------------------------------------------------------------------------------|
-| getProCons                            | prosCons: IEngineProCon[] \| undefined          | string[]                     | Returns descriptions of provided pros and cons.                                               |
-| process                               |                                                 | Promise<void>                | Processes the current problem, throwing an error if memory is not initialized.                |
-| lastPopulationIndex                   | subProblemIndex: number                         | number                       | Returns the index of the last population for a given sub-problem.                            |
-| renderSubProblem                      | subProblemIndex: number, useProblemAsHeader: boolean | string                       | Renders a detailed view of a sub-problem, optionally using "Problem" as the header.           |
-| renderSubProblemSimple                | subProblemIndex: number                         | string                       | Renders a simplified view of a sub-problem.                                                  |
-| getActiveSolutionsLastPopulation      | subProblemIndex: number                         | IEngineSolution[]            | Returns active solutions from the last population of a given sub-problem.                    |
-| getActiveSolutionsFromPopulation      | subProblemIndex: number, populationIndex: number | IEngineSolution[]            | Returns active solutions from a specified population of a given sub-problem.                 |
-| numberOfPopulations                   | subProblemIndex: number                         | number                       | Returns the number of populations for a given sub-problem.                                   |
-| renderSubProblems                     |                                                 | string                       | Renders a detailed view of all sub-problems.                                                 |
-| renderEntity                          | subProblemIndex: number, entityIndex: number    | string                       | Renders a detailed view of an entity associated with a sub-problem.                          |
-| renderProblemStatement                |                                                 | string                       | Renders the problem statement.                                                               |
-| renderProblemStatementSubProblemsAndEntities | index: number                                 | string                       | Renders the problem statement along with details of a sub-problem and its top affected entities. |
-| renderEntityPosNegReasons             | item: IEngineAffectedEntity                     | string                       | Renders positive and negative effects associated with an entity.                             |
+| Name                                  | Parameters                                      | Return Type            | Description                                                                 |
+|---------------------------------------|-------------------------------------------------|------------------------|-----------------------------------------------------------------------------|
+| getProCons                            | prosCons: IEngineProCon[] \| undefined          | string[]               | Returns descriptions of provided pros and cons.                            |
+| process                               |                                                 | Promise<void>          | Processes the current task, throwing an error if memory is not initialized. |
+| lastPopulationIndex                   | subProblemIndex: number                         | number                 | Returns the index of the last population for a given sub-problem.           |
+| renderSubProblem                      | subProblemIndex: number, useProblemAsHeader: boolean = false | string                 | Renders a detailed view of a sub-problem.                                  |
+| renderSubProblemSimple                | subProblemIndex: number                         | string                 | Renders a simplified view of a sub-problem.                                |
+| getActiveSolutionsLastPopulation      | subProblemIndex: number                         | any[]                  | Returns active solutions from the last population of a sub-problem.         |
+| getActiveSolutionsFromPopulation      | subProblemIndex: number, populationIndex: number | any[]                  | Returns active solutions from a specified population of a sub-problem.      |
+| numberOfPopulations                   | subProblemIndex: number                         | number                 | Returns the number of populations for a given sub-problem.                  |
+| renderSubProblems                     |                                                 | string                 | Renders a view of all sub-problems.                                        |
+| renderEntity                          | subProblemIndex: number, entityIndex: number    | string                 | Renders a view of a specific entity within a sub-problem.                   |
+| renderProblemStatement                |                                                 | string                 | Renders the problem statement.                                             |
+| renderProblemStatementSubProblemsAndEntities | index: number                                 | string                 | Renders the problem statement along with sub-problems and entities.         |
+| renderEntityPosNegReasons             | item: IEngineAffectedEntity                     | string                 | Renders positive and negative effects of an entity.                         |
 
 ## Example
 
-```
-// Example usage of BaseProlemSolvingAgent
+```typescript
 import { BaseProlemSolvingAgent } from '@policysynth/agents/baseProblemSolvingAgent.js';
+import { Job } from "bullmq";
+import { PsBaseMemoryData, IEngineProCon, IEngineAffectedEntity } from "./path/to/types";
 
 class CustomProblemSolvingAgent extends BaseProlemSolvingAgent {
-  constructor(job, memory) {
+  constructor(job: Job, memory: PsBaseMemoryData) {
     super(job, memory);
   }
 
-  async process() {
-    // Custom processing logic here
-  }
+  // Implement abstract methods and any additional functionality
 }
 
-// Assuming job and memory are already defined
+// Example usage
+const job = new Job(); // Assuming Job is properly instantiated
+const memory: PsBaseMemoryData = {/* Memory data structure */};
 const agent = new CustomProblemSolvingAgent(job, memory);
-agent.process();
+
+// Example method usage
+agent.process().then(() => {
+  console.log("Processing complete.");
+}).catch(error => {
+  console.error("Processing failed:", error);
+});
 ```

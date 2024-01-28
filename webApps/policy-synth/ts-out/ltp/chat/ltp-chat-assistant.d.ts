@@ -25,7 +25,7 @@ export declare class LtpChatAssistant extends PsChatAssistant {
     defaultDevWsPort: number;
     constructor();
     connectedCallback(): void;
-    addChatBotElement(data: PsAiChatWsMessage): void;
+    addChatBotElement(data: PsAiChatWsMessage): Promise<void>;
     sendChatMessage(): Promise<void>;
     validateSelectedChoices(event: CustomEvent): Promise<void>;
     getSuggestionsFromValidation(agentName: string, validationResults: PsValidationAgentResult): Promise<void>;

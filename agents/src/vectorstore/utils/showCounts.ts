@@ -136,7 +136,7 @@ async function run() {
 
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+    const memory = JSON.parse(output!) as PsBaseMemoryData;
 
     const counts = new ShowCounts({} as any, memory);
     await counts.process();

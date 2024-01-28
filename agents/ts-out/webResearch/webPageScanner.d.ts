@@ -6,8 +6,8 @@ export declare class WebPageScanner extends GetWebPagesProcessor {
     systemPromptOverride: string | undefined;
     collectedWebPages: any[];
     progressFunction: Function | undefined;
-    constructor(memory: IEngineInnovationMemoryData);
-    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
+    constructor(memory: PsBaseMemoryData);
+    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

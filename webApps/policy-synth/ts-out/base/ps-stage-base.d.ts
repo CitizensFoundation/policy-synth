@@ -7,7 +7,7 @@ import '@material/web/iconbutton/icon-button.js';
 import { PsRouter } from './router/router.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare abstract class PsStageBase extends YpBaseElement {
-    memory: IEngineInnovationMemoryData;
+    memory: PsBaseMemoryData;
     childType: "solution" | "policy";
     showEloRatings: boolean;
     activeSubProblemIndex: number | null;
@@ -32,7 +32,7 @@ export declare abstract class PsStageBase extends YpBaseElement {
     toggleScores(): void;
     fixImageUrlIfNeeded(url: string): string;
     static get styles(): any[];
-    isUsedSearch(result: IEngineSearchResultItem, index: number): "" | "selectedSearchItem";
+    isUsedSearch(result: IEngineSearchResultItem, index: number): "selectedSearchItem" | "";
     closeSubProblem(event: CustomEvent): void;
     setSubProblemColor(index: number): void;
     setSubProblem(index: number): void;

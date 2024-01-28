@@ -1,37 +1,36 @@
-# RedisMemoryAccessor
+# RedisMemoryManager
 
-This class is responsible for accessing and retrieving memory data from a Redis database.
+This class demonstrates how to interact with Redis to retrieve and parse memory data.
 
 ## Properties
 
-No properties are documented for this class.
+No properties are defined in this example.
 
 ## Methods
 
-| Name       | Parameters        | Return Type                             | Description                                 |
-|------------|-------------------|-----------------------------------------|---------------------------------------------|
-| `getMemory`| `key: string`     | `Promise<IEngineInnovationMemoryData>` | Retrieves memory data by key from Redis.    |
+No methods are defined in this example.
 
 ## Example
 
 ```typescript
 import ioredis from "ioredis";
-import { IEngineInnovationMemoryData } from '@policysynth/agents/solutions/tools/old/IEngineInnovationMemoryData';
 
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+// Initialize Redis client
+const redis = new ioredis.default(
+  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+);
 
-async function getMemory(key: string): Promise<IEngineInnovationMemoryData | undefined> {
-  const output = await redis.get(key);
-  if (!output) return undefined;
-  return JSON.parse(output) as IEngineInnovationMemoryData;
-}
+// Asynchronously retrieve memory data from Redis
+const output = await redis.get("st_mem:1:id");
 
-(async () => {
-  const memoryKey = "st_mem:1:id";
-  const memory = await getMemory(memoryKey);
-  console.log("output", JSON.stringify(memory, null, 2));
-  process.exit(0);
-})();
+// Parse the retrieved JSON string into PsBaseMemoryData type
+const memory: PsBaseMemoryData | undefined = JSON.parse(output!);
+
+// Log the parsed memory data
+console.log("output", JSON.stringify(memory, null, 2));
+
+// Exit the process
+process.exit(0);
 ```
 
-Note: The example provided demonstrates how to use the `getMemory` method to retrieve memory data from Redis and parse it into the `IEngineInnovationMemoryData` type. The Redis connection is established using the `ioredis` package, and the environment variable `REDIS_MEMORY_URL` is used to specify the Redis server URL, with a fallback to `redis://localhost:6379` if the environment variable is not set.
+Note: This example assumes the existence of a `PsBaseMemoryData` type, which is not defined in the provided code snippet. Ensure to define or import this type appropriately in your actual implementation.

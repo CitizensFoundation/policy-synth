@@ -3,11 +3,11 @@ import { HumanMessage, SystemMessage } from "langchain/schema";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class CreateSolutionsProcessor extends BaseProlemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
-    renderRefinePrompt(results: IEngineSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
+    renderRefinePrompt(results: IEngineSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(SystemMessage | HumanMessage)[]>;
     renderCreateSystemMessage(): SystemMessage;
-    renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (HumanMessage | SystemMessage)[];
-    renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
-    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: IEngineStageTypes): Promise<IEngineSolution[]>;
+    renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (SystemMessage | HumanMessage)[];
+    renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(SystemMessage | HumanMessage)[]>;
+    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsMemoryStageTypes): Promise<IEngineSolution[]>;
     randomSearchQueryIndex(searchQueries: IEngineSearchQueries, type: IEngineWebPageTypes): number;
     getAllTypeQueries(searchQueries: IEngineSearchQueries, subProblemIndex: number | undefined): {
         general: string;

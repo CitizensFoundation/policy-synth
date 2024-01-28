@@ -22,6 +22,56 @@ export class PolicySynthAgentBase {
         }
         this.logger = logger;
     }
+    static get emptyDefaultStages() {
+        return {
+            "create-root-causes-search-queries": {},
+            "web-search-root-causes": {},
+            "web-get-root-causes-pages": {},
+            "rank-web-root-causes": {},
+            "rate-web-root-causes": {},
+            "web-get-refined-root-causes": {},
+            "get-metadata-for-top-root-causes": {},
+            "create-problem-statement-image": {},
+            "create-sub-problems": {},
+            "rank-sub-problems": {},
+            "policies-seed": {},
+            "policies-create-images": {},
+            "create-entities": {},
+            "rank-entities": {},
+            "reduce-sub-problems": {},
+            "create-search-queries": {},
+            "rank-root-causes-search-results": {},
+            "rank-root-causes-search-queries": {},
+            "create-sub-problem-images": {},
+            "rank-search-queries": {},
+            "web-search": {},
+            "rank-web-solutions": {},
+            "rate-solutions": {},
+            "rank-search-results": {},
+            "web-get-pages": {},
+            "create-seed-solutions": {},
+            "create-pros-cons": {},
+            "create-solution-images": {},
+            "rank-pros-cons": {},
+            "rank-solutions": {},
+            "group-solutions": {},
+            "evolve-create-population": {},
+            "evolve-mutate-population": {},
+            "evolve-recombine-population": {},
+            "evolve-reap-population": {},
+            "topic-map-solutions": {},
+            "evolve-rank-population": {},
+            "analyse-external-solutions": {},
+            "create-evidence-search-queries": {},
+            "web-get-evidence-pages": {},
+            "web-search-evidence": {},
+            "rank-web-evidence": {},
+            "rate-web-evidence": {},
+            "web-get-refined-evidence": {},
+            "get-metadata-for-top-evidence": {},
+            "validation-agent": {},
+        };
+    }
     getJsonBlock(text) {
         let startIndex, endIndex;
         startIndex = text.indexOf("```json");
@@ -277,7 +327,12 @@ export class PolicySynthAgentBase {
     }
     async saveMemory() {
         if (this.memory) {
-            await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+            try {
+                await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
+            }
+            catch (error) {
+                this.logger.error("Can't save memory to redis", error);
+            }
         }
         else {
             this.logger.warn("Memory is not initialized");

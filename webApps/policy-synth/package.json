@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/webapp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -8,6 +8,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "copyInLocalAgents": "cp -R ../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
     "prepublishOnly": "npm pack && node repack",
     "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
     "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
@@ -28,7 +29,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@policysynth/agents": "^1.1.0",
+    "@policysynth/agents": "^1.2.0",
     "@yrpri/webapp": "^9.0.14"
   },
   "files": [

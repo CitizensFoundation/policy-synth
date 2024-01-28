@@ -9,9 +9,10 @@ import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
 import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
 import { GetRefinedEvidenceProcessor } from "./web/getRefinedEvidence.js";
 import { GetMetaDataForTopWebEvidenceProcessor } from "./web/getMetaDataForTopWebEvidence.js";
+import { PolicySynthAgentBase } from "../baseAgent.js";
 
 export class AgentPolicies extends BaseAgentProcessor {
-  declare memory: IEngineInnovationMemoryData;
+  declare memory: PsBaseMemoryData;
 
   override async initializeMemory(job: Job) {
     const jobData = job.data as IEngineWorkerData;
@@ -22,7 +23,7 @@ export class AgentPolicies extends BaseAgentProcessor {
       communityId: jobData.communityId,
       domainId: jobData.domainId,
       currentStage: "policies-seed",
-      stages: this.defaultStages,
+      stages: PolicySynthAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},
@@ -49,7 +50,7 @@ export class AgentPolicies extends BaseAgentProcessor {
     await this.saveMemory();
   }
 
-  async setStage(stage: IEngineStageTypes) {
+  async setStage(stage: PsMemoryStageTypes) {
     this.memory.currentStage = stage;
     this.memory.stages[stage].timeStart = Date.now();
 

@@ -1,39 +1,33 @@
 # SearchQueriesGenerator
 
-This class is responsible for generating search queries based on a given question. It extends the `PolicySynthAgentBase` class and utilizes the `ChatOpenAI` service for generating queries.
+This class extends `PolicySynthAgentBase` to generate search queries based on a given question. It utilizes a language model to produce a specified number of high-quality search queries.
 
 ## Properties
 
 | Name                     | Type   | Description                                                                 |
 |--------------------------|--------|-----------------------------------------------------------------------------|
-| systemPrompt             | string | The prompt used to instruct the system on how to generate search queries.   |
-| userPrompt               | string | The prompt that contains the research question for which queries are generated. |
+| systemPrompt             | string | The prompt given to the system for generating search queries.               |
+| userPrompt               | string | The prompt representing the user's research question.                       |
 
 ## Methods
 
-| Name                  | Parameters                                                                 | Return Type       | Description                                                                                   |
-|-----------------------|----------------------------------------------------------------------------|-------------------|-----------------------------------------------------------------------------------------------|
-| constructor           | memory: PsWebResearchMemory, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string | None              | Initializes the class with memory, number of queries to generate, question, and optional prompts. |
-| renderMessages        | None                                                                       | Promise<SystemMessage[] \| HumanMessage[]> | Prepares the system and user prompts as messages.                                             |
-| generateSearchQueries | None                                                                       | Promise<string[]> | Generates search queries based on the provided question and returns them as an array of strings. |
+| Name                  | Parameters                                                                                                   | Return Type      | Description                                                                                   |
+|-----------------------|--------------------------------------------------------------------------------------------------------------|------------------|-----------------------------------------------------------------------------------------------|
+| constructor           | memory: PsBaseMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string | None             | Initializes the class with memory, number of queries to generate, question, and optional prompts. |
+| renderMessages        | None                                                                                                         | Promise<Message[]> | Prepares system and human messages based on the prompts.                                      |
+| generateSearchQueries | None                                                                                                         | Promise<string[]> | Generates search queries using the language model based on the provided question.             |
 
 ## Example
 
 ```typescript
-// Example usage of SearchQueriesGenerator
 import { SearchQueriesGenerator } from '@policysynth/agents/webResearch/searchQueriesGenerator.js';
-import { PsWebResearchMemory } from 'path/to/PsWebResearchMemoryDefinition';
-import { IEngineConstants } from '@policysynth/agents/constants.js';
+import { PsBaseMemoryData } from 'path/to/PsBaseMemoryData';
 
-const memory = new PsWebResearchMemory(/* initialization parameters */);
-const question = "What are the implications of quantum computing for cybersecurity?";
-const numberOfQueriesToGenerate = 5;
+const memoryData: PsBaseMemoryData = /* Initialize memory data */;
+const numberOfQueries = 5;
+const question = "What are the impacts of climate change on polar bears?";
 
-const searchQueriesGenerator = new SearchQueriesGenerator(
-  memory,
-  numberOfQueriesToGenerate,
-  question
-);
+const searchQueriesGenerator = new SearchQueriesGenerator(memoryData, numberOfQueries, question);
 
 searchQueriesGenerator.generateSearchQueries().then((queries) => {
   console.log(queries);

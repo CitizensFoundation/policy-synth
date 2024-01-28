@@ -1,16 +1,76 @@
 import { OpenAI } from "openai";
 import { v4 as uuidv4 } from "uuid";
+import ioredis from "ioredis";
+import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
-const DEBUGGING = true;
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
+//@ts-ignore
+const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class PsBaseChatBot {
-    constructor(clientId, wsClients) {
+    get redisKey() {
+        return `${PsBaseChatBot.redisMemoryKeyPrefix}-${this.memoryId}`;
+    }
+    static loadMemoryFromRedis(memoryId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const memoryString = await redis.get(`${PsBaseChatBot.redisMemoryKeyPrefix}-${memoryId}`);
+                if (memoryString) {
+                    const memory = JSON.parse(memoryString);
+                    resolve(memory);
+                }
+                else {
+                    resolve(undefined);
+                }
+            }
+            catch (error) {
+                console.error("Can't load memory from redis", error);
+                resolve(undefined);
+            }
+        });
+    }
+    static getFullCostOfMemory(memory) {
+        let totalCost = undefined;
+        if (memory && memory.stages) {
+            totalCost = 0;
+            Object.values(memory.stages).forEach((stage) => {
+                if (stage.tokensInCost && stage.tokensOutCost) {
+                    totalCost += stage.tokensInCost + stage.tokensOutCost;
+                }
+            });
+        }
+        return totalCost;
+    }
+    loadMemory() {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const memoryString = await redis.get(this.redisKey);
+                if (memoryString) {
+                    const memory = JSON.parse(memoryString);
+                    resolve(memory);
+                }
+                else {
+                    resolve(this.getEmptyMemory());
+                }
+            }
+            catch (error) {
+                console.error("Can't load memory from redis", error);
+                resolve(this.getEmptyMemory());
+            }
+        });
+    }
+    constructor(wsClientId, wsClients, memoryId = undefined) {
         this.broadcastingLiveCosts = false;
-        this.liveCostsBroadcastTimeout = undefined;
         this.liveCostsBroadcastInterval = 1000;
         this.liveCostsInactivityTimeout = 1000 * 60 * 10;
+        this.tempeture = 0.7;
+        this.maxTokens = 4000;
+        this.llmModel = "gpt-4-0125-preview";
+        this.persistMemory = false;
+        this.memoryId = undefined;
+        this.liveCostsBroadcastTimeout = undefined;
         this.conversation = async (chatLog) => {
+            this.setChatLog(chatLog);
             let messages = chatLog.map((message) => {
                 return {
                     role: message.sender,
@@ -22,35 +82,79 @@ export class PsBaseChatBot {
                 content: this.renderSystemPrompt(),
             };
             messages.unshift(systemMessage);
-            if (DEBUGGING) {
-                console.log("=====================");
-                console.log(JSON.stringify(messages, null, 2));
-                console.log("=====================");
-            }
             const stream = await this.openaiClient.chat.completions.create({
-                model: "gpt-4-0125-preview",
+                model: this.llmModel,
                 messages,
-                max_tokens: 4000,
-                temperature: 0.7,
+                max_tokens: this.maxTokens,
+                temperature: this.tempeture,
                 stream: true,
             });
             this.streamWebSocketResponses(stream);
         };
-        this.clientId = clientId;
-        this.clientSocket = wsClients.get(this.clientId);
+        this.wsClientId = wsClientId;
+        this.wsClientSocket = wsClients.get(this.wsClientId);
         this.openaiClient = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,
         });
-        if (!this.clientSocket) {
-            console.error(`WS Client ${this.clientId} not found in streamWebSocketResponses`);
+        if (!this.wsClientSocket) {
+            console.error(`WS Client ${this.wsClientId} not found in streamWebSocketResponses`);
         }
-        this.memory = this.getEmptyMemory();
+        this.setupMemory(memoryId);
+    }
+    async setupMemory(memoryId = undefined) {
+        if (memoryId) {
+            this.memoryId = memoryId;
+            this.memory = await this.loadMemory();
+        }
+        else {
+            this.memoryId = uuidv4();
+            this.memory = this.getEmptyMemory();
+            if (this.wsClientSocket) {
+                this.sendMemoryId();
+            }
+            else {
+                console.error("No wsClientSocket found");
+            }
+        }
+    }
+    get fullLLMCostsForMemory() {
+        if (this.memory && this.memory.stages) {
+            return PsBaseChatBot.getFullCostOfMemory(this.memory);
+        }
+        else {
+            return undefined;
+        }
+    }
+    async getLoadedMemory() {
+        return await this.loadMemory();
+    }
+    sendMemoryId() {
+        const botMessage = {
+            sender: "bot",
+            type: "memoryIdCreated",
+            data: this.memoryId,
+        };
+        this.wsClientSocket.send(JSON.stringify(botMessage));
+    }
+    async saveMemory() {
+        if (this.memory) {
+            try {
+                await redis.set(this.redisKey, JSON.stringify(this.memory));
+                console.log(`Saved memory to redis: ${this.redisKey}`);
+            }
+            catch (error) {
+                console.log("Can't save memory to redis", error);
+            }
+        }
+        else {
+            console.error("Memory is not initialized");
+        }
     }
     renderSystemPrompt() {
         return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day. Lots of emojis`;
     }
     sendToClient(sender, message, type = "stream") {
-        this.clientSocket.send(JSON.stringify({
+        this.wsClientSocket.send(JSON.stringify({
             sender,
             type: type,
             message,
@@ -61,18 +165,18 @@ export class PsBaseChatBot {
         const botMessage = {
             sender: "bot",
             type: "agentStart",
-            message: {
+            data: {
                 name: name,
                 noStreaming: hasNoStreaming,
             },
         };
-        this.clientSocket.send(JSON.stringify(botMessage));
+        this.wsClientSocket.send(JSON.stringify(botMessage));
     }
     sendAgentCompleted(name, lastAgent = false, error = undefined) {
         const botMessage = {
             sender: "bot",
             type: "agentCompleted",
-            message: {
+            data: {
                 name: name,
                 results: {
                     isValid: true,
@@ -81,7 +185,7 @@ export class PsBaseChatBot {
                 },
             },
         };
-        this.clientSocket.send(JSON.stringify(botMessage));
+        this.wsClientSocket.send(JSON.stringify(botMessage));
     }
     sendAgentUpdate(message) {
         const botMessage = {
@@ -89,7 +193,7 @@ export class PsBaseChatBot {
             type: "agentUpdated",
             message: message,
         };
-        this.clientSocket.send(JSON.stringify(botMessage));
+        this.wsClientSocket.send(JSON.stringify(botMessage));
     }
     startBroadcastingLiveCosts() {
         this.stopBroadcastingLiveCosts();
@@ -100,16 +204,16 @@ export class PsBaseChatBot {
     }
     broadCastLiveCosts() {
         if (this.broadcastingLiveCosts) {
-            if (this.currentAgent && this.currentAgent.fullLLMCostsForMemory) {
-                if (this.lastBroacastedCosts != this.currentAgent.fullLLMCostsForMemory) {
-                    console.log(`Broadcasting live costs: ${this.currentAgent.fullLLMCostsForMemory}`);
+            if (this.memory) {
+                if (this.lastBroacastedCosts != this.fullLLMCostsForMemory) {
+                    console.log(`Broadcasting live costs: ${this.fullLLMCostsForMemory}`);
                     const botMessage = {
                         sender: "bot",
                         type: "liveLlmCosts",
-                        message: this.currentAgent.fullLLMCostsForMemory,
+                        data: this.fullLLMCostsForMemory,
                     };
-                    this.clientSocket.send(JSON.stringify(botMessage));
-                    this.lastBroacastedCosts = this.currentAgent.fullLLMCostsForMemory;
+                    this.wsClientSocket.send(JSON.stringify(botMessage));
+                    this.lastBroacastedCosts = this.fullLLMCostsForMemory;
                 }
             }
             let timePassedSinceBroadcastStartActivity = 0;
@@ -135,67 +239,33 @@ export class PsBaseChatBot {
         this.broadcastingLiveCosts = false;
         console.log("Stopped broadcasting live costs");
     }
+    get emptyChatBotStagesData() {
+        return {
+            "chatbot-conversation": {
+                tokensInCost: 0,
+                tokensOutCost: 0,
+                tokensIn: 0,
+                tokensOut: 0,
+            },
+        };
+    }
     getEmptyMemory() {
         return {
-            redisKey: `webResearch-${uuidv4()}`,
-            groupId: 1,
-            communityId: 2,
-            domainId: 1,
-            stage: "create-sub-problems",
-            currentStage: "create-sub-problems",
+            redisKey: this.redisKey,
+            currentStage: "chatbot-conversation",
             stages: {
-                "create-root-causes-search-queries": {},
-                "web-search-root-causes": {},
-                "web-get-root-causes-pages": {},
-                "rank-web-root-causes": {},
-                "rate-web-root-causes": {},
-                "web-get-refined-root-causes": {},
-                "get-metadata-for-top-root-causes": {},
-                "create-problem-statement-image": {},
-                "create-sub-problems": {},
-                "rank-sub-problems": {},
-                "policies-seed": {},
-                "policies-create-images": {},
-                "create-entities": {},
-                "rank-entities": {},
-                "reduce-sub-problems": {},
-                "create-search-queries": {},
-                "rank-root-causes-search-results": {},
-                "rank-root-causes-search-queries": {},
-                "create-sub-problem-images": {},
-                "rank-search-queries": {},
-                "web-search": {},
-                "rank-web-solutions": {},
-                "rate-solutions": {},
-                "rank-search-results": {},
-                "web-get-pages": {},
-                "create-seed-solutions": {},
-                "create-pros-cons": {},
-                "create-solution-images": {},
-                "rank-pros-cons": {},
-                "rank-solutions": {},
-                "group-solutions": {},
-                "evolve-create-population": {},
-                "evolve-mutate-population": {},
-                "evolve-recombine-population": {},
-                "evolve-reap-population": {},
-                "topic-map-solutions": {},
-                "evolve-rank-population": {},
-                "analyse-external-solutions": {},
-                "create-evidence-search-queries": {},
-                "web-get-evidence-pages": {},
-                "web-search-evidence": {},
-                "rank-web-evidence": {},
-                "rate-web-evidence": {},
-                "web-get-refined-evidence": {},
-                "get-metadata-for-top-evidence": {},
-                "validation-agent": {},
+                ...PolicySynthAgentBase.emptyDefaultStages,
+                ...this.emptyChatBotStagesData,
             },
             timeStart: Date.now(),
+            chatLog: [],
+            groupId: 1,
+            communityId: 1,
+            domainId: 1,
             totalCost: 0,
             customInstructions: {},
             problemStatement: {
-                description: "problemStatement",
+                description: "",
                 searchQueries: {
                     general: [],
                     scientific: [],
@@ -212,7 +282,6 @@ export class PsBaseChatBot {
                 },
             },
             subProblems: [],
-            currentStageData: undefined,
         };
     }
     async streamWebSocketResponses(
@@ -221,9 +290,18 @@ export class PsBaseChatBot {
         return new Promise(async (resolve, reject) => {
             this.sendToClient("bot", "", "start");
             try {
+                let botMessage = "";
                 for await (const part of stream) {
                     this.sendToClient("bot", part.choices[0].delta.content);
+                    botMessage += part.choices[0].delta.content;
                     this.addToExternalSolutionsMemoryCosts(part.choices[0].delta.content, "out");
+                    if (part.choices[0].finish_reason == "stop") {
+                        this.memory.chatLog.push({
+                            sender: "bot",
+                            message: botMessage,
+                        });
+                        await this.saveMemoryIfNeeded();
+                    }
                 }
             }
             catch (error) {
@@ -251,41 +329,48 @@ export class PsBaseChatBot {
         if (text) {
             const parts = text.split(" ").filter((part) => part != "");
             const estimateTokens = parts.length * WORDS_TO_TOKENS_MAGIC_CONSTANT;
-            if (this.currentAgent && this.currentAgent.memory) {
+            if (this.memory) {
                 if (type == "in") {
-                    if (this.memory.stages["analyse-external-solutions"].tokensInCost ===
+                    if (this.memory.stages["chatbot-conversation"].tokensInCost ===
                         undefined ||
-                        this.memory.stages["analyse-external-solutions"].tokensIn ===
-                            undefined) {
-                        this.memory.stages["analyse-external-solutions"].tokensInCost = 0;
-                        this.memory.stages["analyse-external-solutions"].tokensIn = 0;
+                        this.memory.stages["chatbot-conversation"].tokensIn === undefined) {
+                        this.memory.stages["chatbot-conversation"].tokensInCost = 0;
+                        this.memory.stages["chatbot-conversation"].tokensIn = 0;
                     }
-                    this.memory.stages["analyse-external-solutions"].tokensIn +=
-                        estimateTokens;
-                    this.memory.stages["analyse-external-solutions"].tokensInCost +=
+                    this.memory.stages["chatbot-conversation"].tokensIn += estimateTokens;
+                    this.memory.stages["chatbot-conversation"].tokensInCost +=
                         this.getTokenCosts(estimateTokens, type);
                 }
                 else {
-                    if (this.memory.stages["analyse-external-solutions"].tokensOutCost ===
+                    if (this.memory.stages["chatbot-conversation"].tokensOutCost ===
                         undefined ||
-                        this.memory.stages["analyse-external-solutions"].tokensOut ===
-                            undefined) {
-                        this.memory.stages["analyse-external-solutions"].tokensOutCost = 0;
-                        this.memory.stages["analyse-external-solutions"].tokensOut = 0;
+                        this.memory.stages["chatbot-conversation"].tokensOut === undefined) {
+                        this.memory.stages["chatbot-conversation"].tokensOutCost = 0;
+                        this.memory.stages["chatbot-conversation"].tokensOut = 0;
                     }
-                    this.memory.stages["analyse-external-solutions"].tokensOut +=
+                    this.memory.stages["chatbot-conversation"].tokensOut +=
                         estimateTokens;
-                    this.memory.stages["analyse-external-solutions"].tokensOutCost +=
+                    this.memory.stages["chatbot-conversation"].tokensOutCost +=
                         this.getTokenCosts(estimateTokens, type);
                 }
             }
             else {
-                console.warn(`No current agent or memory found to add external solutions costs`);
+                console.warn(`No memory found to add external solutions costs`);
             }
         }
         else {
             console.warn(`No text found to add external solutions costs`);
         }
     }
+    async saveMemoryIfNeeded() {
+        if (this.persistMemory) {
+            await this.saveMemory();
+        }
+    }
+    async setChatLog(chatLog) {
+        this.memory.chatLog = chatLog;
+        await this.saveMemoryIfNeeded();
+    }
 }
+PsBaseChatBot.redisMemoryKeyPrefix = "chatbot-memory";
 //# sourceMappingURL=baseChatBot.js.map
