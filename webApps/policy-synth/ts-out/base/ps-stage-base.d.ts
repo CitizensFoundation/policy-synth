@@ -32,7 +32,7 @@ export declare abstract class PsStageBase extends YpBaseElement {
     toggleScores(): void;
     fixImageUrlIfNeeded(url: string): string;
     static get styles(): any[];
-    isUsedSearch(result: IEngineSearchResultItem, index: number): "selectedSearchItem" | "";
+    isUsedSearch(result: IEngineSearchResultItem, index: number): "" | "selectedSearchItem";
     closeSubProblem(event: CustomEvent): void;
     setSubProblemColor(index: number): void;
     setSubProblem(index: number): void;
