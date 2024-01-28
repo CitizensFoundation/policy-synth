@@ -146,6 +146,11 @@ export class MarkdownDirective extends AsyncDirective {
             white-space: pre-wrap;
             white-space: -moz-pre-wrap;
           }
+
+          a {
+            color: var(--md-sys-color-primary);
+            font-weight: bold;
+          }
         `;
                 // Combine the CSS styles with the generated HTML
                 let formattedMarkdown = `
@@ -158,6 +163,7 @@ export class MarkdownDirective extends AsyncDirective {
             });
         })
             .then(rawHTML => {
+            rawHTML = rawHTML.replace(/<a href="/g, '<a target="_blank" href="');
             if (mergedOptions.skipSanitization) {
                 return Promise.resolve(rawHTML);
             }
