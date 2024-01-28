@@ -37,7 +37,7 @@ export declare class PsAiChatElement extends YpBaseElement {
     renderUser(): import("lit").TemplateResult<1>;
     renderNoStreaming(): import("lit").TemplateResult<1>;
     renderThinking(): import("lit").TemplateResult<1>;
-    getThinkingText(): "Thinking..." | "Mõeldes..." | "Hugsa...";
+    getThinkingText(): "Mõeldes..." | "Hugsa..." | "Thinking...";
     renderMessage(): any;
     render(): import("lit").TemplateResult<1>;
 }
