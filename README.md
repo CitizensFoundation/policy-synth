@@ -18,7 +18,7 @@ Policy Synth aims to help governments and citizens make better decisions togethe
 ## Real life impact
 Policy Synth is already having real life impact: [https://www.fastcompany.com/91001497/ai-faith-in-democracy](https://www.fastcompany.com/91001497/ai-faith-in-democracy)
 
-## Live Results
+## Example Results
 - <a href="https://policy-synth.ai/projects/1/"><strong>Open Results: Democracy in Distress</strong></a><br>
 
 ## Example Policy Synth Agent Configuration
