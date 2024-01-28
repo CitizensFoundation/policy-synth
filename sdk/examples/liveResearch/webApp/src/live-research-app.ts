@@ -5,11 +5,20 @@ import { PsRouter } from '@policysynth/webapp/base/router/router.js';
 import '@material/web/slider/slider.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 
+import '@material/web/menu/menu.js';
+import { MdMenu } from '@material/web/menu/menu.js';
+import '@material/web/menu/menu-item.js';
+
 import './live-research-chatbot.js';
 import { PolicySynthWebApp } from '@policysynth/webapp/ps-app.js';
 import { ResearchServerApi } from './researchServerApi.js';
 import { LiveResearchChatBot } from './live-research-chatbot.js';
 import { PropertyValueMap } from '@lit/reactive-element';
+
+type SavedChat = {
+  serverMemoryId: string;
+  questionSnippet: string;
+};
 
 @customElement('live-research-app')
 export class LiveResearchApp extends PolicySynthWebApp {
@@ -37,6 +46,9 @@ export class LiveResearchApp extends PolicySynthWebApp {
   @property({ type: String })
   runningTime = '0h 0m 0s';
 
+  @property({ type: Array })
+  savedChats: SavedChat[] = [];
+
   runningTimeInterval: number | undefined;
 
   startTime: Date | undefined;
@@ -48,6 +60,70 @@ export class LiveResearchApp extends PolicySynthWebApp {
   constructor() {
     super();
     this.serverApi = new ResearchServerApi();
+  }
+
+  loadChatsFromLocalStorage(): void {
+    const storedChats = localStorage.getItem('myChats');
+    if (storedChats) {
+      this.savedChats = JSON.parse(storedChats) as SavedChat[];
+    }
+  }
+
+  saveChatToLocalStorage(): void {
+    const chatBotElement = this.$$(
+      'live-research-chat-bot'
+    ) as LiveResearchChatBot;
+    if (
+      chatBotElement &&
+      chatBotElement.chatLog &&
+      chatBotElement.chatLog.length > 0
+    ) {
+      const questionSnippet = chatBotElement.chatLog[0].message.slice(0, 25);
+      const newChat: SavedChat = {
+        serverMemoryId: this.serverMemoryId as string,
+        questionSnippet,
+      };
+      this.savedChats.push(newChat);
+      localStorage.setItem('myChats', JSON.stringify(this.savedChats));
+    }
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.loadChatsFromLocalStorage();
+  }
+
+  openMenu() {
+    const menu = this.$$('#usage-menu') as MdMenu;
+    menu.open = true;
+  }
+
+  renderSavedChatsDropdown() {
+    if (this.savedChats.length == 0) {
+      return html``;
+    } else {
+      return html`
+        <span style="position: relative">
+          <md-outlined-button
+            class="menuButton"
+            id="usage-anchor"
+            @click="${this.openMenu}"
+            >Previous Chats</md-outlined-button
+          >
+          <md-menu id="usage-menu" anchor="usage-anchor">
+            ${this.savedChats.map(
+              chat => html`
+                <md-menu-item
+                  @click="${() => this.loadChatLog(chat.serverMemoryId)}"
+                >
+                  <div slot="headline">${chat.questionSnippet}</div>
+                </md-menu-item>
+              `
+            )}
+          </md-menu>
+        </span>
+      `;
+    }
   }
 
   static override get styles() {
@@ -71,6 +147,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
           font-size: 12px;
           padding-left: 16px;
           margin-bottom: 8px;
+        }
+
+        .menuButton {
+          margin-bottom: 32px;
         }
 
         .sliderScopes,
@@ -153,6 +233,12 @@ export class LiveResearchApp extends PolicySynthWebApp {
     this.serverMemoryId = event.detail;
     const path = `/${this.serverMemoryId}`;
     history.pushState({}, '', path);
+    this.saveChatToLocalStorage();
+  }
+
+  private loadChatLog(serverMemoryId: string): void {
+    this.serverMemoryId = serverMemoryId;
+    this.getChatLogFromServer();
   }
 
   renderApp() {
@@ -172,6 +258,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
         .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
         .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}
       ></live-research-chat-bot>
+      ${this.renderSavedChatsDropdown()}
     </div>`;
   }
 
