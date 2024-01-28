@@ -1,6 +1,6 @@
 # ResearchWeb
 
-This class extends `SearchWebProcessor` to perform web searches based on given queries.
+This class extends the `SearchWebProcessor` to perform web searches based on given queries.
 
 ## Properties
 
@@ -8,21 +8,21 @@ No public properties are documented.
 
 ## Methods
 
-| Name    | Parameters                | Return Type | Description                             |
-|---------|---------------------------|-------------|-----------------------------------------|
-| search  | searchQueries: string[]   | Promise<any> | Performs a web search based on the provided queries and returns the search results. |
+| Name    | Parameters                  | Return Type            | Description                             |
+|---------|-----------------------------|------------------------|-----------------------------------------|
+| search  | searchQueries: string[]     | Promise<SearchResult[]>| Performs web searches and returns the results. |
 
 ## Example
 
-```javascript
+```typescript
 import { ResearchWeb } from '@policysynth/agents/webResearch/researchWeb.js';
+import { PsBaseMemoryData } from 'path/to/PsBaseMemoryData';
 
-async function performWebSearch() {
-  const researchWeb = new ResearchWeb();
-  const searchQueries = ["policy synthesis", "AI in public decision making"];
-  const results = await researchWeb.search(searchQueries);
+const memoryData: PsBaseMemoryData = /* Initialize memory data */;
+const researchWeb = new ResearchWeb(memoryData);
+
+const searchQueries = ["policy synthesis", "AI research"];
+researchWeb.search(searchQueries).then(results => {
   console.log(results);
-}
-
-performWebSearch();
+});
 ```

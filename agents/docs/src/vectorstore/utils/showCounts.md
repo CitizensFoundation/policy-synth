@@ -1,40 +1,40 @@
 # ShowCounts
 
-This class extends `BaseProblemSolvingAgent` to count web pages and solutions found within them. It utilizes a `WebPageVectorStore` to retrieve web pages for processing and aggregates counts of various metrics such as total web pages, solutions found, and unique identifiers and URLs.
+This class extends `BaseProlemSolvingAgent` to count web pages and solutions from a vector store.
 
 ## Properties
 
-| Name                | Type                  | Description                                      |
-|---------------------|-----------------------|--------------------------------------------------|
-| webPageVectorStore  | WebPageVectorStore    | Instance of WebPageVectorStore for data access.  |
-| foundIds            | Set<string>           | Set of unique web page IDs found.                |
-| foundUrls           | Set<string>           | Set of unique web page URLs found.               |
-| totalWebPageCount   | number                | Total count of web pages processed.              |
-| totalSolutionsFound | number                | Total count of solutions found.                  |
-| totalEmptySolutions | number                | Count of web pages with no solutions found.      |
-| totalNonEmptySolutions | number              | Count of web pages with solutions found.         |
+| Name                  | Type                  | Description                                      |
+|-----------------------|-----------------------|--------------------------------------------------|
+| webPageVectorStore    | WebPageVectorStore    | Instance of WebPageVectorStore.                  |
+| foundIds              | Set<string>           | Set of found web page IDs.                       |
+| foundUrls             | Set<string>           | Set of found web page URLs.                      |
+| totalWebPageCount     | number                | Total count of web pages processed.              |
+| totalSolutionsFound   | number                | Total count of solutions found.                  |
+| totalEmptySolutions   | number                | Total count of web pages with no solutions.      |
+| totalNonEmptySolutions| number                | Total count of web pages with solutions.         |
 
 ## Methods
 
-| Name            | Parameters                          | Return Type                             | Description                                           |
-|-----------------|-------------------------------------|-----------------------------------------|-------------------------------------------------------|
-| countWebPages   | subProblemIndex: number \| undefined | Promise<{ webPageCount: number; solutionsCount: number; }> | Counts web pages and solutions for a given sub-problem index. |
-| process         |                                     | Promise<void>                          | Processes counts for web pages and solutions, logging the results. |
+| Name            | Parameters                          | Return Type                  | Description                                      |
+|-----------------|-------------------------------------|------------------------------|--------------------------------------------------|
+| countWebPages   | subProblemIndex: number \| undefined| Promise<{webPageCount: number, solutionsCount: number}> | Counts web pages and solutions for a given sub-problem index. |
+| process         |                                     | Promise<void>                | Processes counts for web pages and solutions.    |
 
 ## Example
 
-```javascript
+```typescript
+import { PsBaseMemoryData } from "@policysynth/agents/baseAgent.js";
 import ioredis from "ioredis";
-import { ShowCounts } from '@policysynth/agents/vectorstore/utils/showCounts.js';
-
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+import { ShowCounts } from "@policysynth/agents/vectorstore/utils/showCounts.js";
 
 async function run() {
   const projectId = process.argv[2];
-
+  const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+  
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!); // Assuming PsBaseMemoryData type
+    const memory = JSON.parse(output!) as PsBaseMemoryData;
 
     const counts = new ShowCounts({} as any, memory);
     await counts.process();
@@ -47,5 +47,3 @@ async function run() {
 
 run();
 ```
-
-This example demonstrates how to instantiate and use the `ShowCounts` class to process and count web pages and solutions based on a project ID.

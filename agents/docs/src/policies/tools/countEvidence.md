@@ -1,24 +1,23 @@
 # CountWebEvidenceProcessor
 
-This class extends `BaseProlemSolvingAgent` to count all web evidence related to policies.
+This class extends `BaseProlemSolvingAgent` to count all web evidence for policies. It processes web evidence, counts various metrics such as total evidence, refined evidence, recommendations, and logs the counts for each type of evidence related to policies.
 
 ## Properties
 
-| Name                        | Type                             | Description                                   |
-|-----------------------------|----------------------------------|-----------------------------------------------|
-| evidenceWebPageVectorStore  | EvidenceWebPageVectorStore       | Store for evidence web page vectors.          |
+| Name                        | Type                             | Description                                           |
+|-----------------------------|----------------------------------|-------------------------------------------------------|
+| evidenceWebPageVectorStore  | EvidenceWebPageVectorStore       | An instance of EvidenceWebPageVectorStore.            |
 
 ## Methods
 
-| Name       | Parameters                                      | Return Type | Description                                                                 |
-|------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| countAll   | policy: PSPolicy, subProblemIndex: number       | Promise<void> | Counts all web evidence for a given policy and sub-problem index.          |
-| process    |                                                 | Promise<void> | Processes the evidence counting for all sub-problems and their policies.   |
+| Name       | Parameters                                  | Return Type | Description                                                                 |
+|------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| countAll   | policy: PSPolicy, subProblemIndex: number   | Promise<void>| Counts all web evidence for a given policy and sub-problem index.          |
+| process    |                                             | Promise<void>| Processes and counts evidence for all sub-problems and their policies.     |
 
 ## Example
 
-```javascript
-// Example usage of CountWebEvidenceProcessor
+```typescript
 import { CountWebEvidenceProcessor } from '@policysynth/agents/policies/tools/countEvidence.js';
 import ioredis from "ioredis";
 
@@ -29,7 +28,7 @@ async function run() {
 
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!); // Assuming PsBaseMemoryData type
+    const memory = JSON.parse(output!) as PsBaseMemoryData;
 
     const counts = new CountWebEvidenceProcessor({} as any, memory);
     await counts.process();

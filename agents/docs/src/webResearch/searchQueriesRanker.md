@@ -1,6 +1,6 @@
 # SearchQueriesRanker
 
-This class is responsible for ranking search queries based on their relevance to a given research question. It extends the `BasePairwiseRankingsProcessor` class.
+This class extends `BasePairwiseRankingsProcessor` to rank search queries based on their relevance to a user's research question.
 
 ## Properties
 
@@ -12,27 +12,28 @@ This class is responsible for ranking search queries based on their relevance to
 
 | Name              | Parameters                                                                 | Return Type                             | Description                                                                                   |
 |-------------------|----------------------------------------------------------------------------|-----------------------------------------|-----------------------------------------------------------------------------------------------|
-| voteOnPromptPair  | index: number, promptPair: number[]                                        | Promise<IEnginePairWiseVoteResults>     | Ranks a pair of search queries based on their relevance to the research question.             |
-| rankSearchQueries | queriesToRank: string[], searchQuestion: string, maxPrompts: number = 120 | Promise<string[]>                       | Ranks a list of search queries based on their relevance to the provided research question.   |
+| voteOnPromptPair  | index: number, promptPair: number[]                                        | Promise<IEnginePairWiseVoteResults>     | Ranks a pair of search queries based on their relevance to the search question.               |
+| rankSearchQueries | queriesToRank: string[], searchQuestion: string, maxPrompts: number = 120 | Promise<string[]>                       | Ranks a list of search queries based on their relevance to the provided search question.      |
 
 ## Example
 
-```javascript
-// Example usage of SearchQueriesRanker
+```typescript
 import { SearchQueriesRanker } from '@policysynth/agents/webResearch/searchQueriesRanker.js';
-import { PsWebResearchMemory } from 'path/to/PsWebResearchMemory';
-import { IEngineConstants } from 'path/to/constants.js';
+import { PsBaseMemoryData, IEnginePairWiseVoteResults } from 'path/to/types';
 
-const memory = new PsWebResearchMemory();
-const searchQuestion = "What are the latest trends in AI research?";
+const memoryData: PsBaseMemoryData = {/* Memory data structure */};
+const searchQuestion = "What are the latest advancements in AI research?";
 const queriesToRank = [
-  "AI research trends 2023",
-  "Latest AI breakthroughs",
-  "AI historical milestones"
+  "AI research breakthroughs 2023",
+  "History of AI",
+  "Future predictions for AI technology"
 ];
 
-const ranker = new SearchQueriesRanker(memory);
-ranker.rankSearchQueries(queriesToRank, searchQuestion).then(rankedQueries => {
-  console.log("Ranked Queries:", rankedQueries);
-});
+async function rankQueries() {
+  const ranker = new SearchQueriesRanker(memoryData);
+  const rankedQueries = await ranker.rankSearchQueries(queriesToRank, searchQuestion);
+  console.log(rankedQueries);
+}
+
+rankQueries();
 ```

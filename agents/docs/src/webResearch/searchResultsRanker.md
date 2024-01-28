@@ -4,35 +4,42 @@ This class extends `BasePairwiseRankingsProcessor` to rank search results based 
 
 ## Properties
 
-| Name            | Type                             | Description                                   |
-|-----------------|----------------------------------|-----------------------------------------------|
-| searchQuestion  | string \| undefined              | The search question to rank results against.  |
+| Name            | Type                      | Description                                   |
+|-----------------|---------------------------|-----------------------------------------------|
+| searchQuestion  | string \| undefined       | The search question to rank the results for. |
 
 ## Methods
 
-| Name              | Parameters                                                                 | Return Type                        | Description                                                                                   |
-|-------------------|----------------------------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------------------------|
-| voteOnPromptPair  | index: number, promptPair: number[]                                        | Promise<IEnginePairWiseVoteResults>| Analyzes and ranks a pair of search results based on their relevance to the search question. |
-| rankSearchResults | queriesToRank: IEngineSearchResultItem[], searchQuestion: string, maxPrompts = 150 | Promise<IEngineSearchResultItem[]> | Ranks a list of search results based on their relevance to the search question.               |
+| Name               | Parameters                                                                 | Return Type                        | Description                                                                                   |
+|--------------------|----------------------------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------------------------|
+| voteOnPromptPair   | index: number, promptPair: number[]                                        | Promise<IEnginePairWiseVoteResults>| Analyzes, compares, and ranks a pair of search results based on their relevance.             |
+| rankSearchResults  | queriesToRank: IEngineSearchResultItem[], searchQuestion: string, maxPrompts = 150 | Promise<IEngineSearchResultItem[]> | Ranks a list of search results based on their relevance to the search question.               |
 
 ## Example
 
-```javascript
+```typescript
 import { SearchResultsRanker } from '@policysynth/agents/webResearch/searchResultsRanker.js';
-import { PsWebResearchMemory } from 'path/to/PsWebResearchMemory';
-import { IEngineSearchResultItem, IEnginePairWiseVoteResults } from 'path/to/engineTypes';
+import { PsBaseMemoryData, IEngineSearchResultItem, IEnginePairWiseVoteResults, IEngineConstants } from 'path/to/your/types';
 
-const memory = new PsWebResearchMemory();
-const searchResultsRanker = new SearchResultsRanker(memory);
-
+const memoryData: PsBaseMemoryData = /* Initialize your memory data here */;
+const searchQuestion = "What is the best programming language for web development?";
 const searchResults: IEngineSearchResultItem[] = [
-  // Array of search result items to rank
+  {
+    title: "Python for Web Development",
+    description: "Exploring the use of Python in web development.",
+    url: "https://example.com/python-web"
+  },
+  {
+    title: "JavaScript: The Language of the Web",
+    description: "Why JavaScript is essential for modern web development.",
+    url: "https://example.com/javascript-web"
+  }
+  // Add more search results as needed
 ];
 
-const searchQuestion = "What is the best programming language for beginners?";
-
 async function rankSearchResults() {
-  const rankedResults = await searchResultsRanker.rankSearchResults(searchResults, searchQuestion);
+  const ranker = new SearchResultsRanker(memoryData);
+  const rankedResults = await ranker.rankSearchResults(searchResults, searchQuestion);
   console.log(rankedResults);
 }
 
