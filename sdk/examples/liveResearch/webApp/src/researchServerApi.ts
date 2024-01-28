@@ -6,6 +6,14 @@ export class ResearchServerApi extends YpServerApi {
     this.baseUrlPath = urlPath;
   }
 
+  public async getChatLogFromServer(
+    memoryId: string
+  ): Promise<PsSimpleChatLog[]> {
+    return (await this.fetchWrapper(
+      this.baseUrlPath + `/live_research_chat/${memoryId}`
+    )) as PsSimpleChatLog[];
+  }
+
   public conversation(
     chatLog: PsSimpleChatLog[],
     wsClientId: string,

@@ -96,6 +96,7 @@ export class PsBaseChatBot {
         if (this.memory) {
             try {
                 await redis.set(this.redisKey, JSON.stringify(this.memory));
+                console.log(`Saved memory to redis: ${this.redisKey}`);
             }
             catch (error) {
                 console.log("Can't save memory to redis", error);
@@ -120,7 +121,7 @@ export class PsBaseChatBot {
         const botMessage = {
             sender: "bot",
             type: "agentStart",
-            message: {
+            data: {
                 name: name,
                 noStreaming: hasNoStreaming,
             },
@@ -131,7 +132,7 @@ export class PsBaseChatBot {
         const botMessage = {
             sender: "bot",
             type: "agentCompleted",
-            message: {
+            data: {
                 name: name,
                 results: {
                     isValid: true,
@@ -165,7 +166,7 @@ export class PsBaseChatBot {
                     const botMessage = {
                         sender: "bot",
                         type: "liveLlmCosts",
-                        message: this.currentAgent.fullLLMCostsForMemory,
+                        data: this.currentAgent.fullLLMCostsForMemory,
                     };
                     this.wsClientSocket.send(JSON.stringify(botMessage));
                     this.lastBroacastedCosts = this.currentAgent.fullLLMCostsForMemory;
@@ -245,11 +246,18 @@ export class PsBaseChatBot {
         return new Promise(async (resolve, reject) => {
             this.sendToClient("bot", "", "start");
             try {
+                let botMessage = "";
                 for await (const part of stream) {
                     this.sendToClient("bot", part.choices[0].delta.content);
+                    botMessage += part.choices[0].delta.content;
                     this.addToExternalSolutionsMemoryCosts(part.choices[0].delta.content, "out");
-                    console.log(JSON.stringify(part, null, 2));
-                    // chatLog.push({})
+                    if (part.choices[0].finish_reason == "stop") {
+                        this.memory.chatLog.push({
+                            sender: "bot",
+                            message: botMessage,
+                        });
+                        await this.saveMemoryIfNeeded();
+                    }
                 }
             }
             catch (error) {
@@ -310,11 +318,14 @@ export class PsBaseChatBot {
             console.warn(`No text found to add external solutions costs`);
         }
     }
-    async setChatLog(chatLog) {
-        this.memory.chatLog = chatLog;
+    async saveMemoryIfNeeded() {
         if (this.persistMemory) {
             await this.saveMemory();
         }
+    }
+    async setChatLog(chatLog) {
+        this.memory.chatLog = chatLog;
+        await this.saveMemoryIfNeeded();
     }
 }
 //# sourceMappingURL=baseChatBot.js.map

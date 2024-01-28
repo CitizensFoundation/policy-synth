@@ -7,6 +7,7 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 
 import './live-research-chatbot.js';
 import { PolicySynthWebApp } from '@policysynth/webapp/ps-app.js';
+import { ResearchServerApi } from './researchServerApi.js';
 
 @customElement('live-research-app')
 export class LiveResearchApp extends PolicySynthWebApp {
@@ -23,6 +24,12 @@ export class LiveResearchApp extends PolicySynthWebApp {
   percentOfTopResultsToScan = 0.25;
 
   @property({ type: String })
+  serverMemoryId: string | undefined;
+
+  @property({ type: Array })
+  chatLog: PsSimpleChatLog[] = [];
+
+  @property({ type: String })
   llmTotalCost = '$0.000';
 
   @property({ type: String })
@@ -34,8 +41,11 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
   estimatedSecondsPerPage = 40;
 
+  serverApi: ResearchServerApi;
+
   constructor() {
     super();
+    this.serverApi = new ResearchServerApi();
   }
 
   static override get styles() {
@@ -86,25 +96,62 @@ export class LiveResearchApp extends PolicySynthWebApp {
   override router: PsRouter = new PsRouter(this, [
     {
       path: '/*',
-      render: () => {
-        return html` <div class="layout vertical center-center">
-          <div class="layout horizontal center-center themeToggle">
-            <md-outlined-icon-button hidden @click="${this.reset}"
-              ><md-icon>restart_alt</md-icon></md-outlined-icon-button
-            >${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
-          </div>
-          <live-research-chat-bot
-            @llm-total-cost-update=${this.handleCostUpdate}
-            @start-process=${this.startTimer}
-            @stop-process=${this.stopTimer}
-            .numberOfSelectQueries=${this.numberOfSelectQueries}
-            .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
-            .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}
-          ></live-research-chat-bot>
-        </div>`;
+      render: this.renderApp,
+    },
+    {
+      path: '/:serverMemoryId',
+      render: params => {
+        this.serverMemoryId = params.serverMemoryId;
+        return this.renderApp();
       },
     },
   ]);
+
+  async getChatLogFromServer() {
+    if (this.serverMemoryId) {
+      const chatLogSimple = await this.serverApi.getChatLogFromServer(
+        this.serverMemoryId
+      );
+      if (chatLogSimple) {
+        this.chatLog = chatLogSimple.map((chatLogItem: any) => {
+          return {
+            ...chatLogItem,
+            date: new Date(chatLogItem.date),
+          };
+        });
+      } else {
+        console.error('No chat log from server');
+      }
+    } else {
+      console.error('No serverMemoryId');
+    }
+  }
+
+  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+    super.updated(changedProperties);
+    if (changedProperties.has('serverMemoryId') && this.serverMemoryId) {
+      this.getChatLogFromServer();
+    }
+  }
+
+  renderApp() {
+    return html` <div class="layout vertical center-center">
+      <div class="layout horizontal center-center themeToggle">
+        <md-outlined-icon-button hidden @click="${this.reset}"
+          ><md-icon>restart_alt</md-icon></md-outlined-icon-button
+        >${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
+      </div>
+      <live-research-chat-bot
+        @llm-total-cost-update=${this.handleCostUpdate}
+        @start-process=${this.startTimer}
+        @stop-process=${this.stopTimer}
+        .chatLog=${this.chatLog}
+        .numberOfSelectQueries=${this.numberOfSelectQueries}
+        .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
+        .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}
+      ></live-research-chat-bot>
+    </div>`;
+  }
 
   updateRunningTime() {
     if (this.startTime) {
@@ -116,7 +163,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
       this.runningTime = `${hours}h ${minutes}m ${seconds}s`;
 
       // Update every second
-      this.runningTimeInterval = setTimeout(() => this.updateRunningTime(), 1000) as unknown as number;
+      this.runningTimeInterval = setTimeout(
+        () => this.updateRunningTime(),
+        1000
+      ) as unknown as number;
     }
   }
 
@@ -190,7 +240,9 @@ export class LiveResearchApp extends PolicySynthWebApp {
     return html`
       <div class="layout vertical scopeSliders">
         <div class="layout horizontal center-center estTime">
-          <div class="topInfoItem">${this.t('Estimated')}: ${this.estimatedTotalTime}</div>
+          <div class="topInfoItem">
+            ${this.t('Estimated')}: ${this.estimatedTotalTime}
+          </div>
           <div class="topInfoItem">Running Time: ${this.runningTime}</div>
           <div class="topInfoItem">LLM Cost: ${this.llmTotalCost}</div>
         </div>

@@ -3,6 +3,7 @@ export declare class LiveResearchChatBot extends PsBaseChatBot {
     numberOfQueriesToGenerate: number;
     percentOfQueriesToSearch: number;
     percentOfResultsToScan: number;
+    persistMemory: boolean;
     summarySystemPrompt: string;
     jsonWebPageResearchSchema: string;
     renderFollowupSystemPrompt(): string;

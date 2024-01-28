@@ -74,6 +74,9 @@ export class PsChatAssistant extends YpBaseElement {
   @property({ type: Number })
   scrollStart: number = 0;
 
+  @property({ type: String })
+  serverMemoryId: string | undefined;
+
   @property({ type: Number })
   defaultDevWsPort = 8000;
 
@@ -365,23 +368,23 @@ export class PsChatAssistant extends YpBaseElement {
     }
   }
 
-  addChatBotElement(data: PsAiChatWsMessage) {
+  addChatBotElement(wsMessage: PsAiChatWsMessage) {
     const lastElement = this.chatElements![this.chatElements!.length - 1];
-    switch (data.type) {
+    switch (wsMessage.type) {
       case 'hello_message':
-        this.addToChatLogWithMessage(data);
+        this.addToChatLogWithMessage(wsMessage);
         break;
       case 'thinking':
         if (lastElement) {
           lastElement.active = false;
         }
-        this.addToChatLogWithMessage(data, this.t('Thinking...'));
+        this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
         break;
       case 'noStreaming':
         if (lastElement) {
           lastElement.active = true;
         }
-        this.addToChatLogWithMessage(data, data.message);
+        this.addToChatLogWithMessage(wsMessage, wsMessage.message);
         break;
       case 'agentStart':
       case 'validationAgentStart':
@@ -389,7 +392,7 @@ export class PsChatAssistant extends YpBaseElement {
         if (lastElement) {
           lastElement.active = false;
         }
-        const startOptions = data.message as unknown as PsAgentStartWsOptions;
+        const startOptions = wsMessage.data as PsAgentStartWsOptions;
 
         setTimeout(() => {
           this.scrollDown();
@@ -402,7 +405,7 @@ export class PsChatAssistant extends YpBaseElement {
             message: startOptions.name,
           });
         } else {
-          this.addToChatLogWithMessage(data, startOptions.name);
+          this.addToChatLogWithMessage(wsMessage, startOptions.name);
           this.chatLog[
             this.chatLog.length - 1
           ].message = `${startOptions.name}\n\n`;
@@ -410,18 +413,22 @@ export class PsChatAssistant extends YpBaseElement {
         this.requestUpdate();
         break;
       case 'liveLlmCosts':
-        this.fire('llm-total-cost-update', data.message);
+        this.fire('llm-total-cost-update', wsMessage.data);
+        break;
+      case 'memoryIdCreated':
+        this.serverMemoryId = wsMessage.data as string;
+        this.fire('server-memory-id-created', wsMessage.data);
         break;
       case 'agentCompleted':
       case 'validationAgentCompleted':
         console.log('agentCompleted');
         const completedOptions =
-          data.message as unknown as PsAgentCompletedWsOptions;
+          wsMessage.data as  PsAgentCompletedWsOptions;
 
         if (lastElement) {
           lastElement.active = false;
           lastElement.message = completedOptions.name;
-          this.addToChatLogWithMessage(data, this.t('Thinking...'));
+          this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
           if (!this.chatLog[this.chatLog.length - 1].message)
             this.chatLog[this.chatLog.length - 1].message = '';
         } else {
@@ -431,7 +438,7 @@ export class PsChatAssistant extends YpBaseElement {
       case 'agentUpdated':
         console.log('agentUpdated');
         if (lastElement) {
-          lastElement.updateMessage = data.message;
+          lastElement.updateMessage = wsMessage.message;
         } else {
           console.error('No last element on agentUpdated');
         }
@@ -440,7 +447,7 @@ export class PsChatAssistant extends YpBaseElement {
         if (lastElement) {
           lastElement.active = false;
         }
-        this.addToChatLogWithMessage(data, this.t('Thinking...'));
+        this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
         if (!this.chatLog[this.chatLog.length - 1].message)
           this.chatLog[this.chatLog.length - 1].message = '';
         break;
@@ -448,23 +455,23 @@ export class PsChatAssistant extends YpBaseElement {
         lastElement.followUpQuestionsRaw = '';
         break;
       case 'stream_followup':
-        lastElement.followUpQuestionsRaw += data.message;
+        lastElement.followUpQuestionsRaw += wsMessage.message;
         this.requestUpdate();
         break;
       case 'info':
-        this.infoMessage = data.message;
+        this.infoMessage = wsMessage.message;
         break;
       case 'moderation_error':
-        data.message =
+        wsMessage.message =
           'OpenAI Moderation Flag Error. Please refine your question.';
-        this.addToChatLogWithMessage(data, data.message, false, this.t('Send'));
+        this.addToChatLogWithMessage(wsMessage, wsMessage.message, false, this.t('Send'));
         break;
       case 'error':
-        this.addToChatLogWithMessage(data, data.message, false, this.t('Send'));
+        this.addToChatLogWithMessage(wsMessage, wsMessage.message, false, this.t('Send'));
         break;
       case 'end':
         lastElement.stopJsonLoading();
-        this.chatLog[this.chatLog.length - 1].debug = data.debug;
+        this.chatLog[this.chatLog.length - 1].debug = wsMessage.debug;
         this.sendButton!.disabled = false;
         this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
@@ -474,25 +481,25 @@ export class PsChatAssistant extends YpBaseElement {
           lastElement.active = false;
         }
         this.addToChatLogWithMessage(
-          data,
-          data.message,
+          wsMessage,
+          wsMessage.message,
           undefined,
           undefined,
-          data.refinedCausesSuggestions
+          wsMessage.refinedCausesSuggestions
         );
         this.chatLog[this.chatLog.length - 1].refinedCausesSuggestions =
-          data.refinedCausesSuggestions;
+        wsMessage.refinedCausesSuggestions;
         this.sendButton!.disabled = false;
         this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
         this.requestUpdate();
         break;
       case 'stream':
-        if (data.message && data.message != 'undefined') {
+        if (wsMessage.message && wsMessage.message != 'undefined') {
           //@ts-ignore
           this.infoMessage = this.t('typing');
           this.chatLog[this.chatLog.length - 1].message =
-            this.chatLog[this.chatLog.length - 1].message + data.message;
+            this.chatLog[this.chatLog.length - 1].message + wsMessage.message;
           //console.error(this.chatLog[this.chatLog.length - 1].message)
           this.requestUpdate();
           break;

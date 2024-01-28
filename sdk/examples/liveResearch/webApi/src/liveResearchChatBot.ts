@@ -10,6 +10,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
   numberOfQueriesToGenerate = 7;
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.25;
+  persistMemory = true;
 
   summarySystemPrompt = `Please review the web research below and give the user a full report length.
     Take all the information provided and highlight the main points to answer the users question in detail.
@@ -166,6 +167,8 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     this.numberOfQueriesToGenerate = numberOfSelectQueries;
     this.percentOfQueriesToSearch = percentOfTopQueriesToSearch;
     this.percentOfResultsToScan = percentOfTopResultsToScan;
+
+    this.setChatLog(chatLog);
 
     console.log("In LIVE RESEARH conversation");
     let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
