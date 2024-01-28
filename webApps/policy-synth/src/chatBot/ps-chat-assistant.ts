@@ -368,29 +368,31 @@ export class PsChatAssistant extends YpBaseElement {
     }
   }
 
-  addChatBotElement(wsMessage: PsAiChatWsMessage) {
-    const lastElement = this.chatElements![this.chatElements!.length - 1];
+  get lastChatUiElement() {
+    return this.chatElements![this.chatElements!.length - 1];
+  }
+
+  async addChatBotElement(wsMessage: PsAiChatWsMessage) {
     switch (wsMessage.type) {
       case 'hello_message':
         this.addToChatLogWithMessage(wsMessage);
         break;
       case 'thinking':
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
         this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
         break;
       case 'noStreaming':
-        if (lastElement) {
-          lastElement.active = true;
-        }
         this.addToChatLogWithMessage(wsMessage, wsMessage.message);
+        await this.updateComplete;
+        this.lastChatUiElement.spinnerActive = true;
         break;
       case 'agentStart':
       case 'validationAgentStart':
         console.log('agentStart');
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
         const startOptions = wsMessage.data as PsAgentStartWsOptions;
 
@@ -404,6 +406,7 @@ export class PsChatAssistant extends YpBaseElement {
             type: 'noStreaming',
             message: startOptions.name,
           });
+
         } else {
           this.addToChatLogWithMessage(wsMessage, startOptions.name);
           this.chatLog[
@@ -421,41 +424,38 @@ export class PsChatAssistant extends YpBaseElement {
         break;
       case 'agentCompleted':
       case 'validationAgentCompleted':
-        console.log('agentCompleted');
+        console.log('agentCompleted...');
         const completedOptions =
           wsMessage.data as  PsAgentCompletedWsOptions;
 
-        if (lastElement) {
-          lastElement.active = false;
-          lastElement.message = completedOptions.name;
-          this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
-          if (!this.chatLog[this.chatLog.length - 1].message)
-            this.chatLog[this.chatLog.length - 1].message = '';
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
+          this.lastChatUiElement.message = completedOptions.name;
         } else {
           console.error('No last element on agentCompleted');
         }
         break;
       case 'agentUpdated':
         console.log('agentUpdated');
-        if (lastElement) {
-          lastElement.updateMessage = wsMessage.message;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.updateMessage = wsMessage.message;
         } else {
           console.error('No last element on agentUpdated');
         }
         break;
       case 'start':
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
         this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
         if (!this.chatLog[this.chatLog.length - 1].message)
           this.chatLog[this.chatLog.length - 1].message = '';
         break;
       case 'start_followup':
-        lastElement.followUpQuestionsRaw = '';
+        this.lastChatUiElement.followUpQuestionsRaw = '';
         break;
       case 'stream_followup':
-        lastElement.followUpQuestionsRaw += wsMessage.message;
+        this.lastChatUiElement.followUpQuestionsRaw += wsMessage.message;
         this.requestUpdate();
         break;
       case 'info':
@@ -470,15 +470,15 @@ export class PsChatAssistant extends YpBaseElement {
         this.addToChatLogWithMessage(wsMessage, wsMessage.message, false, this.t('Send'));
         break;
       case 'end':
-        lastElement.stopJsonLoading();
+        this.lastChatUiElement.stopJsonLoading();
         this.chatLog[this.chatLog.length - 1].debug = wsMessage.debug;
         this.sendButton!.disabled = false;
         this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
         break;
       case 'message':
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
         this.addToChatLogWithMessage(
           wsMessage,
@@ -528,9 +528,9 @@ export class PsChatAssistant extends YpBaseElement {
   }
 
   get simplifiedChatLog() {
-    const chatLog = this.chatLog.filter(
+    let chatLog = this.chatLog.filter(
       chatMessage =>
-        chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming'
+        chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming' && chatMessage.message
     );
     return chatLog.map(chatMessage => {
       return {

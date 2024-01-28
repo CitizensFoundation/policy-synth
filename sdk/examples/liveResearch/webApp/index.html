@@ -93,6 +93,9 @@
       if (!window.ElementInternals) {
         import('./node_modules/element-internals-polyfill/dist/index.js');
       }
+      if (!window.URLPattern) {
+        await import("urlpattern-polyfill");
+      }
     </script>
     <script type="module" src="./ts-out/src/live-research-app.js"></script>
   </body>

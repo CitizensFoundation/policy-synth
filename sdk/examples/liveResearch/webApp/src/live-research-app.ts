@@ -8,6 +8,8 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import './live-research-chatbot.js';
 import { PolicySynthWebApp } from '@policysynth/webapp/ps-app.js';
 import { ResearchServerApi } from './researchServerApi.js';
+import { LiveResearchChatBot } from './live-research-chatbot.js';
+import { PropertyValueMap } from '@lit/reactive-element';
 
 @customElement('live-research-app')
 export class LiveResearchApp extends PolicySynthWebApp {
@@ -27,7 +29,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
   serverMemoryId: string | undefined;
 
   @property({ type: Array })
-  chatLog: PsSimpleChatLog[] = [];
+  chatLogFromServer: PsAiChatWsMessage[] = [];
 
   @property({ type: String })
   llmTotalCost = '$0.000';
@@ -95,28 +97,41 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
   override router: PsRouter = new PsRouter(this, [
     {
-      path: '/*',
-      render: this.renderApp,
-    },
-    {
-      path: '/:serverMemoryId',
-      render: params => {
-        this.serverMemoryId = params.serverMemoryId;
-        return this.renderApp();
-      },
+      path: '*',
+      render: this.renderApp.bind(this),
     },
   ]);
 
-  async getChatLogFromServer() {
+  protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void {
+    // Get the server memory id from the url
+    const path = window.location.pathname;
+    if (path.length > 1) {
+      this.serverMemoryId = path.substring(1);
+    }
     if (this.serverMemoryId) {
+      this.getChatLogFromServer();
+    }
+  }
+
+  async getChatLogFromServer() {
+    const chatBotElemement = this.$$(
+      'live-research-chat-bot'
+    ) as LiveResearchChatBot;
+    if (
+      chatBotElemement &&
+      chatBotElemement.chatLog.length == 0 &&
+      this.serverMemoryId
+    ) {
       const chatLogSimple = await this.serverApi.getChatLogFromServer(
         this.serverMemoryId
       );
       if (chatLogSimple) {
-        this.chatLog = chatLogSimple.map((chatLogItem: any) => {
+        //TODO: Fix this sender hack, should be consistent
+        this.chatLogFromServer = chatLogSimple.map((chatLogItem: any) => {
           return {
             ...chatLogItem,
             date: new Date(chatLogItem.date),
+            sender:['assistant','bot'].includes(chatLogItem.sender) ? 'bot' : 'you',
           };
         });
       } else {
@@ -127,11 +142,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
     }
   }
 
-  updated(changedProperties: Map<string | number | symbol, unknown>): void {
-    super.updated(changedProperties);
-    if (changedProperties.has('serverMemoryId') && this.serverMemoryId) {
-      this.getChatLogFromServer();
-    }
+  handleServerMemoryIdCreated(event: CustomEvent) {
+    this.serverMemoryId = event.detail;
+    const path = `/${this.serverMemoryId}`;
+    history.pushState({}, '', path);
   }
 
   renderApp() {
@@ -143,9 +157,11 @@ export class LiveResearchApp extends PolicySynthWebApp {
       </div>
       <live-research-chat-bot
         @llm-total-cost-update=${this.handleCostUpdate}
+        @server-memory-id-created=${this.handleServerMemoryIdCreated}
         @start-process=${this.startTimer}
         @stop-process=${this.stopTimer}
-        .chatLog=${this.chatLog}
+        .serverMemoryId=${this.serverMemoryId}
+        .chatLogFromServer=${this.chatLogFromServer}
         .numberOfSelectQueries=${this.numberOfSelectQueries}
         .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
         .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}

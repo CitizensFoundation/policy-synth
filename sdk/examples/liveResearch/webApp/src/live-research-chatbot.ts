@@ -18,6 +18,9 @@ export class LiveResearchChatBot extends PsChatAssistant {
   @property({ type: Number })
   percentOfTopResultsToScan = 0.25;
 
+  @property({ type: Array })
+  chatLogFromServer: PsAiChatWsMessage[] | undefined;
+
   serverApi: ResearchServerApi;
 
   override connectedCallback(): void {
@@ -38,6 +41,15 @@ export class LiveResearchChatBot extends PsChatAssistant {
       `,
     ];
   }
+
+  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+    super.updated(changedProperties);
+    if (changedProperties.has('chatLogFromServer') && this.chatLogFromServer) {
+      this.chatLog = this.chatLogFromServer;
+    }
+  }
+
+
 
   override async sendChatMessage() {
     const userMessage = this.chatInputField!.value;
