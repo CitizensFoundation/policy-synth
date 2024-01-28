@@ -14,7 +14,7 @@ export declare class PsAiChatElement extends YpBaseElement {
     detectedLanguage: string;
     clusterId: number;
     type: 'start' | 'error' | 'moderation_error' | 'info' | 'message' | 'thinking' | 'noStreaming' | undefined;
-    active: boolean;
+    spinnerActive: boolean;
     fullReferencesOpen: boolean;
     followUpQuestionsRaw: string;
     followUpQuestions: string[];
@@ -37,7 +37,7 @@ export declare class PsAiChatElement extends YpBaseElement {
     renderUser(): import("lit").TemplateResult<1>;
     renderNoStreaming(): import("lit").TemplateResult<1>;
     renderThinking(): import("lit").TemplateResult<1>;
-    getThinkingText(): "Thinking..." | "Mõeldes..." | "Hugsa...";
+    getThinkingText(): "Mõeldes..." | "Hugsa..." | "Thinking...";
     renderMessage(): any;
     render(): import("lit").TemplateResult<1>;
 }

@@ -84,7 +84,11 @@ export class PsBaseChatBot {
     }
     this.memoryId = uuidv4();
     this.memory = this.getEmptyMemory();
-    this.sendMemoryId();
+    if (this.wsClientSocket) {
+      this.sendMemoryId();
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   async getLoadedMemory() {
@@ -95,7 +99,7 @@ export class PsBaseChatBot {
     const botMessage = {
       sender: "bot",
       type: "memoryIdCreated",
-      message: this.memoryId
+      data: this.memoryId
     } as PsAiChatWsMessage;
 
     this.wsClientSocket.send(JSON.stringify(botMessage));
