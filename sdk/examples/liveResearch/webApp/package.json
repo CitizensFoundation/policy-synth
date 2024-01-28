@@ -8,7 +8,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@policysynth/webapp": "^1.2.0"
+    "@policysynth/webapp": "^1.2.1"
   },
   "scripts": {
     "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
