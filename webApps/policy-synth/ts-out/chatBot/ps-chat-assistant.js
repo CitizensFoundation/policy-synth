@@ -559,6 +559,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
             this.ws.close();
             this.initWebSockets();
         }
+        this.serverMemoryId = undefined;
         this.requestUpdate();
     }
     toggleDarkMode() {
