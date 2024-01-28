@@ -21,6 +21,8 @@ export class LiveResearchChatBot extends PsChatAssistant {
   @property({ type: Array })
   chatLogFromServer: PsAiChatWsMessage[] | undefined;
 
+  showCleanupButton = true;
+
   serverApi: ResearchServerApi;
 
   override connectedCallback(): void {
@@ -48,8 +50,6 @@ export class LiveResearchChatBot extends PsChatAssistant {
       this.chatLog = this.chatLogFromServer;
     }
   }
-
-
 
   override async sendChatMessage() {
     const userMessage = this.chatInputField!.value;

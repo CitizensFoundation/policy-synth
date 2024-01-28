@@ -1,4 +1,4 @@
-import { PropertyValueMap, css, html } from 'lit';
+import { PropertyValueMap, css, html, nothing } from 'lit';
 import { property, customElement, query, queryAll } from 'lit/decorators.js';
 
 import '@material/web/fab/fab.js';
@@ -70,6 +70,9 @@ export class PsChatAssistant extends YpBaseElement {
 
   @property({ type: Boolean })
   programmaticScroll = false;
+
+  @property({ type: Boolean })
+  showCleanupButton = false;
 
   @property({ type: Number })
   scrollStart: number = 0;
@@ -406,7 +409,6 @@ export class PsChatAssistant extends YpBaseElement {
             type: 'noStreaming',
             message: startOptions.name,
           });
-
         } else {
           this.addToChatLogWithMessage(wsMessage, startOptions.name);
           this.chatLog[
@@ -425,8 +427,7 @@ export class PsChatAssistant extends YpBaseElement {
       case 'agentCompleted':
       case 'validationAgentCompleted':
         console.log('agentCompleted...');
-        const completedOptions =
-          wsMessage.data as  PsAgentCompletedWsOptions;
+        const completedOptions = wsMessage.data as PsAgentCompletedWsOptions;
 
         if (this.lastChatUiElement) {
           this.lastChatUiElement.spinnerActive = false;
@@ -464,10 +465,20 @@ export class PsChatAssistant extends YpBaseElement {
       case 'moderation_error':
         wsMessage.message =
           'OpenAI Moderation Flag Error. Please refine your question.';
-        this.addToChatLogWithMessage(wsMessage, wsMessage.message, false, this.t('Send'));
+        this.addToChatLogWithMessage(
+          wsMessage,
+          wsMessage.message,
+          false,
+          this.t('Send')
+        );
         break;
       case 'error':
-        this.addToChatLogWithMessage(wsMessage, wsMessage.message, false, this.t('Send'));
+        this.addToChatLogWithMessage(
+          wsMessage,
+          wsMessage.message,
+          false,
+          this.t('Send')
+        );
         break;
       case 'end':
         this.lastChatUiElement.stopJsonLoading();
@@ -488,7 +499,7 @@ export class PsChatAssistant extends YpBaseElement {
           wsMessage.refinedCausesSuggestions
         );
         this.chatLog[this.chatLog.length - 1].refinedCausesSuggestions =
-        wsMessage.refinedCausesSuggestions;
+          wsMessage.refinedCausesSuggestions;
         this.sendButton!.disabled = false;
         this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
@@ -530,7 +541,9 @@ export class PsChatAssistant extends YpBaseElement {
   get simplifiedChatLog() {
     let chatLog = this.chatLog.filter(
       chatMessage =>
-        chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming' && chatMessage.message
+        chatMessage.type != 'thinking' &&
+        chatMessage.type != 'noStreaming' &&
+        chatMessage.message
     );
     return chatLog.map(chatMessage => {
       return {
@@ -710,6 +723,10 @@ export class PsChatAssistant extends YpBaseElement {
 
   reset() {
     this.chatLog = [];
+    if (this.ws) {
+      this.ws.close();
+      this.initWebSockets();
+    }
     this.requestUpdate();
   }
 
@@ -721,6 +738,14 @@ export class PsChatAssistant extends YpBaseElement {
 
   renderChatInput() {
     return html`
+      ${this.showCleanupButton
+        ? html`
+        <md-outlined-icon-button
+          class="restartButton"
+          @click="${() => this.fire('reset-chat')}"
+        ><md-icon>refresh</md-icon></md-icon></md-outlined-icon-button>
+      `
+        : nothing}
       ${this.onlyUseTextField || this.chatLog.length > 1
         ? html`
             <md-outlined-text-field
