@@ -43,7 +43,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       this.sendAgentStart("Generate search queries");
       const searchQueriesGenerator = (this.currentAgent =
         new SearchQueriesGenerator(
-          this.memory,
+          this.memory as PsBaseMemoryData,
           this.numberOfQueriesToGenerate,
           question
         ));
@@ -73,14 +73,16 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       // Search the web
       this.sendAgentStart("Searching the Web...");
-      const webSearch = (this.currentAgent = new ResearchWeb(this.memory));
+      const webSearch = (this.currentAgent = new ResearchWeb(
+        this.memory as PsBaseMemoryData
+      ));
       const searchResults = await webSearch.search(queriesToSearch);
       this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
 
       // Rank search results
       this.sendAgentStart("Pairwise Ranking Search Results");
       const searchResultsRanker = (this.currentAgent = new SearchResultsRanker(
-        this.memory,
+        this.memory as PsBaseMemoryData,
         this.sendAgentUpdate.bind(this)
       ));
       const rankedSearchResults = await searchResultsRanker.rankSearchResults(
@@ -97,7 +99,9 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Scan and Research Web pages
       this.sendAgentStart("Scan and Research Web pages");
 
-      const webPageResearch = (this.currentAgent = new WebPageScanner(this.memory));
+      const webPageResearch = (this.currentAgent = new WebPageScanner(
+        this.memory as PsBaseMemoryData
+      ));
       const webScan = await webPageResearch.scan(
         searchResultsToScan.map((i) => i.url),
         this.jsonWebPageResearchSchema,
@@ -126,7 +130,10 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       ${JSON.stringify(research, null, 2)}
     `;
 
-    this.addToExternalSolutionsMemoryCosts(summaryUserPrompt+this.summarySystemPrompt,"in");
+    this.addToExternalSolutionsMemoryCosts(
+      summaryUserPrompt + this.summarySystemPrompt,
+      "in"
+    );
 
     const messages: any[] = [
       {
