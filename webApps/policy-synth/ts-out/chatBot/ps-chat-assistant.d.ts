@@ -31,6 +31,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     textInputLabel: string;
     currentFollowUpQuestions: string;
     programmaticScroll: boolean;
+    showCleanupButton: boolean;
     scrollStart: number;
     serverMemoryId: string | undefined;
     defaultDevWsPort: number;

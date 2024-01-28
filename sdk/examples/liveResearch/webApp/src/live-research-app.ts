@@ -160,6 +160,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
         @server-memory-id-created=${this.handleServerMemoryIdCreated}
         @start-process=${this.startTimer}
         @stop-process=${this.stopTimer}
+        @reset-chat=${this.reset}
         .serverMemoryId=${this.serverMemoryId}
         .chatLogFromServer=${this.chatLogFromServer}
         .numberOfSelectQueries=${this.numberOfSelectQueries}
@@ -201,7 +202,8 @@ export class LiveResearchApp extends PolicySynthWebApp {
   }
 
   reset() {
-    //(this.$$('live-research-chat-bot') as LiveResearchChatBot).reset();
+    (this.$$('live-research-chat-bot') as LiveResearchChatBot).reset();
+    history.pushState({}, '', "");
   }
 
   handleCostUpdate(event: CustomEvent) {

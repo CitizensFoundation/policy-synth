@@ -4,7 +4,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-import { css, html } from 'lit';
+import { css, html, nothing } from 'lit';
 import { property, customElement, query, queryAll } from 'lit/decorators.js';
 import '@material/web/fab/fab.js';
 import '@material/web/radio/radio.js';
@@ -31,6 +31,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         this.userScrolled = false;
         this.currentFollowUpQuestions = '';
         this.programmaticScroll = false;
+        this.showCleanupButton = false;
         this.scrollStart = 0;
         this.defaultDevWsPort = 8000;
         this.api = new BaseChatBotServerApi();
@@ -376,7 +377,9 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         });
     }
     get simplifiedChatLog() {
-        let chatLog = this.chatLog.filter(chatMessage => chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming' && chatMessage.message);
+        let chatLog = this.chatLog.filter(chatMessage => chatMessage.type != 'thinking' &&
+            chatMessage.type != 'noStreaming' &&
+            chatMessage.message);
         return chatLog.map(chatMessage => {
             return {
                 sender: chatMessage.sender == 'bot' ? 'assistant' : 'user',
@@ -552,6 +555,10 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     reset() {
         this.chatLog = [];
+        if (this.ws) {
+            this.ws.close();
+            this.initWebSockets();
+        }
         this.requestUpdate();
     }
     toggleDarkMode() {
@@ -561,6 +568,14 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     renderChatInput() {
         return html `
+      ${this.showCleanupButton
+            ? html `
+        <md-outlined-icon-button
+          class="restartButton"
+          @click="${() => this.fire('reset-chat')}"
+        ><md-icon>refresh</md-icon></md-icon></md-outlined-icon-button>
+      `
+            : nothing}
       ${this.onlyUseTextField || this.chatLog.length > 1
             ? html `
             <md-outlined-text-field
@@ -689,6 +704,9 @@ __decorate([
 __decorate([
     property({ type: Boolean })
 ], PsChatAssistant.prototype, "programmaticScroll", void 0);
+__decorate([
+    property({ type: Boolean })
+], PsChatAssistant.prototype, "showCleanupButton", void 0);
 __decorate([
     property({ type: Number })
 ], PsChatAssistant.prototype, "scrollStart", void 0);
