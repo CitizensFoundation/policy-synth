@@ -1,20 +1,24 @@
 # modifySubProblemEloScores
 
-This script is designed to modify the Elo scores of specific sub-problems within a project's memory data stored in Redis. It retrieves a project's memory data by its ID, updates the Elo scores for specified sub-problems, reorders the sub-problems based on their new Elo scores, and then saves the updated memory data back to Redis.
+This script modifies the Elo scores of specific sub-problems within a project's memory data stored in Redis and reorders the sub-problems based on their new Elo ratings.
 
 ## Methods
 
 | Name         | Parameters | Return Type | Description                                                                 |
 |--------------|------------|-------------|-----------------------------------------------------------------------------|
-| loadProject  |            | Promise<void> | Main function that loads a project's memory data, updates it, and saves it. |
+| loadProject  |            | Promise<void> | Modifies the Elo scores of specific sub-problems and reorders them. |
 
 ## Example
 
-```javascript
+```typescript
+import { PsBaseMemoryData } from '@policysynth/agents/types';
+
 // Example usage of modifySubProblemEloScores
 import '@policysynth/agents/tools/modifySubProblemEloScors.js';
 
-// Assuming the environment is properly set up with REDIS_MEMORY_URL and the project ID is passed as a command-line argument
-// Run the script directly with node:
-// node modifySubProblemEloScors.js <projectId>
+const projectId = 'your_project_id_here';
+
+(async () => {
+  await loadProject(projectId);
+})();
 ```

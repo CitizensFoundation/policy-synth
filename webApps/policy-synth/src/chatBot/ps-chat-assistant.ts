@@ -1,4 +1,4 @@
-import { PropertyValueMap, css, html } from 'lit';
+import { PropertyValueMap, css, html, nothing } from 'lit';
 import { property, customElement, query, queryAll } from 'lit/decorators.js';
 
 import '@material/web/fab/fab.js';
@@ -71,8 +71,14 @@ export class PsChatAssistant extends YpBaseElement {
   @property({ type: Boolean })
   programmaticScroll = false;
 
+  @property({ type: Boolean })
+  showCleanupButton = false;
+
   @property({ type: Number })
   scrollStart: number = 0;
+
+  @property({ type: String })
+  serverMemoryId: string | undefined;
 
   @property({ type: Number })
   defaultDevWsPort = 8000;
@@ -365,31 +371,33 @@ export class PsChatAssistant extends YpBaseElement {
     }
   }
 
-  addChatBotElement(data: PsAiChatWsMessage) {
-    const lastElement = this.chatElements![this.chatElements!.length - 1];
-    switch (data.type) {
+  get lastChatUiElement() {
+    return this.chatElements![this.chatElements!.length - 1];
+  }
+
+  async addChatBotElement(wsMessage: PsAiChatWsMessage) {
+    switch (wsMessage.type) {
       case 'hello_message':
-        this.addToChatLogWithMessage(data);
+        this.addToChatLogWithMessage(wsMessage);
         break;
       case 'thinking':
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
-        this.addToChatLogWithMessage(data, this.t('Thinking...'));
+        this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
         break;
       case 'noStreaming':
-        if (lastElement) {
-          lastElement.active = true;
-        }
-        this.addToChatLogWithMessage(data, data.message);
+        this.addToChatLogWithMessage(wsMessage, wsMessage.message);
+        await this.updateComplete;
+        this.lastChatUiElement.spinnerActive = true;
         break;
       case 'agentStart':
       case 'validationAgentStart':
         console.log('agentStart');
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
-        const startOptions = data.message as unknown as PsAgentStartWsOptions;
+        const startOptions = wsMessage.data as PsAgentStartWsOptions;
 
         setTimeout(() => {
           this.scrollDown();
@@ -402,7 +410,7 @@ export class PsChatAssistant extends YpBaseElement {
             message: startOptions.name,
           });
         } else {
-          this.addToChatLogWithMessage(data, startOptions.name);
+          this.addToChatLogWithMessage(wsMessage, startOptions.name);
           this.chatLog[
             this.chatLog.length - 1
           ].message = `${startOptions.name}\n\n`;
@@ -410,89 +418,99 @@ export class PsChatAssistant extends YpBaseElement {
         this.requestUpdate();
         break;
       case 'liveLlmCosts':
-        this.fire('llm-total-cost-update', data.message);
+        this.fire('llm-total-cost-update', wsMessage.data);
+        break;
+      case 'memoryIdCreated':
+        this.serverMemoryId = wsMessage.data as string;
+        this.fire('server-memory-id-created', wsMessage.data);
         break;
       case 'agentCompleted':
       case 'validationAgentCompleted':
-        console.log('agentCompleted');
-        const completedOptions =
-          data.message as unknown as PsAgentCompletedWsOptions;
+        console.log('agentCompleted...');
+        const completedOptions = wsMessage.data as PsAgentCompletedWsOptions;
 
-        if (lastElement) {
-          lastElement.active = false;
-          lastElement.message = completedOptions.name;
-          this.addToChatLogWithMessage(data, this.t('Thinking...'));
-          if (!this.chatLog[this.chatLog.length - 1].message)
-            this.chatLog[this.chatLog.length - 1].message = '';
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
+          this.lastChatUiElement.message = completedOptions.name;
         } else {
           console.error('No last element on agentCompleted');
         }
         break;
       case 'agentUpdated':
         console.log('agentUpdated');
-        if (lastElement) {
-          lastElement.updateMessage = data.message;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.updateMessage = wsMessage.message;
         } else {
           console.error('No last element on agentUpdated');
         }
         break;
       case 'start':
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
-        this.addToChatLogWithMessage(data, this.t('Thinking...'));
+        this.addToChatLogWithMessage(wsMessage, this.t('Thinking...'));
         if (!this.chatLog[this.chatLog.length - 1].message)
           this.chatLog[this.chatLog.length - 1].message = '';
         break;
       case 'start_followup':
-        lastElement.followUpQuestionsRaw = '';
+        this.lastChatUiElement.followUpQuestionsRaw = '';
         break;
       case 'stream_followup':
-        lastElement.followUpQuestionsRaw += data.message;
+        this.lastChatUiElement.followUpQuestionsRaw += wsMessage.message;
         this.requestUpdate();
         break;
       case 'info':
-        this.infoMessage = data.message;
+        this.infoMessage = wsMessage.message;
         break;
       case 'moderation_error':
-        data.message =
+        wsMessage.message =
           'OpenAI Moderation Flag Error. Please refine your question.';
-        this.addToChatLogWithMessage(data, data.message, false, this.t('Send'));
+        this.addToChatLogWithMessage(
+          wsMessage,
+          wsMessage.message,
+          false,
+          this.t('Send')
+        );
         break;
       case 'error':
-        this.addToChatLogWithMessage(data, data.message, false, this.t('Send'));
+        this.addToChatLogWithMessage(
+          wsMessage,
+          wsMessage.message,
+          false,
+          this.t('Send')
+        );
         break;
       case 'end':
-        lastElement.stopJsonLoading();
-        this.chatLog[this.chatLog.length - 1].debug = data.debug;
+        this.lastChatUiElement.stopJsonLoading();
+        this.chatLog[this.chatLog.length - 1].debug = wsMessage.debug;
         this.sendButton!.disabled = false;
         this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
         break;
       case 'message':
-        if (lastElement) {
-          lastElement.active = false;
+        if (this.lastChatUiElement) {
+          this.lastChatUiElement.spinnerActive = false;
         }
         this.addToChatLogWithMessage(
-          data,
-          data.message,
+          wsMessage,
+          wsMessage.message,
           undefined,
           undefined,
-          data.refinedCausesSuggestions
+          wsMessage.refinedCausesSuggestions
         );
         this.chatLog[this.chatLog.length - 1].refinedCausesSuggestions =
-          data.refinedCausesSuggestions;
+          wsMessage.refinedCausesSuggestions;
         this.sendButton!.disabled = false;
         this.sendButton!.innerHTML = this.t('Send');
         this.infoMessage = this.defaultInfoMessage;
         this.requestUpdate();
         break;
       case 'stream':
-        if (data.message && data.message != 'undefined') {
+        if (wsMessage.message && wsMessage.message != 'undefined') {
           //@ts-ignore
           this.infoMessage = this.t('typing');
           this.chatLog[this.chatLog.length - 1].message =
-            this.chatLog[this.chatLog.length - 1].message + data.message;
+            this.chatLog[this.chatLog.length - 1].message + wsMessage.message;
           //console.error(this.chatLog[this.chatLog.length - 1].message)
           this.requestUpdate();
           break;
@@ -521,9 +539,11 @@ export class PsChatAssistant extends YpBaseElement {
   }
 
   get simplifiedChatLog() {
-    const chatLog = this.chatLog.filter(
+    let chatLog = this.chatLog.filter(
       chatMessage =>
-        chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming'
+        chatMessage.type != 'thinking' &&
+        chatMessage.type != 'noStreaming' &&
+        chatMessage.message
     );
     return chatLog.map(chatMessage => {
       return {
@@ -703,6 +723,11 @@ export class PsChatAssistant extends YpBaseElement {
 
   reset() {
     this.chatLog = [];
+    if (this.ws) {
+      this.ws.close();
+      this.initWebSockets();
+    }
+    this.serverMemoryId = undefined;
     this.requestUpdate();
   }
 
@@ -714,6 +739,14 @@ export class PsChatAssistant extends YpBaseElement {
 
   renderChatInput() {
     return html`
+      ${this.showCleanupButton
+        ? html`
+        <md-outlined-icon-button
+          class="restartButton"
+          @click="${() => this.fire('reset-chat')}"
+        ><md-icon>refresh</md-icon></md-icon></md-outlined-icon-button>
+      `
+        : nothing}
       ${this.onlyUseTextField || this.chatLog.length > 1
         ? html`
             <md-outlined-text-field

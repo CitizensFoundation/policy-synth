@@ -32,7 +32,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
         super.connectedCallback();
         this.defaultInfoMessage += `**${this.nodeToAddCauseTo.description}**`;
     }
-    addChatBotElement(data) {
+    async addChatBotElement(data) {
         const lastElement = this.chatElements[this.chatElements.length - 1];
         switch (data.type) {
             case 'hello_message':
@@ -40,19 +40,19 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
                 break;
             case 'thinking':
                 if (lastElement) {
-                    lastElement.active = false;
+                    lastElement.spinnerActive = false;
                 }
                 this.addToChatLogWithMessage(data, this.t('Thinking...'));
                 break;
             case 'noStreaming':
                 if (lastElement) {
-                    lastElement.active = true;
+                    lastElement.spinnerActive = true;
                 }
                 this.addToChatLogWithMessage(data, data.message);
                 break;
             case 'validationAgentStart':
                 if (lastElement) {
-                    lastElement.active = false;
+                    lastElement.spinnerActive = false;
                 }
                 const startOptions = data.message;
                 setTimeout(() => {
@@ -73,7 +73,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
                 break;
             case 'validationAgentCompleted':
                 if (lastElement) {
-                    lastElement.active = false;
+                    lastElement.spinnerActive = false;
                 }
                 this.lastChainCompletedAsValid = false;
                 this.lastValidatedCauses = undefined;
@@ -91,7 +91,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
                 break;
             case 'start':
                 if (lastElement) {
-                    lastElement.active = false;
+                    lastElement.spinnerActive = false;
                 }
                 this.addToChatLogWithMessage(data, this.t('Thinking...'));
                 if (!this.chatLog[this.chatLog.length - 1].message)
@@ -124,7 +124,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
                 break;
             case 'message':
                 if (lastElement) {
-                    lastElement.active = false;
+                    lastElement.spinnerActive = false;
                 }
                 this.addToChatLogWithMessage(data, data.message, undefined, undefined, data.refinedCausesSuggestions);
                 this.chatLog[this.chatLog.length - 1].refinedCausesSuggestions =

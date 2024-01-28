@@ -116,7 +116,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAge
 
   async getResultsFromLLM(
     subProblemIndex: number,
-    stageName: IEngineStageTypes,
+    stageName: PsMemoryStageTypes,
     modelConstant: IEngineBaseAIModelConstants,
     messages: (HumanMessage | SystemMessage)[],
     itemOneIndex: number,

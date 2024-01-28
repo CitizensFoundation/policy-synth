@@ -2,7 +2,7 @@ const renderSystemPrompt = (path: string) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
 
 Important Instructions
-For Type use the Typescript definition like for currentMemory use IEngineInnovationMemoryData | undefined
+For Type use the Typescript definition like for currentMemory use PsBaseMemoryData | undefined
 
 Do not output other sections.
 
@@ -98,19 +98,20 @@ function buildDirectoryTree(dir: string, basePath = '', isSrc = false) {
   return structure;
 }
 
-
-function generateMarkdownFromTree(tree: any, depth = 0) {
+function generateMarkdownFromTree(tree: any, depth = 0, basePath = 'src/') {
   let markdown = '';
   const indent = '  '.repeat(depth);
 
   tree.forEach((item: any) => {
       if (item.type === 'directory') {
           markdown += `${indent}- ${item.name}\n`;
-          markdown += generateMarkdownFromTree(item.children, depth + 1);
+          // Append the directory name to the basePath for subdirectories
+          const newBasePath = depth === 0 ? `${item.name}/` : `${basePath}${item.name}/`;
+          markdown += generateMarkdownFromTree(item.children, depth + 1, newBasePath);
       } else if (item.type === 'file') {
-          // Correct the path for files directly under 'src'
-          const filePath = depth === 0 ? `${item.path}` : item.path;
-          markdown += `${indent}- [${item.name.replace('.md', '')}](${filePath})\n`;
+          // Prepend 'src/' to the basePath for files at the root, and adjust for subdirectories
+          const relativePath = `src/${basePath}${item.path}`;
+          markdown += `${indent}- [${item.name.replace('.md', '')}](${relativePath})\n`;
       }
   });
 

@@ -1,18 +1,18 @@
 # destroyQueue
 
-This script is designed to manage and clean up a queue in a BullMQ system. It performs a series of operations on a queue named "agent-policies", including draining the queue, cleaning it based on different job statuses, and finally obliterating the queue.
+This script is designed to manage and clean up a queue in a BullMQ system. It performs several operations such as draining the queue, cleaning various states of jobs within the queue, and finally obliterating the queue entirely.
 
 ## Methods
 
-| Name    | Parameters                  | Return Type | Description                                                                 |
-|---------|-----------------------------|-------------|-----------------------------------------------------------------------------|
-| drain   | -                           | Promise<void> | Drains the queue, removing all jobs.                                        |
-| clean   | grace: number, limit: number, status: "active" \| "failed" \| "completed" \| "wait" \| "delayed" | Promise<number[]> | Cleans jobs in the queue based on their status, within a grace period.      |
-| obliterate | options?: { force?: boolean, count?: number } | Promise<void> | Completely removes the queue and all of its data.                           |
+| Name   | Parameters                  | Return Type | Description                                                                 |
+|--------|-----------------------------|-------------|-----------------------------------------------------------------------------|
+| drain  | -                           | Promise<void> | Drains the queue, removing all waiting jobs.                                |
+| clean  | grace: number, limit: number, status: "active" \| "failed" \| "completed" \| "wait" \| "delayed" | Promise<number[]> | Cleans jobs in specified state older than grace period up to a limit.       |
+| obliterate | options?: { force: boolean } | Promise<void> | Completely removes the queue and all of its data.                           |
 
 ## Example
 
-```javascript
+```typescript
 import { Queue } from "bullmq";
 
 // Initialize the queue
@@ -35,4 +35,4 @@ await myQueue.obliterate();
 process.exit(0);
 ```
 
-This example demonstrates how to use the `Queue` class from the `bullmq` package to manage a queue named "agent-policies". It includes draining the queue, cleaning it based on job status, and obliterating the queue entirely.
+This example demonstrates how to use the `Queue` class from the `bullmq` package to manage a queue named "agent-policies". It includes draining the queue, cleaning jobs in various states, and finally obliterating the queue.

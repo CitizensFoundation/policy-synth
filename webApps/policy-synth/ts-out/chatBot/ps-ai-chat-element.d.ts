@@ -14,7 +14,7 @@ export declare class PsAiChatElement extends YpBaseElement {
     detectedLanguage: string;
     clusterId: number;
     type: 'start' | 'error' | 'moderation_error' | 'info' | 'message' | 'thinking' | 'noStreaming' | undefined;
-    active: boolean;
+    spinnerActive: boolean;
     fullReferencesOpen: boolean;
     followUpQuestionsRaw: string;
     followUpQuestions: string[];

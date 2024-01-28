@@ -1,18 +1,14 @@
-# Queue
+# destroyQueue
 
-The `Queue` class from the `bullmq` package is used to manage job queues. This example demonstrates how to drain and clean queues of different job states and finally obliterate the queue.
+This script demonstrates the process of draining and cleaning a queue of tasks using the `bullmq` library, and then completely obliterating the queue. It is designed to remove tasks in various states such as active, failed, completed, waiting, and delayed before obliterating the queue entirely.
 
 ## Methods
 
-| Name       | Parameters                        | Return Type | Description                                                                 |
-|------------|-----------------------------------|-------------|-----------------------------------------------------------------------------|
-| drain      |                                   | Promise<void> | Drains the queue, removing all jobs.                                        |
-| clean      | grace: number, limit: number, status: 'active' \| 'failed' \| 'completed' \| 'wait' \| 'delayed' | Promise<Job[]> | Cleans jobs in the queue based on their status, grace time, and limit.      |
-| obliterate |                                   | Promise<void> | Completely removes the queue and all of its data.                           |
+No methods are defined in this script as it is a standalone script utilizing the `bullmq` library's `Queue` class methods.
 
 ## Example
 
-```javascript
+```typescript
 import { Queue } from "bullmq";
 
 const myQueue = new Queue("agent-problems");
@@ -20,7 +16,7 @@ const myQueue = new Queue("agent-problems");
 // Drain the queue
 await myQueue.drain();
 
-// Clean the queue based on job status
+// Clean the queue of tasks in various states
 await myQueue.clean(0, 10000, "active");
 await myQueue.clean(0, 10000, "failed");
 await myQueue.clean(0, 10000, "completed");
@@ -34,4 +30,4 @@ await myQueue.obliterate();
 process.exit(0);
 ```
 
-This example is part of a script located at `@policysynth/agents/problems/tools/destroyQueue.js` and demonstrates how to manage a job queue by draining, cleaning, and obliterating it using the `bullmq` package.
+This example demonstrates how to use the `bullmq` library to manage a queue named "agent-problems". It includes draining the queue, cleaning tasks in various states, and finally obliterating the queue. This script is useful for clearing out a queue as part of maintenance or teardown processes.

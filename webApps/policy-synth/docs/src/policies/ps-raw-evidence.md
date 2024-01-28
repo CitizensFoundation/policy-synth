@@ -1,40 +1,40 @@
 # PsRawEvidence
 
-This class represents a custom element that displays raw evidence related to policies. It extends `YpBaseElement` to leverage common functionalities provided by the base element. The component is responsible for fetching, displaying, and organizing raw evidence data into a user-friendly format. It supports features like dynamic evidence grouping, evidence type navigation, and loading states.
+This class represents the raw evidence component in the application. It extends `YpBaseElement` to leverage common functionalities and properties. The component is responsible for displaying raw evidence related to policies, including handling the loading of evidence, grouping evidence by type, and providing interactive elements to navigate through the evidence.
 
 ## Properties
 
-| Name                   | Type                                                         | Description                                                                 |
-|------------------------|--------------------------------------------------------------|-----------------------------------------------------------------------------|
-| memory                 | IEngineInnovationMemoryData                                  | Holds memory data related to engine innovation.                             |
-| policy                 | PSPolicy                                                     | The policy object associated with the current evidence.                     |
-| activeSubProblemIndex  | number                                                       | Index of the active sub-problem.                                            |
-| activeRawEvidence      | PSEvidenceRawWebPageData[]                                   | Array of raw evidence data for the active policy and sub-problem.           |
-| groupedRawEvidence     | Record<string, PSEvidenceRawWebPageData[]>                   | Organized raw evidence data grouped by evidence type.                       |
-| loading                | boolean                                                      | Indicates whether the component is in a loading state.                      |
-| showDropdown           | boolean                                                      | Controls the visibility of the evidence type dropdown menu.                 |
-| showFullList           | Record<string, boolean>                                      | Tracks visibility states for full lists of evidence details.                |
+| Name                    | Type                                                         | Description                                                                 |
+|-------------------------|--------------------------------------------------------------|-----------------------------------------------------------------------------|
+| memory                  | `PsBaseMemoryData`                                           | The memory data associated with the evidence.                               |
+| policy                  | `PSPolicy`                                                   | The policy data associated with the evidence.                               |
+| activeSubProblemIndex   | `number`                                                     | The index of the active sub-problem.                                        |
+| activeRawEvidence       | `PSEvidenceRawWebPageData[]`                                 | The list of active raw evidence web page data.                              |
+| groupedRawEvidence      | `Record<string, PSEvidenceRawWebPageData[]>`                 | The raw evidence data grouped by search type.                               |
+| loading                 | `boolean`                                                    | Indicates whether the component is in a loading state.                      |
+| showDropdown            | `boolean`                                                    | Controls the visibility of the dropdown for navigating evidence types.      |
+| showFullList            | `Record<string, boolean>`                                    | Tracks which lists of evidence have been expanded to show their full content. |
 
 ## Methods
 
-| Name                  | Parameters                                  | Return Type | Description                                                                                   |
-|-----------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------------------------|
-| handleScroll          |                                             | void        | Handles scroll events to toggle the visibility of the evidence type dropdown based on scroll position. |
-| connectedCallback     |                                             | Promise<void> | Lifecycle method that runs when the component is added to the DOM. Registers scroll event listener. |
-| updated               | changedProperties: Map<string \| number \| symbol, unknown> | void        | Lifecycle method that runs when the component's properties change. Updates evidence data.    |
-| setupRawEvidence      |                                             | void        | Organizes raw evidence data into groups and sorts them.                                       |
-| disconnectedCallback  |                                             | void        | Lifecycle method that runs when the component is removed from the DOM. Removes scroll event listener. |
-| formatSearchType      | searchType: string                          | string      | Formats evidence search type strings into a more readable format.                             |
-| loadRawEvidence       |                                             | Promise<void> | Fetches raw evidence data from the server and updates the component state.                    |
-| renderHeader          | evidence: PSEvidenceRawWebPageData          | TemplateResult | Generates HTML for the header section of an evidence item.                                    |
-| scrollToEvidenceType  | evidenceType: string                        | void        | Scrolls the view to the specified evidence type section.                                      |
-| renderDropdown        |                                             | TemplateResult | Generates HTML for the evidence type dropdown menu.                                           |
-| renderPieceOfEvidence | evidence: PSEvidenceRawWebPageData          | TemplateResult | Generates HTML for a single piece of evidence.                                                |
-| camelCaseToRegular    | text: string                                | string      | Converts camelCase strings to regular space-separated strings.                                |
-| renderShortList       | url: string, title: string, list: string[]  | TemplateResult | Generates HTML for a short list of evidence details.                                          |
-| toggleShowFullList    | key: string                                 | void        | Toggles the visibility of the full list for a given evidence detail.                         |
-| renderActiveRawEvidence |                                             | TemplateResult | Generates HTML for the active raw evidence, including dropdown and evidence sections.         |
-| render                |                                             | TemplateResult | Main render method that generates HTML based on the component's state.                       |
+| Name                  | Parameters                          | Return Type | Description                                                                                   |
+|-----------------------|-------------------------------------|-------------|-----------------------------------------------------------------------------------------------|
+| handleScroll          |                                     | `void`      | Handles scroll events to toggle the visibility of the evidence type navigation dropdown.     |
+| connectedCallback     |                                     | `void`      | Lifecycle method called when the component is added to the document's DOM.                   |
+| updated               | `changedProperties: Map<string \| number \| symbol, unknown>` | `void`      | Lifecycle method called after the component’s properties have been updated.                  |
+| setupRawEvidence      |                                     | `void`      | Organizes the raw evidence data into groups and sorts them.                                  |
+| disconnectedCallback  |                                     | `void`      | Lifecycle method called when the component is removed from the document's DOM.               |
+| formatSearchType      | `searchType: string`                | `string`    | Formats the search type string by inserting spaces before capital letters and capitalizing the first letter. |
+| loadRawEvidence       |                                     | `Promise<void>` | Loads the raw evidence data from the server.                                                |
+| renderHeader          | `evidence: PSEvidenceRawWebPageData`| `TemplateResult` | Renders the header section for a piece of evidence.                                         |
+| scrollToEvidenceType  | `evidenceType: string`              | `void`      | Scrolls the view to the specified evidence type section.                                     |
+| renderDropdown        |                                     | `TemplateResult` | Renders the dropdown for navigating evidence types.                                          |
+| renderPieceOfEvidence | `evidence: PSEvidenceRawWebPageData`| `TemplateResult` | Renders a single piece of evidence.                                                         |
+| camelCaseToRegular    | `text: string`                      | `string`    | Converts camel case text to regular text with spaces.                                        |
+| renderShortList       | `url: string, title: string, list: string[]` | `TemplateResult` | Renders a short list of items with an option to expand.                                     |
+| toggleShowFullList    | `key: string`                       | `void`      | Toggles the visibility of the full list for a given key.                                     |
+| renderActiveRawEvidence|                                    | `TemplateResult` | Renders the active raw evidence grouped by type.                                            |
+| render                |                                     | `TemplateResult` | Renders the component based on its state (loading, active evidence, or nothing).            |
 
 ## Events
 
@@ -55,4 +55,4 @@ html`
 `;
 ```
 
-This example demonstrates how to use the `ps-raw-evidence` custom element within a LitElement-based component. It involves passing the necessary data properties such as memory data, policy data, and the active sub-problem index to the custom element for it to fetch and display the relevant raw evidence.
+This example demonstrates how to use the `ps-raw-evidence` component within a LitElement template. The component requires `memory`, `policy`, and `activeSubProblemIndex` properties to be set for it to function correctly.

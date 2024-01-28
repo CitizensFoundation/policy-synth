@@ -3,7 +3,7 @@ import ioredis from "ioredis";
 
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
-const setupProjectOne = (memory: IEngineInnovationMemoryData) => {
+const setupProjectOne = (memory: PsBaseMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -50,7 +50,7 @@ const setupProjectOne = (memory: IEngineInnovationMemoryData) => {
   `;
 };
 
-const setupProjectTwo = (memory: IEngineInnovationMemoryData) => {
+const setupProjectTwo = (memory: PsBaseMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -142,7 +142,7 @@ const setupProjectTwo = (memory: IEngineInnovationMemoryData) => {
   `;
 };
 
-const setupProjectThree = (memory: IEngineInnovationMemoryData) => {
+const setupProjectThree = (memory: PsBaseMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -233,7 +233,7 @@ const setupProjectThree = (memory: IEngineInnovationMemoryData) => {
   `;
 };
 
-const setupProjectFour = (memory: IEngineInnovationMemoryData) => {
+const setupProjectFour = (memory: PsBaseMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -324,7 +324,7 @@ const setupProjectFour = (memory: IEngineInnovationMemoryData) => {
   `;
 };
 
-const setupProjectFive = (memory: IEngineInnovationMemoryData) => {
+const setupProjectFive = (memory: PsBaseMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -415,7 +415,7 @@ const setupProjectFive = (memory: IEngineInnovationMemoryData) => {
 };
 
 
-const setupProjectSix = (memory: IEngineInnovationMemoryData) => {
+const setupProjectSix = (memory: PsBaseMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -509,7 +509,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
   const output = await redis.get(redisKey);
 
-  const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+  const memory = JSON.parse(output!) as PsBaseMemoryData;
 
   if (projectId == "1") {
     setupProjectOne(memory);

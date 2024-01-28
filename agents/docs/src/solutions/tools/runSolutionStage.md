@@ -1,19 +1,18 @@
 # runSolutionStage
 
-This script is responsible for managing the execution of different stages in the solution process. It interacts with Redis to retrieve and update the current memory state of a project and queues a job for further processing.
+This script is responsible for managing the solution stage of a project. It retrieves the current memory state of a project from Redis, updates the current stage of the project's memory, and then saves the updated memory back to Redis. Additionally, it adds a job to a BullMQ queue for further processing.
 
 ## Properties
 
-No properties are directly defined in this script.
+No properties are documented as this script does not define a class or object structure with properties.
 
 ## Methods
 
-No methods are directly defined in this script.
+No methods are documented as this script does not define a class or object structure with methods.
 
 ## Example
 
-```javascript
-// Example usage of runSolutionStage
+```typescript
 import { Queue } from "bullmq";
 import ioredis from "ioredis";
 
@@ -29,7 +28,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
   const output = await redis.get(redisKey);
 
-  const memory = JSON.parse(output!) as IEngineInnovationMemoryData;
+  const memory = JSON.parse(output!) as PsBaseMemoryData;
   memory.currentStage = "create-solution-images";
 
   await redis.set(redisKey, JSON.stringify(memory));

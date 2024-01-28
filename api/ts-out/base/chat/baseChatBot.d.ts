@@ -2,21 +2,34 @@
 import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 export declare class PsBaseChatBot {
-    clientId: string;
-    clientSocket: WebSocket;
+    wsClientId: string;
+    wsClientSocket: WebSocket;
     openaiClient: OpenAI;
-    memory: IEngineInnovationMemoryData;
-    currentAgent: PolicySynthAgentBase | undefined;
+    memory: PsChatBotMemoryData;
     broadcastingLiveCosts: boolean;
-    liveCostsBroadcastTimeout: NodeJS.Timeout | undefined;
     liveCostsBroadcastInterval: number;
     liveCostsInactivityTimeout: number;
+    static redisMemoryKeyPrefix: string;
+    tempeture: number;
+    maxTokens: number;
+    llmModel: string;
+    persistMemory: boolean;
+    memoryId: string | undefined;
+    liveCostsBroadcastTimeout: NodeJS.Timeout | undefined;
     liveCostsBoadcastStartAt: Date | undefined;
     lastSentToUserAt: Date | undefined;
     lastBroacastedCosts: number | undefined;
-    constructor(clientId: string, wsClients: Map<string, WebSocket>);
+    get redisKey(): string;
+    static loadMemoryFromRedis(memoryId: string): Promise<PsChatBotMemoryData | undefined>;
+    static getFullCostOfMemory(memory: PsChatBotMemoryData): number | undefined;
+    loadMemory(): Promise<PsChatBotMemoryData>;
+    constructor(wsClientId: string, wsClients: Map<string, WebSocket>, memoryId?: string | undefined);
+    setupMemory(memoryId?: string | undefined): Promise<void>;
+    get fullLLMCostsForMemory(): number | undefined;
+    getLoadedMemory(): Promise<PsChatBotMemoryData>;
+    sendMemoryId(): void;
+    saveMemory(): Promise<void>;
     renderSystemPrompt(): string;
     sendToClient(sender: string, message: string, type?: string): void;
     sendAgentStart(name: string, hasNoStreaming?: boolean): void;
@@ -25,10 +38,13 @@ export declare class PsBaseChatBot {
     startBroadcastingLiveCosts(): void;
     broadCastLiveCosts(): void;
     stopBroadcastingLiveCosts(): void;
-    getEmptyMemory(): IEngineInnovationMemoryData;
+    get emptyChatBotStagesData(): Record<PSChatBotMemoryStageTypes, IEngineInnovationStagesData>;
+    getEmptyMemory(): PsChatBotMemoryData;
     streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;
     getTokenCosts(estimateTokens: number, type: "in" | "out"): number;
     addToExternalSolutionsMemoryCosts(text: string, type: "in" | "out"): void;
+    saveMemoryIfNeeded(): Promise<void>;
+    setChatLog(chatLog: PsSimpleChatLog[]): Promise<void>;
     conversation: (chatLog: PsSimpleChatLog[]) => Promise<void>;
 }
 //# sourceMappingURL=baseChatBot.d.ts.map

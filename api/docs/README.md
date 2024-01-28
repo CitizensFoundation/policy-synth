@@ -1,23 +1,25 @@
 # Policy Synth ExpressJS API Documentation
 
-- [app](app.md)
+- [app](src/src/app.md)
+- [server](src/src/server.md)
+- [app](src/src/app.md)
 - base
   - chat
-    - [baseChatBot](base/chat/baseChatBot.md)
+    - [baseChatBot](src/base/chat/baseChatBot.md)
 - controllers
-  - [analyticsController](controllers/analyticsController.md)
-  - [baseController](controllers/baseController.md)
-  - [projectsController](controllers/projectsController.md)
-  - [treeController](controllers/treeController.md)
+  - [analyticsController](src/controllers/analyticsController.md)
+  - [baseController](src/controllers/baseController.md)
+  - [projectsController](src/controllers/projectsController.md)
+  - [treeController](src/controllers/treeController.md)
 - ltp
-  - [crtAssistant](ltp/crtAssistant.md)
-  - [crtConfigReview](ltp/crtConfigReview.md)
-  - [crtCreateNodes](ltp/crtCreateNodes.md)
-  - [crtValidationChain](ltp/crtValidationChain.md)
+  - [crtAssistant](src/ltp/crtAssistant.md)
+  - [crtConfigReview](src/ltp/crtConfigReview.md)
+  - [crtCreateNodes](src/ltp/crtCreateNodes.md)
+  - [crtValidationChain](src/ltp/crtValidationChain.md)
 - models
-  - [website](models/website.md)
+  - [website](src/models/website.md)
 - openai
-  - [embeddings](openai/embeddings.md)
-- [server](server.md)
+  - [embeddings](src/openai/embeddings.md)
+- [server](src/src/server.md)
 - tools
-  - [generateDocumentation](tools/generateDocumentation.md)
+  - [generateDocumentation](src/tools/generateDocumentation.md)

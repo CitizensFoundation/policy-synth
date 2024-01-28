@@ -189,7 +189,7 @@ export class CreateSolutionsProcessor extends BaseProlemSolvingAgent {
     openDataTextContext: string,
     newsTextContext: string,
     alreadyCreatedSolutions: string | undefined = undefined,
-    stageName: IEngineStageTypes = "create-seed-solutions"
+    stageName: PsMemoryStageTypes = "create-seed-solutions"
   ): Promise<IEngineSolution[]> {
     if (DISABLE_LLM_FOR_DEBUG) {
       this.logger.info("DISABLE_LLM_FOR_DEBUG is true, skipping LLM call");

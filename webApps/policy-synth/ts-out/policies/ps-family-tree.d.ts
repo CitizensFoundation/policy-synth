@@ -1,7 +1,7 @@
 import '@yrpri/webapp/common/yp-image.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsFamilyTree extends YpBaseElement {
-    memory: IEngineInnovationMemoryData;
+    memory: PsBaseMemoryData;
     subProblemIndex: number;
     solution: IEngineSolution;
     connectedCallback(): Promise<void>;

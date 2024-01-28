@@ -20,7 +20,7 @@ import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
     constructor() {
         super();
-        this.active = true;
+        this.spinnerActive = false;
         this.fullReferencesOpen = false;
         this.followUpQuestionsRaw = '';
         this.followUpQuestions = [];
@@ -257,7 +257,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
           color: var(--md-sys-color-secondary);
         }
 
-        .thinkingText[active] {
+        .thinkingText[spinnerActive] {
           color: var(--md-sys-color-primary);
         }
 
@@ -398,11 +398,11 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
     `;
     }
     renderNoStreaming() {
-        return html `${this.active
+        return html `${this.spinnerActive
             ? html `<svg class="progress-ring" width="28" height="28">
             <circle
               class="progress-ring__circle"
-              ?active="${this.active}"
+              ?spinnerActive="${this.spinnerActive}"
               stroke="blue"
               stroke-width="2"
               fill="transparent"
@@ -412,17 +412,17 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
             />
           </svg>`
             : html `<md-icon class="doneIcon">done</md-icon>`}
-      <div class="thinkingText" ?active="${this.active}">
+      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
         ${this.message}
         ${this.updateMessage ? html `- ${this.updateMessage}` : nothing}
       </div> `;
     }
     renderThinking() {
-        return html `${this.active
+        return html `${this.spinnerActive
             ? html `<svg class="progress-ring" width="28" height="28">
             <circle
               class="progress-ring__circle"
-              ?active="${this.active}"
+              ?spinnerActive="${this.spinnerActive}"
               stroke="blue"
               stroke-width="2"
               fill="transparent"
@@ -432,7 +432,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
             />
           </svg>`
             : html `<md-icon class="doneIcon">done</md-icon>`}
-      <div class="thinkingText" ?active="${this.active}">
+      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
         ${this.getThinkingText()}
       </div> `;
     }
@@ -486,7 +486,7 @@ __decorate([
 ], PsAiChatElement.prototype, "type", void 0);
 __decorate([
     property({ type: Boolean })
-], PsAiChatElement.prototype, "active", void 0);
+], PsAiChatElement.prototype, "spinnerActive", void 0);
 __decorate([
     property({ type: Boolean })
 ], PsAiChatElement.prototype, "fullReferencesOpen", void 0);

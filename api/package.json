@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/api",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -9,10 +9,11 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "ts-out/**/*"
+    "ts-out/**/*",
+    "src/api.d.ts"
   ],
   "dependencies": {
-    "@policysynth/agents": "^1.1.0",
+    "@policysynth/agents": "^1.2.0",
     "@langchain/openai": "^0.0.10",
     "axios": "^1.4.0",
     "colors": "^1.4.0",
@@ -41,6 +42,7 @@
     "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
     "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
     "start": "nodemon -e ts ts-out/server.js",
+    "copyInLocalAgents": "cp -R ../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/server.js",
     "dev": "nodemon --config nodemon.json ./ts-out/server.js",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",
