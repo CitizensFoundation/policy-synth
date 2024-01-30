@@ -1,7 +1,7 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
-export declare class RankWebSolutionsProcessor extends BaseProlemSolvingAgent {
+export declare class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
     renderProblemPrompt(solutionsToRank: string[], subProblemIndex: number | null): Promise<(SystemMessage | HumanMessage)[]>;
     rankWebSolutions(subProblemIndex: number): Promise<void>;

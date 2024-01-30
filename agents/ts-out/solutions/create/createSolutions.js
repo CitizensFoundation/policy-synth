@@ -1,10 +1,10 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 const DISABLE_LLM_FOR_DEBUG = false;
-export class CreateSolutionsProcessor extends BaseProlemSolvingAgent {
+export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     constructor() {
         super(...arguments);
         this.webPageVectorStore = new WebPageVectorStore();

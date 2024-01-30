@@ -1,8 +1,8 @@
 import { HumanMessage, SystemMessage } from "langchain/schema";
-import { BaseProlemSolvingAgent } from "./baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
 import { IEngineConstants } from "./constants.js";
 
-export abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAgent {
+export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
   prompts: Record<number, number[][]> = {};
   allItems: Record<
     number,

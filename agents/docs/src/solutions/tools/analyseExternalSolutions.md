@@ -1,6 +1,6 @@
 # AnalyseExternalSolutions
 
-This class extends `BaseProlemSolvingAgent` to analyze external solutions against specific requirements and generate analysis reports.
+This class extends `BaseProblemSolvingAgent` to analyze external solutions against specific requirements and generate analysis reports.
 
 ## Properties
 

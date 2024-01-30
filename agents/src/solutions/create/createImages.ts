@@ -1,4 +1,4 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
@@ -21,7 +21,7 @@ interface GenerationResponse {
   }>;
 }
 
-export class CreateSolutionImagesProcessor extends BaseProlemSolvingAgent {
+export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
   cloudflareProxy = "https://cps-images.citizens.is";
 
   subProblemColors = [

@@ -1,8 +1,8 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
-export class CreateEvidenceSearchQueriesProcessor extends BaseProlemSolvingAgent {
+export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
     filterPolicyParameters(policy) {
         const { imageUrl, imagePrompt, solutionIndex, ...filteredPolicy } = policy;
         return filteredPolicy;

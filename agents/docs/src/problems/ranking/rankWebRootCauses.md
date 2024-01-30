@@ -1,6 +1,6 @@
 # RankWebRootCausesProcessor
 
-This class extends `BaseProlemSolvingAgent` to rank web root causes by importance to a problem statement. It utilizes a vector store for root cause web pages and leverages language models for processing and ranking.
+This class extends `BaseProblemSolvingAgent` to rank web root causes by importance to a problem statement. It utilizes a vector store for root cause web pages and leverages language models for processing and ranking.
 
 ## Properties
 

@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
-export declare class CreateSeedPoliciesProcessor extends BaseProlemSolvingAgent {
+export declare class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
     renderCurrentSolution(solution: IEngineSolution): string;
     renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution): Promise<(SystemMessage | HumanMessage)[]>;
     renderRefinePrompt(subProblemIndex: number, solution: IEngineSolution, policyProposalsToRefine: PSPolicy[]): Promise<(SystemMessage | HumanMessage)[]>;

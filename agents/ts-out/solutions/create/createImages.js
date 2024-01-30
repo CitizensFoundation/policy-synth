@@ -1,4 +1,4 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
@@ -10,7 +10,7 @@ import path from "path";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
-export class CreateSolutionImagesProcessor extends BaseProlemSolvingAgent {
+export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     constructor() {
         super(...arguments);
         this.cloudflareProxy = "https://cps-images.citizens.is";

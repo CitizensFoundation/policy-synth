@@ -1,7 +1,7 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
-export declare class RankWebRootCausesProcessor extends BaseProlemSolvingAgent {
+export declare class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
     renderProblemPrompt(rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData): Promise<(SystemMessage | HumanMessage)[]>;
     rankWebRootCauses(): Promise<void>;

@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "langchain/schema";
-import { BaseProlemSolvingAgent } from "./baseProblemSolvingAgent.js";
-export declare abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAgent {
+import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
+export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
     prompts: Record<number, number[][]>;
     allItems: Record<number, (IEngineSearchResultItem[] | IEngineSolution[] | IEngineProblemStatement[] | IEngineAffectedEntity[] | IEngineProCon[] | string[]) | undefined>;
     INITIAL_ELO_RATING: number;
@@ -22,6 +22,6 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProlemSo
     }>;
     getUpdatedKFactor(numComparisons: number): number;
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
-    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProblemStatement | IEngineSearchResultItem | IEngineProCon | IEngineSolution | IEngineAffectedEntity)[];
+    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProCon | IEngineSolution | IEngineAffectedEntity | IEngineProblemStatement | IEngineSearchResultItem)[];
 }
 //# sourceMappingURL=basePairwiseRanking.d.ts.map

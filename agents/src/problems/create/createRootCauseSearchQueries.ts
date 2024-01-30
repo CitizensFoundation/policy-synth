@@ -1,9 +1,9 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
 
-export class CreateRootCausesSearchQueriesProcessor extends BaseProlemSolvingAgent {
+export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
   static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[] = [
     "caseStudies",
     "economicRootCause",

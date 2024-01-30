@@ -1,6 +1,6 @@
 # RateSolutionsProcessor
 
-`RateSolutionsProcessor` extends `BaseProlemSolvingAgent` to rate solutions for sub-problems using a language model.
+`RateSolutionsProcessor` extends `BaseProblemSolvingAgent` to rate solutions for sub-problems using a language model.
 
 ## Methods
 

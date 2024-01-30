@@ -1,9 +1,9 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
 
-export class ReduceSubProblemsProcessor extends BaseProlemSolvingAgent {
+export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
   async renderSelectPrompt(
     problemStatement: string,
     subProblemsToConsider: IEngineSubProblem[]

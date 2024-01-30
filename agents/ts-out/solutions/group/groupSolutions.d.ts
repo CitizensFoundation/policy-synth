@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
-export declare class GroupSolutionsProcessor extends BaseProlemSolvingAgent {
+export declare class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
     renderGroupPrompt(solutionsToGroup: IEngineSolutionForGroupCheck[]): Promise<(SystemMessage | HumanMessage)[]>;
     groupSolutionsForSubProblem(subProblemIndex: number, solutions: Array<IEngineSolution>): Promise<void>;
     calculateGroupStats(solutions: Array<IEngineSolution>): Promise<void>;

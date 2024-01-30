@@ -1,6 +1,6 @@
 # SearchWebProcessor
 
-This class extends `BaseProlemSolvingAgent` to perform web searches using either Google or Bing search APIs based on the environment configuration. It processes search queries for problem statements, sub-problems, and entities, deduplicates the results, and updates the memory with the search results.
+This class extends `BaseProblemSolvingAgent` to perform web searches using either Google or Bing search APIs based on the environment configuration. It processes search queries for problem statements, sub-problems, and entities, deduplicates the results, and updates the memory with the search results.
 
 ## Properties
 

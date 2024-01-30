@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
-export declare class CreateSolutionImagesProcessor extends BaseProlemSolvingAgent {
+export declare class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     cloudflareProxy: string;
     subProblemColors: string[];
     secondaryColors: string[];

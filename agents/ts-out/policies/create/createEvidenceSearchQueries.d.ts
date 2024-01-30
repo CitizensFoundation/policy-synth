@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
-export declare class CreateEvidenceSearchQueriesProcessor extends BaseProlemSolvingAgent {
+export declare class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
     static evidenceWebPageTypesArray: PSEvidenceWebPageTypes[];
     filterPolicyParameters(policy: PSPolicy): Omit<PSPolicy, "imageUrl" | "imagePrompt" | "solutionIndex">;
     renderCreatePrompt(subProblemIndex: number, policy: PSPolicy, searchResultType: PSEvidenceWebPageTypes): Promise<(SystemMessage | HumanMessage)[]>;

@@ -1,6 +1,6 @@
 # CountWebEvidenceProcessor
 
-This class extends `BaseProlemSolvingAgent` to count all web evidence for policies. It processes web evidence, counts various metrics such as total evidence, refined evidence, recommendations, and logs the counts for each type of evidence related to policies.
+This class extends `BaseProblemSolvingAgent` to count all web evidence for policies. It processes web evidence, counts various metrics such as total evidence, refined evidence, recommendations, and logs the counts for each type of evidence related to policies.
 
 ## Properties
 

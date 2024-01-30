@@ -1,8 +1,8 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
-export class CreateSearchQueriesProcessor extends BaseProlemSolvingAgent {
+export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
     //TODO: Maybe add a review and refine stage here as well
     renderCommonPromptSection() {
         return `

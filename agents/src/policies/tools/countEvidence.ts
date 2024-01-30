@@ -1,4 +1,4 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import ioredis from "ioredis";
@@ -8,7 +8,7 @@ const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-export class CountWebEvidenceProcessor extends BaseProlemSolvingAgent {
+export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
 
   async countAll(policy: PSPolicy, subProblemIndex: number) {

@@ -1,6 +1,6 @@
 # RankWebEvidenceProcessor
 
-This class extends `BaseProlemSolvingAgent` to rank web evidence related to policy proposals. It utilizes a vector store to retrieve and update web pages with ranked evidence.
+This class extends `BaseProblemSolvingAgent` to rank web evidence related to policy proposals. It utilizes a vector store to retrieve and update web pages with ranked evidence.
 
 ## Properties
 

@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
-export declare class CreateEntitiesProcessor extends BaseProlemSolvingAgent {
+export declare class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
     renderRefinePrompt(subProblemIndex: number, results: IEngineAffectedEntity[]): Promise<(SystemMessage | HumanMessage)[]>;
     renderCreatePrompt(subProblemIndex: number): Promise<(SystemMessage | HumanMessage)[]>;
     createEntities(): Promise<void>;

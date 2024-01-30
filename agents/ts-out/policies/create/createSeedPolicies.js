@@ -1,8 +1,8 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
-export class CreateSeedPoliciesProcessor extends BaseProlemSolvingAgent {
+export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
     renderCurrentSolution(solution) {
         return `
       Solution Component:

@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "./baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
 import { IEngineConstants } from "./constants.js";
-export class BasePairwiseRankingsProcessor extends BaseProlemSolvingAgent {
+export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
     constructor() {
         super(...arguments);
         this.prompts = {};

@@ -1,6 +1,6 @@
 import { PolicySynthAgentBase } from "../../baseAgent.js";
 import { IEngineConstants } from "../../constants.js";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
@@ -9,7 +9,7 @@ const redis = new ioredis.default(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-class ShowCounts extends BaseProlemSolvingAgent {
+class ShowCounts extends BaseProblemSolvingAgent {
   webPageVectorStore = new WebPageVectorStore();
 
   foundIds = new Set<string>();

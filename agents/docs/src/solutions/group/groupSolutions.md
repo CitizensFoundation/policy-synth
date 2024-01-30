@@ -1,6 +1,6 @@
 # GroupSolutionsProcessor
 
-This class extends `BaseProlemSolvingAgent` to process and group solutions based on their core ideas using a language model.
+This class extends `BaseProblemSolvingAgent` to process and group solutions based on their core ideas using a language model.
 
 ## Methods
 

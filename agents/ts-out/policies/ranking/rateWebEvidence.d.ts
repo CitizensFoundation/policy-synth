@@ -1,7 +1,7 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
-export declare class RateWebEvidenceProcessor extends BaseProlemSolvingAgent {
+export declare class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
     simplifyEvidenceType(evidenceType: string): string;
     renderProblemPrompt(subProblemIndex: number | null, policy: PSPolicy, rawWebData: PSEvidenceRawWebPageData, evidenceToRank: string[], evidenceType: keyof PSEvidenceRawWebPageData): Promise<(SystemMessage | HumanMessage)[]>;

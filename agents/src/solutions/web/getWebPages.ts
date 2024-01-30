@@ -15,7 +15,7 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
 import { htmlToText } from "html-to-text";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 
 import weaviate, { WeaviateClient } from "weaviate-ts-client";
 
@@ -36,7 +36,7 @@ puppeteer.use(StealthPlugin());
 
 const onlyCheckWhatNeedsToBeScanned = false;
 
-export class GetWebPagesProcessor extends BaseProlemSolvingAgent {
+export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   webPageVectorStore = new WebPageVectorStore();
 
   totalPagesSave = 0;

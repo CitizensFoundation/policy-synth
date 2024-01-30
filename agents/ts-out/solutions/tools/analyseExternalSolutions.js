@@ -1,5 +1,5 @@
 import { IEngineConstants } from "../../constants.js";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
 import { HumanMessage, SystemMessage } from "langchain/schema";
@@ -94,7 +94,7 @@ const externalSolutionsMisuseOfLegalSystem = [
         description: "Engage communities and build coalitions to ensure that the voices of key stakeholders are represented in funding decisions related to election administration. ",
     },
 ];
-export class AnalyseExternalSolutions extends BaseProlemSolvingAgent {
+export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     async renderAnalysisPrompt(solutionDescription, requirement) {
         const messages = [
             new SystemMessage(`

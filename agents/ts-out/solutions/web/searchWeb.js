@@ -1,10 +1,10 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { IEngineConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class SearchWebProcessor extends BaseProlemSolvingAgent {
+export class SearchWebProcessor extends BaseProblemSolvingAgent {
     async callSearchApi(query) {
         if (process.env.GOOGLE_SEARCH_API_KEY &&
             process.env.GOOGLE_SEARCH_API_CX_ID) {

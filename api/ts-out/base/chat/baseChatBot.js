@@ -153,14 +153,6 @@ export class PsBaseChatBot {
     renderSystemPrompt() {
         return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day. Lots of emojis`;
     }
-    sendToClient(sender, message, type = "stream") {
-        this.wsClientSocket.send(JSON.stringify({
-            sender,
-            type: type,
-            message,
-        }));
-        this.lastSentToUserAt = new Date();
-    }
     sendAgentStart(name, hasNoStreaming = true) {
         const botMessage = {
             sender: "bot",
@@ -283,6 +275,14 @@ export class PsBaseChatBot {
             },
             subProblems: [],
         };
+    }
+    sendToClient(sender, message, type = "stream") {
+        this.wsClientSocket.send(JSON.stringify({
+            sender,
+            type: type,
+            message,
+        }));
+        this.lastSentToUserAt = new Date();
     }
     async streamWebSocketResponses(
     //@ts-ignore

@@ -11,7 +11,7 @@ const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
@@ -20,7 +20,7 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
-export class GetWebPagesProcessor extends BaseProlemSolvingAgent {
+export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     constructor() {
         super(...arguments);
         this.webPageVectorStore = new WebPageVectorStore();

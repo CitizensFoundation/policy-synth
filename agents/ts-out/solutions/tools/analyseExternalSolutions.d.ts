@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "langchain/schema";
-export declare class AnalyseExternalSolutions extends BaseProlemSolvingAgent {
+export declare class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     folderPath: string;
     renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<(SystemMessage | HumanMessage)[]>;
     compareSolutionToExternal(solutionDescription: string, requirement: string): Promise<IEngineExternalSolutionAnalysisResults>;

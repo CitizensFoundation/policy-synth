@@ -1,9 +1,9 @@
 import { IEngineConstants } from "../../constants.js";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-class ShowCounts extends BaseProlemSolvingAgent {
+class ShowCounts extends BaseProblemSolvingAgent {
     constructor() {
         super(...arguments);
         this.webPageVectorStore = new WebPageVectorStore();

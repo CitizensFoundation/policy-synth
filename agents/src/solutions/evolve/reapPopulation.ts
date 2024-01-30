@@ -1,9 +1,9 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 import { IEngineConstants } from "../../constants.js";
 
-export class ReapSolutionsProcessor extends BaseProlemSolvingAgent {
+export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
   async renderReapPrompt(solution: IEngineSolution) {
     const messages = [
       new SystemMessage(

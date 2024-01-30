@@ -1,5 +1,5 @@
 import { IEngineConstants } from "../../constants.js";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
 import { HumanMessage, SystemMessage } from "langchain/schema";
@@ -116,7 +116,7 @@ const externalSolutionsMisuseOfLegalSystem = [
   },
 ];
 
-export class AnalyseExternalSolutions extends BaseProlemSolvingAgent {
+export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
   folderPath!: string;
 
   async renderAnalysisPrompt(solutionDescription: string, requirement: string) {

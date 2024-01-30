@@ -1,4 +1,4 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import {
   AIChatMessage,
@@ -9,7 +9,7 @@ import {
 
 import { IEngineConstants } from "../../constants.js";
 const USE_SHORT_DESCRIPTIONS = true;
-export class CreateSubProblemsProcessor extends BaseProlemSolvingAgent {
+export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
   async renderRefinePrompt(results: IEngineSubProblem[]) {
     const messages: BaseMessage[] = [
       new SystemMessage(

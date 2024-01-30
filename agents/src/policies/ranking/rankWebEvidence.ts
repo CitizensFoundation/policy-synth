@@ -1,11 +1,11 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 
-export class RankWebEvidenceProcessor extends BaseProlemSolvingAgent {
+export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
 
   async renderProblemPrompt(
