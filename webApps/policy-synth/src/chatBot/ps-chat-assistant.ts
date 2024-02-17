@@ -392,7 +392,6 @@ export class PsChatAssistant extends YpBaseElement {
         this.lastChatUiElement.spinnerActive = true;
         break;
       case 'agentStart':
-      case 'validationAgentStart':
         console.log('agentStart');
         if (this.lastChatUiElement) {
           this.lastChatUiElement.spinnerActive = false;
@@ -425,7 +424,6 @@ export class PsChatAssistant extends YpBaseElement {
         this.fire('server-memory-id-created', wsMessage.data);
         break;
       case 'agentCompleted':
-      case 'validationAgentCompleted':
         console.log('agentCompleted...');
         const completedOptions = wsMessage.data as PsAgentCompletedWsOptions;
 
