@@ -23,7 +23,7 @@ export class PsBaseChatBot {
   broadcastingLiveCosts = false;
   liveCostsBroadcastInterval = 1000;
   liveCostsInactivityTimeout = 1000 * 60 * 10;
-  static redisMemoryKeyPrefix = "chatbot-memory";
+  static redisMemoryKeyPrefix = "ps-chatbot-memory";
   tempeture = 0.7;
   maxTokens = 4000;
   llmModel = "gpt-4-0125-preview";
