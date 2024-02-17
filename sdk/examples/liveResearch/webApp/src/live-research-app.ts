@@ -78,7 +78,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
       chatBotElement.chatLog &&
       chatBotElement.chatLog.length > 0
     ) {
-      const questionSnippet = chatBotElement.chatLog[0].message.slice(0, 25);
+      const questionSnippet = chatBotElement.chatLog[0].message.slice(0, 40);
       const newChat: SavedChat = {
         serverMemoryId: this.serverMemoryId as string,
         questionSnippet,
@@ -151,6 +151,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
 
         .menuButton {
           margin-bottom: 32px;
+        }
+
+        md-menu-item {
+          width: 250px;
         }
 
         .sliderScopes,
