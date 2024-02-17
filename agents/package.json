@@ -36,9 +36,6 @@
   "cacheDirectories": [
     "node_modules"
   ],
-  "engines": {
-    "node": "18.16.1"
-  },
   "type": "module",
   "dependencies": {
     "aws-sdk": "^2.1424.0",

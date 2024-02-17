@@ -13,7 +13,7 @@ export declare class RankSearchQueriesProcessor extends BasePairwiseRankingsProc
         searchQueryTarget: "problemStatement" | "subProblem" | "entity";
     }): Promise<IEnginePairWiseVoteResults>;
     processSubProblems(): Promise<void>;
-    getQueryIndex(searchQueryType: IEngineWebPageTypes): 3 | 2 | 5 | 4 | 6;
+    getQueryIndex(searchQueryType: IEngineWebPageTypes): 2 | 4 | 6 | 3 | 5;
     processEntities(subProblemIndex: number): Promise<void>;
     process(): Promise<void>;
 }
