@@ -14,9 +14,12 @@ const logger = winston.createLogger({
     ],
 });
 export class PolicySynthAgentBase {
+    memory;
+    logger;
+    timeStart = Date.now();
+    chat;
+    rateLimits = {};
     constructor(memory = undefined) {
-        this.timeStart = Date.now();
-        this.rateLimits = {};
         if (memory) {
             this.memory = memory;
         }

@@ -53,13 +53,13 @@ const setupProjectTwo = (memory) => {
     3. Keep in mind while you decide that the sub problems, in this case, are especially important to philanthropic organizations, civil society organizations, community-based organizations, and legal advocacy groups.
   `;
     memory.subProblemClientColors = [
-        "#ee782d",
-        "#0b60b9",
-        "#face2d",
-        "#50c363",
-        "#ADD8E6",
-        "#cf1103",
-        "#7F00FF",
+        "#ee782d", // Orange (This is not a typical orange, but more of a dark, burnt orange)
+        "#0b60b9", // Blue (This is a strong, medium-dark blue)
+        "#face2d", // Yellow (This is a bright, somewhat orange-ish yellow)
+        "#50c363", // Green (This is a medium, somewhat light green)
+        "#ADD8E6", // Light blue
+        "#cf1103", // Red (This is a dark, slightly brownish red)
+        "#7F00FF", // Violet
         "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
     ];
     memory.customInstructions.subProblemColors = [
@@ -136,13 +136,13 @@ const setupProjectThree = (memory) => {
     3. Keep in mind while you decide that the sub problems, in this case, are especially important to philanthropic organizations, civil society organizations, community-based organizations, and legal advocacy groups.
   `;
     memory.subProblemClientColors = [
-        "#ee782d",
-        "#0b60b9",
-        "#face2d",
-        "#50c363",
-        "#ADD8E6",
-        "#cf1103",
-        "#7F00FF",
+        "#ee782d", // Orange (This is not a typical orange, but more of a dark, burnt orange)
+        "#0b60b9", // Blue (This is a strong, medium-dark blue)
+        "#face2d", // Yellow (This is a bright, somewhat orange-ish yellow)
+        "#50c363", // Green (This is a medium, somewhat light green)
+        "#ADD8E6", // Light blue
+        "#cf1103", // Red (This is a dark, slightly brownish red)
+        "#7F00FF", // Violet
         "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
     ];
     memory.customInstructions.subProblemColors = [
@@ -219,13 +219,13 @@ const setupProjectFour = (memory) => {
     3. Keep in mind while you decide that the sub problems, in this case, are especially important to parents, students, teachers, policymakers, and other education stakeholders.
   `;
     memory.subProblemClientColors = [
-        "#ee782d",
-        "#0b60b9",
-        "#face2d",
-        "#50c363",
-        "#ADD8E6",
-        "#cf1103",
-        "#7F00FF",
+        "#ee782d", // Orange (This is not a typical orange, but more of a dark, burnt orange)
+        "#0b60b9", // Blue (This is a strong, medium-dark blue)
+        "#face2d", // Yellow (This is a bright, somewhat orange-ish yellow)
+        "#50c363", // Green (This is a medium, somewhat light green)
+        "#ADD8E6", // Light blue
+        "#cf1103", // Red (This is a dark, slightly brownish red)
+        "#7F00FF", // Violet
         "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
     ];
     memory.customInstructions.subProblemColors = [
@@ -302,13 +302,13 @@ const setupProjectFive = (memory) => {
     3. Keep in mind while you decide that the sub problems, in this case, are especially important to civil soecity and policymakers.
   `;
     memory.subProblemClientColors = [
-        "#ee782d",
-        "#0b60b9",
-        "#face2d",
-        "#50c363",
-        "#ADD8E6",
-        "#cf1103",
-        "#7F00FF",
+        "#ee782d", // Orange (This is not a typical orange, but more of a dark, burnt orange)
+        "#0b60b9", // Blue (This is a strong, medium-dark blue)
+        "#face2d", // Yellow (This is a bright, somewhat orange-ish yellow)
+        "#50c363", // Green (This is a medium, somewhat light green)
+        "#ADD8E6", // Light blue
+        "#cf1103", // Red (This is a dark, slightly brownish red)
+        "#7F00FF", // Violet
         "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
     ];
     memory.customInstructions.subProblemColors = [
@@ -384,13 +384,13 @@ const setupProjectSix = (memory) => {
     3. Keep in mind while you decide that the sub problems, in this case, are especially important to civil soecity and policymakers.
   `;
     memory.subProblemClientColors = [
-        "#ee782d",
-        "#0b60b9",
-        "#face2d",
-        "#50c363",
-        "#ADD8E6",
-        "#cf1103",
-        "#7F00FF",
+        "#ee782d", // Orange (This is not a typical orange, but more of a dark, burnt orange)
+        "#0b60b9", // Blue (This is a strong, medium-dark blue)
+        "#face2d", // Yellow (This is a bright, somewhat orange-ish yellow)
+        "#50c363", // Green (This is a medium, somewhat light green)
+        "#ADD8E6", // Light blue
+        "#cf1103", // Red (This is a dark, slightly brownish red)
+        "#7F00FF", // Violet
         "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
     ];
     memory.customInstructions.subProblemColors = [

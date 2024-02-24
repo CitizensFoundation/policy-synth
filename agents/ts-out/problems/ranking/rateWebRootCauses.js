@@ -1,13 +1,10 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
-    }
+    rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     simplifyRootCauseType(rootCauseType) {
         return rootCauseType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
     }

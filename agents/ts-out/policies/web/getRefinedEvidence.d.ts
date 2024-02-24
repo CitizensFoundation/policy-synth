@@ -1,6 +1,7 @@
+/// <reference path="../../../src/types.d.ts" />
 import { Page } from "puppeteer";
 import { Browser } from "puppeteer-extra";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
 export declare class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
     renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (HumanMessage | SystemMessage)[];

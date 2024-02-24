@@ -4,10 +4,7 @@ import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
-    constructor() {
-        super(...arguments);
-        this.searchCounter = 0;
-    }
+    searchCounter = 0;
     async searchWeb(policy, subProblemIndex, policyIndex) {
         if (!policy.evidenceSearchResults) {
             //@ts-ignore

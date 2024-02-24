@@ -1,5 +1,5 @@
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
 export declare class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
     static evidenceWebPageTypesArray: PSEvidenceWebPageTypes[];
     filterPolicyParameters(policy: PSPolicy): Omit<PSPolicy, "imageUrl" | "imagePrompt" | "solutionIndex">;

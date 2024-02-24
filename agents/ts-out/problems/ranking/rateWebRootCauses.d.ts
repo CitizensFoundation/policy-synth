@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export declare class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;

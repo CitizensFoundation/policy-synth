@@ -1,8 +1,8 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { RootCauseExamplePrompts } from "./rootCauseExamplePrompts.js";
@@ -13,28 +13,25 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = true;
 class RootCauseTypeLookup {
+    static rootCauseTypeMapping = {
+        historicalRootCause: "allPossibleHistoricalRootCausesIdentifiedInTextContext",
+        economicRootCause: "allPossibleEconomicRootCausesIdentifiedInTextContext",
+        scientificRootCause: "allPossibleScientificRootCausesIdentifiedInTextContext",
+        culturalRootCause: "allPossibleCulturalRootCausesIdentifiedInTextContext",
+        socialRootCause: "allPossibleSocialRootCausesIdentifiedInTextContext",
+        environmentalRootCause: "allPossibleEnvironmentalRootCausesIdentifiedInTextContext",
+        legalRootCause: "allPossibleLegalRootCausesIdentifiedInTextContext",
+        technologicalRootCause: "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
+        geopoliticalRootCause: "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
+        ethicalRootCause: "allPossibleEthicalRootCausesIdentifiedInTextContext",
+        caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
+    };
     static getPropertyName(rootCauseType) {
         return this.rootCauseTypeMapping[rootCauseType];
     }
 }
-RootCauseTypeLookup.rootCauseTypeMapping = {
-    historicalRootCause: "allPossibleHistoricalRootCausesIdentifiedInTextContext",
-    economicRootCause: "allPossibleEconomicRootCausesIdentifiedInTextContext",
-    scientificRootCause: "allPossibleScientificRootCausesIdentifiedInTextContext",
-    culturalRootCause: "allPossibleCulturalRootCausesIdentifiedInTextContext",
-    socialRootCause: "allPossibleSocialRootCausesIdentifiedInTextContext",
-    environmentalRootCause: "allPossibleEnvironmentalRootCausesIdentifiedInTextContext",
-    legalRootCause: "allPossibleLegalRootCausesIdentifiedInTextContext",
-    technologicalRootCause: "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
-    geopoliticalRootCause: "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
-    ethicalRootCause: "allPossibleEthicalRootCausesIdentifiedInTextContext",
-    caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
-};
 export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
-    constructor() {
-        super(...arguments);
-        this.rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
-    }
+    rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     renderRootCauseScanningPrompt(type, text) {
         const nameOfColumn = RootCauseTypeLookup.getPropertyName(type);
         if (!nameOfColumn) {

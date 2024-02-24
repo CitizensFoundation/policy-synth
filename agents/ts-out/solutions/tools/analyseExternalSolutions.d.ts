@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     folderPath: string;
     renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<(HumanMessage | SystemMessage)[]>;

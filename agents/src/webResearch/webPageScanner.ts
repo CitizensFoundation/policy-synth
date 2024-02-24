@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { HTTPResponse, Page } from "puppeteer";
 import puppeteer, { Browser } from "puppeteer-extra";
 import { PdfReader } from "pdfreader";

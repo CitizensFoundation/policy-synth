@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
     renderCurrentSolution(solution: IEngineSolution): string;
     renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution): Promise<(HumanMessage | SystemMessage)[]>;

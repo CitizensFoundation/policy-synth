@@ -1,7 +1,7 @@
-import { BaseMessage } from "langchain/schema";
 import winston from "winston";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { Callbacks } from "langchain/callbacks";
+import { ChatOpenAI } from "@langchain/openai";
+import { BaseMessage } from "@langchain/core/messages";
+import { Callbacks } from "@langchain/core/callbacks/manager";
 export declare class PolicySynthAgentBase {
     memory?: PsBaseMemoryData;
     logger: winston.Logger;

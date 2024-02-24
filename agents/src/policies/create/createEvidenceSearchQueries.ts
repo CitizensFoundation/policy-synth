@@ -1,8 +1,8 @@
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
 
 import { IEngineConstants } from "../../constants.js";
+import { ChatOpenAI } from "@langchain/openai";
 
 export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
   static evidenceWebPageTypesArray: PSEvidenceWebPageTypes[] = [

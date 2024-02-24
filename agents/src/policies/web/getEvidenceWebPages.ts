@@ -3,9 +3,9 @@ import puppeteer, { Browser } from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";

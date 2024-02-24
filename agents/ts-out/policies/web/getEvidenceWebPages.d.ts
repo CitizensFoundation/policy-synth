@@ -1,6 +1,7 @@
+/// <reference path="../../../src/types.d.ts" />
 import { Page } from "puppeteer";
 import { Browser } from "puppeteer-extra";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export declare class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {

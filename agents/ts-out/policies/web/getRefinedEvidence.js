@@ -1,8 +1,8 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");

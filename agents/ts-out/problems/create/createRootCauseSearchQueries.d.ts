@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
     static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[];
     renderCreatePrompt(searchResultType: PSRootCauseWebPageTypes): Promise<(HumanMessage | SystemMessage)[]>;

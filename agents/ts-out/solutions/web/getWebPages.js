@@ -12,8 +12,8 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -21,11 +21,8 @@ const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://local
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
 export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.webPageVectorStore = new WebPageVectorStore();
-        this.totalPagesSave = 0;
-    }
+    webPageVectorStore = new WebPageVectorStore();
+    totalPagesSave = 0;
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         return [
             new SystemMessage(`Your are an AI expert in analyzing text for practical solutions to difficult problems:

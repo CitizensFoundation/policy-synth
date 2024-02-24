@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
     renderReapPrompt(solution: IEngineSolution): Promise<(HumanMessage | SystemMessage)[]>;
     reapSolutionsForSubProblem(subProblemIndex: number, solutions: Array<IEngineSolution>): Promise<void>;

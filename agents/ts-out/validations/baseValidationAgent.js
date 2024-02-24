@@ -3,6 +3,8 @@ import { PolicySynthAgentBase } from "../baseAgent.js";
 import { IEngineConstants } from "../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 export class PsBaseValidationAgent extends PolicySynthAgentBase {
+    name;
+    options;
     constructor(name, options = {}) {
         super();
         this.name = name;

@@ -1,6 +1,4 @@
-import { Callbacks } from "langchain/callbacks";
 import { PsBaseValidationAgent } from "./baseValidationAgent.js";
-import WebSocket from "ws";
 
 export class PsParallelValidationAgent extends PsBaseValidationAgent {
   private agents: PsBaseValidationAgent[];

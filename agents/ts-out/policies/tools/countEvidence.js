@@ -4,10 +4,7 @@ import { IEngineConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-    }
+    evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     async countAll(policy, subProblemIndex) {
         let offset = 0;
         const limit = 100;

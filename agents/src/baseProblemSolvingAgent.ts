@@ -1,12 +1,5 @@
 import { Job } from "bullmq";
 import { PolicySynthAgentBase } from "./baseAgent.js";
-import {
-  BaseMessage,
-  ChatMessage,
-  HumanMessage,
-  SystemMessage,
-} from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
 import { IEngineConstants } from "./constants.js";
 
 export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {

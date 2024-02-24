@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Page } from "puppeteer";
 import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
 export declare class WebPageScanner extends GetWebPagesProcessor {

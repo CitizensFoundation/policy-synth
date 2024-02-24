@@ -1,8 +1,21 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
+    static rootCauseWebPageTypesArray = [
+        "caseStudies",
+        "economicRootCause",
+        "scientificRootCause",
+        "culturalRootCause",
+        "socialRootCause",
+        "environmentalRootCause",
+        "legalRootCause",
+        "technologicalRootCause",
+        "geopoliticalRootCause",
+        "historicalRootCause",
+        "ethicalRootCause",
+    ];
     async renderCreatePrompt(searchResultType) {
         return [
             new SystemMessage(`Adhere to the following guidelines:
@@ -118,17 +131,4 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
         this.logger.info("Finished creating root cause search queries");
     }
 }
-CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray = [
-    "caseStudies",
-    "economicRootCause",
-    "scientificRootCause",
-    "culturalRootCause",
-    "socialRootCause",
-    "environmentalRootCause",
-    "legalRootCause",
-    "technologicalRootCause",
-    "geopoliticalRootCause",
-    "historicalRootCause",
-    "ethicalRootCause",
-];
 //# sourceMappingURL=createRootCauseSearchQueries.js.map

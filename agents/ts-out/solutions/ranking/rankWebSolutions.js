@@ -1,13 +1,10 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.webPageVectorStore = new WebPageVectorStore();
-    }
+    webPageVectorStore = new WebPageVectorStore();
     async renderProblemPrompt(solutionsToRank, subProblemIndex) {
         return [
             new SystemMessage(`You are an expert in filtering and ranking solutions to problems.

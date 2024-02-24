@@ -1,3 +1,4 @@
+/// <reference path="../../../src/types.d.ts" />
 import { Page } from "puppeteer";
 import { Browser } from "puppeteer-extra";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";

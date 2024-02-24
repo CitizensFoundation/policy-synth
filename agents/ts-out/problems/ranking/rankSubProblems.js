@@ -1,12 +1,9 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
-    constructor() {
-        super(...arguments);
-        this.subProblemIndex = 0;
-    }
+    subProblemIndex = 0;
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];

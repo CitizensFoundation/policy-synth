@@ -1,9 +1,10 @@
 {
   "extends": "@tsconfig/node18/tsconfig.json",
   "compilerOptions": {
-    "target": "es2020",
-    "module": "esnext",
+    "target": "ES2022",
+    "module": "NodeNext",
     "declaration": true,
+    "esModuleInterop": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "ts-out"

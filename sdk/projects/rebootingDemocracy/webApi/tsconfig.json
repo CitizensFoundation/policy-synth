@@ -1,0 +1,17 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "outDir": "ts-out/",
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": [
+    "**/*.ts",
+    "./node_modules/@policysynth/agents/**/*.d.ts",
+    "./node_modules/@policysynth/api/**/*.d.ts"
+  ]
+}

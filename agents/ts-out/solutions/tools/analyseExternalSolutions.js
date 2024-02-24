@@ -2,8 +2,8 @@ import { IEngineConstants } from "../../constants.js";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 import fetch from "node-fetch";
 //@ts-ignore
@@ -95,6 +95,7 @@ const externalSolutionsMisuseOfLegalSystem = [
     },
 ];
 export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
+    folderPath;
     async renderAnalysisPrompt(solutionDescription, requirement) {
         const messages = [
             new SystemMessage(`

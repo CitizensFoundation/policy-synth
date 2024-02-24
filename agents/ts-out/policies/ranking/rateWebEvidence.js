@@ -1,13 +1,10 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-    }
+    evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     simplifyEvidenceType(evidenceType) {
         return evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
     }

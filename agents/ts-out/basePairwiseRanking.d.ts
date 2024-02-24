@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
 export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
     prompts: Record<number, number[][]>;

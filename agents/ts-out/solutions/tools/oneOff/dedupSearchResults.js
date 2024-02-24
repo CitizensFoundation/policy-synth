@@ -2,6 +2,10 @@ import ioredis from "ioredis";
 import { IEngineConstants } from "../../../constants.js";
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 class DeduplicateSearchProcessor {
+    memory;
+    deduplicatedCount;
+    totalCount;
+    seenUrls;
     constructor(memory) {
         this.memory = memory;
         this.deduplicatedCount = 0;

@@ -1,10 +1,10 @@
-import { BaseMessage } from "langchain/schema";
 import winston from "winston";
 import { IEngineConstants } from "./constants.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
 import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
-import { Callbacks } from "langchain/callbacks";
+import { ChatOpenAI } from "@langchain/openai";
+import { BaseMessage } from "@langchain/core/messages";
+import { Callbacks } from "@langchain/core/callbacks/manager";
 
 //@ts-ignore
 const redis = new ioredis.default(

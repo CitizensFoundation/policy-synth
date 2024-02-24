@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
     renderCommonPromptSection(): string;
     renderProblemPrompt(problem: string): Promise<(HumanMessage | SystemMessage)[]>;

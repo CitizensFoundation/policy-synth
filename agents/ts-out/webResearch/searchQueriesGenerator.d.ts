@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PolicySynthAgentBase } from "../baseAgent.js";
 export declare class SearchQueriesGenerator extends PolicySynthAgentBase {
     systemPrompt: string;
