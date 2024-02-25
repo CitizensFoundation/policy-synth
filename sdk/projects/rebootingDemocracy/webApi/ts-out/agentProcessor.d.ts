@@ -1,3 +1,4 @@
+/// <reference types="node" resolution-mode="require"/>
 import { BaseIngestionAgent } from "./baseAgent.js";
 export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     protected dataLayoutPath: string;
@@ -11,7 +12,7 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     processFiles(files: string[]): Promise<void>;
     extractFileIdFromPath(filePath: string): string | null;
     getFilesForProcessing(): string[];
-    private updateCachedFilesAndMetadata;
+    updateCachedFilesAndMetadata(relativePath: string, url: string, data: Buffer, contentType: string): void;
     protected readDataLayout(): Promise<DataLayout>;
     getFileNameAndPath(url: string, extension: string): {
         fullPath: string;

@@ -80,11 +80,13 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     for (const filePath of files) {
       try {
         const data = await fs.readFile(filePath, "utf-8");
-        const fileId = this.extractFileIdFromPath(filePath);
-        if (!fileId) {
-          console.error(`Cannot extract fileId from path: ${filePath}`);
+        const metadataEntry = Object.values(this.fileMetadata).find(meta => meta.filePath === filePath);
+        if (!metadataEntry) {
+          console.error(`Metadata not found for filePath: ${filePath}`);
           continue;
         }
+
+        const fileId = metadataEntry.fileId; // Directly use fileId from metadata
 
         // Split file data if it exceeds the max token length
         if (
@@ -131,27 +133,28 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return filesForProcessing;
   }
 
-  private updateCachedFilesAndMetadata(
-    fileName: string,
+  updateCachedFilesAndMetadata(
+    relativePath: string,
     url: string,
-    data: Buffer
-  ): void {
-    const key = this.generateFileId(url);
+    data: Buffer,
+    contentType: string
+  ) {
+    const fileId = this.generateFileId(url);
     const hash = this.computeHash(data);
 
-    if (!this.cachedFiles.includes(fileName)) {
-      this.cachedFiles.push(fileName);
-    }
-
-    this.fileMetadata[key] = {
-      key, // Include the unique key in metadata
+    // Update or create new metadata entry
+    this.fileMetadata[fileId] = {
+      ...this.fileMetadata[fileId], // Retain existing metadata
       url,
+      fileId,
+      contentType,
+      filePath: relativePath, // Ensure filePath is set here
       lastModified: new Date().toISOString(),
       size: data.length,
       hash,
-    } as any;
+    };
 
-    console.log(`Cached file ${fileName}`);
+    console.log(`Cached file ${relativePath} ${JSON.stringify(this.fileMetadata[fileId], null, 2)}`);
   }
 
   protected async readDataLayout(): Promise<DataLayout> {
@@ -173,18 +176,21 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return dataLayout;
   }
 
-  getFileNameAndPath(url: string, extension: string): { fullPath: string; relativePath: string } {
+  getFileNameAndPath(
+    url: string,
+    extension: string
+  ): { fullPath: string; relativePath: string } {
     const urlObj = new URL(url);
     let basename = path.basename(urlObj.pathname);
     const folderHash = crypto.createHash("md5").update(url).digest("hex");
     const baseDir = `./ingestion/cache/${folderHash}`;
 
     // Check if basename is empty or does not look like a filename, then use a default name
-    if (!basename || basename === '/' || !basename.includes('.')) {
+    if (!basename || basename === "/" || !basename.includes(".")) {
       basename = `default${extension}`; // Use a default basename if necessary
     } else {
       // Ensure the filename uses the determined extension without duplication
-      basename = basename.replace(new RegExp(`${extension}$`), '') + extension;
+      basename = basename.replace(new RegExp(`${extension}$`), "") + extension;
     }
 
     const fullPath = path.join(baseDir, basename);
@@ -198,10 +204,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       try {
         const contentResponse = await fetch(url);
         if (!contentResponse.ok) {
-          throw new Error(`Content fetch failed with status ${contentResponse.status} for URL ${url}`);
+          throw new Error(
+            `Content fetch failed with status ${contentResponse.status} for URL: ${url}`
+          );
         }
 
-        // Use Content-Type header to determine the correct extension, especially for ambiguous URLs
+        // Use Content-Type header to determine the correct extension
         const contentType = contentResponse.headers.get("Content-Type");
         let extension;
         if (contentType) {
@@ -209,12 +217,20 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             extension = ".pdf";
           } else if (contentType.includes("text/html")) {
             extension = ".html";
-          } else if (contentType.includes("application/json") || isJsonData) {
+          } else if (contentType.includes("application/json")) {
             extension = ".json";
+          } else if (contentType.includes("image/")) {
+            // Extract the image file type (e.g., jpeg, png, avif)
+            const imageType = contentType.split("/")[1];
+            extension = `.${imageType}`;
+            if (imageType === "jpeg") extension = ".jpg"; // Adjust for common file extension
           } else {
             console.error(`Unsupported Content-Type for URL: ${url}`);
             continue;
           }
+        } else if (isJsonData) {
+          // Fallback for JSON data if Content-Type is not available
+          extension = ".json";
         }
 
         const arrayBuffer = await contentResponse.arrayBuffer();
@@ -222,11 +238,16 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
         // Ensure extension is determined
         if (!extension) {
-          console.error(`Unable to determine the file extension for URL: ${url}`);
+          console.error(
+            `Unable to determine the file extension for URL: ${url}`
+          );
           continue;
         }
 
-        const { fullPath, relativePath } = this.getFileNameAndPath(url, extension);
+        const { fullPath, relativePath } = this.getFileNameAndPath(
+          url,
+          extension
+        );
 
         // Ensure the directory exists
         await fs.mkdir(path.dirname(fullPath), { recursive: true });
@@ -235,7 +256,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         await fs.writeFile(fullPath, data);
 
         // Update metadata and cachedFiles list
-        this.updateCachedFilesAndMetadata(relativePath, url, data);
+        this.updateCachedFilesAndMetadata(relativePath, url, data, contentType || "unknown");
       } catch (error) {
         console.error(`Failed to download content for URL ${url}:`, error);
       }
@@ -243,7 +264,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     // Save the updated metadata to disk
     await this.saveFileMetadata();
   }
-
 
   protected async processJsonUrls(urls: string[]): Promise<void> {
     for (const url of urls) {

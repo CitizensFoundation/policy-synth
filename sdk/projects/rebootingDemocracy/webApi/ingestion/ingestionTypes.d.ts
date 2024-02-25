@@ -21,11 +21,13 @@ interface CachedFileMetadata {
   lastModified: string;
   size: number;
   hash: string;
+  fileId: string;
   description?: string;
   shortDescription?: string;
   fullDescriptionOfAllContents?: string;
   title?: string;
   filePath: string;
+  contentType: string;
   chunks?: { [key: string]: ChunkData };
   references: string[];
   allUrls: string[];
