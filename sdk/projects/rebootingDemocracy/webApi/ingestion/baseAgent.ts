@@ -72,6 +72,8 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     return parts;
   }
 
+
+
   getEstimateTokenLength(data: string): number {
     const words = data.split(" ");
     return words.length * this.roughFastWordTokenRatio;

@@ -3,7 +3,7 @@ import { IEngineConstants } from "./constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
-  maxCompressionRetries = 5;
+  maxCompressionRetries = 15;
 
   completionValidationSuccessMessage =
     "All content present in compressed text.";
@@ -76,8 +76,16 @@ Output:
   textMetaData: { [key: string]: string };
 }`);
 
-  compressionUserMessage = (data: string, retryCount: number) =>
-    new HumanMessage(`Document to analyze and compress:
+  compressionUserMessage = (
+    data: string,
+    retryCount: number,
+    validationTextResults: string | undefined
+  ) =>
+    new HumanMessage(`${
+      validationTextResults
+        ? `Note: You have already tried once to compress this text, and you got those validation errors:\n${validationTextResults}\n\n`
+        : ``
+    }Document to analyze and compress:
 ${
   retryCount > 1
     ? "MAKE SURE TO INCLUDE ALL THE CONTENT AND DETAILS FROM THE ORIGINAL CONTENT"
@@ -85,12 +93,15 @@ ${
 }${data}
 `);
 
-  async compress(uncompressedData: string): Promise<LlmChunkCompressionReponse> {
+  async compress(
+    uncompressedData: string
+  ): Promise<LlmChunkCompressionReponse> {
     this.resetLlmTemperature();
 
     let chunkCompression;
 
     let validated = false;
+    let validationTextResults: string | undefined;
 
     let retryCount = 0;
     while (!validated && retryCount < this.maxCompressionRetries) {
@@ -99,16 +110,27 @@ ${
         IEngineConstants.ingestionModel,
         this.getFirstMessages(
           this.compressionSystemMessage,
-          this.compressionUserMessage(uncompressedData, retryCount)
+          this.compressionUserMessage(
+            uncompressedData,
+            retryCount,
+            validationTextResults
+          )
         )
       )) as LlmChunkCompressionReponse;
 
-      validated = await this.validateChunkSummary(
+      const validationResults = await this.validateChunkSummary(
         uncompressedData,
         chunkCompression.fullCompressedContents
       );
 
+      validated = validationResults.valid;
+
       retryCount++;
+
+      if (!validated) {
+        validationTextResults = validationResults.validationTextResults;
+        console.warn(`\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`);
+      }
 
       if (retryCount > 2) {
         this.randomizeLlmTemperature();
@@ -125,7 +147,7 @@ ${
   async validateChunkSummary(
     uncompressed: string,
     compressed: string
-  ): Promise<boolean> {
+  ): Promise<{ valid: boolean; validationTextResults: string }> {
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",
@@ -162,31 +184,43 @@ ${
       hallucinationValidation,
     ] = validations.map((response) => response as string);
 
+    const validationTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
+
     if (
-      completionValidation === this.completionValidationSuccessMessage &&
-      correctnessValidation === this.correctnessValidationSuccessMessage &&
-      hallucinationValidation === this.hallucinationValidationSuccessMessage
+      completionValidation.includes(this.completionValidationSuccessMessage) &&
+      correctnessValidation.includes(
+        this.correctnessValidationSuccessMessage
+      ) &&
+      hallucinationValidation.includes(
+        this.hallucinationValidationSuccessMessage
+      )
     ) {
-      return true;
+      return { valid: true, validationTextResults };
     } else {
-      if (completionValidation !== this.completionValidationSuccessMessage) {
+      if (
+        !completionValidation.includes(this.completionValidationSuccessMessage)
+      ) {
         console.warn(
           `Chunk summary completionValidation failed: ${completionValidation}`
         );
       }
-      if (correctnessValidation !== this.correctnessValidationSuccessMessage) {
+      if (
+        !correctnessValidation.includes(this.correctnessValidationSuccessMessage)
+      ) {
         console.warn(
           `Chunk summary correctnessValidation failed: ${correctnessValidation}`
         );
       }
       if (
-        hallucinationValidation !== this.hallucinationValidationSuccessMessage
+       !hallucinationValidation.includes(
+          this.hallucinationValidationSuccessMessage
+        )
       ) {
         console.warn(
           `Chunk summary hallucinationValidation failed: ${hallucinationValidation}`
         );
       }
-      return false;
+      return { valid: false, validationTextResults };
     }
   }
 }

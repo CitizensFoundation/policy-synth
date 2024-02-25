@@ -4,7 +4,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionCleanupAgent extends BaseIngestionAgent {
   maxCleanupTokenLength: number = 4000;
-  maxCleanupRetries: number = 5;
+  maxCleanupRetries: number = 15;
 
   completionValidationSuccessMessage = "All content present in cleaned text.";
 
@@ -18,7 +18,8 @@ export class IngestionCleanupAgent extends BaseIngestionAgent {
 
 Instructions:
 - Identify anything in the cleaned text that is not in the original text.
-- The cleaned text should not include anything not in the original text
+- The cleaned text should not include anything not in the original text.
+- Do not comment on removed text.
 - If there is no additional text in the cleaned text, then output, and nothing else: No additional content in cleaned text.
 `);
 
@@ -28,6 +29,7 @@ Instructions:
 Instructions:
 - Identify anything that is not the same in the original text as in the cleaned text except for items that have been cleaned away.
 - Important: The cleaned text does not have any acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc and that is ok, do not comment on it.
+- Do not comment on fixed typos or such in the cleaned text.
 - If all the cleaned text is correct, output, and nothing else: All content correct in cleaned text.
 `);
 
@@ -37,6 +39,8 @@ Instructions:
 Instructions:
 - Make sure that all main content in the original text is present in the cleaned text, that no main content is missing.
 - The cleaned text does not have any acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc and that is ok as we have cleaned it away.
+- Do not comment on fixed typos or such in the cleaned text.
+- Make sure that all numbers used to number items in the main content are still present in the cleaned text.
 - If all the main content is present in the cleaned text then output, and nothing else: All content present in cleaned text.
 `);
 
@@ -55,7 +59,7 @@ Instruction:
 - Please cleanup the document and only output actual unchanced contents.
 - Do no output any initial acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc.
 - Remove all repeated titles as those are coming from the PDF footer pages.
-- Keep all numbers for numbered lists, etc.
+- If the text start with a numbered index like 1. or 4. do not remove it in your cleanup.
 - Do not add anything to the document.
 - Do not change anything just remove unwanted artifacts, if any, in the cleanup.
 `);
@@ -166,9 +170,9 @@ ${data}
     );
 
     if (
-      completionValidation === this.completionValidationSuccessMessage &&
-      correctnessValidation === this.correctnessValidationSuccessMessage &&
-      hallucinationValidation === this.hallucinationValidationSuccessMessage
+      completionValidation.includes(this.completionValidationSuccessMessage) &&
+      correctnessValidation.includes(this.correctnessValidationSuccessMessage) &&
+      hallucinationValidation.includes(this.hallucinationValidationSuccessMessage)
     ) {
       return {valid: true, validationTextResults};
     } else {
