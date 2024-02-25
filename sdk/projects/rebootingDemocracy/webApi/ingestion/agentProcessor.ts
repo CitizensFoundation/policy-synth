@@ -12,11 +12,11 @@ import { ChunkCompressorAgent } from "./chunkCompressorAgent.js";
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   protected dataLayoutPath: string;
   private cachedFiles: string[] = [];
-  private fileMetadataPath: string = "./cache/fileMetadata.json";
+  private fileMetadataPath: string = "./ingestion/cache/fileMetadata.json";
   private fileMetadata: Record<string, CachedFileMetadata> = {};
   private initialFileMetadata: Record<string, CachedFileMetadata> = {};
 
-  constructor(dataLayoutPath: string = "file://dataLayout.json") {
+  constructor(dataLayoutPath: string = "file://ingestion/dataLayout.json") {
     super();
     this.dataLayoutPath = dataLayoutPath;
 
@@ -56,7 +56,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     for (const [chunkId, chunkData] of Object.entries(chunks)) {
       let chunkCompression = await chunkCompressor.compress(chunkData);
 
-      const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.fullCompressedContents}`
+      const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.fullCompressedContents}`;
 
       const metadata = this.fileMetadata[fileId] || {};
       metadata.chunks = metadata.chunks || {};
@@ -168,38 +168,48 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return dataLayout;
   }
 
-  protected async downloadAndCache(
-    urls: string[],
-    isJsonData: boolean
-  ): Promise<void> {
+  async downloadAndCache(urls: string[], isJsonData: boolean): Promise<void> {
     for (const url of urls) {
-      const fileId = this.generateFileId(url); // Unique key for the file based on its URL
-      const response = await fetch(url, { method: "HEAD" });
-      const lastModified =
-        response.headers.get("Last-Modified") ?? new Date().toISOString();
-      const contentLength = parseInt(
-        response.headers.get("Content-Length") ?? "0",
-        10
-      );
+      try {
+        const fileId = this.generateFileId(url);
+        const response = await fetch(url, { method: "HEAD" });
+        if (!response.ok) {
+          throw new Error(`HEAD request failed with status ${response.status} for URL ${url}`);
+        }
 
-      const existingMetadata = this.fileMetadata[fileId];
+        const lastModified = response.headers.get("Last-Modified") ?? new Date().toISOString();
+        const contentLength = parseInt(response.headers.get("Content-Length") ?? "0", 10);
+        const existingMetadata = this.fileMetadata[fileId];
 
-      if (
-        !existingMetadata ||
-        existingMetadata.lastModified !== lastModified ||
-        existingMetadata.size !== contentLength
-      ) {
-        const contentResponse = await fetch(url);
-        const data = await contentResponse.buffer();
-        const fileName = this.getFileName(url, isJsonData);
+        if (!existingMetadata || existingMetadata.lastModified !== lastModified || existingMetadata.size !== contentLength) {
+          try {
+            const contentResponse = await fetch(url);
+            if (!contentResponse.ok) {
+              throw new Error(`Content fetch failed with status ${contentResponse.status} for URL ${url}`);
+            }
 
-        await fs.writeFile(fileName, data);
+            const arrayBuffer = await contentResponse.arrayBuffer();
+            const data = Buffer.from(arrayBuffer); // Convert ArrayBuffer to Buffer
+            const fileName = this.getFileName(url, isJsonData);
 
-        // Update metadata and cachedFiles list
-        this.updateCachedFilesAndMetadata(fileName, url, data);
+            // Ensure the directory exists
+            await fs.mkdir(path.dirname(fileName), { recursive: true });
+
+            // Write the file
+            await fs.writeFile(fileName, data);
+
+            // Update metadata and cachedFiles list
+            this.updateCachedFilesAndMetadata(fileName, url, data);
+          } catch (error: any) {
+            console.error(`Failed to download content for URL ${url}:`, error.message);
+            // Optionally, log the error to a file or handle it as needed
+          }
+        }
+      } catch (error: any) {
+        console.error(`Failed to process URL ${url}:`, error.message);
+        // Optionally, log the error to a file or handle it as needed
       }
     }
-
     // Save the updated metadata to disk
     await this.saveFileMetadata();
   }
@@ -209,7 +219,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       const response = await fetch(url);
       const jsonData = await response.json();
       const folderHash = crypto.createHash("md5").update(url).digest("hex");
-      const folderPath = `./cache/${folderHash}`;
+      const folderPath = `./ingestion/cache/${folderHash}`;
       await fs.mkdir(folderPath, { recursive: true });
       const jsonFilePath = `${folderPath}/data.json`;
       await fs.writeFile(jsonFilePath, JSON.stringify(jsonData, null, 2));

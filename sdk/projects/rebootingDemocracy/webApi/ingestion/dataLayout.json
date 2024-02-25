@@ -1,3 +1,14 @@
 {
-  "dynamicDataLayoutEndpoint": ""
+  "jsonUrls": [
+    "https://directus.thegovlab.com/ci_cases/items/case_studies?limit=-1",
+    "https://content.thegovlab.com/items/reboot_democracy_blog?fields=*.*&limit=-1",
+    "https://content.thegovlab.com/items/reboot_democracy_resources?fields=*.*&limit=-1",
+    "https://content.thegovlab.com/items/blog?fields=*.*&limit=-1"
+  ],
+  "documentUrls": [
+    "https://media.nesta.org.uk/documents/Collective_Intelligence_A_checklist_for_the_public_sector.pdf",
+    "https://directus.thegovlab.com/uploads/ci_cases/originals/b3b84db2-296c-435d-968a-8d066c6a7b87.pdf",
+    "https://virtual-communities.thegovlab.org/files/DTR_report_en_EN.pdf",
+    "https://content.thegovlab.com/assets/f7ad046e-fc89-42b8-b0ae-37c9cd5d8296"
+  ]
 }

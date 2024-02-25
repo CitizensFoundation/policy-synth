@@ -74,14 +74,24 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
   }
 
   getFileName(url: string, isJsonData: boolean): string {
-    const baseName = path.basename(new URL(url).pathname);
+    const urlObj = new URL(url);
+    let baseName = path.basename(urlObj.pathname);
+
+    // Ensure there's a meaningful baseName, especially for JSON data
+    if (!baseName || isJsonData) {
+      // Fallback filename for JSON or when basename is missing
+      baseName = isJsonData ? 'data.json' : 'content.bin'; // 'content.bin' as a generic binary data filename
+    }
+
     if (isJsonData) {
       const folderHash = this.generateFileId(url);
-      const folderPath = `./cache/${folderHash}`;
-      return `${folderPath}/${baseName}`;
+      const folderPath = `./ingestion/cache/${folderHash}`;
+      return path.join(folderPath, baseName);
     }
-    return `./cache/${baseName}`;
+
+    return path.join('./ingestion/cache', baseName);
   }
+
 
   getExternalUrlsFromJson(jsonData: any): string[] {
     const urls: string[] = [];
