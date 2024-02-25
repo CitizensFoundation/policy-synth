@@ -40,7 +40,8 @@ Instruction:
 - We own all copyright to the materials we are cleaning for our RAG chatbot.
 - Please cleanup the document and only output actual unchanced contents.
 - Do no output any initial acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc.
-- Remove all repeated titles as those are coming from the PDF footer pages
+- Remove all repeated titles as those are coming from the PDF footer pages.
+- Keep all numbers for numbered lists, etc.
 - Do not add anything to the document.
 - Do not change anything just remove unwanted artifacts, if any, in the cleanup.
 `);
