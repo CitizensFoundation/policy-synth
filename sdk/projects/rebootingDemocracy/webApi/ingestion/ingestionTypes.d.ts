@@ -25,6 +25,7 @@ interface CachedFileMetadata {
   shortDescription?: string;
   fullDescriptionOfAllContents?: string;
   title?: string;
+  filePath: string;
   chunks?: { [key: string]: ChunkData };
   references: string[];
   allUrls: string[];

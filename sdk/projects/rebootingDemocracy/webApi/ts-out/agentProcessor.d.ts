@@ -13,6 +13,10 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     getFilesForProcessing(): string[];
     private updateCachedFilesAndMetadata;
     protected readDataLayout(): Promise<DataLayout>;
+    getFileNameAndPath(url: string, extension: string): {
+        fullPath: string;
+        relativePath: string;
+    };
     downloadAndCache(urls: string[], isJsonData: boolean): Promise<void>;
     protected processJsonUrls(urls: string[]): Promise<void>;
     loadFileMetadata(): Promise<void>;

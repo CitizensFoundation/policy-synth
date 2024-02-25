@@ -119,7 +119,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       const initialMetadata = this.initialFileMetadata[fileId];
       // Check if file is new or has been changed
       if (!initialMetadata || initialMetadata.hash !== metadata.hash) {
-        filesForProcessing.push(metadata.url); // Add URL to processing list; adjust as needed
+        // Use the filePath from the metadata to ensure correct file is processed
+        if (metadata.filePath) {
+          filesForProcessing.push(metadata.filePath); // filePath is assumed to be stored in metadata
+        } else {
+          console.error(`File path missing in metadata for fileId: ${fileId}`);
+        }
       }
     }
 
@@ -168,51 +173,77 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return dataLayout;
   }
 
+  getFileNameAndPath(url: string, extension: string): { fullPath: string; relativePath: string } {
+    const urlObj = new URL(url);
+    let basename = path.basename(urlObj.pathname);
+    const folderHash = crypto.createHash("md5").update(url).digest("hex");
+    const baseDir = `./ingestion/cache/${folderHash}`;
+
+    // Check if basename is empty or does not look like a filename, then use a default name
+    if (!basename || basename === '/' || !basename.includes('.')) {
+      basename = `default${extension}`; // Use a default basename if necessary
+    } else {
+      // Ensure the filename uses the determined extension without duplication
+      basename = basename.replace(new RegExp(`${extension}$`), '') + extension;
+    }
+
+    const fullPath = path.join(baseDir, basename);
+    const relativePath = fullPath; // Using fullPath as relativePath for simplicity
+
+    return { fullPath, relativePath };
+  }
+
   async downloadAndCache(urls: string[], isJsonData: boolean): Promise<void> {
     for (const url of urls) {
       try {
-        const fileId = this.generateFileId(url);
-        const response = await fetch(url, { method: "HEAD" });
-        if (!response.ok) {
-          throw new Error(`HEAD request failed with status ${response.status} for URL ${url}`);
+        const contentResponse = await fetch(url);
+        if (!contentResponse.ok) {
+          throw new Error(`Content fetch failed with status ${contentResponse.status} for URL ${url}`);
         }
 
-        const lastModified = response.headers.get("Last-Modified") ?? new Date().toISOString();
-        const contentLength = parseInt(response.headers.get("Content-Length") ?? "0", 10);
-        const existingMetadata = this.fileMetadata[fileId];
-
-        if (!existingMetadata || existingMetadata.lastModified !== lastModified || existingMetadata.size !== contentLength) {
-          try {
-            const contentResponse = await fetch(url);
-            if (!contentResponse.ok) {
-              throw new Error(`Content fetch failed with status ${contentResponse.status} for URL ${url}`);
-            }
-
-            const arrayBuffer = await contentResponse.arrayBuffer();
-            const data = Buffer.from(arrayBuffer); // Convert ArrayBuffer to Buffer
-            const fileName = this.getFileName(url, isJsonData);
-
-            // Ensure the directory exists
-            await fs.mkdir(path.dirname(fileName), { recursive: true });
-
-            // Write the file
-            await fs.writeFile(fileName, data);
-
-            // Update metadata and cachedFiles list
-            this.updateCachedFilesAndMetadata(fileName, url, data);
-          } catch (error: any) {
-            console.error(`Failed to download content for URL ${url}:`, error.message);
-            // Optionally, log the error to a file or handle it as needed
+        // Use Content-Type header to determine the correct extension, especially for ambiguous URLs
+        const contentType = contentResponse.headers.get("Content-Type");
+        let extension;
+        if (contentType) {
+          if (contentType.includes("application/pdf")) {
+            extension = ".pdf";
+          } else if (contentType.includes("text/html")) {
+            extension = ".html";
+          } else if (contentType.includes("application/json") || isJsonData) {
+            extension = ".json";
+          } else {
+            console.error(`Unsupported Content-Type for URL: ${url}`);
+            continue;
           }
         }
-      } catch (error: any) {
-        console.error(`Failed to process URL ${url}:`, error.message);
-        // Optionally, log the error to a file or handle it as needed
+
+        const arrayBuffer = await contentResponse.arrayBuffer();
+        const data = Buffer.from(arrayBuffer);
+
+        // Ensure extension is determined
+        if (!extension) {
+          console.error(`Unable to determine the file extension for URL: ${url}`);
+          continue;
+        }
+
+        const { fullPath, relativePath } = this.getFileNameAndPath(url, extension);
+
+        // Ensure the directory exists
+        await fs.mkdir(path.dirname(fullPath), { recursive: true });
+
+        // Write the file
+        await fs.writeFile(fullPath, data);
+
+        // Update metadata and cachedFiles list
+        this.updateCachedFilesAndMetadata(relativePath, url, data);
+      } catch (error) {
+        console.error(`Failed to download content for URL ${url}:`, error);
       }
     }
     // Save the updated metadata to disk
     await this.saveFileMetadata();
   }
+
 
   protected async processJsonUrls(urls: string[]): Promise<void> {
     for (const url of urls) {
