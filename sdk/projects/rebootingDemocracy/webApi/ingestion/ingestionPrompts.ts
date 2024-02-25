@@ -1,38 +1,7 @@
-// ANALYSIS
 
-export const analysisSystemMessage =  `You are an expert document analyze.
-
-Instructions:
-- You will analyze the document and output your analysis in this JSON format: {
-  title: string;
-  shortDescription: string;
-  description: string;
-  fullDescriptionOfAllContents: string;
-  documentMetaData: { [key: string]: string };
-  references: string[],
-  allUrls: strings[]
-}
-`;
-
-export const analysisUserMessage = (data: string) => `Document to analyze:
-${data}
-`;
 
 // CLEANUP
 
-export const cleanupSystemMessage = `You are an expert document cleaner. Your job is to help cleanup documents coming from various sources. PDFs, etc.
-
-Instruction:
-- We own all copyright to the materials we are cleaning for our RAG chatbot.
-- Please cleanup the document and only output actual contents.
-- Do no output any initial acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc.
-- Remove all repeated titles as those are coming from the PDF footer pages
-- Only output titles and content paragraphs.
-`;
-
-export const cleanupUserMessage = (data: string) => `Document to cleanup and output again in full:
-${data}
-`;
 
 // SPLIT STRATEGY
 

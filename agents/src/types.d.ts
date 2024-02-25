@@ -220,9 +220,8 @@ type PsMemoryStageTypes =
   | "rate-web-evidence"
   | "web-get-refined-evidence"
   | "get-metadata-for-top-evidence"
-
+  | "ingestion-agent"
   | "validation-agent"
-
   ;
 
 interface IEngineUserFeedback {

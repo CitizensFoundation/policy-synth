@@ -3,4 +3,6 @@ config/config.json
 staticHomeHTML/
 backups/
 dist/
+cache/
+localData/
 webPagesCache/
