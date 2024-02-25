@@ -7,14 +7,21 @@ import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IngestionCleanupAgent } from "./cleanupAgent.js";
 import { IngestionSplitAgent } from "./splitAgent.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { ChunkCompressorAgent } from "./chunkCompressorAgent.js";
+import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
+import { IngestionContentParser } from "./contentParser.js";
+import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
 
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
-  protected dataLayoutPath: string;
-  private cachedFiles: string[] = [];
-  private fileMetadataPath: string = "./ingestion/cache/fileMetadata.json";
-  private fileMetadata: Record<string, CachedFileMetadata> = {};
-  private initialFileMetadata: Record<string, CachedFileMetadata> = {};
+  dataLayoutPath: string;
+  cachedFiles: string[] = [];
+  fileMetadataPath: string = "./ingestion/cache/fileMetadata.json";
+  fileMetadata: Record<string, CachedFileMetadata> = {};
+  initialFileMetadata: Record<string, CachedFileMetadata> = {};
+
+  cleanupAgent: IngestionCleanupAgent;
+  splitAgent: IngestionSplitAgent;
+  chunkCompressor: IngestionChunkCompressorAgent;
+  docAnalysisAgent: IngestionDocAnalyzerAgent;
 
   constructor(dataLayoutPath: string = "file://ingestion/dataLayout.json") {
     super();
@@ -27,6 +34,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       .catch((err) => {
         console.error("Failed to load file metadata:", err);
       });
+
+    this.cleanupAgent = new IngestionCleanupAgent();
+    this.splitAgent = new IngestionSplitAgent();
+    this.chunkCompressor = new IngestionChunkCompressorAgent();
+    this.docAnalysisAgent = new IngestionDocAnalyzerAgent();
   }
 
   async processDataLayout(): Promise<void> {
@@ -34,29 +46,30 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
     const dataLayout = await this.readDataLayout();
-    await this.downloadAndCache(dataLayout.documentUrls, false);
-    await this.processJsonUrls(dataLayout.jsonUrls);
-    await this.saveFileMetadata();
+    //await this.downloadAndCache(dataLayout.documentUrls, false);
+    //await this.processJsonUrls(dataLayout.jsonUrls);
+    //await this.saveFileMetadata();
 
-    const filesForProcessing = this.getFilesForProcessing();
+    const filesForProcessing = this.getFilesForProcessing(true);
+    console.log("Files for processing:", filesForProcessing);
     this.processFiles(filesForProcessing);
   }
 
   async processFilePart(fileId: string, dataPart: string): Promise<void> {
-    const cleanupAgent = new IngestionCleanupAgent();
+    console.log(`Processing file part for fileId: ${fileId}`);
+    console.log(`-----------------> Cleaning up Data part: ${dataPart}`)
+    const cleanedUpData = await this.cleanupAgent.clean(dataPart);
+    console.log(`Cleaned up data: ${cleanedUpData}`);
 
-    const cleanedUpData = await cleanupAgent.clean(dataPart);
+    const chunks = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
 
-    const splitAgent = new IngestionSplitAgent();
-
-    const chunkCompressor = new ChunkCompressorAgent();
-
-    const chunks = await splitAgent.splitDocumentIntoChunks(cleanedUpData);
+    console.log(`Split into ${Object.keys(chunks).length} chunks`);
 
     for (const [chunkId, chunkData] of Object.entries(chunks)) {
-      let chunkCompression = await chunkCompressor.compress(chunkData);
-
+      console.log(`Before compression: ${chunkData}`);
+      let chunkCompression = await this.chunkCompressor.compress(chunkData);
       const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.fullCompressedContents}`;
+      console.log(`After compression: ${compressedData}`);
 
       const metadata = this.fileMetadata[fileId] || {};
       metadata.chunks = metadata.chunks || {};
@@ -79,25 +92,26 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   async processFiles(files: string[]): Promise<void> {
     for (const filePath of files) {
       try {
-        const data = await fs.readFile(filePath, "utf-8");
-        const metadataEntry = Object.values(this.fileMetadata).find(meta => meta.filePath === filePath);
+        console.log(`Processing file: ${filePath}`);
+        const parser = new IngestionContentParser();
+        const data = await parser.parseFile(filePath);
+        const metadataEntry = Object.values(this.fileMetadata).find(
+          (meta) => meta.filePath === filePath
+        );
         if (!metadataEntry) {
           console.error(`Metadata not found for filePath: ${filePath}`);
           continue;
         }
 
-        const fileId = metadataEntry.fileId; // Directly use fileId from metadata
-
-        // Split file data if it exceeds the max token length
         if (
           this.getEstimateTokenLength(data) > this.maxFileProcessTokenLength
         ) {
           const dataParts = this.splitDataForProcessing(data);
           for (const part of dataParts) {
-            await this.processFilePart(fileId, part); // Process each part of the file
+            await this.processFilePart(metadataEntry.fileId, part); // Process each part of the file
           }
         } else {
-          await this.processFilePart(fileId, data); // Process the entire file as one part
+          await this.processFilePart(metadataEntry.fileId, data); // Process the entire file as one part
         }
       } catch (error) {
         console.error(`Failed to process file ${filePath}:`, error);
@@ -113,20 +127,23 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return url ? this.generateFileId(url) : null;
   }
 
-  public getFilesForProcessing(): string[] {
+  public getFilesForProcessing(forceProcessing = false): string[] {
     const filesForProcessing: string[] = [];
 
     // Compare current fileMetadata with initialFileMetadata
     for (const [fileId, metadata] of Object.entries(this.fileMetadata)) {
+      console.log(`Checking file ${JSON.stringify(metadata)}`);
       const initialMetadata = this.initialFileMetadata[fileId];
       // Check if file is new or has been changed
-      if (!initialMetadata || initialMetadata.hash !== metadata.hash) {
+      if (forceProcessing || !initialMetadata || initialMetadata.hash !== metadata.hash) {
         // Use the filePath from the metadata to ensure correct file is processed
         if (metadata.filePath) {
           filesForProcessing.push(metadata.filePath); // filePath is assumed to be stored in metadata
         } else {
           console.error(`File path missing in metadata for fileId: ${fileId}`);
         }
+      } else {
+        console.log(`File ${metadata.filePath} has not been modified`);
       }
     }
 
@@ -137,7 +154,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     relativePath: string,
     url: string,
     data: Buffer,
-    contentType: string
+    contentType: string,
+    lastModifiedOnServer: string
   ) {
     const fileId = this.generateFileId(url);
     const hash = this.computeHash(data);
@@ -150,11 +168,18 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       contentType,
       filePath: relativePath, // Ensure filePath is set here
       lastModified: new Date().toISOString(),
+      lastModifiedOnServer,
       size: data.length,
       hash,
     };
 
-    console.log(`Cached file ${relativePath} ${JSON.stringify(this.fileMetadata[fileId], null, 2)}`);
+    console.log(
+      `Cached file ${relativePath} ${JSON.stringify(
+        this.fileMetadata[fileId],
+        null,
+        2
+      )}`
+    );
   }
 
   protected async readDataLayout(): Promise<DataLayout> {
@@ -202,6 +227,43 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   async downloadAndCache(urls: string[], isJsonData: boolean): Promise<void> {
     for (const url of urls) {
       try {
+        const fileId = this.generateFileId(url);
+        const metadata = this.fileMetadata[fileId];
+        const responseHead = await fetch(url, { method: "HEAD" });
+        const lastModified = responseHead.headers.get("Last-Modified");
+
+        // Check if the file already exists and matches the cached version
+        if (metadata) {
+          const contentLength = parseInt(
+            responseHead.headers.get("Content-Length") ?? "0",
+            10
+          );
+          const cachedLastModified = new Date(metadata.lastModifiedOnServer);
+          const fetchedLastModified = new Date(lastModified!);
+
+          console.log(`Last modified: ${lastModified}`);
+          console.log(`Content length: ${contentLength}`);
+          console.log(`Cached last modified: ${cachedLastModified}`);
+          console.log(`Fetched last modified: ${fetchedLastModified}`);
+          console.log(`Metadata lastmod: ${metadata.lastModified}`);
+
+          console.log(
+            `-----> ${fetchedLastModified.getTime()} === ${cachedLastModified.getTime()}`
+          );
+
+          // Then compare the time values directly
+          if (
+            fetchedLastModified.getTime() === cachedLastModified.getTime() &&
+            contentLength === metadata.size
+          ) {
+            console.log(`Using cached version for ${url}`);
+            continue; // Skip downloading if the cached file is up to date
+          } else {
+            console.log(`Cached file for ${url} is outdated, re-downloading`);
+          }
+        }
+
+        // Existing logic to download and cache the file
         const contentResponse = await fetch(url);
         if (!contentResponse.ok) {
           throw new Error(
@@ -209,60 +271,79 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           );
         }
 
-        // Use Content-Type header to determine the correct extension
-        const contentType = contentResponse.headers.get("Content-Type");
-        let extension;
-        if (contentType) {
-          if (contentType.includes("application/pdf")) {
-            extension = ".pdf";
-          } else if (contentType.includes("text/html")) {
-            extension = ".html";
-          } else if (contentType.includes("application/json")) {
-            extension = ".json";
-          } else if (contentType.includes("image/")) {
-            // Extract the image file type (e.g., jpeg, png, avif)
-            const imageType = contentType.split("/")[1];
-            extension = `.${imageType}`;
-            if (imageType === "jpeg") extension = ".jpg"; // Adjust for common file extension
-          } else {
-            console.error(`Unsupported Content-Type for URL: ${url}`);
-            continue;
-          }
-        } else if (isJsonData) {
-          // Fallback for JSON data if Content-Type is not available
-          extension = ".json";
-        }
+        const contentType =
+          contentResponse.headers.get("Content-Type") || "unknown";
+        let extension = this.determineExtension(contentType, isJsonData);
 
         const arrayBuffer = await contentResponse.arrayBuffer();
         const data = Buffer.from(arrayBuffer);
-
-        // Ensure extension is determined
-        if (!extension) {
-          console.error(
-            `Unable to determine the file extension for URL: ${url}`
-          );
-          continue;
-        }
 
         const { fullPath, relativePath } = this.getFileNameAndPath(
           url,
           extension
         );
-
-        // Ensure the directory exists
         await fs.mkdir(path.dirname(fullPath), { recursive: true });
-
-        // Write the file
         await fs.writeFile(fullPath, data);
 
-        // Update metadata and cachedFiles list
-        this.updateCachedFilesAndMetadata(relativePath, url, data, contentType || "unknown");
+        this.updateCachedFilesAndMetadata(
+          relativePath,
+          url,
+          data,
+          contentType,
+          lastModified || ""
+        );
       } catch (error) {
         console.error(`Failed to download content for URL ${url}:`, error);
       }
     }
-    // Save the updated metadata to disk
     await this.saveFileMetadata();
+  }
+
+  determineExtension(contentType: string, isJsonData: boolean): string {
+    // Default extension for unknown content types or when specific handling is not required
+    let extension = ".bin";
+
+    if (contentType.includes("application/pdf")) {
+      extension = ".pdf";
+    } else if (contentType.includes("text/html")) {
+      extension = ".html";
+    } else if (contentType.includes("application/json") || isJsonData) {
+      extension = ".json";
+    } else if (contentType.includes("image/jpeg")) {
+      extension = ".jpg";
+    } else if (contentType.includes("image/png")) {
+      extension = ".png";
+    } else if (contentType.includes("image/gif")) {
+      extension = ".gif";
+    } else if (contentType.includes("image/svg+xml")) {
+      extension = ".svg";
+    } else if (contentType.includes("image/webp")) {
+      extension = ".webp";
+    } else if (contentType.includes("image/avif")) {
+      extension = ".avif";
+    } else if (contentType.includes("text/plain")) {
+      extension = ".txt";
+    } else if (contentType.includes("text/markdown")) {
+      extension = ".md";
+    } else if (contentType.includes("application/msword")) {
+      extension = ".doc";
+    } else if (
+      contentType.includes(
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      )
+    ) {
+      extension = ".docx";
+    } else if (contentType.includes("application/vnd.ms-excel")) {
+      extension = ".xls";
+    } else if (
+      contentType.includes(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      )
+    ) {
+      extension = ".xlsx";
+    }
+
+    return extension;
   }
 
   protected async processJsonUrls(urls: string[]): Promise<void> {

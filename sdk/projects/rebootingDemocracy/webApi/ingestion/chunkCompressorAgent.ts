@@ -2,7 +2,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { IEngineConstants } from "./constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-export class ChunkCompressorAgent extends BaseIngestionAgent {
+export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
   maxCompressionRetries = 5;
 
   completionValidationSuccessMessage =
@@ -14,13 +14,14 @@ export class ChunkCompressorAgent extends BaseIngestionAgent {
   hallucinationValidationSuccessMessage =
     "No additional content in compressed text.";
 
-  halluciantionValidationSystemMessage =
+  hallucinationValidationSystemMessage =
     new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything in the compressed text that is not in the uncompressed text.
 - The compressed text should not include anything not in the uncompressed text
-- If there is no additional text in in the uncompressed text, then output, and nothing else: No additional content in compressed text.
+- The compressed text of course has less detail and that is fine
+- If there is no additional text in the compressed text, then output, and nothing else: No additional content in compressed text.
 `);
 
   correctnessValidationSystemMessage =
@@ -148,8 +149,8 @@ ${
         "ingestion-agent",
         IEngineConstants.ingestionModel,
         this.getFirstMessages(
-          this.halluciantionValidationSystemMessage,
-          this.validationUserMessage(compressed, uncompressed)
+          this.hallucinationValidationSystemMessage,
+          this.validationUserMessage(uncompressed, compressed)
         ),
         false
       ),

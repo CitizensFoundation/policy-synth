@@ -6,7 +6,7 @@ export class IngestionSplitAgent extends BaseIngestionAgent {
 
   Instructions:
   - Your job is to analyze the text document and outline a strategy how best to split this document up into smaller sections based on it's contents.
-  - The contents should be split into sections that cover the same topic.
+  - The contents should be split into sections that cover the same topic so each section can be understood as a whole.
   - Do not output the actual contents only the strategy on how to split it up.
   - Do not split into sub sections, keep one topic per section.
   - Do not talk about or suggest sub sections.
@@ -44,8 +44,10 @@ ${data}
 Your JSON output:
 `);
     async splitDocumentIntoChunks(data) {
+        console.log(`Finding Chunk Strategy`);
         const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, this.strategyUserMessage(data)), false));
         if (chunkingStrategy) {
+            console.log(`Chunking strategy: ${chunkingStrategy}`);
             return await this.chunkDocument(data, chunkingStrategy);
         }
         else {
@@ -59,6 +61,7 @@ Your JSON output:
         else {
             const chunkIdentifiersResponse = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.splitIndexSystemMessage, this.splitIndexUserMessage(data, strategy))));
             const chunkingStrings = chunkIdentifiersResponse.oneLineTextIndexesForSplittingDocument;
+            console.log(`Chunking strings: ${chunkingStrings}`);
             let chunks = {};
             let currentPosition = 0;
             let chunkIndex = 1;

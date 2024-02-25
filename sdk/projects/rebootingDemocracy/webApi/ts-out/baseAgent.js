@@ -29,14 +29,27 @@ export class BaseIngestionAgent extends PolicySynthAgentBase {
         while (this.getEstimateTokenLength(remainingData) > maxTokenLength) {
             let splitPosition = remainingData.lastIndexOf("\n\n", maxTokenLength);
             if (splitPosition === -1) {
-                // Fallback to single line break if double line break is not found
                 splitPosition = remainingData.lastIndexOf("\n", maxTokenLength);
             }
             if (splitPosition === -1) {
-                // If no line break is found, force split at max length
-                splitPosition = maxTokenLength;
+                // Initialize the best position as -1 indicating no suitable split found yet
+                let bestPosition = -1;
+                // Search backwards for a digit followed by a period, indicating the start of a list item
+                for (let i = maxTokenLength; i > 0; i--) {
+                    if (remainingData[i] === '.' && i > 1 && /\d/.test(remainingData[i - 1])) {
+                        // Found a potential list start, now check for spaces or line starts before the digit
+                        if (remainingData[i - 2] === ' ' || remainingData[i - 2] === '\n' || i - 2 === 0) {
+                            // Split before the digit to preserve context
+                            bestPosition = i - 1;
+                            break;
+                        }
+                    }
+                }
+                splitPosition = bestPosition !== -1 ? bestPosition : maxTokenLength;
             }
-            parts.push(remainingData.substring(0, splitPosition));
+            // Ensure the split position does not exceed the length of the remaining data
+            splitPosition = Math.min(splitPosition, remainingData.length);
+            parts.push(remainingData.substring(0, splitPosition).trim());
             remainingData = remainingData.substring(splitPosition).trimStart();
         }
         if (remainingData) {
@@ -52,10 +65,7 @@ export class BaseIngestionAgent extends PolicySynthAgentBase {
         return createHash("sha256").update(data).digest("hex");
     }
     getFirstMessages(systemMessage, userMessage) {
-        return [
-            systemMessage,
-            userMessage,
-        ];
+        return [systemMessage, userMessage];
     }
     getFileName(url, isJsonData) {
         const urlObj = new URL(url);
@@ -63,14 +73,14 @@ export class BaseIngestionAgent extends PolicySynthAgentBase {
         // Ensure there's a meaningful baseName, especially for JSON data
         if (!baseName || isJsonData) {
             // Fallback filename for JSON or when basename is missing
-            baseName = isJsonData ? 'data.json' : 'content.bin'; // 'content.bin' as a generic binary data filename
+            baseName = isJsonData ? "data.json" : "content.bin"; // 'content.bin' as a generic binary data filename
         }
         if (isJsonData) {
             const folderHash = this.generateFileId(url);
             const folderPath = `./ingestion/cache/${folderHash}`;
             return path.join(folderPath, baseName);
         }
-        return path.join('./ingestion/cache', baseName);
+        return path.join("./ingestion/cache", baseName);
     }
     getExternalUrlsFromJson(jsonData) {
         const urls = [];

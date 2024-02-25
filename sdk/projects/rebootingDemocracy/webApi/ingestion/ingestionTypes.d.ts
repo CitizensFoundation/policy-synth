@@ -19,6 +19,7 @@ interface CachedFileMetadata {
   key: string;
   url: string;
   lastModified: string;
+  lastModifiedOnServer: string;
   size: number;
   hash: string;
   fileId: string;

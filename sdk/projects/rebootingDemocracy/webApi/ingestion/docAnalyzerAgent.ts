@@ -3,7 +3,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BaseIngestionAgent } from "./baseAgent.js";
 
-export class DocAnalyzerAgent extends BaseIngestionAgent {
+export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
   systemMessage = new SystemMessage(`You are an expert document analyze.
 
   Instructions:

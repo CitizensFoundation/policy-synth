@@ -1,11 +1,11 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export declare class ChunkCompressorAgent extends BaseIngestionAgent {
+export declare class IngestionChunkCompressorAgent extends BaseIngestionAgent {
     maxCompressionRetries: number;
     completionValidationSuccessMessage: string;
     correctnessValidationSuccessMessage: string;
     hallucinationValidationSuccessMessage: string;
-    halluciantionValidationSystemMessage: SystemMessage;
+    hallucinationValidationSystemMessage: SystemMessage;
     correctnessValidationSystemMessage: SystemMessage;
     completionValidationSystemMessage: SystemMessage;
     validationUserMessage: (uncompressed: string, compressed: string) => HumanMessage;

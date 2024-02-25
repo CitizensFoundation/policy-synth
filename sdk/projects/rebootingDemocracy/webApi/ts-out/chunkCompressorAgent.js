@@ -1,17 +1,18 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { IEngineConstants } from "./constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export class ChunkCompressorAgent extends BaseIngestionAgent {
+export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
     maxCompressionRetries = 5;
     completionValidationSuccessMessage = "All content present in compressed text.";
     correctnessValidationSuccessMessage = "All content correct in compressed text.";
     hallucinationValidationSuccessMessage = "No additional content in compressed text.";
-    halluciantionValidationSystemMessage = new SystemMessage(`You are an detailed oriented text comparison agent.
+    hallucinationValidationSystemMessage = new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything in the compressed text that is not in the uncompressed text.
 - The compressed text should not include anything not in the uncompressed text
-- If there is no additional text in in the uncompressed text, then output, and nothing else: No additional content in compressed text.
+- The compressed text of course has less detail and that is fine
+- If there is no additional text in the compressed text, then output, and nothing else: No additional content in compressed text.
 `);
     correctnessValidationSystemMessage = new SystemMessage(`You are an detailed oriented text comparison agent.
 
@@ -86,7 +87,7 @@ ${retryCount > 1
         const validations = await Promise.all([
             this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.completionValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
             this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
-            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.halluciantionValidationSystemMessage, this.validationUserMessage(compressed, uncompressed)), false),
+            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.hallucinationValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
         ]);
         const [completionValidation, correctnessValidation, hallucinationValidation,] = validations.map((response) => response);
         if (completionValidation === this.completionValidationSuccessMessage &&
