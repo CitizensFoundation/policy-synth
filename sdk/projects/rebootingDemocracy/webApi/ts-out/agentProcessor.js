@@ -47,6 +47,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     async processFilePart(fileId, dataPart) {
         console.log(`Processing file part for fileId: ${fileId}`);
         console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
+        await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata);
         const cleanedUpData = await this.cleanupAgent.clean(dataPart);
         console.log(`Cleaned up data: ${cleanedUpData}`);
         const chunks = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
@@ -69,6 +70,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             // Save to weaviate
             console.log(`Chunk ${chunkId} compressed:`, compressedData);
             console.log(JSON.stringify(metadata.chunks[chunkId]), null, 2);
+            this.saveFileMetadata();
         }
     }
     async processFiles(files) {

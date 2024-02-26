@@ -58,6 +58,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   async processFilePart(fileId: string, dataPart: string): Promise<void> {
     console.log(`Processing file part for fileId: ${fileId}`);
     console.log(`-----------------> Cleaning up Data part: ${dataPart}`)
+    await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata) as LlmDocumentAnalysisReponse;
+
     const cleanedUpData = await this.cleanupAgent.clean(dataPart);
     console.log(`Cleaned up data: ${cleanedUpData}`);
 
@@ -86,6 +88,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
       console.log(`Chunk ${chunkId} compressed:`, compressedData);
       console.log(JSON.stringify(metadata.chunks[chunkId]), null, 2);
+      this.saveFileMetadata();
     }
   }
 
