@@ -1,6 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 export declare class IngestionSplitAgent extends BaseIngestionAgent {
+    maxSplitRetries: number;
+    minChunkCharacterLength: number;
     strategySystemMessage: SystemMessage;
     strategyUserMessage: (data: string) => HumanMessage;
     splitIndexSystemMessage: SystemMessage;

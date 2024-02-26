@@ -47,9 +47,14 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     async processFilePart(fileId, dataPart) {
         console.log(`Processing file part for fileId: ${fileId}`);
         console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
-        await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata);
-        const cleanedUpData = await this.cleanupAgent.clean(dataPart);
+        if (!this.fileMetadata[fileId].documentMetaData) {
+            await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata);
+        }
+        this.saveFileMetadata();
+        const cleanedUpData = this.fileMetadata[fileId].cleanedDocument || await this.cleanupAgent.clean(dataPart);
         console.log(`Cleaned up data: ${cleanedUpData}`);
+        this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
+        this.saveFileMetadata();
         const chunks = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
         console.log(`Split into ${Object.keys(chunks).length} chunks`);
         for (const [chunkId, chunkData] of Object.entries(chunks)) {

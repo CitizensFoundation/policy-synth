@@ -23,6 +23,7 @@ interface CachedFileMetadata {
   size: number;
   hash: string;
   fileId: string;
+  cleanedDocument?: string;
   description?: string;
   shortDescription?: string;
   fullDescriptionOfAllContents?: string;

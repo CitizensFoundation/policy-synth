@@ -27,7 +27,7 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
   }
 
   randomizeLlmTemperature() {
-    this.chat!.temperature = Math.random() * (0.8 - 0.01) + 0.01;
+    this.chat!.temperature = Math.random() * (0.55 - 0.01) + 0.01;
   }
 
   splitDataForProcessing(data: string, maxTokenLength: number = this.maxFileProcessTokenLength): string[] {

@@ -58,20 +58,28 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   async processFilePart(fileId: string, dataPart: string): Promise<void> {
     console.log(`Processing file part for fileId: ${fileId}`);
     console.log(`-----------------> Cleaning up Data part: ${dataPart}`)
-    await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata) as LlmDocumentAnalysisReponse;
+    if (!this.fileMetadata[fileId].documentMetaData) {
+      await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata) as LlmDocumentAnalysisReponse;
+    }
 
-    const cleanedUpData = await this.cleanupAgent.clean(dataPart);
+    this.saveFileMetadata();
+
+    const cleanedUpData = this.fileMetadata[fileId].cleanedDocument || await this.cleanupAgent.clean(dataPart);
     console.log(`Cleaned up data: ${cleanedUpData}`);
+
+    this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
+
+    this.saveFileMetadata();
 
     const chunks = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
 
     console.log(`Split into ${Object.keys(chunks).length} chunks`);
 
     for (const [chunkId, chunkData] of Object.entries(chunks)) {
-      console.log(`Before compression: ${chunkData}`);
+      console.log(`\nBefore compression: ${chunkData}\n`);
       let chunkCompression = await this.chunkCompressor.compress(chunkData);
       const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.fullCompressedContents}`;
-      console.log(`After compression: ${compressedData}`);
+      console.log(`\nAfter compression: ${compressedData}\n`);
 
       const metadata = this.fileMetadata[fileId] || {};
       metadata.chunks = metadata.chunks || {};
@@ -87,7 +95,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       // Save to weaviate
 
       console.log(`Chunk ${chunkId} compressed:`, compressedData);
-      console.log(JSON.stringify(metadata.chunks[chunkId]), null, 2);
+      console.log(`\n${JSON.stringify(metadata.chunks[chunkId]), null, 2}\n`);
       this.saveFileMetadata();
     }
   }
