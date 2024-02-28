@@ -118,7 +118,7 @@ Your JSON output:
           this.splitIndexSystemMessage,
           this.splitIndexUserMessage(data, strategy)
         )
-      )) as LlmDocumentChunksIdentificationReponse; // Ensure the type name is correct
+      )) as LlmDocumentChunksIdentificationResponse;
       const chunkingStrings = chunkIdentifiersResponse.oneLineTextIndexesForSplittingDocument;
 
       console.log(`Chunking strings: ${chunkingStrings.join(',')}`);
@@ -127,10 +127,12 @@ Your JSON output:
       let currentPosition = 0;
       let chunkIndex = 1;
 
+      data = data.replace(/\s+/g, " ").trim();
+
       if (chunkingStrings && chunkingStrings.length > 1) {
         chunkingStrings.shift();
         chunkingStrings.forEach((chunkStr: string, index: number) => {
-          const normalizedData = data.replace(/\s+/g, " ").toLowerCase().trim();
+          const normalizedData = data.toLowerCase();
           const normalizedChunkStr = chunkStr.replace(/\s+/g, " ").trim().toLowerCase();
 
           let nextPosition = normalizedData.indexOf(normalizedChunkStr, currentPosition);
@@ -150,7 +152,7 @@ Your JSON output:
               chunkIndex++;
             }
           } else {
-            console.error(`Chunking string:'\n${chunkStr}\n' not found in the document or results in zero-length chunk.\n${data}\n\n`);
+            console.error(`Chunking string:'\n${normalizedChunkStr}\n' not found in the document\n${normalizedData}\n\n`);
             throw Error(`Chunking string not found in the document or results in zero-length chunk.`);
           }
         });

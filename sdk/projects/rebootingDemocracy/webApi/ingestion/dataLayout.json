@@ -10,5 +10,60 @@
     "https://directus.thegovlab.com/uploads/ci_cases/originals/b3b84db2-296c-435d-968a-8d066c6a7b87.pdf",
     "https://virtual-communities.thegovlab.org/files/DTR_report_en_EN.pdf",
     "https://content.thegovlab.com/assets/f7ad046e-fc89-42b8-b0ae-37c9cd5d8296"
-  ]
+  ],
+  "categories": [
+    {
+      "name": "Content Types",
+      "options": [
+        "Case Studies",
+        "Events",
+        "News/Articles/Blogs/Podcasts",
+        "Engagement Projects",
+        "Teaching",
+        "Media/Resources"
+      ]
+    },
+    {
+      "name": "Detail Level",
+      "options": [
+        "Detailed",
+        "Summary",
+        "Sparse"
+      ]
+    },
+    {
+      "name": "Highlighted Projects",
+      "options": [
+        "Smarter Crowdsourcing Recommendations",
+        "Equitable Engagement Lab Information"
+      ]
+    },
+    {
+      "name": "Engagement Type",
+      "options": [
+        "Informative",
+        "Interactive",
+        "Inspirational",
+        "Collaborative"
+      ]
+    },
+    {
+      "name": "Content Purpose",
+      "options": [
+        "Research and Insights",
+        "Policy and Governance",
+        "Technology and Innovation",
+        "Community and Participation"
+      ]
+    }
+  ],
+  "example": {
+    "contentToClassify": "Some article",
+    "categories": [
+      ["Case Studies","Teaching"],
+      ["Detailed"],
+      ["Informative"],
+      ["Research and Insights"]
+    ]
+  }
 }

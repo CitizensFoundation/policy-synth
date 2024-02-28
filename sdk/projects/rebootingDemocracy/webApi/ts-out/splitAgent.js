@@ -91,16 +91,17 @@ Your JSON output:
             return { chunk1: data };
         }
         else {
-            const chunkIdentifiersResponse = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.splitIndexSystemMessage, this.splitIndexUserMessage(data, strategy)))); // Ensure the type name is correct
+            const chunkIdentifiersResponse = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.splitIndexSystemMessage, this.splitIndexUserMessage(data, strategy))));
             const chunkingStrings = chunkIdentifiersResponse.oneLineTextIndexesForSplittingDocument;
             console.log(`Chunking strings: ${chunkingStrings.join(',')}`);
             let chunks = {};
             let currentPosition = 0;
             let chunkIndex = 1;
+            data = data.replace(/\s+/g, " ").trim();
             if (chunkingStrings && chunkingStrings.length > 1) {
                 chunkingStrings.shift();
                 chunkingStrings.forEach((chunkStr, index) => {
-                    const normalizedData = data.replace(/\s+/g, " ").toLowerCase().trim();
+                    const normalizedData = data.toLowerCase();
                     const normalizedChunkStr = chunkStr.replace(/\s+/g, " ").trim().toLowerCase();
                     let nextPosition = normalizedData.indexOf(normalizedChunkStr, currentPosition);
                     console.log(`Next Position: ${nextPosition}, Current Position: ${currentPosition}, For: ${normalizedChunkStr}`);
@@ -118,7 +119,7 @@ Your JSON output:
                         }
                     }
                     else {
-                        console.error(`Chunking string:'\n${chunkStr}\n' not found in the document or results in zero-length chunk.\n${data}\n\n`);
+                        console.error(`Chunking string:'\n${normalizedChunkStr}\n' not found in the document\n${normalizedData}\n\n`);
                         throw Error(`Chunking string not found in the document or results in zero-length chunk.`);
                     }
                 });

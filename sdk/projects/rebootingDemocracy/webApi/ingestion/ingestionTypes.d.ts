@@ -59,7 +59,7 @@ interface LlmDocumentChunksStrategyReponse {
   directlyConnectedSectionIndexes: number[];
 }
 
-interface LlmDocumentChunksIdentificationReponse {
+interface LlmDocumentChunksIdentificationResponse {
   oneLineTextIndexesForSplittingDocument: string[];
 }
 

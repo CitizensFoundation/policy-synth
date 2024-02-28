@@ -24,36 +24,37 @@ export class BaseIngestionAgent extends PolicySynthAgentBase {
         this.chat.temperature = Math.random() * (0.55 - 0.01) + 0.01;
     }
     splitDataForProcessing(data, maxTokenLength = this.maxFileProcessTokenLength) {
+        let processedData = data;
+        // Step 1: Preprocess to add line breaks carefully, avoiding disrupting list formats
+        const lineBreakDensityCheck = (processedData.match(/\n/g) || []).length / processedData.length < 0.001;
+        if (lineBreakDensityCheck) {
+            // Attempting to add line breaks after sentences, avoiding those that are part of a list
+            const sentenceBoundaryRegex = /(?<!\d)\.(\s+)(?=[A-Z])/g;
+            processedData = processedData.replace(sentenceBoundaryRegex, '.$1\n');
+        }
         const parts = [];
-        let remainingData = data;
+        let remainingData = processedData;
+        // Step 2: Split the text, taking care not to disrupt the integrity of ordered lists
         while (this.getEstimateTokenLength(remainingData) > maxTokenLength) {
             let splitPosition = remainingData.lastIndexOf("\n\n", maxTokenLength);
             if (splitPosition === -1) {
                 splitPosition = remainingData.lastIndexOf("\n", maxTokenLength);
             }
-            if (splitPosition === -1) {
-                // Initialize the best position as -1 indicating no suitable split found yet
-                let bestPosition = -1;
-                // Search backwards for a digit followed by a period, indicating the start of a list item
-                for (let i = maxTokenLength; i > 0; i--) {
-                    if (remainingData[i] === '.' && i > 1 && /\d/.test(remainingData[i - 1])) {
-                        // Found a potential list start, now check for spaces or line starts before the digit
-                        if (remainingData[i - 2] === ' ' || remainingData[i - 2] === '\n' || i - 2 === 0) {
-                            // Split before the digit to preserve context
-                            bestPosition = i - 1;
-                            break;
-                        }
-                    }
-                }
-                splitPosition = bestPosition !== -1 ? bestPosition : maxTokenLength;
+            if (splitPosition === -1 || splitPosition > maxTokenLength) {
+                // Default split position if no suitable newline character is found or if it's too far
+                splitPosition = maxTokenLength;
             }
-            // Ensure the split position does not exceed the length of the remaining data
-            splitPosition = Math.min(splitPosition, remainingData.length);
+            // Ensure split doesn't break a sentence or a list item
+            if (splitPosition !== 0 && (remainingData[splitPosition - 1].match(/\w/) || remainingData[splitPosition].match(/^\d+\./))) {
+                // Find the nearest previous newline to avoid breaking words or list items
+                const lastNewLine = remainingData.lastIndexOf("\n", splitPosition - 1);
+                splitPosition = lastNewLine !== -1 ? lastNewLine : splitPosition;
+            }
             parts.push(remainingData.substring(0, splitPosition).trim());
             remainingData = remainingData.substring(splitPosition).trimStart();
         }
         if (remainingData) {
-            parts.push(remainingData); // Add the remaining data as the last part
+            parts.push(remainingData);
         }
         return parts;
     }

@@ -47,7 +47,8 @@ Instruction:
 - Remove all repeated titles as those are coming from the PDF footer pages.
 - If the text start with a numbered index like 1. or 4. do not remove it in your cleanup.
 - Do not add anything to the document.
-- Do not change anything just remove unwanted artifacts, if any, in the cleanup.
+- Bring together sentences into pargaraphs as one line pure text as needed.
+- Do not change anything just remove unwanted artifacts and format in the cleanup.
 `);
     userMessage = (data, validationTextResults) => new HumanMessage(`${validationTextResults ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n` : ``}
 Document to cleanup and output in full:
@@ -57,6 +58,13 @@ ${data}
         let cleanedUpDataParts = [];
         this.resetLlmTemperature();
         const splitPartsForCleanup = this.splitDataForProcessing(data, this.maxCleanupTokenLength);
+        console.log(JSON.stringify(splitPartsForCleanup, null, 2));
+        // Write the each chunk sizes to console.log
+        splitPartsForCleanup.forEach((part) => {
+            console.log(part.length);
+        });
+        // wait for 10 mintues
+        await new Promise((resolve) => setTimeout(resolve, 600000));
         for (const part of splitPartsForCleanup) {
             let validated = false;
             let retryCount = 0;
