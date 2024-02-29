@@ -56,6 +56,7 @@ interface LlmChunkCompressionReponse {
 interface LlmDocumentChunksStrategyReponse {
   sectionIndex: number;
   sectionTitle: string;
+  sectionStartLineNumber: number;
   directlyConnectedSectionIndexes: number[];
 }
 

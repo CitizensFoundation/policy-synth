@@ -6,63 +6,94 @@ export class IngestionSplitAgent extends BaseIngestionAgent {
     minChunkCharacterLength = 50;
     strategySystemMessage = new SystemMessage(`You are an expert document split strategy generator.
 
+Instructions:
+- Your job is to analyze the text document and outline a strategy how best to split this document up into smaller sections based on it's contents.
+- The contents should be split into sections that cover the same or very close connected topics so each section can be understood as a whole.
+- Do not output the actual contents only the strategy on how to split it up.
+- Do not split into sub sections, keep one core topic per section.
+- Do not talk about or suggest sub sections.
+- Do not make up section names.
+- Always include the start of the document.
+- If for example there is a short case study about one project, that should be one section not split into different sections.
+- Use directlyConnectedSectionIndexes for sections that could be relevant to the current section in retrieval, but not just because they are next to each other in the text
+- Always capture the full contexts for each chunk, so the sections should not be too short.
+
+Output:
+- Reason about the task at hand.
+- Then output a JSON array:
+  json\`\`\`
+  [
+    {
+      sectionIndex: number,
+      sectionTitle: string,
+      sectionStartLineNumber: number,
+      directlyConnectedSectionIndexes: string[]
+    }
+  ]
+  \`\`\`
+`);
+    strategyUserMessage = (data, reviewComments = undefined) => new HumanMessage(`Document to analyze and devise a split strategy for:
+${data}
+${reviewComments
+        ? `This is your second attempt to devise a strategy, here are the reviewers comments:\n${reviewComments}\n`
+        : ""}
+Your strategy:
+`);
+    reviewStrategySystemMessage = new SystemMessage(`You are an expert document split strategy evaluator.
+
   Instructions:
-  - Your job is to analyze the text document and outline a strategy how best to split this document up into smaller sections based on it's contents.
+  - Your job is to evalute a split strategy for a document.
   - The contents should be split into sections that cover the same topic so each section can be understood as a whole.
-  - Do not output the actual contents only the strategy on how to split it up.
-  - Do not split into sub sections, keep one topic per section but keep the sections roughly similar length.
-  - Do not talk about or suggest sub sections.
-  - Do not make up section names.
-  - Always include the start of the document.
-  - If for example there is a short case study about one project, that should be one section not split into different sections.
-  - We always want to capture full contexts
+  - The output should be the actual contents only the strategy on how to split it up.
+  - There should be no sub sections, only one topic per section but the topic be connected in the directlyConnectedSectionIndexes JSON field
+  - The start of the document should always be included.
+  - Make sure line numbers and connected sections are correct.
+  - We always want to capture full contexts for each chunk so the sections should not be too short.
 
   Output:
-  - Reason about the task at hand.
-  - Then output a JSON array: [ {
-  sectionIndex: number,
-  sectionTitle: string,
-  directlyConnectedSectionIndexes: string[]
-  ]`);
-    strategyUserMessage = (data) => new HumanMessage(`Document to analyze and devise a split strategy for:
-${data}
-`);
-    splitIndexSystemMessage = new SystemMessage(`You are an expert document splitter using a split strategy to split a document into smaller sections.
+  - If the strategy is good output only and with no explaination: PASSES
+  - If you have comments write them out and then output: FAILS
+  `);
+    reviewStrategyUserMessage = (data, splitStrategy) => new HumanMessage(`Document:
+  ${data}
 
-Instructions:
-- You identify start, maximum first five words, of text lines as split point indexes for a larger document.
-- You will receive detailed split strategy for how to identify the one line text.
-- Always follow the split strategy given to you in detail.
-- If the split strategy suggest 5 section, only create split indexes for 5 sections.
-- The first split index is always the first line of the document.
-- Output in this JSON format:
-{ oneLineTextIndexesForSplittingDocument: string []
-}`);
-    splitIndexUserMessage = (data, strategy) => new HumanMessage(`Split strategy to follow in detail:
-${strategy}
+  Split strategy to evalute for correctness:
+  ${splitStrategy}
 
-The large document to find the split lines from:
-${data}
-Your JSON output:
-`);
+  Your evaluation: `);
     async splitDocumentIntoChunks(data) {
         this.resetLlmTemperature();
         let retryCount = 0;
         let validated = false;
         let chunks;
+        const dataWithLineNumber = data
+            .split("\n")
+            .map((line, index) => `${index + 1}: ${line}`)
+            .join("\n");
+        let chunkingStrategyReview;
         while (!validated && retryCount < this.maxSplitRetries) {
             console.log(`Finding Chunk Strategy ${retryCount + 1}. attempt.`);
-            const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, this.strategyUserMessage(data)), false));
-            if (chunkingStrategy) {
-                console.log(`Chunking strategy: ${chunkingStrategy}`);
+            const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, this.strategyUserMessage(dataWithLineNumber, chunkingStrategyReview)), false));
+            chunkingStrategyReview = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.reviewStrategySystemMessage, this.reviewStrategyUserMessage(dataWithLineNumber, chunkingStrategy)), false));
+            if (chunkingStrategyReview === "PASSES" &&
+                chunkingStrategy &&
+                chunkingStrategy.length) {
+                console.log(`Chunking strategy: ${JSON.stringify(chunkingStrategy)}`);
                 try {
-                    chunks = await this.chunkDocument(data, chunkingStrategy);
-                    if (chunks) {
-                        validated = true;
-                    }
-                    else {
-                        console.error("No chunks found in the response.");
-                    }
+                    // Initialize chunks object
+                    chunks = {};
+                    const lines = data.split("\n"); // Now we have an array of lines
+                    const jsonChunkingStrategy = this.parseJsonFromLlmResponse(chunkingStrategy);
+                    console.log(JSON.stringify(jsonChunkingStrategy, null, 2));
+                    jsonChunkingStrategy.forEach((strategy, index) => {
+                        const startLine = strategy.sectionStartLineNumber - 1;
+                        const endLine = index + 1 < jsonChunkingStrategy.length
+                            ? jsonChunkingStrategy[index + 1].sectionStartLineNumber - 1
+                            : lines.length;
+                        const chunkContent = lines.slice(startLine, endLine).join("\n");
+                        chunks[strategy.sectionTitle] = chunkContent;
+                    });
+                    validated = true;
                 }
                 catch (error) {
                     console.error(`Error chunking document: ${error}`);
@@ -70,12 +101,15 @@ Your JSON output:
             }
             else {
                 console.error("No chunking strategy found.");
+                if (chunkingStrategyReview !== "FAILS") {
+                    console.error("Chunking strategy review failed: " + chunkingStrategyReview);
+                }
             }
             retryCount++;
             if (!validated) {
                 console.warn(`\nValidation failed ${retryCount}\n`);
             }
-            if (retryCount > 2) {
+            if (retryCount > 5) {
                 this.randomizeLlmTemperature();
             }
         }
@@ -83,62 +117,6 @@ Your JSON output:
             throw new Error("Chunking failed");
         }
         else {
-            return chunks;
-        }
-    }
-    async chunkDocument(data, strategy) {
-        if (this.getEstimateTokenLength(data) < this.minChunkTokenLength) {
-            return { chunk1: data };
-        }
-        else {
-            const chunkIdentifiersResponse = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.splitIndexSystemMessage, this.splitIndexUserMessage(data, strategy))));
-            const chunkingStrings = chunkIdentifiersResponse.oneLineTextIndexesForSplittingDocument;
-            console.log(`Chunking strings: ${chunkingStrings.join(',')}`);
-            let chunks = {};
-            let currentPosition = 0;
-            let chunkIndex = 1;
-            data = data.replace(/\s+/g, " ").trim();
-            if (chunkingStrings && chunkingStrings.length > 1) {
-                chunkingStrings.shift();
-                chunkingStrings.forEach((chunkStr, index) => {
-                    const normalizedData = data.toLowerCase();
-                    const normalizedChunkStr = chunkStr.replace(/\s+/g, " ").trim().toLowerCase();
-                    let nextPosition = normalizedData.indexOf(normalizedChunkStr, currentPosition);
-                    console.log(`Next Position: ${nextPosition}, Current Position: ${currentPosition}, For: ${normalizedChunkStr}`);
-                    if (nextPosition !== -1 && nextPosition !== currentPosition) { // Check to prevent zero-length chunks
-                        const chunk = data.substring(currentPosition, nextPosition).trim();
-                        console.log(`Attempting Chunk ${chunkIndex}: Start=${currentPosition}, End=${nextPosition}, Length=${chunk.length}`);
-                        if (chunk.length < this.minChunkCharacterLength) {
-                            console.error(`Chunk ${chunkIndex} (Start=${currentPosition}, End=${nextPosition}) length (${chunk.length}) is less than the minimum character length.`);
-                            throw Error(`Chunk ${chunkIndex} length is less than the minimum character length.`);
-                        }
-                        else {
-                            chunks[`chunk${chunkIndex}`] = chunk;
-                            currentPosition = nextPosition + chunkStr.length; // Ensure we move past the current chunk string
-                            chunkIndex++;
-                        }
-                    }
-                    else {
-                        console.error(`Chunking string:'\n${normalizedChunkStr}\n' not found in the document\n${normalizedData}\n\n`);
-                        throw Error(`Chunking string not found in the document or results in zero-length chunk.`);
-                    }
-                });
-                // Handle the last chunk from the last found position to the end of the document
-                if (currentPosition < data.length) {
-                    const lastChunk = data.substring(currentPosition).trim();
-                    if (lastChunk.length >= this.minChunkCharacterLength) {
-                        console.log(`Chunk ${chunkIndex} (Final Chunk) Length: ${lastChunk.length}`);
-                        chunks[`chunk${chunkIndex}`] = lastChunk;
-                    }
-                    else {
-                        console.error(`Final chunk length (${lastChunk.length}) is less than the minimum character length, merging with previous.`);
-                        // Optional: Merge this small final chunk with the previous chunk if it's too small
-                    }
-                }
-            }
-            else {
-                throw Error("No chunking strings found in the response.");
-            }
             return chunks;
         }
     }

@@ -30,18 +30,22 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     this.chat!.temperature = Math.random() * (0.55 - 0.01) + 0.01;
   }
 
-  splitDataForProcessing(data: string, maxTokenLength: number = this.maxFileProcessTokenLength): string[] {
+  splitDataForProcessing(
+    data: string,
+    maxTokenLength: number = this.maxFileProcessTokenLength
+  ): string[] {
     let processedData = data;
 
     // Preprocess to add line breaks for better readability, especially for texts without sufficient line breaks
-    const lineBreakDensityCheck = (processedData.match(/\n/g) || []).length / processedData.length < 0.001;
+    const lineBreakDensityCheck =
+      (processedData.match(/\n/g) || []).length / processedData.length < 0.001;
     if (lineBreakDensityCheck) {
-        // Add line breaks after sentences, carefully avoiding disrupting list formats
-        const sentenceBoundaryRegex = /(?<!\d)\.(\s+)(?=[A-Z])/g;
-        processedData = processedData.replace(sentenceBoundaryRegex, '.$1\n');
+      // Add line breaks after sentences, carefully avoiding disrupting list formats
+      const sentenceBoundaryRegex = /(?<!\d)\.(\s+)(?=[A-Z])/g;
+      processedData = processedData.replace(sentenceBoundaryRegex, ".$1\n");
 
-        // Additionally, for texts that might lack line breaks entirely, consider adding breaks at other potential sentence endings
-        // This step is simplified and might need adjustments for specific text formats
+      // Additionally, for texts that might lack line breaks entirely, consider adding breaks at other potential sentence endings
+      // This step is simplified and might need adjustments for specific text formats
     }
 
     const parts: string[] = [];
@@ -52,42 +56,61 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     let idealChunkSize = Math.ceil(totalLength / idealNumberOfParts);
 
     while (remainingData.length > 0) {
-        let splitPosition = Math.min(idealChunkSize, remainingData.length);
+      let splitPosition = Math.min(idealChunkSize, remainingData.length);
 
-        // Adjust for natural breaks, avoiding splitting in the middle of sentences or lists
-        if (splitPosition < remainingData.length) { // Not the last chunk
-            let potentialSplitPosition = remainingData.lastIndexOf("\n", splitPosition);
-            if (potentialSplitPosition !== -1) {
-                splitPosition = potentialSplitPosition;
-            } else {
-                // If no natural break is found, look for the next best split position to avoid mid-sentence splits
-                potentialSplitPosition = remainingData.indexOf("\n", splitPosition);
-                if (potentialSplitPosition !== -1) {
-                    splitPosition = potentialSplitPosition;
-                }
-            }
+      // Adjust for natural breaks, avoiding splitting in the middle of sentences or lists
+      if (splitPosition < remainingData.length) {
+        // Not the last chunk
+        let potentialSplitPosition = remainingData.lastIndexOf(
+          "\n",
+          splitPosition
+        );
+        if (potentialSplitPosition !== -1) {
+          splitPosition = potentialSplitPosition;
+        } else {
+          // If no natural break is found, look for the next best split position to avoid mid-sentence splits
+          potentialSplitPosition = remainingData.indexOf("\n", splitPosition);
+          if (potentialSplitPosition !== -1) {
+            splitPosition = potentialSplitPosition;
+          }
         }
+      }
 
-        parts.push(remainingData.substring(0, splitPosition).trim());
-        remainingData = remainingData.substring(splitPosition).trimStart();
+      parts.push(remainingData.substring(0, splitPosition).trim());
+      remainingData = remainingData.substring(splitPosition).trimStart();
 
-        // Recalculate idealChunkSize for remaining data to maintain even distribution
-        idealChunkSize = remainingData.length / (--idealNumberOfParts);
+      // Recalculate idealChunkSize for remaining data to maintain even distribution
+      idealChunkSize = remainingData.length / --idealNumberOfParts;
     }
 
     return parts;
-}
+  }
 
+  parseJsonFromLlmResponse(data: string) {
+    let startIndex, endIndex;
 
-  splitDataForProcessingWorksBigChunks(data: string, maxTokenLength: number = this.maxFileProcessTokenLength): string[] {
+    startIndex = data.indexOf("```json");
+    endIndex = data.indexOf("```", startIndex + 6);
+
+    if (startIndex > -1 && endIndex > -1) {
+      let jsonContent = data.substring(startIndex + 7, endIndex).trim();
+      return JSON.parse(jsonContent);
+    }
+  }
+
+  splitDataForProcessingWorksBigChunks(
+    data: string,
+    maxTokenLength: number = this.maxFileProcessTokenLength
+  ): string[] {
     let processedData = data;
 
     // Step 1: Preprocess to add line breaks carefully, avoiding disrupting list formats
-    const lineBreakDensityCheck = (processedData.match(/\n/g) || []).length / processedData.length < 0.001;
+    const lineBreakDensityCheck =
+      (processedData.match(/\n/g) || []).length / processedData.length < 0.001;
     if (lineBreakDensityCheck) {
       // Attempting to add line breaks after sentences, avoiding those that are part of a list
       const sentenceBoundaryRegex = /(?<!\d)\.(\s+)(?=[A-Z])/g;
-      processedData = processedData.replace(sentenceBoundaryRegex, '.$1\n');
+      processedData = processedData.replace(sentenceBoundaryRegex, ".$1\n");
     }
 
     const parts: string[] = [];
@@ -106,7 +129,11 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
       }
 
       // Ensure split doesn't break a sentence or a list item
-      if (splitPosition !== 0 && (remainingData[splitPosition - 1].match(/\w/) || remainingData[splitPosition].match(/^\d+\./))) {
+      if (
+        splitPosition !== 0 &&
+        (remainingData[splitPosition - 1].match(/\w/) ||
+          remainingData[splitPosition].match(/^\d+\./))
+      ) {
         // Find the nearest previous newline to avoid breaking words or list items
         const lastNewLine = remainingData.lastIndexOf("\n", splitPosition - 1);
         splitPosition = lastNewLine !== -1 ? lastNewLine : splitPosition;
@@ -121,7 +148,6 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     }
     return parts;
   }
-
 
   getEstimateTokenLength(data: string): number {
     const words = data.split(" ");

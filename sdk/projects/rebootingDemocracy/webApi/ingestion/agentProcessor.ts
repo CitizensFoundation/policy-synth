@@ -64,8 +64,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     this.saveFileMetadata();
 
-    //const cleanedUpData = this.fileMetadata[fileId].cleanedDocument || await this.cleanupAgent.clean(dataPart);
-    const cleanedUpData = await this.cleanupAgent.clean(dataPart);
+    const cleanedUpData = this.fileMetadata[fileId].cleanedDocument || await this.cleanupAgent.clean(dataPart);
+    //const cleanedUpData = await this.cleanupAgent.clean(dataPart);
     console.log(`Cleaned up data: ${cleanedUpData}`);
 
     this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
