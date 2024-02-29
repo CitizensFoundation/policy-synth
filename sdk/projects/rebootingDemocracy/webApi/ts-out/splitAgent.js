@@ -4,120 +4,164 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 export class IngestionSplitAgent extends BaseIngestionAgent {
     maxSplitRetries = 15;
     minChunkCharacterLength = 50;
+    maxChunkLinesLength = 90;
     strategySystemMessage = new SystemMessage(`You are an expert document split strategy generator.
 
 Instructions:
-- Your job is to analyze the text document and outline a strategy how best to split this document up into smaller sections based on it's contents.
-- The contents should be split into sections that cover the same or very close connected topics so each section can be understood as a whole.
+- Your job is to analyze the text document and outline a strategy how best to split this document up into chapters.
+- The contents should be split into chapters that cover the same topic, split longer chapters that cover the same topic into subChapters.
+- If there are individual case studies or similar those should be different chapters.
+- Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
-- Do not split into sub sections, keep one core topic per section.
-- Do not talk about or suggest sub sections.
-- Do not make up section names.
-- Always include the start of the document.
-- If for example there is a short case study about one project, that should be one section not split into different sections.
-- Use directlyConnectedSectionIndexes for sections that could be relevant to the current section in retrieval, but not just because they are next to each other in the text
-- Always capture the full contexts for each chunk, so the sections should not be too short.
+- Use importantContextChapterIndexes for chapters that could be relevant to the current chapter when we will load this chapter for our retrieval augmented generation (RAG) solution. But don't use this for everything only the most important context connections.
 
 Output:
-- Reason about the task at hand.
+- Reason about the task at hand, let's think step by step.
 - Then output a JSON array:
   json\`\`\`
   [
     {
-      sectionIndex: number,
-      sectionTitle: string,
-      sectionStartLineNumber: number,
-      directlyConnectedSectionIndexes: string[]
+      chapterIndex: number;
+      chapterType: 'full' | 'subChapter;
+      chapterTitle: string;
+      chapterStartLineNumber: number;
+      importantContextChapterIndexes: number[];
     }
   ]
   \`\`\`
 `);
-    strategyUserMessage = (data, reviewComments = undefined) => new HumanMessage(`Document to analyze and devise a split strategy for:
+    strategyUserMessage = (data) => new HumanMessage(`Document to analyze and devise a split strategy for:
 ${data}
-${reviewComments
-        ? `This is your second attempt to devise a strategy, here are the reviewers comments:\n${reviewComments}\n`
-        : ""}
+
 Your strategy:
 `);
+    strategyWithReviewUserMessage = (data, reviewComments) => new HumanMessage(`Document to analyze and devise a split strategy for:
+  ${data}
+
+  This is your second attempt to devise a strategy, here are the reviewers comments on the last attempt:
+  ${reviewComments}
+
+  Your improved strategy:
+  `);
     reviewStrategySystemMessage = new SystemMessage(`You are an expert document split strategy evaluator.
 
-  Instructions:
-  - Your job is to evalute a split strategy for a document.
-  - The contents should be split into sections that cover the same topic so each section can be understood as a whole.
-  - The output should be the actual contents only the strategy on how to split it up.
-  - There should be no sub sections, only one topic per section but the topic be connected in the directlyConnectedSectionIndexes JSON field
-  - The start of the document should always be included.
-  - Make sure line numbers and connected sections are correct.
-  - We always want to capture full contexts for each chunk so the sections should not be too short.
+Instructions:
+- Your job is to evaluate a split strategy for a document.
+- The contents should be split into chapters that cover the same topic so each chapter can be understood as a whole.
+- The output should be the actual contents only the strategy on how to split it up.
+- The start of the document should always be included.
+- Make sure line numbers and connected chapters are correct.
+- We always want to capture full contexts for each chunk so the chapters should not be too short.
 
-  Output:
-  - If the strategy is good output only and with no explaination: PASSES
-  - If you have comments write them out and then output: FAILS
-  `);
+Output:
+- If the strategy is good output only and with no explanation: PASSES
+- If you have comments write them out and then output: FAILS
+`);
     reviewStrategyUserMessage = (data, splitStrategy) => new HumanMessage(`Document:
   ${data}
 
-  Split strategy to evalute for correctness:
+  Split strategy to evaluate for correctness:
   ${splitStrategy}
 
   Your evaluation: `);
-    async splitDocumentIntoChunks(data) {
-        this.resetLlmTemperature();
+    async fetchLlmChunkingStrategy(data, review, lastJson) {
+        const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, review && lastJson
+            ? this.strategyWithReviewUserMessage(data, review)
+            : this.strategyUserMessage(data)), false));
+        const chunkingStrategyReview = "PASSES"; /*(await this.callLLM(
+          "ingestion-agent",
+          IEngineConstants.ingestionModel,
+          this.getFirstMessages(
+            this.reviewStrategySystemMessage,
+            this.reviewStrategyUserMessage(data, chunkingStrategy)
+          )
+        )) as string;*/
+        const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(chunkingStrategy);
+        console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
+        return {
+            chunkingStrategy,
+            chunkingStrategyReview,
+            lastChunkingStrategyJson,
+        };
+    }
+    async splitDocumentIntoChunks(data, isSubChunk = false) {
+        if (!isSubChunk) {
+            this.resetLlmTemperature();
+        }
         let retryCount = 0;
-        let validated = false;
-        let chunks;
-        const dataWithLineNumber = data
-            .split("\n")
-            .map((line, index) => `${index + 1}: ${line}`)
-            .join("\n");
-        let chunkingStrategyReview;
-        while (!validated && retryCount < this.maxSplitRetries) {
-            console.log(`Finding Chunk Strategy ${retryCount + 1}. attempt.`);
-            const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, this.strategyUserMessage(dataWithLineNumber, chunkingStrategyReview)), false));
-            chunkingStrategyReview = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.reviewStrategySystemMessage, this.reviewStrategyUserMessage(dataWithLineNumber, chunkingStrategy)), false));
-            if (chunkingStrategyReview === "PASSES" &&
-                chunkingStrategy &&
-                chunkingStrategy.length) {
-                console.log(`Chunking strategy: ${JSON.stringify(chunkingStrategy)}`);
-                try {
-                    // Initialize chunks object
-                    chunks = {};
-                    const lines = data.split("\n"); // Now we have an array of lines
-                    const jsonChunkingStrategy = this.parseJsonFromLlmResponse(chunkingStrategy);
-                    console.log(JSON.stringify(jsonChunkingStrategy, null, 2));
-                    jsonChunkingStrategy.forEach((strategy, index) => {
-                        const startLine = strategy.sectionStartLineNumber - 1;
-                        const endLine = index + 1 < jsonChunkingStrategy.length
-                            ? jsonChunkingStrategy[index + 1].sectionStartLineNumber - 1
-                            : lines.length;
-                        const chunkContent = lines.slice(startLine, endLine).join("\n");
-                        chunks[strategy.sectionTitle] = chunkContent;
-                    });
-                    validated = true;
+        let validated = true;
+        let chunksToProcess = [{ data: data, startLine: 1 }];
+        let processedChunks = [];
+        while (chunksToProcess.length > 0 && retryCount < this.maxSplitRetries) {
+            console.log(`Chunks to process: ${chunksToProcess.length}`);
+            let currentChunk = chunksToProcess.shift();
+            if (!currentChunk)
+                continue;
+            let dataWithLineNumber = currentChunk.data
+                .split("\n")
+                .map((line, index) => `${currentChunk.startLine + index}: ${line}`)
+                .join("\n");
+            console.log(`Finding Chunk Strategy for lines starting at ${currentChunk.startLine}.`);
+            let chunkingStrategyReview;
+            let lastChunkingStrategyJson;
+            try {
+                const llmResults = await this.fetchLlmChunkingStrategy(dataWithLineNumber, chunkingStrategyReview, lastChunkingStrategyJson);
+                chunkingStrategyReview = llmResults.chunkingStrategyReview;
+                lastChunkingStrategyJson = llmResults.lastChunkingStrategyJson;
+                if (lastChunkingStrategyJson &&
+                    chunkingStrategyReview.trim().toUpperCase() === "PASSES" &&
+                    llmResults.chunkingStrategy &&
+                    llmResults.chunkingStrategy.length) {
+                    for (let i = 0; i < lastChunkingStrategyJson.length; i++) {
+                        const strategy = lastChunkingStrategyJson[i];
+                        const startLine = strategy.chapterStartLineNumber;
+                        const endLine = i + 1 < lastChunkingStrategyJson.length ? lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1 : dataWithLineNumber.split("\n").length;
+                        const chunkSize = endLine - startLine + 1;
+                        if (chunkSize > this.maxChunkLinesLength) {
+                            console.log(`Chunk is too large, ${chunkSize} lines, splitting...`);
+                            // Calculate the actual content of the oversized chunk for further processing
+                            const oversizedChunkContent = currentChunk.data.split("\n").slice(startLine - 1, endLine).join("\n");
+                            console.log(`Oversized chunk content: ${oversizedChunkContent}`);
+                            chunksToProcess.push({
+                                data: oversizedChunkContent,
+                                startLine: startLine,
+                            });
+                        }
+                        else {
+                            console.log(`Chunk is valid, adding...`);
+                            processedChunks.push({
+                                ...strategy,
+                                actualStartLine: startLine,
+                                actualEndLine: endLine,
+                            });
+                        }
+                    }
                 }
-                catch (error) {
-                    console.error(`Error chunking document: ${error}`);
+                else {
+                    console.error("No chunking strategy found or review failed.");
+                }
+                if (!validated) {
+                    console.warn(`Validation attempt failed, retrying...`);
+                    chunksToProcess.push(currentChunk); // Re-attempt this chunk
+                    retryCount++;
                 }
             }
-            else {
-                console.error("No chunking strategy found.");
-                if (chunkingStrategyReview !== "FAILS") {
-                    console.error("Chunking strategy review failed: " + chunkingStrategyReview);
-                }
-            }
-            retryCount++;
-            if (!validated) {
-                console.warn(`\nValidation failed ${retryCount}\n`);
-            }
-            if (retryCount > 5) {
-                this.randomizeLlmTemperature();
+            catch (error) {
+                console.error(`Error chunking document: ${error}`);
+                chunksToProcess.push(currentChunk); // Re-attempt this chunk
+                retryCount++;
             }
         }
-        if (!chunks) {
-            throw new Error("Chunking failed");
+        if (processedChunks.length === 0) {
+            throw new Error("Chunking failed after multiple attempts");
         }
-        else {
-            return chunks;
+        if (isSubChunk) {
+            return processedChunks;
         }
+        processedChunks.sort((a, b) => a.actualStartLine - b.actualStartLine);
+        console.log(JSON.stringify(processedChunks, null, 2));
+        // Wait for 10 minutes
+        await new Promise((resolve) => setTimeout(resolve, 600000));
+        return processedChunks;
     }
 }

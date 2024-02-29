@@ -20,7 +20,7 @@ export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
 Instructions:
 - Identify anything in the compressed text that is not in the uncompressed text.
 - The compressed text should not include anything not in the uncompressed text
-- The compressed text of course has less detail and that is fine
+- The compressed text of course has less detail and that is fine.
 - If there is no additional text in the compressed text, then output, and nothing else: No additional content in compressed text.
 `);
 
@@ -28,12 +28,7 @@ Instructions:
     new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify
--- concepts
--- ideas
--- names
--- places
-... that are incorrect in the compressed text.
+- Identify anything that is incorrect in the compressed text compared to the uncompressed text and list it out.
 - The compressed text of course has less detail and that is fine
 - If all the compressed text is correct, output: All content correct in compressed text.
 `);
@@ -42,13 +37,8 @@ Instructions:
     new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify
--- concepts
--- ideas
--- names
--- places
-... that are not at all in the compressed text but are in the uncompressed text.
-- The compressed text of course has less detail but should still have all the contents.
+- Identify every that is not in the compressed text but are in the uncompressed text.
+- The compressed text of course has less words but should still have all the contents.
 - If all the content is in the compressed text then output, and nothing else: All content present in compressed text.
 `);
 
@@ -64,16 +54,17 @@ Think step by step and output your analysis here:
     new SystemMessage(`You are an expert text analyzer and compressor.
 
 Instructions:
-- You will analyze the text for metadata
-- You will compress the text to a title, shortDescription and all content compressed
-- For the fullCompressedContents use as few words as possible but do not leave anything out, keep all names, places, events & context.
+- You will compress the text completeCompressedContents.
+- You will analyze the text for metadata and add title and a short description.
+- For the fullCompressedContents use as few words as possible but keep all the information in the uncompressed text.
 
 Output:
 - Output your analysis and compressed text in this JSON format: {
   title: string;
   shortDescription: string;
-  fullCompressedContents: string;
+  completeCompressedContents: string;
   textMetaData: { [key: string]: string };
+  mainExternalUrlFound: string;
 }`);
 
   compressionUserMessage = (data: string) =>
@@ -129,10 +120,10 @@ Your new improved compressed text:
 
         const validationResults = await this.validateChunkSummary(
           uncompressedData,
-          chunkCompression.fullCompressedContents
+          chunkCompression.completeCompressedContents
         );
 
-        lastCompressedData = chunkCompression.fullCompressedContents;
+        lastCompressedData = chunkCompression.completeCompressedContents;
 
         validated = validationResults.valid;
 

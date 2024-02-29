@@ -45,37 +45,45 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         this.processFiles(filesForProcessing);
     }
     async processFilePart(fileId, dataPart) {
+        if (fileId !== "8211f8f7011d29e3da018207b2d991da")
+            return;
         console.log(`Processing file part for fileId: ${fileId}`);
         console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
         if (!this.fileMetadata[fileId].documentMetaData) {
-            await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata);
+            (await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata));
         }
         this.saveFileMetadata();
-        const cleanedUpData = this.fileMetadata[fileId].cleanedDocument || await this.cleanupAgent.clean(dataPart);
+        const cleanedUpData = this.fileMetadata[fileId].cleanedDocument ||
+            (await this.cleanupAgent.clean(dataPart));
         //const cleanedUpData = await this.cleanupAgent.clean(dataPart);
         console.log(`Cleaned up data: ${cleanedUpData}`);
         this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
         this.saveFileMetadata();
-        const chunks = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
-        console.log(`Split into ${Object.keys(chunks).length} chunks`);
-        for (const [chunkId, chunkData] of Object.entries(chunks)) {
-            console.log(`\nBefore compression: ${chunkData}\n`);
-            let chunkCompression = await this.chunkCompressor.compress(chunkData);
-            const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.fullCompressedContents}`;
+        const metadata = this.fileMetadata[fileId] || {};
+        metadata.chunks = {};
+        const chunkAnalyses = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
+        console.log(`Split into ${chunkAnalyses.length} chunks`);
+        for (let a = 0; a < chunkAnalyses.length; a++) {
+            const chunkAnalysis = chunkAnalyses[a];
+            console.log(`\nBefore compression: ${chunkAnalysis.chunkData}\n`);
+            let chunkCompression = await this.chunkCompressor.compress(chunkAnalysis.chunkData);
+            const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.completeCompressedContents}`;
             console.log(`\nAfter compression: ${compressedData}\n`);
-            const metadata = this.fileMetadata[fileId] || {};
-            metadata.chunks = metadata.chunks || {};
-            metadata.chunks[chunkId] = {
+            metadata.chunks[chunkAnalysis.chapterIndex] = {
+                chunkIndex: chunkAnalysis.chapterIndex,
                 title: chunkCompression.title,
+                mainExternalUrlFound: chunkCompression.mainExternalUrlFound,
+                importantContextChunkIndexes: chunkAnalysis.importantContextChapterIndexes,
                 shortSummary: chunkCompression.shortDescription,
-                fullSummary: chunkCompression.fullCompressedContents,
-                isValid: true,
+                compressedContents: chunkCompression.completeCompressedContents,
                 metaData: chunkCompression.textMetaData,
-                fullText: chunkData,
+                uncompressedContent: chunkAnalysis.chunkData,
             };
             // Save to weaviate
-            console.log(`Chunk ${chunkId} compressed:`, compressedData);
-            console.log(`\n${JSON.stringify(metadata.chunks[chunkId]), null, 2}\n`);
+            console.log(`Chunk ${chunkAnalysis.chapterIndex} compressed:`, compressedData);
+            console.log(`\n${(JSON.stringify(metadata.chunks[chunkAnalysis.chapterIndex]),
+                null,
+                2)}\n`);
             this.saveFileMetadata();
         }
     }
@@ -117,7 +125,9 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             console.log(`Checking file ${JSON.stringify(metadata)}`);
             const initialMetadata = this.initialFileMetadata[fileId];
             // Check if file is new or has been changed
-            if (forceProcessing || !initialMetadata || initialMetadata.hash !== metadata.hash) {
+            if (forceProcessing ||
+                !initialMetadata ||
+                initialMetadata.hash !== metadata.hash) {
                 // Use the filePath from the metadata to ensure correct file is processed
                 if (metadata.filePath) {
                     filesForProcessing.push(metadata.filePath); // filePath is assumed to be stored in metadata

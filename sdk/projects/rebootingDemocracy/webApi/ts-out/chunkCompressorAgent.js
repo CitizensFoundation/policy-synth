@@ -11,31 +11,21 @@ export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
 Instructions:
 - Identify anything in the compressed text that is not in the uncompressed text.
 - The compressed text should not include anything not in the uncompressed text
-- The compressed text of course has less detail and that is fine
+- The compressed text of course has less detail and that is fine.
 - If there is no additional text in the compressed text, then output, and nothing else: No additional content in compressed text.
 `);
     correctnessValidationSystemMessage = new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify
--- concepts
--- ideas
--- names
--- places
-... that are incorrect in the compressed text.
+- Identify anything that is incorrect in the compressed text compared to the uncompressed text and list it out.
 - The compressed text of course has less detail and that is fine
 - If all the compressed text is correct, output: All content correct in compressed text.
 `);
     completionValidationSystemMessage = new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify
--- concepts
--- ideas
--- names
--- places
-... that are not at all in the compressed text but are in the uncompressed text.
-- The compressed text of course has less detail but should still have all the contents.
+- Identify every that is not in the compressed text but are in the uncompressed text.
+- The compressed text of course has less words but should still have all the contents.
 - If all the content is in the compressed text then output, and nothing else: All content present in compressed text.
 `);
     validationUserMessage = (uncompressed, compressed) => new HumanMessage(`<UNCOMPRESSED_TEXT>${uncompressed}</UNCOMPRESSED_TEXT>
@@ -47,41 +37,59 @@ Think step by step and output your analysis here:
     compressionSystemMessage = new SystemMessage(`You are an expert text analyzer and compressor.
 
 Instructions:
-- You will analyze the text for metadata
-- You will compress the text to a title, shortDescription and all content compressed
-- For the fullCompressedContents use as few words as possible but do not leave anything out, keep all names, places, events & context.
+- You will compress the text completeCompressedContents.
+- You will analyze the text for metadata and add title and a short description.
+- For the fullCompressedContents use as few words as possible but keep all the information in the uncompressed text.
 
 Output:
 - Output your analysis and compressed text in this JSON format: {
   title: string;
   shortDescription: string;
-  fullCompressedContents: string;
+  completeCompressedContents: string;
   textMetaData: { [key: string]: string };
+  mainExternalUrlFound: string;
 }`);
-    compressionUserMessage = (data, retryCount, validationTextResults) => new HumanMessage(`${validationTextResults
-        ? `Note: You have already tried once to compress this text, and you got those validation errors:\n${validationTextResults}\n\n`
-        : ``}Document to analyze and compress:
-${retryCount > 1
-        ? "MAKE SURE TO INCLUDE ALL THE CONTENT AND DETAILS FROM THE ORIGINAL CONTENT"
-        : ""}${data}
+    compressionUserMessage = (data) => new HumanMessage(`Document to analyze and compress:
+${data}
+Your compressed text:
+`);
+    compressionRetryUserMessage = (data, lastCompressed, validationTextResults) => new HumanMessage(`Document to analyze and compress:
+${data}
+Note: You have already tried once to compress this text, and you got those validation errors:
+${validationTextResults}
+
+Your invalid compressed text:
+${lastCompressed}
+
+Your new improved compressed text:
 `);
     async compress(uncompressedData) {
         this.resetLlmTemperature();
         let chunkCompression;
         let validated = false;
         let validationTextResults;
+        let lastCompressedData;
         let retryCount = 0;
         while (!validated && retryCount < this.maxCompressionRetries) {
-            chunkCompression = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.compressionSystemMessage, this.compressionUserMessage(uncompressedData, retryCount, validationTextResults))));
-            const validationResults = await this.validateChunkSummary(uncompressedData, chunkCompression.fullCompressedContents);
-            validated = validationResults.valid;
-            retryCount++;
-            if (!validated) {
-                validationTextResults = validationResults.validationTextResults;
-                console.warn(`\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`);
+            try {
+                chunkCompression = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.compressionSystemMessage, validationTextResults && lastCompressedData
+                    ? this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults)
+                    : this.compressionUserMessage(uncompressedData))));
+                const validationResults = await this.validateChunkSummary(uncompressedData, chunkCompression.completeCompressedContents);
+                lastCompressedData = chunkCompression.completeCompressedContents;
+                validated = validationResults.valid;
+                retryCount++;
+                if (!validated) {
+                    validationTextResults = validationResults.validationTextResults;
+                    console.warn(`\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`);
+                }
+                if (retryCount > 2) {
+                    this.randomizeLlmTemperature();
+                }
             }
-            if (retryCount > 2) {
-                this.randomizeLlmTemperature();
+            catch (error) {
+                retryCount++;
+                console.warn(`Compression failed ${retryCount}: ${error}`);
             }
         }
         if (validated && chunkCompression) {

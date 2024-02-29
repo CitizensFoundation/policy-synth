@@ -21,7 +21,7 @@ interface CachedFileMetadata {
   title?: string;
   filePath: string;
   contentType: string;
-  chunks?: { [key: number]: LlmChunkData };
+  chunks?: { [key: number]: PsIngestionChunkData };
   references: string[];
   allUrls: string[];
   documentMetaData: { [key: string]: string };
@@ -40,7 +40,8 @@ interface LlmDocumentAnalysisReponse {
 interface LlmChunkCompressionReponse {
   title: string;
   shortDescription: string;
-  fullCompressedContents: string;
+  completeCompressedContents: string;
+  mainExternalUrlFound: string;
   textMetaData: { [key: string]: string };
 }
 
@@ -61,10 +62,11 @@ interface LlmChunkAnalysisReponse {
   metaData: { [key: string]: string };
 }
 
-interface LlmChunkData {
+interface PsIngestionChunkData {
   title: string;
   chunkIndex: number;
   documentIndex?: string;
+  mainExternalUrlFound: string;
   shortSummary: string;
   uncompressedContent: string;
   compressedContents: string;

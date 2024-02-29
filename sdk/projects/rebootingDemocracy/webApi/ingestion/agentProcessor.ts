@@ -56,6 +56,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   }
 
   async processFilePart(fileId: string, dataPart: string): Promise<void> {
+    if (fileId!=="8211f8f7011d29e3da018207b2d991da") return;
+
     console.log(`Processing file part for fileId: ${fileId}`);
     console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
     if (!this.fileMetadata[fileId].documentMetaData) {
@@ -79,37 +81,51 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.saveFileMetadata();
     const metadata = this.fileMetadata[fileId] || {};
 
-    metadata.chunks = {} as { [key: number]: LlmChunkData };
+    metadata.chunks = {} as { [key: number]: PsIngestionChunkData };
 
-    const chunkAnalyses = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
+    const chunkAnalyses = await this.splitAgent.splitDocumentIntoChunks(
+      cleanedUpData
+    );
 
     console.log(`Split into ${chunkAnalyses.length} chunks`);
 
-    chunkAnalyses.forEach((chunkAnalysis, index) => {
+    for (let a = 0; a < chunkAnalyses.length; a++) {
+      const chunkAnalysis = chunkAnalyses[a];
       console.log(`\nBefore compression: ${chunkAnalysis.chunkData}\n`);
 
       let chunkCompression = await this.chunkCompressor.compress(
         chunkAnalysis.chunkData!
       );
 
-      const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.fullCompressedContents}`;
+      const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.completeCompressedContents}`;
 
       console.log(`\nAfter compression: ${compressedData}\n`);
 
-      metadata.chunks![index+1] = {
-        chunkIndex: index+1,
+      metadata.chunks![chunkAnalysis.chapterIndex] = {
+        chunkIndex: chunkAnalysis.chapterIndex,
         title: chunkCompression.title,
-        importantContextChunkIndexes: chunkAnalysis.importantContextChapterIndexes,
+        mainExternalUrlFound: chunkCompression.mainExternalUrlFound,
+        importantContextChunkIndexes:
+          chunkAnalysis.importantContextChapterIndexes,
         shortSummary: chunkCompression.shortDescription,
-        compressedContents: chunkCompression.fullCompressedContents,
+        compressedContents: chunkCompression.completeCompressedContents,
         metaData: chunkCompression.textMetaData,
-        uncompressedContent: chunkAnalysis.chunkData!
+        uncompressedContent: chunkAnalysis.chunkData!,
       };
 
       // Save to weaviate
 
-      console.log(`Chunk ${index+1} compressed:`, compressedData);
-      console.log(`\n${(JSON.stringify(metadata.chunks![index+1]), null, 2)}\n`);
+      console.log(
+        `Chunk ${chunkAnalysis.chapterIndex} compressed:`,
+        compressedData
+      );
+      console.log(
+        `\n${
+          (JSON.stringify(metadata.chunks![chunkAnalysis.chapterIndex]),
+          null,
+          2)
+        }\n`
+      );
       this.saveFileMetadata();
     }
   }
