@@ -33,6 +33,55 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
   splitDataForProcessing(data: string, maxTokenLength: number = this.maxFileProcessTokenLength): string[] {
     let processedData = data;
 
+    // Preprocess to add line breaks for better readability, especially for texts without sufficient line breaks
+    const lineBreakDensityCheck = (processedData.match(/\n/g) || []).length / processedData.length < 0.001;
+    if (lineBreakDensityCheck) {
+        // Add line breaks after sentences, carefully avoiding disrupting list formats
+        const sentenceBoundaryRegex = /(?<!\d)\.(\s+)(?=[A-Z])/g;
+        processedData = processedData.replace(sentenceBoundaryRegex, '.$1\n');
+
+        // Additionally, for texts that might lack line breaks entirely, consider adding breaks at other potential sentence endings
+        // This step is simplified and might need adjustments for specific text formats
+    }
+
+    const parts: string[] = [];
+    let remainingData = processedData;
+
+    const totalLength = remainingData.length;
+    let idealNumberOfParts = Math.ceil(totalLength / maxTokenLength);
+    let idealChunkSize = Math.ceil(totalLength / idealNumberOfParts);
+
+    while (remainingData.length > 0) {
+        let splitPosition = Math.min(idealChunkSize, remainingData.length);
+
+        // Adjust for natural breaks, avoiding splitting in the middle of sentences or lists
+        if (splitPosition < remainingData.length) { // Not the last chunk
+            let potentialSplitPosition = remainingData.lastIndexOf("\n", splitPosition);
+            if (potentialSplitPosition !== -1) {
+                splitPosition = potentialSplitPosition;
+            } else {
+                // If no natural break is found, look for the next best split position to avoid mid-sentence splits
+                potentialSplitPosition = remainingData.indexOf("\n", splitPosition);
+                if (potentialSplitPosition !== -1) {
+                    splitPosition = potentialSplitPosition;
+                }
+            }
+        }
+
+        parts.push(remainingData.substring(0, splitPosition).trim());
+        remainingData = remainingData.substring(splitPosition).trimStart();
+
+        // Recalculate idealChunkSize for remaining data to maintain even distribution
+        idealChunkSize = remainingData.length / (--idealNumberOfParts);
+    }
+
+    return parts;
+}
+
+
+  splitDataForProcessingWorksBigChunks(data: string, maxTokenLength: number = this.maxFileProcessTokenLength): string[] {
+    let processedData = data;
+
     // Step 1: Preprocess to add line breaks carefully, avoiding disrupting list formats
     const lineBreakDensityCheck = (processedData.match(/\n/g) || []).length / processedData.length < 0.001;
     if (lineBreakDensityCheck) {

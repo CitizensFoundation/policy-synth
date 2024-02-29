@@ -10,6 +10,7 @@ export declare abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     resetLlmTemperature(): void;
     randomizeLlmTemperature(): void;
     splitDataForProcessing(data: string, maxTokenLength?: number): string[];
+    splitDataForProcessingWorksBigChunks(data: string, maxTokenLength?: number): string[];
     getEstimateTokenLength(data: string): number;
     computeHash(data: Buffer): string;
     getFirstMessages(systemMessage: SystemMessage, userMessage: BaseMessage): BaseMessage[];

@@ -66,7 +66,7 @@ Think step by step and output your analysis here:
 Instructions:
 - You will analyze the text for metadata
 - You will compress the text to a title, shortDescription and all content compressed
-- For the fullCompressedContents make it as short as possible but do not leave anything out, keep all names, places and events.
+- For the fullCompressedContents use as few words as possible but do not leave anything out, keep all names, places, events & context.
 
 Output:
 - Output your analysis and compressed text in this JSON format: {
