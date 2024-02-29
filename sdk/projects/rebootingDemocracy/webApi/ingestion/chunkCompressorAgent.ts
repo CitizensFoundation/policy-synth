@@ -76,21 +76,26 @@ Output:
   textMetaData: { [key: string]: string };
 }`);
 
-  compressionUserMessage = (
+  compressionUserMessage = (data: string) =>
+    new HumanMessage(`Document to analyze and compress:
+${data}
+Your compressed text:
+`);
+
+  compressionRetryUserMessage = (
     data: string,
-    retryCount: number,
-    validationTextResults: string | undefined
+    lastCompressed: string,
+    validationTextResults: string
   ) =>
-    new HumanMessage(`${
-      validationTextResults
-        ? `Note: You have already tried once to compress this text, and you got those validation errors:\n${validationTextResults}\n\n`
-        : ``
-    }Document to analyze and compress:
-${
-  retryCount > 1
-    ? "MAKE SURE TO INCLUDE ALL THE CONTENT AND DETAILS FROM THE ORIGINAL CONTENT"
-    : ""
-}${data}
+    new HumanMessage(`Document to analyze and compress:
+${data}
+Note: You have already tried once to compress this text, and you got those validation errors:
+${validationTextResults}
+
+Your invalid compressed text:
+${lastCompressed}
+
+Your new improved compressed text:
 `);
 
   async compress(
@@ -102,38 +107,50 @@ ${
 
     let validated = false;
     let validationTextResults: string | undefined;
+    let lastCompressedData: string | undefined;
 
     let retryCount = 0;
     while (!validated && retryCount < this.maxCompressionRetries) {
-      chunkCompression = (await this.callLLM(
-        "ingestion-agent",
-        IEngineConstants.ingestionModel,
-        this.getFirstMessages(
-          this.compressionSystemMessage,
-          this.compressionUserMessage(
-            uncompressedData,
-            retryCount,
-            validationTextResults
+      try {
+        chunkCompression = (await this.callLLM(
+          "ingestion-agent",
+          IEngineConstants.ingestionModel,
+          this.getFirstMessages(
+            this.compressionSystemMessage,
+            validationTextResults && lastCompressedData
+              ? this.compressionRetryUserMessage(
+                  uncompressedData,
+                  lastCompressedData,
+                  validationTextResults
+                )
+              : this.compressionUserMessage(uncompressedData)
           )
-        )
-      )) as LlmChunkCompressionReponse;
+        )) as LlmChunkCompressionReponse;
 
-      const validationResults = await this.validateChunkSummary(
-        uncompressedData,
-        chunkCompression.fullCompressedContents
-      );
+        const validationResults = await this.validateChunkSummary(
+          uncompressedData,
+          chunkCompression.fullCompressedContents
+        );
 
-      validated = validationResults.valid;
+        lastCompressedData = chunkCompression.fullCompressedContents;
 
-      retryCount++;
+        validated = validationResults.valid;
 
-      if (!validated) {
-        validationTextResults = validationResults.validationTextResults;
-        console.warn(`\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`);
-      }
+        retryCount++;
 
-      if (retryCount > 2) {
-        this.randomizeLlmTemperature();
+        if (!validated) {
+          validationTextResults = validationResults.validationTextResults;
+          console.warn(
+            `\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`
+          );
+        }
+
+        if (retryCount > 2) {
+          this.randomizeLlmTemperature();
+        }
+      } catch (error) {
+        retryCount++;
+        console.warn(`Compression failed ${retryCount}: ${error}`);
       }
     }
 
@@ -205,14 +222,16 @@ ${
         );
       }
       if (
-        !correctnessValidation.includes(this.correctnessValidationSuccessMessage)
+        !correctnessValidation.includes(
+          this.correctnessValidationSuccessMessage
+        )
       ) {
         console.warn(
           `Chunk summary correctnessValidation failed: ${correctnessValidation}`
         );
       }
       if (
-       !hallucinationValidation.includes(
+        !hallucinationValidation.includes(
           this.hallucinationValidationSuccessMessage
         )
       ) {

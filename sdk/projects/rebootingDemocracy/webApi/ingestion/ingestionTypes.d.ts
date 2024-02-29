@@ -4,15 +4,6 @@ interface DataLayout {
   documentUrls: string[];
 }
 
-interface ChunkData {
-  title: string;
-  shortSummary: string;
-  fullSummary: string;
-  isValid: boolean;
-  metaData: { [key: string]: string };
-  fullText: string;
-}
-
 // Add cache for first the response keyed on the data hashes
 // So if user asks a similar question, we lookup in weaviate, and decide in the routing
 interface CachedFileMetadata {
@@ -30,7 +21,7 @@ interface CachedFileMetadata {
   title?: string;
   filePath: string;
   contentType: string;
-  chunks?: { [key: string]: ChunkData };
+  chunks?: { [key: number]: LlmChunkData };
   references: string[];
   allUrls: string[];
   documentMetaData: { [key: string]: string };
@@ -53,25 +44,31 @@ interface LlmChunkCompressionReponse {
   textMetaData: { [key: string]: string };
 }
 
-interface LlmDocumentChunksStrategyReponse {
-  sectionIndex: number;
-  sectionTitle: string;
-  sectionStartLineNumber: number;
-  directlyConnectedSectionIndexes: number[];
-}
-
-interface LlmDocumentChunksIdentificationResponse {
-  oneLineTextIndexesForSplittingDocument: string[];
+interface LlmDocumentChunksStrategy {
+  chapterIndex: number;
+  chapterTitle: string;
+  chapterType: 'full' | 'subChapter';
+  chapterStartLineNumber: number;
+  importantContextChapterIndexes: number[];
+  chunkData?: string;
 }
 
 interface LlmChunkAnalysisReponse {
   title: string;
   shortSummary: string;
-  fullSummary: string;
+  fullCompressedContents: string;
   metaDataFields: string[];
   metaData: { [key: string]: string };
 }
 
-interface LlmChunkFullSummaryValidationReponse {
-  fullSummaryContainsAllDataFromChunk: boolean;
+interface LlmChunkData {
+  title: string;
+  chunkIndex: number;
+  documentIndex?: string;
+  shortSummary: string;
+  uncompressedContent: string;
+  compressedContents: string;
+  importantContextChunkIndexes: number[];
+  metaDataFields?: string[];
+  metaData: { [key: string]: string };
 }
