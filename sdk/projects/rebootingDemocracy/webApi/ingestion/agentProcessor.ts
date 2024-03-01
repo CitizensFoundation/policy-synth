@@ -85,7 +85,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const chunkAnalyses = await this.splitAgent.splitDocumentIntoChunks(
       cleanedUpData
-    ) as any[];
+    ) as LlmDocumentChunksStrategy[];
 
     console.log(`Split into ${chunkAnalyses.length} chunks`);
 

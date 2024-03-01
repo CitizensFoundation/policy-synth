@@ -22,7 +22,7 @@ export class IngestionSplitAgent extends BaseIngestionAgent {
 Instructions:
 - Your job is to analyze the text document and outline a strategy how best to split this document up into chapters.
 - The contents should be split into chapters that cover the same topic, split longer chapters that cover the same topic into subChapters.
-- If there are case studies those should always be whole chapters or a series of subChapters, under any chapter.
+- If there are case studies those should always be whole chapters or a series of subChapters - we want to capture all case studies as top level items.
 - Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
 - Use importantContextChapterIndexes for chapters that could be relevant to the current chapter when we will load this chapter for our retrieval augmented generation (RAG) solution. But don't use this for everything only the most important context connections.
@@ -45,19 +45,25 @@ Output:
 
   strategyUserMessage = (data: string) =>
     new HumanMessage(`Document to analyze and devise a split strategy for:
-${data}
+<DOCUMENT_FOR_SPLIT_STRATEGY>
+    ${data}
+</DOCUMENT_FOR_SPLIT_STRATEGY>
 
-Your strategy:
+YOUR THOUGHTFUL STRATEGY:
 `);
 
   strategyWithReviewUserMessage = (data: string, reviewComments: string) =>
     new HumanMessage(`Document to analyze and devise a split strategy for:
-  ${data}
+  <DOCUMENT_FOR_SPLIT_STRATEGY>
+    ${data}
+  </DOCUMENT_FOR_SPLIT_STRATEGY>
 
   This is your second attempt to devise a strategy, here are the reviewers comments on the last attempt:
-  ${reviewComments}
+  <REVIEW_FOR_LAST_ATTEMPT>
+    ${reviewComments}
+  </REVIEW_FOR_LAST_ATTEMPT>
 
-  Your improved strategy:
+  YOUR IMPROVED STRATEGY:
   `);
 
   reviewStrategySystemMessage =
@@ -67,7 +73,7 @@ Instructions:
 - Your job is to evaluate a split strategy for a document.
 - The contents should be split into chapters that cover the same topic so each chapter can be understood as a whole.
 - The output should not be the actual contents only the strategy on how to split it up.
-- If there are case studies those should always be whole chapters or a series of subChapters - we want to capture all case studies as top level items.
+- If there are case studies those should always be whole chapters or a series of subChapters, under any chapter.
 - The start of the document should always be included.
 - Make sure line numbers and connected chapters are correct.
 
@@ -77,19 +83,22 @@ Output:
 `);
 
   reviewStrategyUserMessage = (data: string, splitStrategy: string) =>
-    new HumanMessage(`Document:
-  ${data}
+    new HumanMessage(`<DOCUMENT_FOR_SPLIT_STRATEGY>
+    ${data}
+</DOCUMENT_FOR_SPLIT_STRATEGY>
 
-  Split strategy to evaluate for correctness:
+<SPLIT_STRATEGY_TO_EVALUATE>
   ${splitStrategy}
+</SPLIT_STRATEGY_TO_EVALUATE>
 
-  Your evaluation: `);
+YOUR EVALUATION: `);
 
   async fetchLlmChunkingStrategy(
     data: string,
     review: string | undefined,
     lastJson: LlmDocumentChunksStrategy[] | undefined
   ) {
+    console.log("Generating chunking strategy...")
     const chunkingStrategy = (await this.callLLM(
       "ingestion-agent",
       IEngineConstants.ingestionModel,
@@ -102,6 +111,14 @@ Output:
       false
     )) as string;
 
+    const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(
+      chunkingStrategy
+    ) as LlmDocumentChunksStrategy[];
+
+    console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
+
+    console.log("Reviewing chunking strategy...");
+
     const chunkingStrategyReview = (await this.callLLM(
       "ingestion-agent",
       IEngineConstants.ingestionModel,
@@ -111,12 +128,6 @@ Output:
       ),
       false
     )) as string;
-
-    const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(
-      chunkingStrategy
-    ) as LlmDocumentChunksStrategy[];
-
-    console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
 
     console.log(`Chunking strategy: ${chunkingStrategyReview}`);
 
