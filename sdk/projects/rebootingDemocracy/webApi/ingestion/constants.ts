@@ -428,7 +428,7 @@ export class IEngineConstants {
     outTokenCostUSD: gpt4OutTokenPrice,
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
-    verbose: true
+    verbose: false
   };
 
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months

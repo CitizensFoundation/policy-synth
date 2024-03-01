@@ -10,7 +10,7 @@ export class IngestionSplitAgent extends BaseIngestionAgent {
 Instructions:
 - Your job is to analyze the text document and outline a strategy how best to split this document up into chapters.
 - The contents should be split into chapters that cover the same topic, split longer chapters that cover the same topic into subChapters.
-- If there are case studies those should always be whole chapters or a series of subChapters - we want to capture all case studies as top level items.
+- If there are case studies those should always be whole chapters or a series of subChapters, under any chapter.
 - Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
 - Use importantContextChapterIndexes for chapters that could be relevant to the current chapter when we will load this chapter for our retrieval augmented generation (RAG) solution. But don't use this for everything only the most important context connections.
@@ -48,10 +48,10 @@ Your strategy:
 Instructions:
 - Your job is to evaluate a split strategy for a document.
 - The contents should be split into chapters that cover the same topic so each chapter can be understood as a whole.
-- The output should be the actual contents only the strategy on how to split it up.
+- The output should not be the actual contents only the strategy on how to split it up.
+- If there are case studies those should always be whole chapters or a series of subChapters - we want to capture all case studies as top level items.
 - The start of the document should always be included.
 - Make sure line numbers and connected chapters are correct.
-- We always want to capture full contexts for each chunk so the chapters should not be too short.
 
 Output:
 - If the strategy is good output only and with no explanation: PASSES
@@ -68,16 +68,10 @@ Output:
         const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, review && lastJson
             ? this.strategyWithReviewUserMessage(data, review)
             : this.strategyUserMessage(data)), false));
-        const chunkingStrategyReview = "PASSES"; /*(await this.callLLM(
-          "ingestion-agent",
-          IEngineConstants.ingestionModel,
-          this.getFirstMessages(
-            this.reviewStrategySystemMessage,
-            this.reviewStrategyUserMessage(data, chunkingStrategy)
-          )
-        )) as string;*/
+        const chunkingStrategyReview = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.reviewStrategySystemMessage, this.reviewStrategyUserMessage(data, chunkingStrategy)), false));
         const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(chunkingStrategy);
         console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
+        console.log(`Chunking strategy: ${chunkingStrategyReview}`);
         return {
             chunkingStrategy,
             chunkingStrategyReview,
@@ -93,7 +87,7 @@ Output:
         let validated = false;
         let lastChunkingStrategyJson;
         while (!validated && retryCount < this.maxSplitRetries) {
-            console.log(`Processing chunk ${retryCount + 1}...`);
+            console.log(`Processing chunk...`);
             let dataWithLineNumber = isSubChunk
                 ? data
                 : data
