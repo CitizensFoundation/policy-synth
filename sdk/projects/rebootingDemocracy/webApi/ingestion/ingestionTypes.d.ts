@@ -52,6 +52,10 @@ interface LlmDocumentChunksStrategy {
   chapterStartLineNumber: number;
   importantContextChapterIndexes: number[];
   chunkData?: string;
+  startLine: number;
+  actualStartLine?: number;
+  actualEndLine?: number;
+  subChunks?: Chunk[];
 }
 
 interface LlmChunkAnalysisReponse {

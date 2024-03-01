@@ -45,8 +45,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         this.processFiles(filesForProcessing);
     }
     async processFilePart(fileId, dataPart) {
-        if (fileId !== "8211f8f7011d29e3da018207b2d991da")
-            return;
+        //if (fileId!=="8211f8f7011d29e3da018207b2d991da") return;
         console.log(`Processing file part for fileId: ${fileId}`);
         console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
         if (!this.fileMetadata[fileId].documentMetaData) {
