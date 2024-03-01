@@ -166,7 +166,7 @@ YOUR EVALUATION: `);
     };
   }
 
-  async splitDocumentIntoChunks(data: string, isSubChunk: boolean = false) {
+  async splitDocumentIntoChunks(data: string, startingLineNumber: number = 0, isSubChunk: boolean = false) {
     console.log(
       `Splitting document into chunks... (isSubChunk: ${isSubChunk})`
     );
@@ -180,11 +180,9 @@ YOUR EVALUATION: `);
 
     while (!validated && retryCount < this.maxSplitRetries) {
       console.log(`Processing chunk...`);
-      let dataWithLineNumber = isSubChunk
-        ? data
-        : data
+      let dataWithLineNumber = data
             .split("\n")
-            .map((line, index) => `${index + 1}: ${line}`)
+            .map((line, index) => `${startingLineNumber + index + 1}: ${line}`)
             .join("\n");
 
       try {
@@ -230,13 +228,14 @@ YOUR EVALUATION: `);
 
             if (chunkSize > this.maxChunkLinesLength) {
               console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
-              const oversizedChunkContent = dataWithLineNumber
+              const oversizedChunkContent = data
                 .split("\n")
                 .slice(startLine - 1, endLine)
                 .join("\n");
 
               const subChunks = await this.splitDocumentIntoChunks(
                 oversizedChunkContent,
+                startLine,
                 true
               );
               strategy.subChunks = [];
@@ -310,7 +309,7 @@ YOUR EVALUATION: `);
 
     // Wait for 10 minutes to debug the data above
     if (!isSubChunk) {
-      await new Promise((resolve) => setTimeout(resolve, 600000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
     return lastChunkingStrategyJson;

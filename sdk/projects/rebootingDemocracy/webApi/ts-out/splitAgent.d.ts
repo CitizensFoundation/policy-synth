@@ -15,6 +15,6 @@ export declare class IngestionSplitAgent extends BaseIngestionAgent {
         chunkingStrategyReview: string;
         lastChunkingStrategyJson: LlmDocumentChunksStrategy[];
     }>;
-    splitDocumentIntoChunks(data: string, isSubChunk?: boolean): Promise<LlmDocumentChunksStrategy[] | undefined>;
+    splitDocumentIntoChunks(data: string, startingLineNumber?: number, isSubChunk?: boolean): Promise<LlmDocumentChunksStrategy[] | undefined>;
 }
 //# sourceMappingURL=splitAgent.d.ts.map

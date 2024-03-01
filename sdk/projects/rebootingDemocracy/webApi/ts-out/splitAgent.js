@@ -111,7 +111,7 @@ YOUR EVALUATION: `);
             lastChunkingStrategyJson,
         };
     }
-    async splitDocumentIntoChunks(data, isSubChunk = false) {
+    async splitDocumentIntoChunks(data, startingLineNumber = 0, isSubChunk = false) {
         console.log(`Splitting document into chunks... (isSubChunk: ${isSubChunk})`);
         if (!isSubChunk) {
             this.resetLlmTemperature();
@@ -122,12 +122,10 @@ YOUR EVALUATION: `);
         let chunkingStrategyReview;
         while (!validated && retryCount < this.maxSplitRetries) {
             console.log(`Processing chunk...`);
-            let dataWithLineNumber = isSubChunk
-                ? data
-                : data
-                    .split("\n")
-                    .map((line, index) => `${index + 1}: ${line}`)
-                    .join("\n");
+            let dataWithLineNumber = data
+                .split("\n")
+                .map((line, index) => `${startingLineNumber + index + 1}: ${line}`)
+                .join("\n");
             try {
                 const llmResults = await this.fetchLlmChunkingStrategy(dataWithLineNumber, chunkingStrategyReview, lastChunkingStrategyJson);
                 chunkingStrategyReview = llmResults.chunkingStrategyReview;
@@ -153,11 +151,11 @@ YOUR EVALUATION: `);
                             .join("\n");
                         if (chunkSize > this.maxChunkLinesLength) {
                             console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
-                            const oversizedChunkContent = dataWithLineNumber
+                            const oversizedChunkContent = data
                                 .split("\n")
                                 .slice(startLine - 1, endLine)
                                 .join("\n");
-                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, true);
+                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine, true);
                             strategy.subChunks = [];
                             strategy.subChunks.push(...subChunks);
                         }
