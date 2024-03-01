@@ -3,6 +3,14 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BaseIngestionAgent } from "./baseAgent.js";
 
+interface Chunk {
+  data: string;
+  startLine: number;
+  actualStartLine?: number;
+  actualEndLine?: number;
+  subChunks?: Chunk[];
+}
+
 export class IngestionSplitAgent extends BaseIngestionAgent {
   maxSplitRetries = 15;
   minChunkCharacterLength = 50;
@@ -94,7 +102,7 @@ Output:
       false
     )) as string;
 
-    const chunkingStrategyReview = "PASSES";/*(await this.callLLM(
+    const chunkingStrategyReview = "PASSES"; /*(await this.callLLM(
       "ingestion-agent",
       IEngineConstants.ingestionModel,
       this.getFirstMessages(
@@ -117,17 +125,20 @@ Output:
   }
 
   async splitDocumentIntoChunks(data: string, isSubChunk: boolean = false) {
+    console.log(`Splitting document into chunks... (isSubChunk: ${isSubChunk})`)
     if (!isSubChunk) {
       this.resetLlmTemperature();
     }
     let retryCount = 0;
     let validated = true;
 
-    let chunksToProcess = [{ data: data, startLine: 1 }];
-    let processedChunks = [];
+    let chunksToProcess = [
+      { data: data, startLine: 1, subChunks: [] as Chunk[] },
+    ] as Chunk[];
+    let processedChunks = [] as Chunk[];
 
     while (chunksToProcess.length > 0 && retryCount < this.maxSplitRetries) {
-      console.log(`Chunks to process: ${chunksToProcess.length}`)
+      console.log(`Chunks to process: ${chunksToProcess.length}`);
       let currentChunk = chunksToProcess.shift()!;
       if (!currentChunk) continue;
       let dataWithLineNumber = currentChunk.data
@@ -156,63 +167,77 @@ Output:
           llmResults.chunkingStrategy &&
           llmResults.chunkingStrategy.length
         ) {
+          currentChunk.subChunks = [];
+          console.log(`Chunking strategy validated.`);
+
           for (let i = 0; i < lastChunkingStrategyJson.length; i++) {
+            console.log(`Processing chunk ${i + 1} of ${lastChunkingStrategyJson.length}`);
             const strategy = lastChunkingStrategyJson[i];
             const startLine = strategy.chapterStartLineNumber;
-            const endLine = i + 1 < lastChunkingStrategyJson.length ? lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1 : dataWithLineNumber.split("\n").length;
-
+            const endLine =
+              i + 1 < lastChunkingStrategyJson.length
+                ? lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1
+                : dataWithLineNumber.split("\n").length;
             const chunkSize = endLine - startLine + 1;
 
             if (chunkSize > this.maxChunkLinesLength) {
-              console.log(`Chunk is too large, ${chunkSize} lines, splitting...`);
-              // Calculate the actual content of the oversized chunk for further processing
-              const oversizedChunkContent = currentChunk.data.split("\n").slice(startLine - 1, endLine).join("\n");
-              console.log(`Oversized chunk content: ${oversizedChunkContent}`)
-              chunksToProcess.push({
-                data: oversizedChunkContent,
-                startLine: startLine,
-              });
+              console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
+              const oversizedChunkContent = dataWithLineNumber
+                .split("\n")
+                .slice(startLine - 1, endLine)
+                .join("\n");
+              // Recursively split oversized chunk
+              const subChunks = await this.splitDocumentIntoChunks(
+                oversizedChunkContent,
+                true
+              );
+              currentChunk.subChunks.push(...subChunks!); // Add resulting subChunks to the current chunk
             } else {
-              console.log(`Chunk is valid, adding...`);
-              processedChunks.push({
-                ...strategy,
+              console.log(`Chunk ${i + 1} is within size limits (${chunkSize} lines)`)
+              currentChunk.subChunks.push({
+                data: currentChunk.data
+                  .split("\n")
+                  .slice(startLine - 1, endLine)
+                  .join("\n"),
+                startLine: startLine,
                 actualStartLine: startLine,
                 actualEndLine: endLine,
+                subChunks: [], // Initialize as empty; no further split required
               });
             }
           }
-        } else {
-          console.error("No chunking strategy found or review failed.");
-        }
 
+          if (!isSubChunk) {
+            processedChunks.push(currentChunk); // For top-level chunks, add to processedChunks
+          }
+        }
 
         if (!validated) {
           console.warn(`Validation attempt failed, retrying...`);
           chunksToProcess.push(currentChunk); // Re-attempt this chunk
           retryCount++;
         }
-      } catch (error) {
-        console.error(`Error chunking document: ${error}`);
-        chunksToProcess.push(currentChunk); // Re-attempt this chunk
+      } catch (e) {
+        console.error(e);
         retryCount++;
       }
-    }
-
-    if (processedChunks.length === 0) {
-      throw new Error("Chunking failed after multiple attempts");
     }
 
     if (isSubChunk) {
       return processedChunks;
     }
 
-    processedChunks.sort((a, b) => a.actualStartLine - b.actualStartLine);
+    if (processedChunks.length === 0) {
+      console.error("Chunking failed after multiple attempts: "+retryCount);
+    }
+
+    processedChunks.sort((a, b) => a.actualStartLine! - b.actualStartLine!);
 
     console.log(JSON.stringify(processedChunks, null, 2));
 
     // Wait for 10 minutes
     await new Promise((resolve) => setTimeout(resolve, 600000));
 
-    return processedChunks;
+    return processedChunks as unknown as PsIngestionChunkData[];
   }
 }

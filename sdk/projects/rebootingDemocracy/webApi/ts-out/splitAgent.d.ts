@@ -1,5 +1,12 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
+interface Chunk {
+    data: string;
+    startLine: number;
+    actualStartLine?: number;
+    actualEndLine?: number;
+    subChunks?: Chunk[];
+}
 export declare class IngestionSplitAgent extends BaseIngestionAgent {
     maxSplitRetries: number;
     minChunkCharacterLength: number;
@@ -14,15 +21,7 @@ export declare class IngestionSplitAgent extends BaseIngestionAgent {
         chunkingStrategyReview: string;
         lastChunkingStrategyJson: LlmDocumentChunksStrategy[];
     }>;
-    splitDocumentIntoChunks(data: string, isSubChunk?: boolean): Promise<{
-        actualStartLine: number;
-        actualEndLine: number;
-        chapterIndex: number;
-        chapterTitle: string;
-        chapterType: "full" | "subChapter";
-        chapterStartLineNumber: number;
-        importantContextChapterIndexes: number[];
-        chunkData?: string | undefined;
-    }[]>;
+    splitDocumentIntoChunks(data: string, isSubChunk?: boolean): Promise<Chunk[]>;
 }
+export {};
 //# sourceMappingURL=splitAgent.d.ts.map

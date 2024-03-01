@@ -67,9 +67,14 @@ interface PsIngestionChunkData {
   chunkIndex: number;
   documentIndex?: string;
   mainExternalUrlFound: string;
+  data: string;
+  actualStartLine: number;
+  startLine: number;
+  actualEndLine: number;
   shortSummary: string;
   uncompressedContent: string;
   compressedContents: string;
+  subChunks?: PsIngestionChunkData[];
   importantContextChunkIndexes: number[];
   metaDataFields?: string[];
   metaData: { [key: string]: string };

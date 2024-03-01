@@ -69,6 +69,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             let chunkCompression = await this.chunkCompressor.compress(chunkAnalysis.chunkData);
             const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.completeCompressedContents}`;
             console.log(`\nAfter compression: ${compressedData}\n`);
+            //@ts-ignore
             metadata.chunks[chunkAnalysis.chapterIndex] = {
                 chunkIndex: chunkAnalysis.chapterIndex,
                 title: chunkCompression.title,

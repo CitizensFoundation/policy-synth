@@ -85,7 +85,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const chunkAnalyses = await this.splitAgent.splitDocumentIntoChunks(
       cleanedUpData
-    );
+    ) as any[];
 
     console.log(`Split into ${chunkAnalyses.length} chunks`);
 
@@ -101,6 +101,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
       console.log(`\nAfter compression: ${compressedData}\n`);
 
+      //@ts-ignore
       metadata.chunks![chunkAnalysis.chapterIndex] = {
         chunkIndex: chunkAnalysis.chapterIndex,
         title: chunkCompression.title,
