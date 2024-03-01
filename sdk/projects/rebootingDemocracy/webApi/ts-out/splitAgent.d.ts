@@ -9,6 +9,7 @@ export declare class IngestionSplitAgent extends BaseIngestionAgent {
     strategyWithReviewUserMessage: (data: string, reviewComments: string) => HumanMessage;
     reviewStrategySystemMessage: SystemMessage;
     reviewStrategyUserMessage: (data: string, splitStrategy: string) => HumanMessage;
+    generateDiff(str1: string, str2: string): string;
     fetchLlmChunkingStrategy(data: string, review: string | undefined, lastJson: LlmDocumentChunksStrategy[] | undefined): Promise<{
         chunkingStrategy: string;
         chunkingStrategyReview: string;
