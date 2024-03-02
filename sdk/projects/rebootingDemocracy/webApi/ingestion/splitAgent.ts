@@ -25,6 +25,7 @@ Instructions:
 - If there are case studies those should always be whole chapters or if very long, one long chapter.
 - Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
+- Always include chapterStartLineNumber for each chapter referencing the line number present at the start of each line in the DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY.
 - Use importantContextChapterIndexes for chapters that could be relevant to the current chapter when we will load this chapter for our retrieval augmented generation (RAG) solution. But don't use this for everything only the most important context connections.
 
 Output:
@@ -68,7 +69,7 @@ YOUR THOUGHTFUL STRATEGY:
 
 Instructions:
 - Your job is to evaluate a split strategy for a document.
-- The contents should be split into chapters that cover the same topic or very connected topics.-
+- The contents should be split into chapters that cover the same topic or very connected topics.
 - There can be long chapters covering many topics.
 - The output should not be the actual contents only the strategy on how to split it up.
 - If there are case studies those should be whole chapters or if long a part of longer chapters.
@@ -225,19 +226,22 @@ YOUR EVALUATION: `);
           console.log(`Chunking strategy validated.`);
 
           for (let i = 0; i < lastChunkingStrategyJson.length; i++) {
-            console.log(
-              `Processing chunk ${i + 1} of ${lastChunkingStrategyJson.length}`
-            );
+            console.log(`Processing chunk ${i + 1} of ${lastChunkingStrategyJson.length}`);
             const strategy = lastChunkingStrategyJson[i];
             const startLine = strategy.chapterStartLineNumber;
-            const endLine =
-              i + 1 < lastChunkingStrategyJson.length
-                ? lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1
-                : totalLinesInChunk
-                ? totalLinesInChunk
-                : dataWithLineNumber.split("\n").length; // Adjusted calculation here
-            const chunkSize = endLine - startLine + 1;
+            let endLine;
 
+            if (i + 1 < lastChunkingStrategyJson.length) {
+              endLine = lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1;
+            } else if (totalLinesInChunk) {
+              // Ensure the end line does not exceed the total lines available for subchunks
+              endLine = startLine + totalLinesInChunk - 1;
+            } else {
+              // Fallback to the total number of lines in the data if not a subchunk or if totalLinesInChunk is not provided
+              endLine = dataWithLineNumber.split("\n").length;
+            }
+
+            const chunkSize = endLine - startLine + 1;
             const finalData = data
               .split("\n")
               .slice(startLine - 1, endLine)
@@ -252,7 +256,7 @@ YOUR EVALUATION: `);
               const totalLinesInOversizedChunk =
                 oversizedChunkContent.split("\n").length;
 
-              console.log(`Creating subchunks startline ${startLine - 1} endline ${endLine} totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`)
+              console.log(`Creating subchunks startline ${startLine} endline ${endLine} totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`)
 
               const subChunks = await this.splitDocumentIntoChunks(
                 oversizedChunkContent,
