@@ -18,8 +18,8 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     docAnalysisAgent: IngestionDocAnalyzerAgent;
     constructor(dataLayoutPath?: string);
     processDataLayout(): Promise<void>;
-    processFilePart(fileId: string, cleanedUpData: string): Promise<void>;
     processFiles(files: string[]): Promise<void>;
+    processFilePart(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void>;
     extractFileIdFromPath(filePath: string): string | null;
     getFilesForProcessing(forceProcessing?: boolean): string[];
     updateCachedFilesAndMetadata(relativePath: string, url: string, data: Buffer, contentType: string, lastModifiedOnServer: string): void;

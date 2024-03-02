@@ -114,7 +114,7 @@ YOUR EVALUATION: `);
         };
     }
     async splitDocumentIntoChunks(data, startingLineNumber = 0, isSubChunk = false, totalLinesInChunk) {
-        console.log(`Splitting document into chunks... (isSubChunk: ${isSubChunk})`);
+        console.log(`Splitting document into chunks... (Starting line number: ${startingLineNumber}) (isSubChunk: ${isSubChunk}) (totalLinesInChunk: ${totalLinesInChunk})`);
         if (!isSubChunk) {
             this.resetLlmTemperature();
         }
@@ -128,6 +128,10 @@ YOUR EVALUATION: `);
                 .split("\n")
                 .map((line, index) => `${startingLineNumber + index + 1}: ${line}`)
                 .join("\n");
+            if (isSubChunk)
+                console.log(`Sub Chunk Data with line numbers: ${dataWithLineNumber}`);
+            else
+                console.log(`Chunk Data with line numbers: ${dataWithLineNumber}`);
             try {
                 const llmResults = await this.fetchLlmChunkingStrategy(dataWithLineNumber, chunkingStrategyReview, lastChunkingStrategyJson);
                 chunkingStrategyReview = llmResults.chunkingStrategyReview;
@@ -160,6 +164,7 @@ YOUR EVALUATION: `);
                                 .slice(startLine - 1, endLine)
                                 .join("\n");
                             const totalLinesInOversizedChunk = oversizedChunkContent.split("\n").length;
+                            console.log(`Creating subchunks startline ${startLine - 1} endline ${endLine} totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`);
                             const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine - 1, true, totalLinesInOversizedChunk);
                             strategy.subChunks = [];
                             strategy.subChunks.push(...subChunks);

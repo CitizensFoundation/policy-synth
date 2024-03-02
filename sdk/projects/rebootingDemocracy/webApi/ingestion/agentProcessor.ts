@@ -58,7 +58,79 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.processFiles(filesForProcessing);
   }
 
-  async processFilePart(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void> {
+  async processFiles(files: string[]): Promise<void> {
+    for (const filePath of files) {
+      try {
+        let weaviateDocumentId = "TBD";
+        console.log(`Processing file: ${filePath}`);
+        const parser = new IngestionContentParser();
+        const data = await parser.parseFile(filePath);
+        const metadataEntry = Object.values(this.fileMetadata).find(
+          (meta) => meta.filePath === filePath
+        );
+        if (!metadataEntry) {
+          console.error(`Metadata not found for filePath: ${filePath}`);
+          continue;
+        }
+
+        //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
+        //  continue;
+
+        const reAnalyze = false;
+        if (
+          reAnalyze ||
+          !this.fileMetadata[metadataEntry!.fileId].documentMetaData
+        ) {
+          (await this.docAnalysisAgent.analyze(
+            metadataEntry.fileId,
+            data,
+            this.fileMetadata
+          )) as LlmDocumentAnalysisReponse;
+          this.saveFileMetadata();
+
+          // Create Weaviate object for document with all analyzies and get and id for the parts
+        }
+
+        const reCleanData = false;
+
+        const cleanedUpData =
+          (!reCleanData &&
+            this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
+          (await this.cleanupAgent.clean(data));
+
+        console.log(`Cleaned up data: ${cleanedUpData}`);
+
+        if (
+          this.getEstimateTokenLength(cleanedUpData) >
+          this.maxFileProcessTokenLength
+        ) {
+          const dataParts = this.splitDataForProcessing(cleanedUpData);
+          for (const part of dataParts) {
+            await this.processFilePart(
+              metadataEntry.fileId,
+              part,
+              weaviateDocumentId
+            ); // Process each part of the file
+          }
+        } else {
+          await this.processFilePart(
+            metadataEntry.fileId,
+            cleanedUpData,
+            weaviateDocumentId
+          ); // Process the entire file as one part
+        }
+      } catch (error) {
+        console.error(`Failed to process file ${filePath}:`, error);
+      }
+    }
+    await this.saveFileMetadata();
+  }
+
+  async processFilePart(
+    fileId: string,
+    cleanedUpData: string,
+    weaviateDocumentId: string
+  ): Promise<void> {
     console.log(`Processing file part for fileId: ${fileId}`);
 
     this.saveFileMetadata();
@@ -78,7 +150,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     let chunkChapterIndex = 1;
 
-    const processChunk = async (chunk: LlmDocumentChunksStrategy, chunkIndex: number) => {
+    const processChunk = async (
+      chunk: LlmDocumentChunksStrategy,
+      chunkIndex: number
+    ) => {
       console.log(`\nBefore compression: ${chunk.chunkData}\n`);
 
       let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(
@@ -104,10 +179,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         uncompressedContent: chunk.chunkData!,
       };
 
-      console.log(
-        `Chunk ${chunk.chapterIndex} compressed:`,
-        compressedData
-      );
+      console.log(`Chunk ${chunk.chapterIndex} compressed:`, compressedData);
       console.log(
         `\n${JSON.stringify(metadata.chunks![chunkIndex], null, 2)}\n`
       );
@@ -127,66 +199,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       chunkChapterIndex++; // Increment the chapter index after processing a chunk (and its sub-chunks, if any)
     }
 
-    console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`)
+    console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
 
     this.saveFileMetadata();
-}
-
-
-  async processFiles(files: string[]): Promise<void> {
-    for (const filePath of files) {
-      try {
-        let weaviateDocumentId;
-        console.log(`Processing file: ${filePath}`);
-        const parser = new IngestionContentParser();
-        const data = await parser.parseFile(filePath);
-        const metadataEntry = Object.values(this.fileMetadata).find(
-          (meta) => meta.filePath === filePath
-        );
-        if (!metadataEntry) {
-          console.error(`Metadata not found for filePath: ${filePath}`);
-          continue;
-        }
-
-        if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da") continue;
-
-        if (
-          true ||
-          !this.fileMetadata[metadataEntry!.fileId].documentMetaData
-        ) {
-          (await this.docAnalysisAgent.analyze(
-            metadataEntry.fileId,
-            data,
-            this.fileMetadata
-          )) as LlmDocumentAnalysisReponse;
-          this.saveFileMetadata();
-
-          // Create Weaviate object for document with all analyzies and get and id for the parts
-        }
-
-        const reCleanData = true;
-
-        const cleanedUpData =
-          (!reCleanData && this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
-          (await this.cleanupAgent.clean(data));
-
-        console.log(`Cleaned up data: ${cleanedUpData}`);
-
-        if (
-          this.getEstimateTokenLength(cleanedUpData) > this.maxFileProcessTokenLength
-        ) {
-          const dataParts = this.splitDataForProcessing(cleanedUpData);
-          for (const part of dataParts) {
-            await this.processFilePart(metadataEntry.fileId, part, weaviateDocumentId); // Process each part of the file
-          }
-        } else {
-          await this.processFilePart(metadataEntry.fileId, cleanedUpData, weaviateDocumentId); // Process the entire file as one part
-        }
-      } catch (error) {
-        console.error(`Failed to process file ${filePath}:`, error);
-      }
-    }
-    await this.saveFileMetadata();
   }
 
   extractFileIdFromPath(filePath: string): string | null {
