@@ -29,8 +29,8 @@ Instructions:
 
 Output:
 - Reason about the task at hand, let's think step by step.
-- Then output a JSON array:
-  json\`\`\`
+- Then ALWAYS output a JSON array at the end with your results:
+  \`\`\`json
   [
     {
       chapterIndex: number;
@@ -68,11 +68,12 @@ YOUR THOUGHTFUL STRATEGY:
 
 Instructions:
 - Your job is to evaluate a split strategy for a document.
-- The contents should be split into chapters that cover the same topic so each chapter can be understood as a whole.
+- The contents should be split into chapters that cover the same topic or very connected topics.-
+- There can be long chapters covering many topics.
 - The output should not be the actual contents only the strategy on how to split it up.
-- If there are case studies those should always be whole chapters or if very long one long chapter.
+- If there are case studies those should be whole chapters or if long a part of longer chapters.
 - Do not suggest any changes to the order of the document, it can't be changed.
-- The start of the document should always be included.
+- This is a recursive process, there might be long chapters we will alter split into sub chapters.
 - Make sure line numbers and connected chapters are correct.
 
 Output:
@@ -132,18 +133,22 @@ YOUR EVALUATION: `);
       IEngineConstants.ingestionModel,
       this.getFirstMessages(
         this.strategySystemMessage,
-        review && lastJson
+        review
           ? this.strategyWithReviewUserMessage(data, review)
           : this.strategyUserMessage(data)
       ),
       false
     )) as string;
 
+    console.log(`Raw chunking strategy: ${chunkingStrategy}`);
+
     const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(
       chunkingStrategy
     ) as LlmDocumentChunksStrategy[];
 
-    console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
+    console.log(
+      `JSON strategy: ${JSON.stringify(lastChunkingStrategyJson, null, 2)}`
+    );
 
     console.log("Reviewing chunking strategy...");
 
@@ -166,7 +171,12 @@ YOUR EVALUATION: `);
     };
   }
 
-  async splitDocumentIntoChunks(data: string, startingLineNumber: number = 0, isSubChunk: boolean = false) {
+  async splitDocumentIntoChunks(
+    data: string,
+    startingLineNumber: number = 0,
+    isSubChunk: boolean = false,
+    totalLinesInChunk?: number
+  ) {
     console.log(
       `Splitting document into chunks... (isSubChunk: ${isSubChunk})`
     );
@@ -181,9 +191,9 @@ YOUR EVALUATION: `);
     while (!validated && retryCount < this.maxSplitRetries) {
       console.log(`Processing chunk...`);
       let dataWithLineNumber = data
-            .split("\n")
-            .map((line, index) => `${startingLineNumber + index + 1}: ${line}`)
-            .join("\n");
+        .split("\n")
+        .map((line, index) => `${startingLineNumber + index + 1}: ${line}`)
+        .join("\n");
 
       try {
         const llmResults = await this.fetchLlmChunkingStrategy(
@@ -218,7 +228,9 @@ YOUR EVALUATION: `);
             const endLine =
               i + 1 < lastChunkingStrategyJson.length
                 ? lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1
-                : dataWithLineNumber.split("\n").length;
+                : totalLinesInChunk
+                ? totalLinesInChunk
+                : dataWithLineNumber.split("\n").length; // Adjusted calculation here
             const chunkSize = endLine - startLine + 1;
 
             const finalData = data
@@ -232,11 +244,14 @@ YOUR EVALUATION: `);
                 .split("\n")
                 .slice(startLine - 1, endLine)
                 .join("\n");
+              const totalLinesInOversizedChunk =
+                oversizedChunkContent.split("\n").length;
 
               const subChunks = await this.splitDocumentIntoChunks(
                 oversizedChunkContent,
-                startLine,
-                true
+                startLine - 1,
+                true,
+                totalLinesInOversizedChunk
               );
               strategy.subChunks = [];
               strategy.subChunks.push(...subChunks!);
@@ -270,7 +285,7 @@ YOUR EVALUATION: `);
         };
 
         function normalizeLineBreaks(text: string): string {
-          return text.replace(/\n{2,}/g, "\n");
+          return text.replace(/\n/g, "");
         }
 
         // Existing validation logic...
@@ -292,7 +307,7 @@ YOUR EVALUATION: `);
             console.error(
               `Validation failed: Normalized chunk data does not match the normalized original data. ${normalizedAggregatedData.length} !== ${normalizedOriginalData.length}`
             );
-            await new Promise((resolve) => setTimeout(resolve, 600000));
+            validated = false;
           } else {
             console.log(
               "Validation passed: Normalized chunk data matches the normalized original data."

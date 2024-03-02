@@ -56,7 +56,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   }
 
   async processFilePart(fileId: string, dataPart: string): Promise<void> {
-    //if (fileId!=="8211f8f7011d29e3da018207b2d991da") return;
+    if (fileId!=="8211f8f7011d29e3da018207b2d991da") return;
 
     console.log(`Processing file part for fileId: ${fileId}`);
     console.log(`-----------------> Cleaning up Data part: ${dataPart}`);

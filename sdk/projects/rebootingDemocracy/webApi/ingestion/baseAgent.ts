@@ -90,11 +90,17 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     let startIndex, endIndex;
 
     startIndex = data.indexOf("```json");
+    if (startIndex < 0)
+      startIndex = data.indexOf("json```");
     endIndex = data.indexOf("```", startIndex + 6);
+
+    console.log(`JSON PARSE startIndex: ${startIndex}, endIndex: ${endIndex}`);
 
     if (startIndex > -1 && endIndex > -1) {
       let jsonContent = data.substring(startIndex + 7, endIndex).trim();
       return JSON.parse(jsonContent);
+    } else {
+      console.error(`JSON PARSE ERROR: Could not find JSON content in response ${data}`);
     }
   }
 

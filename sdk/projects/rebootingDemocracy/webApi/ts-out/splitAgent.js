@@ -17,8 +17,8 @@ Instructions:
 
 Output:
 - Reason about the task at hand, let's think step by step.
-- Then output a JSON array:
-  json\`\`\`
+- Then ALWAYS output a JSON array at the end with your results:
+  \`\`\`json
   [
     {
       chapterIndex: number;
@@ -50,11 +50,12 @@ YOUR THOUGHTFUL STRATEGY:
 
 Instructions:
 - Your job is to evaluate a split strategy for a document.
-- The contents should be split into chapters that cover the same topic so each chapter can be understood as a whole.
+- The contents should be split into chapters that cover the same topic or very connected topics.-
+- There can be long chapters covering many topics.
 - The output should not be the actual contents only the strategy on how to split it up.
-- If there are case studies those should always be whole chapters or if very long one long chapter.
+- If there are case studies those should be whole chapters or if long a part of longer chapters.
 - Do not suggest any changes to the order of the document, it can't be changed.
-- The start of the document should always be included.
+- This is a recursive process, there might be long chapters we will alter split into sub chapters.
 - Make sure line numbers and connected chapters are correct.
 
 Output:
@@ -97,11 +98,12 @@ YOUR EVALUATION: `);
     }
     async fetchLlmChunkingStrategy(data, review, lastJson) {
         console.log("Generating chunking strategy...");
-        const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, review && lastJson
+        const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, review
             ? this.strategyWithReviewUserMessage(data, review)
             : this.strategyUserMessage(data)), false));
+        console.log(`Raw chunking strategy: ${chunkingStrategy}`);
         const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(chunkingStrategy);
-        console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
+        console.log(`JSON strategy: ${JSON.stringify(lastChunkingStrategyJson, null, 2)}`);
         console.log("Reviewing chunking strategy...");
         const chunkingStrategyReview = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.reviewStrategySystemMessage, this.reviewStrategyUserMessage(data, chunkingStrategy)), false));
         console.log(`Chunking strategy: ${chunkingStrategyReview}`);
@@ -111,7 +113,7 @@ YOUR EVALUATION: `);
             lastChunkingStrategyJson,
         };
     }
-    async splitDocumentIntoChunks(data, startingLineNumber = 0, isSubChunk = false) {
+    async splitDocumentIntoChunks(data, startingLineNumber = 0, isSubChunk = false, totalLinesInChunk) {
         console.log(`Splitting document into chunks... (isSubChunk: ${isSubChunk})`);
         if (!isSubChunk) {
             this.resetLlmTemperature();
@@ -143,7 +145,9 @@ YOUR EVALUATION: `);
                         const startLine = strategy.chapterStartLineNumber;
                         const endLine = i + 1 < lastChunkingStrategyJson.length
                             ? lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1
-                            : dataWithLineNumber.split("\n").length;
+                            : totalLinesInChunk
+                                ? totalLinesInChunk
+                                : dataWithLineNumber.split("\n").length; // Adjusted calculation here
                         const chunkSize = endLine - startLine + 1;
                         const finalData = data
                             .split("\n")
@@ -155,7 +159,8 @@ YOUR EVALUATION: `);
                                 .split("\n")
                                 .slice(startLine - 1, endLine)
                                 .join("\n");
-                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine, true);
+                            const totalLinesInOversizedChunk = oversizedChunkContent.split("\n").length;
+                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine - 1, true, totalLinesInOversizedChunk);
                             strategy.subChunks = [];
                             strategy.subChunks.push(...subChunks);
                         }
@@ -179,7 +184,7 @@ YOUR EVALUATION: `);
                     }, "");
                 };
                 function normalizeLineBreaks(text) {
-                    return text.replace(/\n{2,}/g, "\n");
+                    return text.replace(/\n/g, "");
                 }
                 // Existing validation logic...
                 if (validated && lastChunkingStrategyJson) {
@@ -191,7 +196,7 @@ YOUR EVALUATION: `);
                         const diff = this.generateDiff(normalizedAggregatedData, normalizedOriginalData);
                         console.error(`Diff: ${diff}`);
                         console.error(`Validation failed: Normalized chunk data does not match the normalized original data. ${normalizedAggregatedData.length} !== ${normalizedOriginalData.length}`);
-                        await new Promise((resolve) => setTimeout(resolve, 600000));
+                        validated = false;
                     }
                     else {
                         console.log("Validation passed: Normalized chunk data matches the normalized original data.");
@@ -206,7 +211,7 @@ YOUR EVALUATION: `);
         console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
         // Wait for 10 minutes to debug the data above
         if (!isSubChunk) {
-            await new Promise((resolve) => setTimeout(resolve, 600000));
+            await new Promise((resolve) => setTimeout(resolve, 5000));
         }
         return lastChunkingStrategyJson;
     }
