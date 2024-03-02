@@ -49,9 +49,6 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             return;
         console.log(`Processing file part for fileId: ${fileId}`);
         console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
-        if (!this.fileMetadata[fileId].documentMetaData) {
-            (await this.docAnalysisAgent.analyze(fileId, dataPart, this.fileMetadata));
-        }
         this.saveFileMetadata();
         const cleanedUpData = this.fileMetadata[fileId].cleanedDocument ||
             (await this.cleanupAgent.clean(dataPart));
@@ -98,6 +95,11 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 if (!metadataEntry) {
                     console.error(`Metadata not found for filePath: ${filePath}`);
                     continue;
+                }
+                if (true || !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
+                    (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
+                    this.saveFileMetadata();
+                    // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
                 if (this.getEstimateTokenLength(data) > this.maxFileProcessTokenLength) {
                     const dataParts = this.splitDataForProcessing(data);
