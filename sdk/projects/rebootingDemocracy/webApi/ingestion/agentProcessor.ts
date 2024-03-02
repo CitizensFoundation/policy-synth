@@ -10,6 +10,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
 import { IngestionContentParser } from "./contentParser.js";
 import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
+import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
@@ -21,6 +22,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   cleanupAgent: IngestionCleanupAgent;
   splitAgent: IngestionSplitAgent;
   chunkCompressor: IngestionChunkCompressorAgent;
+  chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
   docAnalysisAgent: IngestionDocAnalyzerAgent;
 
   constructor(dataLayoutPath: string = "file://ingestion/dataLayout.json") {
@@ -39,6 +41,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.splitAgent = new IngestionSplitAgent();
     this.chunkCompressor = new IngestionChunkCompressorAgent();
     this.docAnalysisAgent = new IngestionDocAnalyzerAgent();
+    this.chunkAnalysisAgent = new IngestionChunkAnalzyerAgent();
   }
 
   async processDataLayout(): Promise<void> {
@@ -55,19 +58,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.processFiles(filesForProcessing);
   }
 
-  async processFilePart(fileId: string, dataPart: string): Promise<void> {
-    if (fileId!=="8211f8f7011d29e3da018207b2d991da") return;
-
+  async processFilePart(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void> {
     console.log(`Processing file part for fileId: ${fileId}`);
-    console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
 
     this.saveFileMetadata();
-
-    const cleanedUpData =
-      this.fileMetadata[fileId].cleanedDocument ||
-      (await this.cleanupAgent.clean(dataPart));
-    //const cleanedUpData = await this.cleanupAgent.clean(dataPart);
-    console.log(`Cleaned up data: ${cleanedUpData}`);
 
     this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
 
@@ -76,57 +70,73 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     metadata.chunks = {} as { [key: number]: PsIngestionChunkData };
 
-    const chunkAnalyses = await this.splitAgent.splitDocumentIntoChunks(
+    const chunks = (await this.splitAgent.splitDocumentIntoChunks(
       cleanedUpData
-    ) as LlmDocumentChunksStrategy[];
+    )) as LlmDocumentChunksStrategy[];
 
-    console.log(`Split into ${chunkAnalyses.length} chunks`);
+    console.log(`Split into ${chunks.length} chunks`);
 
-    for (let a = 0; a < chunkAnalyses.length; a++) {
-      const chunkAnalysis = chunkAnalyses[a];
-      console.log(`\nBefore compression: ${chunkAnalysis.chunkData}\n`);
+    let chunkChapterIndex = 1;
 
-      let chunkCompression = await this.chunkCompressor.compress(
-        chunkAnalysis.chunkData!
+    const processChunk = async (chunk: LlmDocumentChunksStrategy, chunkIndex: number) => {
+      console.log(`\nBefore compression: ${chunk.chunkData}\n`);
+
+      let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(
+        chunk.chunkData!
       );
 
-      const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.completeCompressedContents}`;
+      chunkAnalyzeResponse.fullCompressedContents =
+        await this.chunkCompressor.compress(chunk.chunkData!);
+
+      const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
 
       console.log(`\nAfter compression: ${compressedData}\n`);
 
       //@ts-ignore
-      metadata.chunks![chunkAnalysis.chapterIndex] = {
-        chunkIndex: chunkAnalysis.chapterIndex,
-        title: chunkCompression.title,
-        mainExternalUrlFound: chunkCompression.mainExternalUrlFound,
-        importantContextChunkIndexes:
-          chunkAnalysis.importantContextChapterIndexes,
-        shortSummary: chunkCompression.shortDescription,
-        compressedContents: chunkCompression.completeCompressedContents,
-        metaData: chunkCompression.textMetaData,
-        uncompressedContent: chunkAnalysis.chunkData!,
+      metadata.chunks![chunkIndex] = {
+        chunkIndex: chunkIndex,
+        title: chunkAnalyzeResponse.title,
+        mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
+        importantContextChunkIndexes: chunk.importantContextChapterIndexes,
+        shortSummary: chunkAnalyzeResponse.shortDescription,
+        compressedContents: chunkAnalyzeResponse.fullCompressedContents,
+        metaData: chunkAnalyzeResponse.textMetaData,
+        uncompressedContent: chunk.chunkData!,
       };
 
-      // Save to weaviate
-
       console.log(
-        `Chunk ${chunkAnalysis.chapterIndex} compressed:`,
+        `Chunk ${chunk.chapterIndex} compressed:`,
         compressedData
       );
       console.log(
-        `\n${
-          (JSON.stringify(metadata.chunks![chunkAnalysis.chapterIndex]),
-          null,
-          2)
-        }\n`
+        `\n${JSON.stringify(metadata.chunks![chunkIndex], null, 2)}\n`
       );
-      this.saveFileMetadata();
+
+      // If there are sub-chunks, process each one recursively.
+      if (chunk.subChunks && chunk.subChunks.length > 0) {
+        for (let subChunk of chunk.subChunks) {
+          chunkChapterIndex++; // Increment the chapter index for each sub-chunk
+          await processChunk(subChunk, chunkChapterIndex);
+        }
+      }
+    };
+
+    // Process each top-level chunk.
+    for (let chunk of chunks) {
+      await processChunk(chunk, chunkChapterIndex);
+      chunkChapterIndex++; // Increment the chapter index after processing a chunk (and its sub-chunks, if any)
     }
-  }
+
+    console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`)
+
+    this.saveFileMetadata();
+}
+
 
   async processFiles(files: string[]): Promise<void> {
     for (const filePath of files) {
       try {
+        let weaviateDocumentId;
         console.log(`Processing file: ${filePath}`);
         const parser = new IngestionContentParser();
         const data = await parser.parseFile(filePath);
@@ -138,7 +148,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           continue;
         }
 
-        if (true || !this.fileMetadata[metadataEntry!.fileId].documentMetaData) {
+        if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da") continue;
+
+        if (
+          true ||
+          !this.fileMetadata[metadataEntry!.fileId].documentMetaData
+        ) {
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
             data,
@@ -149,15 +164,23 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           // Create Weaviate object for document with all analyzies and get and id for the parts
         }
 
+        const reCleanData = true;
+
+        const cleanedUpData =
+          (!reCleanData && this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
+          (await this.cleanupAgent.clean(data));
+
+        console.log(`Cleaned up data: ${cleanedUpData}`);
+
         if (
-          this.getEstimateTokenLength(data) > this.maxFileProcessTokenLength
+          this.getEstimateTokenLength(cleanedUpData) > this.maxFileProcessTokenLength
         ) {
-          const dataParts = this.splitDataForProcessing(data);
+          const dataParts = this.splitDataForProcessing(cleanedUpData);
           for (const part of dataParts) {
-            await this.processFilePart(metadataEntry.fileId, part); // Process each part of the file
+            await this.processFilePart(metadataEntry.fileId, part, weaviateDocumentId); // Process each part of the file
           }
         } else {
-          await this.processFilePart(metadataEntry.fileId, data); // Process the entire file as one part
+          await this.processFilePart(metadataEntry.fileId, cleanedUpData, weaviateDocumentId); // Process the entire file as one part
         }
       } catch (error) {
         console.error(`Failed to process file ${filePath}:`, error);

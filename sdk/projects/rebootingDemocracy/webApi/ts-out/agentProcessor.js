@@ -8,6 +8,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
 import { IngestionContentParser } from "./contentParser.js";
 import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
+import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 export class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath;
     cachedFiles = [];
@@ -17,6 +18,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     cleanupAgent;
     splitAgent;
     chunkCompressor;
+    chunkAnalysisAgent;
     docAnalysisAgent;
     constructor(dataLayoutPath = "file://ingestion/dataLayout.json") {
         super();
@@ -32,6 +34,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         this.splitAgent = new IngestionSplitAgent();
         this.chunkCompressor = new IngestionChunkCompressorAgent();
         this.docAnalysisAgent = new IngestionDocAnalyzerAgent();
+        this.chunkAnalysisAgent = new IngestionChunkAnalzyerAgent();
     }
     async processDataLayout() {
         await this.loadFileMetadata(); // Load existing metadata to compare against
@@ -44,37 +47,32 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         console.log("Files for processing:", filesForProcessing);
         this.processFiles(filesForProcessing);
     }
-    async processFilePart(fileId, dataPart) {
-        if (fileId !== "8211f8f7011d29e3da018207b2d991da")
-            return;
+    async processFilePart(fileId, cleanedUpData) {
         console.log(`Processing file part for fileId: ${fileId}`);
-        console.log(`-----------------> Cleaning up Data part: ${dataPart}`);
         this.saveFileMetadata();
-        const cleanedUpData = this.fileMetadata[fileId].cleanedDocument ||
-            (await this.cleanupAgent.clean(dataPart));
-        //const cleanedUpData = await this.cleanupAgent.clean(dataPart);
-        console.log(`Cleaned up data: ${cleanedUpData}`);
         this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
         this.saveFileMetadata();
         const metadata = this.fileMetadata[fileId] || {};
         metadata.chunks = {};
-        const chunkAnalyses = await this.splitAgent.splitDocumentIntoChunks(cleanedUpData);
+        const chunkAnalyses = (await this.splitAgent.splitDocumentIntoChunks(cleanedUpData));
         console.log(`Split into ${chunkAnalyses.length} chunks`);
         for (let a = 0; a < chunkAnalyses.length; a++) {
             const chunkAnalysis = chunkAnalyses[a];
             console.log(`\nBefore compression: ${chunkAnalysis.chunkData}\n`);
-            let chunkCompression = await this.chunkCompressor.compress(chunkAnalysis.chunkData);
-            const compressedData = `${chunkCompression.title} ${chunkCompression.shortDescription} ${chunkCompression.completeCompressedContents}`;
+            let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(chunkAnalysis.chunkData);
+            chunkAnalyzeResponse.fullCompressedContents =
+                await this.chunkCompressor.compress(chunkAnalysis.chunkData);
+            const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
             console.log(`\nAfter compression: ${compressedData}\n`);
             //@ts-ignore
             metadata.chunks[chunkAnalysis.chapterIndex] = {
                 chunkIndex: chunkAnalysis.chapterIndex,
-                title: chunkCompression.title,
-                mainExternalUrlFound: chunkCompression.mainExternalUrlFound,
+                title: chunkAnalyzeResponse.title,
+                mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
                 importantContextChunkIndexes: chunkAnalysis.importantContextChapterIndexes,
-                shortSummary: chunkCompression.shortDescription,
-                compressedContents: chunkCompression.completeCompressedContents,
-                metaData: chunkCompression.textMetaData,
+                shortSummary: chunkAnalyzeResponse.shortDescription,
+                compressedContents: chunkAnalyzeResponse.fullCompressedContents,
+                metaData: chunkAnalyzeResponse.textMetaData,
                 uncompressedContent: chunkAnalysis.chunkData,
             };
             // Save to weaviate
@@ -96,19 +94,26 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     console.error(`Metadata not found for filePath: ${filePath}`);
                     continue;
                 }
-                if (true || !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
+                if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
+                    continue;
+                if (true ||
+                    !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
                     this.saveFileMetadata();
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
-                if (this.getEstimateTokenLength(data) > this.maxFileProcessTokenLength) {
-                    const dataParts = this.splitDataForProcessing(data);
+                const reCleanData = true;
+                const cleanedUpData = (!reCleanData && this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
+                    (await this.cleanupAgent.clean(data));
+                console.log(`Cleaned up data: ${cleanedUpData}`);
+                if (this.getEstimateTokenLength(cleanedUpData) > this.maxFileProcessTokenLength) {
+                    const dataParts = this.splitDataForProcessing(cleanedUpData);
                     for (const part of dataParts) {
                         await this.processFilePart(metadataEntry.fileId, part); // Process each part of the file
                     }
                 }
                 else {
-                    await this.processFilePart(metadataEntry.fileId, data); // Process the entire file as one part
+                    await this.processFilePart(metadataEntry.fileId, cleanedUpData); // Process the entire file as one part
                 }
             }
             catch (error) {

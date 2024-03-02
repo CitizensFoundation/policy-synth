@@ -4,6 +4,7 @@ import { IngestionSplitAgent } from "./splitAgent.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
 import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
+import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath: string;
     cachedFiles: string[];
@@ -13,10 +14,11 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     cleanupAgent: IngestionCleanupAgent;
     splitAgent: IngestionSplitAgent;
     chunkCompressor: IngestionChunkCompressorAgent;
+    chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
     docAnalysisAgent: IngestionDocAnalyzerAgent;
     constructor(dataLayoutPath?: string);
     processDataLayout(): Promise<void>;
-    processFilePart(fileId: string, dataPart: string): Promise<void>;
+    processFilePart(fileId: string, cleanedUpData: string): Promise<void>;
     processFiles(files: string[]): Promise<void>;
     extractFileIdFromPath(filePath: string): string | null;
     getFilesForProcessing(forceProcessing?: boolean): string[];

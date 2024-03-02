@@ -51,24 +51,14 @@ Think step by step and output your analysis here:
 `);
 
   compressionSystemMessage =
-    new SystemMessage(`You are an expert text analyzer and compressor.
+    new SystemMessage(`You are an expert text compressor.
 
 Instructions:
-- You will compress the text completeCompressedContents.
-- You will analyze the text for metadata and add title and a short description.
-- For the fullCompressedContents use as few words as possible but keep all the information in the uncompressed text.
-
-Output:
-- Output your analysis and compressed text in this JSON format: {
-  title: string;
-  shortDescription: string;
-  completeCompressedContents: string;
-  textMetaData: { [key: string]: string };
-  mainExternalUrlFound: string;
-}`);
+- You will compress the text marked <TEXT_TO_COMPRESS> into as few words as you can without loosing any meaning or important nuance.
+- Output the compressed text nothing else.`);
 
   compressionUserMessage = (data: string) =>
-    new HumanMessage(`Document to analyze and compress:
+    new HumanMessage(`Text to compress:
 ${data}
 Your compressed text:
 `);
@@ -91,10 +81,10 @@ Your new improved compressed text:
 
   async compress(
     uncompressedData: string
-  ): Promise<LlmChunkCompressionReponse> {
+  ): Promise<string> {
     this.resetLlmTemperature();
 
-    let chunkCompression;
+    let compressedText;
 
     let validated = false;
     let validationTextResults: string | undefined;
@@ -103,7 +93,7 @@ Your new improved compressed text:
     let retryCount = 0;
     while (!validated && retryCount < this.maxCompressionRetries) {
       try {
-        chunkCompression = (await this.callLLM(
+        compressedText = (await this.callLLM(
           "ingestion-agent",
           IEngineConstants.ingestionModel,
           this.getFirstMessages(
@@ -115,15 +105,16 @@ Your new improved compressed text:
                   validationTextResults
                 )
               : this.compressionUserMessage(uncompressedData)
-          )
-        )) as LlmChunkCompressionReponse;
+          ),
+          false
+        )) as string;
 
         const validationResults = await this.validateChunkSummary(
           uncompressedData,
-          chunkCompression.completeCompressedContents
+          compressedText
         );
 
-        lastCompressedData = chunkCompression.completeCompressedContents;
+        lastCompressedData = compressedText;
 
         validated = validationResults.valid;
 
@@ -145,8 +136,8 @@ Your new improved compressed text:
       }
     }
 
-    if (validated && chunkCompression) {
-      return chunkCompression;
+    if (validated && compressedText) {
+      return compressedText;
     } else {
       throw new Error("Chunk summary validation failed");
     }

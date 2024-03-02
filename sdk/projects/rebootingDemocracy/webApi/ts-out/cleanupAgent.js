@@ -30,6 +30,7 @@ Instructions:
 - The cleaned text does not have any acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc and that is ok as we have cleaned it away.
 - Do not comment on fixed typos or such in the cleaned text.
 - Make sure that all numbers used to number items in the main content are still present in the cleaned text.
+- All lists of references or list of urls should be removed but all URLs in the should be in the cleaned text.
 - If all the main content is present in the cleaned text then output, and nothing else: All content present in cleaned text.
 `);
     validationUserMessage = (original, cleaned) => new HumanMessage(`<ORIGINAL_TEXT>${original}</ORIGINAL_TEXT>
@@ -49,6 +50,7 @@ Instruction:
 - Do not add anything to the document.
 - Bring together sentences into paragraphs as one line pure text as needed.
 - Split too long paragraphs into smaller ones if needed.
+- Remove all lists of references or list of urls but keep all URLs in the text.
 - Do not change anything just remove unwanted artifacts and paragraph format in the cleanup.
 `);
     userMessage = (data, validationTextResults) => new HumanMessage(`${validationTextResults ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n` : ``}

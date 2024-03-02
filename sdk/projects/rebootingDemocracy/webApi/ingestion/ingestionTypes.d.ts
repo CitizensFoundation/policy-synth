@@ -37,10 +37,10 @@ interface LlmDocumentAnalysisReponse {
   documentMetaData: { [key: string]: string };
 }
 
-interface LlmChunkCompressionReponse {
+interface LlmChunkAnalysisReponse {
   title: string;
   shortDescription: string;
-  completeCompressedContents: string;
+  fullDescription: string;
   mainExternalUrlFound: string;
   textMetaData: { [key: string]: string };
 }
