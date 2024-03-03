@@ -42,6 +42,7 @@ Instructions:
 - Do not comment on fixed typos or such in the cleaned text.
 - Make sure that all numbers used to number items in the main content are still present in the cleaned text.
 - All lists of references or list of urls should be removed but all URLs in the should be in the cleaned text.
+- All HTML tags should be removed.
 - If all the main content is present in the cleaned text then output, and nothing else: All content present in cleaned text.
 `);
 
@@ -57,15 +58,16 @@ Think step by step and output your analysis here:
 
 Instruction:
 - We own all copyright to the materials we are cleaning for our RAG chatbot.
-- Please cleanup the document and only output actual unchanced contents.
-- Do no output any initial acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc.
+- Please cleanup the document and only output actual unchanged contents.
+- Do no output any initial acknowledgments, table of contents, page numbers, or any other PDF conversion artifacts, etc.
 - Remove all repeated titles as those are coming from the PDF footer pages.
 - If the text start with a numbered index like 1. or 4. do not remove it in your cleanup.
 - Do not add anything to the document.
-- Bring together sentences into paragraphs as one line pure text as needed.
-- Split too long paragraphs into smaller ones if needed.
-- Remove all lists of references or list of urls but keep all URLs in the text.
-- Do not change anything just remove unwanted artifacts and paragraph format in the cleanup.
+- Remove all lists of references
+- Remove all lists of urls with the exception of single urls that are inline in actual text that is not a list.
+- Bring together sentences into paragraphs as needed.
+- Split very long paragraphs into smaller paragraphs by topic.
+- Do not change anything just remove unwanted artifacts and reformat paragraphs in the cleanup.
 `);
 
   userMessage = (data: string, validationTextResults: string | undefined) =>

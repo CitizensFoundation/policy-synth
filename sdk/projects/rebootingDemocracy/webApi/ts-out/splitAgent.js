@@ -13,7 +13,9 @@ Instructions:
 - If there are case studies those should always be whole chapters or if very long, one long chapter.
 - Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
-- Always include chapterStartLineNumber for each chapter referencing the line number present at the start of each line in the DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY.
+- At the start of each line you will see a line number in this format "1: " pay special attention to those line numbers and always output those line number as the chapterStartLineNumber for each chapter.
+- Always output the chapterStartLineNumber for each chapter as a number not text.
+- Chapters should never start on an empty line that just shows the line number.
 - Use importantContextChapterIndexes for chapters that could be relevant to the current chapter when we will load this chapter for our retrieval augmented generation (RAG) solution. But don't use this for everything only the most important context connections.
 
 Output:
@@ -57,7 +59,9 @@ Instructions:
 - If there are case studies those should be whole chapters or if long a part of longer chapters.
 - Do not suggest any changes to the order of the document, it can't be changed.
 - This is a recursive process, there might be long chapters we will alter split into sub chapters.
-- Make sure line numbers and connected chapters are correct.
+- At the start of each line you will see a line number in this format "1: " pay special attention to those line numbers, those should always align with the chapterStartLineNumber for each chapter.
+- Chapters should never start on an empty line that just shows the line number.
+- Make sure connected chapters are correct.
 
 Output:
 - If the strategy is good output only and with no explanation: PASSES
@@ -97,6 +101,14 @@ YOUR EVALUATION: `);
         }
         return "No difference found.";
     }
+    logShortLines(text) {
+        // Split the text into lines
+        // then only console.log the first 100 characters of each line
+        const lines = text.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+            console.log(lines[i].substring(0, 9999990));
+        }
+    }
     async fetchLlmChunkingStrategy(data, review, lastJson) {
         console.log("Generating chunking strategy...");
         const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, review
@@ -130,9 +142,10 @@ YOUR EVALUATION: `);
                 .map((line, index) => `${startingLineNumber + index + 1}: ${line}`)
                 .join("\n");
             if (isSubChunk)
-                console.log(`Sub Chunk Data with line numbers: ${dataWithLineNumber}`);
+                console.log(`Sub Chunk Data with line numbers:\n`);
             else
-                console.log(`Chunk Data with line numbers: ${dataWithLineNumber}`);
+                console.log(`Chunk Data with line numbers:\n`);
+            this.logShortLines(dataWithLineNumber);
             try {
                 const llmResults = await this.fetchLlmChunkingStrategy(dataWithLineNumber, chunkingStrategyReview, lastChunkingStrategyJson);
                 chunkingStrategyReview = llmResults.chunkingStrategyReview;
@@ -173,6 +186,8 @@ YOUR EVALUATION: `);
                                 .join("\n");
                             const totalLinesInOversizedChunk = oversizedChunkContent.split("\n").length;
                             console.log(`Creating subchunks startline ${startLine} endline ${endLine} totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`);
+                            console.log(`Oversizedchunk content:`);
+                            this.logShortLines(oversizedChunkContent);
                             const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine - 1, true, totalLinesInOversizedChunk);
                             strategy.subChunks = [];
                             strategy.subChunks.push(...subChunks);

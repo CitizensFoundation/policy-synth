@@ -68,7 +68,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     this.saveFileMetadata();
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
-                const reCleanData = false;
+                const reCleanData = true;
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
                     (await this.cleanupAgent.clean(data));
