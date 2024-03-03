@@ -78,7 +78,7 @@ ${data}
 
   referencesCheckSystemMessage= new SystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
 
-  If the documents contains references or URLs output, only: ONLY_REFERENCES_OR_URLS
+  If the documents contains only references without text explainations or URLs output, only: ONLY_REFERENCES_OR_URLS
 
   If the document contains real content with paragraphs, sentences or even just one paragraph output only: PARAGRAPHS
 `);
@@ -138,8 +138,8 @@ Your one word analysis:
           false
         )) as string;
 
-        if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") === -1) {
-          console.warn(`\n\nCleaning part: ${part} is not only references\n\n`);
+        if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") > -1) {
+          console.warn(`\n\nONLY_REFERENCES_OR_URLS:\n${part}\nONLY_REFERENCES_OR_URLS\n\n`);
           cleanedPart = "";
           validated = true;
         } else {
@@ -184,7 +184,7 @@ Your one word analysis:
     original: string,
     cleaned: string
   ): Promise<{valid: boolean, validationTextResults: string}> {
-    console.log(`Validating cleaned part:\n${cleaned}\n\n`);
+    console.log(`\nValidating cleaned part:\n${cleaned}\n\n`);
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",

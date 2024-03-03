@@ -23,12 +23,12 @@ export class BaseIngestionAgent extends PolicySynthAgentBase {
     randomizeLlmTemperature() {
         this.chat.temperature = Math.random() * (0.55 - 0.01) + 0.01;
     }
-    logShortLines(text) {
+    logShortLines(text, maxLength = 50) {
         // Split the text into lines
         // then only console.log the first 100 characters of each line
         const lines = text.split("\n");
         for (let i = 0; i < lines.length; i++) {
-            console.log(lines[i].substring(0, 9999990));
+            console.log(lines[i].substring(0, maxLength));
         }
     }
     splitDataForProcessing(data, maxTokenLength = this.maxFileProcessTokenLength) {
