@@ -61,7 +61,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
                 if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
                     continue;
-                const reAnalyze = false;
+                const reAnalyze = true;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));

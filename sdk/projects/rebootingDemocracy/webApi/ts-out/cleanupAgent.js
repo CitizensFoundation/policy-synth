@@ -30,7 +30,7 @@ Instructions:
 - The cleaned text does not have any acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc and that is ok as we have cleaned it away.
 - Do not comment on fixed typos or such in the cleaned text.
 - Make sure that all numbers used to number items in the main content are still present in the cleaned text.
-- All lists of references or list of urls should be removed but all URLs in the should be in the cleaned text.
+- All lists of references or list of urls should be removed but all URLs in the should be in the cleaned text. The references and lists of urls should be replaced with empty text. The cleaned document could be empty if there is nothing in the original but references and urls.
 - All HTML tags should be removed.
 - If all the main content is present in the cleaned text then output, and nothing else: All content present in cleaned text.
 `);
@@ -49,8 +49,9 @@ Instruction:
 - Remove all repeated titles as those are coming from the PDF footer pages.
 - If the text start with a numbered index like 1. or 4. do not remove it in your cleanup.
 - Do not add anything to the document.
-- Remove all lists of references
-- Remove all lists of urls with the exception of single urls that are inline in actual text that is not a list.
+- Remove all lists of references and replace with empty text, do not make up text to replace those.
+- Remove all lists of urls with the exception of single urls that are inline in actual text that is not a list. Replace those list of urls with empty text do not make up something instead.
+- If there are only lists of refrences or urls in the original document you can output an empty document.
 - Bring together sentences into paragraphs as needed.
 - Split very long paragraphs into smaller paragraphs by topic.
 - Do not change anything just remove unwanted artifacts and reformat paragraphs in the cleanup.
