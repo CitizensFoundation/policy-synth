@@ -105,6 +105,61 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         const chunks = (await this.splitAgent.splitDocumentIntoChunks(cleanedUpData));
         console.log(JSON.stringify(chunks, null, 2));
         console.log(`Split into ${chunks.length} chunks`);
+        const processChunk = async (chunk, parentChunkIndex = null) => {
+            if (chunk.chunkData) {
+                let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(chunk.chunkData);
+                chunkAnalyzeResponse.fullCompressedContents =
+                    await this.chunkCompressor.compress(chunk.chunkData);
+                const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
+                const chunkIndex = parentChunkIndex === null
+                    ? Object.keys(metadata.chunks).length + 1
+                    : parentChunkIndex;
+                const chunkMetadata = {
+                    chunkIndex: chunkIndex,
+                    title: chunkAnalyzeResponse.title,
+                    mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
+                    importantContextChunkIndexes: chunk.importantContextChapterIndexes,
+                    shortSummary: chunkAnalyzeResponse.shortDescription,
+                    compressedContents: chunkAnalyzeResponse.fullCompressedContents,
+                    metaData: chunkAnalyzeResponse.textMetaData,
+                    uncompressedContent: chunk.chunkData,
+                    subChunks: [],
+                };
+                // If parentChunkIndex is null, it's a top-level chunk; otherwise, it's a subChunk.
+                if (parentChunkIndex === null) {
+                    metadata.chunks[chunkIndex] = chunkMetadata;
+                }
+                else {
+                    // Safely push to subChunks after ensuring parent chunk and its subChunks array exist.
+                    if (!metadata.chunks[parentChunkIndex].subChunks) {
+                        metadata.chunks[parentChunkIndex].subChunks = [];
+                    }
+                    metadata.chunks[parentChunkIndex].subChunks.push(chunkMetadata);
+                }
+                // If there are sub-chunks, process each one recursively.
+                if (chunk.subChunks && chunk.subChunks.length > 0) {
+                    for (let subChunk of chunk.subChunks) {
+                        await processChunk(subChunk, chunkIndex);
+                    }
+                }
+            }
+        };
+        // Process each top-level chunk.
+        for (let chunk of chunks) {
+            await processChunk(chunk);
+        }
+        this.saveFileMetadata();
+    }
+    async processFilePartT(fileId, cleanedUpData, weaviateDocumentId) {
+        console.log(`Processing file part for fileId: ${fileId}`);
+        this.saveFileMetadata();
+        this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
+        this.saveFileMetadata();
+        const metadata = this.fileMetadata[fileId] || {};
+        metadata.chunks = {};
+        const chunks = (await this.splitAgent.splitDocumentIntoChunks(cleanedUpData));
+        console.log(JSON.stringify(chunks, null, 2));
+        console.log(`Split into ${chunks.length} chunks`);
         let chunkMasterChapterIndex = 1;
         const processChunk = async (chunk) => {
             if (chunk.chunkData) {

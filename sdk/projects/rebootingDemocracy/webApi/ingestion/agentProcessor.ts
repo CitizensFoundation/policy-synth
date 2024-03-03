@@ -148,6 +148,89 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.saveFileMetadata();
     const metadata = this.fileMetadata[fileId] || {};
 
+    metadata.chunks = {};
+
+    const chunks = (await this.splitAgent.splitDocumentIntoChunks(
+      cleanedUpData
+    )) as LlmDocumentChunksStrategy[];
+
+    console.log(JSON.stringify(chunks, null, 2));
+
+    console.log(`Split into ${chunks.length} chunks`);
+
+    const processChunk = async (
+      chunk: LlmDocumentChunksStrategy,
+      parentChunkIndex: number | null = null
+    ) => {
+      if (chunk.chunkData) {
+        let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(
+          chunk.chunkData
+        );
+
+        chunkAnalyzeResponse.fullCompressedContents =
+          await this.chunkCompressor.compress(chunk.chunkData);
+
+        const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
+
+        const chunkIndex =
+          parentChunkIndex === null
+            ? Object.keys(metadata.chunks!).length + 1
+            : parentChunkIndex;
+
+        const chunkMetadata: PsIngestionChunkData = {
+          chunkIndex: chunkIndex,
+          title: chunkAnalyzeResponse.title,
+          mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
+          importantContextChunkIndexes: chunk.importantContextChapterIndexes,
+          shortSummary: chunkAnalyzeResponse.shortDescription,
+          compressedContents: chunkAnalyzeResponse.fullCompressedContents,
+          metaData: chunkAnalyzeResponse.textMetaData,
+          uncompressedContent: chunk.chunkData,
+          subChunks: [],
+        };
+
+        // If parentChunkIndex is null, it's a top-level chunk; otherwise, it's a subChunk.
+        if (parentChunkIndex === null) {
+          metadata.chunks![chunkIndex] = chunkMetadata;
+        } else {
+          // Safely push to subChunks after ensuring parent chunk and its subChunks array exist.
+          if (!metadata.chunks![parentChunkIndex].subChunks) {
+            metadata.chunks![parentChunkIndex].subChunks = [];
+          }
+          metadata.chunks![parentChunkIndex!].subChunks!.push(chunkMetadata);
+        }
+
+        // If there are sub-chunks, process each one recursively.
+        if (chunk.subChunks && chunk.subChunks.length > 0) {
+          for (let subChunk of chunk.subChunks) {
+            await processChunk(subChunk, chunkIndex);
+          }
+        }
+      }
+    };
+
+    // Process each top-level chunk.
+    for (let chunk of chunks) {
+      await processChunk(chunk);
+    }
+
+    this.saveFileMetadata();
+  }
+
+  async processFilePartT(
+    fileId: string,
+    cleanedUpData: string,
+    weaviateDocumentId: string
+  ): Promise<void> {
+    console.log(`Processing file part for fileId: ${fileId}`);
+
+    this.saveFileMetadata();
+
+    this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
+
+    this.saveFileMetadata();
+    const metadata = this.fileMetadata[fileId] || {};
+
     metadata.chunks = {} as { [key: number]: PsIngestionChunkData };
 
     const chunks = (await this.splitAgent.splitDocumentIntoChunks(
@@ -160,9 +243,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     let chunkMasterChapterIndex = 1;
 
-    const processChunk = async (
-      chunk: LlmDocumentChunksStrategy
-    ) => {
+    const processChunk = async (chunk: LlmDocumentChunksStrategy) => {
       if (chunk.chunkData) {
         console.log(`\nBefore compression: ${chunk.chunkData}\n`);
 
@@ -187,17 +268,23 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           compressedContents: chunkAnalyzeResponse.fullCompressedContents,
           metaData: chunkAnalyzeResponse.textMetaData,
           uncompressedContent: chunk.chunkData!,
-           //subChunks: Recursively process sub-chunks,
+          //subChunks: Recursively process sub-chunks,
         };
 
         console.log(`Chunk ${chunk.chapterIndex} compressed:`, compressedData);
         console.log(
-          `\n${JSON.stringify(metadata.chunks![chunkMasterChapterIndex], null, 2)}\n`
+          `\n${JSON.stringify(
+            metadata.chunks![chunkMasterChapterIndex],
+            null,
+            2
+          )}\n`
         );
 
         this.saveFileMetadata();
-      } else if (!chunk.subChunks){
-        console.error(`\n\n\n\n\nChunk data missing for chunk ${chunkMasterChapterIndex}`);
+      } else if (!chunk.subChunks) {
+        console.error(
+          `\n\n\n\n\nChunk data missing for chunk ${chunkMasterChapterIndex}`
+        );
         console.log(`Chunk: ${JSON.stringify(chunk, null, 2)}\n\n\n\n\n`);
       }
 

@@ -75,10 +75,10 @@ interface PsIngestionChunkData {
   chunkIndex: number;
   documentIndex?: string;
   mainExternalUrlFound: string;
-  data: string;
-  actualStartLine: number;
-  startLine: number;
-  actualEndLine: number;
+  data?: string;
+  actualStartLine?: number;
+  startLine?: number;
+  actualEndLine?: number;
   shortSummary: string;
   uncompressedContent: string;
   compressedContents: string;
