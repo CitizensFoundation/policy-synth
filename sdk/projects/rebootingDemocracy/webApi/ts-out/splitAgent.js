@@ -4,7 +4,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 export class IngestionSplitAgent extends BaseIngestionAgent {
     maxSplitRetries = 15;
     minChunkCharacterLength = 50;
-    maxChunkLinesLength = 25;
+    maxChunkLinesLength = 8;
     strategySystemMessage = new SystemMessage(`You are an expert document split strategy generator.
 
 Instructions:
@@ -154,39 +154,44 @@ YOUR EVALUATION: `);
                         console.log(`Processing chunk ${i + 1} of ${lastChunkingStrategyJson.length}`);
                         const strategy = lastChunkingStrategyJson[i];
                         const startLine = strategy.chapterStartLineNumber;
+                        console.log(`Start line for chunk ${i + 1}: ${startLine}`);
                         let endLine;
+                        // Correct calculation of endLine considering the actual content length
                         if (i + 1 < lastChunkingStrategyJson.length) {
-                            endLine = lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1;
-                        }
-                        else if (totalLinesInChunk) {
-                            // Ensure the end line does not exceed the total lines available for subchunks
-                            endLine = startLine + totalLinesInChunk - 1;
+                            endLine =
+                                lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1;
+                            console.log(`Calculated end line based on next chunk's start line for chunk ${i + 1}: ${endLine}`);
                         }
                         else {
-                            // Fallback to the total number of lines in the data if not a subchunk or if totalLinesInChunk is not provided
-                            endLine = dataWithLineNumber.split("\n").length;
+                            // Adjust endLine to not exceed actual content length
+                            endLine = Math.min(startLine +
+                                (totalLinesInChunk ? totalLinesInChunk - 1 : Infinity), dataWithLineNumber.split("\n").length);
+                            console.log(`Calculated end line for the last chunk ${i + 1}: ${endLine}`);
                         }
+                        // Ensure endLine does not exceed the actual content's end
+                        endLine = Math.min(endLine, dataWithLineNumber.split("\n").length);
+                        console.log(`Adjusted end line to not exceed content's end for chunk ${i + 1}: ${endLine}`);
                         const chunkSize = endLine - startLine + 1;
+                        console.log(`Calculated chunk size for chunk ${i + 1}: ${chunkSize} lines`);
                         const finalData = data
                             .split("\n")
                             .slice(startLine - 1, endLine)
                             .join("\n");
                         if (chunkSize > this.maxChunkLinesLength) {
                             console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
-                            const oversizedChunkContent = data
-                                .split("\n")
-                                .slice(startLine - 1, endLine)
-                                .join("\n");
+                            const oversizedChunkContent = finalData; // No need to split and join again, finalData is already correct.
                             const totalLinesInOversizedChunk = oversizedChunkContent.split("\n").length;
-                            console.log(`Creating subchunks startline ${startLine} endline ${endLine} totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`);
-                            console.log(`Oversizedchunk content:`);
+                            console.log(`Creating subchunks startline ${startLine}, endline ${endLine}, totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`);
+                            console.log(`Oversizedchunk content for chunk ${i + 1}:`);
                             this.logShortLines(oversizedChunkContent);
-                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine - 1, true, totalLinesInOversizedChunk);
+                            console.log(`Initiating recursive call to split oversized chunk ${i + 1}`);
+                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine, true, totalLinesInOversizedChunk);
+                            console.log(`Completed recursive call for chunk ${i + 1}, received ${subChunks ? subChunks.length : 0} subchunks`);
                             strategy.subChunks = [];
                             strategy.subChunks.push(...subChunks);
                         }
                         else {
-                            console.log(`Chunk ${i + 1} is within size limits (${chunkSize} lines)`);
+                            console.log(`Chunk ${i + 1} is within size limits (${chunkSize} lines), no need for subchunking.`);
                             strategy.chunkData = finalData;
                         }
                     }
