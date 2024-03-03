@@ -163,30 +163,36 @@ YOUR EVALUATION: `);
                             console.log(`Calculated end line based on next chunk's start line for chunk ${i + 1}: ${endLine}`);
                         }
                         else {
-                            // Adjust endLine to not exceed actual content length
-                            endLine = Math.min(startLine +
-                                (totalLinesInChunk ? totalLinesInChunk - 1 : Infinity), dataWithLineNumber.split("\n").length);
+                            // For the last chunk, adjust endLine based on the actual number of lines in the subchunk (if provided) or document
+                            const totalLinesAvailable = totalLinesInChunk
+                                ? startLine + totalLinesInChunk - 1
+                                : dataWithLineNumber.split("\n").length;
+                            endLine = Math.min(totalLinesAvailable, dataWithLineNumber.split("\n").length);
                             console.log(`Calculated end line for the last chunk ${i + 1}: ${endLine}`);
                         }
-                        // Ensure endLine does not exceed the actual content's end
-                        endLine = Math.min(endLine, dataWithLineNumber.split("\n").length);
-                        console.log(`Adjusted end line to not exceed content's end for chunk ${i + 1}: ${endLine}`);
+                        // Ensure the calculation of endLine is always logical
+                        endLine = Math.max(endLine, startLine);
+                        console.log(`Adjusted end line to ensure logical order for chunk ${i + 1}: ${endLine}`);
+                        if (i + 1 == lastChunkingStrategyJson.length) {
+                            endLine = dataWithLineNumber.split("\n").length;
+                        }
                         const chunkSize = endLine - startLine + 1;
                         console.log(`Calculated chunk size for chunk ${i + 1}: ${chunkSize} lines`);
+                        // Check if chunk size calculation is logical; otherwise, adjust
+                        if (chunkSize <= 0) {
+                            console.error(`Warning: Calculated chunk size for chunk ${i + 1} is non-positive, adjusting...`);
+                        }
                         const finalData = data
                             .split("\n")
                             .slice(startLine - 1, endLine)
                             .join("\n");
                         if (chunkSize > this.maxChunkLinesLength) {
                             console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
-                            const oversizedChunkContent = finalData; // No need to split and join again, finalData is already correct.
+                            const oversizedChunkContent = finalData; // Using finalData directly.
                             const totalLinesInOversizedChunk = oversizedChunkContent.split("\n").length;
                             console.log(`Creating subchunks startline ${startLine}, endline ${endLine}, totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`);
-                            console.log(`Oversizedchunk content for chunk ${i + 1}:`);
-                            this.logShortLines(oversizedChunkContent);
-                            console.log(`Initiating recursive call to split oversized chunk ${i + 1}`);
                             const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine, true, totalLinesInOversizedChunk);
-                            console.log(`Completed recursive call for chunk ${i + 1}, received ${subChunks ? subChunks.length : 0} subchunks`);
+                            console.log(`Completed processing subchunks for chunk ${i + 1}. Received ${subChunks ? subChunks.length : 0} subchunks.`);
                             strategy.subChunks = [];
                             strategy.subChunks.push(...subChunks);
                         }
