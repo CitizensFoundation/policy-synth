@@ -173,7 +173,7 @@ YOUR EVALUATION: `);
                         }
                         const finalData = data
                             .split("\n")
-                            .slice(startLine - 1, endLine)
+                            .slice(startLine - 1 - startingLineNumber, endLine)
                             .join("\n");
                         if (chunkSize > this.maxChunkLinesLength) {
                             console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
@@ -214,8 +214,8 @@ YOUR EVALUATION: `);
                     // Normalize both the original and aggregated data for comparison
                     const normalizedAggregatedData = normalizeLineBreaks(aggregatedChunkData);
                     const normalizedOriginalData = normalizeLineBreaks(data);
-                    console.log(`Original chunk data:\n${normalizedOriginalData}\n`);
-                    console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`);
+                    //console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
+                    //console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
                     if (normalizedAggregatedData !== normalizedOriginalData) {
                         const diff = this.generateDiff(normalizedAggregatedData, normalizedOriginalData);
                         console.error(`Diff: ${diff}`);
