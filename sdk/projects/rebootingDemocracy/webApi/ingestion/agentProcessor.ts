@@ -76,7 +76,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
         //  continue;
 
-        const reAnalyze = false;
+        const reAnalyze = true;
         if (
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
@@ -91,7 +91,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           // Create Weaviate object for document with all analyzies and get and id for the parts
         }
 
-        const reCleanData = false;
+        const reCleanData = true;
 
         const cleanedUpData =
           (!reCleanData &&
@@ -99,6 +99,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           (await this.cleanupAgent.clean(data));
 
         console.log(`Cleaned up data: ${cleanedUpData}`);
+        this.saveFileMetadata();
 
         if (
           this.getEstimateTokenLength(cleanedUpData) >
@@ -455,7 +456,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       const metadataJson = await fs.readFile(this.fileMetadataPath, "utf-8");
       this.fileMetadata = JSON.parse(metadataJson);
     } catch (error) {
-      console.log("No existing metadata found, starting fresh.");
+      console.log("No existing metadata found: "+error);
+      process.exit(1);
       this.fileMetadata = {};
     }
   }

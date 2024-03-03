@@ -12,6 +12,8 @@ export declare class IngestionCleanupAgent extends BaseIngestionAgent {
     validationUserMessage: (original: string, cleaned: string) => HumanMessage;
     systemMessage: SystemMessage;
     userMessage: (data: string, validationTextResults: string | undefined) => HumanMessage;
+    referencesCheckSystemMessage: SystemMessage;
+    referencesCheckUserMessage: (data: string) => HumanMessage;
     clean(data: string): Promise<string>;
     validateCleanedPart(original: string, cleaned: string): Promise<{
         valid: boolean;

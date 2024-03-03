@@ -30,7 +30,7 @@ Instructions:
 - The cleaned text does not have any acknowledgments, table of contents, page numers, or any other PDF conversion artifacts, etc and that is ok as we have cleaned it away.
 - Do not comment on fixed typos or such in the cleaned text.
 - Make sure that all numbers used to number items in the main content are still present in the cleaned text.
-- All lists of references or list of urls should be removed but all URLs in the should be in the cleaned text. The references and lists of urls should be replaced with empty text. The cleaned document could be empty if there is nothing in the original but references and urls.
+- All lists of references or list of urls should be removed but all inline URLs in the should be in the cleaned text. The references and lists of urls should be replaced with empty text.
 - All HTML tags should be removed.
 - If all the main content is present in the cleaned text then output, and nothing else: All content present in cleaned text.
 `);
@@ -51,14 +51,24 @@ Instruction:
 - Do not add anything to the document.
 - Remove all lists of references and replace with empty text, do not make up text to replace those.
 - Remove all lists of urls with the exception of single urls that are inline in actual text that is not a list. Replace those list of urls with empty text do not make up something instead.
-- If there are only lists of refrences or urls in the original document you can output an empty document.
-- Bring together sentences into paragraphs as needed.
-- Split very long paragraphs into smaller paragraphs by topic.
+- If there are very short paragraphs bring those into longer paragraphs.
+- Also, always, split long paragraphs into smaller paragraphs.
 - Do not change anything just remove unwanted artifacts and reformat paragraphs in the cleanup.
 `);
     userMessage = (data, validationTextResults) => new HumanMessage(`${validationTextResults ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n` : ``}
 Document to cleanup and output in full:
 ${data}
+`);
+    referencesCheckSystemMessage = new SystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
+
+  If the documents contains references or URLs output, only: ONLY_REFERENCES_OR_URLS
+
+  If the document contains real content with paragraphs, sentences or even just one paragraph output only: PARAGRAPHS
+`);
+    referencesCheckUserMessage = (data) => new HumanMessage(`Document to analyze:
+${data}
+
+Your one word analysis:
 `);
     async clean(data) {
         let cleanedUpDataParts = [];
@@ -89,16 +99,25 @@ ${data}
             let validationTextResults;
             while (!validated && retryCount < this.maxCleanupRetries) {
                 console.log(`\n\nCleaning part: ${part}`);
-                cleanedPart = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
-                const validationResults = await this.validateCleanedPart(part, cleanedPart);
-                validated = validationResults.valid;
-                retryCount++;
-                if (!validated) {
-                    console.warn(`\nValidation failed ${retryCount}\n`);
-                    validationTextResults = validationResults.validationTextResults;
+                // Check for if the part is only references
+                const referenceAnalysis = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
+                if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") === -1) {
+                    console.warn(`\n\nCleaning part: ${part} is not only references\n\n`);
+                    cleanedPart = "";
+                    validated = true;
                 }
-                if (retryCount > 2) {
-                    this.randomizeLlmTemperature();
+                else {
+                    cleanedPart = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
+                    const validationResults = await this.validateCleanedPart(part, cleanedPart);
+                    validated = validationResults.valid;
+                    retryCount++;
+                    if (!validated) {
+                        console.warn(`\nValidation failed ${retryCount}\n`);
+                        validationTextResults = validationResults.validationTextResults;
+                    }
+                    if (retryCount > 2) {
+                        this.randomizeLlmTemperature();
+                    }
                 }
             }
             if (validated) {
