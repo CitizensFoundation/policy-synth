@@ -235,44 +235,21 @@ YOUR EVALUATION: `);
             );
             const strategy = lastChunkingStrategyJson[i];
             const startLine = strategy.chapterStartLineNumber;
-            console.log(`Start line for chunk ${i + 1}: ${startLine}`);
 
             let endLine;
 
-            // Correct calculation of endLine considering the actual content length
             if (i + 1 < lastChunkingStrategyJson.length) {
               endLine =
                 lastChunkingStrategyJson[i + 1].chapterStartLineNumber - 1;
-              console.log(
-                `Calculated end line based on next chunk's start line for chunk ${
-                  i + 1
-                }: ${endLine}`
-              );
             } else {
-              // For the last chunk, adjust endLine based on the actual number of lines in the subchunk (if provided) or document
-              const totalLinesAvailable = totalLinesInChunk
-                ? startLine + totalLinesInChunk - 1
-                : dataWithLineNumber.split("\n").length;
-              endLine = Math.min(
-                totalLinesAvailable,
-                dataWithLineNumber.split("\n").length
-              );
-              console.log(
-                `Calculated end line for the last chunk ${i + 1}: ${endLine}`
-              );
+              // Directly use the total number of lines for the last chunk, adjusted by the starting line number
+              endLine =
+                startingLineNumber + dataWithLineNumber.split("\n").length - 1;
             }
 
-            // Ensure the calculation of endLine is always logical
-            endLine = Math.max(endLine, startLine);
             console.log(
-              `Adjusted end line to ensure logical order for chunk ${
-                i + 1
-              }: ${endLine}`
+              `Start line for chunk ${i + 1}: ${startLine} endline: ${endLine}`
             );
-
-            if (i + 1 == lastChunkingStrategyJson.length) {
-              endLine = dataWithLineNumber.split("\n").length;
-            }
 
             const chunkSize = endLine - startLine + 1;
             console.log(
