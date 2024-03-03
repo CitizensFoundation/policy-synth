@@ -301,6 +301,8 @@ YOUR EVALUATION: `);
                 } is within size limits (${chunkSize} lines), no need for subchunking.`
               );
               strategy.chunkData = finalData;
+
+              console.log(JSON.stringify(strategy, null, 2));
             }
           }
         }
@@ -310,6 +312,7 @@ YOUR EVALUATION: `);
             `Validation attempt failed, retrying... (${retryCount})`
           );
         }
+
 
         const aggregateChunkData = (
           chunks: LlmDocumentChunksStrategy[]
@@ -337,8 +340,8 @@ YOUR EVALUATION: `);
             normalizeLineBreaks(aggregatedChunkData);
           const normalizedOriginalData = normalizeLineBreaks(data);
 
-          console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
-          console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
+          //console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
+          //console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
 
           if (normalizedAggregatedData !== normalizedOriginalData) {
             const diff = this.generateDiff(

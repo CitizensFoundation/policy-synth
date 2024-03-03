@@ -188,6 +188,7 @@ YOUR EVALUATION: `);
                         else {
                             console.log(`Chunk ${i + 1} is within size limits (${chunkSize} lines), no need for subchunking.`);
                             strategy.chunkData = finalData;
+                            console.log(JSON.stringify(strategy, null, 2));
                         }
                     }
                 }
