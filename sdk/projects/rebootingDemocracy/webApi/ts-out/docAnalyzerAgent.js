@@ -6,14 +6,18 @@ export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
     systemMessage = new SystemMessage(`You are an expert document analyzer.
 
   Instructions:
-  - You will analyze the document and output your analysis in this JSON format without explanations: {
+  - You will analyze the document.
+  - Always output URLs in a proper URL format if you find any and add them to the relevant lists.
+  - Only output png, jpg, jpeg, webp, and gif image URLs into the allImageUrls list.
+  - Finally, output your analysis in this JSON format without explanations: {
     title: string;
     shortDescription: string;
     description: string;
     fullDescriptionOfAllContents: string;
     documentMetaData: { [key: string]: string };
-    allReferencesWithUrls: { reference: string; url: string }[],
-    allOtherReferences: strings[]
+    allImageUrls: string[];
+    allReferencesWithUrls: { reference: string; url: string }[];
+    allOtherReferences: string[];
   }`);
     userMessage = (data) => new HumanMessage(`Document to analyze:
 ${data}
@@ -39,12 +43,14 @@ ${data}
                     fullDescriptionOfAllContents: documentAnalysis.fullDescriptionOfAllContents,
                     documentMetaData: documentAnalysis.documentMetaData,
                     allReferencesWithUrls: documentAnalysis.allReferencesWithUrls,
-                    allOtherReferences: documentAnalysis.allOtherReferences
+                    allOtherReferences: documentAnalysis.allOtherReferences,
+                    allImageUrls: documentAnalysis.allImageUrls,
                 };
             }
             else {
                 // For subsequent chunks, update only specific fields
-                metadata.fullDescriptionOfAllContents += "\n" + documentAnalysis.fullDescriptionOfAllContents;
+                metadata.fullDescriptionOfAllContents +=
+                    "\n" + documentAnalysis.fullDescriptionOfAllContents;
                 metadata.documentMetaData = {
                     ...metadata.documentMetaData,
                     ...documentAnalysis.documentMetaData,
@@ -53,10 +59,14 @@ ${data}
                     ...(metadata.allReferencesWithUrls || []),
                     ...documentAnalysis.allReferencesWithUrls,
                 ];
-                metadata.allOtherReferences = [
+                (metadata.allOtherReferences = [
                     ...(metadata.allOtherReferences || []),
                     ...documentAnalysis.allOtherReferences,
-                ];
+                ]),
+                    (metadata.allImageUrls = [
+                        ...(metadata.allImageUrls || []),
+                        ...documentAnalysis.allImageUrls,
+                    ]);
             }
         }
         console.log(`Final analysis results: ${JSON.stringify(metadata, null, 2)}`);

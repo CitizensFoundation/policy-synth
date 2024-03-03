@@ -66,6 +66,19 @@ ${data}
         const splitPartsForCleanup = this.splitDataForProcessing(data, this.maxCleanupTokenLength);
         console.log(JSON.stringify(splitPartsForCleanup, null, 2));
         // Write the each chunk sizes to console.log
+        console.log("Chunk sizes:");
+        splitPartsForCleanup.forEach((part) => {
+            console.log(part.length);
+        });
+        // If one part is too short < 1000 characters, join it with the part before
+        for (let i = 1; i < splitPartsForCleanup.length; i++) {
+            if (splitPartsForCleanup[i].length < 1000) {
+                splitPartsForCleanup[i - 1] += "\n" + splitPartsForCleanup[i];
+                splitPartsForCleanup.splice(i, 1);
+                i--; // Adjust index to account for the removed element
+            }
+        }
+        console.log("Chunk sizes after normalization:");
         splitPartsForCleanup.forEach((part) => {
             console.log(part.length);
         });

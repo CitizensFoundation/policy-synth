@@ -24,6 +24,7 @@ interface CachedFileMetadata {
   chunks?: { [key: number]: PsIngestionChunkData };
   allReferencesWithUrls: string[];
   allOtherReferences: string[];
+  allImageUrls: string[];
   documentMetaData: { [key: string]: string };
 }
 
@@ -33,6 +34,7 @@ interface LlmDocumentAnalysisReponse {
   description: string;
   fullDescriptionOfAllContents: string;
   allReferencesWithUrls: string[];
+  allImageUrls: string[];
   allOtherReferences: string[];
   documentMetaData: { [key: string]: string };
 }

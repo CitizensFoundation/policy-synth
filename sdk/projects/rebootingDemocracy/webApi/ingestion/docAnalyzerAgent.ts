@@ -8,14 +8,18 @@ export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
   systemMessage = new SystemMessage(`You are an expert document analyzer.
 
   Instructions:
-  - You will analyze the document and output your analysis in this JSON format without explanations: {
+  - You will analyze the document.
+  - Always output URLs in a proper URL format if you find any and add them to the relevant lists.
+  - Only output png, jpg, jpeg, webp, and gif image URLs into the allImageUrls list.
+  - Finally, output your analysis in this JSON format without explanations: {
     title: string;
     shortDescription: string;
     description: string;
     fullDescriptionOfAllContents: string;
     documentMetaData: { [key: string]: string };
-    allReferencesWithUrls: { reference: string; url: string }[],
-    allOtherReferences: strings[]
+    allImageUrls: string[];
+    allReferencesWithUrls: { reference: string; url: string }[];
+    allOtherReferences: string[];
   }`);
 
   userMessage = (data: string) =>
@@ -29,14 +33,18 @@ ${data}
     filesMetaData: Record<string, CachedFileMetadata> = {}
   ): Promise<CachedFileMetadata> {
     // Split data if larger than maxAnalyzeTokenLength
-    const dataChunks = data.length > this.maxAnalyzeTokenLength
-      ? this.splitDataForProcessingWorksBigChunks(data, this.maxAnalyzeTokenLength)
-      : [data];
+    const dataChunks =
+      data.length > this.maxAnalyzeTokenLength
+        ? this.splitDataForProcessingWorksBigChunks(
+            data,
+            this.maxAnalyzeTokenLength
+          )
+        : [data];
 
-    let metadata = filesMetaData[fileId] || {} as CachedFileMetadata;
+    let metadata = filesMetaData[fileId] || ({} as CachedFileMetadata);
 
     for (let i = 0; i < dataChunks.length; i++) {
-      console.log(`Analyzing chunk ${i + 1} of ${dataChunks.length}`)
+      console.log(`Analyzing chunk ${i + 1} of ${dataChunks.length}`);
       const chunkData = dataChunks[i];
       const documentAnalysis = (await this.callLLM(
         "ingestion-agent",
@@ -44,7 +52,9 @@ ${data}
         this.getFirstMessages(this.systemMessage, this.userMessage(chunkData))
       )) as LlmDocumentAnalysisReponse;
 
-      console.log(`Chunk ${i+1} results: ${JSON.stringify(documentAnalysis, null, 2)}`);
+      console.log(
+        `Chunk ${i + 1} results: ${JSON.stringify(documentAnalysis, null, 2)}`
+      );
 
       // For the first chunk, initialize metadata with analysis results
       if (i === 0) {
@@ -53,14 +63,17 @@ ${data}
           title: documentAnalysis.title,
           shortDescription: documentAnalysis.shortDescription,
           description: documentAnalysis.description,
-          fullDescriptionOfAllContents: documentAnalysis.fullDescriptionOfAllContents,
+          fullDescriptionOfAllContents:
+            documentAnalysis.fullDescriptionOfAllContents,
           documentMetaData: documentAnalysis.documentMetaData,
           allReferencesWithUrls: documentAnalysis.allReferencesWithUrls,
-          allOtherReferences: documentAnalysis.allOtherReferences
+          allOtherReferences: documentAnalysis.allOtherReferences,
+          allImageUrls: documentAnalysis.allImageUrls,
         };
       } else {
         // For subsequent chunks, update only specific fields
-        metadata.fullDescriptionOfAllContents += "\n" + documentAnalysis.fullDescriptionOfAllContents;
+        metadata.fullDescriptionOfAllContents +=
+          "\n" + documentAnalysis.fullDescriptionOfAllContents;
         metadata.documentMetaData = {
           ...metadata.documentMetaData,
           ...documentAnalysis.documentMetaData,
@@ -69,10 +82,14 @@ ${data}
           ...(metadata.allReferencesWithUrls || []),
           ...documentAnalysis.allReferencesWithUrls,
         ];
-        metadata.allOtherReferences = [
+        (metadata.allOtherReferences = [
           ...(metadata.allOtherReferences || []),
           ...documentAnalysis.allOtherReferences,
-        ];
+        ]),
+          (metadata.allImageUrls = [
+            ...(metadata.allImageUrls || []),
+            ...documentAnalysis.allImageUrls,
+          ]);
       }
     }
 
