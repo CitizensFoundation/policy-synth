@@ -4,7 +4,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 export class IngestionSplitAgent extends BaseIngestionAgent {
     maxSplitRetries = 20;
     minChunkCharacterLength = 50;
-    maxChunkLinesLength = 10;
+    maxChunkLinesLength = 15;
     strategySystemMessage = new SystemMessage(`You are an expert document split strategy generator.
 
 Instructions:

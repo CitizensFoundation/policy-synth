@@ -155,42 +155,47 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       chunk: LlmDocumentChunksStrategy,
       chunkIndex: number
     ) => {
-      console.log(`\nBefore compression: ${chunk.chunkData}\n`);
+      if (chunk.chunkData) {
+        console.log(`\nBefore compression: ${chunk.chunkData}\n`);
 
-      let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(
-        chunk.chunkData!
-      );
+        let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(
+          chunk.chunkData!
+        );
 
-      chunkAnalyzeResponse.fullCompressedContents =
-        await this.chunkCompressor.compress(chunk.chunkData!);
+        chunkAnalyzeResponse.fullCompressedContents =
+          await this.chunkCompressor.compress(chunk.chunkData!);
 
-      const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
+        const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
 
-      console.log(`\nAfter compression: ${compressedData}\n`);
+        console.log(`\nAfter compression: ${compressedData}\n`);
 
-      //@ts-ignore
-      metadata.chunks![chunkIndex] = {
-        chunkIndex: chunkIndex,
-        title: chunkAnalyzeResponse.title,
-        mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
-        importantContextChunkIndexes: chunk.importantContextChapterIndexes,
-        shortSummary: chunkAnalyzeResponse.shortDescription,
-        compressedContents: chunkAnalyzeResponse.fullCompressedContents,
-        metaData: chunkAnalyzeResponse.textMetaData,
-        uncompressedContent: chunk.chunkData!,
-      };
+        //@ts-ignore
+        metadata.chunks![chunkIndex] = {
+          chunkIndex: chunkIndex,
+          title: chunkAnalyzeResponse.title,
+          mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
+          importantContextChunkIndexes: chunk.importantContextChapterIndexes,
+          shortSummary: chunkAnalyzeResponse.shortDescription,
+          compressedContents: chunkAnalyzeResponse.fullCompressedContents,
+          metaData: chunkAnalyzeResponse.textMetaData,
+          uncompressedContent: chunk.chunkData!,
+        };
 
-      console.log(`Chunk ${chunk.chapterIndex} compressed:`, compressedData);
-      console.log(
-        `\n${JSON.stringify(metadata.chunks![chunkIndex], null, 2)}\n`
-      );
+        console.log(`Chunk ${chunk.chapterIndex} compressed:`, compressedData);
+        console.log(
+          `\n${JSON.stringify(metadata.chunks![chunkIndex], null, 2)}\n`
+        );
 
-      // If there are sub-chunks, process each one recursively.
-      if (chunk.subChunks && chunk.subChunks.length > 0) {
-        for (let subChunk of chunk.subChunks) {
-          chunkChapterIndex++; // Increment the chapter index for each sub-chunk
-          await processChunk(subChunk, chunkChapterIndex);
+        // If there are sub-chunks, process each one recursively.
+        if (chunk.subChunks && chunk.subChunks.length > 0) {
+          for (let subChunk of chunk.subChunks) {
+            chunkChapterIndex++; // Increment the chapter index for each sub-chunk
+            await processChunk(subChunk, chunkChapterIndex);
+          }
         }
+      } else {
+        console.error(`\n\n\n\n\nChunk data missing for chunk ${chunkIndex}`);
+        console.log(`Chunk: ${JSON.stringify(chunk, null, 2)}\n\n\n\n\n`);
       }
     };
 
