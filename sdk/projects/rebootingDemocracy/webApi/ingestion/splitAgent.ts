@@ -128,15 +128,6 @@ YOUR EVALUATION: `);
     return "No difference found.";
   }
 
-  logShortLines(text: string) {
-    // Split the text into lines
-    // then only console.log the first 100 characters of each line
-    const lines = text.split("\n");
-    for (let i = 0; i < lines.length; i++) {
-      console.log(lines[i].substring(0, 9999990));
-    }
-  }
-
   async fetchLlmChunkingStrategy(
     data: string,
     review: string | undefined,

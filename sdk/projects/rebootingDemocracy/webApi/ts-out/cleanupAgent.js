@@ -98,7 +98,8 @@ Your one word analysis:
             let cleanedPart = "";
             let validationTextResults;
             while (!validated && retryCount < this.maxCleanupRetries) {
-                console.log(`\n\nCleaning part: ${part}`);
+                console.log(`\n\nCleaning part:`);
+                this.logShortLines(part);
                 // Check for if the part is only references
                 const referenceAnalysis = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
                 if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") === -1) {
@@ -130,7 +131,7 @@ Your one word analysis:
         return cleanedUpDataParts.join(" ");
     }
     async validateCleanedPart(original, cleaned) {
-        console.log(`Validating cleaned part: ${cleaned}`);
+        console.log(`Validating cleaned part:\n${cleaned}\n\n`);
         const validations = await Promise.all([
             this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.completionValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),
             this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),

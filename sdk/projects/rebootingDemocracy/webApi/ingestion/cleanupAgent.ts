@@ -127,7 +127,8 @@ Your one word analysis:
       let validationTextResults: string | undefined;
 
       while (!validated && retryCount < this.maxCleanupRetries) {
-        console.log(`\n\nCleaning part: ${part}`);
+        console.log(`\n\nCleaning part:`);
+        this.logShortLines(part);
 
         // Check for if the part is only references
         const referenceAnalysis = (await this.callLLM(
@@ -183,7 +184,7 @@ Your one word analysis:
     original: string,
     cleaned: string
   ): Promise<{valid: boolean, validationTextResults: string}> {
-    console.log(`Validating cleaned part: ${cleaned}`);
+    console.log(`Validating cleaned part:\n${cleaned}\n\n`);
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",

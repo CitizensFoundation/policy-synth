@@ -8,12 +8,14 @@ export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
   Instructions:
   - You will analyze the document.
   - Always output URLs in a proper URL format if you find any and add them to the relevant lists.
-  - Only output png, jpg, jpeg, webp, and gif image URLs into the allImageUrls list.
+  - Only output png, jpg, jpeg, webp, and gif image URLs into the allImageUrls list no text.
+  - If you find a document date output it in this format: 1. January 2024 in the documentDate field.
   - Finally, output your analysis in this JSON format without explanations: {
     title: string;
     shortDescription: string;
     description: string;
     fullDescriptionOfAllContents: string;
+    documentDate: string;
     documentMetaData: { [key: string]: string };
     allImageUrls: string[];
     allReferencesWithUrls: { reference: string; url: string }[];

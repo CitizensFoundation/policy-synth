@@ -25,6 +25,7 @@ interface CachedFileMetadata {
   allReferencesWithUrls: string[];
   allOtherReferences: string[];
   allImageUrls: string[];
+  documentDate: string;
   documentMetaData: { [key: string]: string };
 }
 
@@ -36,6 +37,7 @@ interface LlmDocumentAnalysisReponse {
   allReferencesWithUrls: string[];
   allImageUrls: string[];
   allOtherReferences: string[];
+  documentDate: string;
   documentMetaData: { [key: string]: string };
 }
 
