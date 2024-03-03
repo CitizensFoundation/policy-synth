@@ -54,12 +54,16 @@ Think step by step and output your analysis here:
     new SystemMessage(`You are an expert text compressor.
 
 Instructions:
-- You will compress the text marked <TEXT_TO_COMPRESS> into as few words as you can without loosing any meaning or important nuance.
-- Output the compressed text nothing else.`);
+- You will compress each paragraph in the text marked <TEXT_TO_COMPRESS> into as many paragraphs
+- Compress each paragraph into as few words as you can without loosing any meaning or detail.
+- Output the compressed text nothing else.
+`);
 
   compressionUserMessage = (data: string) =>
-    new HumanMessage(`Text to compress:
+    new HumanMessage(`<TEXT_TO_COMPRESS>
 ${data}
+</TEXT_TO_COMPRESS>
+
 Your compressed text:
 `);
 

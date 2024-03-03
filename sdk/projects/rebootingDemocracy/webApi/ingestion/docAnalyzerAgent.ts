@@ -78,20 +78,28 @@ ${data}
           "\n" + documentAnalysis.fullDescriptionOfAllContents;
         metadata.documentMetaData = {
           ...metadata.documentMetaData,
-          ...documentAnalysis.documentMetaData,
+          ...(typeof documentAnalysis.documentMetaData === "object"
+            ? documentAnalysis.documentMetaData
+            : {}),
         };
         metadata.allReferencesWithUrls = [
           ...(metadata.allReferencesWithUrls || []),
-          ...documentAnalysis.allReferencesWithUrls,
+          ...(Array.isArray(documentAnalysis.allReferencesWithUrls)
+            ? documentAnalysis.allReferencesWithUrls
+            : []),
         ];
-        (metadata.allOtherReferences = [
+        metadata.allOtherReferences = [
           ...(metadata.allOtherReferences || []),
-          ...documentAnalysis.allOtherReferences,
-        ]),
-          (metadata.allImageUrls = [
-            ...(metadata.allImageUrls || []),
-            ...documentAnalysis.allImageUrls,
-          ]);
+          ...(Array.isArray(documentAnalysis.allOtherReferences)
+            ? documentAnalysis.allOtherReferences
+            : []),
+        ];
+        metadata.allImageUrls = [
+          ...(metadata.allImageUrls || []),
+          ...(Array.isArray(documentAnalysis.allImageUrls)
+            ? documentAnalysis.allImageUrls
+            : []),
+        ];
       }
     }
 
