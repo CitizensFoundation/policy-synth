@@ -92,13 +92,16 @@ Your one word analysis:
         splitPartsForCleanup.forEach((part) => {
             console.log(part.length);
         });
+        const partsLength = splitPartsForCleanup.length;
+        let partIndex = 0;
         for (const part of splitPartsForCleanup) {
+            partIndex++;
             let validated = false;
             let retryCount = 0;
             let cleanedPart = "";
             let validationTextResults;
             while (!validated && retryCount < this.maxCleanupRetries) {
-                console.log(`\n\nCleaning part:`);
+                console.log(`\n\nCleaning part: ${partIndex} of ${partsLength}\n\n`);
                 this.logShortLines(part);
                 // Check for if the part is only references
                 const referenceAnalysis = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));

@@ -205,6 +205,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       chunkChapterIndex++; // Increment the chapter index after processing a chunk (and its sub-chunks, if any)
     }
 
+    // Create summaries for each parent chunk
+    // Pairwise vote on each chunk on X many axis
+
     console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
 
     this.saveFileMetadata();

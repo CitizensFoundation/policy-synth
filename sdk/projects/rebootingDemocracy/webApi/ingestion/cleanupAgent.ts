@@ -120,14 +120,18 @@ Your one word analysis:
       console.log(part.length);
     });
 
+    const partsLength = splitPartsForCleanup.length;
+    let partIndex = 0;
+
     for (const part of splitPartsForCleanup) {
+      partIndex++;
       let validated = false;
       let retryCount = 0;
       let cleanedPart = "";
       let validationTextResults: string | undefined;
 
       while (!validated && retryCount < this.maxCleanupRetries) {
-        console.log(`\n\nCleaning part:`);
+        console.log(`\n\nCleaning part: ${partIndex} of ${partsLength}\n\n`);
         this.logShortLines(part);
 
         // Check for if the part is only references

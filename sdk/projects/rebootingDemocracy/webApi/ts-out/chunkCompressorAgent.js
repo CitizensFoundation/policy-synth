@@ -46,7 +46,7 @@ Instructions:
 ${data}
 </TEXT_TO_COMPRESS>
 
-Your compressed text:
+Your highly compressed text while still capturing all detail and nuance from the original:
 `);
     compressionRetryUserMessage = (data, lastCompressed, validationTextResults) => new HumanMessage(`Document to analyze and compress:
 ${data}

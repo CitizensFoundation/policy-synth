@@ -59,16 +59,16 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     console.error(`Metadata not found for filePath: ${filePath}`);
                     continue;
                 }
-                //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
-                //  continue;
-                const reAnalyze = false;
+                if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
+                    continue;
+                const reAnalyze = true;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
                     this.saveFileMetadata();
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
-                const reCleanData = false;
+                const reCleanData = true;
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
                     (await this.cleanupAgent.clean(data));
@@ -140,6 +140,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             await processChunk(chunk, chunkChapterIndex);
             chunkChapterIndex++; // Increment the chapter index after processing a chunk (and its sub-chunks, if any)
         }
+        // Create summaries for each parent chunk
+        // Pairwise vote on each chunk on X many axis
         console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
         this.saveFileMetadata();
     }
