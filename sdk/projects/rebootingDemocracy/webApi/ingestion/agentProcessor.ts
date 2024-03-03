@@ -76,7 +76,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
         //  continue;
 
-        const reAnalyze = true;
+        const reAnalyze = false;
         if (
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
@@ -91,7 +91,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           // Create Weaviate object for document with all analyzies and get and id for the parts
         }
 
-        const reCleanData = true;
+        const reCleanData = false;
 
         const cleanedUpData =
           (!reCleanData &&

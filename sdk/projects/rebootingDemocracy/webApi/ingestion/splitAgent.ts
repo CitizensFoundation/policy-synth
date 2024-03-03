@@ -14,7 +14,7 @@ interface Chunk {
 export class IngestionSplitAgent extends BaseIngestionAgent {
   maxSplitRetries = 15;
   minChunkCharacterLength = 50;
-  maxChunkLinesLength = 40;
+  maxChunkLinesLength = 25;
 
   strategySystemMessage =
     new SystemMessage(`You are an expert document split strategy generator.

@@ -61,14 +61,14 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
                 //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
                 //  continue;
-                const reAnalyze = true;
+                const reAnalyze = false;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
                     this.saveFileMetadata();
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
-                const reCleanData = true;
+                const reCleanData = false;
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
                     (await this.cleanupAgent.clean(data));
