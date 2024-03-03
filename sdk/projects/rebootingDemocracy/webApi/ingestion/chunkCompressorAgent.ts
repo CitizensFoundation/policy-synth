@@ -3,7 +3,8 @@ import { IEngineConstants } from "./constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
-  maxCompressionRetries = 15;
+  maxCompressionRetries = 25;
+  retryCountBeforeRandomizingLlmTemperature= 15;
 
   completionValidationSuccessMessage =
     "All content present in compressed text.";
@@ -64,7 +65,7 @@ Instructions:
 ${data}
 </TEXT_TO_COMPRESS>
 
-Your compressed text:
+Your highly compressed text while still capturing all detail and nuance from the original:
 `);
 
   compressionRetryUserMessage = (
@@ -77,7 +78,7 @@ ${data}
 Note: You have already tried once to compress this text, and you got those validation errors:
 ${validationTextResults}
 
-Your invalid compressed text:
+Your last invalid compressed text:
 ${lastCompressed}
 
 Your new improved compressed text:
@@ -131,7 +132,7 @@ Your new improved compressed text:
           );
         }
 
-        if (retryCount > 2) {
+        if (retryCount > this.retryCountBeforeRandomizingLlmTemperature) {
           this.randomizeLlmTemperature();
         }
       } catch (error) {

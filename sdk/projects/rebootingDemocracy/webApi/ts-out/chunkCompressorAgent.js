@@ -2,7 +2,8 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { IEngineConstants } from "./constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
-    maxCompressionRetries = 15;
+    maxCompressionRetries = 25;
+    retryCountBeforeRandomizingLlmTemperature = 15;
     completionValidationSuccessMessage = "All content present in compressed text.";
     correctnessValidationSuccessMessage = "All content correct in compressed text.";
     hallucinationValidationSuccessMessage = "No additional content in compressed text.";
@@ -52,7 +53,7 @@ ${data}
 Note: You have already tried once to compress this text, and you got those validation errors:
 ${validationTextResults}
 
-Your invalid compressed text:
+Your last invalid compressed text:
 ${lastCompressed}
 
 Your new improved compressed text:
@@ -77,7 +78,7 @@ Your new improved compressed text:
                     validationTextResults = validationResults.validationTextResults;
                     console.warn(`\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`);
                 }
-                if (retryCount > 2) {
+                if (retryCount > this.retryCountBeforeRandomizingLlmTemperature) {
                     this.randomizeLlmTemperature();
                 }
             }

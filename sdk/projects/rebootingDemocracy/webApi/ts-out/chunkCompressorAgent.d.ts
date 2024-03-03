@@ -2,6 +2,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class IngestionChunkCompressorAgent extends BaseIngestionAgent {
     maxCompressionRetries: number;
+    retryCountBeforeRandomizingLlmTemperature: number;
     completionValidationSuccessMessage: string;
     correctnessValidationSuccessMessage: string;
     hallucinationValidationSuccessMessage: string;
