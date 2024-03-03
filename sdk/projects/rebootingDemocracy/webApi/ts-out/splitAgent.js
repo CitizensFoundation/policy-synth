@@ -162,7 +162,7 @@ YOUR EVALUATION: `);
                         else {
                             // Directly use the total number of lines for the last chunk, adjusted by the starting line number
                             endLine =
-                                startingLineNumber + dataWithLineNumber.split("\n").length - 1;
+                                startingLineNumber + dataWithLineNumber.split("\n").length;
                         }
                         console.log(`Start line for chunk ${i + 1}: ${startLine} endline: ${endLine}`);
                         const chunkSize = endLine - startLine + 1;
@@ -213,6 +213,8 @@ YOUR EVALUATION: `);
                     // Normalize both the original and aggregated data for comparison
                     const normalizedAggregatedData = normalizeLineBreaks(aggregatedChunkData);
                     const normalizedOriginalData = normalizeLineBreaks(data);
+                    console.log(`Original chunk data:\n${normalizedOriginalData}\n`);
+                    console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`);
                     if (normalizedAggregatedData !== normalizedOriginalData) {
                         const diff = this.generateDiff(normalizedAggregatedData, normalizedOriginalData);
                         console.error(`Diff: ${diff}`);
