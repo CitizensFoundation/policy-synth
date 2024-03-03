@@ -21,12 +21,13 @@ export class IngestionSplitAgent extends BaseIngestionAgent {
 
 Instructions:
 - Your job is to analyze the text document and outline a strategy how best to split this document up into chapters.
-- The contents should be split into chapters that cover the same topic or very connected topics.
-- If there are case studies those should always be whole chapters or if very long, one long chapter.
+- The contents should be split into chapters based on your best strategy.
+- There can be long chapters covering many topics, always describe those well.
 - Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
 - At the start of each line you will see a line number in this format "1: " pay special attention to those line numbers and always output those line number as the chapterStartLineNumber for each chapter.
 - Always output the chapterStartLineNumber for each chapter as a number not text.
+- Never start two chapters with the same chapterStartLineNumber.
 - Chapters should never start on an empty line that just shows the line number.
 - Use importantContextChapterIndexes for chapters that could be relevant to the current chapter when we will load this chapter for our retrieval augmented generation (RAG) solution. But don't use this for everything only the most important context connections.
 
@@ -71,15 +72,15 @@ YOUR THOUGHTFUL STRATEGY:
 
 Instructions:
 - Your job is to evaluate a split strategy for a document.
-- The contents should be split into chapters that cover the same topic or very connected topics.
+- The contents should be split into chapters.
 - There can be long chapters covering many topics.
-- The output should not be the actual contents only the strategy on how to split it up.
 - If there are case studies those should be whole chapters or if long a part of longer chapters.
 - Do not suggest any changes to the order of the document, it can't be changed.
 - This is a recursive process, there might be long chapters we will alter split into sub chapters.
 - At the start of each line you will see a line number in this format "1: " pay special attention to those line numbers, those should always align with the chapterStartLineNumber for each chapter.
 - Chapters should never start on an empty line that just shows the line number.
 - Make sure connected chapters are correct.
+- The output should not be the actual contents only the strategy on how to split it up.
 
 Output:
 - If the strategy is good output only and with no explanation: PASSES
