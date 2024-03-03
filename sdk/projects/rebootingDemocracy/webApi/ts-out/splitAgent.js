@@ -130,6 +130,18 @@ YOUR EVALUATION: `);
             lastChunkingStrategyJson,
         };
     }
+    aggregateChunkData = (chunks) => {
+        return chunks.reduce((acc, chunk) => {
+            const chunkData = chunk.chunkData || "";
+            const subChunkData = chunk.subChunks
+                ? this.aggregateChunkData(chunk.subChunks)
+                : "";
+            return acc + chunkData + subChunkData;
+        }, "");
+    };
+    normalizeLineBreaks(text) {
+        return text.replace(/\n/g, "");
+    }
     async splitDocumentIntoChunks(data, isSubChunk = false, totalLinesInChunk) {
         console.log(`Splitting document into chunks...(isSubChunk: ${isSubChunk}) (totalLinesInChunk: ${totalLinesInChunk})`);
         if (!isSubChunk) {
@@ -207,24 +219,12 @@ YOUR EVALUATION: `);
                     retryCount++;
                     console.warn(`Validation attempt failed, retrying... (${retryCount})`);
                 }
-                const aggregateChunkData = (chunks) => {
-                    return chunks.reduce((acc, chunk) => {
-                        const chunkData = chunk.chunkData || "";
-                        const subChunkData = chunk.subChunks
-                            ? aggregateChunkData(chunk.subChunks)
-                            : "";
-                        return acc + chunkData + subChunkData;
-                    }, "");
-                };
-                function normalizeLineBreaks(text) {
-                    return text.replace(/\n/g, "");
-                }
                 // Existing validation logic...
                 if (validated && lastChunkingStrategyJson) {
-                    const aggregatedChunkData = aggregateChunkData(lastChunkingStrategyJson);
+                    const aggregatedChunkData = this.aggregateChunkData(lastChunkingStrategyJson);
                     // Normalize both the original and aggregated data for comparison
-                    const normalizedAggregatedData = normalizeLineBreaks(aggregatedChunkData);
-                    const normalizedOriginalData = normalizeLineBreaks(data);
+                    const normalizedAggregatedData = this.normalizeLineBreaks(aggregatedChunkData);
+                    const normalizedOriginalData = this.normalizeLineBreaks(data);
                     //console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
                     //console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
                     if (normalizedAggregatedData !== normalizedOriginalData) {

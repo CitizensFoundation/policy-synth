@@ -187,6 +187,23 @@ YOUR EVALUATION: `);
     };
   }
 
+
+  aggregateChunkData = (
+    chunks: LlmDocumentChunksStrategy[]
+  ): string => {
+    return chunks.reduce((acc, chunk) => {
+      const chunkData = chunk.chunkData || "";
+      const subChunkData = chunk.subChunks
+        ? this.aggregateChunkData(chunk.subChunks)
+        : "";
+      return acc + chunkData + subChunkData;
+    }, "");
+  };
+
+  normalizeLineBreaks(text: string): string {
+    return text.replace(/\n/g, "");
+  }
+
   async splitDocumentIntoChunks(
     data: string,
     isSubChunk: boolean = false,
@@ -322,31 +339,15 @@ YOUR EVALUATION: `);
         }
 
 
-        const aggregateChunkData = (
-          chunks: LlmDocumentChunksStrategy[]
-        ): string => {
-          return chunks.reduce((acc, chunk) => {
-            const chunkData = chunk.chunkData || "";
-            const subChunkData = chunk.subChunks
-              ? aggregateChunkData(chunk.subChunks)
-              : "";
-            return acc + chunkData + subChunkData;
-          }, "");
-        };
-
-        function normalizeLineBreaks(text: string): string {
-          return text.replace(/\n/g, "");
-        }
-
         // Existing validation logic...
         if (validated && lastChunkingStrategyJson) {
-          const aggregatedChunkData = aggregateChunkData(
+          const aggregatedChunkData = this.aggregateChunkData(
             lastChunkingStrategyJson
           );
           // Normalize both the original and aggregated data for comparison
           const normalizedAggregatedData =
-            normalizeLineBreaks(aggregatedChunkData);
-          const normalizedOriginalData = normalizeLineBreaks(data);
+            this.normalizeLineBreaks(aggregatedChunkData);
+          const normalizedOriginalData = this.normalizeLineBreaks(data);
 
           //console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
           //console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)

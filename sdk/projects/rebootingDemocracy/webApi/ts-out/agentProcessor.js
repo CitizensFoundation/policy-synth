@@ -95,6 +95,15 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         await this.saveFileMetadata();
     }
+    aggregateChunkData = (chunks) => {
+        return chunks.reduce((acc, chunk) => {
+            const chunkData = chunk.chunkData || "";
+            const subChunkData = chunk.subChunks
+                ? this.aggregateChunkData(chunk.subChunks)
+                : "";
+            return acc + chunkData + subChunkData;
+        }, "");
+    };
     async processFilePart(fileId, cleanedUpData, weaviateDocumentId) {
         console.log(`Processing file part for fileId: ${fileId}`);
         this.saveFileMetadata();
@@ -106,11 +115,20 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         console.log(JSON.stringify(chunks, null, 2));
         console.log(`Split into ${chunks.length} chunks`);
         const processChunk = async (chunk, parentChunkIndex = null) => {
+            let hasAggregatedChunkData = false;
+            if (!chunk.chunkData && chunk.subChunks) {
+                chunk.chunkData = this.aggregateChunkData([chunk]);
+                hasAggregatedChunkData = true;
+            }
             if (chunk.chunkData) {
                 let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(chunk.chunkData);
-                chunkAnalyzeResponse.fullCompressedContents =
-                    await this.chunkCompressor.compress(chunk.chunkData);
-                const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
+                console.log(`\n\nAnalyzed chunk: ${JSON.stringify(chunkAnalyzeResponse)}`);
+                if (!hasAggregatedChunkData) {
+                    console.log(`\nBefore compression:\n${chunk.chunkData}\n`);
+                    chunkAnalyzeResponse.fullCompressedContents =
+                        await this.chunkCompressor.compress(chunk.chunkData);
+                    console.log(`\nAfter compression:\n${chunkAnalyzeResponse.fullCompressedContents}\n\n`);
+                }
                 const chunkIndex = parentChunkIndex === null
                     ? Object.keys(metadata.chunks).length + 1
                     : parentChunkIndex;
@@ -148,9 +166,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         for (let chunk of chunks) {
             await processChunk(chunk);
         }
+        console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
+        // Wait for 3 minutes
+        await new Promise((resolve) => setTimeout(resolve, 150000));
         this.saveFileMetadata();
     }
-    async processFilePartT(fileId, cleanedUpData, weaviateDocumentId) {
+    async processFilePartOld(fileId, cleanedUpData, weaviateDocumentId) {
         console.log(`Processing file part for fileId: ${fileId}`);
         this.saveFileMetadata();
         this.fileMetadata[fileId].cleanedDocument = cleanedUpData;

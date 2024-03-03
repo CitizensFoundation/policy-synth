@@ -134,6 +134,19 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await this.saveFileMetadata();
   }
 
+
+  aggregateChunkData = (
+    chunks: LlmDocumentChunksStrategy[]
+  ): string => {
+    return chunks.reduce((acc, chunk) => {
+      const chunkData = chunk.chunkData || "";
+      const subChunkData = chunk.subChunks
+        ? this.aggregateChunkData(chunk.subChunks)
+        : "";
+      return acc + chunkData + subChunkData;
+    }, "");
+  };
+
   async processFilePart(
     fileId: string,
     cleanedUpData: string,
@@ -162,15 +175,24 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       chunk: LlmDocumentChunksStrategy,
       parentChunkIndex: number | null = null
     ) => {
+      let hasAggregatedChunkData = false;
+      if (!chunk.chunkData && chunk.subChunks) {
+        chunk.chunkData = this.aggregateChunkData([chunk]);
+        hasAggregatedChunkData = true;
+      }
       if (chunk.chunkData) {
         let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(
           chunk.chunkData
         );
 
-        chunkAnalyzeResponse.fullCompressedContents =
-          await this.chunkCompressor.compress(chunk.chunkData);
+        console.log(`\n\nAnalyzed chunk: ${JSON.stringify(chunkAnalyzeResponse)}`)
 
-        const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
+        if (!hasAggregatedChunkData) {
+          console.log(`\nBefore compression:\n${chunk.chunkData}\n`)
+          chunkAnalyzeResponse.fullCompressedContents =
+          await this.chunkCompressor.compress(chunk.chunkData);
+          console.log(`\nAfter compression:\n${chunkAnalyzeResponse.fullCompressedContents}\n\n`)
+        }
 
         const chunkIndex =
           parentChunkIndex === null
@@ -214,10 +236,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       await processChunk(chunk);
     }
 
+    console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
+
+    // Wait for 3 minutes
+    await new Promise((resolve) => setTimeout(resolve, 150000));
+
     this.saveFileMetadata();
   }
 
-  async processFilePartT(
+  async processFilePartOld(
     fileId: string,
     cleanedUpData: string,
     weaviateDocumentId: string

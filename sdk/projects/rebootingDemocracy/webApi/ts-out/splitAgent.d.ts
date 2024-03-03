@@ -15,6 +15,8 @@ export declare class IngestionSplitAgent extends BaseIngestionAgent {
         chunkingStrategyReview: string;
         lastChunkingStrategyJson: LlmDocumentChunksStrategy[];
     }>;
+    aggregateChunkData: (chunks: LlmDocumentChunksStrategy[]) => string;
+    normalizeLineBreaks(text: string): string;
     splitDocumentIntoChunks(data: string, isSubChunk?: boolean, totalLinesInChunk?: number): Promise<LlmDocumentChunksStrategy[] | undefined>;
 }
 //# sourceMappingURL=splitAgent.d.ts.map
