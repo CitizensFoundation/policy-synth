@@ -28,7 +28,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     const messages = [
       new SystemMessage(
         `
-        You are an AI expert trained to chunks/parts of documents based on their relevance to the users ranking rules.
+        You are an AI expert trained to rank chunks of documents based on their relevance to the users ranking rules.
 
         Instructions:
         1. You will see user rankings rules for .
@@ -40,7 +40,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
       ),
       new HumanMessage(
         `
-        Ranking rules: ${this.rankingRules}
+        User Ranking Rules: ${this.rankingRules}
 
         Document Chunks to Rank:
 
