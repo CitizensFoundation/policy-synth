@@ -4,7 +4,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 export class IngestionSplitAgent extends BaseIngestionAgent {
     maxSplitRetries = 15;
     minChunkCharacterLength = 50;
-    maxChunkLinesLength = 8;
+    maxChunkLinesLength = 10;
     strategySystemMessage = new SystemMessage(`You are an expert document split strategy generator.
 
 Instructions:
@@ -188,7 +188,7 @@ YOUR EVALUATION: `);
                         else {
                             console.log(`Chunk ${i + 1} is within size limits (${chunkSize} lines), no need for subchunking.`);
                             strategy.chunkData = finalData;
-                            console.log(JSON.stringify(strategy, null, 2));
+                            //console.log(JSON.stringify(strategy, null, 2))
                         }
                     }
                 }
@@ -214,8 +214,8 @@ YOUR EVALUATION: `);
                     // Normalize both the original and aggregated data for comparison
                     const normalizedAggregatedData = normalizeLineBreaks(aggregatedChunkData);
                     const normalizedOriginalData = normalizeLineBreaks(data);
-                    console.log(`Original chunk data:\n${normalizedOriginalData}\n`);
-                    console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`);
+                    //console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
+                    //console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
                     if (normalizedAggregatedData !== normalizedOriginalData) {
                         const diff = this.generateDiff(normalizedAggregatedData, normalizedOriginalData);
                         console.error(`Diff: ${diff}`);
