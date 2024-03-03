@@ -119,8 +119,8 @@ YOUR EVALUATION: `);
             lastChunkingStrategyJson,
         };
     }
-    async splitDocumentIntoChunks(data, startingLineNumber = 0, isSubChunk = false, totalLinesInChunk) {
-        console.log(`Splitting document into chunks... (Starting line number: ${startingLineNumber}) (isSubChunk: ${isSubChunk}) (totalLinesInChunk: ${totalLinesInChunk})`);
+    async splitDocumentIntoChunks(data, isSubChunk = false, totalLinesInChunk) {
+        console.log(`Splitting document into chunks...(isSubChunk: ${isSubChunk}) (totalLinesInChunk: ${totalLinesInChunk})`);
         if (!isSubChunk) {
             this.resetLlmTemperature();
         }
@@ -132,7 +132,7 @@ YOUR EVALUATION: `);
             console.log(`Processing chunk...`);
             let dataWithLineNumber = data
                 .split("\n")
-                .map((line, index) => `${startingLineNumber + index + 1}: ${line}`)
+                .map((line, index) => `${index + 1}: ${line}`)
                 .join("\n");
             if (isSubChunk)
                 console.log(`Sub Chunk Data with line numbers:\n`);
@@ -162,7 +162,7 @@ YOUR EVALUATION: `);
                         else {
                             // Directly use the total number of lines for the last chunk, adjusted by the starting line number
                             endLine =
-                                startingLineNumber + dataWithLineNumber.split("\n").length;
+                                dataWithLineNumber.split("\n").length;
                         }
                         console.log(`Start line for chunk ${i + 1}: ${startLine} endline: ${endLine}`);
                         const chunkSize = endLine - startLine + 1;
@@ -173,14 +173,14 @@ YOUR EVALUATION: `);
                         }
                         const finalData = data
                             .split("\n")
-                            .slice(startLine - 1 - startingLineNumber, endLine)
+                            .slice(startLine - 1, endLine)
                             .join("\n");
                         if (chunkSize > this.maxChunkLinesLength) {
                             console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
                             const oversizedChunkContent = finalData; // Using finalData directly.
                             const totalLinesInOversizedChunk = oversizedChunkContent.split("\n").length;
                             console.log(`Creating subchunks startline ${startLine}, endline ${endLine}, totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`);
-                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, startLine, true, totalLinesInOversizedChunk);
+                            const subChunks = await this.splitDocumentIntoChunks(oversizedChunkContent, true, totalLinesInOversizedChunk);
                             console.log(`Completed processing subchunks for chunk ${i + 1}. Received ${subChunks ? subChunks.length : 0} subchunks.`);
                             strategy.subChunks = [];
                             strategy.subChunks.push(...subChunks);
@@ -214,8 +214,8 @@ YOUR EVALUATION: `);
                     // Normalize both the original and aggregated data for comparison
                     const normalizedAggregatedData = normalizeLineBreaks(aggregatedChunkData);
                     const normalizedOriginalData = normalizeLineBreaks(data);
-                    //console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
-                    //console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
+                    console.log(`Original chunk data:\n${normalizedOriginalData}\n`);
+                    console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`);
                     if (normalizedAggregatedData !== normalizedOriginalData) {
                         const diff = this.generateDiff(normalizedAggregatedData, normalizedOriginalData);
                         console.error(`Diff: ${diff}`);
