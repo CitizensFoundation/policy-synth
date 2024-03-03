@@ -2,7 +2,7 @@ import { IEngineConstants } from "./constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 export class IngestionSplitAgent extends BaseIngestionAgent {
-    maxSplitRetries = 15;
+    maxSplitRetries = 20;
     minChunkCharacterLength = 50;
     maxChunkLinesLength = 10;
     strategySystemMessage = new SystemMessage(`You are an expert document split strategy generator.
@@ -39,9 +39,13 @@ Output:
 
 YOUR THOUGHTFUL STRATEGY:
 `);
-    strategyWithReviewUserMessage = (data, reviewComments) => new HumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
+    strategyWithReviewUserMessage = (data, lastAttempt, reviewComments) => new HumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
     ${data}
   </DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
+
+  <LAST_ATTEMPT_AT_STRATEGY>
+    ${lastAttempt}
+  </LAST_ATTEMPT_AT_STRATEGY>
 
   This is your second attempt to devise a strategy, here are the reviewers comments on the last attempt:
   <REVIEW_FOR_LAST_ATTEMPT>
@@ -104,8 +108,15 @@ YOUR EVALUATION: `);
     }
     async fetchLlmChunkingStrategy(data, review, lastJson) {
         console.log("Generating chunking strategy...");
+        let lastJsonText = "";
+        try {
+            lastJsonText = JSON.stringify(lastJson, null, 2);
+        }
+        catch (e) {
+            console.error(e);
+        }
         const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, review
-            ? this.strategyWithReviewUserMessage(data, review)
+            ? this.strategyWithReviewUserMessage(data, lastJsonText, review)
             : this.strategyUserMessage(data)), false));
         console.log(`Raw chunking strategy: ${chunkingStrategy}`);
         const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(chunkingStrategy);
@@ -232,11 +243,7 @@ YOUR EVALUATION: `);
                 retryCount++;
             }
         }
-        console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
-        // Wait for 10 minutes to debug the data above
-        if (!isSubChunk) {
-            await new Promise((resolve) => setTimeout(resolve, 5000));
-        }
+        //console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
         return lastChunkingStrategyJson;
     }
 }

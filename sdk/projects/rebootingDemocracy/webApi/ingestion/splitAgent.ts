@@ -12,7 +12,7 @@ interface Chunk {
 }
 
 export class IngestionSplitAgent extends BaseIngestionAgent {
-  maxSplitRetries = 15;
+  maxSplitRetries = 20;
   minChunkCharacterLength = 50;
   maxChunkLinesLength = 10;
 
@@ -54,10 +54,14 @@ Output:
 YOUR THOUGHTFUL STRATEGY:
 `);
 
-  strategyWithReviewUserMessage = (data: string, reviewComments: string) =>
+  strategyWithReviewUserMessage = (data: string, lastAttempt: string, reviewComments: string) =>
     new HumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
     ${data}
   </DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
+
+  <LAST_ATTEMPT_AT_STRATEGY>
+    ${lastAttempt}
+  </LAST_ATTEMPT_AT_STRATEGY>
 
   This is your second attempt to devise a strategy, here are the reviewers comments on the last attempt:
   <REVIEW_FOR_LAST_ATTEMPT>
@@ -134,13 +138,19 @@ YOUR EVALUATION: `);
     lastJson: LlmDocumentChunksStrategy[] | undefined
   ) {
     console.log("Generating chunking strategy...");
+    let lastJsonText = "";
+    try {
+      lastJsonText = JSON.stringify(lastJson, null, 2);
+    } catch (e) {
+      console.error(e);
+    }
     const chunkingStrategy = (await this.callLLM(
       "ingestion-agent",
       IEngineConstants.ingestionModel,
       this.getFirstMessages(
         this.strategySystemMessage,
         review
-          ? this.strategyWithReviewUserMessage(data, review)
+          ? this.strategyWithReviewUserMessage(data, lastJsonText, review)
           : this.strategyUserMessage(data)
       ),
       false
@@ -363,12 +373,7 @@ YOUR EVALUATION: `);
       }
     }
 
-    console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
-
-    // Wait for 10 minutes to debug the data above
-    if (!isSubChunk) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
+    //console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
 
     return lastChunkingStrategyJson;
   }

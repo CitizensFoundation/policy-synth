@@ -6,7 +6,7 @@ export declare class IngestionSplitAgent extends BaseIngestionAgent {
     maxChunkLinesLength: number;
     strategySystemMessage: SystemMessage;
     strategyUserMessage: (data: string) => HumanMessage;
-    strategyWithReviewUserMessage: (data: string, reviewComments: string) => HumanMessage;
+    strategyWithReviewUserMessage: (data: string, lastAttempt: string, reviewComments: string) => HumanMessage;
     reviewStrategySystemMessage: SystemMessage;
     reviewStrategyUserMessage: (data: string, splitStrategy: string) => HumanMessage;
     generateDiff(str1: string, str2: string): string;
