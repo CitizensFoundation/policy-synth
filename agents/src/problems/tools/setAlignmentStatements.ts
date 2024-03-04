@@ -1,7 +1,7 @@
 import { Queue } from "bullmq";
 import ioredis from "ioredis";
 
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
 const setupProjectOne = (memory: PsBaseMemoryData) => {
   if (!memory.customInstructions) {

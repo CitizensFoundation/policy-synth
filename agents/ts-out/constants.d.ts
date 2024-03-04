@@ -35,6 +35,7 @@ export declare class IEngineConstants {
     static evolutionMutateModel: IEngineBaseAIModelConstants;
     static evolutionRecombineModel: IEngineBaseAIModelConstants;
     static validationModel: IEngineBaseAIModelConstants;
+    static ingestionModel: IEngineBaseAIModelConstants;
     static getPageCacheExpiration: number;
     static maxSubProblems: number;
     static maxNumberGeneratedOfEntities: number;

@@ -2,7 +2,7 @@ import { IEngineConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
     searchCounter = 0;
     async searchWeb(policy, subProblemIndex, policyIndex) {

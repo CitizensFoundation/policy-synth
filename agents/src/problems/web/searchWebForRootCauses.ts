@@ -5,7 +5,7 @@ import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
 const FORCE_RESEARCH = false;
 

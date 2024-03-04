@@ -20,7 +20,9 @@ import { writeFile, readFile, existsSync } from "fs";
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+//TODO: Look into this
+//@ts-ignore
 const metascraper = metascraperFactory([
     metascraperAuthor(),
     metascraperDate(),

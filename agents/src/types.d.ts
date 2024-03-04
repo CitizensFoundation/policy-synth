@@ -63,7 +63,7 @@ interface IEngineWorkerData {
   initialProblemStatement: string;
 }
 
-interface IEngineProblemStatement {
+interface IEngineProblemStatement extends PsEloRateable{
   description: string;
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
@@ -74,7 +74,7 @@ interface IEngineProblemStatement {
   imageUrl?: string;
 }
 
-interface IEngineSubProblem {
+interface IEngineSubProblem extends PsEloRateable {
   title: string;
   description: string;
   displayDescription?: string;
@@ -88,7 +88,6 @@ interface IEngineSubProblem {
   searchResults: IEngineSearchResults;
   customSearchUrls?: string[];
   haveScannedWeb?: boolean;
-  eloRating?: number;
   solutions: {
     populations: IEngineSolution[][];
   };
@@ -106,11 +105,10 @@ interface IEngineAffectedEntityAffect {
   reason: string;
 }
 
-interface IEngineAffectedEntity {
+interface IEngineAffectedEntity extends PsEloRateable {
   name: string;
   positiveEffects?: IEngineAffectedEntityAffect[];
   negativeEffects?: IEngineAffectedEntityAffect[];
-  eloRating?: number;
   searchQueries?: IEngineSearchQueries;
   searchResults?: IEngineSearchResults;
   haveScannedWeb?: boolean;
@@ -129,11 +127,14 @@ interface IEngineSimilarityGroup {
   totalCount?: number;
 }
 
-interface IEngineSolution {
+interface PsEloRateable {
+  eloRating?: number;
+}
+
+interface IEngineSolution extends PsEloRateable {
   id: string;
   title: string;
   description: string;
-  eloRating?: number;
   similarityGroup?: IEngineSimilarityGroup;
   isFirstInGroup?: boolean;
   mainBenefitOfSolutionComponent: string;
@@ -156,10 +157,9 @@ interface IEngineSolution {
   };
 }
 
-interface IEngineProCon {
+interface IEngineProCon extends PsEloRateable {
   id?: number;
   description: string;
-  eloRating?: number;
 }
 
 interface IEEngineSearchResultPage {
@@ -277,13 +277,12 @@ interface IEngineSearchQuery {
   openData: string;
 }
 
-interface IEngineSearchResultItem {
+interface IEngineSearchResultItem extends PsEloRateable {
   title: string;
   originalPosition: number;
   description: string;
   url: string;
   date: string;
-  eloRating?: number;
   //TODO: Depricated
   link?: string;
   //TODO: Depricated

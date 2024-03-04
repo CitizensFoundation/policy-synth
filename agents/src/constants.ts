@@ -9,14 +9,14 @@ const gpt4TotalTokenLimit = 70000;
 
 const adaInTokenPrice = 0.0001;
 
-const gpt35_16k_TPM = 1000000;
-const gpt35_16k_RPM = 10000;
+const gpt35_16k_TPM = 1000000 * 3;
+const gpt35_16k_RPM = 10000 * 3;
 
 const gpt35_TPM = 750000;
 const gpt35_RPM = 10000;
 
-const gpt4_TPM = 150000;
-const gpt4_RPM = 10000;
+const gpt4_TPM = 150000 * 3;
+const gpt4_RPM = 10000 * 3;
 
 export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
@@ -417,6 +417,18 @@ export class IEngineConstants {
     limitTPM: gpt4_TPM,
     limitRPM: gpt4_RPM,
     verbose: false,
+  };
+
+  static ingestionModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4-0125-preview",
+    temperature: 0.0,
+    maxOutputTokens: 4095,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
   };
 
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months

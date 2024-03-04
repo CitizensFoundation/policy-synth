@@ -1,4 +1,4 @@
-import puppeteer, { Page } from "puppeteer-extra";
+import puppeteer from "puppeteer-extra";
 
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { htmlToText } from "html-to-text";
@@ -7,8 +7,9 @@ import { htmlToText } from "html-to-text";
 import ioredis from "ioredis";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
+import { Page } from "puppeteer";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 

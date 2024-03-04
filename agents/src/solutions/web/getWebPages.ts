@@ -1,5 +1,5 @@
-import { HTTPResponse, Page } from "puppeteer";
-import puppeteer, { Browser } from "puppeteer-extra";
+import { HTTPResponse, Page, Browser } from "puppeteer";
+import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 import { PdfReader } from "pdfreader";
@@ -27,7 +27,7 @@ import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 import ioredis from "ioredis";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 

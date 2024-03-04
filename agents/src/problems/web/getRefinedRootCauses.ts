@@ -1,5 +1,5 @@
 import { Page } from "puppeteer";
-import puppeteer, { Browser } from "puppeteer-extra";
+import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 
@@ -13,7 +13,7 @@ import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 

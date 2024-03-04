@@ -1,6 +1,4 @@
-/// <reference path="../../../src/types.d.ts" />
-import { Page } from "puppeteer";
-import { Browser } from "puppeteer-extra";
+import { Page, Browser } from "puppeteer";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";

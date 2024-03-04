@@ -5,7 +5,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcessor {

@@ -1,6 +1,6 @@
 import ioredis from "ioredis";
 import { PolicySynthAgentBase } from "./baseAgent.js";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class BaseAgentProcessor extends PolicySynthAgentBase {
     job;
     getRedisKey(groupId) {

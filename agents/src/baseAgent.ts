@@ -7,7 +7,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { Callbacks } from "@langchain/core/callbacks/manager";
 
 //@ts-ignore
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
@@ -87,6 +87,7 @@ export class PolicySynthAgentBase {
       "web-get-refined-evidence": {},
       "get-metadata-for-top-evidence": {},
       "validation-agent": {},
+      "ingestion-agent": {}
     }
   }
 

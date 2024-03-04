@@ -2,7 +2,7 @@ import { IEngineConstants } from "../../constants.js";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 class ShowCounts extends BaseProblemSolvingAgent {
     webPageVectorStore = new WebPageVectorStore();
     foundIds = new Set();

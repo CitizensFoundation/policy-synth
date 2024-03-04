@@ -1,6 +1,4 @@
-/// <reference path="../../../src/types.d.ts" />
-import { Page } from "puppeteer";
-import { Browser } from "puppeteer-extra";
+import { Page, Browser } from "puppeteer";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
 export declare class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesProcessor {
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;

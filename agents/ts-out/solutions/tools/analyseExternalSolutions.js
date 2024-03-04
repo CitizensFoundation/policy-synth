@@ -8,7 +8,7 @@ import path from "path";
 import fetch from "node-fetch";
 //@ts-ignore
 global.fetch = fetch;
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const externalSolutionsElectionViolence = [
     {
         description: "Invest in Early Warning Response Systems (EWRS) - tools which use data and research findings to predict instances of violence – with an emphasis on rapidly delivering intelligence about threats to elections groups working at the local level.",

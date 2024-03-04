@@ -2,7 +2,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
 export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
     prompts: Record<number, number[][]>;
-    allItems: Record<number, (IEngineSearchResultItem[] | IEngineSolution[] | IEngineProblemStatement[] | IEngineAffectedEntity[] | IEngineProCon[] | string[]) | undefined>;
+    allItems: Record<number, (PsEloRateable[] | string[]) | undefined>;
     INITIAL_ELO_RATING: number;
     K_FACTOR_INITIAL: number;
     K_FACTOR_MIN: number;
@@ -22,6 +22,6 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemS
     }>;
     getUpdatedKFactor(numComparisons: number): number;
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
-    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProCon | IEngineSolution | IEngineAffectedEntity | IEngineProblemStatement | IEngineSearchResultItem)[];
+    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | PsEloRateable)[];
 }
 //# sourceMappingURL=basePairwiseRanking.d.ts.map

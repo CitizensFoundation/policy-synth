@@ -184,7 +184,8 @@ export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
         let allItems = this.allItems[subProblemIndex];
         if (returnEloRatings) {
             for (let i = 0; i < allItems.length; i++) {
-                allItems[i].eloRating = this.eloRatings[subProblemIndex][i];
+                allItems[i].eloRating =
+                    this.eloRatings[subProblemIndex][i];
             }
         }
         const orderedItems = allItems.map((item, index) => {

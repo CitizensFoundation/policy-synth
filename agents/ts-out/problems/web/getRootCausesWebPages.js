@@ -8,7 +8,7 @@ import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { RootCauseExamplePrompts } from "./rootCauseExamplePrompts.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = true;

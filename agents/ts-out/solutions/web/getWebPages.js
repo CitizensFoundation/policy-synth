@@ -16,7 +16,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 import ioredis from "ioredis";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;

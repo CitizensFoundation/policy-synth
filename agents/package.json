@@ -30,6 +30,7 @@
     "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
     "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
     "test": "gulp test:local",
+    "build": "tsc --project ./ --outDir ./ts-out",
     "start": "nodemon -q ts-out/queue.js",
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ts-out/queue.js"
   },
@@ -40,8 +41,8 @@
   "dependencies": {
     "mammoth": "^1.7.0",
     "xlsx": "^0.18.5",
-    "@langchain/core": "^0.1.30",
-    "@langchain/openai": "^0.0.14",
+    "@langchain/core": "^0.1.40",
+    "@langchain/openai": "^0.0.15",
     "aws-sdk": "^2.1424.0",
     "axios": "^1.4.0",
     "bullmq": "^4.1.0",
@@ -72,7 +73,7 @@
     "puppeteer": "^19.11.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "weaviate-ts-client": "^2.0.0",
+    "weaviate-ts-client": "^2.1.0",
     "winston": "^3.9.0",
     "ws": "^8.16.0"
   }

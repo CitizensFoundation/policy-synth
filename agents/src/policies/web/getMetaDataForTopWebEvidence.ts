@@ -1,5 +1,5 @@
-import { Page } from "puppeteer";
-import puppeteer, { Browser } from "puppeteer-extra";
+import { Page, Browser } from "puppeteer";
+import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 import metascraperFactory from "metascraper";
@@ -33,10 +33,12 @@ const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
+//TODO: Look into this
+//@ts-ignore
 const metascraper = metascraperFactory([
   metascraperAuthor(),
   metascraperDate(),

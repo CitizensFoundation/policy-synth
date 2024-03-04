@@ -4,7 +4,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import ioredis from "ioredis";
 import { IEngineConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
