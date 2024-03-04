@@ -6,7 +6,7 @@ interface DataLayout {
 
 // Add cache for first the response keyed on the data hashes
 // So if user asks a similar question, we lookup in weaviate, and decide in the routing
-interface CachedFileMetadata {
+interface CachedFileMetadata extends PsEloRateable{
   key: string;
   url: string;
   lastModified: string;

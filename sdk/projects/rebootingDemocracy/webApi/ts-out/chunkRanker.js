@@ -35,17 +35,17 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         Document Chunks to Rank:
 
         Document Chunk One:
-        ${itemOne}
+        ${itemOne.compressedContents}
 
         Document Chunk Two:
-        ${itemTwo}
+        ${itemTwo.compressedContents}
 
         The Most Relevant Document Chunk Is:
        `),
         ];
         return await this.getResultsFromLLM(index, "ingestion-agent", IEngineConstants.ingestionModel, messages, itemOneIndex, itemTwoIndex);
     }
-    async rankDocumentChunks(chunksToRank, rankingRules, documentSummary, maxPrompts = 120) {
+    async rankDocumentChunks(chunksToRank, rankingRules, documentSummary) {
         this.rankingRules = rankingRules;
         this.documentSummary = documentSummary;
         this.chat = new ChatOpenAI({
@@ -54,8 +54,8 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
             modelName: IEngineConstants.searchQueryRankingsModel.name,
             verbose: IEngineConstants.searchQueryRankingsModel.verbose,
         });
-        this.setupRankingPrompts(-1, chunksToRank, maxPrompts, this.progressFunction);
+        this.setupRankingPrompts(-1, chunksToRank, chunksToRank.length * 10, this.progressFunction);
         await this.performPairwiseRanking(-1);
-        return this.getOrderedListOfItems(-1);
+        return this.getOrderedListOfItems(-1, true);
     }
 }

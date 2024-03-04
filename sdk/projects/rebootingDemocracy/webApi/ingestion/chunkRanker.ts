@@ -23,8 +23,8 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![itemOneIndex] as string;
-    const itemTwo = this.allItems![index]![itemTwoIndex] as string;
+    const itemOne = this.allItems![index]![itemOneIndex] as PsIngestionChunkData;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as PsIngestionChunkData;
 
     const messages = [
       new SystemMessage(
@@ -50,10 +50,10 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         Document Chunks to Rank:
 
         Document Chunk One:
-        ${itemOne}
+        ${itemOne.compressedContents}
 
         Document Chunk Two:
-        ${itemTwo}
+        ${itemTwo.compressedContents}
 
         The Most Relevant Document Chunk Is:
        `
@@ -73,8 +73,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   async rankDocumentChunks(
     chunksToRank: PsIngestionChunkData[],
     rankingRules: string,
-    documentSummary: string,
-    maxPrompts = 120
+    documentSummary: string
   ) {
     this.rankingRules = rankingRules;
     this.documentSummary = documentSummary;
@@ -89,7 +88,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     this.setupRankingPrompts(
       -1,
       chunksToRank as PsEloRateable[],
-      maxPrompts,
+      chunksToRank.length * 10,
       this.progressFunction,
     );
     await this.performPairwiseRanking(-1);
