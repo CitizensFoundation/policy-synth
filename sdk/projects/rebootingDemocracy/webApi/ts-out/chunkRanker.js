@@ -4,6 +4,7 @@ import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseR
 import { IEngineConstants } from "./constants.js";
 export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     rankingRules;
+    documentSummary;
     constructor(memory, progressFunction = undefined) {
         super(undefined, memory);
         this.progressFunction = progressFunction;
@@ -18,14 +19,18 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         You are an AI expert trained to rank chunks of documents based on their relevance to the users ranking rules.
 
         Instructions:
-        1. You will see user rankings rules for .
+        1. The user will provide you with ranking rules you should follow.
         2. You will also see document chunks, each marked as "Document Chunk One" and "Document Chunk Two".
         3. Your task is to analyze, compare, and rank these document chunks based on their relevance to the users rankinng rules.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
             new HumanMessage(`
-        User Ranking Rules: ${this.rankingRules}
+        User Ranking Rules:
+        ${this.rankingRules}
+
+        Full document summary:
+        ${this.documentSummary}
 
         Document Chunks to Rank:
 
@@ -40,8 +45,9 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         ];
         return await this.getResultsFromLLM(index, "ingestion-agent", IEngineConstants.ingestionModel, messages, itemOneIndex, itemTwoIndex);
     }
-    async rankDocumentChunks(chunksToRank, rankingRules, maxPrompts = 120) {
+    async rankDocumentChunks(chunksToRank, rankingRules, documentSummary, maxPrompts = 120) {
         this.rankingRules = rankingRules;
+        this.documentSummary = documentSummary;
         this.chat = new ChatOpenAI({
             temperature: IEngineConstants.searchQueryRankingsModel.temperature,
             maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,

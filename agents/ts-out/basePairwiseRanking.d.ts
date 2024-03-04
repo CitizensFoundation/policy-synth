@@ -13,7 +13,7 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemS
     eloRatings: Record<number, Record<number, number>>;
     progressFunction: Function | undefined;
     fisherYatesShuffle(array: any[]): any[];
-    setupRankingPrompts(subProblemIndex: number, allItems: IEngineSearchResultItem[] | IEngineSolution[] | IEngineProblemStatement[] | string[] | IEngineProCon[] | IEngineAffectedEntity[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
+    setupRankingPrompts(subProblemIndex: number, allItems: PsEloRateable[] | string[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
     abstract voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<IEnginePairWiseVoteResults>;
     getResultsFromLLM(subProblemIndex: number, stageName: PsMemoryStageTypes, modelConstant: IEngineBaseAIModelConstants, messages: (HumanMessage | SystemMessage)[], itemOneIndex: number, itemTwoIndex: number): Promise<{
         subProblemIndex: number;

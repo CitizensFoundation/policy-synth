@@ -6,6 +6,7 @@ import { IEngineConstants } from "./constants.js";
 
 export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   rankingRules: string | undefined;
+  documentSummary: string | undefined;
 
   constructor(
     memory: PsBaseMemoryData,
@@ -31,7 +32,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         You are an AI expert trained to rank chunks of documents based on their relevance to the users ranking rules.
 
         Instructions:
-        1. You will see user rankings rules for .
+        1. The user will provide you with ranking rules you should follow.
         2. You will also see document chunks, each marked as "Document Chunk One" and "Document Chunk Two".
         3. Your task is to analyze, compare, and rank these document chunks based on their relevance to the users rankinng rules.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
@@ -40,7 +41,11 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
       ),
       new HumanMessage(
         `
-        User Ranking Rules: ${this.rankingRules}
+        User Ranking Rules:
+        ${this.rankingRules}
+
+        Full document summary:
+        ${this.documentSummary}
 
         Document Chunks to Rank:
 
@@ -66,11 +71,13 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   }
 
   async rankDocumentChunks(
-    chunksToRank: string[],
+    chunksToRank: PsIngestionChunkData[],
     rankingRules: string,
+    documentSummary: string,
     maxPrompts = 120
   ) {
     this.rankingRules = rankingRules;
+    this.documentSummary = documentSummary;
 
     this.chat = new ChatOpenAI({
       temperature: IEngineConstants.searchQueryRankingsModel.temperature,
@@ -81,11 +88,11 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
 
     this.setupRankingPrompts(
       -1,
-      chunksToRank,
+      chunksToRank as PsEloRateable[],
       maxPrompts,
-      this.progressFunction
+      this.progressFunction,
     );
     await this.performPairwiseRanking(-1);
-    return this.getOrderedListOfItems(-1) as string[];
+    return this.getOrderedListOfItems(-1, true) as PsIngestionChunkData[];
   }
 }

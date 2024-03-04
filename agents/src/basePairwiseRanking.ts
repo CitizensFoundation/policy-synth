@@ -34,12 +34,8 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
   setupRankingPrompts(
     subProblemIndex: number,
     allItems:
-      | IEngineSearchResultItem[]
-      | IEngineSolution[]
-      | IEngineProblemStatement[]
-      | string[]
-      | IEngineProCon[]
-      | IEngineAffectedEntity[],
+      | PsEloRateable[]
+      | string[],
     maxPrompts: number | undefined = undefined,
     updateFunction: Function | undefined = undefined
   ) {

@@ -72,6 +72,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     this.saveFileMetadata();
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
+                // Cleanup fullContentsColumns in docAnalysis and redo the summaries
                 const reCleanData = false || doNotReprocess.indexOf(metadataEntry.fileId) === -1;
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
@@ -82,11 +83,11 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     this.maxFileProcessTokenLength) {
                     const dataParts = this.splitDataForProcessing(cleanedUpData);
                     for (const part of dataParts) {
-                        await this.processFilePart(metadataEntry.fileId, part, weaviateDocumentId); // Process each part of the file
+                        await this.processFilePartTree(metadataEntry.fileId, part, weaviateDocumentId); // Process each part of the file
                     }
                 }
                 else {
-                    await this.processFilePart(metadataEntry.fileId, cleanedUpData, weaviateDocumentId); // Process the entire file as one part
+                    await this.processFilePartTree(metadataEntry.fileId, cleanedUpData, weaviateDocumentId); // Process the entire file as one part
                 }
             }
             catch (error) {
@@ -104,7 +105,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             return acc + chunkData + subChunkData;
         }, "");
     };
-    async processFilePart(fileId, cleanedUpData, weaviateDocumentId) {
+    async processFilePartTree(fileId, cleanedUpData, weaviateDocumentId) {
         console.log(`Processing file part for fileId: ${fileId}`);
         this.saveFileMetadata();
         this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
@@ -171,7 +172,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         await new Promise((resolve) => setTimeout(resolve, 150000));
         this.saveFileMetadata();
     }
-    async processFilePartOld(fileId, cleanedUpData, weaviateDocumentId) {
+    async processFilePartFlat(fileId, cleanedUpData, weaviateDocumentId) {
         console.log(`Processing file part for fileId: ${fileId}`);
         this.saveFileMetadata();
         this.fileMetadata[fileId].cleanedDocument = cleanedUpData;

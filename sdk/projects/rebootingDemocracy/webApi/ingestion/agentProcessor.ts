@@ -97,6 +97,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           // Create Weaviate object for document with all analyzies and get and id for the parts
         }
 
+        // Cleanup fullContentsColumns in docAnalysis and redo the summaries
+
         const reCleanData =
           false || doNotReprocess.indexOf(metadataEntry.fileId) === -1;
 
@@ -114,14 +116,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         ) {
           const dataParts = this.splitDataForProcessing(cleanedUpData);
           for (const part of dataParts) {
-            await this.processFilePart(
+            await this.processFilePartTree(
               metadataEntry.fileId,
               part,
               weaviateDocumentId
             ); // Process each part of the file
           }
         } else {
-          await this.processFilePart(
+          await this.processFilePartTree(
             metadataEntry.fileId,
             cleanedUpData,
             weaviateDocumentId
@@ -147,7 +149,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     }, "");
   };
 
-  async processFilePart(
+  async processFilePartTree(
     fileId: string,
     cleanedUpData: string,
     weaviateDocumentId: string
@@ -244,7 +246,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.saveFileMetadata();
   }
 
-  async processFilePartOld(
+  async processFilePartFlat(
     fileId: string,
     cleanedUpData: string,
     weaviateDocumentId: string

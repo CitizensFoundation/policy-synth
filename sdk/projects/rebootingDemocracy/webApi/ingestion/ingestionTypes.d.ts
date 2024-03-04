@@ -70,7 +70,7 @@ interface LlmChunkAnalysisReponse {
   metaData: { [key: string]: string };
 }
 
-interface PsIngestionChunkData {
+interface PsIngestionChunkData extends PsEloRateable {
   title: string;
   chunkIndex: number;
   documentIndex?: string;

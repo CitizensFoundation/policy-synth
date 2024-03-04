@@ -48,15 +48,21 @@ ${data}
 
 Your highly compressed text while still capturing all detail and nuance from the original:
 `);
-    compressionRetryUserMessage = (data, lastCompressed, validationTextResults) => new HumanMessage(`Document to analyze and compress:
+    compressionRetryUserMessage = (data, lastCompressed, validationTextResults) => new HumanMessage(`<TEXT_TO_COMPRESS>
 ${data}
-Note: You have already tried once to compress this text, and you got those validation errors:
+</TEXT_TO_COMPRESS>
+
+Note: You have already tried once to compress this text, and you got those validation suggestions:
+<INFORMATION_FOR_COMPRESSION_IMPROVEMENTS>
 ${validationTextResults}
+</INFORMATION_FOR_COMPRESSION_IMPROVEMENTS>
 
 Your last invalid compressed text:
+<LAST_ATTEMPT_TO_IMPROVE>
 ${lastCompressed}
+</LAST_ATTEMPT_TO_IMPROVE>
 
-Your new improved compressed text:
+Your new improved highly compressed text while still capturing all detail and nuance from the original:
 `);
     async compress(uncompressedData) {
         this.resetLlmTemperature();

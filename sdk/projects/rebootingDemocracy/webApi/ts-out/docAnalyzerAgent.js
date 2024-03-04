@@ -10,7 +10,8 @@ export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
   - Always output URLs in a proper URL format if you find any and add them to the relevant lists.
   - Only output png, jpg, jpeg, webp, and gif image URLs into the allImageUrls list no text.
   - If you find a document date output it in this format: 1. January 2024 in the documentDate field.
-  - Finally, output your analysis in this JSON format without explanations: {
+  - Finally, output your analysis in this JSON format without explanations:
+  {
     title: string;
     shortDescription: string;
     description: string;
@@ -23,6 +24,31 @@ export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
   }`);
     userMessage = (data) => new HumanMessage(`Document to analyze:
 ${data}
+
+Your JSON analysis:
+`);
+    finalReviewSystemMessage = new SystemMessage(`You are an expert document analyze refiner.
+Instructions:
+- You will recieve a document analysis in JSON format.
+- Please refine the fullDescriptionOfAllContents has been collected part by part in a loop, but keep all the data and all text do not remove anything from there.
+- Then refine the shortDescription and description with all the data from the fullDescriptionOfAllContents.
+- Then output again the full JSON but with the refined shortDescription, description and fullDescriptionOfAllContents without explanations:
+{
+  title: string;
+  shortDescription: string;
+  description: string;
+  fullDescriptionOfAllContents: string;
+  documentDate: string;
+  documentMetaData: { [key: string]: string };
+  allImageUrls: string[];
+  allReferencesWithUrls: { reference: string; url: string }[];
+  allOtherReferences: string[];
+}
+`);
+    finalReviewUserMessage = (analysis) => new HumanMessage(`Document analyzis to review:
+${JSON.stringify(analysis, null, 2)}
+
+Your refined JSON analysis:
 `);
     async analyze(fileId, data, filesMetaData = {}) {
         // Split data if larger than maxAnalyzeTokenLength
@@ -80,6 +106,12 @@ ${data}
             }
         }
         console.log(`Final analysis results: ${JSON.stringify(metadata, null, 2)}`);
+        const refinedMetadata = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.finalReviewSystemMessage, this.finalReviewUserMessage(metadata))));
+        metadata.shortDescription = refinedMetadata.shortDescription;
+        metadata.description = refinedMetadata.description;
+        metadata.fullDescriptionOfAllContents =
+            refinedMetadata.fullDescriptionOfAllContents;
+        console.log(`Final refined analysis results: ${JSON.stringify(metadata, null, 2)}`);
         filesMetaData[fileId] = metadata;
         return metadata;
     }
