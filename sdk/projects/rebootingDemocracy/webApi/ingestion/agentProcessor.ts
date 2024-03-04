@@ -11,6 +11,7 @@ import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
 import { IngestionContentParser } from "./contentParser.js";
 import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
 import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
+import { IngestionChunkRanker } from "./chunkRanker.js";
 
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
@@ -237,6 +238,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     for (let chunk of chunks) {
       await processChunk(chunk);
     }
+
+    const ranker = new IngestionChunkRanker();
 
     console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
 

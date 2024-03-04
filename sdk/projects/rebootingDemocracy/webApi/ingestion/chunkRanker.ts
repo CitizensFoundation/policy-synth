@@ -9,10 +9,10 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   documentSummary: string | undefined;
 
   constructor(
-    memory: PsBaseMemoryData,
+    memory: PsBaseMemoryData | undefined = undefined,
     progressFunction: Function | undefined = undefined
   ) {
-    super(undefined as any, memory);
+    super(undefined as any, memory!);
     this.progressFunction = progressFunction;
   }
 

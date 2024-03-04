@@ -5,7 +5,7 @@ import { IEngineConstants } from "./constants.js";
 export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     rankingRules;
     documentSummary;
-    constructor(memory, progressFunction = undefined) {
+    constructor(memory = undefined, progressFunction = undefined) {
         super(undefined, memory);
         this.progressFunction = progressFunction;
     }
