@@ -168,7 +168,20 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         for (let chunk of chunks) {
             await processChunk(chunk);
         }
+        const flattenedChunks = [];
+        const flattenChunks = (chunks) => {
+            for (let chunkIndex in chunks) {
+                const chunk = chunks[chunkIndex];
+                flattenedChunks.push(chunk);
+                if (chunk.subChunks) {
+                    flattenChunks(chunk.subChunks);
+                }
+            }
+        };
+        const topLevelChunksArray = Object.values(metadata.chunks);
+        flattenChunks(topLevelChunksArray);
         const ranker = new IngestionChunkRanker();
+        await ranker.rankDocumentChunks(flattenedChunks, "Ranking rules", "Document summary");
         console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
         // Wait for 3 minutes
         await new Promise((resolve) => setTimeout(resolve, 150000));

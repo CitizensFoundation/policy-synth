@@ -239,7 +239,23 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       await processChunk(chunk);
     }
 
+    const flattenedChunks: PsIngestionChunkData[] = [];
+
+    const flattenChunks = (chunks: PsIngestionChunkData[]) => {
+      for (let chunkIndex in chunks) {
+        const chunk = chunks[chunkIndex];
+        flattenedChunks.push(chunk);
+        if (chunk.subChunks) {
+          flattenChunks(chunk.subChunks);
+        }
+      }
+    };
+
+    const topLevelChunksArray: PsIngestionChunkData[] = Object.values(metadata.chunks!);
+    flattenChunks(topLevelChunksArray);
+
     const ranker = new IngestionChunkRanker();
+    await ranker.rankDocumentChunks(flattenedChunks, "Ranking rules", "Document summary");
 
     console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
 
