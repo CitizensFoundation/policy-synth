@@ -78,7 +78,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         //  continue;
 
 
-        const reAnalyze = false;
+        const reAnalyze = true;
         if (
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
