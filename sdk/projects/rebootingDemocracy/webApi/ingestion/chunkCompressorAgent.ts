@@ -78,7 +78,7 @@ Your compressed text:
 ${data}
 </ORIGINAL_TEXT_TO_COMPRESS>
 
-IMPORTANT: You have already tried once to compress this text, and you got those validation suggestions:
+IMPORTANT: You have already tried once to compress this text, and you got those suggestions for improvement:
 <SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 ${validationTextResults}
 </SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
@@ -87,7 +87,7 @@ ${validationTextResults}
 ${lastCompressed}
 </LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 
-Please use the information from the last compression validation suggestions to improve on the last compression attempt.
+Please use the information from the suggestions for improvement to improve on the last compression attempt.
 
 Your new improved compressed text:
 `);
