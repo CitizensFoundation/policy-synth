@@ -179,13 +179,19 @@ export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
             throw error;
         }
     }
-    getOrderedListOfItems(subProblemIndex, returnEloRatings = false) {
+    getOrderedListOfItems(subProblemIndex, setEloRatings = false, customEloRatingKey = undefined) {
         this.logger.info("Getting ordered list of items");
         let allItems = this.allItems[subProblemIndex];
-        if (returnEloRatings) {
+        if (setEloRatings) {
             for (let i = 0; i < allItems.length; i++) {
-                allItems[i].eloRating =
-                    this.eloRatings[subProblemIndex][i];
+                if (customEloRatingKey) {
+                    allItems[i][customEloRatingKey] =
+                        this.eloRatings[subProblemIndex][i];
+                }
+                else {
+                    allItems[i].eloRating =
+                        this.eloRatings[subProblemIndex][i];
+                }
             }
         }
         const orderedItems = allItems.map((item, index) => {

@@ -33,9 +33,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
 
   setupRankingPrompts(
     subProblemIndex: number,
-    allItems:
-      | PsEloRateable[]
-      | string[],
+    allItems: PsEloRateable[] | string[],
     maxPrompts: number | undefined = undefined,
     updateFunction: Function | undefined = undefined
   ) {
@@ -267,14 +265,20 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
 
   getOrderedListOfItems(
     subProblemIndex: number,
-    returnEloRatings: boolean = false
+    setEloRatings: boolean = false,
+    customEloRatingKey: string | undefined = undefined
   ) {
     this.logger.info("Getting ordered list of items");
     let allItems = this.allItems[subProblemIndex];
-    if (returnEloRatings) {
+    if (setEloRatings) {
       for (let i = 0; i < allItems!.length; i++) {
-        (allItems![i] as PsEloRateable).eloRating =
-          this.eloRatings[subProblemIndex][i];
+        if (customEloRatingKey) {
+          (allItems![i] as any)[customEloRatingKey] =
+            this.eloRatings[subProblemIndex][i];
+        } else {
+          (allItems![i] as PsEloRateable).eloRating =
+            this.eloRatings[subProblemIndex][i];
+        }
       }
     }
 

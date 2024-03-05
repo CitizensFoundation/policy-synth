@@ -22,6 +22,6 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemS
     }>;
     getUpdatedKFactor(numComparisons: number): number;
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
-    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | PsEloRateable)[];
+    getOrderedListOfItems(subProblemIndex: number, setEloRatings?: boolean, customEloRatingKey?: string | undefined): (string | PsEloRateable)[];
 }
 //# sourceMappingURL=basePairwiseRanking.d.ts.map
