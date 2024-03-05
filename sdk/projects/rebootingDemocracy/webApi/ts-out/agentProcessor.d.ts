@@ -21,7 +21,6 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     processFiles(files: string[]): Promise<void>;
     aggregateChunkData: (chunks: LlmDocumentChunksStrategy[]) => string;
     processFilePartTree(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void>;
-    processFilePartFlat(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void>;
     extractFileIdFromPath(filePath: string): string | null;
     getFilesForProcessing(forceProcessing?: boolean): string[];
     updateCachedFilesAndMetadata(relativePath: string, url: string, data: Buffer, contentType: string, lastModifiedOnServer: string): void;

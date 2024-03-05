@@ -77,13 +77,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
         //  continue;
 
-        const doNotReprocess = [
-          "8211f8f7011d29e3da018207b2d991da",
-          "735de0621e35c642758954aae1c3f0aa",
-        ];
 
-        const reAnalyze =
-          false || doNotReprocess.indexOf(metadataEntry.fileId) === -1;
+        const reAnalyze = false;
         if (
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
@@ -93,15 +88,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             data,
             this.fileMetadata
           )) as LlmDocumentAnalysisReponse;
-          this.saveFileMetadata();
+          await this.saveFileMetadata();
 
           // Create Weaviate object for document with all analyzies and get and id for the parts
         }
 
         // Cleanup fullContentsColumns in docAnalysis and redo the summaries
 
-        const reCleanData =
-          false || doNotReprocess.indexOf(metadataEntry.fileId) === -1;
+        const reCleanData = false;
 
         const cleanedUpData =
           (!reCleanData &&
@@ -109,7 +103,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           (await this.cleanupAgent.clean(data));
 
         console.log(`Cleaned up data: ${cleanedUpData}`);
-        this.saveFileMetadata();
+        await this.saveFileMetadata();
 
         if (
           this.getEstimateTokenLength(cleanedUpData) >
@@ -121,14 +115,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
               metadataEntry.fileId,
               part,
               weaviateDocumentId
-            ); // Process each part of the file
+            );
           }
         } else {
           await this.processFilePartTree(
             metadataEntry.fileId,
             cleanedUpData,
             weaviateDocumentId
-          ); // Process the entire file as one part
+          );
         }
       } catch (error) {
         console.error(`Failed to process file ${filePath}:`, error);
@@ -136,7 +130,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     }
     await this.saveFileMetadata();
   }
-
 
   aggregateChunkData = (
     chunks: LlmDocumentChunksStrategy[]
@@ -157,14 +150,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   ): Promise<void> {
     console.log(`Processing file part for fileId: ${fileId}`);
 
-    this.saveFileMetadata();
 
     this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
 
-    this.saveFileMetadata();
+    await this.saveFileMetadata();
+
     const metadata = this.fileMetadata[fileId] || {};
 
-    metadata.chunks = {};
+    metadata.chunks = [];
 
     const chunks = (await this.splitAgent.splitDocumentIntoChunks(
       cleanedUpData
@@ -188,175 +181,60 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           chunk.chunkData
         );
 
-        console.log(`\n\nAnalyzed chunk: ${JSON.stringify(chunkAnalyzeResponse)}`)
+        console.log(`\n\nAnalyzed chunk: ${JSON.stringify(chunkAnalyzeResponse)}`);
 
         if (!hasAggregatedChunkData) {
-          console.log(`\nBefore compression:\n${chunk.chunkData}\n`)
-          chunkAnalyzeResponse.fullCompressedContents =
-          await this.chunkCompressor.compress(chunk.chunkData);
-          console.log(`\nAfter compression:\n${chunkAnalyzeResponse.fullCompressedContents}\n\n`)
+          console.log(`\nBefore compression:\n${chunk.chunkData}\n`);
+          chunkAnalyzeResponse.fullCompressedContent =
+            await this.chunkCompressor.compress(chunk.chunkData);
+          console.log(`\nAfter compression:\n${chunkAnalyzeResponse.fullCompressedContent}\n\n`);
         }
 
-        const chunkIndex =
-          parentChunkIndex === null
-            ? Object.keys(metadata.chunks!).length + 1
-            : parentChunkIndex;
-
         const chunkMetadata: PsIngestionChunkData = {
-          chunkIndex: chunkIndex,
+          chunkIndex: chunk.chapterIndex, // Using chapterIndex directly
           title: chunkAnalyzeResponse.title,
           mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
           importantContextChunkIndexes: chunk.importantContextChapterIndexes,
           shortSummary: chunkAnalyzeResponse.shortDescription,
-          compressedContents: chunkAnalyzeResponse.fullCompressedContents,
+          compressedContent: chunkAnalyzeResponse.fullCompressedContent,
           metaData: chunkAnalyzeResponse.textMetaData,
           uncompressedContent: chunk.chunkData,
           subChunks: [],
         };
 
-        // If parentChunkIndex is null, it's a top-level chunk; otherwise, it's a subChunk.
         if (parentChunkIndex === null) {
-          metadata.chunks![chunkIndex] = chunkMetadata;
+          metadata.chunks!.push(chunkMetadata); // Pushing to array directly for top-level chunks
         } else {
-          // Safely push to subChunks after ensuring parent chunk and its subChunks array exist.
-          if (!metadata.chunks![parentChunkIndex].subChunks) {
-            metadata.chunks![parentChunkIndex].subChunks = [];
+          // Ensure the parentChunk's subChunks array exists and is accessible
+          if (!metadata.chunks![parentChunkIndex - 1].subChunks) {
+            metadata.chunks![parentChunkIndex - 1].subChunks = [];
           }
-          metadata.chunks![parentChunkIndex!].subChunks!.push(chunkMetadata);
+          metadata.chunks![parentChunkIndex - 1].subChunks!.push(chunkMetadata);
+          // Note: No manual adjustment of chunkIndex for subChunks needed
         }
 
-        // If there are sub-chunks, process each one recursively.
         if (chunk.subChunks && chunk.subChunks.length > 0) {
           for (let subChunk of chunk.subChunks) {
-            await processChunk(subChunk, chunkIndex);
+            await processChunk(subChunk, chunkMetadata.chunkIndex); // Recursively process subChunks
           }
         }
       }
     };
 
-    // Process each top-level chunk.
     for (let chunk of chunks) {
-      await processChunk(chunk);
+      await processChunk(chunk); // Initial call to process top-level chunks
     }
 
-    const flattenedChunks: PsIngestionChunkData[] = [];
-
-    const flattenChunks = (chunks: PsIngestionChunkData[]) => {
-      for (let chunkIndex in chunks) {
-        const chunk = chunks[chunkIndex];
-        flattenedChunks.push(chunk);
-        if (chunk.subChunks) {
-          flattenChunks(chunk.subChunks);
-        }
-      }
-    };
-
-    const topLevelChunksArray: PsIngestionChunkData[] = Object.values(metadata.chunks!);
-    flattenChunks(topLevelChunksArray);
 
     const ranker = new IngestionChunkRanker();
-    await ranker.rankDocumentChunks(flattenedChunks, "Ranking rules", "Document summary");
+    await ranker.rankDocumentChunks(metadata.chunks, "Ranking rules", "Document summary");
 
     console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
 
     // Wait for 3 minutes
     await new Promise((resolve) => setTimeout(resolve, 150000));
 
-    this.saveFileMetadata();
-  }
-
-  async processFilePartFlat(
-    fileId: string,
-    cleanedUpData: string,
-    weaviateDocumentId: string
-  ): Promise<void> {
-    console.log(`Processing file part for fileId: ${fileId}`);
-
-    this.saveFileMetadata();
-
-    this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
-
-    this.saveFileMetadata();
-    const metadata = this.fileMetadata[fileId] || {};
-
-    metadata.chunks = {} as { [key: number]: PsIngestionChunkData };
-
-    const chunks = (await this.splitAgent.splitDocumentIntoChunks(
-      cleanedUpData
-    )) as LlmDocumentChunksStrategy[];
-
-    console.log(JSON.stringify(chunks, null, 2));
-
-    console.log(`Split into ${chunks.length} chunks`);
-
-    let chunkMasterChapterIndex = 1;
-
-    const processChunk = async (chunk: LlmDocumentChunksStrategy) => {
-      if (chunk.chunkData) {
-        console.log(`\nBefore compression: ${chunk.chunkData}\n`);
-
-        let chunkAnalyzeResponse = await this.chunkAnalysisAgent.analyze(
-          chunk.chunkData!
-        );
-
-        chunkAnalyzeResponse.fullCompressedContents =
-          await this.chunkCompressor.compress(chunk.chunkData!);
-
-        const compressedData = `${chunkAnalyzeResponse.title} ${chunkAnalyzeResponse.shortDescription} ${chunkAnalyzeResponse.fullCompressedContents}`;
-
-        console.log(`\nAfter compression: ${compressedData}\n`);
-
-        //@ts-ignore
-        metadata.chunks![chunkMasterChapterIndex] = {
-          chunkIndex: chunkMasterChapterIndex,
-          title: chunkAnalyzeResponse.title,
-          mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
-          importantContextChunkIndexes: chunk.importantContextChapterIndexes,
-          shortSummary: chunkAnalyzeResponse.shortDescription,
-          compressedContents: chunkAnalyzeResponse.fullCompressedContents,
-          metaData: chunkAnalyzeResponse.textMetaData,
-          uncompressedContent: chunk.chunkData!,
-          //subChunks: Recursively process sub-chunks,
-        };
-
-        console.log(`Chunk ${chunk.chapterIndex} compressed:`, compressedData);
-        console.log(
-          `\n${JSON.stringify(
-            metadata.chunks![chunkMasterChapterIndex],
-            null,
-            2
-          )}\n`
-        );
-
-        this.saveFileMetadata();
-      } else if (!chunk.subChunks) {
-        console.error(
-          `\n\n\n\n\nChunk data missing for chunk ${chunkMasterChapterIndex}`
-        );
-        console.log(`Chunk: ${JSON.stringify(chunk, null, 2)}\n\n\n\n\n`);
-      }
-
-      // If there are sub-chunks, process each one recursively.
-      if (chunk.subChunks && chunk.subChunks.length > 0) {
-        for (let subChunk of chunk.subChunks) {
-          chunkMasterChapterIndex++; // Increment the chapter index for each sub-chunk
-          await processChunk(subChunk);
-        }
-      }
-    };
-
-    // Process each top-level chunk.
-    for (let chunk of chunks) {
-      await processChunk(chunk);
-      chunkMasterChapterIndex++; // Increment the chapter index after processing a chunk (and its sub-chunks, if any)
-    }
-
-    // Create summaries for each parent chunk
-    // Pairwise vote on each chunk on X many axis
-
-    console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
-    await new Promise((resolve) => setTimeout(resolve, 150000));
-    this.saveFileMetadata();
+    await this.saveFileMetadata();
   }
 
   extractFileIdFromPath(filePath: string): string | null {

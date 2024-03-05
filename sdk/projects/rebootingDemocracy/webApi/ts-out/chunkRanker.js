@@ -35,10 +35,10 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         Document Chunks to Rank:
 
         Document Chunk One:
-        ${itemOne.compressedContents}
+        ${itemOne.compressedContent}
 
         Document Chunk Two:
-        ${itemTwo.compressedContents}
+        ${itemTwo.compressedContent}
 
         The Most Relevant Document Chunk Is:
        `),

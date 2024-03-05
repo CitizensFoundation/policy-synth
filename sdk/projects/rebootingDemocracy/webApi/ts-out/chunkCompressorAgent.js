@@ -40,6 +40,7 @@ Think step by step and output your analysis here:
 Instructions:
 - You will compress each paragraph in the text marked <TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
 - Compress each paragraph into as few words as you can without loosing any meaning or detail.
+- Focus on not loosing any detail, meaning or nuance in your compression.
 - Output the compressed text, nothing else.
 `);
     compressionUserMessage = (data) => new HumanMessage(`<TEXT_TO_COMPRESS>
@@ -73,11 +74,16 @@ Your new improved highly compressed text while still capturing all detail and nu
         let retryCount = 0;
         while (!validated && retryCount < this.maxCompressionRetries) {
             try {
+                if (validationTextResults && lastCompressedData) {
+                    console.log(`\n\nRetrying compression ${retryCount}\n\n`);
+                    console.log(this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults).toString());
+                }
                 compressedText = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.compressionSystemMessage, validationTextResults && lastCompressedData
                     ? this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults)
                     : this.compressionUserMessage(uncompressedData)), false));
                 const validationResults = await this.validateChunkSummary(uncompressedData, compressedText);
                 lastCompressedData = compressedText;
+                console.log(`\nCompressed text:\n${lastCompressedData}\n\n`);
                 validated = validationResults.valid;
                 retryCount++;
                 if (!validated) {

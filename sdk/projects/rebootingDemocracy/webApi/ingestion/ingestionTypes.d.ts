@@ -21,7 +21,7 @@ interface CachedFileMetadata extends PsEloRateable {
   title?: string;
   filePath: string;
   contentType: string;
-  chunks?: { [key: number]: PsIngestionChunkData };
+  chunks?: PsIngestionChunkData[];
   allReferencesWithUrls: string[];
   allOtherReferences: string[];
   allImageUrls: string[];
@@ -65,7 +65,7 @@ interface LlmDocumentChunksStrategy {
 interface LlmChunkAnalysisReponse {
   title: string;
   shortSummary: string;
-  fullCompressedContents: string;
+  fullCompressedContent: string;
   metaDataFields: string[];
   metaData: { [key: string]: string };
 }
@@ -81,7 +81,7 @@ interface PsIngestionChunkData extends PsEloRateable {
   actualEndLine?: number;
   shortSummary: string;
   uncompressedContent: string;
-  compressedContents: string;
+  compressedContent: string;
   subChunks?: PsIngestionChunkData[];
   importantContextChunkIndexes: number[];
   metaDataFields?: string[];

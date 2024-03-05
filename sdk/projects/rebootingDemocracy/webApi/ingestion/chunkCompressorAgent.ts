@@ -4,7 +4,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
   maxCompressionRetries = 25;
-  retryCountBeforeRandomizingLlmTemperature= 15;
+  retryCountBeforeRandomizingLlmTemperature = 15;
 
   completionValidationSuccessMessage =
     "All content present in compressed text.";
@@ -57,6 +57,7 @@ Think step by step and output your analysis here:
 Instructions:
 - You will compress each paragraph in the text marked <TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
 - Compress each paragraph into as few words as you can without loosing any meaning or detail.
+- Focus on not loosing any detail, meaning or nuance in your compression.
 - Output the compressed text, nothing else.
 `);
 
@@ -90,9 +91,7 @@ ${lastCompressed}
 Your new improved highly compressed text while still capturing all detail and nuance from the original:
 `);
 
-  async compress(
-    uncompressedData: string
-  ): Promise<string> {
+  async compress(uncompressedData: string): Promise<string> {
     this.resetLlmTemperature();
 
     let compressedText;
@@ -104,6 +103,16 @@ Your new improved highly compressed text while still capturing all detail and nu
     let retryCount = 0;
     while (!validated && retryCount < this.maxCompressionRetries) {
       try {
+        if (validationTextResults && lastCompressedData) {
+          console.log(`\n\nRetrying compression ${retryCount}\n\n`)
+          console.log(
+            this.compressionRetryUserMessage(
+              uncompressedData,
+              lastCompressedData,
+              validationTextResults
+            ).toString()
+          );
+        }
         compressedText = (await this.callLLM(
           "ingestion-agent",
           IEngineConstants.ingestionModel,
@@ -126,6 +135,8 @@ Your new improved highly compressed text while still capturing all detail and nu
         );
 
         lastCompressedData = compressedText;
+
+        console.log(`\nCompressed text:\n${lastCompressedData}\n\n`);
 
         validated = validationResults.valid;
 
