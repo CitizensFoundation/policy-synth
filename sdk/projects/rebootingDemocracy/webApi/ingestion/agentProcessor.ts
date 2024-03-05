@@ -54,7 +54,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
     const dataLayout = await this.readDataLayout();
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     try {
       this.logger.debug("Launching browser");
 
@@ -479,11 +479,13 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         } else if (!contentType.includes("image")) {
           console.log(`Downloading content for URL: ${url}`);
           const response = await browserPage.goto(url, {
-            waitUntil: ["load","networkidle0","domcontentloaded"]
+            waitUntil: ["load","networkidle0"]
           });
 
           if (response) {
-            const data = await response.text();
+            // Wait for 10 seconds
+            //await new Promise((resolve) => setTimeout(resolve, 10000));
+            const data = await browserPage.content();
             const { fullPath, relativePath } = this.getFileNameAndPath(
               url,
               extension

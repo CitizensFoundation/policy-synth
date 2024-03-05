@@ -11,6 +11,7 @@
   "dependencies": {
     "@policysynth/api": "^1.2.1",
     "mammoth": "^1.7.0",
+    "puppeteer": "^22.4.0",
     "xlsx": "^0.18.5"
   },
   "scripts": {
