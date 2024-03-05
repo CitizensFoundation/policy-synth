@@ -130,8 +130,6 @@ Your refined JSON analysis:
             allOtherReferences: metadata.allOtherReferences,
         };
         console.log(`Final refined analysis results: ${JSON.stringify(debugResults, null, 2)}`);
-        // Wait for 3 minutes
-        await new Promise((resolve) => setTimeout(resolve, 180000));
         filesMetaData[fileId] = metadata;
         return metadata;
     }
