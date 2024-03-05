@@ -4,5 +4,6 @@ staticHomeHTML/
 backups/
 dist/
 cache/
+oldCache/
 localData/
 webPagesCache/
