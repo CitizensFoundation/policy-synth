@@ -62,7 +62,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
                 //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
                 //  continue;
-                const reAnalyze = true;
+                const reAnalyze = false;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
@@ -135,13 +135,16 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 if (parentChunkIndex === null) {
                     metadata.chunks.push(chunkMetadata); // Pushing to array directly for top-level chunks
                 }
-                else {
+                else if (metadata.chunks[parentChunkIndex - 1]) {
                     // Ensure the parentChunk's subChunks array exists and is accessible
                     if (!metadata.chunks[parentChunkIndex - 1].subChunks) {
                         metadata.chunks[parentChunkIndex - 1].subChunks = [];
                     }
                     metadata.chunks[parentChunkIndex - 1].subChunks.push(chunkMetadata);
                     // Note: No manual adjustment of chunkIndex for subChunks needed
+                }
+                else {
+                    console.error(`Parent chunk not found for chunkIndex: ${parentChunkIndex}`);
                 }
                 if (chunk.subChunks && chunk.subChunks.length > 0) {
                     for (let subChunk of chunk.subChunks) {

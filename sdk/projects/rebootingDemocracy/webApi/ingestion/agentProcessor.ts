@@ -78,7 +78,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         //  continue;
 
 
-        const reAnalyze = true;
+        const reAnalyze = false;
         if (
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
@@ -192,13 +192,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
         if (parentChunkIndex === null) {
           metadata.chunks!.push(chunkMetadata); // Pushing to array directly for top-level chunks
-        } else {
+        } else if (metadata.chunks![parentChunkIndex - 1]) {
           // Ensure the parentChunk's subChunks array exists and is accessible
           if (!metadata.chunks![parentChunkIndex - 1].subChunks) {
             metadata.chunks![parentChunkIndex - 1].subChunks = [];
           }
           metadata.chunks![parentChunkIndex - 1].subChunks!.push(chunkMetadata);
           // Note: No manual adjustment of chunkIndex for subChunks needed
+        } else {
+          console.error(`Parent chunk not found for chunkIndex: ${parentChunkIndex}`);
         }
 
         if (chunk.subChunks && chunk.subChunks.length > 0) {
@@ -258,12 +260,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       [] as PsIngestionChunkData[]
     );
 
+    console.log("Ranking by relevance");
     const relevanceRules = "Rank the two chunks based on the relevance to the document";
     await ranker.rankDocumentChunks(flattenedChunks, relevanceRules, metadata.compressedFullDescriptionOfAllContents!, "relevanceEloRating");
 
+    console.log("Ranking by substance");
     const substanceRules = "Rank the two chunks based substance and completeness of the information";
     await ranker.rankDocumentChunks(flattenedChunks, substanceRules, metadata.compressedFullDescriptionOfAllContents!, "substanceEloRating");
 
+    console.log("Ranking by quality");
     const qualityRules = "Rank the two chunks based on quality of the information";
     await ranker.rankDocumentChunks(flattenedChunks, qualityRules, metadata.compressedFullDescriptionOfAllContents!, "qualityEloRating");
   }
