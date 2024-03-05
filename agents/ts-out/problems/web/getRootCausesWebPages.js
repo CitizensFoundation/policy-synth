@@ -269,7 +269,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         this.logger.info("Finished and closed page for current problem");
     }
     async getAllPages() {
-        const browser = await puppeteer.launch({ headless: "new" });
+        const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);

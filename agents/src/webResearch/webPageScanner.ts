@@ -185,7 +185,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     this.totalPagesSave = 0;
 
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();

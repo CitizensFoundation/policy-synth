@@ -862,7 +862,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   }
 
   async getAllPages() {
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
