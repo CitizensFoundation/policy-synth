@@ -92,6 +92,6 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
       this.progressFunction,
     );
     await this.performPairwiseRanking(-1);
-    return this.getOrderedListOfItems(-1, true) as PsIngestionChunkData[];
+    return this.getOrderedListOfItems(-1, true, eloRatingKey) as PsIngestionChunkData[];
   }
 }

@@ -164,7 +164,10 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         const metadata = this.fileMetadata[fileId] || {};
         metadata.chunks = [];
         metadata.weaviteId = weaviateDocumentId;
-        await this.createTreeChunks(metadata, cleanedUpData);
+        const rechunk = false;
+        if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
+            await this.createTreeChunks(metadata, cleanedUpData);
+        }
         await this.saveFileMetadata();
         console.log(`Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`);
         await this.rankChunks(metadata);
@@ -177,10 +180,13 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     async rankChunks(metadata) {
         const ranker = new IngestionChunkRanker();
         const flattenedChunks = metadata.chunks.reduce((acc, chunk) => acc.concat(chunk, chunk.subChunks || []), []);
+        console.log("Ranking by relevance");
         const relevanceRules = "Rank the two chunks based on the relevance to the document";
         await ranker.rankDocumentChunks(flattenedChunks, relevanceRules, metadata.compressedFullDescriptionOfAllContents, "relevanceEloRating");
+        console.log("Ranking by substance");
         const substanceRules = "Rank the two chunks based substance and completeness of the information";
         await ranker.rankDocumentChunks(flattenedChunks, substanceRules, metadata.compressedFullDescriptionOfAllContents, "substanceEloRating");
+        console.log("Ranking by quality");
         const qualityRules = "Rank the two chunks based on quality of the information";
         await ranker.rankDocumentChunks(flattenedChunks, qualityRules, metadata.compressedFullDescriptionOfAllContents, "qualityEloRating");
     }

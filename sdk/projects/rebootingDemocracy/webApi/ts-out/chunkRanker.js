@@ -56,6 +56,6 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         });
         this.setupRankingPrompts(-1, chunksToRank, chunksToRank.length * 10, this.progressFunction);
         await this.performPairwiseRanking(-1);
-        return this.getOrderedListOfItems(-1, true);
+        return this.getOrderedListOfItems(-1, true, eloRatingKey);
     }
 }

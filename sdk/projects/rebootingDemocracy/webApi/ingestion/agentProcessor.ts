@@ -233,7 +233,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     metadata.weaviteId = weaviateDocumentId;
 
-    await this.createTreeChunks(metadata, cleanedUpData);
+    const rechunk = false;
+
+    if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
+      await this.createTreeChunks(metadata, cleanedUpData);
+    }
 
     await this.saveFileMetadata();
 
