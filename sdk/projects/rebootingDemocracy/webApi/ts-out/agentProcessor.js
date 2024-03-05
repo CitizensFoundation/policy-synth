@@ -339,7 +339,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 else if (!contentType.includes("image")) {
                     console.log(`Downloading content for URL: ${url}`);
                     const response = await browserPage.goto(url, {
-                        waitUntil: "networkidle0",
+                        waitUntil: ["load", "networkidle0", "domcontentloaded"]
                     });
                     if (response) {
                         const data = await response.text();
