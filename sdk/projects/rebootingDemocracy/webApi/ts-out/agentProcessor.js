@@ -2,6 +2,8 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import fetch from "node-fetch";
+import puppeteer from "puppeteer-extra";
+import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { IngestionCleanupAgent } from "./cleanupAgent.js";
 import { IngestionSplitAgent } from "./splitAgent.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -309,12 +311,31 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
                 const contentType = contentResponse.headers.get("Content-Type") || "unknown";
                 let extension = this.determineExtension(contentType, isJsonData);
-                const arrayBuffer = await contentResponse.arrayBuffer();
-                const data = Buffer.from(arrayBuffer);
-                const { fullPath, relativePath } = this.getFileNameAndPath(url, extension);
-                await fs.mkdir(path.dirname(fullPath), { recursive: true });
-                await fs.writeFile(fullPath, data);
-                this.updateCachedFilesAndMetadata(relativePath, url, data, contentType, lastModified || "");
+                // If an image file
+                if (!contentType.includes("image")) {
+                    const browser = await puppeteer.launch({ headless: "new" });
+                    this.logger.debug("Launching browser");
+                    const browserPage = await browser.newPage();
+                    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+                    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+                    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+                    const response = await browserPage.goto(url, {
+                        waitUntil: "networkidle2",
+                    });
+                    if (response) {
+                        const data = await response.text();
+                        const { fullPath, relativePath } = this.getFileNameAndPath(url, extension);
+                        await fs.mkdir(path.dirname(fullPath), { recursive: true });
+                        await fs.writeFile(fullPath, data);
+                        this.updateCachedFilesAndMetadata(relativePath, url, data, contentType, lastModified || "");
+                    }
+                    else {
+                        console.log(`Failed to fetch content for URL: ${url}`);
+                    }
+                }
+                else {
+                    console.log(`Skipping download for image URL: ${url}`);
+                }
             }
             catch (error) {
                 console.error(`Failed to download content for URL ${url}:`, error);
@@ -392,8 +413,22 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             this.fileMetadata = JSON.parse(metadataJson);
         }
         catch (error) {
-            console.log("No existing metadata found: " + error);
-            process.exit(1);
+            // First, check if the error is an instance of Error and has a 'code' property
+            if (error instanceof Error && 'code' in error) {
+                const readError = error; // Type assertion
+                if (readError.code === 'ENOENT') {
+                    console.log("File does not exist, initializing empty metadata.");
+                    this.fileMetadata = {}; // Initialize as empty object
+                }
+                else {
+                    // Handle other types of errors that might have occurred during readFile
+                    throw error;
+                }
+            }
+            else {
+                console.error("Error loading metadata: " + error);
+                process.exit(1); // Consider if this is the desired behavior
+            }
         }
     }
     async saveFileMetadata() {

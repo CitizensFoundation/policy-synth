@@ -14,7 +14,7 @@ export declare abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     parseJsonFromLlmResponse(data: string): any;
     splitDataForProcessingWorksBigChunks(data: string, maxTokenLength?: number): string[];
     getEstimateTokenLength(data: string): number;
-    computeHash(data: Buffer): string;
+    computeHash(data: Buffer | string): string;
     getFirstMessages(systemMessage: SystemMessage, userMessage: BaseMessage): BaseMessage[];
     getFileName(url: string, isJsonData: boolean): string;
     getExternalUrlsFromJson(jsonData: any): string[];

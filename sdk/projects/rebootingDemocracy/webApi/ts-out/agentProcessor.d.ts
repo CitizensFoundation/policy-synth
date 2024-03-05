@@ -25,7 +25,7 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     rankChunks(metadata: DocumentSource): Promise<void>;
     extractFileIdFromPath(filePath: string): string | null;
     getFilesForProcessing(forceProcessing?: boolean): string[];
-    updateCachedFilesAndMetadata(relativePath: string, url: string, data: Buffer, contentType: string, lastModifiedOnServer: string): void;
+    updateCachedFilesAndMetadata(relativePath: string, url: string, data: Buffer | string, contentType: string, lastModifiedOnServer: string): void;
     protected readDataLayout(): Promise<DataLayout>;
     getFileNameAndPath(url: string, extension: string): {
         fullPath: string;

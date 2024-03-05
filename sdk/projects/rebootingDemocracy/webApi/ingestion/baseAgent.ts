@@ -169,7 +169,7 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     return words.length * this.roughFastWordTokenRatio;
   }
 
-  computeHash(data: Buffer): string {
+  computeHash(data: Buffer | string): string {
     return createHash("sha256").update(data).digest("hex");
   }
 

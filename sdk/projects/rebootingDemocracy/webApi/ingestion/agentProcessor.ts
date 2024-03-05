@@ -2,8 +2,12 @@ import fs from "fs/promises";
 import path from "path";
 import crypto, { createHash } from "crypto";
 import fetch from "node-fetch";
+import { HTTPResponse, Page, Browser } from "puppeteer";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { IngestionCleanupAgent } from "./cleanupAgent.js";
 import { IngestionSplitAgent } from "./splitAgent.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -50,9 +54,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
     const dataLayout = await this.readDataLayout();
-    //await this.downloadAndCache(dataLayout.documentUrls, false);
-    //await this.processJsonUrls(dataLayout.jsonUrls);
-    //await this.saveFileMetadata();
+    await this.downloadAndCache(dataLayout.documentUrls, false);
+    await this.saveFileMetadata();
+    await this.processJsonUrls(dataLayout.jsonUrls);
+    await this.saveFileMetadata();
 
     const filesForProcessing = this.getFilesForProcessing(true);
     console.log("Files for processing:", filesForProcessing);
@@ -74,9 +79,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           continue;
         }
 
-        if (metadataEntry.fileId !== "735de0621e35c642758954aae1c3f0aa")
-          continue;
-
+        //if (metadataEntry.fileId !== "735de0621e35c642758954aae1c3f0aa")
+        //  continue;
 
         const reAnalyze = false;
         if (
@@ -316,7 +320,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   updateCachedFilesAndMetadata(
     relativePath: string,
     url: string,
-    data: Buffer,
+    data: Buffer | string,
     contentType: string,
     lastModifiedOnServer: string
   ) {
@@ -438,23 +442,42 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           contentResponse.headers.get("Content-Type") || "unknown";
         let extension = this.determineExtension(contentType, isJsonData);
 
-        const arrayBuffer = await contentResponse.arrayBuffer();
-        const data = Buffer.from(arrayBuffer);
+        // If an image file
+        if (!contentType.includes("image")) {
+          const browser = await puppeteer.launch({ headless: "new" });
+          this.logger.debug("Launching browser");
 
-        const { fullPath, relativePath } = this.getFileNameAndPath(
-          url,
-          extension
-        );
-        await fs.mkdir(path.dirname(fullPath), { recursive: true });
-        await fs.writeFile(fullPath, data);
+          const browserPage = await browser.newPage();
+          browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+          browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
 
-        this.updateCachedFilesAndMetadata(
-          relativePath,
-          url,
-          data,
-          contentType,
-          lastModified || ""
-        );
+          await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+          const response = await browserPage.goto(url, {
+            waitUntil: "networkidle2",
+          });
+
+          if (response) {
+            const data = await response.text();
+            const { fullPath, relativePath } = this.getFileNameAndPath(
+              url,
+              extension
+            );
+            await fs.mkdir(path.dirname(fullPath), { recursive: true });
+            await fs.writeFile(fullPath, data);
+
+            this.updateCachedFilesAndMetadata(
+              relativePath,
+              url,
+              data,
+              contentType,
+              lastModified || ""
+            );
+          } else {
+            console.log(`Failed to fetch content for URL: ${url}`);
+          }
+        } else {
+          console.log(`Skipping download for image URL: ${url}`);
+        }
       } catch (error) {
         console.error(`Failed to download content for URL ${url}:`, error);
       }
@@ -530,10 +553,23 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       const metadataJson = await fs.readFile(this.fileMetadataPath, "utf-8");
       this.fileMetadata = JSON.parse(metadataJson);
     } catch (error) {
-      console.log("No existing metadata found: " + error);
-      process.exit(1);
+      // First, check if the error is an instance of Error and has a 'code' property
+      if (error instanceof Error && 'code' in error) {
+        const readError = error as { code: string }; // Type assertion
+        if (readError.code === 'ENOENT') {
+          console.log("File does not exist, initializing empty metadata.");
+          this.fileMetadata = {}; // Initialize as empty object
+        } else {
+          // Handle other types of errors that might have occurred during readFile
+          throw error;
+        }
+      } else {
+        console.error("Error loading metadata: " + error);
+        process.exit(1); // Consider if this is the desired behavior
+      }
     }
   }
+
 
   async saveFileMetadata(): Promise<void> {
     await fs.writeFile(
