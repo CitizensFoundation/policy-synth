@@ -56,8 +56,8 @@ Think step by step and output your analysis here:
 
 Instructions:
 - You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
-- Compress each paragraph into as few words as you can without loosing any meaning or detail.
-- Focus on not loosing any detail, meaning or nuance in your compression.
+- Compress each paragraph into as few words as you can without losing any meaning, nuance or detail.
+- Pay special attention to all detail, meaning and nuance in the original text and make sure it is in your compressed text.
 - Output the compressed text, nothing else.
 `);
 
@@ -66,7 +66,7 @@ Instructions:
 ${data}
 </ORIGINAL_TEXT_TO_COMPRESS>
 
-Your highly compressed text while still capturing all detail and nuance from the original:
+Your compressed text:
 `);
 
   compressionRetryUserMessage = (
@@ -78,19 +78,18 @@ Your highly compressed text while still capturing all detail and nuance from the
 ${data}
 </ORIGINAL_TEXT_TO_COMPRESS>
 
-Note: You have already tried once to compress this text, and you got those validation suggestions:
+IMPORTANT: You have already tried once to compress this text, and you got those validation suggestions:
 <SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 ${validationTextResults}
 </SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 
-Your last invalid compressed text:
 <LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 ${lastCompressed}
 </LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 
-Please use the information from the last compression validation suggestions to improve the last compression attempt.
+Please use the information from the last compression validation suggestions to improve on the last compression attempt.
 
-Your new improved highly compressed text still capturing all detail, meaning, names, places, ideas and nuance from the original:
+Your new improved compressed text:
 `);
 
   async compress(uncompressedData: string): Promise<string> {
