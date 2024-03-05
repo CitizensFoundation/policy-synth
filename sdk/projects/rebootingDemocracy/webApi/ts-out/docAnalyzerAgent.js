@@ -117,7 +117,19 @@ Your refined JSON analysis:
         metadata.description = refinedMetadata.description;
         metadata.compressedFullDescriptionOfAllContents =
             refinedMetadata.compressedFullDescriptionOfAllContents;
-        console.log(`Final refined analysis results: ${JSON.stringify(metadata, null, 2)}`);
+        const debugResults = {
+            title: metadata.title,
+            shortDescription: metadata.shortDescription,
+            description: metadata.description,
+            fullDescriptionOfAllContents: metadata.fullDescriptionOfAllContents,
+            compressedFullDescriptionOfAllContents: metadata.compressedFullDescriptionOfAllContents,
+            documentDate: metadata.documentMetaData?.documentDate,
+            documentMetaData: metadata.documentMetaData,
+            allImageUrls: metadata.allImageUrls,
+            allReferencesWithUrls: metadata.allReferencesWithUrls,
+            allOtherReferences: metadata.allOtherReferences,
+        };
+        console.log(`Final refined analysis results: ${JSON.stringify(debugResults, null, 2)}`);
         // Wait for 3 minutes
         await new Promise((resolve) => setTimeout(resolve, 180000));
         filesMetaData[fileId] = metadata;

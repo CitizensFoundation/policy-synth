@@ -171,8 +171,21 @@ Your refined JSON analysis:
     metadata.compressedFullDescriptionOfAllContents =
       refinedMetadata.compressedFullDescriptionOfAllContents;
 
+    const debugResults = {
+      title: metadata.title,
+      shortDescription: metadata.shortDescription,
+      description: metadata.description,
+      fullDescriptionOfAllContents: metadata.fullDescriptionOfAllContents,
+      compressedFullDescriptionOfAllContents: metadata.compressedFullDescriptionOfAllContents,
+      documentDate: metadata.documentMetaData?.documentDate,
+      documentMetaData: metadata.documentMetaData,
+      allImageUrls: metadata.allImageUrls,
+      allReferencesWithUrls: metadata.allReferencesWithUrls,
+      allOtherReferences: metadata.allOtherReferences,
+    };
+
     console.log(
-      `Final refined analysis results: ${JSON.stringify(metadata, null, 2)}`
+      `Final refined analysis results: ${JSON.stringify(debugResults, null, 2)}`
     );
 
     // Wait for 3 minutes
