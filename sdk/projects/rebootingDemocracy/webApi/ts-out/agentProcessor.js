@@ -60,8 +60,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     console.error(`Metadata not found for filePath: ${filePath}`);
                     continue;
                 }
-                //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
-                //  continue;
+                if (metadataEntry.fileId !== "735de0621e35c642758954aae1c3f0aa")
+                    continue;
                 const reAnalyze = false;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
@@ -162,11 +162,15 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
         await this.saveFileMetadata();
         const metadata = this.fileMetadata[fileId] || {};
-        metadata.chunks = [];
         metadata.weaviteId = weaviateDocumentId;
         const rechunk = false;
         if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
+            metadata.chunks = [];
+            console.log(`Creating tree chunks for fileId: ${fileId}`);
             await this.createTreeChunks(metadata, cleanedUpData);
+        }
+        else {
+            console.log(`Chunks already exist for fileId: ${fileId}`);
         }
         await this.saveFileMetadata();
         console.log(`Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`);
@@ -390,7 +394,6 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         catch (error) {
             console.log("No existing metadata found: " + error);
             process.exit(1);
-            this.fileMetadata = {};
         }
     }
     async saveFileMetadata() {

@@ -74,8 +74,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           continue;
         }
 
-        //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
-        //  continue;
+        if (metadataEntry.fileId !== "735de0621e35c642758954aae1c3f0aa")
+          continue;
 
 
         const reAnalyze = false;
@@ -229,14 +229,16 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const metadata = this.fileMetadata[fileId] || {};
 
-    metadata.chunks = [];
-
     metadata.weaviteId = weaviateDocumentId;
 
     const rechunk = false;
 
     if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
+      metadata.chunks = [];
+      console.log(`Creating tree chunks for fileId: ${fileId}`)
       await this.createTreeChunks(metadata, cleanedUpData);
+    } else {
+      console.log(`Chunks already exist for fileId: ${fileId}`);
     }
 
     await this.saveFileMetadata();
@@ -530,7 +532,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     } catch (error) {
       console.log("No existing metadata found: " + error);
       process.exit(1);
-      this.fileMetadata = {};
     }
   }
 
