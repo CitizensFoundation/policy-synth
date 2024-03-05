@@ -1,4 +1,5 @@
 /// <reference types="node" resolution-mode="require"/>
+import { Page } from "puppeteer";
 import { IngestionCleanupAgent } from "./cleanupAgent.js";
 import { IngestionSplitAgent } from "./splitAgent.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -31,9 +32,9 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
         fullPath: string;
         relativePath: string;
     };
-    downloadAndCache(urls: string[], isJsonData: boolean): Promise<void>;
+    downloadAndCache(urls: string[], isJsonData: boolean, browserPage: Page): Promise<void>;
     determineExtension(contentType: string, isJsonData: boolean): string;
-    protected processJsonUrls(urls: string[]): Promise<void>;
+    protected processJsonUrls(urls: string[], browserPage: Page): Promise<void>;
     loadFileMetadata(): Promise<void>;
     saveFileMetadata(): Promise<void>;
 }

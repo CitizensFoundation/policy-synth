@@ -416,7 +416,7 @@ export class IEngineConstants {
     static numberOfSearchTypes = 4;
     static webPageNavTimeout = 30 * 1000;
     static subProblemsRankingMinNumberOfMatches = 10;
-    static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
+    static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
     static topItemsToKeepForTopicClusterPruning = 3;
     static chances = {
         createSolutions: {

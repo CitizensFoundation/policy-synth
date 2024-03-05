@@ -54,10 +54,25 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
     const dataLayout = await this.readDataLayout();
-    await this.downloadAndCache(dataLayout.documentUrls, false);
-    await this.saveFileMetadata();
-    await this.processJsonUrls(dataLayout.jsonUrls);
-    await this.saveFileMetadata();
+    const browser = await puppeteer.launch({ headless: "new" });
+    try {
+      this.logger.debug("Launching browser");
+
+      const browserPage = await browser.newPage();
+      browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+      browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+
+      await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+
+      await this.downloadAndCache(dataLayout.documentUrls, false, browserPage);
+      await this.saveFileMetadata();
+      await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
+      await this.saveFileMetadata();
+    } catch (error) {
+      console.error("Failed to process data layout:", error);
+    } finally {
+      await browser.close();
+    }
 
     const filesForProcessing = this.getFilesForProcessing(true);
     console.log("Files for processing:", filesForProcessing);
@@ -391,7 +406,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return { fullPath, relativePath };
   }
 
-  async downloadAndCache(urls: string[], isJsonData: boolean): Promise<void> {
+  async downloadAndCache(urls: string[], isJsonData: boolean, browserPage: Page): Promise<void> {
     for (const url of urls) {
       try {
         const fileId = this.generateFileId(url);
@@ -443,16 +458,27 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         let extension = this.determineExtension(contentType, isJsonData);
 
         // If an image file
-        if (!contentType.includes("image")) {
-          const browser = await puppeteer.launch({ headless: "new" });
-          this.logger.debug("Launching browser");
+        if (extension.indexOf("pdf") > -1) {
+          const arrayBuffer = await contentResponse.arrayBuffer();
+          const data = Buffer.from(arrayBuffer);
+          //TODO: Refactor so not to do this twice
+          const { fullPath, relativePath } = this.getFileNameAndPath(
+            url,
+            extension
+          );
+          await fs.mkdir(path.dirname(fullPath), { recursive: true });
+          await fs.writeFile(fullPath, data);
 
-          const browserPage = await browser.newPage();
-          browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-          browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-
-          await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
-          const response = await browserPage.goto(url, {
+          this.updateCachedFilesAndMetadata(
+            relativePath,
+            url,
+            data,
+            contentType,
+            lastModified || ""
+          );
+        } else if (!contentType.includes("image")) {
+          console.log(`Downloading content for URL: ${url}`);
+          const response = await browserPage.goto(url, extension.endsWith("pdf") ? undefined : {
             waitUntil: "networkidle2",
           });
 
@@ -532,7 +558,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return extension;
   }
 
-  protected async processJsonUrls(urls: string[]): Promise<void> {
+  protected async processJsonUrls(urls: string[], browserPage: Page): Promise<void> {
     for (const url of urls) {
       const response = await fetch(url);
       const jsonData = await response.json();
@@ -544,7 +570,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       this.cachedFiles.push(jsonFilePath); // Track cached JSON file
 
       const urlsToFetch = this.getExternalUrlsFromJson(jsonData);
-      await this.downloadAndCache(urlsToFetch, true); // Download and cache content from URLs found in JSON
+      await this.downloadAndCache(urlsToFetch, true, browserPage); // Download and cache content from URLs found in JSON
     }
   }
 

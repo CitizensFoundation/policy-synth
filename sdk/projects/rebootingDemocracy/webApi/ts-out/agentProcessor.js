@@ -43,9 +43,24 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         await this.loadFileMetadata(); // Load existing metadata to compare against
         this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
         const dataLayout = await this.readDataLayout();
-        //await this.downloadAndCache(dataLayout.documentUrls, false);
-        //await this.processJsonUrls(dataLayout.jsonUrls);
-        //await this.saveFileMetadata();
+        const browser = await puppeteer.launch({ headless: "new" });
+        try {
+            this.logger.debug("Launching browser");
+            const browserPage = await browser.newPage();
+            browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+            browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+            await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+            await this.downloadAndCache(dataLayout.documentUrls, false, browserPage);
+            await this.saveFileMetadata();
+            await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
+            await this.saveFileMetadata();
+        }
+        catch (error) {
+            console.error("Failed to process data layout:", error);
+        }
+        finally {
+            await browser.close();
+        }
         const filesForProcessing = this.getFilesForProcessing(true);
         console.log("Files for processing:", filesForProcessing);
         this.processFiles(filesForProcessing);
@@ -62,8 +77,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     console.error(`Metadata not found for filePath: ${filePath}`);
                     continue;
                 }
-                if (metadataEntry.fileId !== "735de0621e35c642758954aae1c3f0aa")
-                    continue;
+                //if (metadataEntry.fileId !== "735de0621e35c642758954aae1c3f0aa")
+                //  continue;
                 const reAnalyze = false;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
@@ -276,7 +291,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         const relativePath = fullPath; // Using fullPath as relativePath for simplicity
         return { fullPath, relativePath };
     }
-    async downloadAndCache(urls, isJsonData) {
+    async downloadAndCache(urls, isJsonData, browserPage) {
         for (const url of urls) {
             try {
                 const fileId = this.generateFileId(url);
@@ -312,14 +327,18 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 const contentType = contentResponse.headers.get("Content-Type") || "unknown";
                 let extension = this.determineExtension(contentType, isJsonData);
                 // If an image file
-                if (!contentType.includes("image")) {
-                    const browser = await puppeteer.launch({ headless: "new" });
-                    this.logger.debug("Launching browser");
-                    const browserPage = await browser.newPage();
-                    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-                    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-                    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
-                    const response = await browserPage.goto(url, {
+                if (extension.indexOf("pdf") > -1) {
+                    const arrayBuffer = await contentResponse.arrayBuffer();
+                    const data = Buffer.from(arrayBuffer);
+                    //TODO: Refactor so not to do this twice
+                    const { fullPath, relativePath } = this.getFileNameAndPath(url, extension);
+                    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+                    await fs.writeFile(fullPath, data);
+                    this.updateCachedFilesAndMetadata(relativePath, url, data, contentType, lastModified || "");
+                }
+                else if (!contentType.includes("image")) {
+                    console.log(`Downloading content for URL: ${url}`);
+                    const response = await browserPage.goto(url, extension.endsWith("pdf") ? undefined : {
                         waitUntil: "networkidle2",
                     });
                     if (response) {
@@ -393,7 +412,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         return extension;
     }
-    async processJsonUrls(urls) {
+    async processJsonUrls(urls, browserPage) {
         for (const url of urls) {
             const response = await fetch(url);
             const jsonData = await response.json();
@@ -404,7 +423,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             await fs.writeFile(jsonFilePath, JSON.stringify(jsonData, null, 2));
             this.cachedFiles.push(jsonFilePath); // Track cached JSON file
             const urlsToFetch = this.getExternalUrlsFromJson(jsonData);
-            await this.downloadAndCache(urlsToFetch, true); // Download and cache content from URLs found in JSON
+            await this.downloadAndCache(urlsToFetch, true, browserPage); // Download and cache content from URLs found in JSON
         }
     }
     async loadFileMetadata() {
