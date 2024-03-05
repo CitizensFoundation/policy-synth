@@ -338,8 +338,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
                 else if (!contentType.includes("image")) {
                     console.log(`Downloading content for URL: ${url}`);
-                    const response = await browserPage.goto(url, extension.endsWith("pdf") ? undefined : {
-                        waitUntil: "networkidle2",
+                    const response = await browserPage.goto(url, {
+                        waitUntil: "networkidle0",
                     });
                     if (response) {
                         const data = await response.text();
