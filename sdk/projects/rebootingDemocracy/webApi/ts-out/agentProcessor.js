@@ -158,12 +158,13 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         for (let chunk of chunks) {
             await processChunk(chunk); // Initial call to process top-level chunks
         }
-        const ranker = new IngestionChunkRanker();
-        await ranker.rankDocumentChunks(metadata.chunks, "Ranking rules", "Document summary");
-        console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
+        await this.saveFileMetadata();
+        console.log(`Final metadata:\n${JSON.stringify(metadata, null, 2)}`);
         // Wait for 3 minutes
         await new Promise((resolve) => setTimeout(resolve, 150000));
-        await this.saveFileMetadata();
+        const ranker = new IngestionChunkRanker();
+        await ranker.rankDocumentChunks(metadata.chunks, "Ranking rules", "Document summary");
+        //    await this.saveFileMetadata();
     }
     extractFileIdFromPath(filePath) {
         const url = Object.values(this.fileMetadata).find((meta) => filePath.includes(meta.key))?.url;

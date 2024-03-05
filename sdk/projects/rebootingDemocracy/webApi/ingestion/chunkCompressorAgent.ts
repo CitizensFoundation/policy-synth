@@ -55,16 +55,16 @@ Think step by step and output your analysis here:
     new SystemMessage(`You are an expert text compressor.
 
 Instructions:
-- You will compress each paragraph in the text marked <TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
+- You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
 - Compress each paragraph into as few words as you can without loosing any meaning or detail.
 - Focus on not loosing any detail, meaning or nuance in your compression.
 - Output the compressed text, nothing else.
 `);
 
   compressionUserMessage = (data: string) =>
-    new HumanMessage(`<TEXT_TO_COMPRESS>
+    new HumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
 ${data}
-</TEXT_TO_COMPRESS>
+</ORIGINAL_TEXT_TO_COMPRESS>
 
 Your highly compressed text while still capturing all detail and nuance from the original:
 `);
@@ -74,21 +74,23 @@ Your highly compressed text while still capturing all detail and nuance from the
     lastCompressed: string,
     validationTextResults: string
   ) =>
-    new HumanMessage(`<TEXT_TO_COMPRESS>
+    new HumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
 ${data}
-</TEXT_TO_COMPRESS>
+</ORIGINAL_TEXT_TO_COMPRESS>
 
 Note: You have already tried once to compress this text, and you got those validation suggestions:
-<INFORMATION_FOR_COMPRESSION_IMPROVEMENTS>
+<SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 ${validationTextResults}
-</INFORMATION_FOR_COMPRESSION_IMPROVEMENTS>
+</SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 
 Your last invalid compressed text:
-<LAST_ATTEMPT_TO_IMPROVE>
+<LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 ${lastCompressed}
-</LAST_ATTEMPT_TO_IMPROVE>
+</LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 
-Your new improved highly compressed text while still capturing all detail and nuance from the original:
+Please use the information from the last compression validation suggestions to improve the last compression attempt.
+
+Your new improved highly compressed text still capturing all detail, meaning, names, places, ideas and nuance from the original:
 `);
 
   async compress(uncompressedData: string): Promise<string> {
@@ -110,7 +112,7 @@ Your new improved highly compressed text while still capturing all detail and nu
               uncompressedData,
               lastCompressedData,
               validationTextResults
-            ).toString()
+            ).content
           );
         }
         compressedText = (await this.callLLM(

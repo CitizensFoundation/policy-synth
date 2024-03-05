@@ -225,16 +225,17 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       await processChunk(chunk); // Initial call to process top-level chunks
     }
 
+    await this.saveFileMetadata();
 
-    const ranker = new IngestionChunkRanker();
-    await ranker.rankDocumentChunks(metadata.chunks, "Ranking rules", "Document summary");
-
-    console.log(`Final metadata: ${JSON.stringify(metadata, null, 2)}`);
+    console.log(`Final metadata:\n${JSON.stringify(metadata, null, 2)}`);
 
     // Wait for 3 minutes
     await new Promise((resolve) => setTimeout(resolve, 150000));
 
-    await this.saveFileMetadata();
+    const ranker = new IngestionChunkRanker();
+    await ranker.rankDocumentChunks(metadata.chunks, "Ranking rules", "Document summary");
+
+//    await this.saveFileMetadata();
   }
 
   extractFileIdFromPath(filePath: string): string | null {

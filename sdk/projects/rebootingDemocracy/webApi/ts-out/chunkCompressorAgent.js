@@ -38,32 +38,34 @@ Think step by step and output your analysis here:
     compressionSystemMessage = new SystemMessage(`You are an expert text compressor.
 
 Instructions:
-- You will compress each paragraph in the text marked <TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
+- You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
 - Compress each paragraph into as few words as you can without loosing any meaning or detail.
 - Focus on not loosing any detail, meaning or nuance in your compression.
 - Output the compressed text, nothing else.
 `);
-    compressionUserMessage = (data) => new HumanMessage(`<TEXT_TO_COMPRESS>
+    compressionUserMessage = (data) => new HumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
 ${data}
-</TEXT_TO_COMPRESS>
+</ORIGINAL_TEXT_TO_COMPRESS>
 
 Your highly compressed text while still capturing all detail and nuance from the original:
 `);
-    compressionRetryUserMessage = (data, lastCompressed, validationTextResults) => new HumanMessage(`<TEXT_TO_COMPRESS>
+    compressionRetryUserMessage = (data, lastCompressed, validationTextResults) => new HumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
 ${data}
-</TEXT_TO_COMPRESS>
+</ORIGINAL_TEXT_TO_COMPRESS>
 
 Note: You have already tried once to compress this text, and you got those validation suggestions:
-<INFORMATION_FOR_COMPRESSION_IMPROVEMENTS>
+<SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 ${validationTextResults}
-</INFORMATION_FOR_COMPRESSION_IMPROVEMENTS>
+</SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 
 Your last invalid compressed text:
-<LAST_ATTEMPT_TO_IMPROVE>
+<LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 ${lastCompressed}
-</LAST_ATTEMPT_TO_IMPROVE>
+</LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 
-Your new improved highly compressed text while still capturing all detail and nuance from the original:
+Please use the information from the last compression validation suggestions to improve the last compression attempt.
+
+Your new improved highly compressed text still capturing all detail, meaning, names, places, ideas and nuance from the original:
 `);
     async compress(uncompressedData) {
         this.resetLlmTemperature();
@@ -76,7 +78,7 @@ Your new improved highly compressed text while still capturing all detail and nu
             try {
                 if (validationTextResults && lastCompressedData) {
                     console.log(`\n\nRetrying compression ${retryCount}\n\n`);
-                    console.log(this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults).toString());
+                    console.log(this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults).content);
                 }
                 compressedText = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.compressionSystemMessage, validationTextResults && lastCompressedData
                     ? this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults)
