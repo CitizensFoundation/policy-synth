@@ -99,14 +99,27 @@ Your refined JSON analysis:
                 ];
             }
         }
-        console.log(`Final analysis results: ${JSON.stringify(metadata, null, 2)}`);
-        const refinedMetadata = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.finalReviewSystemMessage, this.finalReviewUserMessage(metadata))));
+        const refineInput = {
+            title: metadata.title,
+            shortDescription: metadata.shortDescription,
+            description: metadata.description,
+            fullDescriptionOfAllContents: metadata.fullDescriptionOfAllContents,
+            documentDate: metadata.documentMetaData?.documentDate,
+            documentMetaData: metadata.documentMetaData,
+            allImageUrls: metadata.allImageUrls,
+            allReferencesWithUrls: metadata.allReferencesWithUrls,
+            allOtherReferences: metadata.allOtherReferences,
+        };
+        console.log(`Final analysis results: ${JSON.stringify(refineInput, null, 2)}`);
+        const refinedMetadata = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.finalReviewSystemMessage, this.finalReviewUserMessage(refineInput))));
         console.log(`Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`);
         metadata.shortDescription = refinedMetadata.shortDescription;
         metadata.description = refinedMetadata.description;
         metadata.compressedFullDescriptionOfAllContents =
             refinedMetadata.compressedFullDescriptionOfAllContents;
         console.log(`Final refined analysis results: ${JSON.stringify(metadata, null, 2)}`);
+        // Wait for 3 minutes
+        await new Promise((resolve) => setTimeout(resolve, 180000));
         filesMetaData[fileId] = metadata;
         return metadata;
     }

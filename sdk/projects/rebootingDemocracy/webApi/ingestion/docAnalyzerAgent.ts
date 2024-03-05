@@ -2,6 +2,18 @@ import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 
+interface RefineInput {
+  title: string;
+  shortDescription: string;
+  description: string;
+  fullDescriptionOfAllContents: string;
+  documentDate: string;
+  documentMetaData: { [key: string]: string };
+  allImageUrls: string[];
+  allReferencesWithUrls: { reference: string; url: string }[];
+  allOtherReferences: string[];
+}
+
 export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
   maxAnalyzeTokenLength = 8000;
 
@@ -127,25 +139,44 @@ Your refined JSON analysis:
       }
     }
 
-    console.log(`Final analysis results: ${JSON.stringify(metadata, null, 2)}`);
+    const refineInput = {
+      title: metadata.title,
+      shortDescription: metadata.shortDescription,
+      description: metadata.description,
+      fullDescriptionOfAllContents: metadata.fullDescriptionOfAllContents,
+      documentDate: metadata.documentMetaData?.documentDate,
+      documentMetaData: metadata.documentMetaData,
+      allImageUrls: metadata.allImageUrls,
+      allReferencesWithUrls: metadata.allReferencesWithUrls,
+      allOtherReferences: metadata.allOtherReferences,
+    };
+
+    console.log(`Final analysis results: ${JSON.stringify(refineInput, null, 2)}`);
 
     const refinedMetadata = (await this.callLLM(
       "ingestion-agent",
       PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.finalReviewSystemMessage,
-        this.finalReviewUserMessage(metadata as LlmDocumentAnalysisReponse)
+        this.finalReviewUserMessage(refineInput as LlmDocumentAnalysisReponse)
       )
     )) as LlmDocumentAnalysisReponse;
 
-    console.log(`Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`);
+    console.log(
+      `Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`
+    );
 
     metadata.shortDescription = refinedMetadata.shortDescription;
     metadata.description = refinedMetadata.description;
     metadata.compressedFullDescriptionOfAllContents =
       refinedMetadata.compressedFullDescriptionOfAllContents;
 
-    console.log(`Final refined analysis results: ${JSON.stringify(metadata, null, 2)}`);
+    console.log(
+      `Final refined analysis results: ${JSON.stringify(metadata, null, 2)}`
+    );
+
+    // Wait for 3 minutes
+    await new Promise((resolve) => setTimeout(resolve, 180000));
 
     filesMetaData[fileId] = metadata;
     return metadata;
