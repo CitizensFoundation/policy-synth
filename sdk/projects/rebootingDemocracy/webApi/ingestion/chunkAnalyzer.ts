@@ -1,5 +1,5 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionChunkAnalzyerAgent extends BaseIngestionAgent {
@@ -30,7 +30,7 @@ Your analyzis in JSON format:
     try {
       const analyze = (await this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.analyzisSystemMessage,
           this.analyzisUserMessage(data)

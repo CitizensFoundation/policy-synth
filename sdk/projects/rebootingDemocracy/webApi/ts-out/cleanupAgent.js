@@ -1,5 +1,5 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class IngestionCleanupAgent extends BaseIngestionAgent {
     maxCleanupTokenLength = 4000;
@@ -104,14 +104,14 @@ Your one word analysis:
                 console.log(`\n\nCleaning part: ${partIndex} of ${partsLength}\n\n`);
                 this.logShortLines(part);
                 // Check for if the part is only references
-                const referenceAnalysis = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
+                const referenceAnalysis = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
                 if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") > -1) {
                     console.warn(`\n\nONLY_REFERENCES_OR_URLS:\n${part}\nONLY_REFERENCES_OR_URLS\n\n`);
                     cleanedPart = "";
                     validated = true;
                 }
                 else {
-                    cleanedPart = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
+                    cleanedPart = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
                     const validationResults = await this.validateCleanedPart(part, cleanedPart);
                     validated = validationResults.valid;
                     retryCount++;
@@ -136,9 +136,9 @@ Your one word analysis:
     async validateCleanedPart(original, cleaned) {
         console.log(`\nValidating cleaned part:\n${cleaned}\n\n`);
         const validations = await Promise.all([
-            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.completionValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),
-            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),
-            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.hallucinationValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),
+            this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.completionValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),
+            this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),
+            this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.hallucinationValidationSystemMessage, this.validationUserMessage(original, cleaned)), false),
         ]);
         const [completionValidation, correctnessValidation, hallucinationValidation,] = validations.map((response) => response);
         const validationTextResults = `${completionValidation} ${correctnessValidation} ${hallucinationValidation}`;

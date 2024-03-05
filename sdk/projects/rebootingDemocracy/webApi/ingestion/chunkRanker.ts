@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 
 export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   rankingRules: string | undefined;
@@ -63,7 +63,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       index,
       "ingestion-agent",
-      IEngineConstants.ingestionModel,
+      PsIngestionConstants.ingestionMainModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -73,18 +73,18 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   async rankDocumentChunks(
     chunksToRank: PsIngestionChunkData[],
     rankingRules: string,
-    documentSummary: string
+    documentSummary: string,
+    eloRatingKey: string
   ) {
     this.rankingRules = rankingRules;
     this.documentSummary = documentSummary;
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-      maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.searchQueryRankingsModel.name,
-      verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+      temperature: PsIngestionConstants.ingestionRankingModel.temperature,
+      maxTokens: PsIngestionConstants.ingestionRankingModel.maxOutputTokens,
+      modelName: PsIngestionConstants.ingestionRankingModel.name,
+      verbose: PsIngestionConstants.ingestionRankingModel.verbose,
     });
-
     this.setupRankingPrompts(
       -1,
       chunksToRank as PsEloRateable[],

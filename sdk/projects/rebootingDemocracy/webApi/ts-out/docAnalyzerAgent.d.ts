@@ -6,6 +6,6 @@ export declare class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
     userMessage: (data: string) => HumanMessage;
     finalReviewSystemMessage: SystemMessage;
     finalReviewUserMessage: (analysis: LlmDocumentAnalysisReponse) => HumanMessage;
-    analyze(fileId: string, data: string, filesMetaData?: Record<string, CachedFileMetadata>): Promise<CachedFileMetadata>;
+    analyze(fileId: string, data: string, filesMetaData?: Record<string, DocumentSource>): Promise<DocumentSource>;
 }
 //# sourceMappingURL=docAnalyzerAgent.d.ts.map

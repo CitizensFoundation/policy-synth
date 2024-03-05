@@ -1,9 +1,9 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
-    maxCompressionRetries = 25;
-    retryCountBeforeRandomizingLlmTemperature = 15;
+    maxCompressionRetries = 30;
+    retryCountBeforeRandomizingLlmTemperature = 25;
     completionValidationSuccessMessage = "All content present in compressed text.";
     correctnessValidationSuccessMessage = "All content correct in compressed text.";
     hallucinationValidationSuccessMessage = "No additional content in compressed text.";
@@ -53,7 +53,7 @@ Your compressed text:
 ${data}
 </ORIGINAL_TEXT_TO_COMPRESS>
 
-IMPORTANT: You have already tried once to compress this text, and you got those validation suggestions:
+IMPORTANT: You have already tried once to compress this text, and you got those suggestions for improvement:
 <SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
 ${validationTextResults}
 </SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
@@ -62,7 +62,7 @@ ${validationTextResults}
 ${lastCompressed}
 </LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 
-Please use the information from the last compression validation suggestions to improve on the last compression attempt.
+Please use the information from the suggestions for improvement to improve on the last compression attempt.
 
 Your new improved compressed text:
 `);
@@ -79,7 +79,7 @@ Your new improved compressed text:
                     console.log(`\n\nRetrying compression ${retryCount}\n\n`);
                     console.log(this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults).content);
                 }
-                compressedText = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.compressionSystemMessage, validationTextResults && lastCompressedData
+                compressedText = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.compressionSystemMessage, validationTextResults && lastCompressedData
                     ? this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults)
                     : this.compressionUserMessage(uncompressedData)), false));
                 const validationResults = await this.validateChunkSummary(uncompressedData, compressedText);
@@ -104,14 +104,15 @@ Your new improved compressed text:
             return compressedText;
         }
         else {
-            throw new Error("Chunk summary validation failed");
+            console.error("Chunk summary validation failed");
+            return uncompressedData;
         }
     }
     async validateChunkSummary(uncompressed, compressed) {
         const validations = await Promise.all([
-            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.completionValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
-            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
-            this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.hallucinationValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
+            this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.completionValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
+            this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
+            this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.hallucinationValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
         ]);
         const [completionValidation, correctnessValidation, hallucinationValidation,] = validations.map((response) => response);
         const validationTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;

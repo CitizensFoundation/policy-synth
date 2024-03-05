@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 
 export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
   rankingRules: string | undefined;
@@ -23,8 +23,8 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![itemOneIndex] as CachedFileMetadata;
-    const itemTwo = this.allItems![index]![itemTwoIndex] as CachedFileMetadata;
+    const itemOne = this.allItems![index]![itemOneIndex] as DocumentSource;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as DocumentSource;
 
     const messages = [
       new SystemMessage(
@@ -63,7 +63,7 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       index,
       "ingestion-agent",
-      IEngineConstants.ingestionModel,
+      PsIngestionConstants.ingestionMainModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -71,18 +71,19 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
   }
 
   async rankDocuments(
-    docsToRank: CachedFileMetadata[],
+    docsToRank: DocumentSource[],
     rankingRules: string,
-    overallTopic: string
+    overallTopic: string,
+    eloRatingKey: string
   ) {
     this.rankingRules = rankingRules;
     this.overallTopic = overallTopic;
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-      maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.searchQueryRankingsModel.name,
-      verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+      temperature: PsIngestionConstants.ingestionRankingModel.temperature,
+      maxTokens: PsIngestionConstants.ingestionRankingModel.maxOutputTokens,
+      modelName: PsIngestionConstants.ingestionRankingModel.name,
+      verbose: PsIngestionConstants.ingestionRankingModel.verbose,
     });
 
     this.setupRankingPrompts(
@@ -92,6 +93,6 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
       this.progressFunction,
     );
     await this.performPairwiseRanking(-1);
-    return this.getOrderedListOfItems(-1, true) as CachedFileMetadata[];
+    return this.getOrderedListOfItems(-1, true, eloRatingKey) as DocumentSource[];
   }
 }

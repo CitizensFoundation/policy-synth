@@ -9,8 +9,8 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     dataLayoutPath: string;
     cachedFiles: string[];
     fileMetadataPath: string;
-    fileMetadata: Record<string, CachedFileMetadata>;
-    initialFileMetadata: Record<string, CachedFileMetadata>;
+    fileMetadata: Record<string, DocumentSource>;
+    initialFileMetadata: Record<string, DocumentSource>;
     cleanupAgent: IngestionCleanupAgent;
     splitAgent: IngestionSplitAgent;
     chunkCompressor: IngestionChunkCompressorAgent;
@@ -20,7 +20,9 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     processDataLayout(): Promise<void>;
     processFiles(files: string[]): Promise<void>;
     aggregateChunkData: (chunks: LlmDocumentChunksStrategy[]) => string;
+    createTreeChunks(metadata: DocumentSource, cleanedUpData: string): Promise<void>;
     processFilePartTree(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void>;
+    rankChunks(metadata: DocumentSource): Promise<void>;
     extractFileIdFromPath(filePath: string): string | null;
     getFilesForProcessing(forceProcessing?: boolean): string[];
     updateCachedFilesAndMetadata(relativePath: string, url: string, data: Buffer, contentType: string, lastModifiedOnServer: string): void;

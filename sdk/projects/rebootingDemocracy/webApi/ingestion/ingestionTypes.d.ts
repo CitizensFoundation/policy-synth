@@ -6,7 +6,7 @@ interface DataLayout {
 
 // Add cache for first the response keyed on the data hashes
 // So if user asks a similar question, we lookup in weaviate, and decide in the routing
-interface CachedFileMetadata extends PsEloRateable {
+interface DocumentSource extends PsEloRateable {
   key: string;
   url: string;
   lastModified: string;
@@ -18,7 +18,9 @@ interface CachedFileMetadata extends PsEloRateable {
   description?: string;
   shortDescription?: string;
   fullDescriptionOfAllContents?: string;
+  compressedFullDescriptionOfAllContents?: string;
   title?: string;
+  weaviteId?: string;
   filePath: string;
   contentType: string;
   chunks?: PsIngestionChunkData[];
@@ -34,6 +36,7 @@ interface LlmDocumentAnalysisReponse {
   shortDescription: string;
   description: string;
   fullDescriptionOfAllContents: string;
+  compressedFullDescriptionOfAllContents?: string;
   allReferencesWithUrls: string[];
   allImageUrls: string[];
   allOtherReferences: string[];

@@ -4,6 +4,6 @@ export declare class IngestionDocumentRanker extends BasePairwiseRankingsProcess
     overallTopic: string | undefined;
     constructor(memory?: PsBaseMemoryData | undefined, progressFunction?: Function | undefined);
     voteOnPromptPair(index: number, promptPair: number[]): Promise<IEnginePairWiseVoteResults>;
-    rankDocuments(docsToRank: CachedFileMetadata[], rankingRules: string, overallTopic: string): Promise<CachedFileMetadata[]>;
+    rankDocuments(docsToRank: DocumentSource[], rankingRules: string, overallTopic: string, eloRatingKey: string): Promise<DocumentSource[]>;
 }
 //# sourceMappingURL=docRanker.d.ts.map

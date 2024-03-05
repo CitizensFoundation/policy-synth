@@ -17,8 +17,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
   cachedFiles: string[] = [];
   fileMetadataPath: string = "./ingestion/cache/fileMetadata.json";
-  fileMetadata: Record<string, CachedFileMetadata> = {};
-  initialFileMetadata: Record<string, CachedFileMetadata> = {};
+  fileMetadata: Record<string, DocumentSource> = {};
+  initialFileMetadata: Record<string, DocumentSource> = {};
 
   cleanupAgent: IngestionCleanupAgent;
   splitAgent: IngestionSplitAgent;
@@ -143,22 +143,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     }, "");
   };
 
-  async processFilePartTree(
-    fileId: string,
-    cleanedUpData: string,
-    weaviateDocumentId: string
-  ): Promise<void> {
-    console.log(`Processing file part for fileId: ${fileId}`);
-
-
-    this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
-
-    await this.saveFileMetadata();
-
-    const metadata = this.fileMetadata[fileId] || {};
-
-    metadata.chunks = [];
-
+  async createTreeChunks(
+    metadata: DocumentSource,
+    cleanedUpData: string
+  ) {
     const chunks = (await this.splitAgent.splitDocumentIntoChunks(
       cleanedUpData
     )) as LlmDocumentChunksStrategy[];
@@ -224,18 +212,55 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     for (let chunk of chunks) {
       await processChunk(chunk); // Initial call to process top-level chunks
     }
+  }
+
+  async processFilePartTree(
+    fileId: string,
+    cleanedUpData: string,
+    weaviateDocumentId: string
+  ): Promise<void> {
+    console.log(`Processing file part for fileId: ${fileId}`);
+
+    this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
 
     await this.saveFileMetadata();
 
-    console.log(`Final metadata:\n${JSON.stringify(metadata, null, 2)}`);
+    const metadata = this.fileMetadata[fileId] || {};
+
+    metadata.chunks = [];
+
+    metadata.weaviteId = weaviateDocumentId;
+
+    await this.createTreeChunks(metadata, cleanedUpData);
+
+    await this.saveFileMetadata();
+
+    console.log(`Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`);
+
+    await this.rankChunks(metadata);
+
+    await this.saveFileMetadata();
+
+    console.log(`Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`);
 
     // Wait for 3 minutes
     await new Promise((resolve) => setTimeout(resolve, 150000));
 
-    const ranker = new IngestionChunkRanker();
-    await ranker.rankDocumentChunks(metadata.chunks, "Ranking rules", "Document summary");
+    //    await this.saveFileMetadata();
 
-//    await this.saveFileMetadata();
+  }
+
+  async rankChunks(metadata: DocumentSource) {
+    const ranker = new IngestionChunkRanker();
+
+    const relevanceRules = "Rank the two chunks based on the relevance to the document";
+    await ranker.rankDocumentChunks(metadata.chunks!, relevanceRules, metadata.compressedFullDescriptionOfAllContents!, "relevanceEloRating");
+
+    const substanceRules = "Rank the two chunks based substance and completeness of the information";
+    await ranker.rankDocumentChunks(metadata.chunks!, substanceRules, metadata.compressedFullDescriptionOfAllContents!, "substanceEloRating");
+
+    const qualityRules = "Rank the two chunks based on quality of the information";
+    await ranker.rankDocumentChunks(metadata.chunks!, qualityRules, metadata.compressedFullDescriptionOfAllContents!, "qualityEloRating");
   }
 
   extractFileIdFromPath(filePath: string): string | null {

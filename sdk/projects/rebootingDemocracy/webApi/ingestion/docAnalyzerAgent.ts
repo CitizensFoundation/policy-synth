@@ -1,4 +1,4 @@
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 
@@ -36,19 +36,13 @@ Your JSON analysis:
     new SystemMessage(`You are an expert document analyze refiner.
 Instructions:
 - You will recieve a document analysis in JSON format.
-- Please refine the fullDescriptionOfAllContents has been collected part by part in a loop, but keep all the data and all text do not remove anything from there.
-- Then refine the shortDescription and description with all the data from the fullDescriptionOfAllContents.
-- Then output again the full JSON but with the refined shortDescription, description and fullDescriptionOfAllContents without explanations:
+- Refine description and shortDescription with all the data from the fullDescriptionOfAllContents.
+- Compressed fullDescriptionOfAllContents into compressedFullDescriptionOfAllContents.
+- Then output again only the processed JSON fields with the refined shortDescription, description and compressedFullDescriptionOfAllContents without explanations:
 {
-  title: string;
   shortDescription: string;
   description: string;
-  fullDescriptionOfAllContents: string;
-  documentDate: string;
-  documentMetaData: { [key: string]: string };
-  allImageUrls: string[];
-  allReferencesWithUrls: { reference: string; url: string }[];
-  allOtherReferences: string[];
+  compressedFullDescriptionOfAllContents: string;
 }
 `);
 
@@ -62,8 +56,8 @@ Your refined JSON analysis:
   async analyze(
     fileId: string,
     data: string,
-    filesMetaData: Record<string, CachedFileMetadata> = {}
-  ): Promise<CachedFileMetadata> {
+    filesMetaData: Record<string, DocumentSource> = {}
+  ): Promise<DocumentSource> {
     // Split data if larger than maxAnalyzeTokenLength
     const dataChunks =
       data.length > this.maxAnalyzeTokenLength
@@ -73,14 +67,14 @@ Your refined JSON analysis:
           )
         : [data];
 
-    let metadata = filesMetaData[fileId] || ({} as CachedFileMetadata);
+    let metadata = filesMetaData[fileId] || ({} as DocumentSource);
 
     for (let i = 0; i < dataChunks.length; i++) {
       console.log(`Analyzing chunk ${i + 1} of ${dataChunks.length}`);
       const chunkData = dataChunks[i];
       const documentAnalysis = (await this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(this.systemMessage, this.userMessage(chunkData))
       )) as LlmDocumentAnalysisReponse;
 
@@ -137,7 +131,7 @@ Your refined JSON analysis:
 
     const refinedMetadata = (await this.callLLM(
       "ingestion-agent",
-      IEngineConstants.ingestionModel,
+      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.finalReviewSystemMessage,
         this.finalReviewUserMessage(metadata as LlmDocumentAnalysisReponse)
@@ -146,8 +140,8 @@ Your refined JSON analysis:
 
     metadata.shortDescription = refinedMetadata.shortDescription;
     metadata.description = refinedMetadata.description;
-    metadata.fullDescriptionOfAllContents =
-      refinedMetadata.fullDescriptionOfAllContents;
+    metadata.compressedFullDescriptionOfAllContents =
+      refinedMetadata.compressedFullDescriptionOfAllContents;
 
     console.log(`Final refined analysis results: ${JSON.stringify(metadata, null, 2)}`);
 

@@ -4,6 +4,6 @@ export declare class IngestionChunkRanker extends BasePairwiseRankingsProcessor 
     documentSummary: string | undefined;
     constructor(memory?: PsBaseMemoryData | undefined, progressFunction?: Function | undefined);
     voteOnPromptPair(index: number, promptPair: number[]): Promise<IEnginePairWiseVoteResults>;
-    rankDocumentChunks(chunksToRank: PsIngestionChunkData[], rankingRules: string, documentSummary: string): Promise<PsIngestionChunkData[]>;
+    rankDocumentChunks(chunksToRank: PsIngestionChunkData[], rankingRules: string, documentSummary: string, eloRatingKey: string): Promise<PsIngestionChunkData[]>;
 }
 //# sourceMappingURL=chunkRanker.d.ts.map

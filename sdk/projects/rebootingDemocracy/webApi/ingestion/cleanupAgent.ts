@@ -1,5 +1,5 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionCleanupAgent extends BaseIngestionAgent {
@@ -137,7 +137,7 @@ Your one word analysis:
         // Check for if the part is only references
         const referenceAnalysis = (await this.callLLM(
           "ingestion-agent",
-          IEngineConstants.ingestionModel,
+          PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)),
           false
         )) as string;
@@ -149,7 +149,7 @@ Your one word analysis:
         } else {
           cleanedPart = (await this.callLLM(
             "ingestion-agent",
-            IEngineConstants.ingestionModel,
+            PsIngestionConstants.ingestionMainModel,
             this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)),
             false
           )) as string;
@@ -192,7 +192,7 @@ Your one word analysis:
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.completionValidationSystemMessage,
           this.validationUserMessage(original, cleaned)
@@ -201,7 +201,7 @@ Your one word analysis:
       ),
       this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.correctnessValidationSystemMessage,
           this.validationUserMessage(original, cleaned)
@@ -210,7 +210,7 @@ Your one word analysis:
       ),
       this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.hallucinationValidationSystemMessage,
           this.validationUserMessage(original, cleaned)

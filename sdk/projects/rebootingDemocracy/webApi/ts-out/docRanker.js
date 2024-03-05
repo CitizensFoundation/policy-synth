@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
     rankingRules;
     overallTopic;
@@ -43,19 +43,19 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
         The Most Relevant Document Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "ingestion-agent", IEngineConstants.ingestionModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "ingestion-agent", PsIngestionConstants.ingestionMainModel, messages, itemOneIndex, itemTwoIndex);
     }
-    async rankDocuments(docsToRank, rankingRules, overallTopic) {
+    async rankDocuments(docsToRank, rankingRules, overallTopic, eloRatingKey) {
         this.rankingRules = rankingRules;
         this.overallTopic = overallTopic;
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-            maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.searchQueryRankingsModel.name,
-            verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+            temperature: PsIngestionConstants.ingestionRankingModel.temperature,
+            maxTokens: PsIngestionConstants.ingestionRankingModel.maxOutputTokens,
+            modelName: PsIngestionConstants.ingestionRankingModel.name,
+            verbose: PsIngestionConstants.ingestionRankingModel.verbose,
         });
         this.setupRankingPrompts(-1, docsToRank, docsToRank.length * 10, this.progressFunction);
         await this.performPairwiseRanking(-1);
-        return this.getOrderedListOfItems(-1, true);
+        return this.getOrderedListOfItems(-1, true, eloRatingKey);
     }
 }

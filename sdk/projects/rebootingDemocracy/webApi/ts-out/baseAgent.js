@@ -2,7 +2,7 @@ import path from "path";
 import crypto, { createHash } from "crypto";
 import { ChatOpenAI } from "@langchain/openai";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 export class BaseIngestionAgent extends PolicySynthAgentBase {
     minChunkTokenLength = 1000;
     maxChunkTokenLength = 3500;
@@ -11,14 +11,14 @@ export class BaseIngestionAgent extends PolicySynthAgentBase {
     constructor() {
         super();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.ingestionModel.temperature,
-            maxTokens: IEngineConstants.ingestionModel.maxOutputTokens,
-            modelName: IEngineConstants.ingestionModel.name,
-            verbose: IEngineConstants.ingestionModel.verbose,
+            temperature: PsIngestionConstants.ingestionMainModel.temperature,
+            maxTokens: PsIngestionConstants.ingestionMainModel.maxOutputTokens,
+            modelName: PsIngestionConstants.ingestionMainModel.name,
+            verbose: PsIngestionConstants.ingestionMainModel.verbose,
         });
     }
     resetLlmTemperature() {
-        this.chat.temperature = IEngineConstants.ingestionModel.temperature;
+        this.chat.temperature = PsIngestionConstants.ingestionMainModel.temperature;
     }
     randomizeLlmTemperature() {
         this.chat.temperature = Math.random() * (0.55 - 0.01) + 0.01;

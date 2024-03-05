@@ -1,4 +1,4 @@
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -146,7 +146,7 @@ YOUR EVALUATION: `);
     }
     const chunkingStrategy = (await this.callLLM(
       "ingestion-agent",
-      IEngineConstants.ingestionModel,
+      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.strategySystemMessage,
         review
@@ -170,7 +170,7 @@ YOUR EVALUATION: `);
 
     const chunkingStrategyReview = (await this.callLLM(
       "ingestion-agent",
-      IEngineConstants.ingestionModel,
+      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.reviewStrategySystemMessage,
         this.reviewStrategyUserMessage(data, chunkingStrategy)

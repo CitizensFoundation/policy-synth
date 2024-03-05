@@ -1,5 +1,5 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class IngestionChunkAnalzyerAgent extends BaseIngestionAgent {
     analyzisSystemMessage = new SystemMessage(`You are an expert text analyzer.
@@ -23,7 +23,7 @@ Your analyzis in JSON format:
     async analyze(data) {
         this.resetLlmTemperature();
         try {
-            const analyze = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.analyzisSystemMessage, this.analyzisUserMessage(data))));
+            const analyze = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.analyzisSystemMessage, this.analyzisUserMessage(data))));
             return analyze;
         }
         catch (error) {

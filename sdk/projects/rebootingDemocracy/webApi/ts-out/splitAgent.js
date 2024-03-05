@@ -1,4 +1,4 @@
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 export class IngestionSplitAgent extends BaseIngestionAgent {
@@ -115,14 +115,14 @@ YOUR EVALUATION: `);
         catch (e) {
             console.error(e);
         }
-        const chunkingStrategy = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.strategySystemMessage, review
+        const chunkingStrategy = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.strategySystemMessage, review
             ? this.strategyWithReviewUserMessage(data, lastJsonText, review)
             : this.strategyUserMessage(data)), false));
         console.log(`Raw chunking strategy: ${chunkingStrategy}`);
         const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(chunkingStrategy);
         console.log(`JSON strategy: ${JSON.stringify(lastChunkingStrategyJson, null, 2)}`);
         console.log("Reviewing chunking strategy...");
-        const chunkingStrategyReview = (await this.callLLM("ingestion-agent", IEngineConstants.ingestionModel, this.getFirstMessages(this.reviewStrategySystemMessage, this.reviewStrategyUserMessage(data, chunkingStrategy)), false));
+        const chunkingStrategyReview = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.reviewStrategySystemMessage, this.reviewStrategyUserMessage(data, chunkingStrategy)), false));
         console.log(`Chunking strategy: ${chunkingStrategyReview}`);
         return {
             chunkingStrategy,

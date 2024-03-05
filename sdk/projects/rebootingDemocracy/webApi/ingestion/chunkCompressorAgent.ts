@@ -1,10 +1,10 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
-  maxCompressionRetries = 25;
-  retryCountBeforeRandomizingLlmTemperature = 15;
+  maxCompressionRetries = 30;
+  retryCountBeforeRandomizingLlmTemperature = 25;
 
   completionValidationSuccessMessage =
     "All content present in compressed text.";
@@ -116,7 +116,7 @@ Your new improved compressed text:
         }
         compressedText = (await this.callLLM(
           "ingestion-agent",
-          IEngineConstants.ingestionModel,
+          PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(
             this.compressionSystemMessage,
             validationTextResults && lastCompressedData
@@ -162,7 +162,8 @@ Your new improved compressed text:
     if (validated && compressedText) {
       return compressedText;
     } else {
-      throw new Error("Chunk summary validation failed");
+      console.error("Chunk summary validation failed");
+      return uncompressedData;
     }
   }
 
@@ -173,7 +174,7 @@ Your new improved compressed text:
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.completionValidationSystemMessage,
           this.validationUserMessage(uncompressed, compressed)
@@ -182,7 +183,7 @@ Your new improved compressed text:
       ),
       this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.correctnessValidationSystemMessage,
           this.validationUserMessage(uncompressed, compressed)
@@ -191,7 +192,7 @@ Your new improved compressed text:
       ),
       this.callLLM(
         "ingestion-agent",
-        IEngineConstants.ingestionModel,
+        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.hallucinationValidationSystemMessage,
           this.validationUserMessage(uncompressed, compressed)
