@@ -62,7 +62,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
                 //if (metadataEntry.fileId !== "8211f8f7011d29e3da018207b2d991da")
                 //  continue;
-                const reAnalyze = false;
+                const reAnalyze = true;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
@@ -173,12 +173,13 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     }
     async rankChunks(metadata) {
         const ranker = new IngestionChunkRanker();
+        const flattenedChunks = metadata.chunks.reduce((acc, chunk) => acc.concat(chunk, chunk.subChunks || []), []);
         const relevanceRules = "Rank the two chunks based on the relevance to the document";
-        await ranker.rankDocumentChunks(metadata.chunks, relevanceRules, metadata.compressedFullDescriptionOfAllContents, "relevanceEloRating");
+        await ranker.rankDocumentChunks(flattenedChunks, relevanceRules, metadata.compressedFullDescriptionOfAllContents, "relevanceEloRating");
         const substanceRules = "Rank the two chunks based substance and completeness of the information";
-        await ranker.rankDocumentChunks(metadata.chunks, substanceRules, metadata.compressedFullDescriptionOfAllContents, "substanceEloRating");
+        await ranker.rankDocumentChunks(flattenedChunks, substanceRules, metadata.compressedFullDescriptionOfAllContents, "substanceEloRating");
         const qualityRules = "Rank the two chunks based on quality of the information";
-        await ranker.rankDocumentChunks(metadata.chunks, qualityRules, metadata.compressedFullDescriptionOfAllContents, "qualityEloRating");
+        await ranker.rankDocumentChunks(flattenedChunks, qualityRules, metadata.compressedFullDescriptionOfAllContents, "qualityEloRating");
     }
     extractFileIdFromPath(filePath) {
         const url = Object.values(this.fileMetadata).find((meta) => filePath.includes(meta.key))?.url;

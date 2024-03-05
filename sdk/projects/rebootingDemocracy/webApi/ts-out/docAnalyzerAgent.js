@@ -101,6 +101,7 @@ Your refined JSON analysis:
         }
         console.log(`Final analysis results: ${JSON.stringify(metadata, null, 2)}`);
         const refinedMetadata = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.finalReviewSystemMessage, this.finalReviewUserMessage(metadata))));
+        console.log(`Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`);
         metadata.shortDescription = refinedMetadata.shortDescription;
         metadata.description = refinedMetadata.description;
         metadata.compressedFullDescriptionOfAllContents =

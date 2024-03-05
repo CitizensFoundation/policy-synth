@@ -253,14 +253,19 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   async rankChunks(metadata: DocumentSource) {
     const ranker = new IngestionChunkRanker();
 
+    const flattenedChunks = metadata.chunks!.reduce(
+      (acc, chunk) => acc.concat(chunk, chunk.subChunks || []),
+      [] as PsIngestionChunkData[]
+    );
+
     const relevanceRules = "Rank the two chunks based on the relevance to the document";
-    await ranker.rankDocumentChunks(metadata.chunks!, relevanceRules, metadata.compressedFullDescriptionOfAllContents!, "relevanceEloRating");
+    await ranker.rankDocumentChunks(flattenedChunks, relevanceRules, metadata.compressedFullDescriptionOfAllContents!, "relevanceEloRating");
 
     const substanceRules = "Rank the two chunks based substance and completeness of the information";
-    await ranker.rankDocumentChunks(metadata.chunks!, substanceRules, metadata.compressedFullDescriptionOfAllContents!, "substanceEloRating");
+    await ranker.rankDocumentChunks(flattenedChunks, substanceRules, metadata.compressedFullDescriptionOfAllContents!, "substanceEloRating");
 
     const qualityRules = "Rank the two chunks based on quality of the information";
-    await ranker.rankDocumentChunks(metadata.chunks!, qualityRules, metadata.compressedFullDescriptionOfAllContents!, "qualityEloRating");
+    await ranker.rankDocumentChunks(flattenedChunks, qualityRules, metadata.compressedFullDescriptionOfAllContents!, "qualityEloRating");
   }
 
   extractFileIdFromPath(filePath: string): string | null {

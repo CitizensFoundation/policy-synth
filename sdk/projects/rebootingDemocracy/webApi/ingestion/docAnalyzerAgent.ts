@@ -138,6 +138,8 @@ Your refined JSON analysis:
       )
     )) as LlmDocumentAnalysisReponse;
 
+    console.log(`Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`);
+
     metadata.shortDescription = refinedMetadata.shortDescription;
     metadata.description = refinedMetadata.description;
     metadata.compressedFullDescriptionOfAllContents =
