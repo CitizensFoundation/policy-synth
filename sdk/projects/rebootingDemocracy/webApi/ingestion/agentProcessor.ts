@@ -53,25 +53,29 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await this.loadFileMetadata(); // Load existing metadata to compare against
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
-    const dataLayout = await this.readDataLayout();
-    const browser = await puppeteer.launch({ headless: true });
-    try {
-      this.logger.debug("Launching browser");
+    const downloadContent = false;
 
-      const browserPage = await browser.newPage();
-      browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-      browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    if (downloadContent) {
+      const dataLayout = await this.readDataLayout();
+      const browser = await puppeteer.launch({ headless: true });
+      try {
+        this.logger.debug("Launching browser");
 
-      await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        const browserPage = await browser.newPage();
+        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
 
-      await this.downloadAndCache(dataLayout.documentUrls, false, browserPage);
-      await this.saveFileMetadata();
-      await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
-      await this.saveFileMetadata();
-    } catch (error) {
-      console.error("Failed to process data layout:", error);
-    } finally {
-      await browser.close();
+        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+
+        await this.downloadAndCache(dataLayout.documentUrls, false, browserPage);
+        await this.saveFileMetadata();
+        await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
+        await this.saveFileMetadata();
+      } catch (error) {
+        console.error("Failed to process data layout:", error);
+      } finally {
+        await browser.close();
+      }
     }
 
     const filesForProcessing = this.getFilesForProcessing(true);
@@ -251,7 +255,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     metadata.weaviteId = weaviateDocumentId;
 
-    const rechunk = false;
+    const rechunk = true;
 
     if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
       metadata.chunks = [];
