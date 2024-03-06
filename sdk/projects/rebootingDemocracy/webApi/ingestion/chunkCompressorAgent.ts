@@ -194,7 +194,7 @@ Your new improved compressed text:
     compressed: string
   ): Promise<{ valid: boolean; validationTextResults: string }> {
     const validations = await Promise.all([
-      this.callLLM(
+      /*this.callLLM(
         "ingestion-agent",
         PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
@@ -202,7 +202,7 @@ Your new improved compressed text:
           this.validationUserMessage(uncompressed, compressed)
         ),
         false
-      ),
+      ),*/
       this.callLLM(
         "ingestion-agent",
         PsIngestionConstants.ingestionMainModel,

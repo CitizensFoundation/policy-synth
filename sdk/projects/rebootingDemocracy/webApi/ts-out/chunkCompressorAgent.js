@@ -130,7 +130,15 @@ Your new improved compressed text:
     }
     async validateChunkSummary(uncompressed, compressed) {
         const validations = await Promise.all([
-            this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.completionValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
+            /*this.callLLM(
+              "ingestion-agent",
+              PsIngestionConstants.ingestionMainModel,
+              this.getFirstMessages(
+                this.completionValidationSystemMessage,
+                this.validationUserMessage(uncompressed, compressed)
+              ),
+              false
+            ),*/
             this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
             this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.hallucinationValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
         ]);
