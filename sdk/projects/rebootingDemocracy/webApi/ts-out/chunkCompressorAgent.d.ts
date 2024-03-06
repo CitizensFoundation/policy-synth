@@ -13,9 +13,9 @@ export declare class IngestionChunkCompressorAgent extends BaseIngestionAgent {
     compressionSystemMessage: SystemMessage;
     compressionRetrySystemMessage: SystemMessage;
     compressionUserMessage: (data: string) => HumanMessage;
-    compressionRetryUserMessage: (data: string, lastCompressed: string, validationTextResults: string) => HumanMessage;
+    compressionRetryUserMessage: (data: string, lastCompressed: string, currentValidationResults: string, previousValidationResults: string, retryCount: number) => HumanMessage;
     compress(uncompressedData: string): Promise<string>;
-    validateChunkSummary(uncompressed: string, compressed: string, validationErrorTextResults: string): Promise<{
+    validateChunkSummary(uncompressed: string, compressed: string): Promise<{
         valid: boolean;
         validationTextResults: string;
     }>;

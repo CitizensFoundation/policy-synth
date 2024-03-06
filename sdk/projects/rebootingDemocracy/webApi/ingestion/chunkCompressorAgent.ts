@@ -77,7 +77,7 @@ Instructions:
 - You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
 - Compress each paragraph into as few words as you can without losing any meaning, nuance or detail.
 - Pay special attention to all detail, meaning and nuance in the original text and make sure it is in your compressed text.
-- IMPORTANT: This is your second attempt to compress this text, pay special attention to: SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS and implement each of those suggestions in your new compressed text.
+- IMPORTANT: This is your second attempt to compress this text, pay special attention to: CURRENT_SUGGESTIONS_IMPROVEMENTS and implement each of those suggestions in your new compressed text.
 - Output the compressed text, nothing else.
 `);
 
@@ -92,22 +92,34 @@ Your compressed text:
   compressionRetryUserMessage = (
     data: string,
     lastCompressed: string,
-    validationTextResults: string
+    currentValidationResults: string,
+    previousValidationResults: string,
+    retryCount: number
   ) =>
     new HumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
 ${data}
 </ORIGINAL_TEXT_TO_COMPRESS>
 
-IMPORTANT: You have already tried once to compress this text, and you got those suggestions for improvement:
-<SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
-${validationTextResults}
-</SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS>
+IMPORTANT: You have already tried ${retryCount} times to compress this text, and you got those new suggestions for improvement:
+<CURRENT_SUGGESTIONS_FOR_IMPROVEMENTS>
+${currentValidationResults}
+</CURRENT_SUGGESTIONS_FOR_IMPROVEMENTS>
+
+${
+  previousValidationResults && previousValidationResults.trim() != ""
+    ? `
+<PREVIOUS_SUGGESTIONS_FOR_IMPROVEMENTS>
+${previousValidationResults}
+</PREVIOUS_SUGGESTIONS_FOR_IMPROVEMENTS>
+`
+    : ``
+}
 
 <LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 ${lastCompressed}
 </LAST_COMPRESSION_ATTEMPT_TO_IMPROVE_ON>
 
-Please use the information from the suggestions for improvement to improve on the last compression attempt.
+Please use the suggestions for improvement to improve on the last compression attempt.
 
 Your new improved compressed text:
 `);
@@ -121,16 +133,19 @@ Your new improved compressed text:
     let lastCompressedData: string | undefined;
 
     let retryCount = 0;
-    let validationErrorTextResults = "";
+    let previousValidationResults = "";
+    let currentValidationResults = "";
     while (!validated && retryCount < this.maxCompressionRetries) {
       try {
-        if (validationErrorTextResults && lastCompressedData) {
+        if (currentValidationResults && lastCompressedData) {
           console.log(`\n\nRetrying compression ${retryCount}\n\n`);
           console.log(
             this.compressionRetryUserMessage(
               uncompressedData,
               lastCompressedData,
-              validationErrorTextResults
+              currentValidationResults,
+              previousValidationResults,
+              retryCount
             ).content
           );
         }
@@ -138,24 +153,29 @@ Your new improved compressed text:
           "ingestion-agent",
           PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(
-            validationErrorTextResults && lastCompressedData
+            currentValidationResults && lastCompressedData
               ? this.compressionRetrySystemMessage
               : this.compressionSystemMessage,
-              validationErrorTextResults && lastCompressedData
+            currentValidationResults && lastCompressedData
               ? this.compressionRetryUserMessage(
                   uncompressedData,
                   lastCompressedData,
-                  validationErrorTextResults
+                  currentValidationResults,
+                  previousValidationResults,
+                  retryCount
                 )
               : this.compressionUserMessage(uncompressedData)
           ),
           false
         )) as string;
 
+        if (currentValidationResults) {
+          previousValidationResults += currentValidationResults;
+        }
+
         const validationResults = await this.validateChunkSummary(
           uncompressedData,
-          compressedText,
-          validationErrorTextResults
+          compressedText
         );
 
         lastCompressedData = compressedText;
@@ -167,9 +187,9 @@ Your new improved compressed text:
         retryCount++;
 
         if (!validated) {
-          validationErrorTextResults = validationResults.validationTextResults;
+          currentValidationResults = validationResults.validationTextResults;
           console.warn(
-            `\nCompression Validation failed ${retryCount}:\n\n${validationErrorTextResults}\n\n`
+            `\nCompression Validation failed ${retryCount}:\n\n${currentValidationResults}\n\n`
           );
         }
 
@@ -192,8 +212,7 @@ Your new improved compressed text:
 
   async validateChunkSummary(
     uncompressed: string,
-    compressed: string,
-    validationErrorTextResults: string
+    compressed: string
   ): Promise<{ valid: boolean; validationTextResults: string }> {
     const validations = await Promise.all([
       /*this.callLLM(
@@ -226,16 +245,17 @@ Your new improved compressed text:
     ]);
 
     const [
-     // completionValidation,
+      // completionValidation,
       correctnessValidation,
       hallucinationValidation,
     ] = validations.map((response) => response as string);
 
     //const validationOkTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
     const validationOkTextResults = `${correctnessValidation}\n${hallucinationValidation}\n\n`;
+    let currentValidationResults = "";
 
     if (
-     // completionValidation.includes(this.completionValidationSuccessMessage) &&
+      // completionValidation.includes(this.completionValidationSuccessMessage) &&
       correctnessValidation.includes(
         this.correctnessValidationSuccessMessage
       ) &&
@@ -248,7 +268,7 @@ Your new improved compressed text:
       /*if (
         !completionValidation.includes(this.completionValidationSuccessMessage)
       ) {
-        validationErrorTextResults += `${completionValidation}\n`;
+        previousValidationResults += `${completionValidation}\n`;
         console.warn(
           `Chunk summary completionValidation failed: ${completionValidation}`
         );
@@ -258,7 +278,7 @@ Your new improved compressed text:
           this.correctnessValidationSuccessMessage
         )
       ) {
-        validationErrorTextResults += `${correctnessValidation}\n`;
+        currentValidationResults += `${correctnessValidation}\n`;
         console.warn(
           `Chunk summary correctnessValidation failed: ${correctnessValidation}`
         );
@@ -268,14 +288,14 @@ Your new improved compressed text:
           this.hallucinationValidationSuccessMessage
         )
       ) {
-        validationErrorTextResults += `${hallucinationValidation}\n`;
+        currentValidationResults += `${hallucinationValidation}\n`;
         console.warn(
           `Chunk summary hallucinationValidation failed: ${hallucinationValidation}`
         );
       }
       return {
         valid: false,
-        validationTextResults: validationErrorTextResults,
+        validationTextResults: currentValidationResults,
       };
     }
   }
