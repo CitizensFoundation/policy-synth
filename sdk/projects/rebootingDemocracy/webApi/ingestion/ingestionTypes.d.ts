@@ -83,6 +83,7 @@ interface PsIngestionChunkData extends PsEloRateable {
   startLine?: number;
   actualEndLine?: number;
   shortSummary: string;
+  fullSummary: string;
   uncompressedContent: string;
   compressedContent: string;
   subChunks?: PsIngestionChunkData[];

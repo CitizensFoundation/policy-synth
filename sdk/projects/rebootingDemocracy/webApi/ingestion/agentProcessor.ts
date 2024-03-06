@@ -203,6 +203,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
           importantContextChunkIndexes: chunk.importantContextChapterIndexes,
           shortSummary: chunkAnalyzeResponse.shortDescription,
+          fullSummary: chunkAnalyzeResponse.fullDescription,
           compressedContent: chunkAnalyzeResponse.fullCompressedContent,
           metaData: chunkAnalyzeResponse.textMetaData,
           uncompressedContent: chunk.chunkData,

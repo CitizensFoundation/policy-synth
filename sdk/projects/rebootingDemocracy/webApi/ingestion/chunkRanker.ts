@@ -3,6 +3,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
+import { it } from "node:test";
 
 export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   rankingRules: string | undefined;
@@ -50,10 +51,10 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         Document Chunks to Rank:
 
         Document Chunk One:
-        ${itemOne.compressedContent}
+        ${itemOne.compressedContent || itemOne.fullSummary}
 
         Document Chunk Two:
-        ${itemTwo.compressedContent}
+        ${itemTwo.compressedContent || itemOne.fullSummary}
 
         The Most Relevant Document Chunk Is:
        `
