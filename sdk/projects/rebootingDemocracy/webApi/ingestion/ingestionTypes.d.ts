@@ -77,6 +77,7 @@ interface LlmChunkAnalysisReponse {
 interface PsIngestionChunkData extends PsEloRateable {
   title: string;
   chunkIndex: number;
+  chapterIndex: number;
   documentIndex?: string;
   mainExternalUrlFound: string;
   data?: string;

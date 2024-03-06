@@ -124,7 +124,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
         // Cleanup fullContentsColumns in docAnalysis and redo the summaries
 
-        const reCleanData = false;
+        const reCleanData = true;
 
         const cleanedUpData =
           (!reCleanData &&
@@ -186,9 +186,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     console.log(`Split into ${chunks.length} chunks`);
 
+    let masterChunkIndex = 0;
+
     const processChunk = async (
       chunk: LlmDocumentChunksStrategy,
-      parentChunkIndex: number | null = null
+      parentChunk: PsIngestionChunkData | undefined = undefined
     ) => {
       let hasAggregatedChunkData = false;
       if (!chunk.chunkData && chunk.subChunks) {
@@ -214,7 +216,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         }
 
         const chunkMetadata: PsIngestionChunkData = {
-          chunkIndex: chunk.chapterIndex, // Using chapterIndex directly
+          chunkIndex: masterChunkIndex++,
+          chapterIndex: chunk.chapterIndex,
           title: chunkAnalyzeResponse.title,
           mainExternalUrlFound: chunkAnalyzeResponse.mainExternalUrlFound,
           importantContextChunkIndexes: chunk.importantContextChapterIndexes,
@@ -226,24 +229,18 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           subChunks: [],
         };
 
-        if (parentChunkIndex === null) {
-          metadata.chunks!.push(chunkMetadata); // Pushing to array directly for top-level chunks
-        } else if (metadata.chunks![parentChunkIndex - 1]) {
-          // Ensure the parentChunk's subChunks array exists and is accessible
-          if (!metadata.chunks![parentChunkIndex - 1].subChunks) {
-            metadata.chunks![parentChunkIndex - 1].subChunks = [];
+        if (parentChunk === undefined) {
+          metadata.chunks!.push(chunkMetadata);
+        } else if (parentChunk) {
+          if (!parentChunk.subChunks) {
+            parentChunk.subChunks = [];
           }
-          metadata.chunks![parentChunkIndex - 1].subChunks!.push(chunkMetadata);
-          // Note: No manual adjustment of chunkIndex for subChunks needed
-        } else {
-          console.error(
-            `Parent chunk not found for chunkIndex: ${parentChunkIndex}`
-          );
+          parentChunk.subChunks!.push(chunkMetadata);
         }
 
         if (chunk.subChunks && chunk.subChunks.length > 0) {
           for (let subChunk of chunk.subChunks) {
-            await processChunk(subChunk, chunkMetadata.chunkIndex); // Recursively process subChunks
+            await processChunk(subChunk, chunkMetadata); // Recursively process subChunks
           }
         }
       }
@@ -269,7 +266,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     metadata.weaviteId = weaviateDocumentId;
 
-    const rechunk = false;
+    const rechunk = true;
 
     if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
       metadata.chunks = [];

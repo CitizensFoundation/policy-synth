@@ -113,6 +113,12 @@ Your new improved compressed text:
                     : this.compressionUserMessage(uncompressedData)), false));
                 if (currentValidationResults) {
                     previousValidationResults += currentValidationResults;
+                    const previousValidationResultsLines = previousValidationResults.split("\n");
+                    if (previousValidationResultsLines.length > 12) {
+                        previousValidationResults = previousValidationResultsLines
+                            .slice(previousValidationResultsLines.length - 12)
+                            .join("\n");
+                    }
                 }
                 const validationResults = await this.validateChunkSummary(uncompressedData, compressedText);
                 lastCompressedData = compressedText;

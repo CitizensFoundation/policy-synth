@@ -171,6 +171,15 @@ Your new improved compressed text:
 
         if (currentValidationResults) {
           previousValidationResults += currentValidationResults;
+
+          const previousValidationResultsLines = previousValidationResults.split(
+            "\n"
+          );
+          if (previousValidationResultsLines.length > 12) {
+            previousValidationResults = previousValidationResultsLines
+              .slice(previousValidationResultsLines.length - 12)
+              .join("\n");
+          }
         }
 
         const validationResults = await this.validateChunkSummary(
