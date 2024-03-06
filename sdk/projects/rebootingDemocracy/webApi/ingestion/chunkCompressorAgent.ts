@@ -29,9 +29,16 @@ Instructions:
     new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify anything that is incorrect in the compressed text compared to the uncompressed text and give exact instructions on how to improve the compressed text, item by item.
+- Identify anything important that is incorrect in the compressed text compared to the uncompressed text and give exact instructions on how to improve the compressed text, item by item.
+
 - The compressed text of course has less detail and that is fine.
-- Slightly different wording is fine as well as long as detail is captured in the compressed text.
+
+- Slightly different wording is fine as well as long as detail is captured.
+
+- Simplifying is fine as well as long as core nuance is captured.
+
+- This is a compressed text so don't bother with minor detail.
+
 - If all the compressed text is correct, output: All content correct in compressed text.
 `);
 
@@ -57,8 +64,20 @@ Think step by step and output your analysis here:
 
 Instructions:
 - You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
+- Compress each paragraph into as few words as you can without losing any details, nuance or meaning.
+- Pay special attention to all concepts, meaning, detail and nuance in the original text and make sure it is in your compressed text.
+- You should only compress the text so it has fewer words otherwise all detail, meaning and nuance should be the same.
+- Output the compressed text, nothing else.
+`);
+
+  compressionRetrySystemMessage =
+    new SystemMessage(`You are an expert text compressor.
+
+Instructions:
+- You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
 - Compress each paragraph into as few words as you can without losing any meaning, nuance or detail.
 - Pay special attention to all detail, meaning and nuance in the original text and make sure it is in your compressed text.
+- IMPORTANT: This is your second attempt to compress this text, pay special attention to: SUGGESTIONS_FOR_COMPRESSION_IMPROVEMENTS and implement each of those suggestions in your new compressed text.
 - Output the compressed text, nothing else.
 `);
 
@@ -119,7 +138,9 @@ Your new improved compressed text:
           "ingestion-agent",
           PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(
-            this.compressionSystemMessage,
+            validationTextResults && lastCompressedData
+              ? this.compressionRetrySystemMessage
+              : this.compressionSystemMessage,
             validationTextResults && lastCompressedData
               ? this.compressionRetryUserMessage(
                   uncompressedData,
