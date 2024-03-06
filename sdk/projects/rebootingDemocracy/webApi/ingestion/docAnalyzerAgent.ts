@@ -59,7 +59,7 @@ Instructions:
 `);
 
   finalReviewUserMessage = (analysis: LlmDocumentAnalysisReponse) =>
-    new HumanMessage(`Document analyzis to review:
+    new HumanMessage(`Document analysis to review:
 ${JSON.stringify(analysis, null, 2)}
 
 Your refined JSON analysis:

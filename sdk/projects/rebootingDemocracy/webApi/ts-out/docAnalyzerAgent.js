@@ -39,7 +39,7 @@ Instructions:
   compressedFullDescriptionOfAllContents: string;
 }
 `);
-    finalReviewUserMessage = (analysis) => new HumanMessage(`Document analyzis to review:
+    finalReviewUserMessage = (analysis) => new HumanMessage(`Document analysis to review:
 ${JSON.stringify(analysis, null, 2)}
 
 Your refined JSON analysis:

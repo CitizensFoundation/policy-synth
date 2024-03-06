@@ -3,7 +3,7 @@ import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionChunkAnalzyerAgent extends BaseIngestionAgent {
-  analyzisSystemMessage = new SystemMessage(`You are an expert text analyzer.
+  analysisSystemMessage = new SystemMessage(`You are an expert text analyzer.
 
 Instructions:
 - You will analyze the text for metadata and add title, a short description and a full description of all the contents.
@@ -18,10 +18,10 @@ Output:
   mainExternalUrlFound: string;
 }`);
 
-  analyzisUserMessage = (data: string) =>
-    new HumanMessage(`Document to analyze:
+  analysisUserMessage = (data: string) =>
+    new HumanMessage(`Text to analyze:
 ${data}
-Your analyzis in JSON format:
+Your analysis in JSON format:
 `);
 
   async analyze(data: string): Promise<LlmChunkAnalysisReponse> {
@@ -32,8 +32,8 @@ Your analyzis in JSON format:
         "ingestion-agent",
         PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
-          this.analyzisSystemMessage,
-          this.analyzisUserMessage(data)
+          this.analysisSystemMessage,
+          this.analysisUserMessage(data)
         )
       )) as LlmChunkAnalysisReponse;
       return analyze;
