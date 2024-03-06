@@ -2,8 +2,8 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
-    maxCompressionRetries = 30;
-    retryCountBeforeRandomizingLlmTemperature = 25;
+    maxCompressionRetries = 15;
+    retryCountBeforeRandomizingLlmTemperature = 13;
     completionValidationSuccessMessage = "All content present in compressed text.";
     correctnessValidationSuccessMessage = "All content correct in compressed text.";
     hallucinationValidationSuccessMessage = "No additional content in compressed text.";
@@ -18,15 +18,15 @@ Instructions:
     correctnessValidationSystemMessage = new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify anything important that is incorrect in the compressed text compared to the uncompressed text and give exact instructions on how to improve the compressed text, item by item.
+- Identify anything important that is incorrect in the compressed text compared to the uncompressed text and give exact instructions on how to improve the compressed text as short clear unnumbered sentences.
 
 - The compressed text of course has less detail and that is fine.
 
 - Slightly different wording is fine as well as long as detail is captured.
 
-- Simplifying is fine as well as long as core nuance is captured.
+- Simplifying is fine as well as long as basic nuance is captured.
 
-- This is a compressed text so don't bother with minor detail.
+- This is a compressed text so don't comment on minor details missing.
 
 - If all the compressed text is correct, output: All content correct in compressed text.
 `);
@@ -92,6 +92,7 @@ Your new improved compressed text:
         let lastCompressedData;
         let retryCount = 0;
         while (!validated && retryCount < this.maxCompressionRetries) {
+            let validationErrorTextResults = "";
             try {
                 if (validationTextResults && lastCompressedData) {
                     console.log(`\n\nRetrying compression ${retryCount}\n\n`);
@@ -102,7 +103,7 @@ Your new improved compressed text:
                     : this.compressionSystemMessage, validationTextResults && lastCompressedData
                     ? this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults)
                     : this.compressionUserMessage(uncompressedData)), false));
-                const validationResults = await this.validateChunkSummary(uncompressedData, compressedText);
+                const validationResults = await this.validateChunkSummary(uncompressedData, compressedText, validationErrorTextResults);
                 lastCompressedData = compressedText;
                 console.log(`\nCompressed text:\n${lastCompressedData}\n\n`);
                 validated = validationResults.valid;
@@ -128,7 +129,7 @@ Your new improved compressed text:
             return uncompressedData;
         }
     }
-    async validateChunkSummary(uncompressed, compressed) {
+    async validateChunkSummary(uncompressed, compressed, validationErrorTextResults) {
         const validations = await Promise.all([
             /*this.callLLM(
               "ingestion-agent",
@@ -147,7 +148,6 @@ Your new improved compressed text:
         correctnessValidation, hallucinationValidation,] = validations.map((response) => response);
         //const validationOkTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
         const validationOkTextResults = `${correctnessValidation}\n${hallucinationValidation}\n\n`;
-        let validationErrorTextResults = "";
         if (
         // completionValidation.includes(this.completionValidationSuccessMessage) &&
         correctnessValidation.includes(this.correctnessValidationSuccessMessage) &&
