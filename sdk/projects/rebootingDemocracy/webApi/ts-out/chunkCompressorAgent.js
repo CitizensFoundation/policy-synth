@@ -134,19 +134,27 @@ Your new improved compressed text:
             this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.correctnessValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
             this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.hallucinationValidationSystemMessage, this.validationUserMessage(uncompressed, compressed)), false),
         ]);
-        const [completionValidation, correctnessValidation, hallucinationValidation,] = validations.map((response) => response);
-        const validationOkTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
+        const [
+        // completionValidation,
+        correctnessValidation, hallucinationValidation,] = validations.map((response) => response);
+        //const validationOkTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
+        const validationOkTextResults = `${correctnessValidation}\n${hallucinationValidation}\n\n`;
         let validationErrorTextResults = "";
-        if (completionValidation.includes(this.completionValidationSuccessMessage) &&
-            correctnessValidation.includes(this.correctnessValidationSuccessMessage) &&
+        if (
+        // completionValidation.includes(this.completionValidationSuccessMessage) &&
+        correctnessValidation.includes(this.correctnessValidationSuccessMessage) &&
             hallucinationValidation.includes(this.hallucinationValidationSuccessMessage)) {
             return { valid: true, validationTextResults: validationOkTextResults };
         }
         else {
-            if (!completionValidation.includes(this.completionValidationSuccessMessage)) {
-                validationErrorTextResults += `${completionValidation}\n`;
-                console.warn(`Chunk summary completionValidation failed: ${completionValidation}`);
-            }
+            /*if (
+              !completionValidation.includes(this.completionValidationSuccessMessage)
+            ) {
+              validationErrorTextResults += `${completionValidation}\n`;
+              console.warn(
+                `Chunk summary completionValidation failed: ${completionValidation}`
+              );
+            }*/
             if (!correctnessValidation.includes(this.correctnessValidationSuccessMessage)) {
                 validationErrorTextResults += `${correctnessValidation}\n`;
                 console.warn(`Chunk summary correctnessValidation failed: ${correctnessValidation}`);

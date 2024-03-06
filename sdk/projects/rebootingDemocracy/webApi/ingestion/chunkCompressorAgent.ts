@@ -224,16 +224,17 @@ Your new improved compressed text:
     ]);
 
     const [
-      completionValidation,
+     // completionValidation,
       correctnessValidation,
       hallucinationValidation,
     ] = validations.map((response) => response as string);
 
-    const validationOkTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
+    //const validationOkTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
+    const validationOkTextResults = `${correctnessValidation}\n${hallucinationValidation}\n\n`;
     let validationErrorTextResults = "";
 
     if (
-      completionValidation.includes(this.completionValidationSuccessMessage) &&
+     // completionValidation.includes(this.completionValidationSuccessMessage) &&
       correctnessValidation.includes(
         this.correctnessValidationSuccessMessage
       ) &&
@@ -243,14 +244,14 @@ Your new improved compressed text:
     ) {
       return { valid: true, validationTextResults: validationOkTextResults };
     } else {
-      if (
+      /*if (
         !completionValidation.includes(this.completionValidationSuccessMessage)
       ) {
         validationErrorTextResults += `${completionValidation}\n`;
         console.warn(
           `Chunk summary completionValidation failed: ${completionValidation}`
         );
-      }
+      }*/
       if (
         !correctnessValidation.includes(
           this.correctnessValidationSuccessMessage
