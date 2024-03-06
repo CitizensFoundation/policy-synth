@@ -29,8 +29,9 @@ Instructions:
     new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify anything that is incorrect in the compressed text compared to the uncompressed text and list it out.
-- The compressed text of course has less detail and that is fine
+- Identify anything that is incorrect in the compressed text compared to the uncompressed text and give exact instructions on how to improve the compressed text, item by item.
+- The compressed text of course has less detail and that is fine.
+- Slightly different wording is fine as well as long as detail is captured in the compressed text.
 - If all the compressed text is correct, output: All content correct in compressed text.
 `);
 
@@ -38,7 +39,7 @@ Instructions:
     new SystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
-- Identify every that is not in the compressed text but are in the uncompressed text.
+- Identify anything that is not at all in the compressed text but is in the uncompressed text and give exact instructions on how to improve the compressed text, item by item.
 - The compressed text of course has less words but should still have all the contents.
 - If all the content is in the compressed text then output, and nothing else: All content present in compressed text.
 `);
@@ -105,7 +106,7 @@ Your new improved compressed text:
     while (!validated && retryCount < this.maxCompressionRetries) {
       try {
         if (validationTextResults && lastCompressedData) {
-          console.log(`\n\nRetrying compression ${retryCount}\n\n`)
+          console.log(`\n\nRetrying compression ${retryCount}\n\n`);
           console.log(
             this.compressionRetryUserMessage(
               uncompressedData,
@@ -207,7 +208,8 @@ Your new improved compressed text:
       hallucinationValidation,
     ] = validations.map((response) => response as string);
 
-    const validationTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
+    const validationOkTextResults = `${completionValidation}\n${correctnessValidation}\n${hallucinationValidation}\n\n`;
+    let validationErrorTextResults = "";
 
     if (
       completionValidation.includes(this.completionValidationSuccessMessage) &&
@@ -218,11 +220,12 @@ Your new improved compressed text:
         this.hallucinationValidationSuccessMessage
       )
     ) {
-      return { valid: true, validationTextResults };
+      return { valid: true, validationTextResults: validationOkTextResults };
     } else {
       if (
         !completionValidation.includes(this.completionValidationSuccessMessage)
       ) {
+        validationErrorTextResults += `${completionValidation}\n`;
         console.warn(
           `Chunk summary completionValidation failed: ${completionValidation}`
         );
@@ -232,6 +235,7 @@ Your new improved compressed text:
           this.correctnessValidationSuccessMessage
         )
       ) {
+        validationErrorTextResults += `${correctnessValidation}\n`;
         console.warn(
           `Chunk summary correctnessValidation failed: ${correctnessValidation}`
         );
@@ -241,11 +245,15 @@ Your new improved compressed text:
           this.hallucinationValidationSuccessMessage
         )
       ) {
+        validationErrorTextResults += `${hallucinationValidation}\n`;
         console.warn(
           `Chunk summary hallucinationValidation failed: ${hallucinationValidation}`
         );
       }
-      return { valid: false, validationTextResults };
+      return {
+        valid: false,
+        validationTextResults: validationErrorTextResults,
+      };
     }
   }
 }
