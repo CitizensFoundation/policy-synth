@@ -118,20 +118,19 @@ Your new improved compressed text:
     let compressedText;
 
     let validated = false;
-    let validationTextResults: string | undefined;
     let lastCompressedData: string | undefined;
 
     let retryCount = 0;
     let validationErrorTextResults = "";
     while (!validated && retryCount < this.maxCompressionRetries) {
       try {
-        if (validationTextResults && lastCompressedData) {
+        if (validationErrorTextResults && lastCompressedData) {
           console.log(`\n\nRetrying compression ${retryCount}\n\n`);
           console.log(
             this.compressionRetryUserMessage(
               uncompressedData,
               lastCompressedData,
-              validationTextResults
+              validationErrorTextResults
             ).content
           );
         }
@@ -139,14 +138,14 @@ Your new improved compressed text:
           "ingestion-agent",
           PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(
-            validationTextResults && lastCompressedData
+            validationErrorTextResults && lastCompressedData
               ? this.compressionRetrySystemMessage
               : this.compressionSystemMessage,
-            validationTextResults && lastCompressedData
+              validationErrorTextResults && lastCompressedData
               ? this.compressionRetryUserMessage(
                   uncompressedData,
                   lastCompressedData,
-                  validationTextResults
+                  validationErrorTextResults
                 )
               : this.compressionUserMessage(uncompressedData)
           ),
@@ -168,9 +167,9 @@ Your new improved compressed text:
         retryCount++;
 
         if (!validated) {
-          validationTextResults = validationResults.validationTextResults;
+          validationErrorTextResults = validationResults.validationTextResults;
           console.warn(
-            `\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`
+            `\nCompression Validation failed ${retryCount}:\n\n${validationErrorTextResults}\n\n`
           );
         }
 

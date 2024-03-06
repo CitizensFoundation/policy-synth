@@ -88,20 +88,19 @@ Your new improved compressed text:
         this.resetLlmTemperature();
         let compressedText;
         let validated = false;
-        let validationTextResults;
         let lastCompressedData;
         let retryCount = 0;
         let validationErrorTextResults = "";
         while (!validated && retryCount < this.maxCompressionRetries) {
             try {
-                if (validationTextResults && lastCompressedData) {
+                if (validationErrorTextResults && lastCompressedData) {
                     console.log(`\n\nRetrying compression ${retryCount}\n\n`);
-                    console.log(this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults).content);
+                    console.log(this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationErrorTextResults).content);
                 }
-                compressedText = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(validationTextResults && lastCompressedData
+                compressedText = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(validationErrorTextResults && lastCompressedData
                     ? this.compressionRetrySystemMessage
-                    : this.compressionSystemMessage, validationTextResults && lastCompressedData
-                    ? this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationTextResults)
+                    : this.compressionSystemMessage, validationErrorTextResults && lastCompressedData
+                    ? this.compressionRetryUserMessage(uncompressedData, lastCompressedData, validationErrorTextResults)
                     : this.compressionUserMessage(uncompressedData)), false));
                 const validationResults = await this.validateChunkSummary(uncompressedData, compressedText, validationErrorTextResults);
                 lastCompressedData = compressedText;
@@ -109,8 +108,8 @@ Your new improved compressed text:
                 validated = validationResults.valid;
                 retryCount++;
                 if (!validated) {
-                    validationTextResults = validationResults.validationTextResults;
-                    console.warn(`\nCompression Validation failed ${retryCount}\n${validationTextResults}\n\n`);
+                    validationErrorTextResults = validationResults.validationTextResults;
+                    console.warn(`\nCompression Validation failed ${retryCount}:\n\n${validationErrorTextResults}\n\n`);
                 }
                 if (retryCount > this.retryCountBeforeRandomizingLlmTemperature) {
                     this.randomizeLlmTemperature();
