@@ -8,4 +8,4 @@ export declare class DocumentAnalyzerAgent extends BaseIngestionAgent {
     finalReviewUserMessage: (analysis: LlmDocumentAnalysisReponse) => HumanMessage;
     analyze(fileId: string, data: string, filesMetaData?: Record<string, DocumentSource>): Promise<DocumentSource>;
 }
-//# sourceMappingURL=docAnalyzerAgent.d.ts.map
+//# sourceMappingURL=docAnalyzer.d.ts.map

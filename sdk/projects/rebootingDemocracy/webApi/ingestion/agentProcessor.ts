@@ -8,12 +8,12 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
-import { IngestionCleanupAgent } from "./cleanupAgent.js";
-import { IngestionSplitAgent } from "./splitAgent.js";
+import { DocumentCleanupAgent } from "./docCleanup.js";
+import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
 import { IngestionContentParser } from "./contentParser.js";
-import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
+import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
 import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 import { IngestionChunkRanker } from "./chunkRanker.js";
 
@@ -24,11 +24,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   fileMetadata: Record<string, DocumentSource> = {};
   initialFileMetadata: Record<string, DocumentSource> = {};
 
-  cleanupAgent: IngestionCleanupAgent;
-  splitAgent: IngestionSplitAgent;
+  cleanupAgent: DocumentCleanupAgent;
+  splitAgent: DocumentTreeSplitAgent;
   chunkCompressor: IngestionChunkCompressorAgent;
   chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
-  docAnalysisAgent: IngestionDocAnalyzerAgent;
+  docAnalysisAgent: DocumentAnalyzerAgent;
 
   constructor(dataLayoutPath: string = "file://ingestion/dataLayout.json") {
     super();
@@ -42,10 +42,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         console.error("Failed to load file metadata:", err);
       });
 
-    this.cleanupAgent = new IngestionCleanupAgent();
-    this.splitAgent = new IngestionSplitAgent();
+    this.cleanupAgent = new DocumentCleanupAgent();
+    this.splitAgent = new DocumentTreeSplitAgent();
     this.chunkCompressor = new IngestionChunkCompressorAgent();
-    this.docAnalysisAgent = new IngestionDocAnalyzerAgent();
+    this.docAnalysisAgent = new DocumentAnalyzerAgent();
     this.chunkAnalysisAgent = new IngestionChunkAnalzyerAgent();
   }
 
@@ -63,11 +63,17 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
         const browserPage = await browser.newPage();
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(
+          IEngineConstants.webPageNavTimeout
+        );
 
         await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-        await this.downloadAndCache(dataLayout.documentUrls, false, browserPage);
+        await this.downloadAndCache(
+          dataLayout.documentUrls,
+          false,
+          browserPage
+        );
         await this.saveFileMetadata();
         await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
         await this.saveFileMetadata();
@@ -154,9 +160,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await this.saveFileMetadata();
   }
 
-  aggregateChunkData = (
-    chunks: LlmDocumentChunksStrategy[]
-  ): string => {
+  aggregateChunkData = (chunks: LlmDocumentChunksStrategy[]): string => {
     return chunks.reduce((acc, chunk) => {
       const chunkData = chunk.chunkData || "";
       const subChunkData = chunk.subChunks
@@ -166,13 +170,17 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     }, "");
   };
 
-  async createTreeChunks(
-    metadata: DocumentSource,
-    cleanedUpData: string
-  ) {
-    const chunks = (await this.splitAgent.splitDocumentIntoChunks(
-      cleanedUpData
-    )) as LlmDocumentChunksStrategy[];
+  async createTreeChunks(metadata: DocumentSource, cleanedUpData: string) {
+    let chunks;
+    if (!metadata.cachedChunkStrategy) {
+      chunks = (await this.splitAgent.splitDocumentIntoChunks(
+        cleanedUpData
+      )) as LlmDocumentChunksStrategy[];
+      metadata.cachedChunkStrategy = chunks;
+      await this.saveFileMetadata();
+    } else {
+      chunks = metadata.cachedChunkStrategy;
+    }
 
     console.log(JSON.stringify(chunks, null, 2));
 
@@ -192,13 +200,17 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           chunk.chunkData
         );
 
-        console.log(`\n\nAnalyzed chunk: ${JSON.stringify(chunkAnalyzeResponse)}`);
+        console.log(
+          `\n\nAnalyzed chunk: ${JSON.stringify(chunkAnalyzeResponse)}`
+        );
 
         if (!hasAggregatedChunkData) {
           console.log(`\nBefore compression:\n${chunk.chunkData}\n`);
           chunkAnalyzeResponse.fullCompressedContent =
             await this.chunkCompressor.compress(chunk.chunkData);
-          console.log(`\nAfter compression:\n${chunkAnalyzeResponse.fullCompressedContent}\n\n`);
+          console.log(
+            `\nAfter compression:\n${chunkAnalyzeResponse.fullCompressedContent}\n\n`
+          );
         }
 
         const chunkMetadata: PsIngestionChunkData = {
@@ -224,7 +236,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           metadata.chunks![parentChunkIndex - 1].subChunks!.push(chunkMetadata);
           // Note: No manual adjustment of chunkIndex for subChunks needed
         } else {
-          console.error(`Parent chunk not found for chunkIndex: ${parentChunkIndex}`);
+          console.error(
+            `Parent chunk not found for chunkIndex: ${parentChunkIndex}`
+          );
         }
 
         if (chunk.subChunks && chunk.subChunks.length > 0) {
@@ -259,7 +273,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
       metadata.chunks = [];
-      console.log(`Creating tree chunks for fileId: ${fileId}`)
+      console.log(`Creating tree chunks for fileId: ${fileId}`);
       await this.createTreeChunks(metadata, cleanedUpData);
     } else {
       console.log(`Chunks already exist for fileId: ${fileId}`);
@@ -267,19 +281,22 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     await this.saveFileMetadata();
 
-    console.log(`Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`);
+    console.log(
+      `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
+    );
 
     await this.rankChunks(metadata);
 
     await this.saveFileMetadata();
 
-    console.log(`Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`);
+    console.log(
+      `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
+    );
 
     // Wait for 3 minutes
     await new Promise((resolve) => setTimeout(resolve, 150000));
 
     //    await this.saveFileMetadata();
-
   }
 
   async rankChunks(metadata: DocumentSource) {
@@ -291,16 +308,34 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     );
 
     console.log("Ranking by relevance");
-    const relevanceRules = "Rank the two chunks based on the relevance to the document";
-    await ranker.rankDocumentChunks(flattenedChunks, relevanceRules, metadata.compressedFullDescriptionOfAllContents!, "relevanceEloRating");
+    const relevanceRules =
+      "Rank the two chunks based on the relevance to the document";
+    await ranker.rankDocumentChunks(
+      flattenedChunks,
+      relevanceRules,
+      metadata.compressedFullDescriptionOfAllContents!,
+      "relevanceEloRating"
+    );
 
     console.log("Ranking by substance");
-    const substanceRules = "Rank the two chunks based substance and completeness of the information";
-    await ranker.rankDocumentChunks(flattenedChunks, substanceRules, metadata.compressedFullDescriptionOfAllContents!, "substanceEloRating");
+    const substanceRules =
+      "Rank the two chunks based substance and completeness of the information";
+    await ranker.rankDocumentChunks(
+      flattenedChunks,
+      substanceRules,
+      metadata.compressedFullDescriptionOfAllContents!,
+      "substanceEloRating"
+    );
 
     console.log("Ranking by quality");
-    const qualityRules = "Rank the two chunks based on quality of the information";
-    await ranker.rankDocumentChunks(flattenedChunks, qualityRules, metadata.compressedFullDescriptionOfAllContents!, "qualityEloRating");
+    const qualityRules =
+      "Rank the two chunks based on quality of the information";
+    await ranker.rankDocumentChunks(
+      flattenedChunks,
+      qualityRules,
+      metadata.compressedFullDescriptionOfAllContents!,
+      "qualityEloRating"
+    );
   }
 
   extractFileIdFromPath(filePath: string): string | null {
@@ -411,7 +446,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return { fullPath, relativePath };
   }
 
-  async downloadAndCache(urls: string[], isJsonData: boolean, browserPage: Page): Promise<void> {
+  async downloadAndCache(
+    urls: string[],
+    isJsonData: boolean,
+    browserPage: Page
+  ): Promise<void> {
     for (const url of urls) {
       try {
         const fileId = this.generateFileId(url);
@@ -484,7 +523,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         } else if (!contentType.includes("image")) {
           console.log(`Downloading content for URL: ${url}`);
           const response = await browserPage.goto(url, {
-            waitUntil: ["load","networkidle0"]
+            waitUntil: ["load", "networkidle0"],
           });
 
           if (response) {
@@ -565,7 +604,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return extension;
   }
 
-  protected async processJsonUrls(urls: string[], browserPage: Page): Promise<void> {
+  protected async processJsonUrls(
+    urls: string[],
+    browserPage: Page
+  ): Promise<void> {
     for (const url of urls) {
       const response = await fetch(url);
       const jsonData = await response.json();
@@ -587,9 +629,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       this.fileMetadata = JSON.parse(metadataJson);
     } catch (error) {
       // First, check if the error is an instance of Error and has a 'code' property
-      if (error instanceof Error && 'code' in error) {
+      if (error instanceof Error && "code" in error) {
         const readError = error as { code: string }; // Type assertion
-        if (readError.code === 'ENOENT') {
+        if (readError.code === "ENOENT") {
           console.log("File does not exist, initializing empty metadata.");
           this.fileMetadata = {}; // Initialize as empty object
         } else {
@@ -602,7 +644,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       }
     }
   }
-
 
   async saveFileMetadata(): Promise<void> {
     await fs.writeFile(

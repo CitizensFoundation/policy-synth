@@ -14,7 +14,7 @@ interface RefineInput {
   allOtherReferences: string[];
 }
 
-export class IngestionDocAnalyzerAgent extends BaseIngestionAgent {
+export class DocumentAnalyzerAgent extends BaseIngestionAgent {
   maxAnalyzeTokenLength = 8000;
 
   systemMessage = new SystemMessage(`You are an expert document analyzer.

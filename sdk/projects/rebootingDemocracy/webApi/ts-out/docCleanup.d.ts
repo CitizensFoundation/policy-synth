@@ -20,4 +20,4 @@ export declare class DocumentCleanupAgent extends BaseIngestionAgent {
         validationTextResults: string;
     }>;
 }
-//# sourceMappingURL=cleanupAgent.d.ts.map
+//# sourceMappingURL=docCleanup.d.ts.map

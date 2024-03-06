@@ -1,10 +1,10 @@
 /// <reference types="node" resolution-mode="require"/>
 import { Page } from "puppeteer";
-import { IngestionCleanupAgent } from "./cleanupAgent.js";
-import { IngestionSplitAgent } from "./splitAgent.js";
+import { DocumentCleanupAgent } from "./docCleanup.js";
+import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
-import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
+import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
 import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath: string;
@@ -12,11 +12,11 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     fileMetadataPath: string;
     fileMetadata: Record<string, DocumentSource>;
     initialFileMetadata: Record<string, DocumentSource>;
-    cleanupAgent: IngestionCleanupAgent;
-    splitAgent: IngestionSplitAgent;
+    cleanupAgent: DocumentCleanupAgent;
+    splitAgent: DocumentTreeSplitAgent;
     chunkCompressor: IngestionChunkCompressorAgent;
     chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
-    docAnalysisAgent: IngestionDocAnalyzerAgent;
+    docAnalysisAgent: DocumentAnalyzerAgent;
     constructor(dataLayoutPath?: string);
     processDataLayout(): Promise<void>;
     processFiles(files: string[]): Promise<void>;

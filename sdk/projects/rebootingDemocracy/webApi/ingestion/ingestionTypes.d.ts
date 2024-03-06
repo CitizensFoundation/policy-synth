@@ -21,6 +21,7 @@ interface DocumentSource extends PsEloRateable {
   compressedFullDescriptionOfAllContents?: string;
   title?: string;
   weaviteId?: string;
+  cachedChunkStrategy?: LlmDocumentChunksStrategy[];
   filePath: string;
   contentType: string;
   chunks?: PsIngestionChunkData[];

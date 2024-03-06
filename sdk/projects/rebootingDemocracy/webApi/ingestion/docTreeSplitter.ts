@@ -11,7 +11,7 @@ interface Chunk {
   subChunks?: Chunk[];
 }
 
-export class IngestionSplitAgent extends BaseIngestionAgent {
+export class DocumentTreeSplitAgent extends BaseIngestionAgent {
   maxSplitRetries = 20;
   minChunkCharacterLength = 50;
   maxChunkLinesLength = 15;

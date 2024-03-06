@@ -2,7 +2,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-export class IngestionCleanupAgent extends BaseIngestionAgent {
+export class DocumentCleanupAgent extends BaseIngestionAgent {
   maxCleanupTokenLength: number = 4000;
   maxCleanupRetries: number = 15;
 

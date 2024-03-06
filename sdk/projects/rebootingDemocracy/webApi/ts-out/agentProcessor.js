@@ -4,12 +4,12 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
-import { IngestionCleanupAgent } from "./cleanupAgent.js";
-import { IngestionSplitAgent } from "./splitAgent.js";
+import { DocumentCleanupAgent } from "./docCleanup.js";
+import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
 import { IngestionContentParser } from "./contentParser.js";
-import { IngestionDocAnalyzerAgent } from "./docAnalyzerAgent.js";
+import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
 import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 import { IngestionChunkRanker } from "./chunkRanker.js";
 export class IngestionAgentProcessor extends BaseIngestionAgent {
@@ -33,10 +33,10 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             .catch((err) => {
             console.error("Failed to load file metadata:", err);
         });
-        this.cleanupAgent = new IngestionCleanupAgent();
-        this.splitAgent = new IngestionSplitAgent();
+        this.cleanupAgent = new DocumentCleanupAgent();
+        this.splitAgent = new DocumentTreeSplitAgent();
         this.chunkCompressor = new IngestionChunkCompressorAgent();
-        this.docAnalysisAgent = new IngestionDocAnalyzerAgent();
+        this.docAnalysisAgent = new DocumentAnalyzerAgent();
         this.chunkAnalysisAgent = new IngestionChunkAnalzyerAgent();
     }
     async processDataLayout() {
@@ -123,7 +123,15 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }, "");
     };
     async createTreeChunks(metadata, cleanedUpData) {
-        const chunks = (await this.splitAgent.splitDocumentIntoChunks(cleanedUpData));
+        let chunks;
+        if (!metadata.cachedChunkStrategy) {
+            chunks = (await this.splitAgent.splitDocumentIntoChunks(cleanedUpData));
+            metadata.cachedChunkStrategy = chunks;
+            await this.saveFileMetadata();
+        }
+        else {
+            chunks = metadata.cachedChunkStrategy;
+        }
         console.log(JSON.stringify(chunks, null, 2));
         console.log(`Split into ${chunks.length} chunks`);
         const processChunk = async (chunk, parentChunkIndex = null) => {
@@ -343,7 +351,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 else if (!contentType.includes("image")) {
                     console.log(`Downloading content for URL: ${url}`);
                     const response = await browserPage.goto(url, {
-                        waitUntil: ["load", "networkidle0"]
+                        waitUntil: ["load", "networkidle0"],
                     });
                     if (response) {
                         // Wait for 10 seconds
@@ -439,9 +447,9 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         catch (error) {
             // First, check if the error is an instance of Error and has a 'code' property
-            if (error instanceof Error && 'code' in error) {
+            if (error instanceof Error && "code" in error) {
                 const readError = error; // Type assertion
-                if (readError.code === 'ENOENT') {
+                if (readError.code === "ENOENT") {
                     console.log("File does not exist, initializing empty metadata.");
                     this.fileMetadata = {}; // Initialize as empty object
                 }
