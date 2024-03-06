@@ -91,8 +91,8 @@ Your new improved compressed text:
         let validationTextResults;
         let lastCompressedData;
         let retryCount = 0;
+        let validationErrorTextResults = "";
         while (!validated && retryCount < this.maxCompressionRetries) {
-            let validationErrorTextResults = "";
             try {
                 if (validationTextResults && lastCompressedData) {
                     console.log(`\n\nRetrying compression ${retryCount}\n\n`);
