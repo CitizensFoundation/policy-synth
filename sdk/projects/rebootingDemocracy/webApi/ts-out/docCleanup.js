@@ -55,7 +55,9 @@ Instruction:
 - Also, always, split long paragraphs into smaller paragraphs.
 - Do not change anything just remove unwanted artifacts and reformat paragraphs in the cleanup.
 `);
-    userMessage = (data, validationTextResults) => new HumanMessage(`${validationTextResults ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n` : ``}
+    userMessage = (data, validationTextResults) => new HumanMessage(`${validationTextResults
+        ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n`
+        : ``}
 Document to cleanup and output in full:
 ${data}
 `);
@@ -71,39 +73,27 @@ ${data}
 Your one word analysis:
 `);
     async clean(data) {
-        let cleanedUpDataParts = [];
         this.resetLlmTemperature();
         const splitPartsForCleanup = this.splitDataForProcessing(data, this.maxCleanupTokenLength);
         console.log(JSON.stringify(splitPartsForCleanup, null, 2));
-        // Write the each chunk sizes to console.log
-        console.log("Chunk sizes:");
-        splitPartsForCleanup.forEach((part) => {
-            console.log(part.length);
-        });
-        // If one part is too short < 1000 characters, join it with the part before
+        // Normalize parts by joining short parts with the previous ones
         for (let i = 1; i < splitPartsForCleanup.length; i++) {
             if (splitPartsForCleanup[i].length < 1000) {
                 splitPartsForCleanup[i - 1] += "\n" + splitPartsForCleanup[i];
                 splitPartsForCleanup.splice(i, 1);
-                i--; // Adjust index to account for the removed element
+                i--; // Adjust index for removed element
             }
         }
-        console.log("Chunk sizes after normalization:");
-        splitPartsForCleanup.forEach((part) => {
-            console.log(part.length);
-        });
-        const partsLength = splitPartsForCleanup.length;
-        let partIndex = 0;
-        for (const part of splitPartsForCleanup) {
-            partIndex++;
+        const executing = [];
+        // Define an async function for cleaning each part
+        const cleanPart = async (part, index, total) => {
+            console.log(`\n\nCleaning part: ${index + 1} of ${total}\n\n`);
+            this.logShortLines(part);
             let validated = false;
             let retryCount = 0;
             let cleanedPart = "";
             let validationTextResults;
             while (!validated && retryCount < this.maxCleanupRetries) {
-                console.log(`\n\nCleaning part: ${partIndex} of ${partsLength}\n\n`);
-                this.logShortLines(part);
-                // Check for if the part is only references
                 const referenceAnalysis = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)), false));
                 if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") > -1) {
                     console.warn(`\n\nONLY_REFERENCES_OR_URLS:\n${part}\nONLY_REFERENCES_OR_URLS\n\n`);
@@ -124,13 +114,27 @@ Your one word analysis:
                     }
                 }
             }
-            if (validated) {
-                cleanedUpDataParts.push(cleanedPart);
-            }
-            else {
+            if (!validated) {
                 throw new Error(`Validation failed for part: ${part}`);
             }
+            return cleanedPart;
+        };
+        // Process chunks with concurrency limit
+        const concurrencyLimit = 10;
+        const results = [];
+        for (const [index, part] of splitPartsForCleanup.entries()) {
+            const promise = cleanPart(part, index, splitPartsForCleanup.length).then((cleanedPart) => {
+                executing.splice(executing.indexOf(promise), 1);
+                return cleanedPart; // This promise resolves with a string, matching the declared type
+            });
+            results.push(promise);
+            // Correct the type of the executing array here as well
+            if (executing.push(promise) === concurrencyLimit) {
+                await Promise.race(executing);
+            }
         }
+        // Await all promises in 'results' and then join them into a single string
+        const cleanedUpDataParts = await Promise.all(results);
         return cleanedUpDataParts.join(" ");
     }
     async validateCleanedPart(original, cleaned) {

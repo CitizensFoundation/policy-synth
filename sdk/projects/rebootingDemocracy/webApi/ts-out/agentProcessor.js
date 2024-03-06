@@ -192,7 +192,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         await this.saveFileMetadata();
         const metadata = this.fileMetadata[fileId] || {};
         metadata.weaviteId = weaviateDocumentId;
-        const rechunk = true;
+        const rechunk = false;
         if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
             metadata.chunks = [];
             console.log(`Creating tree chunks for fileId: ${fileId}`);
@@ -203,11 +203,13 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         await this.saveFileMetadata();
         console.log(`Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`);
-        await this.rankChunks(metadata);
-        await this.saveFileMetadata();
+        const reRank = false;
+        if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+            await this.rankChunks(metadata);
+            await this.saveFileMetadata();
+        }
         console.log(`Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`);
-        // Wait for 3 minutes
-        await new Promise((resolve) => setTimeout(resolve, 150000));
+        await new Promise((resolve) => setTimeout(resolve, 15000));
         //    await this.saveFileMetadata();
     }
     async rankChunks(metadata) {

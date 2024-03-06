@@ -71,26 +71,31 @@ Instruction:
 `);
 
   userMessage = (data: string, validationTextResults: string | undefined) =>
-    new HumanMessage(`${validationTextResults ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n`: ``}
+    new HumanMessage(`${
+      validationTextResults
+        ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n`
+        : ``
+    }
 Document to cleanup and output in full:
 ${data}
 `);
 
-  referencesCheckSystemMessage= new SystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
+  referencesCheckSystemMessage =
+    new SystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
 
   If the documents contains only references without text explainations or URLs output, only: ONLY_REFERENCES_OR_URLS
 
   If the document contains real content with paragraphs, sentences or even just one paragraph output only: PARAGRAPHS
 `);
 
-  referencesCheckUserMessage = (data: string) => new HumanMessage(`Document to analyze:
+  referencesCheckUserMessage = (data: string) =>
+    new HumanMessage(`Document to analyze:
 ${data}
 
 Your one word analysis:
 `);
 
   async clean(data: string): Promise<string> {
-    let cleanedUpDataParts: string[] = [];
     this.resetLlmTemperature();
 
     const splitPartsForCleanup = this.splitDataForProcessing(
@@ -100,57 +105,52 @@ Your one word analysis:
 
     console.log(JSON.stringify(splitPartsForCleanup, null, 2));
 
-    // Write the each chunk sizes to console.log
-    console.log("Chunk sizes:");
-    splitPartsForCleanup.forEach((part) => {
-      console.log(part.length);
-    });
-
-    // If one part is too short < 1000 characters, join it with the part before
+    // Normalize parts by joining short parts with the previous ones
     for (let i = 1; i < splitPartsForCleanup.length; i++) {
       if (splitPartsForCleanup[i].length < 1000) {
         splitPartsForCleanup[i - 1] += "\n" + splitPartsForCleanup[i];
         splitPartsForCleanup.splice(i, 1);
-        i--; // Adjust index to account for the removed element
+        i--; // Adjust index for removed element
       }
     }
 
-    console.log("Chunk sizes after normalization:");
-    splitPartsForCleanup.forEach((part) => {
-      console.log(part.length);
-    });
+    const executing: Promise<string>[] = [];
 
-    const partsLength = splitPartsForCleanup.length;
-    let partIndex = 0;
+    // Define an async function for cleaning each part
+    const cleanPart = async (part: string, index: number, total: number) => {
+      console.log(`\n\nCleaning part: ${index + 1} of ${total}\n\n`);
+      this.logShortLines(part);
 
-    for (const part of splitPartsForCleanup) {
-      partIndex++;
       let validated = false;
       let retryCount = 0;
       let cleanedPart = "";
       let validationTextResults: string | undefined;
 
       while (!validated && retryCount < this.maxCleanupRetries) {
-        console.log(`\n\nCleaning part: ${partIndex} of ${partsLength}\n\n`);
-        this.logShortLines(part);
-
-        // Check for if the part is only references
         const referenceAnalysis = (await this.callLLM(
           "ingestion-agent",
           PsIngestionConstants.ingestionMainModel,
-          this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)),
+          this.getFirstMessages(
+            this.systemMessage,
+            this.userMessage(part, validationTextResults)
+          ),
           false
         )) as string;
 
         if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") > -1) {
-          console.warn(`\n\nONLY_REFERENCES_OR_URLS:\n${part}\nONLY_REFERENCES_OR_URLS\n\n`);
+          console.warn(
+            `\n\nONLY_REFERENCES_OR_URLS:\n${part}\nONLY_REFERENCES_OR_URLS\n\n`
+          );
           cleanedPart = "";
           validated = true;
         } else {
           cleanedPart = (await this.callLLM(
             "ingestion-agent",
             PsIngestionConstants.ingestionMainModel,
-            this.getFirstMessages(this.systemMessage, this.userMessage(part, validationTextResults)),
+            this.getFirstMessages(
+              this.systemMessage,
+              this.userMessage(part, validationTextResults)
+            ),
             false
           )) as string;
 
@@ -158,9 +158,7 @@ Your one word analysis:
             part,
             cleanedPart
           );
-
           validated = validationResults.valid;
-
           retryCount++;
 
           if (!validated) {
@@ -174,20 +172,41 @@ Your one word analysis:
         }
       }
 
-      if (validated) {
-        cleanedUpDataParts.push(cleanedPart);
-      } else {
+      if (!validated) {
         throw new Error(`Validation failed for part: ${part}`);
+      }
+
+      return cleanedPart;
+    };
+
+    // Process chunks with concurrency limit
+    const concurrencyLimit = 10;
+    const results: Promise<string>[] = [];
+    for (const [index, part] of splitPartsForCleanup.entries()) {
+      const promise = cleanPart(part, index, splitPartsForCleanup.length).then(
+        (cleanedPart: string) => {
+          executing.splice(executing.indexOf(promise), 1);
+          return cleanedPart; // This promise resolves with a string, matching the declared type
+        }
+      );
+
+      results.push(promise);
+
+      // Correct the type of the executing array here as well
+      if (executing.push(promise) === concurrencyLimit) {
+        await Promise.race(executing);
       }
     }
 
+    // Await all promises in 'results' and then join them into a single string
+    const cleanedUpDataParts = await Promise.all(results);
     return cleanedUpDataParts.join(" ");
   }
 
   async validateCleanedPart(
     original: string,
     cleaned: string
-  ): Promise<{valid: boolean, validationTextResults: string}> {
+  ): Promise<{ valid: boolean; validationTextResults: string }> {
     console.log(`\nValidating cleaned part:\n${cleaned}\n\n`);
     const validations = await Promise.all([
       this.callLLM(
@@ -232,12 +251,16 @@ Your one word analysis:
 
     if (
       completionValidation.includes(this.completionValidationSuccessMessage) &&
-      correctnessValidation.includes(this.correctnessValidationSuccessMessage) &&
-      hallucinationValidation.includes(this.hallucinationValidationSuccessMessage)
+      correctnessValidation.includes(
+        this.correctnessValidationSuccessMessage
+      ) &&
+      hallucinationValidation.includes(
+        this.hallucinationValidationSuccessMessage
+      )
     ) {
-      return {valid: true, validationTextResults};
+      return { valid: true, validationTextResults };
     } else {
-      return {valid: false, validationTextResults};
+      return { valid: false, validationTextResults };
     }
   }
 }
