@@ -6,7 +6,7 @@ interface DataLayout {
 
 // Add cache for first the response keyed on the data hashes
 // So if user asks a similar question, we lookup in weaviate, and decide in the routing
-interface DocumentSource extends PsEloRateable {
+interface PsRagDocumentSource extends PsEloRateable {
   key: string;
   url: string;
   lastModified: string;
@@ -24,12 +24,20 @@ interface DocumentSource extends PsEloRateable {
   cachedChunkStrategy?: LlmDocumentChunksStrategy[];
   filePath: string;
   contentType: string;
-  chunks?: PsIngestionChunkData[];
+  chunks?: PsRagChunk[];
   allReferencesWithUrls: string[];
   allOtherReferences: string[];
   allImageUrls: string[];
   documentDate: string;
   documentMetaData: { [key: string]: string };
+}
+
+interface PsRagDocumentSourceGraphQlResponse {
+  data: {
+    Get: {
+      RagDocument: PsRagDocumentSource[];
+    };
+  };
 }
 
 interface LlmDocumentAnalysisReponse {
@@ -74,7 +82,7 @@ interface LlmChunkAnalysisReponse {
   metaData: { [key: string]: string };
 }
 
-interface PsIngestionChunkData extends PsEloRateable {
+interface PsRagChunk extends PsEloRateable {
   title: string;
   chunkIndex: number;
   chapterIndex: number;
@@ -91,8 +99,16 @@ interface PsIngestionChunkData extends PsEloRateable {
   substanceEloRating?: number;
   uncompressedContent: string;
   compressedContent: string;
-  subChunks?: PsIngestionChunkData[];
+  subChunks?: PsRagChunk[];
   importantContextChunkIndexes: number[];
   metaDataFields?: string[];
   metaData: { [key: string]: string };
+}
+
+interface PsRagChunkGraphQlResponse {
+  data: {
+    Get: {
+      RagChunk: PsRagChunk[];
+    };
+  };
 }

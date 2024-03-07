@@ -1,0 +1,146 @@
+import weaviate from "weaviate-ts-client";
+import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
+import { IEngineConstants } from "@policysynth/agents/constants.js";
+import fs from "fs/promises";
+export class RagDocumentVectorStore extends PolicySynthAgentBase {
+    static allFieldsToExtract = "title key url lastModified lastModifiedOnServer size hash fileId \
+      cleanedDocument description shortDescription fullDescriptionOfAllContents \
+      compressedFullDescriptionOfAllContents weaviteId cachedChunkStrategy \
+      filePath contentType chunks allReferencesWithUrls allOtherReferences \
+      allImageUrls documentDate documentMetaData\
+     _additional { id, distance }";
+    static client = weaviate.client({
+        scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
+        host: process.env.WEAVIATE_HOST || "localhost:8080",
+    });
+    async addSchema() {
+        let classObj;
+        try {
+            const data = await fs.readFile("./schemas/document.json", "utf8");
+            classObj = JSON.parse(data);
+        }
+        catch (err) {
+            console.error(`Error reading file from disk: ${err}`);
+            return;
+        }
+        try {
+            const res = await RagDocumentVectorStore.client.schema
+                .classCreator()
+                .withClass(classObj)
+                .do();
+            console.log(res);
+        }
+        catch (err) {
+            console.error(`Error creating schema: ${err}`);
+        }
+    }
+    async showScheme() {
+        try {
+            const res = await RagDocumentVectorStore.client.schema.getter().do();
+            console.log(JSON.stringify(res, null, 2));
+        }
+        catch (err) {
+            console.error(`Error creating schema: ${err}`);
+        }
+    }
+    async deleteScheme() {
+        try {
+            const res = await RagDocumentVectorStore.client.schema
+                .classDeleter()
+                .withClassName("RagDocument")
+                .do();
+            console.log(res);
+        }
+        catch (err) {
+            console.error(`Error creating schema: ${err}`);
+        }
+    }
+    async testQuery() {
+        const where = [];
+        const res = await RagDocumentVectorStore.client.graphql
+            .get()
+            .withClassName("RagDocument")
+            .withFields(
+        // TODO: confirm fields
+        RagDocumentVectorStore.allFieldsToExtract)
+            .withNearText({ concepts: ["case study"] })
+            .withLimit(100)
+            .do();
+        console.log(JSON.stringify(res, null, 2));
+        return res;
+    }
+    async postDocument(document) {
+        return new Promise((resolve, reject) => {
+            RagDocumentVectorStore.client.data
+                .creator()
+                .withClassName("RagDocument")
+                .withProperties(document)
+                .do()
+                .then((res) => {
+                this.logger.info(`Weaviate: Have saved document ${document.url}`);
+                resolve(res);
+            })
+                .catch((err) => {
+                reject(err);
+            });
+        });
+    }
+    async updateDocument(id, documentData, quiet = false) {
+        return new Promise((resolve, reject) => {
+            RagDocumentVectorStore.client.data
+                .merger()
+                .withId(id)
+                .withClassName("RagDocument")
+                .withProperties(documentData)
+                .do()
+                .then((res) => {
+                if (!quiet)
+                    this.logger.info(`Weaviate: Have updated web solutions for ${id}`);
+                resolve(res);
+            })
+                .catch((err) => {
+                this.logger.error(err.stack || err);
+                reject(err);
+            });
+        });
+    }
+    async getDocument(id) {
+        return new Promise((resolve, reject) => {
+            RagDocumentVectorStore.client.data
+                .getterById()
+                .withId(id)
+                .withClassName("RagDocument")
+                .do()
+                .then((res) => {
+                this.logger.info(`Weaviate: Have got web page ${id}`);
+                const webData = res
+                    .properties;
+                resolve(webData);
+            })
+                .catch((err) => {
+                reject(err);
+            });
+        });
+    }
+    async searchDocuments(query) {
+        const where = [];
+        let results;
+        try {
+            results = await RagDocumentVectorStore.client.graphql
+                .get()
+                .withClassName("RagDocument")
+                .withNearText({ concepts: [query] })
+                .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
+                .withWhere({
+                operator: "And",
+                operands: where,
+            })
+                .withFields(RagDocumentVectorStore.allFieldsToExtract)
+                .do();
+        }
+        catch (err) {
+            throw err;
+        }
+        return results;
+    }
+}

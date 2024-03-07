@@ -24,8 +24,8 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![itemOneIndex] as PsIngestionChunkData;
-    const itemTwo = this.allItems![index]![itemTwoIndex] as PsIngestionChunkData;
+    const itemOne = this.allItems![index]![itemOneIndex] as PsRagChunk;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as PsRagChunk;
 
     const messages = [
       new SystemMessage(
@@ -72,7 +72,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   }
 
   async rankDocumentChunks(
-    chunksToRank: PsIngestionChunkData[],
+    chunksToRank: PsRagChunk[],
     rankingRules: string,
     documentSummary: string,
     eloRatingKey: string
@@ -93,6 +93,6 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
       this.progressFunction,
     );
     await this.performPairwiseRanking(-1);
-    return this.getOrderedListOfItems(-1, true, eloRatingKey) as PsIngestionChunkData[];
+    return this.getOrderedListOfItems(-1, true, eloRatingKey) as PsRagChunk[];
   }
 }

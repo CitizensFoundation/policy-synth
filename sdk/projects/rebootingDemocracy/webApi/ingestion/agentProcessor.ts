@@ -21,8 +21,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
   cachedFiles: string[] = [];
   fileMetadataPath: string = "./ingestion/cache/fileMetadata.json";
-  fileMetadata: Record<string, DocumentSource> = {};
-  initialFileMetadata: Record<string, DocumentSource> = {};
+  fileMetadata: Record<string, PsRagDocumentSource> = {};
+  initialFileMetadata: Record<string, PsRagDocumentSource> = {};
 
   cleanupAgent: DocumentCleanupAgent;
   splitAgent: DocumentTreeSplitAgent;
@@ -170,7 +170,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     }, "");
   };
 
-  async createTreeChunks(metadata: DocumentSource, cleanedUpData: string) {
+  async createTreeChunks(metadata: PsRagDocumentSource, cleanedUpData: string) {
     let chunks;
     if (!metadata.cachedChunkStrategy) {
       chunks = (await this.splitAgent.splitDocumentIntoChunks(
@@ -190,7 +190,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const processChunk = async (
       chunk: LlmDocumentChunksStrategy,
-      parentChunk: PsIngestionChunkData | undefined = undefined
+      parentChunk: PsRagChunk | undefined = undefined
     ) => {
       let hasAggregatedChunkData = false;
       if (!chunk.chunkData && chunk.subChunks) {
@@ -215,7 +215,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           );
         }
 
-        const chunkMetadata: PsIngestionChunkData = {
+        const chunkMetadata: PsRagChunk = {
           chunkIndex: masterChunkIndex++,
           chapterIndex: chunk.chapterIndex,
           title: chunkAnalyzeResponse.title,
@@ -306,12 +306,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     //    await this.saveFileMetadata();
   }
 
-  async rankChunks(metadata: DocumentSource) {
+  async rankChunks(metadata: PsRagDocumentSource) {
     const ranker = new IngestionChunkRanker();
 
     const flattenedChunks = metadata.chunks!.reduce(
       (acc, chunk) => acc.concat(chunk, chunk.subChunks || []),
-      [] as PsIngestionChunkData[]
+      [] as PsRagChunk[]
     );
 
     console.log("Ranking by relevance");

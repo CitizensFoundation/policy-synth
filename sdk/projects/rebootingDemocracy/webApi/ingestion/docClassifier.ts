@@ -59,8 +59,8 @@ Your refined JSON analysis:
   async classify(
     fileId: string,
     data: string,
-    filesMetaData: Record<string, DocumentSource> = {}
-  ): Promise<DocumentSource> {
+    filesMetaData: Record<string, PsRagDocumentSource> = {}
+  ): Promise<PsRagDocumentSource> {
     // Split data if larger than maxAnalyzeTokenLength
     const dataChunks =
       data.length > this.maxAnalyzeTokenLength
@@ -70,7 +70,7 @@ Your refined JSON analysis:
           )
         : [data];
 
-    let metadata = filesMetaData[fileId] || ({} as DocumentSource);
+    let metadata = filesMetaData[fileId] || ({} as PsRagDocumentSource);
 
     for (let i = 0; i < dataChunks.length; i++) {
       console.log(`Analyzing chunk ${i + 1} of ${dataChunks.length}`);
