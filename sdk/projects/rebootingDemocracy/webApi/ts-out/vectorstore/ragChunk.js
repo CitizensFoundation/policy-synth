@@ -14,7 +14,7 @@ export class RagChunk extends PolicySynthAgentBase {
     async addSchema() {
         let classObj;
         try {
-            const data = await fs.readFile("./schemas/chunk.json", "utf8");
+            const data = await fs.readFile("./schemas/RagChunk.json", "utf8");
             classObj = JSON.parse(data);
         }
         catch (err) {

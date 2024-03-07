@@ -3,10 +3,10 @@ import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
 export class RagDocumentVectorStore extends PolicySynthAgentBase {
-    static allFieldsToExtract = "title key url lastModified lastModifiedOnServer size hash fileId \
+    static allFieldsToExtract = "title url lastModified size \
       cleanedDocument description shortDescription fullDescriptionOfAllContents \
-      compressedFullDescriptionOfAllContents weaviteId cachedChunkStrategy \
-      filePath contentType chunks allReferencesWithUrls allOtherReferences \
+      compressedFullDescriptionOfAllContents \
+      contentType allReferencesWithUrls allOtherReferences \
       allImageUrls documentDate documentMetaData\
      _additional { id, distance }";
     static client = weaviate.client({
@@ -16,7 +16,7 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
     async addSchema() {
         let classObj;
         try {
-            const data = await fs.readFile("./schemas/document.json", "utf8");
+            const data = await fs.readFile("./schemas/RagDocument.json", "utf8");
             classObj = JSON.parse(data);
         }
         catch (err) {
