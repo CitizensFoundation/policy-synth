@@ -90,7 +90,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
                 // Cleanup fullContentsColumns in docAnalysis and redo the summaries
-                const reCleanData = true;
+                const reCleanData = false;
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
                     (await this.cleanupAgent.clean(data));
@@ -189,7 +189,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         await this.saveFileMetadata();
         const metadata = this.fileMetadata[fileId] || {};
         metadata.weaviteId = weaviateDocumentId;
-        const rechunk = true;
+        let rechunk = false;
+        if (fileId != "735de0621e35c642758954aae1c3f0aa" &&
+            fileId != "8211f8f7011d29e3da018207b2d991da") {
+            rechunk = true;
+            console.log("RECHUNKING --------------------------------------- >");
+        }
         if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
             metadata.chunks = [];
             console.log(`Creating tree chunks for fileId: ${fileId}`);
