@@ -9,61 +9,46 @@
     "https://media.nesta.org.uk/documents/Collective_Intelligence_A_checklist_for_the_public_sector.pdf",
     "https://directus.thegovlab.com/uploads/ci_cases/originals/b3b84db2-296c-435d-968a-8d066c6a7b87.pdf",
     "https://virtual-communities.thegovlab.org/files/DTR_report_en_EN.pdf",
-    "https://content.thegovlab.com/assets/f7ad046e-fc89-42b8-b0ae-37c9cd5d8296"
+    "https://content.thegovlab.com/assets/f7ad046e-fc89-42b8-b0ae-37c9cd5d8296",
+    "https://rebootdemocracy.ai/blog/googleorg-support-to-train-more-government-workers-in-digital-skills",
+    "https://rebootdemocracy.ai/blog/the-ai-dilemma-governing-for-safety-or-steering-towards-progress",
+    "https://rebootdemocracy.ai/blog/ai-for-the-people-a-federal-mandate-for-inclusive-engagement",
+    "https://rebootdemocracy.ai/blog/preparing-for-an-ai-driven-future-the-government-of-indias-free-ai-for-all-course",
+    "https://rebootdemocracy.ai/blog/artificial-intelligence-can-help-us-create-a-more-efficient-government",
+    "https://rebootdemocracy.ai/blog/announcing-the-unlocking-literacy-project",
+    "https://rebootdemocracy.ai/blog/was-vtaiwan-such-a-big-flop-after-all",
+    "https://rebootdemocracy.ai/blog/sam altman one true leader and the missed opportunity for innovation",
+    "https://rebootdemocracy.ai/blog/test",
+    "https://rebootdemocracy.ai/blog/test",
+    "https://rebootdemocracy.ai/blog/ai-in-gov",
+    "https://rebootdemocracy.ai/blog/nj-ai-taskforce",
+    "https://rebootdemocracy.ai/blog/combining-human-and-machine-intelligence-for-enhanced-democracy-with-sir-geoff-mulgan",
+    "https://rebootdemocracy.ai/blog/exploring-the-power-of-collective-intelligence-a-conversation-with-prateek-buch-and-brendan-arnold",
+    "https://rebootdemocracy.ai/blog/conversing-with-congress-an-experiment-in-ai-enabled-communication",
+    "https://rebootdemocracy.ai/blog/crisis-collective-intell",
+    "https://rebootdemocracy.ai/blog/AI-restore-faith-in-democracy",
+    "https://rebootdemocracy.ai/blog/HSGAC-Full-Testimony",
+    "https://rebootdemocracy.ai/blog/popvox-ai-legislatures",
+    "https://rebootdemocracy.ai/blog/News-That-Caught-Our-Eye-1",
+    "https://rebootdemocracy.ai/blog/News-That-Caught-Our-Eye-2",
+    "https://rebootdemocracy.ai/blog/Post-Office-Scandal",
+    "https://rebootdemocracy.ai/blog/AI-in-Congress",
+    "https://rebootdemocracy.ai/blog/News-That-Caught-Our-Eye-3",
+    "https://rebootdemocracy.ai/blog/brennan-ai-congress",
+    "https://rebootdemocracy.ai/blog/techreview-ai-law",
+    "https://rebootdemocracy.ai/blog/News-That-Caught-Our-Eye-4",
+    "https://rebootdemocracy.ai/blog/AI-Content-Moderation",
+    "https://rebootdemocracy.ai/blog/Ai-Powered-Content-Moderation",
+    "https://rebootdemocracy.ai/blog/launching-innovatema-partnering-with-government-to-build-ai-for-good-and-the-ai-talent-pipeline",
+    "https://rebootdemocracy.ai/blog/News-That-Caught-Our-Eye-5",
+    "https://rebootdemocracy.ai/blog/guns-narratives-ai",
+    "https://rebootdemocracy.ai/blog/AI-transcription",
+    "https://rebootdemocracy.ai/blog/News-That-Caught-Our-Eye-6"
   ],
   "categories": [
-    {
-      "name": "Content Types",
-      "options": [
-        "Case Studies",
-        "Events",
-        "News/Articles/Blogs/Podcasts",
-        "Engagement Projects",
-        "Teaching",
-        "Media/Resources"
-      ]
-    },
-    {
-      "name": "Detail Level",
-      "options": [
-        "Detailed",
-        "Summary",
-        "Sparse"
-      ]
-    },
-    {
-      "name": "Highlighted Projects",
-      "options": [
-        "Smarter Crowdsourcing Recommendations",
-        "Equitable Engagement Lab Information"
-      ]
-    },
-    {
-      "name": "Engagement Type",
-      "options": [
-        "Informative",
-        "Interactive",
-        "Inspirational",
-        "Collaborative"
-      ]
-    },
-    {
-      "name": "Content Purpose",
-      "options": [
-        "Research and Insights",
-        "Policy and Governance",
-        "Technology and Innovation",
-        "Community and Participation"
-      ]
-    }
+    "Case Studies",
+    "Blogs/Articles/Podcasts",
+    "Democracy Project Website"
   ],
-  "example": {
-    "contentToClassify": "Some article",
-    "categories": [
-      ["Case Studies","Teaching"],
-      ["Detailed"],
-      ["Informative"],
-      ["Research and Insights"]
-    ]
-  }
+  "aboutProject": "The Rebooting Democracy chatbot has rich information about collective intelligence, AI, and democracy. It can provide you with case studies, news, articles, and resources. It can also provide you with recommendations on the basis of your preferences. It can also provide you with documents and URLs for further reading."
 }

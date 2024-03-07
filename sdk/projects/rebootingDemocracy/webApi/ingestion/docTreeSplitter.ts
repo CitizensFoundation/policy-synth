@@ -25,6 +25,7 @@ Instructions:
 - There can be long chapters covering many topics, always describe those well.
 - Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
+- If there are references those should in most cases all in a single chapter.
 - At the start of each line you will see a line number in this format "1: " pay special attention to those line numbers and always output those line number as the chapterStartLineNumber for each chapter.
 - Always output the chapterStartLineNumber for each chapter as a number not text.
 - Never start two chapters with the same chapterStartLineNumber.
@@ -80,6 +81,7 @@ Instructions:
 - There can be long chapters covering many topics.
 - If there are case studies those should be whole chapters or if long a part of longer chapters.
 - Do not suggest any changes to the order of the document, it can't be changed.
+- If there are references those should in most cases all in a single chapter.
 - This is a recursive process, there might be long chapters we will alter split into sub chapters.
 - At the start of each line you will see a line number in this format "1: " pay special attention to those line numbers, those should always align with the chapterStartLineNumber for each chapter.
 - Chapters should never start on an empty line that just shows the line number.

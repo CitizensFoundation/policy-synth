@@ -16,6 +16,7 @@ import { IngestionContentParser } from "./contentParser.js";
 import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
 import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 import { IngestionChunkRanker } from "./chunkRanker.js";
+import { IngestionDocumentRanker } from "./docRanker.js";
 
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
@@ -87,6 +88,37 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     const filesForProcessing = this.getFilesForProcessing(true);
     console.log("Files for processing:", filesForProcessing);
     this.processFiles(filesForProcessing);
+
+    const allDocumentSources = this.getMetaDataForAllFiles();
+    await this.processAllSources(allDocumentSources);
+  }
+
+  async processAllSources(allDocumentSources: PsRagDocumentSource[]) {
+    // Rank for relevance
+    // Rank for substance
+
+    console.log("Ranking by relevance");
+    const relevanceRules =
+      "Rank the two documents based on the relevance to the ";
+    await ranker.rankDocuments(
+      allDocumentSources,
+      relevanceRules,
+      metadata.compressedFullDescriptionOfAllContents!,
+      "relevanceEloRating"
+    );
+
+    // Classify for all categories
+    // Rank all categories
+
+  }
+
+  async processSource(source: PsRagDocumentSource) {
+    const fileId = source.fileId;
+    const cleanedUpData = source.cleanedDocument || "";
+    const ranker = new IngestionDocumentRanker();
+
+
+
   }
 
   async processFiles(files: string[]): Promise<void> {
@@ -379,6 +411,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     return filesForProcessing;
   }
 
+  getAllFilesForProcessing(): string[] {
+    return Object.values(this.fileMetadata).map((meta) => meta.filePath);
+  }
+
+  getMetaDataForAllFiles(): PsRagDocumentSource[] {
+    return Object.values(this.fileMetadata);
+  }
+
   updateCachedFilesAndMetadata(
     relativePath: string,
     url: string,
@@ -411,8 +451,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     );
   }
 
-  protected async readDataLayout(): Promise<DataLayout> {
-    let dataLayout: DataLayout;
+  protected async readDataLayout(): Promise<PsIngestionDataLayout> {
+    let dataLayout: PsIngestionDataLayout;
     if (this.dataLayoutPath.startsWith("file://")) {
       const filePath = this.dataLayoutPath.replace("file://", "");
       const data = await fs.readFile(filePath, "utf-8");
@@ -420,7 +460,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     } else {
       try {
         const response = await fetch(this.dataLayoutPath);
-        dataLayout = (await response.json()) as DataLayout;
+        dataLayout = (await response.json()) as PsIngestionDataLayout;
       } catch (error) {
         throw new Error(
           `Failed to read data layout from ${this.dataLayoutPath}: ${error}`
@@ -484,10 +524,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             `-----> ${fetchedLastModified.getTime()} === ${cachedLastModified.getTime()}`
           );
 
-          // Then compare the time values directly
+          const skipIfChunked = true;
+
           if (
-            fetchedLastModified.getTime() === cachedLastModified.getTime() &&
-            contentLength === metadata.size
+            (skipIfChunked && metadata.chunks && metadata.chunks.length > 0) ||
+            (fetchedLastModified.getTime() === cachedLastModified.getTime() &&
+              contentLength === metadata.size)
           ) {
             console.log(`Using cached version for ${url}`);
             continue; // Skip downloading if the cached file is up to date

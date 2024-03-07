@@ -1,7 +1,21 @@
-
-interface DataLayout {
+interface PsIngestionDataLayout {
   jsonUrls: string[];
   documentUrls: string[];
+  categories: string[];
+  aboutProject: string;
+}
+
+interface PsRagDocumentClassificationResponse {
+  primaryCategory: string;
+  secondaryCategory: string;
+}
+
+interface PsRagRoutingResponse {
+  primaryCategory: string;
+  secondaryCategories: string[];
+  userIsAskingForLatestContent: boolean;
+  isAskingAboutOneSpecificDetail: string;
+  isAskingAboutOneSpecificProject: string;
 }
 
 // Add cache for first the response keyed on the data hashes
@@ -29,6 +43,8 @@ interface PsRagDocumentSource extends PsEloRateable {
   allOtherReferences: string[];
   allImageUrls: string[];
   documentDate: string;
+  primaryCategory?: string;
+  secondaryCategory?: string;
   documentMetaData: { [key: string]: string };
 }
 
@@ -64,7 +80,7 @@ interface LlmChunkAnalysisReponse {
 interface LlmDocumentChunksStrategy {
   chapterIndex: number;
   chapterTitle: string;
-  chapterType: 'full' | 'subChapter';
+  chapterType: "full" | "subChapter";
   chapterStartLineNumber: number;
   importantContextChapterIndexes: number[];
   chunkData?: string;
