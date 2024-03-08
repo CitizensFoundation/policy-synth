@@ -5,7 +5,7 @@ import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
 
-export class RagDocumentVectorStore extends PolicySynthAgentBase {
+export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
   static allFieldsToExtract =
     "title url lastModified size \
       cleanedDocument description shortDescription fullDescriptionOfAllContents \

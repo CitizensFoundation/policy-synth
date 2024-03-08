@@ -47,10 +47,6 @@ export class ChatController extends BaseController {
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
     const memoryId = req.body.memoryId;
-    const numberOfSelectQueries = req.body.numberOfSelectQueries;
-    const percentOfTopQueriesToSearch = req.body.percentOfTopQueriesToSearch;
-    const percentOfTopResultsToScan = req.body.percentOfTopResultsToScan;
-
     let saveChatLog: PsSimpleChatLog[] | undefined;
 
     try {
@@ -61,11 +57,9 @@ export class ChatController extends BaseController {
           saveChatLog = memory.chatLog;
         }
       }
-      bot.researchConversation(
+      bot.rebootingDemocracyConversation(
         chatLog,
-        numberOfSelectQueries,
-        percentOfTopQueriesToSearch,
-        percentOfTopResultsToScan
+        [] as any
       );
     } catch (error) {
       console.log(error);

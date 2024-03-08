@@ -120,6 +120,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     console.log("Skipping youtube video");
                     continue;
                 }
+                if (metadataEntry.fileId == "a3a5aa1b529ab55073b8031927413afa")
+                    continue;
                 const reAnalyze = false;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {

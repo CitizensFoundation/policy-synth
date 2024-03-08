@@ -42,9 +42,6 @@ export class ChatController extends BaseController {
         const chatLog = req.body.chatLog;
         const wsClientId = req.body.wsClientId;
         const memoryId = req.body.memoryId;
-        const numberOfSelectQueries = req.body.numberOfSelectQueries;
-        const percentOfTopQueriesToSearch = req.body.percentOfTopQueriesToSearch;
-        const percentOfTopResultsToScan = req.body.percentOfTopResultsToScan;
         let saveChatLog;
         try {
             const bot = new RebootingDemocracyChatBot(wsClientId, this.wsClients, memoryId);
@@ -54,7 +51,7 @@ export class ChatController extends BaseController {
                     saveChatLog = memory.chatLog;
                 }
             }
-            bot.researchConversation(chatLog, numberOfSelectQueries, percentOfTopQueriesToSearch, percentOfTopResultsToScan);
+            bot.rebootingDemocracyConversation(chatLog, []);
         }
         catch (error) {
             console.log(error);

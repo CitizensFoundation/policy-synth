@@ -18,6 +18,8 @@ import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 import { IngestionChunkRanker } from "./chunkRanker.js";
 import { IngestionDocumentRanker } from "./docRanker.js";
 import { DocumentClassifierAgent } from "./docClassifier.js";
+import { RagDocumentVectorStore } from "../vectorstore/ragDocument.js";
+import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
@@ -31,6 +33,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   chunkCompressor: IngestionChunkCompressorAgent;
   chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
   docAnalysisAgent: DocumentAnalyzerAgent;
+
+  dataLayout!: PsIngestionDataLayout;
 
   constructor(dataLayoutPath: string = "file://ingestion/dataLayout.json") {
     super();
@@ -53,10 +57,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   async processDataLayout(): Promise<void> {
     await this.loadFileMetadata(); // Load existing metadata to compare against
+    this.dataLayout = await this.readDataLayout();
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
     const downloadContent = false;
-    const dataLayout = await this.readDataLayout();
 
     if (downloadContent) {
       const browser = await puppeteer.launch({ headless: true });
@@ -72,14 +76,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
         await this.downloadAndCache(
-          dataLayout.documentUrls,
+          this.dataLayout.documentUrls,
           false,
           browserPage
         );
         await this.saveFileMetadata();
         const disableJsonUrls = true;
         if (!disableJsonUrls) {
-          await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
+          await this.processJsonUrls(this.dataLayout.jsonUrls, browserPage);
           await this.saveFileMetadata();
         }
       } catch (error) {
@@ -94,22 +98,89 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await this.processFiles(filesForProcessing);
 
     const allDocumentSources = this.getMetaDataForAllFiles();
-    await this.processAllSources(allDocumentSources, dataLayout);
+    await this.processAllSources(allDocumentSources);
   }
 
   async processAllSources(
-    allDocumentSources: PsRagDocumentSource[],
-    dataLayout: PsIngestionDataLayout
+    allDocumentSources: PsRagDocumentSource[]
   ): Promise<void> {
-
     // Filter out all document sources that don't have chunks
     const allDocumentSourcesWithChunks = allDocumentSources.filter(
       (source) => source.chunks && source.chunks.length > 0
     );
 
+    await this.classifyDocuments(allDocumentSourcesWithChunks);
+
+    await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
+  }
+
+  async addDocumentsToWeaviate(
+    allDocumentSourcesWithChunks: PsRagDocumentSource[]
+  ) {
+    const documentStore = new RagDocumentVectorStore();
+    const chunkStore = new PsRagChunkVectorStore();
+
+    // Helper function to post a chunk and its sub-chunks recursively
+    const postChunkRecursively = async (
+      chunk: PsRagChunk,
+      documentId: string,
+      parentChunkId?: string
+    ) => {
+      const chunkId = (await chunkStore.postChunk(chunk)) as string;
+
+      // Add cross reference to the document
+      await chunkStore.addCrossReference(chunkId, "inDocument", documentId);
+
+      // Add cross reference to the parent chunk if provided
+      if (parentChunkId) {
+        await chunkStore.addCrossReference(chunkId, "inChunk", parentChunkId);
+      }
+
+      if (chunk.subChunks) {
+        const siblingChunkIds = [];
+        for (const subChunk of chunk.subChunks) {
+          const subChunkId = await postChunkRecursively(
+            subChunk,
+            documentId,
+            chunkId
+          );
+          siblingChunkIds.push(subChunkId);
+        }
+        // Add cross references for sibling chunks
+        for (const siblingChunkId of siblingChunkIds) {
+          await chunkStore.addCrossReference(
+            chunkId,
+            "allSiblingChunks",
+            siblingChunkId
+          );
+        }
+      }
+
+      return chunkId;
+    };
+
+    for (const source of allDocumentSourcesWithChunks) {
+      try {
+        const documentId = await documentStore.postDocument(source);
+
+        if (source.chunks) {
+          for (const chunk of source.chunks) {
+            await postChunkRecursively(chunk, documentId);
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to post document ${source.url}:`, error);
+      }
+    }
+  }
+
+  async classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]) {
     console.log("Classifying all documents");
     const classifier = new DocumentClassifierAgent();
-    await classifier.classifyAllDocuments(allDocumentSourcesWithChunks, dataLayout);
+    await classifier.classifyAllDocuments(
+      allDocumentSourcesWithChunks,
+      this.dataLayout
+    );
 
     const ranker = new IngestionDocumentRanker();
 
@@ -119,7 +190,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await ranker.rankDocuments(
       allDocumentSourcesWithChunks,
       relevanceRules,
-      dataLayout.aboutProject,
+      this.dataLayout.aboutProject,
       "relevanceEloRating"
     );
 
@@ -130,11 +201,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await ranker.rankDocuments(
       allDocumentSourcesWithChunks,
       substanceRules,
-      dataLayout.aboutProject,
+      this.dataLayout.aboutProject,
       "substanceEloRating"
     );
 
-    for (const category of dataLayout.categories) {
+    for (const category of this.dataLayout.categories) {
       console.log(`Ranking documents in the ${category} category`);
       // Filter documents that fall into the current category
       const documentsInCategory = allDocumentSourcesWithChunks.filter(
@@ -150,7 +221,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       await ranker.rankDocuments(
         documentsInCategory,
         categoryRankingRules,
-        dataLayout.aboutProject,
+        this.dataLayout.aboutProject,
         eloRatingFieldName
       );
     }
@@ -177,10 +248,16 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           continue;
         }
 
-        if (metadataEntry.url.indexOf("youtube") > -1 || metadataEntry.url.indexOf("youtu.be") > -1) {
-          console.log("Skipping youtube video")
+        if (
+          metadataEntry.url.indexOf("youtube") > -1 ||
+          metadataEntry.url.indexOf("youtu.be") > -1
+        ) {
+          console.log("Skipping youtube video");
           continue;
         }
+
+        if (metadataEntry.fileId == "a3a5aa1b529ab55073b8031927413afa")
+          continue;
 
         const reAnalyze = false;
         if (

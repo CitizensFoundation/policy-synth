@@ -5,7 +5,7 @@ import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
 
-export class RagChunk extends PolicySynthAgentBase {
+export class PsRagChunkVectorStore extends PolicySynthAgentBase {
   static allFieldsToExtract =
     "title chunkIndex chapterIndex documentIndex mainExternalUrlFound data \
       actualStartLine startLine actualEndLine shortSummary fullSummary \
@@ -28,7 +28,7 @@ export class RagChunk extends PolicySynthAgentBase {
     }
 
     try {
-      const res = await RagChunk.client.schema
+      const res = await PsRagChunkVectorStore.client.schema
         .classCreator()
         .withClass(classObj)
         .do();
@@ -40,7 +40,7 @@ export class RagChunk extends PolicySynthAgentBase {
 
   async showScheme() {
     try {
-      const res = await RagChunk.client.schema.getter().do();
+      const res = await PsRagChunkVectorStore.client.schema.getter().do();
       console.log(JSON.stringify(res, null, 2));
     } catch (err) {
       console.error(`Error showing schema: ${err}`);
@@ -49,7 +49,7 @@ export class RagChunk extends PolicySynthAgentBase {
 
   async deleteScheme() {
     try {
-      const res = await RagChunk.client.schema
+      const res = await PsRagChunkVectorStore.client.schema
         .classDeleter()
         .withClassName("RagChunk")
         .do();
@@ -60,7 +60,7 @@ export class RagChunk extends PolicySynthAgentBase {
   }
 
   async testQuery() {
-    const res = await RagChunk.client.graphql
+    const res = await PsRagChunkVectorStore.client.graphql
       .get()
       .withClassName("RagChunk")
       .withFields(RagChunk.allFieldsToExtract)
@@ -74,13 +74,37 @@ export class RagChunk extends PolicySynthAgentBase {
 
   async postChunk(chunkData: PsRagChunk) {
     return new Promise((resolve, reject) => {
-      RagChunk.client.data
+      PsRagChunkVectorStore.client.data
         .creator()
         .withClassName("RagChunk")
         .withProperties(chunkData as any)
         .do()
-        .then((res) => {
+        .then((res: any) => {
           this.logger.info(`Weaviate: Have saved chunk ${chunkData.title}`);
+          resolve(res.id);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  }
+
+  async addCrossReference(
+    sourceId: string,
+    propertyName: string,
+    targetId: string
+  ) {
+    return new Promise((resolve, reject) => {
+      PsRagChunkVectorStore.client.data
+        .referenceCreator()
+        .withId(sourceId)
+        .withReferenceProperty(propertyName)
+        .withReference({ beacon: targetId })
+        .do()
+        .then((res) => {
+          this.logger.info(
+            `Weaviate: Added cross reference from ${sourceId} to ${targetId} via ${propertyName}`
+          );
           resolve(res);
         })
         .catch((err) => {
@@ -89,13 +113,9 @@ export class RagChunk extends PolicySynthAgentBase {
     });
   }
 
-  async updateChunk(
-    id: string,
-    chunkData: PsRagChunk,
-    quiet = false
-  ) {
+  async updateChunk(id: string, chunkData: PsRagChunk, quiet = false) {
     return new Promise((resolve, reject) => {
-      RagChunk.client.data
+      PsRagChunkVectorStore.client.data
         .merger()
         .withId(id)
         .withClassName("RagChunk")
@@ -115,7 +135,7 @@ export class RagChunk extends PolicySynthAgentBase {
 
   async getChunk(id: string): Promise<PsRagChunk> {
     return new Promise((resolve, reject) => {
-      RagChunk.client.data
+      PsRagChunkVectorStore.client.data
         .getterById()
         .withId(id)
         .withClassName("RagChunk")
@@ -131,13 +151,11 @@ export class RagChunk extends PolicySynthAgentBase {
     });
   }
 
-  async searchChunks(
-    query: string
-  ): Promise<PsRagChunkGraphQlResponse> {
+  async searchChunks(query: string): Promise<PsRagChunkGraphQlResponse> {
     let results;
 
     try {
-      results = await RagChunk.client.graphql
+      results = await PsRagChunkVectorStore.client.graphql
         .get()
         .withClassName("RagChunk")
         .withNearText({ concepts: [query] })
@@ -159,12 +177,13 @@ export class RagChunk extends PolicySynthAgentBase {
     let results;
 
     try {
-      results = await RagChunk.client.graphql
+      results = await PsRagChunkVectorStore.client.graphql
         .get()
         .withClassName("RagChunk")
         .withNearText({ concepts: [query] })
         .withLimit(25)
-        .withFields(`
+        .withFields(
+          `
           title
           chunkIndex
           chapterIndex
@@ -241,7 +260,8 @@ export class RagChunk extends PolicySynthAgentBase {
               }
             }
           }
-        `)
+        `
+        )
         .do();
     } catch (err) {
       throw err;

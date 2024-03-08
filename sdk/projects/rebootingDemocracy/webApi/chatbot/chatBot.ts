@@ -9,6 +9,9 @@ export class RebootingDemocracyChatBot extends PsBaseChatBot {
 The user will ask a question, we will search a large database in a vector store and bring information connected to the user question into your <CONTEXT_TO_ANSWER_USERS_QUESTION_FROM> to provide a thoughtful answer from.
 If not enough information is available, you can ask the user for more information.
 Never provide information that is not backed by your context or is comment knowledge.
+Do not reference your contexts and the different document sources just provide the information based on those sources.
+For all document sources we will provide the user with those you do not need to link or reference them.
+If there are inline links in the actual document chunks, you can provide those to the user in a markdown link format.
 Use markdown to format your answers, use nice formatting.
 Keep your answers short and to the point except when the user asks for detail.
 `;
@@ -75,7 +78,7 @@ Your thoughtful answer in markdown:
       role: "user",
       content: this.mainStreamingUserPrompt(
         userLastMessage,
-        searchContext
+        "searchContext"
       ),
     };
 
