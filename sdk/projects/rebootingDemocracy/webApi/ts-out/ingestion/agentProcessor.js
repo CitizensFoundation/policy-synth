@@ -12,6 +12,8 @@ import { IngestionContentParser } from "./contentParser.js";
 import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
 import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 import { IngestionChunkRanker } from "./chunkRanker.js";
+import { IngestionDocumentRanker } from "./docRanker.js";
+import { DocumentClassifierAgent } from "./docClassifier.js";
 export class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath;
     cachedFiles = [];
@@ -43,8 +45,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         await this.loadFileMetadata(); // Load existing metadata to compare against
         this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
         const downloadContent = false;
+        const dataLayout = await this.readDataLayout();
         if (downloadContent) {
-            const dataLayout = await this.readDataLayout();
             const browser = await puppeteer.launch({ headless: true });
             try {
                 this.logger.debug("Launching browser");
@@ -54,8 +56,11 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
                 await this.downloadAndCache(dataLayout.documentUrls, false, browserPage);
                 await this.saveFileMetadata();
-                await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
-                await this.saveFileMetadata();
+                const disableJsonUrls = true;
+                if (!disableJsonUrls) {
+                    await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
+                    await this.saveFileMetadata();
+                }
             }
             catch (error) {
                 console.error("Failed to process data layout:", error);
@@ -67,6 +72,35 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         const filesForProcessing = this.getFilesForProcessing(true);
         console.log("Files for processing:", filesForProcessing);
         this.processFiles(filesForProcessing);
+        const allDocumentSources = this.getMetaDataForAllFiles();
+        await this.processAllSources(allDocumentSources, dataLayout);
+    }
+    async processAllSources(allDocumentSources, dataLayout) {
+        console.log("Classifying all documents");
+        const classifier = new DocumentClassifierAgent();
+        await classifier.classifyAllDocuments(allDocumentSources, dataLayout);
+        const ranker = new IngestionDocumentRanker();
+        console.log("Ranking by relevance");
+        const relevanceRules = "Rank the two documents based on the relevance to the project";
+        await ranker.rankDocuments(allDocumentSources, relevanceRules, dataLayout.aboutProject, "relevanceEloRating");
+        console.log("Ranking by substance");
+        const substanceRules = "Rank the two documents based substance and completeness of the information";
+        await ranker.rankDocuments(allDocumentSources, substanceRules, dataLayout.aboutProject, "substanceEloRating");
+        for (const category of dataLayout.categories) {
+            console.log(`Ranking documents in the ${category} category`);
+            // Filter documents that fall into the current category
+            const documentsInCategory = allDocumentSources.filter((doc) => doc.primaryCategory === category || doc.secondaryCategory === category);
+            // Define a dynamic ELO rating field name based on the category
+            const eloRatingFieldName = `${category.toLowerCase()}EloRating`;
+            // Rank documents within the category
+            const categoryRankingRules = `Rank the documents based on their relevance and substance within the ${category} category`;
+            await ranker.rankDocuments(documentsInCategory, categoryRankingRules, dataLayout.aboutProject, eloRatingFieldName);
+        }
+    }
+    async processSource(source) {
+        const fileId = source.fileId;
+        const cleanedUpData = source.cleanedDocument || "";
+        const ranker = new IngestionDocumentRanker();
     }
     async processFiles(files) {
         for (const filePath of files) {
@@ -255,6 +289,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         return filesForProcessing;
     }
+    getAllFilesForProcessing() {
+        return Object.values(this.fileMetadata).map((meta) => meta.filePath);
+    }
+    getMetaDataForAllFiles() {
+        return Object.values(this.fileMetadata);
+    }
     updateCachedFilesAndMetadata(relativePath, url, data, contentType, lastModifiedOnServer) {
         const fileId = this.generateFileId(url);
         const hash = this.computeHash(data);
@@ -325,9 +365,10 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     console.log(`Fetched last modified: ${fetchedLastModified}`);
                     console.log(`Metadata lastmod: ${metadata.lastModified}`);
                     console.log(`-----> ${fetchedLastModified.getTime()} === ${cachedLastModified.getTime()}`);
-                    // Then compare the time values directly
-                    if (fetchedLastModified.getTime() === cachedLastModified.getTime() &&
-                        contentLength === metadata.size) {
+                    const skipIfChunked = true;
+                    if ((skipIfChunked && metadata.chunks && metadata.chunks.length > 0) ||
+                        (fetchedLastModified.getTime() === cachedLastModified.getTime() &&
+                            contentLength === metadata.size)) {
                         console.log(`Using cached version for ${url}`);
                         continue; // Skip downloading if the cached file is up to date
                     }

@@ -1,5 +1,5 @@
 import { BaseController } from "@policysynth/api/controllers/baseController.js";
-import { RebootingDemocracyChatBot } from "../chatBot.js";
+import { RebootingDemocracyChatBot } from "../chatbot/chatBot.js";
 export class ChatController extends BaseController {
     path = "/api/live_research_chat";
     constructor(wsClients) {

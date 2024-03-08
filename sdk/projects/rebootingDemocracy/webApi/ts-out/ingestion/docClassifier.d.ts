@@ -1,11 +1,9 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 export declare class DocumentClassifierAgent extends BaseIngestionAgent {
-    maxAnalyzeTokenLength: number;
-    systemMessage: (schema: string) => SystemMessage;
-    userMessage: (data: string) => HumanMessage;
-    reviewSystemMessage: SystemMessage;
-    reviewUserMessage: (analysis: LlmDocumentAnalysisReponse) => HumanMessage;
-    classify(fileId: string, data: string, filesMetaData?: Record<string, PsRagDocumentSource>): Promise<PsRagDocumentSource>;
+    systemMessage: (schema: string, about: string) => SystemMessage;
+    userMessage: (title: string, decription: string, url: string) => HumanMessage;
+    classify(metadata: PsRagDocumentSource, dataLayout: PsIngestionDataLayout): Promise<void>;
+    classifyAllDocuments(documentSources: PsRagDocumentSource[], dataLayout: PsIngestionDataLayout): Promise<void>;
 }
 //# sourceMappingURL=docClassifier.d.ts.map

@@ -2,126 +2,45 @@ import { PsIngestionConstants } from "./ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 export class DocumentClassifierAgent extends BaseIngestionAgent {
-    maxAnalyzeTokenLength = 8000;
-    systemMessage = (schema) => new SystemMessage(`You are an expert classification agent that analyzes content and classifies it.
+    systemMessage = (schema, about) => new SystemMessage(`You are an expert classification agent that analyzes documents and classifies them.
 
-  Instructions:
-  - Use the schema below to classify the content the user will provide you with.
-  - Output only the most relevant categories for each category type.
-  - Think step by step
-
-  Classification Categories Schema:
-
-  `);
-    userMessage = (data) => new HumanMessage(`Document to analyze:
-${data}
-
-Your JSON analysis:
-`);
-    reviewSystemMessage = new SystemMessage(`You are an expert document analyze refiner.
 Instructions:
-- You will recieve a document analysis in JSON format.
-- Refine description and shortDescription with all the data from the fullDescriptionOfAllContents.
-- Compressed fullDescriptionOfAllContents into compressedFullDescriptionOfAllContents.
-- Then output again only the processed JSON fields with the refined shortDescription, description and compressedFullDescriptionOfAllContents without explanations:
+- Use the available categories to classify the content the user will provide you with in the DOCUMENT_TO_CLASSIFY tag
+- Output one primary category
+- If there is one highly relevant secondaryCategory output it otherwise output "" in secondaryCategory
+- Think step by step
+
+Available categories:
+${schema}
+
+About this project:
+${about}
+
+JSON Output:
 {
-  shortDescription: string;
-  description: string;
-  compressedFullDescriptionOfAllContents: string;
+  primaryCategory: string;
+  secondaryCategory: string
 }
 `);
-    reviewUserMessage = (analysis) => new HumanMessage(`Document analysis to review:
-${JSON.stringify(analysis, null, 2)}
+    userMessage = (title, decription, url) => new HumanMessage(`<DOCUMENT_TO_CLASSIFY>
+Title: ${title}
+Full description: ${decription}
+</DOCUMENT_TO_CLASSIFY>
 
-Your refined JSON analysis:
+Document URL: ${url}
+
+Your JSON classification:
 `);
-    async classify(fileId, data, filesMetaData = {}) {
-        // Split data if larger than maxAnalyzeTokenLength
-        const dataChunks = data.length > this.maxAnalyzeTokenLength
-            ? this.splitDataForProcessingWorksBigChunks(data, this.maxAnalyzeTokenLength)
-            : [data];
-        let metadata = filesMetaData[fileId] || {};
-        for (let i = 0; i < dataChunks.length; i++) {
-            console.log(`Analyzing chunk ${i + 1} of ${dataChunks.length}`);
-            const chunkData = dataChunks[i];
-            const documentAnalysis = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.systemMessage(""), this.userMessage(chunkData))));
-            console.log(`Chunk ${i + 1} results: ${JSON.stringify(documentAnalysis, null, 2)}`);
-            // For the first chunk, initialize metadata with analysis results
-            if (i === 0) {
-                metadata = {
-                    ...metadata,
-                    title: documentAnalysis.title,
-                    shortDescription: documentAnalysis.shortDescription,
-                    description: documentAnalysis.description,
-                    fullDescriptionOfAllContents: documentAnalysis.fullDescriptionOfAllContents,
-                    documentMetaData: documentAnalysis.documentMetaData,
-                    allReferencesWithUrls: documentAnalysis.allReferencesWithUrls,
-                    allOtherReferences: documentAnalysis.allOtherReferences,
-                    allImageUrls: documentAnalysis.allImageUrls,
-                };
-            }
-            else {
-                // For subsequent chunks, update only specific fields
-                metadata.fullDescriptionOfAllContents +=
-                    "\n" + documentAnalysis.fullDescriptionOfAllContents;
-                metadata.documentMetaData = {
-                    ...metadata.documentMetaData,
-                    ...(typeof documentAnalysis.documentMetaData === "object"
-                        ? documentAnalysis.documentMetaData
-                        : {}),
-                };
-                metadata.allReferencesWithUrls = [
-                    ...(metadata.allReferencesWithUrls || []),
-                    ...(Array.isArray(documentAnalysis.allReferencesWithUrls)
-                        ? documentAnalysis.allReferencesWithUrls
-                        : []),
-                ];
-                metadata.allOtherReferences = [
-                    ...(metadata.allOtherReferences || []),
-                    ...(Array.isArray(documentAnalysis.allOtherReferences)
-                        ? documentAnalysis.allOtherReferences
-                        : []),
-                ];
-                metadata.allImageUrls = [
-                    ...(metadata.allImageUrls || []),
-                    ...(Array.isArray(documentAnalysis.allImageUrls)
-                        ? documentAnalysis.allImageUrls
-                        : []),
-                ];
-            }
+    async classify(metadata, dataLayout) {
+        const documentClassification = await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.systemMessage(JSON.stringify(dataLayout.categories), dataLayout.aboutProject), this.userMessage(metadata.title, metadata.fullDescriptionOfAllContents, metadata.url)));
+        metadata.primaryCategory = documentClassification.primaryCategory;
+        metadata.secondaryCategory = documentClassification.secondaryCategory;
+    }
+    async classifyAllDocuments(documentSources, dataLayout) {
+        for (let s = 0; s < documentSources.length; s++) {
+            const source = documentSources[s];
+            await this.classify(source, dataLayout);
+            console.log(`Classified ${source.title}: ${source.primaryCategory}, ${source.secondaryCategory}`);
         }
-        const refineInput = {
-            title: metadata.title,
-            shortDescription: metadata.shortDescription,
-            description: metadata.description,
-            fullDescriptionOfAllContents: metadata.fullDescriptionOfAllContents,
-            documentDate: metadata.documentMetaData?.documentDate,
-            documentMetaData: metadata.documentMetaData,
-            allImageUrls: metadata.allImageUrls,
-            allReferencesWithUrls: metadata.allReferencesWithUrls,
-            allOtherReferences: metadata.allOtherReferences,
-        };
-        console.log(`Final analysis results: ${JSON.stringify(refineInput, null, 2)}`);
-        const refinedMetadata = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.reviewSystemMessage, this.reviewUserMessage(refineInput))));
-        console.log(`Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`);
-        metadata.shortDescription = refinedMetadata.shortDescription;
-        metadata.description = refinedMetadata.description;
-        metadata.compressedFullDescriptionOfAllContents =
-            refinedMetadata.compressedFullDescriptionOfAllContents;
-        const debugResults = {
-            title: metadata.title,
-            shortDescription: metadata.shortDescription,
-            description: metadata.description,
-            fullDescriptionOfAllContents: metadata.fullDescriptionOfAllContents,
-            compressedFullDescriptionOfAllContents: metadata.compressedFullDescriptionOfAllContents,
-            documentDate: metadata.documentMetaData?.documentDate,
-            documentMetaData: metadata.documentMetaData,
-            allImageUrls: metadata.allImageUrls,
-            allReferencesWithUrls: metadata.allReferencesWithUrls,
-            allOtherReferences: metadata.allOtherReferences,
-        };
-        console.log(`Final refined analysis results: ${JSON.stringify(debugResults, null, 2)}`);
-        filesMetaData[fileId] = metadata;
-        return metadata;
     }
 }

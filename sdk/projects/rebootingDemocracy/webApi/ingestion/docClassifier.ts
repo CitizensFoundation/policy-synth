@@ -61,15 +61,14 @@ Your JSON classification:
   }
 
   async classifyAllDocuments(
-    filesMetaData: Record<string, PsRagDocumentSource>,
+    documentSources: PsRagDocumentSource[],
     dataLayout: PsIngestionDataLayout
   ): Promise<void> {
-    for (const fileId in filesMetaData) {
-      const metadata = filesMetaData[fileId];
-      await this.classify(metadata, dataLayout);
-      // Here, after classification, the metadata object would be updated
+    for (let s=0;s<documentSources.length;s++) {
+      const source = documentSources[s];
+      await this.classify(source, dataLayout);
       console.log(
-        `Classified ${metadata.title}: ${metadata.primaryCategory}, ${metadata.secondaryCategory}`
+        `Classified ${source.title}: ${source.primaryCategory}, ${source.secondaryCategory}`
       );
     }
   }

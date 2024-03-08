@@ -19,6 +19,8 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     docAnalysisAgent: DocumentAnalyzerAgent;
     constructor(dataLayoutPath?: string);
     processDataLayout(): Promise<void>;
+    processAllSources(allDocumentSources: PsRagDocumentSource[], dataLayout: PsIngestionDataLayout): Promise<void>;
+    processSource(source: PsRagDocumentSource): Promise<void>;
     processFiles(files: string[]): Promise<void>;
     aggregateChunkData: (chunks: LlmDocumentChunksStrategy[]) => string;
     createTreeChunks(metadata: PsRagDocumentSource, cleanedUpData: string): Promise<void>;
@@ -26,8 +28,10 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     rankChunks(metadata: PsRagDocumentSource): Promise<void>;
     extractFileIdFromPath(filePath: string): string | null;
     getFilesForProcessing(forceProcessing?: boolean): string[];
+    getAllFilesForProcessing(): string[];
+    getMetaDataForAllFiles(): PsRagDocumentSource[];
     updateCachedFilesAndMetadata(relativePath: string, url: string, data: Buffer | string, contentType: string, lastModifiedOnServer: string): void;
-    protected readDataLayout(): Promise<DataLayout>;
+    protected readDataLayout(): Promise<PsIngestionDataLayout>;
     getFileNameAndPath(url: string, extension: string): {
         fullPath: string;
         relativePath: string;
