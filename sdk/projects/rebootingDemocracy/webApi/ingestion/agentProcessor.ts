@@ -177,8 +177,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           continue;
         }
 
-        //if (metadataEntry.fileId !== "735de0621e35c642758954aae1c3f0aa")
-        //  continue;
+        if (metadataEntry.url.indexOf("youtube") > -1 || metadataEntry.url.indexOf("youtu.be") > -1) {
+          console.log("Skipping youtube video")
+          continue;
+        }
 
         const reAnalyze = false;
         if (

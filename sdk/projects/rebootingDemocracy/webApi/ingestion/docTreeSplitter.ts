@@ -25,7 +25,7 @@ Instructions:
 - There can be long chapters covering many topics, always describe those well.
 - Always include the start of the document at chapterIndex 1.
 - Do not output the actual contents only the strategy on how to split it up.
-- If there are references those should in most cases all in a single chapter.
+- If there are only references or names we don't care about how those are split into chapter as those will be removed later.
 - At the start of each line you will see a line number in this format "1: " pay special attention to those line numbers and always output those line number as the chapterStartLineNumber for each chapter.
 - Always output the chapterStartLineNumber for each chapter as a number not text.
 - Never start two chapters with the same chapterStartLineNumber.
