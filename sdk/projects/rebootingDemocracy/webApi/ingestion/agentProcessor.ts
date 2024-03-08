@@ -91,7 +91,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const filesForProcessing = this.getFilesForProcessing(true);
     console.log("Files for processing:", filesForProcessing);
-    this.processFiles(filesForProcessing);
+    await this.processFiles(filesForProcessing);
 
     const allDocumentSources = this.getMetaDataForAllFiles();
     await this.processAllSources(allDocumentSources, dataLayout);
@@ -101,9 +101,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     allDocumentSources: PsRagDocumentSource[],
     dataLayout: PsIngestionDataLayout
   ): Promise<void> {
+
+    // Filter out all document sources that don't have chunks
+    const allDocumentSourcesWithChunks = allDocumentSources.filter(
+      (source) => source.chunks && source.chunks.length > 0
+    );
+
     console.log("Classifying all documents");
     const classifier = new DocumentClassifierAgent();
-    await classifier.classifyAllDocuments(allDocumentSources, dataLayout);
+    await classifier.classifyAllDocuments(allDocumentSourcesWithChunks, dataLayout);
 
     const ranker = new IngestionDocumentRanker();
 
@@ -111,7 +117,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     const relevanceRules =
       "Rank the two documents based on the relevance to the project";
     await ranker.rankDocuments(
-      allDocumentSources,
+      allDocumentSourcesWithChunks,
       relevanceRules,
       dataLayout.aboutProject,
       "relevanceEloRating"
@@ -122,7 +128,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       "Rank the two documents based substance and completeness of the information";
 
     await ranker.rankDocuments(
-      allDocumentSources,
+      allDocumentSourcesWithChunks,
       substanceRules,
       dataLayout.aboutProject,
       "substanceEloRating"
@@ -131,7 +137,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     for (const category of dataLayout.categories) {
       console.log(`Ranking documents in the ${category} category`);
       // Filter documents that fall into the current category
-      const documentsInCategory = allDocumentSources.filter(
+      const documentsInCategory = allDocumentSourcesWithChunks.filter(
         (doc) =>
           doc.primaryCategory === category || doc.secondaryCategory === category
       );
@@ -198,7 +204,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
           (await this.cleanupAgent.clean(data));
 
-        console.log(`Cleaned up data: ${cleanedUpData}`);
+        //console.log(`Cleaned up data: ${cleanedUpData}`);
         await this.saveFileMetadata();
 
         if (
@@ -335,14 +341,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     let rechunk = false;
 
-    if (
-      fileId != "735de0621e35c642758954aae1c3f0aa" &&
-      fileId != "8211f8f7011d29e3da018207b2d991da"
-    ) {
-      rechunk = true;
-      console.log("RECHUNKING --------------------------------------- >");
-    }
-
     if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
       metadata.chunks = [];
       console.log(`Creating tree chunks for fileId: ${fileId}`);
@@ -353,9 +351,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     await this.saveFileMetadata();
 
-    console.log(
+    /*console.log(
       `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
-    );
+    );*/
 
     const reRank = false;
 
@@ -364,11 +362,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       await this.saveFileMetadata();
     }
 
-    console.log(
+    /*console.log(
       `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
-    );
+    );*/
 
-    await new Promise((resolve) => setTimeout(resolve, 15000));
+    //await new Promise((resolve) => setTimeout(resolve, 15000));
 
     //    await this.saveFileMetadata();
   }

@@ -71,25 +71,27 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         const filesForProcessing = this.getFilesForProcessing(true);
         console.log("Files for processing:", filesForProcessing);
-        this.processFiles(filesForProcessing);
+        await this.processFiles(filesForProcessing);
         const allDocumentSources = this.getMetaDataForAllFiles();
         await this.processAllSources(allDocumentSources, dataLayout);
     }
     async processAllSources(allDocumentSources, dataLayout) {
+        // Filter out all document sources that don't have chunks
+        const allDocumentSourcesWithChunks = allDocumentSources.filter((source) => source.chunks && source.chunks.length > 0);
         console.log("Classifying all documents");
         const classifier = new DocumentClassifierAgent();
-        await classifier.classifyAllDocuments(allDocumentSources, dataLayout);
+        await classifier.classifyAllDocuments(allDocumentSourcesWithChunks, dataLayout);
         const ranker = new IngestionDocumentRanker();
         console.log("Ranking by relevance");
         const relevanceRules = "Rank the two documents based on the relevance to the project";
-        await ranker.rankDocuments(allDocumentSources, relevanceRules, dataLayout.aboutProject, "relevanceEloRating");
+        await ranker.rankDocuments(allDocumentSourcesWithChunks, relevanceRules, dataLayout.aboutProject, "relevanceEloRating");
         console.log("Ranking by substance");
         const substanceRules = "Rank the two documents based substance and completeness of the information";
-        await ranker.rankDocuments(allDocumentSources, substanceRules, dataLayout.aboutProject, "substanceEloRating");
+        await ranker.rankDocuments(allDocumentSourcesWithChunks, substanceRules, dataLayout.aboutProject, "substanceEloRating");
         for (const category of dataLayout.categories) {
             console.log(`Ranking documents in the ${category} category`);
             // Filter documents that fall into the current category
-            const documentsInCategory = allDocumentSources.filter((doc) => doc.primaryCategory === category || doc.secondaryCategory === category);
+            const documentsInCategory = allDocumentSourcesWithChunks.filter((doc) => doc.primaryCategory === category || doc.secondaryCategory === category);
             // Define a dynamic ELO rating field name based on the category
             const eloRatingFieldName = `${category.toLowerCase()}EloRating`;
             // Rank documents within the category
@@ -128,7 +130,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
                     (await this.cleanupAgent.clean(data));
-                console.log(`Cleaned up data: ${cleanedUpData}`);
+                //console.log(`Cleaned up data: ${cleanedUpData}`);
                 await this.saveFileMetadata();
                 if (this.getEstimateTokenLength(cleanedUpData) >
                     this.maxFileProcessTokenLength) {
@@ -224,11 +226,6 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         const metadata = this.fileMetadata[fileId] || {};
         metadata.weaviteId = weaviateDocumentId;
         let rechunk = false;
-        if (fileId != "735de0621e35c642758954aae1c3f0aa" &&
-            fileId != "8211f8f7011d29e3da018207b2d991da") {
-            rechunk = true;
-            console.log("RECHUNKING --------------------------------------- >");
-        }
         if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
             metadata.chunks = [];
             console.log(`Creating tree chunks for fileId: ${fileId}`);
@@ -238,14 +235,18 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             console.log(`Chunks already exist for fileId: ${fileId}`);
         }
         await this.saveFileMetadata();
-        console.log(`Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`);
+        /*console.log(
+          `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
+        );*/
         const reRank = false;
         if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
             await this.rankChunks(metadata);
             await this.saveFileMetadata();
         }
-        console.log(`Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`);
-        await new Promise((resolve) => setTimeout(resolve, 15000));
+        /*console.log(
+          `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
+        );*/
+        //await new Promise((resolve) => setTimeout(resolve, 15000));
         //    await this.saveFileMetadata();
     }
     async rankChunks(metadata) {
