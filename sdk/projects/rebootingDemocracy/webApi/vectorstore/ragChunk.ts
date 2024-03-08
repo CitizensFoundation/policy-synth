@@ -63,7 +63,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     const res = await PsRagChunkVectorStore.client.graphql
       .get()
       .withClassName("RagChunk")
-      .withFields(RagChunk.allFieldsToExtract)
+      .withFields(PsRagChunkVectorStore.allFieldsToExtract)
       .withNearText({ concepts: ["specific concept"] })
       .withLimit(100)
       .do();
@@ -160,7 +160,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
         .withClassName("RagChunk")
         .withNearText({ concepts: [query] })
         .withLimit(25)
-        .withFields(RagChunk.allFieldsToExtract)
+        .withFields(PsRagChunkVectorStore.allFieldsToExtract)
         .do();
     } catch (err) {
       throw err;

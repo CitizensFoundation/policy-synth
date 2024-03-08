@@ -2,7 +2,7 @@ import weaviate from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
-export class RagDocumentVectorStore extends PolicySynthAgentBase {
+export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract = "title url lastModified size \
       cleanedDocument description shortDescription fullDescriptionOfAllContents \
       compressedFullDescriptionOfAllContents \
@@ -24,7 +24,7 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
             return;
         }
         try {
-            const res = await RagDocumentVectorStore.client.schema
+            const res = await PsRagDocumentVectorStore.client.schema
                 .classCreator()
                 .withClass(classObj)
                 .do();
@@ -36,7 +36,7 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
     }
     async showScheme() {
         try {
-            const res = await RagDocumentVectorStore.client.schema.getter().do();
+            const res = await PsRagDocumentVectorStore.client.schema.getter().do();
             console.log(JSON.stringify(res, null, 2));
         }
         catch (err) {
@@ -45,7 +45,7 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
     }
     async deleteScheme() {
         try {
-            const res = await RagDocumentVectorStore.client.schema
+            const res = await PsRagDocumentVectorStore.client.schema
                 .classDeleter()
                 .withClassName("RagDocument")
                 .do();
@@ -57,12 +57,12 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
     }
     async testQuery() {
         const where = [];
-        const res = await RagDocumentVectorStore.client.graphql
+        const res = await PsRagDocumentVectorStore.client.graphql
             .get()
             .withClassName("RagDocument")
             .withFields(
         // TODO: confirm fields
-        RagDocumentVectorStore.allFieldsToExtract)
+        PsRagDocumentVectorStore.allFieldsToExtract)
             .withNearText({ concepts: ["case study"] })
             .withLimit(100)
             .do();
@@ -71,14 +71,14 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
     }
     async postDocument(document) {
         return new Promise((resolve, reject) => {
-            RagDocumentVectorStore.client.data
+            PsRagDocumentVectorStore.client.data
                 .creator()
                 .withClassName("RagDocument")
                 .withProperties(document)
                 .do()
                 .then((res) => {
                 this.logger.info(`Weaviate: Have saved document ${document.url}`);
-                resolve(res);
+                resolve(res.id);
             })
                 .catch((err) => {
                 reject(err);
@@ -87,7 +87,7 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
     }
     async updateDocument(id, documentData, quiet = false) {
         return new Promise((resolve, reject) => {
-            RagDocumentVectorStore.client.data
+            PsRagDocumentVectorStore.client.data
                 .merger()
                 .withId(id)
                 .withClassName("RagDocument")
@@ -106,7 +106,7 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
     }
     async getDocument(id) {
         return new Promise((resolve, reject) => {
-            RagDocumentVectorStore.client.data
+            PsRagDocumentVectorStore.client.data
                 .getterById()
                 .withId(id)
                 .withClassName("RagDocument")
@@ -126,7 +126,7 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
         const where = [];
         let results;
         try {
-            results = await RagDocumentVectorStore.client.graphql
+            results = await PsRagDocumentVectorStore.client.graphql
                 .get()
                 .withClassName("RagDocument")
                 .withNearText({ concepts: [query] })
@@ -135,12 +135,146 @@ export class RagDocumentVectorStore extends PolicySynthAgentBase {
                 operator: "And",
                 operands: where,
             })
-                .withFields(RagDocumentVectorStore.allFieldsToExtract)
+                .withFields(PsRagDocumentVectorStore.allFieldsToExtract)
                 .do();
         }
         catch (err) {
             throw err;
         }
         return results;
+    }
+    async searchChunksWithReferences(query) {
+        let results;
+        try {
+            results = await PsRagDocumentVectorStore.client.graphql
+                .get()
+                .withClassName("RagChunk")
+                .withNearText({ concepts: [query] })
+                .withLimit(25)
+                .withFields(`
+          title
+          chunkIndex
+          chapterIndex
+          documentIndex
+          mainExternalUrlFound
+          data
+          actualStartLine
+          startLine
+          actualEndLine
+          shortSummary
+          fullSummary
+          relevanceEloRating
+          qualityEloRating
+          substanceEloRating
+          uncompressedContent
+          compressedContent
+          importantContextChunkIndexes
+          metaDataFields
+          metaData
+          connectedChunks(where: {
+            path: ["relevanceEloRating"],
+            operator: GreaterThan,
+            valueInt: 950
+          }) {
+            title
+            chunkIndex
+            chapterIndex
+            documentIndex
+            mainExternalUrlFound
+            shortSummary
+            fullSummary
+            relevanceEloRating
+            qualityEloRating
+            substanceEloRating
+            uncompressedContent
+            compressedContent
+            importantContextChunkIndexes
+            metaDataFields
+            metaData
+          }
+          inChunk {
+            ... on RagChunk {
+              title
+              chunkIndex
+              chapterIndex
+              documentIndex
+              mainExternalUrlFound
+              shortSummary
+              fullSummary
+              relevanceEloRating
+              qualityEloRating
+              substanceEloRating
+              uncompressedContent
+              compressedContent
+              importantContextChunkIndexes
+              metaDataFields
+              metaData
+
+              inChunk {
+                ... on RagChunk {
+                  title
+                  chunkIndex
+                  chapterIndex
+                  documentIndex
+                }
+              }
+            }
+          }
+        `)
+                .do();
+            const enrichedChunks = [];
+            for (const chunk of results.data.Get.RagChunk) {
+                let contextChunks = [];
+                let characterCount = 0;
+                // Add the current chunk to the context
+                contextChunks.push(chunk);
+                characterCount += chunk.uncompressedContent.length;
+                // Add sibling chunks to the context
+                if (chunk.connectedChunks) {
+                    for (const sibling of chunk.connectedChunks) {
+                        if (characterCount + sibling.uncompressedContent.length <= 1000) {
+                            contextChunks.push(sibling);
+                            characterCount += sibling.uncompressedContent.length;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                }
+                // If character count is still less than 1000, add parent chunks with content
+                if (characterCount < 1000 && chunk.inChunk) {
+                    const parent = chunk.inChunk;
+                    if (parent.connectedChunks) {
+                        for (const parentSibling of parent.connectedChunks) {
+                            if (parentSibling.uncompressedContent &&
+                                characterCount + parentSibling.uncompressedContent.length <=
+                                    1000) {
+                                contextChunks.push(parentSibling);
+                                characterCount += parentSibling.uncompressedContent.length;
+                            }
+                            else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                enrichedChunks.push({
+                    ...chunk,
+                    subChunks: contextChunks,
+                });
+            }
+            // Sort the enrichedChunks based on chunkIndex
+            enrichedChunks.sort((a, b) => a.chunkIndex - b.chunkIndex);
+            return {
+                data: {
+                    Get: {
+                        RagChunk: enrichedChunks,
+                    },
+                },
+            };
+        }
+        catch (err) {
+            throw err;
+        }
     }
 }

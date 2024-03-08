@@ -18,7 +18,7 @@ import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 import { IngestionChunkRanker } from "./chunkRanker.js";
 import { IngestionDocumentRanker } from "./docRanker.js";
 import { DocumentClassifierAgent } from "./docClassifier.js";
-import { RagDocumentVectorStore } from "../vectorstore/ragDocument.js";
+import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
@@ -117,42 +117,40 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   async addDocumentsToWeaviate(
     allDocumentSourcesWithChunks: PsRagDocumentSource[]
   ) {
-    const documentStore = new RagDocumentVectorStore();
+    const documentStore = new PsRagDocumentVectorStore();
     const chunkStore = new PsRagChunkVectorStore();
 
     // Helper function to post a chunk and its sub-chunks recursively
-    const postChunkRecursively = async (
-      chunk: PsRagChunk,
-      documentId: string,
-      parentChunkId?: string
-    ) => {
-      const chunkId = (await chunkStore.postChunk(chunk)) as string;
+    const postChunkRecursively = async (chunk: PsRagChunk, documentId: string, parentChunkId?: string) => {
+      const chunkId = await chunkStore.postChunk(chunk) as string;
 
       // Add cross reference to the document
-      await chunkStore.addCrossReference(chunkId, "inDocument", documentId);
+      await chunkStore.addCrossReference(chunkId, 'inDocument', documentId);
 
       // Add cross reference to the parent chunk if provided
       if (parentChunkId) {
-        await chunkStore.addCrossReference(chunkId, "inChunk", parentChunkId);
+        await chunkStore.addCrossReference(chunkId, 'inChunk', parentChunkId);
       }
 
       if (chunk.subChunks) {
         const siblingChunkIds = [];
         for (const subChunk of chunk.subChunks) {
-          const subChunkId = await postChunkRecursively(
-            subChunk,
-            documentId,
-            chunkId
-          );
+          const subChunkId = await postChunkRecursively(subChunk, documentId, chunkId);
           siblingChunkIds.push(subChunkId);
         }
         // Add cross references for sibling chunks
         for (const siblingChunkId of siblingChunkIds) {
-          await chunkStore.addCrossReference(
-            chunkId,
-            "allSiblingChunks",
-            siblingChunkId
-          );
+          await chunkStore.addCrossReference(chunkId, 'allSiblingChunks', siblingChunkId);
+        }
+
+        // Add cross references for most relevant sibling chunks based on importantContextChunkIndexes
+        if (chunk.importantContextChunkIndexes) {
+          for (const index of chunk.importantContextChunkIndexes) {
+            const relevantSiblingChunkId = siblingChunkIds[index - 1];
+            if (relevantSiblingChunkId) {
+              await chunkStore.addCrossReference(chunkId, 'mostRelevantSiblingChunks', relevantSiblingChunkId);
+            }
+          }
         }
       }
 

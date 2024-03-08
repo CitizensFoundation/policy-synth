@@ -14,6 +14,8 @@ import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
 import { IngestionChunkRanker } from "./chunkRanker.js";
 import { IngestionDocumentRanker } from "./docRanker.js";
 import { DocumentClassifierAgent } from "./docClassifier.js";
+import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
+import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 export class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath;
     cachedFiles = [];
@@ -25,6 +27,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     chunkCompressor;
     chunkAnalysisAgent;
     docAnalysisAgent;
+    dataLayout;
     constructor(dataLayoutPath = "file://ingestion/dataLayout.json") {
         super();
         this.dataLayoutPath = dataLayoutPath;
@@ -43,9 +46,9 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     }
     async processDataLayout() {
         await this.loadFileMetadata(); // Load existing metadata to compare against
+        this.dataLayout = await this.readDataLayout();
         this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
         const downloadContent = false;
-        const dataLayout = await this.readDataLayout();
         if (downloadContent) {
             const browser = await puppeteer.launch({ headless: true });
             try {
@@ -54,11 +57,11 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
                 browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
                 await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
-                await this.downloadAndCache(dataLayout.documentUrls, false, browserPage);
+                await this.downloadAndCache(this.dataLayout.documentUrls, false, browserPage);
                 await this.saveFileMetadata();
                 const disableJsonUrls = true;
                 if (!disableJsonUrls) {
-                    await this.processJsonUrls(dataLayout.jsonUrls, browserPage);
+                    await this.processJsonUrls(this.dataLayout.jsonUrls, browserPage);
                     await this.saveFileMetadata();
                 }
             }
@@ -73,22 +76,74 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         console.log("Files for processing:", filesForProcessing);
         await this.processFiles(filesForProcessing);
         const allDocumentSources = this.getMetaDataForAllFiles();
-        await this.processAllSources(allDocumentSources, dataLayout);
+        await this.processAllSources(allDocumentSources);
     }
-    async processAllSources(allDocumentSources, dataLayout) {
+    async processAllSources(allDocumentSources) {
         // Filter out all document sources that don't have chunks
         const allDocumentSourcesWithChunks = allDocumentSources.filter((source) => source.chunks && source.chunks.length > 0);
+        await this.classifyDocuments(allDocumentSourcesWithChunks);
+        await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
+    }
+    async addDocumentsToWeaviate(allDocumentSourcesWithChunks) {
+        const documentStore = new PsRagDocumentVectorStore();
+        const chunkStore = new PsRagChunkVectorStore();
+        // Helper function to post a chunk and its sub-chunks recursively
+        const postChunkRecursively = async (chunk, documentId, parentChunkId) => {
+            const chunkId = await chunkStore.postChunk(chunk);
+            // Add cross reference to the document
+            await chunkStore.addCrossReference(chunkId, 'inDocument', documentId);
+            // Add cross reference to the parent chunk if provided
+            if (parentChunkId) {
+                await chunkStore.addCrossReference(chunkId, 'inChunk', parentChunkId);
+            }
+            if (chunk.subChunks) {
+                const siblingChunkIds = [];
+                for (const subChunk of chunk.subChunks) {
+                    const subChunkId = await postChunkRecursively(subChunk, documentId, chunkId);
+                    siblingChunkIds.push(subChunkId);
+                }
+                // Add cross references for sibling chunks
+                for (const siblingChunkId of siblingChunkIds) {
+                    await chunkStore.addCrossReference(chunkId, 'allSiblingChunks', siblingChunkId);
+                }
+                // Add cross references for most relevant sibling chunks based on importantContextChunkIndexes
+                if (chunk.importantContextChunkIndexes) {
+                    for (const index of chunk.importantContextChunkIndexes) {
+                        const relevantSiblingChunkId = siblingChunkIds[index - 1];
+                        if (relevantSiblingChunkId) {
+                            await chunkStore.addCrossReference(chunkId, 'mostRelevantSiblingChunks', relevantSiblingChunkId);
+                        }
+                    }
+                }
+            }
+            return chunkId;
+        };
+        for (const source of allDocumentSourcesWithChunks) {
+            try {
+                const documentId = await documentStore.postDocument(source);
+                if (source.chunks) {
+                    for (const chunk of source.chunks) {
+                        await postChunkRecursively(chunk, documentId);
+                    }
+                }
+            }
+            catch (error) {
+                console.error(`Failed to post document ${source.url}:`, error);
+            }
+        }
+    }
+    async classifyDocuments(allDocumentSourcesWithChunks) {
         console.log("Classifying all documents");
         const classifier = new DocumentClassifierAgent();
-        await classifier.classifyAllDocuments(allDocumentSourcesWithChunks, dataLayout);
+        await classifier.classifyAllDocuments(allDocumentSourcesWithChunks, this.dataLayout);
         const ranker = new IngestionDocumentRanker();
         console.log("Ranking by relevance");
         const relevanceRules = "Rank the two documents based on the relevance to the project";
-        await ranker.rankDocuments(allDocumentSourcesWithChunks, relevanceRules, dataLayout.aboutProject, "relevanceEloRating");
+        await ranker.rankDocuments(allDocumentSourcesWithChunks, relevanceRules, this.dataLayout.aboutProject, "relevanceEloRating");
         console.log("Ranking by substance");
         const substanceRules = "Rank the two documents based substance and completeness of the information";
-        await ranker.rankDocuments(allDocumentSourcesWithChunks, substanceRules, dataLayout.aboutProject, "substanceEloRating");
-        for (const category of dataLayout.categories) {
+        await ranker.rankDocuments(allDocumentSourcesWithChunks, substanceRules, this.dataLayout.aboutProject, "substanceEloRating");
+        for (const category of this.dataLayout.categories) {
             console.log(`Ranking documents in the ${category} category`);
             // Filter documents that fall into the current category
             const documentsInCategory = allDocumentSourcesWithChunks.filter((doc) => doc.primaryCategory === category || doc.secondaryCategory === category);
@@ -96,7 +151,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             const eloRatingFieldName = `${category.toLowerCase()}EloRating`;
             // Rank documents within the category
             const categoryRankingRules = `Rank the documents based on their relevance and substance within the ${category} category`;
-            await ranker.rankDocuments(documentsInCategory, categoryRankingRules, dataLayout.aboutProject, eloRatingFieldName);
+            await ranker.rankDocuments(documentsInCategory, categoryRankingRules, this.dataLayout.aboutProject, eloRatingFieldName);
         }
     }
     async processSource(source) {
@@ -116,7 +171,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                     console.error(`Metadata not found for filePath: ${filePath}`);
                     continue;
                 }
-                if (metadataEntry.url.indexOf("youtube") > -1 || metadataEntry.url.indexOf("youtu.be") > -1) {
+                if (metadataEntry.url.indexOf("youtube") > -1 ||
+                    metadataEntry.url.indexOf("youtu.be") > -1) {
                     console.log("Skipping youtube video");
                     continue;
                 }

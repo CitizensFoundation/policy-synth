@@ -1,7 +1,7 @@
 import weaviate from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import fs from "fs/promises";
-export class RagChunk extends PolicySynthAgentBase {
+export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract = "title chunkIndex chapterIndex documentIndex mainExternalUrlFound data \
       actualStartLine startLine actualEndLine shortSummary fullSummary \
       relevanceEloRating qualityEloRating substanceEloRating uncompressedContent \
@@ -22,7 +22,7 @@ export class RagChunk extends PolicySynthAgentBase {
             return;
         }
         try {
-            const res = await RagChunk.client.schema
+            const res = await PsRagChunkVectorStore.client.schema
                 .classCreator()
                 .withClass(classObj)
                 .do();
@@ -34,7 +34,7 @@ export class RagChunk extends PolicySynthAgentBase {
     }
     async showScheme() {
         try {
-            const res = await RagChunk.client.schema.getter().do();
+            const res = await PsRagChunkVectorStore.client.schema.getter().do();
             console.log(JSON.stringify(res, null, 2));
         }
         catch (err) {
@@ -43,7 +43,7 @@ export class RagChunk extends PolicySynthAgentBase {
     }
     async deleteScheme() {
         try {
-            const res = await RagChunk.client.schema
+            const res = await PsRagChunkVectorStore.client.schema
                 .classDeleter()
                 .withClassName("RagChunk")
                 .do();
@@ -54,10 +54,10 @@ export class RagChunk extends PolicySynthAgentBase {
         }
     }
     async testQuery() {
-        const res = await RagChunk.client.graphql
+        const res = await PsRagChunkVectorStore.client.graphql
             .get()
             .withClassName("RagChunk")
-            .withFields(RagChunk.allFieldsToExtract)
+            .withFields(PsRagChunkVectorStore.allFieldsToExtract)
             .withNearText({ concepts: ["specific concept"] })
             .withLimit(100)
             .do();
@@ -66,13 +66,30 @@ export class RagChunk extends PolicySynthAgentBase {
     }
     async postChunk(chunkData) {
         return new Promise((resolve, reject) => {
-            RagChunk.client.data
+            PsRagChunkVectorStore.client.data
                 .creator()
                 .withClassName("RagChunk")
                 .withProperties(chunkData)
                 .do()
                 .then((res) => {
                 this.logger.info(`Weaviate: Have saved chunk ${chunkData.title}`);
+                resolve(res.id);
+            })
+                .catch((err) => {
+                reject(err);
+            });
+        });
+    }
+    async addCrossReference(sourceId, propertyName, targetId) {
+        return new Promise((resolve, reject) => {
+            PsRagChunkVectorStore.client.data
+                .referenceCreator()
+                .withId(sourceId)
+                .withReferenceProperty(propertyName)
+                .withReference({ beacon: targetId })
+                .do()
+                .then((res) => {
+                this.logger.info(`Weaviate: Added cross reference from ${sourceId} to ${targetId} via ${propertyName}`);
                 resolve(res);
             })
                 .catch((err) => {
@@ -82,7 +99,7 @@ export class RagChunk extends PolicySynthAgentBase {
     }
     async updateChunk(id, chunkData, quiet = false) {
         return new Promise((resolve, reject) => {
-            RagChunk.client.data
+            PsRagChunkVectorStore.client.data
                 .merger()
                 .withId(id)
                 .withClassName("RagChunk")
@@ -101,7 +118,7 @@ export class RagChunk extends PolicySynthAgentBase {
     }
     async getChunk(id) {
         return new Promise((resolve, reject) => {
-            RagChunk.client.data
+            PsRagChunkVectorStore.client.data
                 .getterById()
                 .withId(id)
                 .withClassName("RagChunk")
@@ -119,12 +136,12 @@ export class RagChunk extends PolicySynthAgentBase {
     async searchChunks(query) {
         let results;
         try {
-            results = await RagChunk.client.graphql
+            results = await PsRagChunkVectorStore.client.graphql
                 .get()
                 .withClassName("RagChunk")
                 .withNearText({ concepts: [query] })
                 .withLimit(25)
-                .withFields(RagChunk.allFieldsToExtract)
+                .withFields(PsRagChunkVectorStore.allFieldsToExtract)
                 .do();
         }
         catch (err) {
@@ -135,7 +152,7 @@ export class RagChunk extends PolicySynthAgentBase {
     async searchChunksWithReferences(query, minRelevanceEloRating = 1000, minSubstanceEloRating = 920) {
         let results;
         try {
-            results = await RagChunk.client.graphql
+            results = await PsRagChunkVectorStore.client.graphql
                 .get()
                 .withClassName("RagChunk")
                 .withNearText({ concepts: [query] })

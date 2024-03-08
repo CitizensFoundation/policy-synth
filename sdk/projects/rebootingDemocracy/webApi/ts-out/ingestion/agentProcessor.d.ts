@@ -17,9 +17,12 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     chunkCompressor: IngestionChunkCompressorAgent;
     chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
     docAnalysisAgent: DocumentAnalyzerAgent;
+    dataLayout: PsIngestionDataLayout;
     constructor(dataLayoutPath?: string);
     processDataLayout(): Promise<void>;
-    processAllSources(allDocumentSources: PsRagDocumentSource[], dataLayout: PsIngestionDataLayout): Promise<void>;
+    processAllSources(allDocumentSources: PsRagDocumentSource[]): Promise<void>;
+    addDocumentsToWeaviate(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
+    classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
     processSource(source: PsRagDocumentSource): Promise<void>;
     processFiles(files: string[]): Promise<void>;
     aggregateChunkData: (chunks: LlmDocumentChunksStrategy[]) => string;
