@@ -140,7 +140,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             console.log(`Posted chunk ${chunkId} for document ${documentId}`);
             // Add cross reference to the document
             const documentBeacon = `weaviate://localhost/RagDocument/${documentId}`;
-            await chunkStore.addCrossReference(chunkId, "inDocument", documentBeacon, "RagDocument");
+            await chunkStore.addCrossReference(chunkId, "inDocument", documentBeacon, "RagDocumentChunk");
             // Add cross reference to the parent chunk if provided
             if (parentChunkId) {
                 const parentChunkBeacon = `weaviate://localhost/RagDocumentChunk/${parentChunkId}`;

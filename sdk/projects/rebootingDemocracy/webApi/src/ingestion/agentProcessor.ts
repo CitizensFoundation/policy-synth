@@ -204,7 +204,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         chunkId,
         "inDocument",
         documentBeacon,
-        "RagDocument"
+        "RagDocumentChunk"
       );
 
       // Add cross reference to the parent chunk if provided

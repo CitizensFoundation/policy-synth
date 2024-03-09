@@ -11,17 +11,6 @@
   },
   "properties": [
     {
-      "name": "inDocument",
-      "description": "The chunks that belong to this document",
-      "dataType": ["RagDocumentChunk"],
-      "moduleConfig": {
-        "text2vec-openai": {
-          "skip": true,
-          "vectorizePropertyName": false
-        }
-      }
-    },
-    {
       "name": "title",
       "description": "Title of the article",
       "dataType": ["text"],

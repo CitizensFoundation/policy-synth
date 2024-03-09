@@ -11,6 +11,17 @@
   },
   "properties": [
     {
+      "name": "inDocument",
+      "description": "The document that this chunk belongs to",
+      "dataType": ["RagDocument"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
       "name": "mostRelevantSiblingChunks",
       "description": "The identified most relevant sibling chunks of this chunk",
       "dataType": ["RagDocumentChunk"],
