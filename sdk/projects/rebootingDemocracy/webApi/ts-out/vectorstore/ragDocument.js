@@ -3,7 +3,7 @@ import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract = "title url lastModified size \
@@ -164,29 +164,21 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .withNearText({ concepts: [query] })
                 .withLimit(25)
                 .withFields(`
-          title
-          chunkIndex
-          chapterIndex
-          mainExternalUrlFound
-          data
-          actualStartLine
-          startLine
-          actualEndLine
-          shortSummary
-          fullSummary
-          relevanceEloRating
-          qualityEloRating
-          substanceEloRating
-          uncompressedContent
-          compressedContent
-          importantContextChunkIndexes
-          metaDataFields
-          metaData
-          allSiblingChunks(where: {
-            path: ["qualityEloRating"],
-            operator: GreaterThan,
-            valueInt: ${this.minQualityEloRatingForChunk}
-          }) {
+        title
+        chunkIndex
+        chapterIndex
+        mainExternalUrlFound
+        shortSummary
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        uncompressedContent
+        compressedContent
+        metaDataFields
+        metaData
+        allSiblingChunks {
+          ... on RagDocumentChunk {
             title
             chunkIndex
             chapterIndex
@@ -198,37 +190,36 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             substanceEloRating
             uncompressedContent
             compressedContent
-            importantContextChunkIndexes
             metaDataFields
             metaData
           }
-          inChunk {
-            ... on RagDocumentChunk {
-              title
-              chunkIndex
-              chapterIndex
-              mainExternalUrlFound
-              shortSummary
-              fullSummary
-              relevanceEloRating
-              qualityEloRating
-              substanceEloRating
-              uncompressedContent
-              compressedContent
-              importantContextChunkIndexes
-              metaDataFields
-              metaData
+        }
+        inChunk {
+          ... on RagDocumentChunk {
+            title
+            chunkIndex
+            chapterIndex
+            mainExternalUrlFound
+            shortSummary
+            fullSummary
+            relevanceEloRating
+            qualityEloRating
+            substanceEloRating
+            uncompressedContent
+            compressedContent
+            metaDataFields
+            metaData
 
-              inChunk {
-                ... on RagDocumentChunk {
-                  title
-                  chunkIndex
-                  chapterIndex
-                }
+            inChunk {
+              ... on RagDocumentChunk {
+                title
+                chunkIndex
+                chapterIndex
               }
             }
           }
-        `)
+        }
+      `)
                 .do();
             const ragDocumentsMap = new Map();
             for (const chunk of results.data.Get.RagDocumentChunk) {

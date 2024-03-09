@@ -5,7 +5,7 @@ import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -93,7 +93,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
   }
 
   async postDocument(document: PsRagDocumentSource): Promise<string> {
-    console.log(`Posting document ${JSON.stringify(document, null, 2)}`)
+    console.log(`Posting document ${JSON.stringify(document, null, 2)}`);
     return new Promise((resolve, reject) => {
       PsRagDocumentVectorStore.client.data
         .creator()
@@ -101,7 +101,9 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .withProperties(document as any)
         .do()
         .then((res) => {
-          this.logger.info(`Weaviate: Have saved document ${document.url} ${res.id}`);
+          this.logger.info(
+            `Weaviate: Have saved document ${document.url} ${res.id}`
+          );
           resolve(res.id!);
         })
         .catch((err) => {
@@ -192,29 +194,21 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .withLimit(25)
         .withFields(
           `
-          title
-          chunkIndex
-          chapterIndex
-          mainExternalUrlFound
-          data
-          actualStartLine
-          startLine
-          actualEndLine
-          shortSummary
-          fullSummary
-          relevanceEloRating
-          qualityEloRating
-          substanceEloRating
-          uncompressedContent
-          compressedContent
-          importantContextChunkIndexes
-          metaDataFields
-          metaData
-          allSiblingChunks(where: {
-            path: ["qualityEloRating"],
-            operator: GreaterThan,
-            valueInt: ${this.minQualityEloRatingForChunk}
-          }) {
+        title
+        chunkIndex
+        chapterIndex
+        mainExternalUrlFound
+        shortSummary
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        uncompressedContent
+        compressedContent
+        metaDataFields
+        metaData
+        allSiblingChunks {
+          ... on RagDocumentChunk {
             title
             chunkIndex
             chapterIndex
@@ -226,105 +220,104 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             substanceEloRating
             uncompressedContent
             compressedContent
-            importantContextChunkIndexes
             metaDataFields
             metaData
           }
-          inChunk {
-            ... on RagDocumentChunk {
-              title
-              chunkIndex
-              chapterIndex
-              mainExternalUrlFound
-              shortSummary
-              fullSummary
-              relevanceEloRating
-              qualityEloRating
-              substanceEloRating
-              uncompressedContent
-              compressedContent
-              importantContextChunkIndexes
-              metaDataFields
-              metaData
+        }
+        inChunk {
+          ... on RagDocumentChunk {
+            title
+            chunkIndex
+            chapterIndex
+            mainExternalUrlFound
+            shortSummary
+            fullSummary
+            relevanceEloRating
+            qualityEloRating
+            substanceEloRating
+            uncompressedContent
+            compressedContent
+            metaDataFields
+            metaData
 
-              inChunk {
-                ... on RagDocumentChunk {
-                  title
-                  chunkIndex
-                  chapterIndex
-                }
+            inChunk {
+              ... on RagDocumentChunk {
+                title
+                chunkIndex
+                chapterIndex
               }
             }
           }
-        `
+        }
+      `
         )
         .do();
 
-        const ragDocumentsMap: Map<string, PsRagDocumentSource> = new Map();
+      const ragDocumentsMap: Map<string, PsRagDocumentSource> = new Map();
 
-        for (const chunk of results.data.Get.RagDocumentChunk) {
-          if (chunk.inDocument) {
-            chunk.inDocument.chunks = [];
-            ragDocumentsMap.set(chunk.inDocument.id, chunk.inDocument);
-          }
+      for (const chunk of results.data.Get.RagDocumentChunk) {
+        if (chunk.inDocument) {
+          chunk.inDocument.chunks = [];
+          ragDocumentsMap.set(chunk.inDocument.id, chunk.inDocument);
         }
+      }
 
-        // Process each RagDocument with its associated chunks
-        for (const chunk of results.data.Get.RagDocumentChunk) {
-          if (chunk.inDocument) {
-            const ragDocument = ragDocumentsMap.get(chunk.inDocument.id);
-            if (ragDocument) {
-              const flattenedChunks: PsRagChunk[] = [];
-              const alwaysAddAllSiblings = true;
+      // Process each RagDocument with its associated chunks
+      for (const chunk of results.data.Get.RagDocumentChunk) {
+        if (chunk.inDocument) {
+          const ragDocument = ragDocumentsMap.get(chunk.inDocument.id);
+          if (ragDocument) {
+            const flattenedChunks: PsRagChunk[] = [];
+            const alwaysAddAllSiblings = true;
 
-              const collectRelevantChunks = (
-                chunk: PsRagChunk,
-                tokenCountText: string
-              ): void => {
-                flattenedChunks.push(chunk);
-                tokenCountText += chunk.compressedContent;
+            const collectRelevantChunks = (
+              chunk: PsRagChunk,
+              tokenCountText: string
+            ): void => {
+              flattenedChunks.push(chunk);
+              tokenCountText += chunk.compressedContent;
 
-                if (chunk.allSiblingChunks) {
-                  for (const sibling of chunk.allSiblingChunks) {
-                    if (
-                      alwaysAddAllSiblings ||
-                      this.getEstimateTokenLength(tokenCountText) +
-                        this.getEstimateTokenLength(sibling.compressedContent) <=
-                        this.maxChunkTokenLength
-                    ) {
-                      collectRelevantChunks(sibling, tokenCountText);
-                    } else {
-                      break;
-                    }
+              if (chunk.allSiblingChunks) {
+                for (const sibling of chunk.allSiblingChunks) {
+                  if (
+                    alwaysAddAllSiblings ||
+                    this.getEstimateTokenLength(tokenCountText) +
+                      this.getEstimateTokenLength(sibling.compressedContent) <=
+                      this.maxChunkTokenLength
+                  ) {
+                    collectRelevantChunks(sibling, tokenCountText);
+                  } else {
+                    break;
                   }
                 }
+              }
 
-                if (
-                  this.getEstimateTokenLength(tokenCountText) <
-                    this.maxChunkTokenLength &&
-                  chunk.inChunk
-                ) {
-                  collectRelevantChunks(chunk.inChunk, tokenCountText);
-                }
-              };
+              if (
+                this.getEstimateTokenLength(tokenCountText) <
+                  this.maxChunkTokenLength &&
+                chunk.inChunk
+              ) {
+                collectRelevantChunks(chunk.inChunk, tokenCountText);
+              }
+            };
 
-              collectRelevantChunks(chunk, "");
+            collectRelevantChunks(chunk, "");
 
-              // Sort the flattenedChunks based on chunkIndex
-              flattenedChunks.sort((a, b) => a.chunkIndex - b.chunkIndex);
+            // Sort the flattenedChunks based on chunkIndex
+            flattenedChunks.sort((a, b) => a.chunkIndex - b.chunkIndex);
 
-              ragDocument.chunks!.push(chunk);
-            } else {
-              this.logger.error(
-                `RagDocument ${chunk.inDocument.id} not found in map`
-              );
-            }
+            ragDocument.chunks!.push(chunk);
+          } else {
+            this.logger.error(
+              `RagDocument ${chunk.inDocument.id} not found in map`
+            );
           }
         }
-
-        return Array.from(ragDocumentsMap.values());
-      } catch (err) {
-        throw err;
       }
+
+      return Array.from(ragDocumentsMap.values());
+    } catch (err) {
+      throw err;
+    }
   }
 }

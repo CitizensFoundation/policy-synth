@@ -171,10 +171,6 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
           chunkIndex
           chapterIndex
           mainExternalUrlFound
-          data
-          actualStartLine
-          startLine
-          actualEndLine
           shortSummary
           fullSummary
           relevanceEloRating
@@ -182,10 +178,9 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
           substanceEloRating
           uncompressedContent
           compressedContent
-          importantContextChunkIndexes
           metaDataFields
           metaData
-          connectedChunks(where: {
+          mostRelevantSiblingChunks(where: {
             path: ["relevanceEloRating"],
             operator: GreaterThan,
             valueInt: ${minRelevanceEloRating}
@@ -194,10 +189,6 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
             chunkIndex
             chapterIndex
             mainExternalUrlFound
-            data
-            actualStartLine
-            startLine
-            actualEndLine
             shortSummary
             fullSummary
             relevanceEloRating
@@ -210,15 +201,11 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
             metaData
           }
           inChunk {
-            ... on RagChunk {
+            ... on RagDocumentChunk {
               title
               chunkIndex
               chapterIndex
               mainExternalUrlFound
-              data
-              actualStartLine
-              startLine
-              actualEndLine
               shortSummary
               fullSummary
               relevanceEloRating
@@ -231,7 +218,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
               metaData
 
               inChunk {
-                ... on RagChunk {
+                ... on RagDocumentChunk {
                   title
                   chunkIndex
                   chapterIndex
