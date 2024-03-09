@@ -116,6 +116,10 @@ interface PsRagChunk extends PsEloRateable {
   substanceEloRating?: number;
   uncompressedContent: string;
   compressedContent: string;
+  mostRelevantSiblingChunks?: PsRagChunk[];
+  allSiblingChunks?: PsRagChunk[];
+  inChunk?: PsRagChunk;
+  inDocument?: PsRagDocumentSource;
   subChunks?: PsRagChunk[];
   importantContextChunkIndexes: number[];
   metaDataFields?: string[];

@@ -99,6 +99,56 @@
       "dataType": ["number"]
     },
     {
+      "name": "category1EloRating",
+      "description": "Elo rating for category1",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category2EloRating",
+      "description": "Elo rating for category2",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category3EloRating",
+      "description": "Elo rating for category3",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category4EloRating",
+      "description": "Elo rating for category4",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category5EloRating",
+      "description": "Elo rating for category5",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category6EloRating",
+      "description": "Elo rating for category6",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category7EloRating",
+      "description": "Elo rating for category7",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category8EloRating",
+      "description": "Elo rating for category8",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category9EloRating",
+      "description": "Elo rating for category9",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category10EloRating",
+      "description": "Elo rating for category10",
+      "dataType": ["number"]
+    },
+    {
       "name": "uncompressedContent",
       "description": "Uncompressed content of the chunk",
       "dataType": ["text"]

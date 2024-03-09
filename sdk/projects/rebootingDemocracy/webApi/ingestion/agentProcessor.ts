@@ -121,26 +121,38 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     const chunkStore = new PsRagChunkVectorStore();
 
     // Helper function to post a chunk and its sub-chunks recursively
-    const postChunkRecursively = async (chunk: PsRagChunk, documentId: string, parentChunkId?: string) => {
-      const chunkId = await chunkStore.postChunk(chunk) as string;
+    const postChunkRecursively = async (
+      chunk: PsRagChunk,
+      documentId: string,
+      parentChunkId?: string
+    ) => {
+      const chunkId = (await chunkStore.postChunk(chunk)) as string;
 
       // Add cross reference to the document
-      await chunkStore.addCrossReference(chunkId, 'inDocument', documentId);
+      await chunkStore.addCrossReference(chunkId, "inDocument", documentId);
 
       // Add cross reference to the parent chunk if provided
       if (parentChunkId) {
-        await chunkStore.addCrossReference(chunkId, 'inChunk', parentChunkId);
+        await chunkStore.addCrossReference(chunkId, "inChunk", parentChunkId);
       }
 
       if (chunk.subChunks) {
         const siblingChunkIds = [];
         for (const subChunk of chunk.subChunks) {
-          const subChunkId = await postChunkRecursively(subChunk, documentId, chunkId);
+          const subChunkId = await postChunkRecursively(
+            subChunk,
+            documentId,
+            chunkId
+          );
           siblingChunkIds.push(subChunkId);
         }
         // Add cross references for sibling chunks
         for (const siblingChunkId of siblingChunkIds) {
-          await chunkStore.addCrossReference(chunkId, 'allSiblingChunks', siblingChunkId);
+          await chunkStore.addCrossReference(
+            chunkId,
+            "allSiblingChunks",
+            siblingChunkId
+          );
         }
 
         // Add cross references for most relevant sibling chunks based on importantContextChunkIndexes
@@ -148,7 +160,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           for (const index of chunk.importantContextChunkIndexes) {
             const relevantSiblingChunkId = siblingChunkIds[index - 1];
             if (relevantSiblingChunkId) {
-              await chunkStore.addCrossReference(chunkId, 'mostRelevantSiblingChunks', relevantSiblingChunkId);
+              await chunkStore.addCrossReference(
+                chunkId,
+                "mostRelevantSiblingChunks",
+                relevantSiblingChunkId
+              );
             }
           }
         }
@@ -203,6 +219,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       "substanceEloRating"
     );
 
+    let categoryIndex = 1;
+
     for (const category of this.dataLayout.categories) {
       console.log(`Ranking documents in the ${category} category`);
       // Filter documents that fall into the current category
@@ -212,7 +230,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       );
 
       // Define a dynamic ELO rating field name based on the category
-      const eloRatingFieldName = `${category.toLowerCase()}EloRating`;
+      const eloRatingFieldName = `category${categoryIndex}EloRating`;
 
       // Rank documents within the category
       const categoryRankingRules = `Rank the documents based on their relevance and substance within the ${category} category`;
@@ -222,6 +240,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         this.dataLayout.aboutProject,
         eloRatingFieldName
       );
+
+      categoryIndex++;
     }
   }
 
