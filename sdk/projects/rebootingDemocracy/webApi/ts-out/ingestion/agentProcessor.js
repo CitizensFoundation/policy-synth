@@ -81,8 +81,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     async processAllSources(allDocumentSources) {
         // Filter out all document sources that don't have chunks
         const allDocumentSourcesWithChunks = allDocumentSources.filter((source) => source.chunks && source.chunks.length > 0);
-        await this.classifyDocuments(allDocumentSourcesWithChunks);
-        //await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
+        //await this.classifyDocuments(allDocumentSourcesWithChunks);
+        await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
     }
     async addDocumentsToWeaviate(allDocumentSourcesWithChunks) {
         const documentStore = new PsRagDocumentVectorStore();

@@ -22,6 +22,7 @@ interface PsRagRoutingResponse {
 // Add cache for first the response keyed on the data hashes
 // So if user asks a similar question, we lookup in weaviate, and decide in the routing
 interface PsRagDocumentSource extends PsEloRateable {
+  id?: string;
   key: string;
   url: string;
   lastModified: string;
@@ -44,6 +45,8 @@ interface PsRagDocumentSource extends PsEloRateable {
   allOtherReferences: string[];
   allImageUrls: string[];
   documentDate: string;
+  relevanceEloRating?: number;
+  substanceEloRating?: number;
   primaryCategory?: string;
   secondaryCategory?: string;
   documentMetaData: { [key: string]: string };
@@ -100,6 +103,7 @@ interface LlmChunkAnalysisReponse {
 }
 
 interface PsRagChunk extends PsEloRateable {
+  id?: string;
   title: string;
   chunkIndex: number;
   chapterIndex: number;

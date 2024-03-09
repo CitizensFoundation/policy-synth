@@ -7,6 +7,6 @@ export declare class ChatController extends BaseController {
     constructor(wsClients: Map<string, WebSocket>);
     initializeRoutes(): Promise<void>;
     private getChatLog;
-    liveResearchChat: (req: express.Request, res: express.Response) => Promise<void>;
+    rebootDemocracyChat: (req: express.Request, res: express.Response) => Promise<void>;
 }
 //# sourceMappingURL=chatController.d.ts.map

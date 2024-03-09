@@ -2,6 +2,9 @@ import weaviate from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract = "title url lastModified size \
       cleanedDocument description shortDescription fullDescriptionOfAllContents \
@@ -23,7 +26,8 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     async addSchema() {
         let classObj;
         try {
-            const data = await fs.readFile("./schemas/RagDocument.json", "utf8");
+            const filePath = path.join(__dirname, "./schemas/RagDocument.json");
+            const data = await fs.readFile(filePath, "utf8");
             classObj = JSON.parse(data);
         }
         catch (err) {

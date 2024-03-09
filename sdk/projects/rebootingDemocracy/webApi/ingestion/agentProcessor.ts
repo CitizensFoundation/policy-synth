@@ -109,9 +109,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       (source) => source.chunks && source.chunks.length > 0
     );
 
-    await this.classifyDocuments(allDocumentSourcesWithChunks);
+    //await this.classifyDocuments(allDocumentSourcesWithChunks);
 
-    //await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
+    await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
   }
 
   async addDocumentsToWeaviate(

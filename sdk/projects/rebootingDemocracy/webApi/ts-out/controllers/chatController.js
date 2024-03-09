@@ -7,7 +7,7 @@ export class ChatController extends BaseController {
         this.initializeRoutes();
     }
     async initializeRoutes() {
-        this.router.put(this.path + "/", this.liveResearchChat);
+        this.router.put(this.path + "/", this.rebootDemocracyChat);
         this.router.get(this.path + "/:memoryId", this.getChatLog);
     }
     getChatLog = async (req, res) => {
@@ -38,7 +38,7 @@ export class ChatController extends BaseController {
             res.sendStatus(404);
         }
     };
-    liveResearchChat = async (req, res) => {
+    rebootDemocracyChat = async (req, res) => {
         const chatLog = req.body.chatLog;
         const wsClientId = req.body.wsClientId;
         const memoryId = req.body.memoryId;

@@ -1,12 +1,15 @@
 import weaviate from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract = "title chunkIndex chapterIndex documentIndex mainExternalUrlFound data \
       actualStartLine startLine actualEndLine shortSummary fullSummary \
       relevanceEloRating qualityEloRating substanceEloRating uncompressedContent \
       compressedContent subChunks importantContextChunkIndexes metaDataFields metaData\
-     _additional { id, distance }";
+     _additional { id, distance, certainty }";
     static client = weaviate.client({
         scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
         host: process.env.WEAVIATE_HOST || "localhost:8080",
@@ -14,7 +17,8 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     async addSchema() {
         let classObj;
         try {
-            const data = await fs.readFile("./schemas/RagChunk.json", "utf8");
+            const filePath = path.join(__dirname, "./schemas/RagChunk.json");
+            const data = await fs.readFile(filePath, "utf8");
             classObj = JSON.parse(data);
         }
         catch (err) {
@@ -149,7 +153,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
         }
         return results;
     }
-    async searchChunksWithReferences(query, minRelevanceEloRating = 1000, minSubstanceEloRating = 920) {
+    async searchChunksWithReferences(query, minRelevanceEloRating = 900, minSubstanceEloRating = 900) {
         let results;
         try {
             results = await PsRagChunkVectorStore.client.graphql

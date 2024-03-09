@@ -4,6 +4,10 @@ import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export class PsRagChunkVectorStore extends PolicySynthAgentBase {
   static allFieldsToExtract =
@@ -11,7 +15,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
       actualStartLine startLine actualEndLine shortSummary fullSummary \
       relevanceEloRating qualityEloRating substanceEloRating uncompressedContent \
       compressedContent subChunks importantContextChunkIndexes metaDataFields metaData\
-     _additional { id, distance }";
+     _additional { id, distance, certainty }";
   static client: WeaviateClient = weaviate.client({
     scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
     host: process.env.WEAVIATE_HOST || "localhost:8080",
@@ -20,7 +24,8 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
   async addSchema() {
     let classObj;
     try {
-      const data = await fs.readFile("./schemas/RagChunk.json", "utf8");
+      const filePath = path.join(__dirname, "./schemas/RagChunk.json");
+      const data = await fs.readFile(filePath, "utf8");
       classObj = JSON.parse(data);
     } catch (err) {
       console.error(`Error reading file from disk: ${err}`);
@@ -171,8 +176,8 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
 
   async searchChunksWithReferences(
     query: string,
-    minRelevanceEloRating = 1000,
-    minSubstanceEloRating = 920
+    minRelevanceEloRating = 900,
+    minSubstanceEloRating = 900
   ): Promise<PsRagChunkGraphQlResponse> {
     let results;
 

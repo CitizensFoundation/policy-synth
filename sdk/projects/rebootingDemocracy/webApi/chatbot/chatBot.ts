@@ -1,6 +1,7 @@
 import { PsBaseChatBot } from "@policysynth/api/base/chat/baseChatBot.js";
 
 import { PsRagRouter } from "./router.js";
+import { PsRagVectorSearch } from "./vectorSearch.js";
 
 export class RebootingDemocracyChatBot extends PsBaseChatBot {
   persistMemory = true;
@@ -51,9 +52,14 @@ Your thoughtful answer in markdown:
     const router = new PsRagRouter();
     const routingData = await router.getRoutingData(
       userLastMessage,
-      chatLogWithoutLastUserMessage.length > 0
-        ? JSON.stringify(chatLog, null, 2)
-        : undefined,
+      dataLayout
+    );
+
+    this.sendAgentStart("Searhing...");
+    const vectorSearch = new PsRagVectorSearch();
+    const searchContext = await vectorSearch.search(
+      userLastMessage,
+      routingData,
       dataLayout
     );
 
@@ -76,10 +82,7 @@ Your thoughtful answer in markdown:
 
     const userMessage = {
       role: "user",
-      content: this.mainStreamingUserPrompt(
-        userLastMessage,
-        "searchContext"
-      ),
+      content: this.mainStreamingUserPrompt(userLastMessage, searchContext),
     };
 
     messages.push(userMessage);

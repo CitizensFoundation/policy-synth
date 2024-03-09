@@ -21,6 +21,7 @@
     "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
     "copyInLocalApi": "cp -R ../../../../api/ts-out/* ./node_modules/@policysynth/api/;cp ../../../../api/src/*.d.ts ./node_modules/@policysynth/api/;",
     "copyInLocalDeps": "npm run copyInLocalAgents;npm run copyInLocalApi;",
+    "createWeaviateRagDocument": "npm run build;cp vectorstore/schemas/* ts-out/vectorstore/schemas/;node ts-out/vectorstore/schemas/createRagDocument.js",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk ./ts-out/server.js",
     "build": "tsc --project ./ --outDir ./ts-out",
     "prepublishOnly": "npm run build"

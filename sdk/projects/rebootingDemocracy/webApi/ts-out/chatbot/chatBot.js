@@ -1,5 +1,6 @@
 import { PsBaseChatBot } from "@policysynth/api/base/chat/baseChatBot.js";
 import { PsRagRouter } from "./router.js";
+import { PsRagVectorSearch } from "./vectorSearch.js";
 export class RebootingDemocracyChatBot extends PsBaseChatBot {
     persistMemory = true;
     mainSreamingSystemPrompt = `You are the Rebooting Democracy chatbot.
@@ -29,9 +30,10 @@ Your thoughtful answer in markdown:
         console.log(`chatLogWithoutLastUserMessage: ${JSON.stringify(chatLogWithoutLastUserMessage, null, 2)}`);
         this.sendAgentStart("Thinking...");
         const router = new PsRagRouter();
-        const routingData = await router.getRoutingData(userLastMessage, chatLogWithoutLastUserMessage.length > 0
-            ? JSON.stringify(chatLog, null, 2)
-            : undefined, dataLayout);
+        const routingData = await router.getRoutingData(userLastMessage, dataLayout);
+        this.sendAgentStart("Searhing...");
+        const vectorSearch = new PsRagVectorSearch();
+        const searchContext = await vectorSearch.search(userLastMessage, routingData, dataLayout);
         console.log("In Rebooting Democracy conversation");
         let messages = chatLogWithoutLastUserMessage.map((message) => {
             return {
@@ -46,7 +48,7 @@ Your thoughtful answer in markdown:
         messages.unshift(systemMessage);
         const userMessage = {
             role: "user",
-            content: this.mainStreamingUserPrompt(userLastMessage, "searchContext"),
+            content: this.mainStreamingUserPrompt(userLastMessage, searchContext),
         };
         messages.push(userMessage);
         console.log(`Messages to chatbot: ${JSON.stringify(messages, null, 2)}`);
