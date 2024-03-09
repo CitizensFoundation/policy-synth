@@ -20,6 +20,7 @@ import { IngestionDocumentRanker } from "./docRanker.js";
 import { DocumentClassifierAgent } from "./docClassifier.js";
 import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
+import { isArray } from "util";
 
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
@@ -114,6 +115,57 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
   }
 
+  stringifyIfObjectOrArray(value: any): string {
+    if (value && (typeof value === "object" || Array.isArray(value))) {
+      return JSON.stringify(value);
+    }
+    return value;
+  }
+
+  transformChunkForVectorstore(chunk: PsRagChunk) {
+    const newChunk = JSON.parse(JSON.stringify(chunk));
+    newChunk.subChunks = undefined;
+    newChunk.data = undefined;
+    newChunk.actualEndLine = undefined;
+    newChunk.actualStartLine = undefined;
+    newChunk.startLine = undefined;
+    newChunk.importantContextChunkIndexes = undefined;
+    newChunk.metaDataFields = this.stringifyIfObjectOrArray(
+      newChunk.metaDataFields
+    );
+    newChunk.metaData = this.stringifyIfObjectOrArray(newChunk.metaData);
+    return newChunk;
+  }
+
+  transformDocumentSourceForVectorstore(source: PsRagDocumentSource) {
+    const newSource = JSON.parse(JSON.stringify(source));
+    //TODO: Make sure we have dates
+    const date = new Date(newSource.lastModifiedOnServer || newSource.documentDate);
+    newSource.lastModified = date.toISOString();
+
+    newSource.lastModifiedOnServer = undefined as any;
+    newSource.documentData = undefined as any;
+    newSource.fileId = undefined as any;
+    newSource.cleanedDocument = undefined as any;
+    newSource.cachedChunkStrategy = undefined;
+    newSource.filePath = undefined as any;
+    newSource.chunks = undefined as any;
+    newSource.allReferencesWithUrls = this.stringifyIfObjectOrArray(
+      newSource.allReferencesWithUrls
+    );
+    newSource.allOtherReferences = this.stringifyIfObjectOrArray(
+      newSource.allOtherReferences
+    );
+    newSource.allImageUrls = this.stringifyIfObjectOrArray(
+      newSource.allImageUrls
+    );
+    newSource.documentMetaData = this.stringifyIfObjectOrArray(
+      newSource.documentMetaData
+    );
+
+    return newSource;
+  }
+
   async addDocumentsToWeaviate(
     allDocumentSourcesWithChunks: PsRagDocumentSource[]
   ) {
@@ -126,7 +178,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       documentId: string,
       parentChunkId?: string
     ) => {
-      const chunkId = (await chunkStore.postChunk(chunk)) as string;
+      const chunkId = (await chunkStore.postChunk(this.transformChunkForVectorstore(chunk))) as string;
+      console.log(`Posted chunk ${chunkId} for document ${documentId}`);
 
       // Add cross reference to the document
       await chunkStore.addCrossReference(chunkId, "inDocument", documentId);
@@ -175,7 +228,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     for (const source of allDocumentSourcesWithChunks) {
       try {
-        const documentId = await documentStore.postDocument(source);
+        const documentId = await documentStore.postDocument(
+          this.transformDocumentSourceForVectorstore(source)
+        );
 
         if (source.chunks) {
           for (const chunk of source.chunks) {
@@ -238,7 +293,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       // Define a dynamic ELO rating field name based on the category
       const eloRatingFieldName = `category${categoryIndex}EloRating`;
 
-      console.log(`Ranking by relevance within the ${category} category (${eloRatingFieldName})`);
+      console.log(
+        `Ranking by relevance within the ${category} category (${eloRatingFieldName})`
+      );
 
       // Rank documents within the category
       const categoryRankingRules = `Rank the documents based on their relevance and substance within the ${category} category`;
@@ -443,8 +500,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await this.saveFileMetadata();
 
     const metadata = this.fileMetadata[fileId] || {};
-
-    metadata.weaviteId = weaviateDocumentId;
 
     let rechunk = false;
 

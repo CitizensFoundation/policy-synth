@@ -100,7 +100,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .withProperties(document as any)
         .do()
         .then((res) => {
-          this.logger.info(`Weaviate: Have saved document ${document.url}`);
+          this.logger.info(`Weaviate: Have saved document ${document.url} ${res.id}`);
           resolve(res.id!);
         })
         .catch((err) => {
@@ -194,7 +194,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
           title
           chunkIndex
           chapterIndex
-          documentIndex
           mainExternalUrlFound
           data
           actualStartLine
@@ -218,7 +217,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             title
             chunkIndex
             chapterIndex
-            documentIndex
             mainExternalUrlFound
             shortSummary
             fullSummary
@@ -236,7 +234,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
               title
               chunkIndex
               chapterIndex
-              documentIndex
               mainExternalUrlFound
               shortSummary
               fullSummary
@@ -254,7 +251,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                   title
                   chunkIndex
                   chapterIndex
-                  documentIndex
                 }
               }
             }

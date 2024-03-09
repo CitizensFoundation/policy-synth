@@ -36,7 +36,6 @@ interface PsRagDocumentSource extends PsEloRateable {
   fullDescriptionOfAllContents?: string;
   compressedFullDescriptionOfAllContents?: string;
   title?: string;
-  weaviteId?: string;
   cachedChunkStrategy?: LlmDocumentChunksStrategy[];
   filePath: string;
   contentType: string;
@@ -107,7 +106,6 @@ interface PsRagChunk extends PsEloRateable {
   title: string;
   chunkIndex: number;
   chapterIndex: number;
-  documentIndex?: string;
   mainExternalUrlFound: string;
   data?: string;
   actualStartLine?: number;

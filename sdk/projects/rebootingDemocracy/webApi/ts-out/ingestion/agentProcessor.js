@@ -84,12 +84,49 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         //await this.classifyDocuments(allDocumentSourcesWithChunks);
         await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
     }
+    stringifyIfObjectOrArray(value) {
+        if (value && (typeof value === "object" || Array.isArray(value))) {
+            return JSON.stringify(value);
+        }
+        return value;
+    }
+    transformChunkForVectorstore(chunk) {
+        const newChunk = JSON.parse(JSON.stringify(chunk));
+        newChunk.subChunks = undefined;
+        newChunk.data = undefined;
+        newChunk.actualEndLine = undefined;
+        newChunk.actualStartLine = undefined;
+        newChunk.startLine = undefined;
+        newChunk.importantContextChunkIndexes = undefined;
+        newChunk.metaDataFields = this.stringifyIfObjectOrArray(newChunk.metaDataFields);
+        newChunk.metaData = this.stringifyIfObjectOrArray(newChunk.metaData);
+        return newChunk;
+    }
+    transformDocumentSourceForVectorstore(source) {
+        const newSource = JSON.parse(JSON.stringify(source));
+        //TODO: Make sure we have dates
+        const date = new Date(newSource.lastModifiedOnServer || newSource.documentDate);
+        newSource.lastModified = date.toISOString();
+        newSource.lastModifiedOnServer = undefined;
+        newSource.documentData = undefined;
+        newSource.fileId = undefined;
+        newSource.cleanedDocument = undefined;
+        newSource.cachedChunkStrategy = undefined;
+        newSource.filePath = undefined;
+        newSource.chunks = undefined;
+        newSource.allReferencesWithUrls = this.stringifyIfObjectOrArray(newSource.allReferencesWithUrls);
+        newSource.allOtherReferences = this.stringifyIfObjectOrArray(newSource.allOtherReferences);
+        newSource.allImageUrls = this.stringifyIfObjectOrArray(newSource.allImageUrls);
+        newSource.documentMetaData = this.stringifyIfObjectOrArray(newSource.documentMetaData);
+        return newSource;
+    }
     async addDocumentsToWeaviate(allDocumentSourcesWithChunks) {
         const documentStore = new PsRagDocumentVectorStore();
         const chunkStore = new PsRagChunkVectorStore();
         // Helper function to post a chunk and its sub-chunks recursively
         const postChunkRecursively = async (chunk, documentId, parentChunkId) => {
-            const chunkId = (await chunkStore.postChunk(chunk));
+            const chunkId = (await chunkStore.postChunk(this.transformChunkForVectorstore(chunk)));
+            console.log(`Posted chunk ${chunkId} for document ${documentId}`);
             // Add cross reference to the document
             await chunkStore.addCrossReference(chunkId, "inDocument", documentId);
             // Add cross reference to the parent chunk if provided
@@ -120,7 +157,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         };
         for (const source of allDocumentSourcesWithChunks) {
             try {
-                const documentId = await documentStore.postDocument(source);
+                const documentId = await documentStore.postDocument(this.transformDocumentSourceForVectorstore(source));
                 if (source.chunks) {
                     for (const chunk of source.chunks) {
                         await postChunkRecursively(chunk, documentId);
@@ -291,7 +328,6 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
         await this.saveFileMetadata();
         const metadata = this.fileMetadata[fileId] || {};
-        metadata.weaviteId = weaviateDocumentId;
         let rechunk = false;
         if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
             metadata.chunks = [];

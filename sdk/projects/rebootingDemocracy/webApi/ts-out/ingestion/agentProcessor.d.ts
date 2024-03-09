@@ -21,6 +21,9 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     constructor(dataLayoutPath?: string);
     processDataLayout(): Promise<void>;
     processAllSources(allDocumentSources: PsRagDocumentSource[]): Promise<void>;
+    stringifyIfObjectOrArray(value: any): string;
+    transformChunkForVectorstore(chunk: PsRagChunk): any;
+    transformDocumentSourceForVectorstore(source: PsRagDocumentSource): any;
     addDocumentsToWeaviate(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
     classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
     processSource(source: PsRagDocumentSource): Promise<void>;

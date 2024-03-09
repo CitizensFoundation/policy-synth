@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class PsRagChunkVectorStore extends PolicySynthAgentBase {
-    static allFieldsToExtract = "title chunkIndex chapterIndex documentIndex mainExternalUrlFound data \
+    static allFieldsToExtract = "title chunkIndex chapterIndex mainExternalUrlFound data \
       actualStartLine startLine actualEndLine shortSummary fullSummary \
       relevanceEloRating qualityEloRating substanceEloRating uncompressedContent \
       compressedContent subChunks importantContextChunkIndexes metaDataFields metaData\
@@ -165,7 +165,6 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
           title
           chunkIndex
           chapterIndex
-          documentIndex
           mainExternalUrlFound
           data
           actualStartLine
@@ -189,7 +188,6 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
             title
             chunkIndex
             chapterIndex
-            documentIndex
             mainExternalUrlFound
             data
             actualStartLine
@@ -211,7 +209,6 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
               title
               chunkIndex
               chapterIndex
-              documentIndex
               mainExternalUrlFound
               data
               actualStartLine
@@ -233,7 +230,6 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
                   title
                   chunkIndex
                   chapterIndex
-                  documentIndex
                 }
               }
             }

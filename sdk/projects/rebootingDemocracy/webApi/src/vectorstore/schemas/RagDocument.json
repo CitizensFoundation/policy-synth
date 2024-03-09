@@ -87,7 +87,7 @@
     {
       "name": "allReferencesWithUrls",
       "description": "All references with URLs in the document",
-      "dataType": ["text[]"],
+      "dataType": ["text"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true
@@ -97,7 +97,7 @@
     {
       "name": "allOtherReferences",
       "description": "All other references in the document",
-      "dataType": ["text[]"],
+      "dataType": ["text"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true
@@ -127,7 +127,7 @@
     {
       "name": "allImageUrls",
       "description": "All image URLs in the document",
-      "dataType": ["text[]"],
+      "dataType": ["text"],
       "moduleConfig": {
         "text2vec-openai": {
           "skip": true
