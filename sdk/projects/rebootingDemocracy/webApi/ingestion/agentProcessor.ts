@@ -95,7 +95,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const filesForProcessing = this.getFilesForProcessing(true);
     console.log("Files for processing:", filesForProcessing);
-    await this.processFiles(filesForProcessing);
+    //await this.processFiles(filesForProcessing);
 
     const allDocumentSources = this.getMetaDataForAllFiles();
     await this.processAllSources(allDocumentSources);
@@ -111,7 +111,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     await this.classifyDocuments(allDocumentSourcesWithChunks);
 
-    await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
+    //await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
   }
 
   async addDocumentsToWeaviate(
@@ -196,6 +196,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       this.dataLayout
     );
 
+    await this.saveFileMetadata();
+
     const ranker = new IngestionDocumentRanker();
 
     console.log("Ranking by relevance");
@@ -208,6 +210,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       "relevanceEloRating"
     );
 
+    await this.saveFileMetadata();
+
     console.log("Ranking by substance");
     const substanceRules =
       "Rank the two documents based substance and completeness of the information";
@@ -218,6 +222,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       this.dataLayout.aboutProject,
       "substanceEloRating"
     );
+
+    await this.saveFileMetadata();
 
     let categoryIndex = 1;
 
@@ -232,6 +238,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       // Define a dynamic ELO rating field name based on the category
       const eloRatingFieldName = `category${categoryIndex}EloRating`;
 
+      console.log(`Ranking by relevance within the ${category} category (${eloRatingFieldName})`);
+
       // Rank documents within the category
       const categoryRankingRules = `Rank the documents based on their relevance and substance within the ${category} category`;
       await ranker.rankDocuments(
@@ -243,6 +251,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
       categoryIndex++;
     }
+
+    await this.saveFileMetadata();
   }
 
   async processSource(source: PsRagDocumentSource) {

@@ -65,10 +65,11 @@ Your JSON classification:
     dataLayout: PsIngestionDataLayout
   ): Promise<void> {
     for (let s=0;s<documentSources.length;s++) {
+      console.log(`Classifying ${s} of ${documentSources.length}`);
       const source = documentSources[s];
       await this.classify(source, dataLayout);
       console.log(
-        `Classified ${source.title}: ${source.primaryCategory}, ${source.secondaryCategory}`
+        `Classified ${source.title}: ${source.primaryCategory} ${source.secondaryCategory}`
       );
     }
   }

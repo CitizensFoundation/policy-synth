@@ -13,6 +13,13 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
         host: process.env.WEAVIATE_HOST || "localhost:8080",
     });
+    roughFastWordTokenRatio = 1.25;
+    maxChunkTokenLength = 500;
+    minQualityEloRatingForChunk = 920;
+    getEstimateTokenLength(data) {
+        const words = data.split(" ");
+        return words.length * this.roughFastWordTokenRatio;
+    }
     async addSchema() {
         let classObj;
         try {
@@ -171,10 +178,10 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
           importantContextChunkIndexes
           metaDataFields
           metaData
-          connectedChunks(where: {
-            path: ["relevanceEloRating"],
+          allSiblingChunks(where: {
+            path: ["qualityEloRating"],
             operator: GreaterThan,
-            valueInt: 950
+            valueInt: ${this.minQualityEloRatingForChunk}
           }) {
             title
             chunkIndex
@@ -222,56 +229,53 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
           }
         `)
                 .do();
-            const enrichedChunks = [];
+            const ragDocumentsMap = new Map();
             for (const chunk of results.data.Get.RagChunk) {
-                let contextChunks = [];
-                let characterCount = 0;
-                // Add the current chunk to the context
-                contextChunks.push(chunk);
-                characterCount += chunk.uncompressedContent.length;
-                // Add sibling chunks to the context
-                if (chunk.connectedChunks) {
-                    for (const sibling of chunk.connectedChunks) {
-                        if (characterCount + sibling.uncompressedContent.length <= 1000) {
-                            contextChunks.push(sibling);
-                            characterCount += sibling.uncompressedContent.length;
-                        }
-                        else {
-                            break;
-                        }
-                    }
+                if (chunk.inDocument) {
+                    chunk.inDocument.chunks = [];
+                    ragDocumentsMap.set(chunk.inDocument.id, chunk.inDocument);
                 }
-                // If character count is still less than 1000, add parent chunks with content
-                if (characterCount < 1000 && chunk.inChunk) {
-                    const parent = chunk.inChunk;
-                    if (parent.connectedChunks) {
-                        for (const parentSibling of parent.connectedChunks) {
-                            if (parentSibling.uncompressedContent &&
-                                characterCount + parentSibling.uncompressedContent.length <=
-                                    1000) {
-                                contextChunks.push(parentSibling);
-                                characterCount += parentSibling.uncompressedContent.length;
-                            }
-                            else {
-                                break;
-                            }
-                        }
-                    }
-                }
-                enrichedChunks.push({
-                    ...chunk,
-                    subChunks: contextChunks,
-                });
             }
-            // Sort the enrichedChunks based on chunkIndex
-            enrichedChunks.sort((a, b) => a.chunkIndex - b.chunkIndex);
-            return {
-                data: {
-                    Get: {
-                        RagChunk: enrichedChunks,
-                    },
-                },
-            };
+            // Process each RagDocument with its associated chunks
+            for (const chunk of results.data.Get.RagChunk) {
+                if (chunk.inDocument) {
+                    const ragDocument = ragDocumentsMap.get(chunk.inDocument.id);
+                    if (ragDocument) {
+                        const flattenedChunks = [];
+                        const alwaysAddAllSiblings = true;
+                        const collectRelevantChunks = (chunk, tokenCountText) => {
+                            flattenedChunks.push(chunk);
+                            tokenCountText += chunk.compressedContent;
+                            if (chunk.allSiblingChunks) {
+                                for (const sibling of chunk.allSiblingChunks) {
+                                    if (alwaysAddAllSiblings ||
+                                        this.getEstimateTokenLength(tokenCountText) +
+                                            this.getEstimateTokenLength(sibling.compressedContent) <=
+                                            this.maxChunkTokenLength) {
+                                        collectRelevantChunks(sibling, tokenCountText);
+                                    }
+                                    else {
+                                        break;
+                                    }
+                                }
+                            }
+                            if (this.getEstimateTokenLength(tokenCountText) <
+                                this.maxChunkTokenLength &&
+                                chunk.inChunk) {
+                                collectRelevantChunks(chunk.inChunk, tokenCountText);
+                            }
+                        };
+                        collectRelevantChunks(chunk, "");
+                        // Sort the flattenedChunks based on chunkIndex
+                        flattenedChunks.sort((a, b) => a.chunkIndex - b.chunkIndex);
+                        ragDocument.chunks.push(chunk);
+                    }
+                    else {
+                        this.logger.error(`RagDocument ${chunk.inDocument.id} not found in map`);
+                    }
+                }
+            }
+            return Array.from(ragDocumentsMap.values());
         }
         catch (err) {
             throw err;

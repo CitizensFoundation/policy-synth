@@ -74,7 +74,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         const filesForProcessing = this.getFilesForProcessing(true);
         console.log("Files for processing:", filesForProcessing);
-        await this.processFiles(filesForProcessing);
+        //await this.processFiles(filesForProcessing);
         const allDocumentSources = this.getMetaDataForAllFiles();
         await this.processAllSources(allDocumentSources);
     }
@@ -82,19 +82,19 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         // Filter out all document sources that don't have chunks
         const allDocumentSourcesWithChunks = allDocumentSources.filter((source) => source.chunks && source.chunks.length > 0);
         await this.classifyDocuments(allDocumentSourcesWithChunks);
-        await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
+        //await this.addDocumentsToWeaviate(allDocumentSourcesWithChunks);
     }
     async addDocumentsToWeaviate(allDocumentSourcesWithChunks) {
         const documentStore = new PsRagDocumentVectorStore();
         const chunkStore = new PsRagChunkVectorStore();
         // Helper function to post a chunk and its sub-chunks recursively
         const postChunkRecursively = async (chunk, documentId, parentChunkId) => {
-            const chunkId = await chunkStore.postChunk(chunk);
+            const chunkId = (await chunkStore.postChunk(chunk));
             // Add cross reference to the document
-            await chunkStore.addCrossReference(chunkId, 'inDocument', documentId);
+            await chunkStore.addCrossReference(chunkId, "inDocument", documentId);
             // Add cross reference to the parent chunk if provided
             if (parentChunkId) {
-                await chunkStore.addCrossReference(chunkId, 'inChunk', parentChunkId);
+                await chunkStore.addCrossReference(chunkId, "inChunk", parentChunkId);
             }
             if (chunk.subChunks) {
                 const siblingChunkIds = [];
@@ -104,14 +104,14 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
                 // Add cross references for sibling chunks
                 for (const siblingChunkId of siblingChunkIds) {
-                    await chunkStore.addCrossReference(chunkId, 'allSiblingChunks', siblingChunkId);
+                    await chunkStore.addCrossReference(chunkId, "allSiblingChunks", siblingChunkId);
                 }
                 // Add cross references for most relevant sibling chunks based on importantContextChunkIndexes
                 if (chunk.importantContextChunkIndexes) {
                     for (const index of chunk.importantContextChunkIndexes) {
                         const relevantSiblingChunkId = siblingChunkIds[index - 1];
                         if (relevantSiblingChunkId) {
-                            await chunkStore.addCrossReference(chunkId, 'mostRelevantSiblingChunks', relevantSiblingChunkId);
+                            await chunkStore.addCrossReference(chunkId, "mostRelevantSiblingChunks", relevantSiblingChunkId);
                         }
                     }
                 }
@@ -136,23 +136,30 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         console.log("Classifying all documents");
         const classifier = new DocumentClassifierAgent();
         await classifier.classifyAllDocuments(allDocumentSourcesWithChunks, this.dataLayout);
+        await this.saveFileMetadata();
         const ranker = new IngestionDocumentRanker();
         console.log("Ranking by relevance");
         const relevanceRules = "Rank the two documents based on the relevance to the project";
         await ranker.rankDocuments(allDocumentSourcesWithChunks, relevanceRules, this.dataLayout.aboutProject, "relevanceEloRating");
+        await this.saveFileMetadata();
         console.log("Ranking by substance");
         const substanceRules = "Rank the two documents based substance and completeness of the information";
         await ranker.rankDocuments(allDocumentSourcesWithChunks, substanceRules, this.dataLayout.aboutProject, "substanceEloRating");
+        await this.saveFileMetadata();
+        let categoryIndex = 1;
         for (const category of this.dataLayout.categories) {
             console.log(`Ranking documents in the ${category} category`);
             // Filter documents that fall into the current category
             const documentsInCategory = allDocumentSourcesWithChunks.filter((doc) => doc.primaryCategory === category || doc.secondaryCategory === category);
             // Define a dynamic ELO rating field name based on the category
-            const eloRatingFieldName = `${category.toLowerCase()}EloRating`;
+            const eloRatingFieldName = `category${categoryIndex}EloRating`;
+            console.log(`Ranking by relevance within the ${category} category (${eloRatingFieldName})`);
             // Rank documents within the category
             const categoryRankingRules = `Rank the documents based on their relevance and substance within the ${category} category`;
             await ranker.rankDocuments(documentsInCategory, categoryRankingRules, this.dataLayout.aboutProject, eloRatingFieldName);
+            categoryIndex++;
         }
+        await this.saveFileMetadata();
     }
     async processSource(source) {
         const fileId = source.fileId;

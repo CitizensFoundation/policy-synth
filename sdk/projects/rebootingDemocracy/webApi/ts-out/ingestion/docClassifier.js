@@ -38,9 +38,10 @@ Your JSON classification:
     }
     async classifyAllDocuments(documentSources, dataLayout) {
         for (let s = 0; s < documentSources.length; s++) {
+            console.log(`Classifying ${s} of ${documentSources.length}`);
             const source = documentSources[s];
             await this.classify(source, dataLayout);
-            console.log(`Classified ${source.title}: ${source.primaryCategory}, ${source.secondaryCategory}`);
+            console.log(`Classified ${source.title}: ${source.primaryCategory} ${source.secondaryCategory}`);
         }
     }
 }
