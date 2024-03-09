@@ -81,6 +81,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         return res;
     }
     async postDocument(document) {
+        //console.log(`Posting document ${JSON.stringify(document, null, 2)}`)
         return new Promise((resolve, reject) => {
             PsRagDocumentVectorStore.client.data
                 .creator()

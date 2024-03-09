@@ -97,7 +97,8 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
   async addCrossReference(
     sourceId: string,
     propertyName: string,
-    targetId: string
+    targetId: string,
+    targetClassName: string
   ) {
     return new Promise((resolve, reject) => {
       PsRagChunkVectorStore.client.data
@@ -105,6 +106,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
         .withId(sourceId)
         .withReferenceProperty(propertyName)
         .withReference({ beacon: targetId })
+        .withClassName(targetClassName)
         .do()
         .then((res) => {
           this.logger.info(

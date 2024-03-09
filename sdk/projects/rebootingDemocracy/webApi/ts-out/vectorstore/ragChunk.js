@@ -84,13 +84,14 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
             });
         });
     }
-    async addCrossReference(sourceId, propertyName, targetId) {
+    async addCrossReference(sourceId, propertyName, targetId, targetClassName) {
         return new Promise((resolve, reject) => {
             PsRagChunkVectorStore.client.data
                 .referenceCreator()
                 .withId(sourceId)
                 .withReferenceProperty(propertyName)
                 .withReference({ beacon: targetId })
+                .withClassName(targetClassName)
                 .do()
                 .then((res) => {
                 this.logger.info(`Weaviate: Added cross reference from ${sourceId} to ${targetId} via ${propertyName}`);

@@ -124,6 +124,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   transformChunkForVectorstore(chunk: PsRagChunk) {
     const newChunk = JSON.parse(JSON.stringify(chunk));
+    if (newChunk.subChunks && newChunk.subChunks.length > 0) {
+      newChunk.uncompressedContent = undefined;
+      newChunk.compressedContent = undefined;
+    }
     newChunk.subChunks = undefined;
     newChunk.data = undefined;
     newChunk.actualEndLine = undefined;
@@ -139,9 +143,20 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   transformDocumentSourceForVectorstore(source: PsRagDocumentSource) {
     const newSource = JSON.parse(JSON.stringify(source));
+
     //TODO: Make sure we have dates
-    const date = new Date(newSource.lastModifiedOnServer || newSource.documentDate);
-    newSource.lastModified = date.toISOString();
+    let dateString: string | undefined;
+
+    try {
+      const date = new Date(
+        newSource.lastModifiedOnServer || newSource.documentDate
+      );
+      dateString = date.toISOString();
+    } catch (error) {
+      console.error(`Failed to parse date: ${error}`);
+    }
+
+    newSource.lastModified = dateString;
 
     newSource.lastModifiedOnServer = undefined as any;
     newSource.documentData = undefined as any;
@@ -178,15 +193,29 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       documentId: string,
       parentChunkId?: string
     ) => {
-      const chunkId = (await chunkStore.postChunk(this.transformChunkForVectorstore(chunk))) as string;
+      const chunkId = (await chunkStore.postChunk(
+        this.transformChunkForVectorstore(chunk)
+      )) as string;
       console.log(`Posted chunk ${chunkId} for document ${documentId}`);
 
       // Add cross reference to the document
-      await chunkStore.addCrossReference(chunkId, "inDocument", documentId);
+      const documentBeacon = `weaviate://localhost/RagDocument/${documentId}`;
+      await chunkStore.addCrossReference(
+        chunkId,
+        "inDocument",
+        documentBeacon,
+        "RagDocument"
+      );
 
       // Add cross reference to the parent chunk if provided
       if (parentChunkId) {
-        await chunkStore.addCrossReference(chunkId, "inChunk", parentChunkId);
+        const parentChunkBeacon = `weaviate://localhost/RagDocumentChunk/${parentChunkId}`;
+        await chunkStore.addCrossReference(
+          chunkId,
+          "inChunk",
+          parentChunkBeacon,
+          "RagDocumentChunk"
+        );
       }
 
       if (chunk.subChunks) {
@@ -201,10 +230,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         // Add cross references for sibling chunks
         for (const siblingChunkId of siblingChunkIds) {
+          const siblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${siblingChunkId}`;
           await chunkStore.addCrossReference(
             chunkId,
             "allSiblingChunks",
-            siblingChunkId
+            siblingChunkBeacon,
+            "RagDocumentChunk"
           );
         }
 
@@ -213,10 +244,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           for (const index of chunk.importantContextChunkIndexes) {
             const relevantSiblingChunkId = siblingChunkIds[index - 1];
             if (relevantSiblingChunkId) {
+              const relevantSiblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${relevantSiblingChunkId}`;
               await chunkStore.addCrossReference(
                 chunkId,
                 "mostRelevantSiblingChunks",
-                relevantSiblingChunkId
+                relevantSiblingChunkBeacon,
+                "RagDocumentChunk"
               );
             }
           }
@@ -234,11 +267,20 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
         if (source.chunks) {
           for (const chunk of source.chunks) {
-            await postChunkRecursively(chunk, documentId);
+            try {
+              await postChunkRecursively(chunk, documentId);
+            } catch (error) {
+              console.error(
+                `Failed to post chunk for document ${
+                  source.url
+                }:\n${JSON.stringify(chunk)}`,
+                error
+              );
+            }
           }
         }
       } catch (error) {
-        console.error(`Failed to post document ${source.url}:`, error);
+        console.error(`Failed to post document ${source.url}:\n`, error);
       }
     }
   }
