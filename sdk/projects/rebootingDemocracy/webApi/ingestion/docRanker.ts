@@ -29,7 +29,7 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
     const messages = [
       new SystemMessage(
         `
-        You are an AI expert trained to rank chunks of documents based on their relevance to the users ranking rules.
+        You are an AI expert trained to documents based on their relevance to the users ranking rules.
 
         Instructions:
         1. The user will provide you with ranking rules you should follow.
@@ -47,7 +47,7 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
         Overall Topic:
         ${this.overallTopic}
 
-        Document to Rank:
+        Documents to Rank:
 
         Document One:
         ${itemOne.fullDescriptionOfAllContents}

@@ -7,7 +7,7 @@ export class PsRagRouter extends BaseIngestionAgent {
     new SystemMessage(`You are an expert user question analyzer for a RAG based chatbot. We will use the information to decide what documents to retrieve for the user through a vector database search.
 
 Instructions:
-- Use the available categories to classify the content the user will provide you with in the DOCUMENT_TO_CLASSIFY tag
+- Use the available categories to classify the question the user will provide you with in the DOCUMENT_TO_CLASSIFY tag
 - Always output one primary category
 - Output one or more secondary categories if those could help answer the user question if there is any chance it could help, even if small
 - Always rewrite the user question based on your previous conversation with the user as needed for the best possible and best informed vector search query.
