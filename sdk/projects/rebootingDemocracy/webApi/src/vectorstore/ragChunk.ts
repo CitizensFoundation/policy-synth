@@ -56,7 +56,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     try {
       const res = await PsRagChunkVectorStore.client.schema
         .classDeleter()
-        .withClassName("RagChunk")
+        .withClassName("RagDocumentChunk")
         .do();
       console.log(res);
     } catch (err) {
@@ -67,7 +67,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
   async testQuery() {
     const res = await PsRagChunkVectorStore.client.graphql
       .get()
-      .withClassName("RagChunk")
+      .withClassName("RagDocumentChunk")
       .withFields(PsRagChunkVectorStore.allFieldsToExtract)
       .withNearText({ concepts: ["specific concept"] })
       .withLimit(100)
@@ -81,7 +81,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     return new Promise((resolve, reject) => {
       PsRagChunkVectorStore.client.data
         .creator()
-        .withClassName("RagChunk")
+        .withClassName("RagDocumentChunk")
         .withProperties(chunkData as any)
         .do()
         .then((res: any) => {
@@ -123,7 +123,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
       PsRagChunkVectorStore.client.data
         .merger()
         .withId(id)
-        .withClassName("RagChunk")
+        .withClassName("RagDocumentChunk")
         .withProperties(chunkData as any)
         .do()
         .then((res) => {
@@ -143,7 +143,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
       PsRagChunkVectorStore.client.data
         .getterById()
         .withId(id)
-        .withClassName("RagChunk")
+        .withClassName("RagDocumentChunk")
         .do()
         .then((res) => {
           this.logger.info(`Weaviate: Have got chunk ${id}`);
@@ -162,7 +162,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     try {
       results = await PsRagChunkVectorStore.client.graphql
         .get()
-        .withClassName("RagChunk")
+        .withClassName("RagDocumentChunk")
         .withNearText({ concepts: [query] })
         .withLimit(25)
         .withFields(PsRagChunkVectorStore.allFieldsToExtract)
@@ -184,7 +184,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     try {
       results = await PsRagChunkVectorStore.client.graphql
         .get()
-        .withClassName("RagChunk")
+        .withClassName("RagDocumentChunk")
         .withNearText({ concepts: [query] })
         .withLimit(25)
         .withFields(

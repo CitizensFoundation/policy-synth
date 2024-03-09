@@ -24,7 +24,7 @@ import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
   cachedFiles: string[] = [];
-  fileMetadataPath: string = "./ingestion/cache/fileMetadata.json";
+  fileMetadataPath: string = "./src/ingestion/cache/fileMetadata.json";
   fileMetadata: Record<string, PsRagDocumentSource> = {};
   initialFileMetadata: Record<string, PsRagDocumentSource> = {};
 
@@ -36,7 +36,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   dataLayout!: PsIngestionDataLayout;
 
-  constructor(dataLayoutPath: string = "file://ingestion/dataLayout.json") {
+  constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
     super();
     this.dataLayoutPath = dataLayoutPath;
 
@@ -617,7 +617,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     const urlObj = new URL(url);
     let basename = path.basename(urlObj.pathname);
     const folderHash = crypto.createHash("md5").update(url).digest("hex");
-    const baseDir = `./ingestion/cache/${folderHash}`;
+    const baseDir = `./src/ingestion/cache/${folderHash}`;
 
     // Check if basename is empty or does not look like a filename, then use a default name
     if (!basename || basename === "/" || !basename.includes(".")) {
@@ -801,7 +801,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       const response = await fetch(url);
       const jsonData = await response.json();
       const folderHash = crypto.createHash("md5").update(url).digest("hex");
-      const folderPath = `./ingestion/cache/${folderHash}`;
+      const folderPath = `./src/ingestion/cache/${folderHash}`;
       await fs.mkdir(folderPath, { recursive: true });
       const jsonFilePath = `${folderPath}/data.json`;
       await fs.writeFile(jsonFilePath, JSON.stringify(jsonData, null, 2));

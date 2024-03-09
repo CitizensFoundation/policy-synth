@@ -19,7 +19,7 @@ import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 export class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath;
     cachedFiles = [];
-    fileMetadataPath = "./ingestion/cache/fileMetadata.json";
+    fileMetadataPath = "./src/ingestion/cache/fileMetadata.json";
     fileMetadata = {};
     initialFileMetadata = {};
     cleanupAgent;
@@ -28,7 +28,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     chunkAnalysisAgent;
     docAnalysisAgent;
     dataLayout;
-    constructor(dataLayoutPath = "file://ingestion/dataLayout.json") {
+    constructor(dataLayoutPath = "file://src/ingestion/dataLayout.json") {
         super();
         this.dataLayoutPath = dataLayoutPath;
         this.loadFileMetadata()
@@ -402,7 +402,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         const urlObj = new URL(url);
         let basename = path.basename(urlObj.pathname);
         const folderHash = crypto.createHash("md5").update(url).digest("hex");
-        const baseDir = `./ingestion/cache/${folderHash}`;
+        const baseDir = `./src/ingestion/cache/${folderHash}`;
         // Check if basename is empty or does not look like a filename, then use a default name
         if (!basename || basename === "/" || !basename.includes(".")) {
             basename = `default${extension}`; // Use a default basename if necessary
@@ -544,7 +544,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             const response = await fetch(url);
             const jsonData = await response.json();
             const folderHash = crypto.createHash("md5").update(url).digest("hex");
-            const folderPath = `./ingestion/cache/${folderHash}`;
+            const folderPath = `./src/ingestion/cache/${folderHash}`;
             await fs.mkdir(folderPath, { recursive: true });
             const jsonFilePath = `${folderPath}/data.json`;
             await fs.writeFile(jsonFilePath, JSON.stringify(jsonData, null, 2));
