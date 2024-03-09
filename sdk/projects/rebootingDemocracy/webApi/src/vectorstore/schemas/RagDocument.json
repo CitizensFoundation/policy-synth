@@ -45,7 +45,7 @@
       }
     },
     {
-      "name": "lastModified",
+      "name": "date",
       "description": "Last modified date of the document",
       "dataType": ["date"]
     },

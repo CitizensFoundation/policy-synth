@@ -7,10 +7,10 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract = "title url lastModified size \
-      cleanedDocument description shortDescription fullDescriptionOfAllContents \
+       description shortDescription fullDescriptionOfAllContents \
       compressedFullDescriptionOfAllContents \
       contentType allReferencesWithUrls allOtherReferences \
-      allImageUrls documentDate documentMetaData\
+      allImageUrls  documentMetaData\
      _additional { id, distance }";
     static client = weaviate.client({
         scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
@@ -81,7 +81,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         return res;
     }
     async postDocument(document) {
-        //console.log(`Posting document ${JSON.stringify(document, null, 2)}`)
+        console.log(`Posting document ${JSON.stringify(document, null, 2)}`);
         return new Promise((resolve, reject) => {
             PsRagDocumentVectorStore.client.data
                 .creator()
@@ -143,10 +143,10 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .withClassName("RagDocument")
                 .withNearText({ concepts: [query] })
                 .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
-                .withWhere({
-                operator: "And",
-                operands: where,
-            })
+                /*.withWhere({
+                  operator: "And",
+                  operands: where,
+                })*/
                 .withFields(PsRagDocumentVectorStore.allFieldsToExtract)
                 .do();
         }
@@ -160,7 +160,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         try {
             results = await PsRagDocumentVectorStore.client.graphql
                 .get()
-                .withClassName("RagChunk")
+                .withClassName("RagDocumentChunk")
                 .withNearText({ concepts: [query] })
                 .withLimit(25)
                 .withFields(`
@@ -203,7 +203,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             metaData
           }
           inChunk {
-            ... on RagChunk {
+            ... on RagDocumentChunk {
               title
               chunkIndex
               chapterIndex
@@ -220,7 +220,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
               metaData
 
               inChunk {
-                ... on RagChunk {
+                ... on RagDocumentChunk {
                   title
                   chunkIndex
                   chapterIndex
@@ -231,14 +231,14 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         `)
                 .do();
             const ragDocumentsMap = new Map();
-            for (const chunk of results.data.Get.RagChunk) {
+            for (const chunk of results.data.Get.RagDocumentChunk) {
                 if (chunk.inDocument) {
                     chunk.inDocument.chunks = [];
                     ragDocumentsMap.set(chunk.inDocument.id, chunk.inDocument);
                 }
             }
             // Process each RagDocument with its associated chunks
-            for (const chunk of results.data.Get.RagChunk) {
+            for (const chunk of results.data.Get.RagDocumentChunk) {
                 if (chunk.inDocument) {
                     const ragDocument = ragDocumentsMap.get(chunk.inDocument.id);
                     if (ragDocument) {

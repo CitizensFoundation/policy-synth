@@ -11,10 +11,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export class PsRagChunkVectorStore extends PolicySynthAgentBase {
   static allFieldsToExtract =
-    "title chunkIndex chapterIndex mainExternalUrlFound data \
-      actualStartLine startLine actualEndLine shortSummary fullSummary \
+    "title chunkIndex chapterIndex mainExternalUrlFound  \
+         shortSummary fullSummary \
       relevanceEloRating qualityEloRating substanceEloRating uncompressedContent \
-      compressedContent subChunks importantContextChunkIndexes metaDataFields metaData\
+      compressedContent, metaDataFields metaData\
+      category1EloRating, category2EloRating, category3EloRating, category4EloRating\
+      category5EloRating, category6EloRating, category7EloRating, category8EloRating\
+      category9EloRating, category10EloRating\
      _additional { id, distance, certainty }";
   static client: WeaviateClient = weaviate.client({
     scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
@@ -78,6 +81,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
   }
 
   async postChunk(chunkData: PsRagChunk) {
+    console.log(`Posting chunk ${chunkData.title}`)
     return new Promise((resolve, reject) => {
       PsRagChunkVectorStore.client.data
         .creator()
