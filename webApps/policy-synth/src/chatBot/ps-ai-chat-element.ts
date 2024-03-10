@@ -138,7 +138,6 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .chatTextUser {
-          padding-top: 12px;
         }
 
         .userChatDialog {
