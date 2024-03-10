@@ -17,7 +17,7 @@ export declare class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     updateDocument(id: string, documentData: PsRagDocumentSource, quiet?: boolean): Promise<unknown>;
     getDocument(id: string): Promise<PsRagDocumentSource>;
     searchDocuments(query: string): Promise<PsRagDocumentSourceGraphQlResponse>;
-    searchChunksWithReferences(query: string): Promise<PsRagDocumentSource[]>;
+    searchChunksWithReferences(query: string): Promise<PsRagChunk[]>;
     searchChunksWithReferencesTEST(query: string): Promise<PsRagDocumentSource[]>;
 }
 //# sourceMappingURL=ragDocument.d.ts.map
