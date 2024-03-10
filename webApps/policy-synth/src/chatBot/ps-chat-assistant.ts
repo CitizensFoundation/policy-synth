@@ -599,9 +599,9 @@ export class PsChatAssistant extends YpBaseElement {
         }
 
         .you-chat-element {
-          align-self: flex-end;
+          align-self: flex-start;
           max-width: 80%;
-          justify-content: flex-end;
+          justify-content: flex-start;
           margin-right: 32px;
         }
 
@@ -621,7 +621,7 @@ export class PsChatAssistant extends YpBaseElement {
 
         @media (max-width: 600px) {
           .chat-window {
-            height: 100%;
+           
           }
 
           .you-chat-element {
@@ -660,8 +660,8 @@ export class PsChatAssistant extends YpBaseElement {
         }
 
         .chatElement[thinking] {
-          margin-top: 8px;
-          margin-bottom: 0px;
+          margin-top: 16px;
+          margin-bottom: 8px;
         }
 
         @media (max-width: 960px) {
@@ -798,7 +798,8 @@ export class PsChatAssistant extends YpBaseElement {
     return html`
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
-          <ps-ai-chat-element
+          <yp-chatbot-item-base
+            ?hidden="${!this.defaultInfoMessage}"
             class="chatElement bot-chat-element"
             .detectedLanguage="${this.language}"
             .message="${this.defaultInfoMessage}"

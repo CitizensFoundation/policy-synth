@@ -34,10 +34,10 @@ export declare class PsAiChatElement extends YpBaseElement {
     renderChatGPT(): any;
     parseFollowUpQuestions(): void;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
-    renderUser(): import("lit").TemplateResult<1>;
+    renderUser(): any;
     renderNoStreaming(): import("lit").TemplateResult<1>;
     renderThinking(): import("lit").TemplateResult<1>;
-    getThinkingText(): "Thinking..." | "Mõeldes..." | "Hugsa...";
+    getThinkingText(): "Mõeldes..." | "Hugsa..." | "Thinking...";
     renderMessage(): any;
     render(): import("lit").TemplateResult<1>;
 }

@@ -93,11 +93,11 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
         }
 
         .userChatDialog {
-          color: var(--md-sys-color-on-primary);
-          background-color: var(--md-sys-color-primary);
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface-container);
           padding: 8px;
           margin: 16px;
-          line-height: 1.35;
+          line-height: 1.5;
           margin-bottom: 0px;
           border-radius: 12px;
         }
@@ -136,11 +136,11 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
         }
 
         .chatGPTDialog {
-          color: var(--md-sys-color-on-primary-container);
-          background-color: var(--md-sys-color-primary-container);
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface);
           padding: 8px;
           margin: 16px;
-          line-height: 1.35;
+          line-height: 1.5;
           margin-bottom: 0px;
           border-radius: 10px;
           max-width: 89%;
@@ -341,7 +341,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
           class="chatGPTDialog layout vertical bot-message"
           ?error="${this.isError}"
         >
-          <div class="layout horizontal">
+          <div class="layout ${this.wide ? 'horizontal' : 'vertical'}">
             <div class="layout vertical chatImage">${this.renderCGImage()}</div>
             <div class="layout vertical chatText">
               ${resolveMarkdown(this.message, {
@@ -393,7 +393,14 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
         return html `
       <div class="userChatDialog layout horizontal user-message">
         <div class="layout vertical chatImage">${this.renderRoboImage()}</div>
-        <div class="layout vertical chatText chatTextUser">${this.message}</div>
+        <div class="layout vertical chatText chatTextUser">
+          ${resolveMarkdown(this.message, {
+            includeImages: true,
+            includeCodeBlockClassNames: true,
+            handleJsonBlocks: true,
+            targetElement: this,
+        })}
+        </div>
       </div>
     `;
     }

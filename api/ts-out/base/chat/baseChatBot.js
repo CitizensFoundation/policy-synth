@@ -8,6 +8,23 @@ const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 //@ts-ignore
 const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class PsBaseChatBot {
+    wsClientId;
+    wsClientSocket;
+    openaiClient;
+    memory;
+    broadcastingLiveCosts = false;
+    liveCostsBroadcastInterval = 1000;
+    liveCostsInactivityTimeout = 1000 * 60 * 10;
+    static redisMemoryKeyPrefix = "ps-chatbot-memory";
+    tempeture = 0.7;
+    maxTokens = 4000;
+    llmModel = "gpt-4-0125-preview";
+    persistMemory = false;
+    memoryId = undefined;
+    liveCostsBroadcastTimeout = undefined;
+    liveCostsBoadcastStartAt;
+    lastSentToUserAt;
+    lastBroacastedCosts;
     get redisKey() {
         return `${PsBaseChatBot.redisMemoryKeyPrefix}-${this.memoryId}`;
     }
@@ -60,37 +77,6 @@ export class PsBaseChatBot {
         });
     }
     constructor(wsClientId, wsClients, memoryId = undefined) {
-        this.broadcastingLiveCosts = false;
-        this.liveCostsBroadcastInterval = 1000;
-        this.liveCostsInactivityTimeout = 1000 * 60 * 10;
-        this.tempeture = 0.7;
-        this.maxTokens = 4000;
-        this.llmModel = "gpt-4-0125-preview";
-        this.persistMemory = false;
-        this.memoryId = undefined;
-        this.liveCostsBroadcastTimeout = undefined;
-        this.conversation = async (chatLog) => {
-            this.setChatLog(chatLog);
-            let messages = chatLog.map((message) => {
-                return {
-                    role: message.sender,
-                    content: message.message,
-                };
-            });
-            const systemMessage = {
-                role: "system",
-                content: this.renderSystemPrompt(),
-            };
-            messages.unshift(systemMessage);
-            const stream = await this.openaiClient.chat.completions.create({
-                model: this.llmModel,
-                messages,
-                max_tokens: this.maxTokens,
-                temperature: this.tempeture,
-                stream: true,
-            });
-            this.streamWebSocketResponses(stream);
-        };
         this.wsClientId = wsClientId;
         this.wsClientSocket = wsClients.get(this.wsClientId);
         this.openaiClient = new OpenAI({
@@ -134,7 +120,12 @@ export class PsBaseChatBot {
             type: "memoryIdCreated",
             data: this.memoryId,
         };
-        this.wsClientSocket.send(JSON.stringify(botMessage));
+        if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+        }
+        else {
+            console.error("No wsClientSocket found");
+        }
     }
     async saveMemory() {
         if (this.memory) {
@@ -162,7 +153,12 @@ export class PsBaseChatBot {
                 noStreaming: hasNoStreaming,
             },
         };
-        this.wsClientSocket.send(JSON.stringify(botMessage));
+        if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+        }
+        else {
+            console.error("No wsClientSocket found");
+        }
     }
     sendAgentCompleted(name, lastAgent = false, error = undefined) {
         const botMessage = {
@@ -177,7 +173,12 @@ export class PsBaseChatBot {
                 },
             },
         };
-        this.wsClientSocket.send(JSON.stringify(botMessage));
+        if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+        }
+        else {
+            console.error("No wsClientSocket found");
+        }
     }
     sendAgentUpdate(message) {
         const botMessage = {
@@ -185,7 +186,12 @@ export class PsBaseChatBot {
             type: "agentUpdated",
             message: message,
         };
-        this.wsClientSocket.send(JSON.stringify(botMessage));
+        if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+        }
+        else {
+            console.error("No wsClientSocket found");
+        }
     }
     startBroadcastingLiveCosts() {
         this.stopBroadcastingLiveCosts();
@@ -204,7 +210,12 @@ export class PsBaseChatBot {
                         type: "liveLlmCosts",
                         data: this.fullLLMCostsForMemory,
                     };
-                    this.wsClientSocket.send(JSON.stringify(botMessage));
+                    if (this.wsClientSocket) {
+                        this.wsClientSocket.send(JSON.stringify(botMessage));
+                    }
+                    else {
+                        console.error("No wsClientSocket found");
+                    }
                     this.lastBroacastedCosts = this.fullLLMCostsForMemory;
                 }
             }
@@ -371,6 +382,27 @@ export class PsBaseChatBot {
         this.memory.chatLog = chatLog;
         await this.saveMemoryIfNeeded();
     }
+    conversation = async (chatLog) => {
+        this.setChatLog(chatLog);
+        let messages = chatLog.map((message) => {
+            return {
+                role: message.sender,
+                content: message.message,
+            };
+        });
+        const systemMessage = {
+            role: "system",
+            content: this.renderSystemPrompt(),
+        };
+        messages.unshift(systemMessage);
+        const stream = await this.openaiClient.chat.completions.create({
+            model: this.llmModel,
+            messages,
+            max_tokens: this.maxTokens,
+            temperature: this.tempeture,
+            stream: true,
+        });
+        this.streamWebSocketResponses(stream);
+    };
 }
-PsBaseChatBot.redisMemoryKeyPrefix = "chatbot-memory";
 //# sourceMappingURL=baseChatBot.js.map

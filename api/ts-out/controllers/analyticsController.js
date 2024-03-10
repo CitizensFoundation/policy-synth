@@ -15,18 +15,18 @@ else {
     });
 }
 export class AnalyticsController {
+    path = "/api/analytics";
+    router = express.Router();
+    wsClients = new Map();
     constructor(wsClients) {
-        this.path = "/api/analytics";
-        this.router = express.Router();
-        this.wsClients = new Map();
-        this.createActivityFromApp = async (req, res) => {
-            res.sendStatus(200);
-        };
         this.wsClients = wsClients;
         this.initializeRoutes();
     }
     initializeRoutes() {
         this.router.post(this.path + "/createActivityFromApp", this.createActivityFromApp);
     }
+    createActivityFromApp = async (req, res) => {
+        res.sendStatus(200);
+    };
 }
 //# sourceMappingURL=analyticsController.js.map
