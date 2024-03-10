@@ -4,6 +4,7 @@ import { SearchQueriesGenerator } from "@policysynth/agents/webResearch/searchQu
 import { ResearchWeb } from "@policysynth/agents/webResearch/researchWeb.js";
 import { SearchResultsRanker } from "@policysynth/agents/webResearch/searchResultsRanker.js";
 import { WebPageScanner } from "@policysynth/agents/webResearch/webPageScanner.js";
+import { promises as fs } from "fs";
 export class LiveResearchChatBot extends PsBaseChatBot {
     constructor() {
         super(...arguments);
@@ -11,15 +12,15 @@ export class LiveResearchChatBot extends PsBaseChatBot {
         this.percentOfQueriesToSearch = 0.25;
         this.percentOfResultsToScan = 0.25;
         this.persistMemory = true;
-        this.summarySystemPrompt = `Please review the web research below and give the user a full report length.
-    Take all the information provided and highlight the main points to answer the users question in detail.
-    Do not output the analysis on an article by article basis, it needs to go deeper and wider than that to answer the users question.
+        this.summarySystemPrompt = `Please analyse those sources step by step and provide a summary of the most relevant information.
     Provide links to the original webpages, if they are relevant, in markdown format as citations.
   `;
         // For directing the LLMs to focus on the most relevant parts of each web page
         this.jsonWebPageResearchSchema = `
+    //MOST IMPORTANT INSTRUCTIONS: You are a researchers for the Skills First project and we are looking for any information that can help us identify law or regulations that are barriers to Skills First policies in New Jersey.
     {
-      mostRelevantParagraphs: string[],
+      potentialSourcesOfInformationAboutBarriersToSkillsFirstPolicies: string[],
+      potentialDescriptionOfBarriersToSkillsFirstPolicies: string[],
       summary: string,
       howThisIsRelevant: string,
       relevanceScore: number
@@ -86,6 +87,11 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(searchQueries, question);
             this.sendAgentCompleted("Pairwise Ranking Completed");
             const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * this.percentOfQueriesToSearch));
+            // Add "New Jersey" to the each search query
+            //TODO: Do not hard code "New Jersey"
+            queriesToSearch.forEach((query) => {
+                query += " New Jersey";
+            });
             // Search the web
             this.sendAgentStart("Searching the Web...");
             const webSearch = new ResearchWeb(this.memory);
@@ -103,6 +109,15 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             const webScan = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.jsonWebPageResearchSchema, undefined, this.sendAgentUpdate.bind(this));
             this.sendAgentCompleted("Website Scanning Completed", true);
             console.log(`webScan: (${webScan.length}) ${JSON.stringify(webScan, null, 2)}`);
+            // Create a webScan.json filename with a timestamp
+            const timestamp = new Date().toISOString().replace(/:/g, "-");
+            try {
+                await fs.writeFile(`/tmp/webScan_${timestamp}.json`, JSON.stringify(webScan, null, 2));
+                console.log("webScan.json has been saved to /tmp directory.");
+            }
+            catch (err) {
+                console.error(`Error saving webScan.json: ${err}`);
+            }
             await this.renderResultsToUser(webScan, question);
         }
         catch (err) {

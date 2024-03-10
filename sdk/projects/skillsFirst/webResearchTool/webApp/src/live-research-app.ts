@@ -378,7 +378,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
           <div class="layout vertical">
             <md-slider
               min="5"
-              max="50"
+              max="100"
               value="5"
               labeled
               .valueLabel="${this.numberOfSelectQueries.toString()}"

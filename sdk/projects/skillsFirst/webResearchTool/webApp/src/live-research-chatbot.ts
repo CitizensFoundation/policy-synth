@@ -7,7 +7,7 @@ import { ResearchServerApi } from './researchServerApi.js';
 @customElement('live-research-chat-bot')
 export class LiveResearchChatBot extends PsChatAssistant {
   @property({ type: Number })
-  defaultDevWsPort = 5021;
+  defaultDevWsPort = 5029;
 
   @property({ type: Number })
   numberOfSelectQueries = 5;

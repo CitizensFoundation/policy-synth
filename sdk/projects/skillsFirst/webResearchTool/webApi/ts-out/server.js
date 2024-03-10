@@ -4,5 +4,5 @@ import { LiveResearchChatController } from './controllers/liveResearchChatContro
 const app = new PolicySynthApiApp([
     AnalyticsController,
     LiveResearchChatController
-], 5021);
+], 5029);
 app.listen();
