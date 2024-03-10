@@ -4,6 +4,6 @@ export declare class PsRagVectorSearch extends PolicySynthAgentBase {
     minQualityEloRatingForDocument: number;
     search(userQuestion: string, routingData: PsRagRoutingResponse, dataLayout: PsIngestionDataLayout): Promise<string>;
     processAndMergeResults(documentResults: PsRagDocumentSourceGraphQlResponse, documentsWithChunksResults: PsRagDocumentSource[]): PsRagDocumentSource[];
-    formatOutput(processedResults: PsRagDocumentSource[]): string;
+    formatOutput(processedResults: PsRagChunk[]): string;
 }
 //# sourceMappingURL=vectorSearch.d.ts.map

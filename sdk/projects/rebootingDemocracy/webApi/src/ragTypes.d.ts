@@ -120,8 +120,8 @@ interface PsRagChunk extends PsEloRateable {
   compressedContent: string;
   mostRelevantSiblingChunks?: PsRagChunk[];
   allSiblingChunks?: PsRagChunk[];
-  inChunk?: PsRagChunk;
-  inDocument?: PsRagDocumentSource;
+  inChunk?: PsRagChunk[];
+  inDocument?: PsRagDocumentSource[];
   subChunks?: PsRagChunk[];
   importantContextChunkIndexes: number[];
   metaDataFields?: string[];

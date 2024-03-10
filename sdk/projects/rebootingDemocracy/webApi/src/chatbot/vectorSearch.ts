@@ -13,7 +13,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     // Your existing logic to rewrite userQuestion and perform searches
     const vectorStore = new PsRagDocumentVectorStore();
 
-    const [documentResults, chunkResults] = await Promise.all([
+    /*const [documentResults, chunkResults] = await Promise.all([
       vectorStore.searchDocuments(userQuestion),
       vectorStore.searchChunksWithReferences(userQuestion),
     ]);
@@ -22,10 +22,14 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     const processedResults = this.processAndMergeResults(
       documentResults,
       chunkResults
-    );
+    );*/
+
+    const [chunkResults] = await Promise.all([
+      vectorStore.searchChunksWithReferences(userQuestion),
+    ]);
 
     // Format and return the output
-    return this.formatOutput(processedResults);
+    return this.formatOutput(chunkResults as any);
   }
 
   processAndMergeResults(
@@ -76,15 +80,43 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     return Array.from(ragDocumentsMap.values());
   }
 
-  formatOutput(processedResults: PsRagDocumentSource[]) {
+  formatOutput(processedResults: PsRagChunk[]) {
+    console.log(`Processed results: ${JSON.stringify(processedResults, null, 2)}`);
     let output = "";
-    for (const result of processedResults) {
-      output += `Title: ${result.title}\nSummary: ${result.compressedFullDescriptionOfAllContents}\nRelevant chapters:\n`;
-      for (const chunk of result.chunks!) {
-        output += `  - Chapter Title: ${chunk.title}, Relevance Rating: ${chunk.relevanceEloRating}, Substance Rating: ${chunk.substanceEloRating}\n`;
+
+    // Function to recursively collect chunk information, including all nested inChunks
+    const collectChunks = (
+      chunk: PsRagChunk,
+      collectedChunks: PsRagChunk[] = []
+    ) => {
+      if (chunk.inChunk) {
+        collectChunks(chunk.inChunk[0], collectedChunks);
       }
-      output += "\n";
-    }
+      collectedChunks.push(chunk);
+      return collectedChunks;
+    };
+
+    // Process each chunk to collect information in reverse order (deepest first)
+    processedResults.forEach((chunk) => {
+      if (chunk.inDocument) {
+        const doc = chunk.inDocument[0];
+        const docTitle = doc.title || "No title available";
+        const docSummary =
+          doc.compressedFullDescriptionOfAllContents ||
+          doc.fullDescriptionOfAllContents ||
+          "";
+        // Placing inDocument details at the start of the output
+        output += `Document title: ${docTitle}\n\nAbout document:\n${docSummary}\n\n`;
+      }
+
+      const collectedChunks = collectChunks(chunk);
+      // Append each collected chunk's information to the output
+      collectedChunks.forEach(({ title, compressedContent }) => {
+        output += `Chapter: ${title || 'undefined'}\n\n${compressedContent || 'undefined'}\n\n`;
+      });
+    });
+
+    console.log(output);
     return output;
   }
 }
