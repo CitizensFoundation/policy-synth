@@ -59,6 +59,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     formatOutput(processedResults) {
         console.log(`Processed results: ${JSON.stringify(processedResults, null, 2)}`);
         let output = "";
+        const collectedTitles = new Set();
         // Function to recursively collect chunk information, including all nested inChunks
         const collectChunks = (chunk, collectedChunks = []) => {
             if (chunk.inChunk) {
@@ -72,6 +73,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
             if (chunk.inDocument) {
                 const doc = chunk.inDocument[0];
                 const docTitle = doc.title || "No title available";
+                collectedTitles.add(docTitle);
                 const docSummary = doc.compressedFullDescriptionOfAllContents ||
                     doc.fullDescriptionOfAllContents ||
                     "";
@@ -80,8 +82,8 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
             }
             const collectedChunks = collectChunks(chunk);
             // Append each collected chunk's information to the output
-            collectedChunks.forEach(({ title, compressedContent }) => {
-                output += `Chapter: ${title || 'undefined'}\n\n${compressedContent || 'undefined'}\n\n`;
+            collectedChunks.forEach(({ title, compressedContent, fullSummary }) => {
+                output += `Chapter: ${title || 'undefined'}\n${compressedContent || fullSummary || ''}\n\n`;
             });
         });
         console.log(output);
