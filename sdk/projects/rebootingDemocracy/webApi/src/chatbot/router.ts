@@ -52,6 +52,8 @@ Your JSON classification:
       )
     );
 
+    console.log(`Routing information: ${JSON.stringify(routingInformation, null, 2)}`)
+
     return routingInformation;
   }
 }

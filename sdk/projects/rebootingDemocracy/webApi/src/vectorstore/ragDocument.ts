@@ -191,7 +191,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .get()
         .withClassName("RagDocumentChunk")
         .withNearText({ concepts: [query] })
-        .withLimit(25)
+        .withLimit(1)
         .withFields(
           `
         title
@@ -245,6 +245,51 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 title
                 chunkIndex
                 chapterIndex
+                mainExternalUrlFound
+                shortSummary
+                fullSummary
+                relevanceEloRating
+                qualityEloRating
+                substanceEloRating
+                uncompressedContent
+                compressedContent
+                metaDataFields
+                metaData
+                inChunk {
+                  ... on RagDocumentChunk {
+                    title
+                    chunkIndex
+                    chapterIndex
+                    mainExternalUrlFound
+                    shortSummary
+                    fullSummary
+                    relevanceEloRating
+                    qualityEloRating
+                    substanceEloRating
+                    uncompressedContent
+                    compressedContent
+                    metaDataFields
+                    metaData
+
+                    inChunk {
+                      ... on RagDocumentChunk {
+                        title
+                        chunkIndex
+                        chapterIndex
+                        mainExternalUrlFound
+                        shortSummary
+                        fullSummary
+                        relevanceEloRating
+                        qualityEloRating
+                        substanceEloRating
+                        uncompressedContent
+                        compressedContent
+                        metaDataFields
+                        metaData
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -254,6 +299,9 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .do();
 
       const ragDocumentsMap: Map<string, PsRagDocumentSource> = new Map();
+
+      console.log(`Got ${results.data.Get.RagDocumentChunk.length} chunks`);
+      console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
 
       for (const chunk of results.data.Get.RagDocumentChunk) {
         if (chunk.inDocument) {

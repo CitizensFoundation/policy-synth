@@ -142,7 +142,11 @@ export class PsBaseChatBot {
       data: this.memoryId,
     } as PsAiChatWsMessage;
 
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   async saveMemory() {
@@ -171,7 +175,12 @@ export class PsBaseChatBot {
         noStreaming: hasNoStreaming,
       } as PsAgentStartWsOptions,
     } as PsAiChatWsMessage;
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   sendAgentCompleted(
@@ -192,7 +201,11 @@ export class PsBaseChatBot {
       } as PsAgentCompletedWsOptions,
     } as PsAiChatWsMessage;
 
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   sendAgentUpdate(message: string) {
@@ -202,7 +215,11 @@ export class PsBaseChatBot {
       message: message,
     } as PsAiChatWsMessage;
 
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   startBroadcastingLiveCosts() {
@@ -224,7 +241,11 @@ export class PsBaseChatBot {
             type: "liveLlmCosts",
             data: this.fullLLMCostsForMemory,
           } as PsAiChatWsMessage;
-          this.wsClientSocket.send(JSON.stringify(botMessage));
+          if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+          } else {
+            console.error("No wsClientSocket found");
+          }
           this.lastBroacastedCosts = this.fullLLMCostsForMemory;
         }
       }
