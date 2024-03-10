@@ -185,13 +185,24 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     query: string
   ): Promise<PsRagChunk[]> {
     let results;
+    const where: any[] = [
+      {
+        path: ['compressedContent'],
+        operator: 'IsNull',
+        valueBoolean: false
+      }
+    ];
 
     try {
       results = await PsRagDocumentVectorStore.client.graphql
         .get()
         .withClassName("RagDocumentChunk")
         .withNearText({ concepts: [query] })
-        .withLimit(10)
+        .withLimit(30)
+        .withWhere({
+          operator: "And",
+          operands: where,
+        })
         .withFields(
           `
         title
@@ -219,7 +230,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
           }
         }
 
-        allSiblingChunks {
+        mostRelevantSiblingChunks {
           ... on RagDocumentChunk {
             title
             chunkIndex
@@ -253,6 +264,8 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 chapterIndex
                 shortSummary
                 fullSummary
+                compressedContent
+
                 inChunk {
                   ... on RagDocumentChunk {
                     title
@@ -260,6 +273,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                     chapterIndex
                     shortSummary
                     fullSummary
+                    compressedContent
 
                     inChunk {
                       ... on RagDocumentChunk {
@@ -268,6 +282,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                         chapterIndex
                         shortSummary
                         fullSummary
+                        compressedContent
                       }
                     }
                   }
