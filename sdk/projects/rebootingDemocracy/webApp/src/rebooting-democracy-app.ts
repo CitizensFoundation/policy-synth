@@ -20,10 +20,11 @@ type SavedChat = {
   questionSnippet: string;
 };
 
-@customElement('live-research-app')
-export class LiveResearchApp extends PolicySynthWebApp {
+@customElement('rebooting-democracy-chatbot-app')
+export class RebootingDemocracyChatBotApp extends PolicySynthWebApp {
   themeColor = '#e80000';
   localStorageThemeColorKey = 'md3-rebooting-democracy-theme-color';
+  localeStorageChatsKey= "rebooting-democracy-chats-v1"
 
   @property({ type: Number })
   numberOfSelectQueries = 5;
@@ -63,7 +64,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
   }
 
   loadChatsFromLocalStorage(): void {
-    const storedChats = localStorage.getItem('myChats');
+    const storedChats = localStorage.getItem(this.localeStorageChatsKey);
     if (storedChats) {
       this.savedChats = JSON.parse(storedChats) as SavedChat[];
     }
@@ -84,7 +85,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
         questionSnippet,
       };
       this.savedChats.push(newChat);
-      localStorage.setItem('myChats', JSON.stringify(this.savedChats));
+      localStorage.setItem(this.localeStorageChatsKey, JSON.stringify(this.savedChats));
     }
   }
 
