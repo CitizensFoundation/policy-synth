@@ -40,7 +40,24 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
             }
         });
         chunkResults.forEach((chunk) => {
+            if (chunk._additional) {
+                console.log(`\n\n${chunk.title}`);
+                console.log(`C: ${chunk.compressedContent}`);
+                console.log(`\nChunk info: ${chunk._additional.id} with distance: ${chunk._additional.distance} and confidence: ${chunk._additional.certainty}`);
+                console.log(`Chunk info: ${chunk._additional.id} with relevance: ${chunk.relevanceEloRating}} and substance: ${chunk.substanceEloRating} and quality: ${chunk.qualityEloRating}\n\n`);
+            }
             this.processChunk(chunk, chunksMap, documentsMap, addedChunkIdsMap);
+        });
+        const recursiveSortChunks = (chunk) => {
+            if (chunk.subChunks && chunk.subChunks.length) {
+                chunk.subChunks.sort((a, b) => a.chapterIndex - b.chapterIndex);
+                chunk.subChunks.forEach((subChunk) => {
+                    recursiveSortChunks(subChunk);
+                });
+            }
+        };
+        chunkResults.forEach((chunk) => {
+            recursiveSortChunks(chunk);
         });
         console.log("Processed chunk assignments complete.");
         return this.formatOutput(Array.from(documentsMap.values()));

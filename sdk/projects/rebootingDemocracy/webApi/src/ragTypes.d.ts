@@ -126,6 +126,7 @@ interface PsRagChunk extends PsEloRateable {
   importantContextChunkIndexes: number[];
   metaDataFields?: string[];
   metaData: { [key: string]: string };
+  _additional?: { id: string; distance: number; certainty: number };
 }
 
 interface PsRagChunkGraphQlResponse {

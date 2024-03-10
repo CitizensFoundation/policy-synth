@@ -11,7 +11,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       compressedFullDescriptionOfAllContents \
       contentType allReferencesWithUrls allOtherReferences \
       allImageUrls  documentMetaData\
-     _additional { id, distance }";
+     _additional { id, distance, confidence }";
     static client = weaviate.client({
         scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
         host: process.env.WEAVIATE_HOST || "localhost:8080",
@@ -174,6 +174,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         qualityEloRating
         substanceEloRating
         compressedContent
+        _additional { id, distance, certainty }
 
         inDocument {
           ... on RagDocument {
