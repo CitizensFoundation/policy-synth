@@ -1,84 +1,107 @@
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 
+
 export class PsRagVectorSearch extends PolicySynthAgentBase {
-  async search(
-    userQuestion: string,
-    routingData: any,
-    dataLayout: any
-  ): Promise<string> {
+
+  getChunkId(chunk: PsRagChunk, documentUrl: string): string {
+    return `${documentUrl}#${chunk.chunkIndex}#${chunk.chapterIndex}`;
+  }
+
+  async search(userQuestion: string, routingData: any, dataLayout: any): Promise<string> {
     const vectorStore = new PsRagDocumentVectorStore();
-    const chunkResults = await vectorStore.searchChunksWithReferences(
-      userQuestion
-    );
+    const chunkResults: PsRagChunk[] = await vectorStore.searchChunksWithReferences(userQuestion);
 
-    console.log(`Chunk results: ${JSON.stringify(chunkResults, null, 2)}`);
+    console.log("Initial chunk results received:", JSON.stringify(chunkResults, null, 2));
 
-    const documentsMap = new Map();
-    const chunksMap = new Map();
-    const addedChunkIdsMap = new Map(); // New map to track added chunk IDs for each document
+    const documentsMap: Map<string, PsRagDocumentSource & { chunks: PsRagChunk[] }> = new Map();
+    const chunksMap: Map<string, PsRagChunk & { subChunks: PsRagChunk[] }> = new Map();
+    const addedChunkIdsMap: Map<string, Set<string>> = new Map(); // Tracks added chunk IDs for each document
+
+    // Go through all the chunks and subChunks recursively and do cunk.id = this.getChunkId(chunk, documentUrl)
+    let documentUrl: string | undefined;
+
+    const recursiveChunkId = (chunk: PsRagChunk, documentUrl: string) => {
+      chunk.id = this.getChunkId(chunk, documentUrl);
+      if (chunk.subChunks && chunk.subChunks.length) {
+        chunk.subChunks.forEach((subChunk) => {
+          recursiveChunkId(subChunk, documentUrl);
+        });
+      }
+    };
 
     chunkResults.forEach((chunk) => {
-      chunksMap.set(chunk.id, { ...chunk, subChunks: [] });
+      if (chunk.inDocument && chunk.inDocument.length) {
+        documentUrl = chunk.inDocument[0].url;
+        recursiveChunkId(chunk, documentUrl);
+      }
+    });
+
+    chunkResults.forEach((chunk) => {
+      console.log(`Processing chunk: ${chunk.id}`)
+      chunksMap.set(chunk.id!, { ...chunk, subChunks: [] });
       if (chunk.inDocument && chunk.inDocument.length) {
         const doc = chunk.inDocument[0];
         if (!documentsMap.has(doc.url)) {
           documentsMap.set(doc.url, { ...doc, chunks: [] });
-          addedChunkIdsMap.set(doc.url, new Set()); // Initialize the set for this document
+          addedChunkIdsMap.set(doc.url, new Set());
+          console.log(`Document initialized: ${doc.url}`);
         }
       }
     });
 
     chunkResults.forEach((chunk) => {
-      const parentChunk =
-        chunk.inChunk && chunk.inChunk.length
-          ? chunksMap.get(chunk.inChunk[0].id)
-          : null;
-      const doc = documentsMap.get(chunk.inDocument![0].url);
-      const addedChunkIds = addedChunkIdsMap.get(chunk.inDocument![0].url); // Retrieve the set of added chunk IDs for this document
-
-      if (parentChunk) {
-        if (!addedChunkIds.has(chunk.id)) {
-          // Check if the chunk is not already added
-          parentChunk.subChunks.push(chunk);
-          addedChunkIds.add(chunk.id); // Mark this chunk ID as added
-        }
-      } else if (doc && !addedChunkIds.has(chunk.id)) {
-        // Similarly, check for the document's chunk list
-        doc.chunks.push(chunk);
-        addedChunkIds.add(chunk.id); // Mark this chunk ID as added
-      }
+      this.processChunk(chunk, chunksMap, documentsMap, addedChunkIdsMap);
     });
 
+    console.log("Processed chunk assignments complete.");
     return this.formatOutput(Array.from(documentsMap.values()));
   }
 
-  formatOutput(
-    documents: (PsRagDocumentSource & { chunks: PsRagChunk[] })[]
-  ): string {
+  processChunk(
+    chunk: PsRagChunk,
+    chunksMap: Map<string, PsRagChunk & { subChunks: PsRagChunk[] }>,
+    documentsMap: Map<string, PsRagDocumentSource & { chunks: PsRagChunk[] }>,
+    addedChunkIdsMap: Map<string, Set<string>>
+  ) {
+    const parentChunk = chunk.inChunk && chunk.inChunk.length ? chunksMap.get(chunk.inChunk[0].id!) : null;
+    const doc = chunk.inDocument && chunk.inDocument.length ? documentsMap.get(chunk.inDocument[0].url) : null;
+    const addedChunkIds = doc ? addedChunkIdsMap.get(chunk.inDocument![0].url) : null;
+
+    if (!addedChunkIds || addedChunkIds.has(chunk.id!)) return; // Skip if already processed
+
+    if (parentChunk) {
+      parentChunk.subChunks.push(chunk);
+      console.log(`Chunk assigned to parent: ${chunk.title}`);
+    } else if (doc) {
+      doc.chunks.push(chunk);
+      console.log(`Chunk assigned to document: ${chunk.title}`);
+    }
+
+    addedChunkIds.add(chunk.id!); // Mark as processed
+  }
+
+  formatOutput(documents: (PsRagDocumentSource & { chunks: PsRagChunk[] })[]): string {
     let output = "";
 
     documents.forEach((doc) => {
-      output += `Document: ${doc.shortDescription}\nURL: ${doc.url}\n\n`;
-      console.log(`Document: ${doc.shortDescription}\nURL: ${doc.url}\n\n`);
+      if (!doc.title && !doc.url) return; // Skip empty DocumentSource
+      console.log(`Formatting document: ${doc.shortDescription || doc.title}`);
+      output += `Document: ${doc.shortDescription || doc.title}\nURL: ${doc.url}\n\n`;
       output += this.appendChunks(doc.chunks, 1);
     });
 
-    return output;
+    console.log("Final output:", output);
+    return output.trim(); // Remove trailing new lines
   }
 
   appendChunks(chunks: PsRagChunk[], level: number): string {
     let chunkOutput = "";
 
     chunks.forEach((chunk) => {
-      console.log(
-        `${" ".repeat(level * 2)}Chapter (${
-          chunk.compressedContent ? "Content" : "Summary"
-        }): ${chunk.title}\n${chunk.compressedContent || chunk.fullSummary}\n\n`
-      );
-      chunkOutput += `${" ".repeat(level * 2)}Chapter (${
-        chunk.compressedContent ? "Content" : "Summary"
-      }): ${chunk.title}\n${chunk.compressedContent || chunk.fullSummary}\n\n`;
+      const prefix = `${" ".repeat(level * 2)}Chapter (${chunk.compressedContent ? "Content" : "Summary"}): `;
+      console.log(`${prefix}${chunk.title}`);
+      chunkOutput += `${prefix}${chunk.title}\n${" ".repeat(level * 2)}${chunk.compressedContent || chunk.fullSummary}\n\n`;
       if (chunk.subChunks && chunk.subChunks.length) {
         chunkOutput += this.appendChunks(chunk.subChunks, level + 1);
       }
