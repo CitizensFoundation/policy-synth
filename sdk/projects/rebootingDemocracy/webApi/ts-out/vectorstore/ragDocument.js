@@ -162,7 +162,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .get()
                 .withClassName("RagDocumentChunk")
                 .withNearText({ concepts: [query] })
-                .withLimit(1)
+                .withLimit(10)
                 .withFields(`
         title
         chunkIndex

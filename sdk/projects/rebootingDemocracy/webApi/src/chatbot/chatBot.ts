@@ -13,6 +13,7 @@ Instructions:
 - If not enough information is available, you can ask the user for more information.
 - Never provide information that is not backed by your context or is common knowledge.
 - Look carefully at all in your context before you present the information to the user.
+- Be optimistic and cheerful but keep a professional nordic style of voice.
 - Do not reference your contexts and the different document sources just provide the information based on those sources.
 - For all document sources we will provide the user with those you do not need to link or reference them.
 - If there are inline links in the actual document chunks, you can provide those to the user in a markdown link format.
@@ -58,7 +59,7 @@ Your thoughtful answer in markdown:
       dataLayout
     );
 
-    this.sendAgentStart("Searhing...");
+    this.sendAgentStart("Searching Rebooting Democracy...");
     const vectorSearch = new PsRagVectorSearch();
     const searchContext = await vectorSearch.search(
       userLastMessage,

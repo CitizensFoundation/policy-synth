@@ -22,8 +22,8 @@ type SavedChat = {
 
 @customElement('live-research-app')
 export class LiveResearchApp extends PolicySynthWebApp {
-  themeColor = '#88f940';
-  localStorageThemeColorKey = 'md3-live-research-theme-color3';
+  themeColor = '#e80000';
+  localStorageThemeColorKey = 'md3-rebooting-democracy-theme-color';
 
   @property({ type: Number })
   numberOfSelectQueries = 5;
@@ -253,9 +253,13 @@ export class LiveResearchApp extends PolicySynthWebApp {
   }
 
   renderApp() {
-    return html` <div class="layout vertical center-center">
+    return html` <div class="layout vertical">
       <div class="layout horizontal center-center themeToggle">
-        ${this.renderThemeToggle(true)} ${this.renderScopeSliders()}
+        <img src="https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/rebooting.png" style="height: 100px;margin-top: 8px;margin-left: 16px;"/>
+        <div class="flex"></div>
+        <div style="margin-top: 32px">${this.renderSavedChatsDropdown()}</div>
+        <div class="flex"></div>
+        <div class="layout horizontal" style="margin-left: 32px">${this.renderThemeToggle(true)}</div>
       </div>
       <rebooting-democracy-chat-bot
         @llm-total-cost-update=${this.handleCostUpdate}
@@ -269,7 +273,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
         .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
         .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}
       ></rebooting-democracy-chat-bot>
-      ${this.renderSavedChatsDropdown()}
+
     </div>`;
   }
 
@@ -364,63 +368,5 @@ export class LiveResearchApp extends PolicySynthWebApp {
     return formattedTime;
   }
 
-  renderScopeSliders() {
-    return html`
-      <div class="layout vertical scopeSliders">
-        <div class="layout horizontal center-center estTime">
-          <div class="topInfoItem">
-            ${this.t('Estimated')}: ${this.estimatedTotalTime}
-          </div>
-          <div class="topInfoItem">Running Time: ${this.runningTime}</div>
-          <div class="topInfoItem">LLM Cost: ${this.llmTotalCost}</div>
-        </div>
-        <div class="layout horizontal sliderScopes">
-          <div class="layout vertical">
-            <md-slider
-              min="5"
-              max="50"
-              value="5"
-              labeled
-              .valueLabel="${this.numberOfSelectQueries.toString()}"
-              @change="${this.updateNumberOfQueries}"
-            ></md-slider>
-            <div class="sliderTitle">
-              ${this.t('Number of search queries')}:
-              ${this.numberOfSelectQueries.toString()}
-            </div>
-          </div>
-          <div class="layout vertical">
-            <md-slider
-              min="10"
-              max="100"
-              value="25"
-              labeled
-              .valueLabel="${Math.round(
-                this.percentOfTopQueriesToSearch * 100
-              )}%"
-              @change="${this.updatePercentOfQueries}"
-            ></md-slider>
-            <div class="sliderTitle">
-              ${this.t('Use % of top search queries')}:
-              ${Math.round(this.percentOfTopQueriesToSearch * 100)}%
-            </div>
-          </div>
-          <div class="layout vertical">
-            <md-slider
-              min="10"
-              max="100"
-              labeled
-              value="25"
-              .valueLabel="${Math.round(this.percentOfTopResultsToScan * 100)}%"
-              @change="${this.updatePercentOfResults}"
-            ></md-slider>
-            <div class="sliderTitle">
-              ${this.t('Use % of top search results')}:
-              ${Math.round(this.percentOfTopResultsToScan * 100)}%
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+
 }

@@ -27,8 +27,8 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this.defaultInfoMessage = this.t("I'm your helpful web research assistant");
-    this.textInputLabel = this.t('Please state your research question.');
+    this.defaultInfoMessage = this.t("I'm your helpful web Rebooting Democracy assistant");
+    this.textInputLabel = this.t('How can I help?');
     this.serverApi = new ResearchServerApi();
   }
 
