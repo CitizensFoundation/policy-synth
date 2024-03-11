@@ -56,7 +56,8 @@ Your thoughtful answer in markdown:
     const router = new PsRagRouter();
     const routingData = await router.getRoutingData(
       userLastMessage,
-      dataLayout
+      dataLayout,
+      JSON.stringify(chatLogWithoutLastUserMessage)
     );
 
     this.sendAgentStart("Searching Rebooting Democracy...");
@@ -84,9 +85,11 @@ Your thoughtful answer in markdown:
 
     messages.unshift(systemMessage);
 
+    const finalUserQuestionText = `Original user question: ${userLastMessage} \nRewritten user question (for vector search): ${routingData.rewrittenUserQuestionVectorDatabaseSearch}`
+
     const userMessage = {
       role: "user",
-      content: this.mainStreamingUserPrompt(userLastMessage, searchContext),
+      content: this.mainStreamingUserPrompt(finalUserQuestionText, searchContext),
     };
 
     messages.push(userMessage);

@@ -34,7 +34,7 @@ Your thoughtful answer in markdown:
         console.log(`chatLogWithoutLastUserMessage: ${JSON.stringify(chatLogWithoutLastUserMessage, null, 2)}`);
         this.sendAgentStart("Thinking...");
         const router = new PsRagRouter();
-        const routingData = await router.getRoutingData(userLastMessage, dataLayout);
+        const routingData = await router.getRoutingData(userLastMessage, dataLayout, JSON.stringify(chatLogWithoutLastUserMessage));
         this.sendAgentStart("Searching Rebooting Democracy...");
         const vectorSearch = new PsRagVectorSearch();
         const searchContext = await vectorSearch.search(userLastMessage, routingData, dataLayout);
@@ -50,9 +50,10 @@ Your thoughtful answer in markdown:
             content: this.mainSreamingSystemPrompt,
         };
         messages.unshift(systemMessage);
+        const finalUserQuestionText = `Original user question: ${userLastMessage} \nRewritten user question (for vector search): ${routingData.rewrittenUserQuestionVectorDatabaseSearch}`;
         const userMessage = {
             role: "user",
-            content: this.mainStreamingUserPrompt(userLastMessage, searchContext),
+            content: this.mainStreamingUserPrompt(finalUserQuestionText, searchContext),
         };
         messages.push(userMessage);
         console.log(`Messages to chatbot: ${JSON.stringify(messages, null, 2)}`);

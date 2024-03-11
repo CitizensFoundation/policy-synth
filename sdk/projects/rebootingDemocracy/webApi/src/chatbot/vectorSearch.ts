@@ -15,10 +15,10 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     const chunkResults: PsRagChunk[] =
       await vectorStore.searchChunksWithReferences(userQuestion);
 
-    console.log(
+    /*console.log(
       "Initial chunk results received:",
       JSON.stringify(chunkResults, null, 2)
-    );
+    );*/
 
     const documentsMap: Map<
       string,
@@ -62,7 +62,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
           }
         }
         if (chunk.inChunk) {
-          console.log("----------------------------> RECURSIVE CALL ---------------------->");
+          //console.log("----------------------------> RECURSIVE CALL ---------------------->");
           recursiveProcessChunkResults(chunk.inChunk);
         }
       });
@@ -71,7 +71,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     recursiveProcessChunkResults(chunkResults);
 
     chunkResults.forEach((chunk) => {
-      if (chunk._additional) {
+      /*if (chunk._additional) {
         console.log(`\n\n${chunk.title}`);
         console.log(`C: ${(chunk.compressedContent && chunk.compressedContent!="") ? "Content" : "Summary"}`);
         console.log(
@@ -80,7 +80,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         console.log(
           `Chunk info: ${chunk._additional.id} with relevance: ${chunk.relevanceEloRating}} and substance: ${chunk.substanceEloRating} and quality: ${chunk.qualityEloRating}\n\n`
         );
-      }
+      }*/
       this.processChunk(chunk, chunksMap, documentsMap, addedChunkIdsMap);
     });
 
@@ -126,17 +126,14 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     if (!addedChunkIds || addedChunkIds.has(chunk.id!)) return; // Skip if already processed
 
     if (parentChunk) {
-      // Add chunk to parentChunk's subChunks
       parentChunk.subChunks!.push(chunk);
       console.log(`Chunk assigned to chunk parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} in ${parentChunk.title}`);
-      if (!parentChunk.inChunk) {
+      if (!parentChunk.inChunk && !doc?.chunks?.includes(parentChunk)) {
         doc!.chunks!.push(parentChunk);
       }
-      // Note: Recursively calling processChunk here may not be necessary or should be carefully managed to avoid redundant processing
   } else if (doc) {
       doc.chunks!.push(chunk);
       console.log(`Chunk assigned to document: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} in ${doc.title}`);
-      // Since we're directly modifying the doc object which is a reference in documentsMap, this change is reflected automatically
   }
 
     addedChunkIds.add(chunk.id!); // Mark as processed
