@@ -22,9 +22,9 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
 
     const documentsMap: Map<
       string,
-      PsRagDocumentSource & { chunks: PsRagChunk[] }
+      PsRagDocumentSource
     > = new Map();
-    const chunksMap: Map<string, PsRagChunk & { subChunks: PsRagChunk[] }> =
+    const chunksMap: Map<string, PsRagChunk> =
       new Map();
     const addedChunkIdsMap: Map<string, Set<string>> = new Map(); // Tracks added chunk IDs for each document
 
@@ -50,7 +50,9 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     const recursiveProcessChunkResults = (chunkResults: PsRagChunk[]) => {
       chunkResults.forEach((chunk) => {
         console.log(`Processing chunk ${chunk.compressedContent ? "Content" : "Summary"}: ${chunk.id} `);
-        chunksMap.set(chunk.id!, { ...chunk, subChunks: [] });
+        if (!chunksMap.has(chunk.id!)) {
+          chunksMap.set(chunk.id!, { ...chunk, subChunks: [] });
+        }
         if (chunk.inDocument && chunk.inDocument.length) {
           const doc = chunk.inDocument[0];
           if (!documentsMap.has(doc.url)) {
@@ -60,7 +62,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
           }
         }
         if (chunk.inChunk) {
-          console.log("----------------------------_> RECURSIVE CALL ---------------------->");
+          console.log("----------------------------> RECURSIVE CALL ---------------------->");
           recursiveProcessChunkResults(chunk.inChunk);
         }
       });
@@ -95,19 +97,14 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
       recursiveSortChunks(chunk);
     });
 
-    console.log(`Processed chunk assignments: ${JSON.stringify(Array.from(documentsMap.values()), null, 2)}`);
-
-    // Wait 3 minutes
-    await new Promise((resolve) => setTimeout(resolve, 180000));
-
     console.log("Processed chunk assignments complete.");
     return this.formatOutput(Array.from(documentsMap.values()));
   }
 
   processChunk(
     chunk: PsRagChunk,
-    chunksMap: Map<string, PsRagChunk & { subChunks: PsRagChunk[] }>,
-    documentsMap: Map<string, PsRagDocumentSource & { chunks: PsRagChunk[] }>,
+    chunksMap: Map<string, PsRagChunk>,
+    documentsMap: Map<string, PsRagDocumentSource>,
     addedChunkIdsMap: Map<string, Set<string>>
   ) {
     console.log(
@@ -129,27 +126,24 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     if (!addedChunkIds || addedChunkIds.has(chunk.id!)) return; // Skip if already processed
 
     if (parentChunk) {
-      parentChunk.subChunks.push(chunk);
-      console.log(
-        `Chunk assigned to chunk parent: ${
-          chunk.compressedContent ? "Content" : "Summary"
-        } ${chunk.title} in ${parentChunk.title}`
-      );
-      this.processChunk(parentChunk, chunksMap, documentsMap, addedChunkIdsMap);
-    } else if (doc) {
-      doc.chunks.push(chunk);
-      console.log(
-        `Chunk assigned to document: ${
-          chunk.compressedContent ? "Content" : "Summary"
-        } ${chunk.title} in ${doc.title}`
-      );
-    }
+      // Add chunk to parentChunk's subChunks
+      parentChunk.subChunks!.push(chunk);
+      console.log(`Chunk assigned to chunk parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} in ${parentChunk.title}`);
+      if (!parentChunk.inChunk) {
+        doc!.chunks!.push(parentChunk);
+      }
+      // Note: Recursively calling processChunk here may not be necessary or should be carefully managed to avoid redundant processing
+  } else if (doc) {
+      doc.chunks!.push(chunk);
+      console.log(`Chunk assigned to document: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} in ${doc.title}`);
+      // Since we're directly modifying the doc object which is a reference in documentsMap, this change is reflected automatically
+  }
 
     addedChunkIds.add(chunk.id!); // Mark as processed
   }
 
   formatOutput(
-    documents: (PsRagDocumentSource & { chunks: PsRagChunk[] })[]
+    documents: PsRagDocumentSource[]
   ): string {
     let output = "";
 
@@ -159,7 +153,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
       output += `Document: ${doc.shortDescription || doc.title}\nURL: ${
         doc.url
       }\n\n`;
-      output += this.appendChunks(doc.chunks, 1);
+      output += this.appendChunks(doc.chunks!, 1);
     });
 
     console.log("Final output:", output);
