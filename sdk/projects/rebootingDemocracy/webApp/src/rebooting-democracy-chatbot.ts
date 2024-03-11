@@ -23,6 +23,8 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
 
   showCleanupButton = true;
 
+  onlyUseTextField = true;
+
   serverApi: ResearchServerApi;
 
   override connectedCallback(): void {

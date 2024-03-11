@@ -63,7 +63,8 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
         searchQueries,
-        question
+        question,
+        searchQueries.length*10
       );
       this.sendAgentCompleted("Pairwise Ranking Completed");
 

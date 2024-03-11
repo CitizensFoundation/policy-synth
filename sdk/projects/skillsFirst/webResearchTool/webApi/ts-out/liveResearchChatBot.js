@@ -84,7 +84,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             // Rank search queries
             this.sendAgentStart("Pairwise Ranking Search Queries");
             const searchQueriesRanker = new SearchQueriesRanker(this.memory, this.sendAgentUpdate.bind(this));
-            const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(searchQueries, question);
+            const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(searchQueries, question, searchQueries.length * 10);
             this.sendAgentCompleted("Pairwise Ranking Completed");
             const queriesToSearch = rankedSearchQueries.slice(0, Math.floor(rankedSearchQueries.length * this.percentOfQueriesToSearch));
             // Add "New Jersey" to the each search query
