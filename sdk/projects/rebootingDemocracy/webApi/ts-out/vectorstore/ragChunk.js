@@ -2,7 +2,7 @@ import weaviate from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class PsRagChunkVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract = "title chunkIndex chapterIndex mainExternalUrlFound  \
@@ -71,22 +71,37 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
         console.log(JSON.stringify(res, null, 2));
         return res;
     }
+    //TODO: Move to base class
+    async retry(fn, retries = 10, delay = 5000) {
+        try {
+            return await fn();
+        }
+        catch (err) {
+            if (retries > 1) {
+                await new Promise((resolve) => setTimeout(resolve, delay));
+                return this.retry(fn, retries - 1, delay);
+            }
+            else {
+                throw err;
+            }
+        }
+    }
     async postChunk(chunkData) {
         console.log(`Posting chunk ${chunkData.title}`);
-        return new Promise((resolve, reject) => {
-            PsRagChunkVectorStore.client.data
-                .creator()
-                .withClassName("RagDocumentChunk")
-                .withProperties(chunkData)
-                .do()
-                .then((res) => {
+        return this.retry(async () => {
+            try {
+                const res = await PsRagChunkVectorStore.client.data
+                    .creator()
+                    .withClassName("RagDocumentChunk")
+                    .withProperties(chunkData)
+                    .do();
                 this.logger.info(`Weaviate: Have saved chunk ${chunkData.title}`);
-                resolve(res.id);
-            })
-                .catch((err) => {
-                reject(err);
-            });
-        });
+                return res.id;
+            }
+            catch (err) {
+                console.error(`Error posting chunk: ${err}`);
+            }
+        }, 3, 1000);
     }
     async addCrossReference(sourceId, propertyName, targetId, targetClassName) {
         return new Promise((resolve, reject) => {
@@ -102,6 +117,7 @@ export class PsRagChunkVectorStore extends PolicySynthAgentBase {
                 resolve(res);
             })
                 .catch((err) => {
+                this.logger.error(err);
                 reject(err);
             });
         });

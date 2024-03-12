@@ -80,22 +80,37 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         console.log(JSON.stringify(res, null, 2));
         return res;
     }
+    //TODO: Move to base class
+    async retry(fn, retries = 10, delay = 5000) {
+        try {
+            return await fn();
+        }
+        catch (err) {
+            if (retries > 1) {
+                await new Promise((resolve) => setTimeout(resolve, delay));
+                return this.retry(fn, retries - 1, delay);
+            }
+            else {
+                throw err;
+            }
+        }
+    }
     async postDocument(document) {
         console.log(`Posting document ${JSON.stringify(document, null, 2)}`);
-        return new Promise((resolve, reject) => {
-            PsRagDocumentVectorStore.client.data
-                .creator()
-                .withClassName("RagDocument")
-                .withProperties(document)
-                .do()
-                .then((res) => {
+        return this.retry(async () => {
+            try {
+                const res = await PsRagDocumentVectorStore.client.data
+                    .creator()
+                    .withClassName("RagDocument")
+                    .withProperties(document)
+                    .do();
                 this.logger.info(`Weaviate: Have saved document ${document.url} ${res.id}`);
-                resolve(res.id);
-            })
-                .catch((err) => {
-                reject(err);
-            });
-        });
+                return res.id;
+            }
+            catch (error) {
+                console.error(`Error posting document: ${error}`);
+            }
+        }, 10, 5000);
     }
     async updateDocument(id, documentData, quiet = false) {
         return new Promise((resolve, reject) => {

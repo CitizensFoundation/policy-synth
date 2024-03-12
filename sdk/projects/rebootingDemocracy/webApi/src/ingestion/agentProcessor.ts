@@ -154,10 +154,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       dateString = date.toISOString();
     } catch (error) {
       console.error(`Failed to parse date: ${error}`);
+      dateString = new Date().toISOString();
     }
 
+    newSource.date = dateString;
     newSource.lastModified = dateString;
-
     newSource.lastModifiedOnServer = undefined as any;
     newSource.documentData = undefined as any;
     newSource.fileId = undefined as any;
@@ -186,16 +187,44 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   ) {
     const documentStore = new PsRagDocumentVectorStore();
     const chunkStore = new PsRagChunkVectorStore();
+    const processedChunks = new Map<string, PsRagChunk>();
 
     // Helper function to post a chunk and its sub-chunks recursively
     const postChunkRecursively = async (
       chunk: PsRagChunk,
       documentId: string,
-      parentChunkId?: string
+      parentChunkId?: string,
+      allSiblingChunksIncludingMe?: PsRagChunk[]
     ) => {
+      // Construct the unique identifier for the current chunk
+      const chunkIdentifier = `${documentId}-${chunk.chunkIndex}-${chunk.chapterIndex}`;
+      // Check if this chunk has already been processed
+      if (processedChunks.has(chunkIdentifier)) {
+        console.log(`Skipping already processed chunk ${chunkIdentifier}`);
+        return processedChunks.get(chunkIdentifier)!.id;
+      } else {
+        console.log(`Processing chunk ${chunkIdentifier}`);
+      }
+
+      // Mark this chunk as processed to prevent duplicate processing
+      processedChunks.set(chunkIdentifier, chunk);
+
+      console.log(
+        `\n\n\n\n1. importantContextChunkIndexes ${JSON.stringify(
+          chunk.importantContextChunkIndexes
+        )}`
+      );
+
       const chunkId = (await chunkStore.postChunk(
         this.transformChunkForVectorstore(chunk)
       )) as string;
+
+      console.log(
+        `2. importantContextChunkIndexes ${JSON.stringify(
+          chunk.importantContextChunkIndexes
+        )}`
+      );
+
       console.log(`Posted chunk ${chunkId} for document ${documentId}`);
 
       // Add cross reference to the document
@@ -205,6 +234,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         "inDocument",
         documentBeacon,
         "RagDocumentChunk"
+      );
+      console.log(
+        `3. importantContextChunkIndexes ${JSON.stringify(
+          chunk.importantContextChunkIndexes
+        )}`
       );
 
       // Add cross reference to the parent chunk if provided
@@ -218,19 +252,43 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         );
       }
 
-      if (chunk.subChunks) {
-        const siblingChunkIds = [];
-        for (const subChunk of chunk.subChunks) {
-          const subChunkId = await postChunkRecursively(
-            subChunk,
-            documentId,
-            chunkId
-          );
-          siblingChunkIds.push(subChunkId);
+      if (allSiblingChunksIncludingMe && allSiblingChunksIncludingMe.length > 1) {
+        console.log(`Processing sibling chunks for ${chunkId}`);
+        console.log(
+          `4. importantContextChunkIndexes ${JSON.stringify(
+            chunk.importantContextChunkIndexes
+          )}`
+        );
+
+        const allSiblingChunksWithIds = [];
+        for (const subChunk of allSiblingChunksIncludingMe) {
+          if (subChunk.chapterIndex != chunk.chapterIndex) {
+            console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex}`)
+            const subChunkId = await postChunkRecursively(
+              subChunk,
+              documentId,
+              chunkId,
+              chunk.subChunks
+            );
+            subChunk.id = subChunkId;
+            allSiblingChunksWithIds.push(subChunk);
+          } else {
+            console.log(
+              `Skipping myself ${subChunk.chapterIndex} for ${chunk.chapterIndex}`
+            );
+          }
         }
+
+        console.log(
+          `5. importantContextChunkIndexes ${JSON.stringify(
+            chunk.importantContextChunkIndexes
+          )}`
+        );
+
         // Add cross references for sibling chunks
-        for (const siblingChunkId of siblingChunkIds) {
-          const siblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${siblingChunkId}`;
+        for (const siblingChunk of allSiblingChunksWithIds) {
+          console.log(`Adding sibling chunk ${siblingChunk.id}`);
+          const siblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${siblingChunk.id}`;
           await chunkStore.addCrossReference(
             chunkId,
             "allSiblingChunks",
@@ -239,12 +297,30 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           );
         }
 
-        // Add cross references for most relevant sibling chunks based on importantContextChunkIndexes
-        if (chunk.importantContextChunkIndexes) {
-          for (const index of chunk.importantContextChunkIndexes) {
-            const relevantSiblingChunkId = siblingChunkIds[index - 1];
-            if (relevantSiblingChunkId) {
-              const relevantSiblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${relevantSiblingChunkId}`;
+        console.log(
+          `6. importantContextChunkIndexes ${JSON.stringify(
+            chunk.importantContextChunkIndexes
+          )}`
+        );
+
+        if (
+          chunk.importantContextChunkIndexes &&
+          chunk.importantContextChunkIndexes.length > 0
+        ) {
+          console.log(
+            `1. Adding relevant sibling chunks for ${chunkId} ${chunk.chapterIndex}`
+          );
+          for (const sibling of allSiblingChunksWithIds) {
+            console.log(
+              `2. Adding relevant sibling chunks for ${sibling.id} ${sibling.chapterIndex}`
+            );
+            if (
+              chunk.chapterIndex != sibling.chapterIndex &&
+              chunk.importantContextChunkIndexes.indexOf(sibling.chapterIndex) >
+                -1
+            ) {
+              console.log(`3. Adding Relevant sibling chunk ${sibling.id}`);
+              const relevantSiblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${sibling.id}`;
               await chunkStore.addCrossReference(
                 chunkId,
                 "mostRelevantSiblingChunks",
@@ -253,6 +329,24 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
               );
             }
           }
+        }
+      } else {
+        console.log(
+          `No sibling chunks to process for ${chunkId} length ${
+            allSiblingChunksIncludingMe ? allSiblingChunksIncludingMe.length : -1
+          }`
+        );
+      }
+
+      if (chunk.subChunks) {
+        for (const subChunk of chunk.subChunks) {
+          console.log(`Middle Level Loop: Processing subChunk ${subChunk.chapterIndex}`)
+          await postChunkRecursively(
+            subChunk,
+            documentId,
+            chunkId,
+            chunk.subChunks
+          );
         }
       }
 
@@ -265,19 +359,29 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           this.transformDocumentSourceForVectorstore(source)
         );
 
-        if (source.chunks) {
-          for (const chunk of source.chunks) {
-            try {
-              await postChunkRecursively(chunk, documentId);
-            } catch (error) {
-              console.error(
-                `Failed to post chunk for document ${
-                  source.url
-                }:\n${JSON.stringify(chunk)}`,
-                error
-              );
+        if (documentId) {
+          if (source.chunks) {
+            for (const chunk of source.chunks) {
+              console.log(`Top Level Loop: Processing chunk ${chunk.chapterIndex} for ${source.url}`);
+              try {
+                await postChunkRecursively(
+                  chunk,
+                  documentId,
+                  undefined,
+                  source.chunks
+                );
+              } catch (error) {
+                console.error(
+                  `Failed to post chunk for document ${
+                    source.url
+                  }:\n${JSON.stringify(chunk)}`,
+                  error
+                );
+              }
             }
           }
+        } else {
+          console.error(`Failed to post document ${source.url}`);
         }
       } catch (error) {
         console.error(`Failed to post document ${source.url}:\n`, error);

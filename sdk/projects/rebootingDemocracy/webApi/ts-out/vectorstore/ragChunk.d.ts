@@ -9,7 +9,8 @@ export declare class PsRagChunkVectorStore extends PolicySynthAgentBase {
     testQuery(): Promise<{
         data: any;
     }>;
-    postChunk(chunkData: PsRagChunk): Promise<unknown>;
+    retry<T>(fn: () => Promise<T>, retries?: number, delay?: number): Promise<T>;
+    postChunk(chunkData: PsRagChunk): Promise<string | undefined>;
     addCrossReference(sourceId: string, propertyName: string, targetId: string, targetClassName: string): Promise<unknown>;
     updateChunk(id: string, chunkData: PsRagChunk, quiet?: boolean): Promise<unknown>;
     getChunk(id: string): Promise<PsRagChunk>;

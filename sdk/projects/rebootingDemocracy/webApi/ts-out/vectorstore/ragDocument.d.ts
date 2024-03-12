@@ -13,7 +13,8 @@ export declare class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     testQuery(): Promise<{
         data: any;
     }>;
-    postDocument(document: PsRagDocumentSource): Promise<string>;
+    retry<T>(fn: () => Promise<T>, retries?: number, delay?: number): Promise<T>;
+    postDocument(document: PsRagDocumentSource): Promise<string | undefined>;
     updateDocument(id: string, documentData: PsRagDocumentSource, quiet?: boolean): Promise<unknown>;
     getDocument(id: string): Promise<PsRagDocumentSource>;
     searchDocuments(query: string): Promise<PsRagDocumentSourceGraphQlResponse>;

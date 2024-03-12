@@ -1,0 +1,146 @@
+{
+  "class": "RagDocumentChunk",
+  "description": "A RAG document chunk",
+  "vectorIndexType": "hnsw",
+  "vectorizer": "text2vec-openai",
+  "moduleConfig": {
+    "text2vec-openai": {
+      "model": "text-embedding-3-large",
+      "vectorizeClassName": true
+    }
+  },
+  "properties": [
+    {
+      "name": "inDocument",
+      "description": "The document that this chunk belongs to",
+      "dataType": ["RagDocument"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "mostRelevantSiblingChunks",
+      "description": "The identified most relevant sibling chunks of this chunk",
+      "dataType": ["RagDocumentChunk"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "allSiblingChunks",
+      "description": "All sibling chunks of this chunk",
+      "dataType": ["RagDocumentChunk"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "inChunk",
+      "description": "The parent chunk of this chunk",
+      "dataType": ["RagDocumentChunk"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "title",
+      "description": "Title of the document chunk",
+      "dataType": ["text"]
+    },
+    {
+      "name": "chunkIndex",
+      "description": "Index of the chunk within the document overall docuemnt",
+      "dataType": ["int"]
+    },
+    {
+      "name": "chapterIndex",
+      "description": "The index of this chunk in on this level in the tree",
+      "dataType": ["int"]
+    },
+    {
+      "name": "mainExternalUrlFound",
+      "description": "Main external URL found within the chunk",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "shortSummary",
+      "description": "A short summary of the chunk",
+      "dataType": ["text"]
+    },
+    {
+      "name": "fullSummary",
+      "description": "A full summary of the chunk",
+      "dataType": ["text"]
+    },
+    {
+      "name": "relevanceEloRating",
+      "description": "Elo rating for relevance",
+      "dataType": ["number"]
+    },
+    {
+      "name": "qualityEloRating",
+      "description": "Elo rating for quality",
+      "dataType": ["number"]
+    },
+    {
+      "name": "substanceEloRating",
+      "description": "Elo rating for substance",
+      "dataType": ["number"]
+    },
+    {
+      "name": "uncompressedContent",
+      "description": "Uncompressed content of the chunk",
+      "dataType": ["text"]
+    },
+    {
+      "name": "compressedContent",
+      "description": "Compressed content of the chunk",
+      "dataType": ["text"]
+    },
+    {
+      "name": "metaDataFields",
+      "description": "Meta data fields of the chunk",
+      "dataType": ["text[]"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "metaData",
+      "description": "Meta data key-value pairs of the chunk",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    }
+  ],
+  "invertedIndexConfig": {
+    "indexTimestamps": true,
+    "indexNullState": true,
+    "indexPropertyLength": true
+  },
+  "multiTenancyConfig": {
+    "enabled": false
+  }
+}
