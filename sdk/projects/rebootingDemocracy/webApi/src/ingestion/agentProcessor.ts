@@ -153,7 +153,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       );
       dateString = date.toISOString();
     } catch (error) {
-      console.error(`Failed to parse date: ${error}`);
+      console.error(`Failed to parse date: ${error} - using Date.now()`);
       dateString = new Date().toISOString();
     }
 
@@ -193,9 +193,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     const postChunkRecursively = async (
       chunk: PsRagChunk,
       documentId: string,
-      parentChunkId?: string,
-      allSiblingChunksIncludingMe?: PsRagChunk[]
+      parentChunkId: string | undefined,
+      allSiblingChunksIncludingMe: PsRagChunk[]
     ) => {
+
       // Construct the unique identifier for the current chunk
       const chunkIdentifier = `${documentId}-${chunk.chunkIndex}-${chunk.chapterIndex}`;
       // Check if this chunk has already been processed
@@ -216,14 +217,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       );
 
       const chunkId = (await chunkStore.postChunk(
-        this.transformChunkForVectorstore(chunk)
+        this.transformChunkForVectorstore(JSON.parse(JSON.stringify(chunk)))
       )) as string;
 
-      console.log(
-        `2. importantContextChunkIndexes ${JSON.stringify(
-          chunk.importantContextChunkIndexes
-        )}`
-      );
+      chunk.id = chunkId;
 
       console.log(`Posted chunk ${chunkId} for document ${documentId}`);
 
@@ -234,11 +231,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         "inDocument",
         documentBeacon,
         "RagDocumentChunk"
-      );
-      console.log(
-        `3. importantContextChunkIndexes ${JSON.stringify(
-          chunk.importantContextChunkIndexes
-        )}`
       );
 
       // Add cross reference to the parent chunk if provided
@@ -263,15 +255,19 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         const allSiblingChunksWithIds = [];
         for (const subChunk of allSiblingChunksIncludingMe) {
           if (subChunk.chapterIndex != chunk.chapterIndex) {
-            console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex}`)
+            console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex} current chunk.subChunks: ${chunk.subChunks?.map(c => c.chapterIndex)}`)
             const subChunkId = await postChunkRecursively(
               subChunk,
               documentId,
               chunkId,
-              chunk.subChunks
+              allSiblingChunksIncludingMe
             );
-            subChunk.id = subChunkId;
-            allSiblingChunksWithIds.push(subChunk);
+            if (subChunkId) {
+              subChunk.id = subChunkId;
+              allSiblingChunksWithIds.push(subChunk);
+            } else {
+              console.error(`Error: Failed to post sibling chunk ${subChunk.chapterIndex} NO CHUNK ID`)
+            }
           } else {
             console.log(
               `Skipping myself ${subChunk.chapterIndex} for ${chunk.chapterIndex}`
@@ -345,7 +341,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             subChunk,
             documentId,
             chunkId,
-            chunk.subChunks
+            allSiblingChunksIncludingMe
           );
         }
       }

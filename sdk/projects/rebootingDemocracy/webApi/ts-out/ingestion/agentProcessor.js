@@ -115,7 +115,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             dateString = date.toISOString();
         }
         catch (error) {
-            console.error(`Failed to parse date: ${error}`);
+            console.error(`Failed to parse date: ${error} - using Date.now()`);
             dateString = new Date().toISOString();
         }
         newSource.date = dateString;
@@ -152,13 +152,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             // Mark this chunk as processed to prevent duplicate processing
             processedChunks.set(chunkIdentifier, chunk);
             console.log(`\n\n\n\n1. importantContextChunkIndexes ${JSON.stringify(chunk.importantContextChunkIndexes)}`);
-            const chunkId = (await chunkStore.postChunk(this.transformChunkForVectorstore(chunk)));
-            console.log(`2. importantContextChunkIndexes ${JSON.stringify(chunk.importantContextChunkIndexes)}`);
+            const chunkId = (await chunkStore.postChunk(this.transformChunkForVectorstore(JSON.parse(JSON.stringify(chunk)))));
+            chunk.id = chunkId;
             console.log(`Posted chunk ${chunkId} for document ${documentId}`);
             // Add cross reference to the document
             const documentBeacon = `weaviate://localhost/RagDocument/${documentId}`;
             await chunkStore.addCrossReference(chunkId, "inDocument", documentBeacon, "RagDocumentChunk");
-            console.log(`3. importantContextChunkIndexes ${JSON.stringify(chunk.importantContextChunkIndexes)}`);
             // Add cross reference to the parent chunk if provided
             if (parentChunkId) {
                 const parentChunkBeacon = `weaviate://localhost/RagDocumentChunk/${parentChunkId}`;
@@ -170,10 +169,15 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 const allSiblingChunksWithIds = [];
                 for (const subChunk of allSiblingChunksIncludingMe) {
                     if (subChunk.chapterIndex != chunk.chapterIndex) {
-                        console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex}`);
-                        const subChunkId = await postChunkRecursively(subChunk, documentId, chunkId, chunk.subChunks);
-                        subChunk.id = subChunkId;
-                        allSiblingChunksWithIds.push(subChunk);
+                        console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex} current chunk.subChunks: ${chunk.subChunks?.map(c => c.chapterIndex)}`);
+                        const subChunkId = await postChunkRecursively(subChunk, documentId, chunkId, allSiblingChunksIncludingMe);
+                        if (subChunkId) {
+                            subChunk.id = subChunkId;
+                            allSiblingChunksWithIds.push(subChunk);
+                        }
+                        else {
+                            console.error(`Error: Failed to post sibling chunk ${subChunk.chapterIndex} NO CHUNK ID`);
+                        }
                     }
                     else {
                         console.log(`Skipping myself ${subChunk.chapterIndex} for ${chunk.chapterIndex}`);
@@ -203,12 +207,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
             }
             else {
-                console.log(`No sibling chunks to process for ${chunkId} length ${allSiblingChunks ? allSiblingChunks.length : -1}`);
+                console.log(`No sibling chunks to process for ${chunkId} length ${allSiblingChunksIncludingMe ? allSiblingChunksIncludingMe.length : -1}`);
             }
             if (chunk.subChunks) {
                 for (const subChunk of chunk.subChunks) {
                     console.log(`Middle Level Loop: Processing subChunk ${subChunk.chapterIndex}`);
-                    await postChunkRecursively(subChunk, documentId, chunkId, chunk.subChunks);
+                    await postChunkRecursively(subChunk, documentId, chunkId, allSiblingChunksIncludingMe);
                 }
             }
             return chunkId;
