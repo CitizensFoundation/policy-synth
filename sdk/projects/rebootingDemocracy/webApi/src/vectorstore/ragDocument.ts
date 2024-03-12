@@ -210,7 +210,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .get()
         .withClassName("RagDocumentChunk")
         .withNearText({ concepts: [query] })
-        .withLimit(20)
+        .withLimit(1)
         .withWhere({
           operator: "And",
           operands: where,
@@ -256,6 +256,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             compressedContent
           }
         }
+
         inChunk {
           ... on RagDocumentChunk {
             title
@@ -295,6 +296,17 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                         shortSummary
                         fullSummary
                         compressedContent
+
+                        inChunk {
+                          ... on RagDocumentChunk {
+                            title
+                            chunkIndex
+                            chapterIndex
+                            shortSummary
+                            fullSummary
+                            compressedContent
+                          }
+                        }
                       }
                     }
                   }
@@ -308,9 +320,12 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .do();
 
 
+      //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
+
       return results.data.Get.RagDocumentChunk as PsRagChunk[];
       //return Array.from(ragDocumentsMap.values());
     } catch (err) {
+      console.error(err);
       throw err;
     }
   }
@@ -325,7 +340,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .get()
         .withClassName("RagDocumentChunk")
         .withNearText({ concepts: [query] })
-        .withLimit(1)
+        .withLimit(15)
         .withFields(
           `
         title
@@ -435,7 +450,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       const ragDocumentsMap: Map<string, PsRagDocumentSource> = new Map();
 
       console.log(`Got ${results.data.Get.RagDocumentChunk.length} chunks`);
-      console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
+      //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
 
       for (const chunk of results.data.Get.RagDocumentChunk) {
         if (chunk.inDocument) {
@@ -491,7 +506,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             ragDocument.chunks!.push(chunk);
           } else {
             this.logger.error(
-              `RagDocument ${chunk.inDocument.id} not found in map`
+              `!!!!!!!!!!!!!!!!!!!!!!!!!! RagDocument ${chunk.inDocument.id} not found in map`
             );
           }
         }
