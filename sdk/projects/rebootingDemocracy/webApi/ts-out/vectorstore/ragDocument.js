@@ -184,7 +184,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .get()
                 .withClassName("RagDocumentChunk")
                 .withNearText({ concepts: [query] })
-                .withLimit(1)
+                .withLimit(15)
                 .withWhere({
                 operator: "And",
                 operands: where,
