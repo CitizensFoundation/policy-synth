@@ -14,6 +14,7 @@ services:
     - 8080:8080
     - 50051:50051
     volumes:
+    # Folder weaviate_data needs to be created manually before docker compose up
     - weaviate_data:/home/robert/data/weaviate_ps_chatbot
     restart: on-failure:0
     environment:
@@ -25,5 +26,5 @@ services:
       ENABLE_MODULES: ' text2vec-openai'
       OPENAI_APIKEY: ${OPENAI_API_KEY}
       CLUSTER_HOSTNAME: 'node1'
-volumes:
-  weaviate_data:
+      PERSISTENCE_DATA_PATH: '/home/robert/data/weaviate_ps_chatbot'
+	
