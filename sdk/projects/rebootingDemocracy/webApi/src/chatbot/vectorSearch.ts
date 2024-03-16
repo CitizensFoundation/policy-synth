@@ -6,6 +6,145 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     return `${documentUrl}#${chunk.chunkIndex}#${chunk.chapterIndex}`;
   }
 
+  setupChunkMaps(chunkResults: PsRagChunk[], documentsMap: Map<string, PsRagDocumentSource>, chunksMap: Map<string, PsRagChunk>, addedChunkIdsMap: Map<string, Set<string>>) {
+    const recursiveChunkId = (chunk: PsRagChunk, documentUrl: string) => {
+      chunk.id = this.getChunkId(chunk, documentUrl);
+      if (chunk.inChunk) {
+        chunk.inChunk.forEach((subChunk) => {
+          recursiveChunkId(subChunk, documentUrl);
+        });
+      }
+    };
+
+    let documentUrl: string | undefined;
+
+    chunkResults.forEach((chunk) => {
+      if (chunk.inDocument && chunk.inDocument.length) {
+        documentUrl = chunk.inDocument[0].url;
+        recursiveChunkId(chunk, documentUrl);
+      }
+    });
+
+    //console.log(JSON.stringify(chunkResults, null, 2));
+
+    const recursivePreProcessChunkResults = (chunkResults: PsRagChunk[]) => {
+      chunkResults.forEach((recursiveChunk) => {
+        console.log(
+          `Processing chunk ${
+            recursiveChunk.compressedContent ? "Content" : "Summary"
+          }: ${recursiveChunk.id} `
+        );
+        if (recursiveChunk.inDocument && recursiveChunk.inDocument.length) {
+          const doc = recursiveChunk.inDocument[0];
+          if (!documentsMap.has(doc.url)) {
+            documentsMap.set(doc.url, { ...doc, chunks: [] });
+            addedChunkIdsMap.set(doc.url, new Set());
+            console.log(`Document initialized: ${doc.url}`);
+          }
+        }
+        if (!chunksMap.has(recursiveChunk.id!)) {
+          chunksMap.set(recursiveChunk.id!, {
+            ...recursiveChunk,
+            subChunks: [],
+          });
+        }
+        if (recursiveChunk.inChunk) {
+          console.log(
+            "----------------------------> RECURSIVE CALL ---------------------->"
+          );
+          recursivePreProcessChunkResults(recursiveChunk.inChunk);
+        }
+      });
+    };
+
+    recursivePreProcessChunkResults(chunkResults);
+  }
+
+  processChunk(
+    document: PsRagDocumentSource,
+    chunk: PsRagChunk,
+    chunksMap: Map<string, PsRagChunk>,
+    documentsMap: Map<string, PsRagDocumentSource>,
+    addedChunkIdsMap: Map<string, Set<string>>
+  ) {
+    console.log(
+      `Processing chunk: ${chunk.compressedContent ? "Content" : "Summary"} ${
+        chunk.inChunk ? chunk.inChunk[0].id! : ""
+      }`
+    );
+    const parentChunk =
+      chunk.inChunk && chunk.inChunk.length
+        ? chunksMap.get(chunk.inChunk[0].id!)
+        : null;
+
+    const addedChunkIds = addedChunkIdsMap.get(document.url);
+
+    if (addedChunkIds && addedChunkIds.has(chunk.id!)) {
+      console.log(
+        `Chunk already processed: ${
+          chunk.compressedContent ? "Content" : "Summary"
+        } ${chunk.title}`
+      );
+      return; // Skip if already processed
+    } else if (!addedChunkIds) {
+      console.error(
+        `!!!!!!!!!!!!!!!!!!!!!!!!!!! Chunk has no ${
+          document.url
+        } addedChunkIds: ${chunk.compressedContent ? "Content" : "Summary"} ${
+          chunk.title
+        }`
+      );
+      return;
+    }
+
+    if (parentChunk) {
+      parentChunk.subChunks!.push(chunk);
+      console.log(
+        `Chunk assigned to chunk parent: ${
+          chunk.compressedContent ? "Content" : "Summary"
+        } ${chunk.title} in ${parentChunk.title}`
+      );
+      if (!parentChunk.inChunk && !document.chunks?.includes(parentChunk)) {
+        if (!document.chunks) {
+          document.chunks = [];
+        }
+        document.chunks!.push(parentChunk);
+      }
+    } else if (document) {
+      document.chunks!.push(chunk);
+      console.log(
+        `Chunk assigned to document: ${
+          chunk.compressedContent ? "Content" : "Summary"
+        } ${chunk.title} in ${document.title}`
+      );
+    } else {
+      console.error(
+        `!!!!!!!!!!!!!!!!!!!!!!!!!!! Chunk not assigned to any parent: ${
+          chunk.compressedContent ? "Content" : "Summary"
+        } ${chunk.title}`
+      );
+    }
+
+    if (chunk.inChunk) {
+      this.processChunk(
+        document,
+        chunk.inChunk[0],
+        chunksMap,
+        documentsMap,
+        addedChunkIdsMap
+      );
+    } else {
+      console.log(
+        `XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Chunk has no parent: ${
+          chunk.compressedContent ? "Content" : "Summary"
+        } ${chunk.title}`
+      );
+    }
+
+    addedChunkIds.add(chunk.id!); // Mark as processed
+  }
+
+
   async search(
     userQuestion: string,
     routingData: any,
@@ -25,64 +164,8 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
       const chunksMap: Map<string, PsRagChunk> = new Map();
       const addedChunkIdsMap: Map<string, Set<string>> = new Map(); // Tracks added chunk IDs for each document
 
-      // Go through all the chunks and subChunks recursively and do cunk.id = this.getChunkId(chunk, documentUrl)
-      let documentUrl: string | undefined;
 
-      const recursiveChunkId = (chunk: PsRagChunk, documentUrl: string) => {
-        chunk.id = this.getChunkId(chunk, documentUrl);
-        if (chunk.inChunk) {
-          chunk.inChunk.forEach((subChunk) => {
-            recursiveChunkId(subChunk, documentUrl);
-          });
-        }
-      };
-
-      chunkResults.forEach((chunk) => {
-        if (chunk.inDocument && chunk.inDocument.length) {
-          documentUrl = chunk.inDocument[0].url;
-          recursiveChunkId(chunk, documentUrl);
-        }
-      });
-
-      //console.log(JSON.stringify(chunkResults, null, 2));
-
-      const recursivePreProcessChunkResults = (chunkResults: PsRagChunk[]) => {
-        chunkResults.forEach((recursiveChunk) => {
-          console.log(
-            `Processing chunk ${
-              recursiveChunk.compressedContent ? "Content" : "Summary"
-            }: ${recursiveChunk.id} `
-          );
-          if (!chunksMap.has(recursiveChunk.id!)) {
-            chunksMap.set(recursiveChunk.id!, {
-              ...recursiveChunk,
-              subChunks: [],
-            });
-          }
-          if (recursiveChunk.inDocument && recursiveChunk.inDocument.length) {
-            const doc = recursiveChunk.inDocument[0];
-            if (!documentsMap.has(doc.url)) {
-              documentsMap.set(doc.url, { ...doc, chunks: [] });
-              addedChunkIdsMap.set(doc.url, new Set());
-              console.log(`Document initialized: ${doc.url}`);
-            }
-          }
-          this.processChunk(
-            recursiveChunk,
-            chunksMap,
-            documentsMap,
-            addedChunkIdsMap
-          );
-          if (recursiveChunk.inChunk) {
-            console.log(
-              "----------------------------> RECURSIVE CALL ---------------------->"
-            );
-            recursivePreProcessChunkResults(recursiveChunk.inChunk);
-          }
-        });
-      };
-
-      recursivePreProcessChunkResults(chunkResults);
+      this.setupChunkMaps(chunkResults, documentsMap, chunksMap, addedChunkIdsMap);
 
       chunkResults.forEach((chunk) => {
         if (chunk._additional) {
@@ -101,8 +184,66 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
             `Chunk info: ${chunk._additional.id} with relevance: ${chunk.relevanceEloRating}} and substance: ${chunk.substanceEloRating} and quality: ${chunk.qualityEloRating}\n\n`
           );
         }
-        this.processChunk(chunk, chunksMap, documentsMap, addedChunkIdsMap);
+
+        this.processChunk(
+          documentsMap.get(chunk.inDocument![0]!.url!)!,
+          chunk,
+          chunksMap,
+          documentsMap,
+          addedChunkIdsMap
+        );
       });
+
+      console.log(
+        `\n\n\n\nDocuments keys:\n${JSON.stringify(
+          Array.from(documentsMap.keys()),
+          null,
+          2
+        )}\n\n`
+      );
+      console.log(
+        `\n\nDocuments values:\n${JSON.stringify(
+          Array.from(documentsMap.values()),
+          null,
+          2
+        )}\n\n`
+      );
+
+      console.log(
+        `\n\n\n\chunksMap keys:\n${JSON.stringify(
+          Array.from(chunksMap.keys()),
+          null,
+          2
+        )}\n\n`
+      );
+      console.log(
+        `\n\chunksMap values:\n${JSON.stringify(
+          Array.from(chunksMap.values()),
+          null,
+          2
+        )}\n\n`
+      );
+
+      console.log(
+        `\n\n\n\addedChunkIdsMap keys:\n${JSON.stringify(
+          Array.from(addedChunkIdsMap.keys()),
+          null,
+          2
+        )}\n\n`
+      );
+      console.log(
+        `\n\addedChunkIdsMap values:\n${JSON.stringify(
+          Array.from(addedChunkIdsMap.values()),
+          null,
+          2
+        )}\n\n\n\n`
+      );
+
+      // Wait 3 minutes withn a promise
+      const wait = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
+      await wait(180000);
+
 
       const recursiveSortChunks = (chunk: PsRagChunk) => {
         if (chunk.subChunks && chunk.subChunks.length) {
@@ -125,80 +266,15 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     }
   }
 
-  processChunk(
-    chunk: PsRagChunk,
-    chunksMap: Map<string, PsRagChunk>,
-    documentsMap: Map<string, PsRagDocumentSource>,
-    addedChunkIdsMap: Map<string, Set<string>>
-  ) {
-    console.log(
-      `Processing chunk: ${chunk.compressedContent ? "Content" : "Summary"} ${
-        chunk.inChunk ? chunk.inChunk[0].id! : ""
-      }`
-    );
-    const parentChunk =
-      chunk.inChunk && chunk.inChunk.length
-        ? chunksMap.get(chunk.inChunk[0].id!)
-        : null;
-
-    const doc =
-      chunk.inDocument && chunk.inDocument.length
-        ? documentsMap.get(chunk.inDocument[0].url)
-        : null;
-    const addedChunkIds = doc
-      ? addedChunkIdsMap.get(chunk.inDocument![0].url)
-      : null;
-
-    if (!addedChunkIds || addedChunkIds.has(chunk.id!)) return; // Skip if already processed
-
-    if (parentChunk) {
-      parentChunk.subChunks!.push(chunk);
-      console.log(
-        `Chunk assigned to chunk parent: ${
-          chunk.compressedContent ? "Content" : "Summary"
-        } ${chunk.title} in ${parentChunk.title}`
-      );
-      if (!parentChunk.inChunk && !doc?.chunks?.includes(parentChunk)) {
-        doc!.chunks!.push(parentChunk);
-      }
-    } else if (doc) {
-      doc.chunks!.push(chunk);
-      console.log(
-        `Chunk assigned to document: ${
-          chunk.compressedContent ? "Content" : "Summary"
-        } ${chunk.title} in ${doc.title}`
-      );
-    } else {
-      console.error(
-        `!!!!!!!!!!!!!!!!!!!!!!!!!!! Chunk not assigned to any parent: ${
-          chunk.compressedContent ? "Content" : "Summary"
-        } ${chunk.title}`
-      );
-    }
-
-    if (chunk.inChunk) {
-      this.processChunk(
-        chunk.inChunk[0],
-        chunksMap,
-        documentsMap,
-        addedChunkIdsMap
-      );
-    } else {
-      console.log(
-        `Chunk has no parent: ${
-          chunk.compressedContent ? "Content" : "Summary"
-        } ${chunk.title}`
-      );
-    }
-
-    addedChunkIds.add(chunk.id!); // Mark as processed
-  }
 
   formatOutput(documents: PsRagDocumentSource[]): string {
     console.log(
-      "Formatting output....,..................................................."
+      "Formatting output......................................................."
     );
     console.log(JSON.stringify(documents, null, 2));
+    console.log(
+      "Formatting output......................................................."
+    );
     let output = "";
 
     documents.forEach((doc) => {
@@ -225,8 +301,8 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
       chunkOutput += `${prefix}${chunk.title}\n${" ".repeat(level * 2)}${
         chunk.compressedContent || chunk.fullSummary
       }\n\n`;
-      if (chunk.inChunk && chunk.inChunk.length) {
-        chunkOutput += this.appendChunks(chunk.inChunk, level + 1);
+      if (chunk.subChunks && chunk.subChunks.length) {
+        chunkOutput += this.appendChunks(chunk.subChunks, level + 1);
       }
     });
 

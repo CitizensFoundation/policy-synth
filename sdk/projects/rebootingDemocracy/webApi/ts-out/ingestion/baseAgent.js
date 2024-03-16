@@ -173,3 +173,4 @@ export class BaseIngestionAgent extends PolicySynthAgentBase {
         return crypto.createHash("md5").update(url).digest("hex");
     }
 }
+//# sourceMappingURL=baseAgent.js.map

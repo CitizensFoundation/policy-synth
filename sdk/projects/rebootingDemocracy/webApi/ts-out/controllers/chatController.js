@@ -66,3 +66,4 @@ export class ChatController extends BaseController {
         }
     };
 }
+//# sourceMappingURL=chatController.js.map

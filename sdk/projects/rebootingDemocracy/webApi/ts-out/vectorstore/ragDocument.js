@@ -184,7 +184,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .get()
                 .withClassName("RagDocumentChunk")
                 .withNearText({ concepts: [query] })
-                .withLimit(12)
+                .withLimit(1)
                 .withWhere({
                 operator: "And",
                 operands: where,
@@ -290,7 +290,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         }
       `)
                 .do();
-            //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
+            console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
             return results.data.Get.RagDocumentChunk;
             //return Array.from(ragDocumentsMap.values());
         }
@@ -299,169 +299,5 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             throw err;
         }
     }
-    async searchChunksWithReferencesTEST(query) {
-        let results;
-        try {
-            results = await PsRagDocumentVectorStore.client.graphql
-                .get()
-                .withClassName("RagDocumentChunk")
-                .withNearText({ concepts: [query] })
-                .withLimit(15)
-                .withFields(`
-        title
-        chunkIndex
-        chapterIndex
-        mainExternalUrlFound
-        shortSummary
-        fullSummary
-        relevanceEloRating
-        qualityEloRating
-        substanceEloRating
-        uncompressedContent
-        compressedContent
-        metaDataFields
-        metaData
-        allSiblingChunks {
-          ... on RagDocumentChunk {
-            title
-            chunkIndex
-            chapterIndex
-            mainExternalUrlFound
-            shortSummary
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            uncompressedContent
-            compressedContent
-            metaDataFields
-            metaData
-          }
-        }
-        inChunk {
-          ... on RagDocumentChunk {
-            title
-            chunkIndex
-            chapterIndex
-            mainExternalUrlFound
-            shortSummary
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            uncompressedContent
-            compressedContent
-            metaDataFields
-            metaData
-
-            inChunk {
-              ... on RagDocumentChunk {
-                title
-                chunkIndex
-                chapterIndex
-                mainExternalUrlFound
-                shortSummary
-                fullSummary
-                relevanceEloRating
-                qualityEloRating
-                substanceEloRating
-                uncompressedContent
-                compressedContent
-                metaDataFields
-                metaData
-                inChunk {
-                  ... on RagDocumentChunk {
-                    title
-                    chunkIndex
-                    chapterIndex
-                    mainExternalUrlFound
-                    shortSummary
-                    fullSummary
-                    relevanceEloRating
-                    qualityEloRating
-                    substanceEloRating
-                    uncompressedContent
-                    compressedContent
-                    metaDataFields
-                    metaData
-
-                    inChunk {
-                      ... on RagDocumentChunk {
-                        title
-                        chunkIndex
-                        chapterIndex
-                        mainExternalUrlFound
-                        shortSummary
-                        fullSummary
-                        relevanceEloRating
-                        qualityEloRating
-                        substanceEloRating
-                        uncompressedContent
-                        compressedContent
-                        metaDataFields
-                        metaData
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `)
-                .do();
-            const ragDocumentsMap = new Map();
-            console.log(`Got ${results.data.Get.RagDocumentChunk.length} chunks`);
-            //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
-            for (const chunk of results.data.Get.RagDocumentChunk) {
-                if (chunk.inDocument) {
-                    chunk.inDocument.chunks = [];
-                    ragDocumentsMap.set(chunk.inDocument.id, chunk.inDocument);
-                }
-            }
-            // Process each RagDocument with its associated chunks
-            for (const chunk of results.data.Get.RagDocumentChunk) {
-                if (chunk.inDocument) {
-                    const ragDocument = ragDocumentsMap.get(chunk.inDocument.id);
-                    if (ragDocument) {
-                        const flattenedChunks = [];
-                        const alwaysAddAllSiblings = true;
-                        const collectRelevantChunks = (chunk, tokenCountText) => {
-                            flattenedChunks.push(chunk);
-                            tokenCountText += chunk.compressedContent;
-                            if (chunk.allSiblingChunks) {
-                                for (const sibling of chunk.allSiblingChunks) {
-                                    if (alwaysAddAllSiblings ||
-                                        this.getEstimateTokenLength(tokenCountText) +
-                                            this.getEstimateTokenLength(sibling.compressedContent) <=
-                                            this.maxChunkTokenLength) {
-                                        collectRelevantChunks(sibling, tokenCountText);
-                                    }
-                                    else {
-                                        break;
-                                    }
-                                }
-                            }
-                            if (this.getEstimateTokenLength(tokenCountText) <
-                                this.maxChunkTokenLength &&
-                                chunk.inChunk) {
-                                collectRelevantChunks(chunk.inChunk[0], tokenCountText);
-                            }
-                        };
-                        collectRelevantChunks(chunk, "");
-                        // Sort the flattenedChunks based on chunkIndex
-                        flattenedChunks.sort((a, b) => a.chunkIndex - b.chunkIndex);
-                        ragDocument.chunks.push(chunk);
-                    }
-                    else {
-                        this.logger.error(`!!!!!!!!!!!!!!!!!!!!!!!!!! RagDocument ${chunk.inDocument.id} not found in map`);
-                    }
-                }
-            }
-            return Array.from(ragDocumentsMap.values());
-        }
-        catch (err) {
-            throw err;
-        }
-    }
 }
+//# sourceMappingURL=ragDocument.js.map

@@ -59,3 +59,4 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         return this.getOrderedListOfItems(-1, true, eloRatingKey);
     }
 }
+//# sourceMappingURL=chunkRanker.js.map

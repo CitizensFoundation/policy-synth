@@ -690,3 +690,4 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         await fs.writeFile(this.fileMetadataPath, JSON.stringify(this.fileMetadata, null, 2));
     }
 }
+//# sourceMappingURL=agentProcessor.js.map

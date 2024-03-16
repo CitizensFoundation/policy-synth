@@ -6,3 +6,4 @@ const app = new PolicySynthApiApp([
     ChatController
 ], 5021);
 app.listen();
+//# sourceMappingURL=server.js.map

@@ -9,6 +9,7 @@
     "outDir": "ts-out/",
     "allowSyntheticDefaultImports": true,
     "declaration": true,
+    "sourceMap": true,
     "declarationMap": true
   },
   "include": [
