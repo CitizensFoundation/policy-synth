@@ -33,6 +33,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                     }
                 }
                 if (!chunksMap.has(recursiveChunk.id)) {
+                    console.log(`SAVING: ${recursiveChunk.id}`);
                     chunksMap.set(recursiveChunk.id, {
                         ...recursiveChunk,
                         subChunks: [],
@@ -46,15 +47,18 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         };
         recursivePreProcessChunkResults(chunkResults);
     }
-    processChunk(document, chunk, chunksMap, documentsMap, addedChunkIdsMap) {
-        console.log(`Processing chunk: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.inChunk ? chunk.inChunk[0].id : ""}`);
-        const parentChunk = chunk.inChunk && chunk.inChunk.length
-            ? chunksMap.get(chunk.inChunk[0].id)
-            : null;
+    processChunk(documentUrl, chunk, chunksMap, documentsMap, addedChunkIdsMap) {
+        const document = documentsMap.get(documentUrl);
+        console.log(`Processing document ${document.url}`);
+        console.log(`Processing chunk: ${chunk.id} ${chunk.compressedContent ? "Content" : "Summary"} IN PARENT: ${chunk.inChunk ? chunk.inChunk[0].id : ""}`);
+        let parentChunk;
+        if (chunk.inChunk && chunk.inChunk.length) {
+            parentChunk = chunksMap.get(chunk.inChunk[0].id);
+        }
         const addedChunkIds = addedChunkIdsMap.get(document.url);
         if (addedChunkIds && addedChunkIds.has(chunk.id)) {
-            console.log(`Chunk already processed: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title}`);
-            return; // Skip if already processed
+            console.log(`222222222222222222222222 Chunk already processed: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title}`);
+            return;
         }
         else if (!addedChunkIds) {
             console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!! Chunk has no ${document.url} addedChunkIds: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title}`);
@@ -62,28 +66,25 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         }
         if (parentChunk) {
             parentChunk.subChunks.push(chunk);
-            console.log(`Chunk assigned to chunk parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} in ${parentChunk.title}`);
-            if (!parentChunk.inChunk && !document.chunks?.includes(parentChunk)) {
-                if (!document.chunks) {
-                    document.chunks = [];
-                }
-                document.chunks.push(parentChunk);
-            }
+            console.log(`\n\n\nChunk ${chunk.id} assigned to chunk parent ${parentChunk.id} in ${document.url}`);
+            const copy = { ...parentChunk };
+            copy.inChunk = undefined;
+            console.log(JSON.stringify(copy, null, 2));
         }
         else if (document) {
             document.chunks.push(chunk);
-            console.log(`Chunk assigned to document: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} in ${document.title}`);
+            console.log(`Chunk assigned to document: ${document.url}`);
         }
         else {
-            console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!! Chunk not assigned to any parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title}`);
-        }
-        if (chunk.inChunk) {
-            this.processChunk(document, chunk.inChunk[0], chunksMap, documentsMap, addedChunkIdsMap);
-        }
-        else {
-            console.log(`XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Chunk has no parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title}`);
+            console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!! Chunk not assigned to any parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} ${documentUrl}`);
         }
         addedChunkIds.add(chunk.id); // Mark as processed
+        if (chunk.inChunk) {
+            this.processChunk(document.url, chunksMap.get(chunk.inChunk[0].id), chunksMap, documentsMap, addedChunkIdsMap);
+        }
+        else {
+            console.log(`XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Chunk has no parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.compressedContent}`);
+        }
     }
     async search(userQuestion, routingData, dataLayout) {
         const vectorStore = new PsRagDocumentVectorStore();
@@ -106,17 +107,29 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                     console.log(`\nChunk info: ${chunk._additional.id} with distance: ${chunk._additional.distance} and confidence: ${chunk._additional.certainty}`);
                     console.log(`Chunk info: ${chunk._additional.id} with relevance: ${chunk.relevanceEloRating}} and substance: ${chunk.substanceEloRating} and quality: ${chunk.qualityEloRating}\n\n`);
                 }
-                this.processChunk(documentsMap.get(chunk.inDocument[0].url), chunk, chunksMap, documentsMap, addedChunkIdsMap);
+                this.processChunk(chunk.inDocument[0].url, chunk, chunksMap, documentsMap, addedChunkIdsMap);
             });
-            console.log(`\n\n\n\nDocuments keys:\n${JSON.stringify(Array.from(documentsMap.keys()), null, 2)}\n\n`);
-            console.log(`\n\nDocuments values:\n${JSON.stringify(Array.from(documentsMap.values()), null, 2)}\n\n`);
-            console.log(`\n\n\n\chunksMap keys:\n${JSON.stringify(Array.from(chunksMap.keys()), null, 2)}\n\n`);
-            console.log(`\n\chunksMap values:\n${JSON.stringify(Array.from(chunksMap.values()), null, 2)}\n\n`);
             console.log(`\n\n\n\addedChunkIdsMap keys:\n${JSON.stringify(Array.from(addedChunkIdsMap.keys()), null, 2)}\n\n`);
             console.log(`\n\addedChunkIdsMap values:\n${JSON.stringify(Array.from(addedChunkIdsMap.values()), null, 2)}\n\n\n\n`);
+            console.log("----------------------------------------------------------------------");
+            const logChunks = (chunks) => {
+                chunks.forEach((chunk) => {
+                    console.log(`Log Log Log Chunk: ${chunk.id}`);
+                    console.log(JSON.stringify(chunk.subChunks, null, 2));
+                });
+            };
+            logChunks(Array.from(chunksMap.values()));
+            /*console.log(
+              `\n\nDocuments values:\n${JSON.stringify(
+                Array.from(documentsMap.values()),
+                null,
+                2
+              )}\n\n`
+            );*/
             // Wait 3 minutes withn a promise
-            const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-            await wait(180000);
+            /*const wait = (ms: number) =>
+              new Promise((resolve) => setTimeout(resolve, ms));
+            await wait(180000);*/
             const recursiveSortChunks = (chunk) => {
                 if (chunk.subChunks && chunk.subChunks.length) {
                     chunk.subChunks.sort((a, b) => a.chapterIndex - b.chapterIndex);
