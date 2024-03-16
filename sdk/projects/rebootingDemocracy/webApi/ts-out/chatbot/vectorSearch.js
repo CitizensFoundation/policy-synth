@@ -109,8 +109,21 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                 }
                 this.processChunk(chunk.inDocument[0].url, chunk, chunksMap, documentsMap, addedChunkIdsMap);
             });
-            console.log(`\n\n\n\addedChunkIdsMap keys:\n${JSON.stringify(Array.from(addedChunkIdsMap.keys()), null, 2)}\n\n`);
-            console.log(`\n\addedChunkIdsMap values:\n${JSON.stringify(Array.from(addedChunkIdsMap.values()), null, 2)}\n\n\n\n`);
+            /*console.log(
+              `\n\n\n\addedChunkIdsMap keys:\n${JSON.stringify(
+                Array.from(addedChunkIdsMap.keys()),
+                null,
+                2
+              )}\n\n`
+            );
+      
+            console.log(
+              `\n\addedChunkIdsMap values:\n${JSON.stringify(
+                Array.from(addedChunkIdsMap.values()),
+                null,
+                2
+              )}\n\n\n\n`
+            );*/
             console.log("----------------------------------------------------------------------");
             const logChunks = (chunks) => {
                 chunks.forEach((chunk) => {
@@ -118,7 +131,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                     console.log(JSON.stringify(chunk.subChunks, null, 2));
                 });
             };
-            logChunks(Array.from(chunksMap.values()));
+            //logChunks(Array.from(chunksMap.values()));
             /*console.log(
               `\n\nDocuments values:\n${JSON.stringify(
                 Array.from(documentsMap.values()),
@@ -151,7 +164,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     }
     formatOutput(documents) {
         console.log("Formatting output.......................................................");
-        console.log(JSON.stringify(documents, null, 2));
+        //console.log(JSON.stringify(documents, null, 2));
         console.log("Formatting output.......................................................");
         let output = "";
         documents.forEach((doc) => {

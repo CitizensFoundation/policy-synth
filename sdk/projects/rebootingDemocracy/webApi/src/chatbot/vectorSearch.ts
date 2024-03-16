@@ -195,7 +195,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         );
       });
 
-      console.log(
+      /*console.log(
         `\n\n\n\addedChunkIdsMap keys:\n${JSON.stringify(
           Array.from(addedChunkIdsMap.keys()),
           null,
@@ -209,7 +209,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
           null,
           2
         )}\n\n\n\n`
-      );
+      );*/
 
       console.log(
         "----------------------------------------------------------------------"
@@ -222,7 +222,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         });
       };
 
-      logChunks(Array.from(chunksMap.values()));
+      //logChunks(Array.from(chunksMap.values()));
 
       /*console.log(
         `\n\nDocuments values:\n${JSON.stringify(
@@ -262,7 +262,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     console.log(
       "Formatting output......................................................."
     );
-    console.log(JSON.stringify(documents, null, 2));
+    //console.log(JSON.stringify(documents, null, 2));
     console.log(
       "Formatting output......................................................."
     );

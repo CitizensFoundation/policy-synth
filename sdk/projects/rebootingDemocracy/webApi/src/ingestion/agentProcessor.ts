@@ -259,7 +259,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             const subChunkId = await postChunkRecursively(
               subChunk,
               documentId,
-              chunkId,
+              undefined,
               allSiblingChunksIncludingMe
             );
             if (subChunkId) {
