@@ -194,7 +194,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       chunk: PsRagChunk,
       documentId: string,
       parentChunkId: string | undefined,
-      allSiblingChunksIncludingMe: PsRagChunk[]
+      allSiblingChunksIncludingMe: PsRagChunk[] | undefined
     ) => {
 
       // Construct the unique identifier for the current chunk
@@ -259,8 +259,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             const subChunkId = await postChunkRecursively(
               subChunk,
               documentId,
-              undefined,
-              allSiblingChunksIncludingMe
+              chunkId,
+              undefined
             );
             if (subChunkId) {
               subChunk.id = subChunkId;
