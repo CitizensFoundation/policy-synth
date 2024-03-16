@@ -67,13 +67,13 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         if (parentChunk) {
             parentChunk.subChunks.push(chunk);
             console.log(`\n\n\nChunk ${chunk.id} assigned to chunk parent ${parentChunk.id} in ${document.url}`);
-            const copy = { ...parentChunk };
-            copy.inChunk = undefined;
-            console.log(JSON.stringify(copy, null, 2));
+            chunk.inChunk = [parentChunk];
+            chunk.inDocument = undefined;
         }
         else if (document) {
             document.chunks.push(chunk);
             console.log(`Chunk assigned to document: ${document.url}`);
+            chunk.inDocument = [document];
         }
         else {
             console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!! Chunk not assigned to any parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.title} ${documentUrl}`);
@@ -81,9 +81,6 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         addedChunkIds.add(chunk.id); // Mark as processed
         if (chunk.inChunk) {
             this.processChunk(document.url, chunksMap.get(chunk.inChunk[0].id), chunksMap, documentsMap, addedChunkIdsMap);
-        }
-        else {
-            console.log(`XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Chunk has no parent: ${chunk.compressedContent ? "Content" : "Summary"} ${chunk.compressedContent}`);
         }
     }
     async search(userQuestion, routingData, dataLayout) {
@@ -108,6 +105,26 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                     console.log(`Chunk info: ${chunk._additional.id} with relevance: ${chunk.relevanceEloRating}} and substance: ${chunk.substanceEloRating} and quality: ${chunk.qualityEloRating}\n\n`);
                 }
                 this.processChunk(chunk.inDocument[0].url, chunk, chunksMap, documentsMap, addedChunkIdsMap);
+                const currentChunk = chunksMap.get(chunk.id);
+                if (chunk.mostRelevantSiblingChunks && chunk.mostRelevantSiblingChunks.length) {
+                    chunk.mostRelevantSiblingChunks.forEach((siblingChunk) => {
+                        if (currentChunk.inChunk && currentChunk.inChunk.length) {
+                            const parentChunk = chunksMap.get(currentChunk.inChunk[0].id);
+                            if (parentChunk) {
+                                parentChunk.subChunks.push(siblingChunk);
+                                console.log(`Sibling chunk assigned to parent chunk: ${parentChunk.id}`);
+                            }
+                            else {
+                                console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!! Sibling chunk not assigned to any parent: ${siblingChunk.compressedContent ? "Content" : "Summary"} ${siblingChunk.title}`);
+                            }
+                        }
+                        else if (currentChunk.inDocument && currentChunk.inDocument.length) {
+                            console.log(`Sibling chunk assigned to document: ${currentChunk.inDocument[0].url}`);
+                            const currentDocument = documentsMap.get(currentChunk.inDocument[0].url);
+                            currentDocument.chunks.push(siblingChunk);
+                        }
+                    });
+                }
             });
             /*console.log(
               `\n\n\n\addedChunkIdsMap keys:\n${JSON.stringify(
@@ -125,13 +142,6 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
               )}\n\n\n\n`
             );*/
             console.log("----------------------------------------------------------------------");
-            const logChunks = (chunks) => {
-                chunks.forEach((chunk) => {
-                    console.log(`Log Log Log Chunk: ${chunk.id}`);
-                    console.log(JSON.stringify(chunk.subChunks, null, 2));
-                });
-            };
-            //logChunks(Array.from(chunksMap.values()));
             /*console.log(
               `\n\nDocuments values:\n${JSON.stringify(
                 Array.from(documentsMap.values()),
