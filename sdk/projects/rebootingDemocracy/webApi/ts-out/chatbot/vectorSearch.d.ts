@@ -8,5 +8,6 @@ export declare class PsRagVectorSearch extends PolicySynthAgentBase {
     search(userQuestion: string, routingData: PsRagRoutingResponse, dataLayout: PsIngestionDataLayout): Promise<string>;
     formatOutput(documents: PsRagDocumentSource[]): string;
     appendChunks(chunks: PsRagChunk[], level: number): string;
+    getEloAverage(chunk: PsRagChunk): number;
 }
 //# sourceMappingURL=vectorSearch.d.ts.map

@@ -110,26 +110,35 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     addTopEloRatedSiblingChunks(chunk, chunksMap, documentsMap) {
         const currentChunk = chunksMap.get(chunk.id);
         const allSiblings = chunk.allSiblingChunks ? chunk.allSiblingChunks : [];
-        const mostRelevantSiblings = chunk.mostRelevantSiblingChunks ? new Set(chunk.mostRelevantSiblingChunks.map(s => s.id)) : new Set();
+        const mostRelevantSiblings = chunk.mostRelevantSiblingChunks
+            ? new Set(chunk.mostRelevantSiblingChunks.map((s) => s.id))
+            : new Set();
         // Exclude current chunk and most relevant siblings from the list
-        let filteredSiblings = allSiblings.filter(sibling => sibling.id !== chunk.id && !mostRelevantSiblings.has(sibling.id));
-        // Sort by substance and then relevance ELO ratings
+        let filteredSiblings = allSiblings.filter((sibling) => sibling.id !== chunk.id && !mostRelevantSiblings.has(sibling.id));
         filteredSiblings.sort((a, b) => {
-            if (a.qualityEloRating != undefined && b.qualityEloRating != undefined && a.relevanceEloRating != undefined && b.relevanceEloRating != undefined) {
-                let diff = b.qualityEloRating - a.qualityEloRating;
-                if (diff === 0)
-                    diff = b.relevanceEloRating - a.relevanceEloRating;
-                return diff;
+            // Ensure we have the ELO ratings defined for both chunks before proceeding
+            if (a.qualityEloRating !== undefined &&
+                b.qualityEloRating !== undefined &&
+                a.relevanceEloRating !== undefined &&
+                b.relevanceEloRating !== undefined &&
+                a.substanceEloRating !== undefined &&
+                b.substanceEloRating !== undefined) {
+                // Use getEloAverage to determine the average ELO ratings for comparison
+                let aEloAverage = this.getEloAverage(a);
+                let bEloAverage = this.getEloAverage(b);
+                // Compare the average ELO ratings
+                return bEloAverage - aEloAverage;
             }
             else {
-                console.error("!!!!!!!!!!!!!!!! ELO ratings are not defined for the sibling chunks");
+                // Log an error if any of the required ELO ratings are undefined
+                console.error("!!!!!!!!!!!!!!!! ELO ratings are not defined for one or more sibling chunks");
                 return 0;
             }
         });
         // Take the top 2 chunks based on the sorted list
         const topEloRatedChunks = filteredSiblings.slice(0, 2);
         // Process the selected top ELO rated chunks
-        topEloRatedChunks.forEach(siblingChunk => {
+        topEloRatedChunks.forEach((siblingChunk) => {
             // This follows the same logic as in addMostRelevantChunks for assigning chunks
             if (currentChunk.inChunk && currentChunk.inChunk.length) {
                 const parentChunk = chunksMap.get(currentChunk.inChunk[0].id);
@@ -139,7 +148,8 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                 }
             }
             else if (currentChunk.inDocument && currentChunk.inDocument.length) {
-                console.log(`Top ELO Rated Sibling chunk assigned to document: ${currentChunk.inDocument[0].url}`);
+                console.log(`Top ELO Rated Sibling chunk assigned to document: ${currentChunk
+                    .inDocument[0].url}`);
                 const currentDocument = documentsMap.get(currentChunk.inDocument[0].url);
                 if (currentDocument.chunks) {
                     currentDocument.chunks.push(siblingChunk);
@@ -179,13 +189,24 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
             });
             const recursiveSortChunks = (chunk) => {
                 if (chunk.subChunks && chunk.subChunks.length) {
+                    // First, sort by chapterIndex
                     chunk.subChunks.sort((a, b) => a.chapterIndex - b.chapterIndex);
-                    chunk.subChunks.forEach((subChunk) => {
-                        recursiveSortChunks(subChunk);
-                    });
+                    // Deduplicate
+                    const uniqueSubChunks = [];
+                    const seenChapterIndexes = new Set();
+                    for (const subChunk of chunk.subChunks) {
+                        if (!seenChapterIndexes.has(subChunk.chapterIndex)) {
+                            uniqueSubChunks.push(subChunk);
+                            seenChapterIndexes.add(subChunk.chapterIndex);
+                        }
+                    }
+                    // Replace the original subChunks with the deduplicated array
+                    chunk.subChunks = uniqueSubChunks;
+                    // Recursively apply this to subChunks
+                    chunk.subChunks.forEach(recursiveSortChunks);
                 }
             };
-            chunkResults.forEach((chunk) => {
+            Array.from(chunksMap.values()).forEach((chunk) => {
                 recursiveSortChunks(chunk);
             });
             //TODO: Filter out documents with the lowest relevanceEloRating, qualityEloRating, and substanceEloRating
@@ -215,14 +236,19 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     appendChunks(chunks, level) {
         let chunkOutput = "";
         chunks.forEach((chunk) => {
-            const prefix = `${" ".repeat(level * 2)}Chapter (${chunk.compressedContent ? "Content" : "Summary"}): `;
-            console.log(`${prefix}${chunk.title}`);
+            const debugPefix = `${" ".repeat(level * 2)}Chapter (${chunk.compressedContent ? "Content" : "Summary"}) Chapter ${chunk.chapterIndex} Elo r ${Math.round(chunk.relevanceEloRating)} s ${Math.round(chunk.substanceEloRating)} q ${Math.round(chunk.qualityEloRating)} - `;
+            const prefix = `${" ".repeat(level * 2)}Chapter (${chunk.compressedContent ? "Content" : "Summary"}) `;
+            console.log(`${debugPefix}${chunk.title}`);
             chunkOutput += `${prefix}${chunk.title}\n${" ".repeat(level * 2)}${chunk.compressedContent || chunk.fullSummary}\n\n`;
             if (chunk.subChunks && chunk.subChunks.length) {
                 chunkOutput += this.appendChunks(chunk.subChunks, level + 1);
             }
         });
         return chunkOutput;
+    }
+    getEloAverage(chunk) {
+        const { relevanceEloRating, substanceEloRating, qualityEloRating } = chunk;
+        return (relevanceEloRating + substanceEloRating + qualityEloRating) / 3;
     }
 }
 //# sourceMappingURL=vectorSearch.js.map
