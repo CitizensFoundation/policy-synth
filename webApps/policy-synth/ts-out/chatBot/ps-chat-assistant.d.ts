@@ -72,6 +72,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     renderChatInput(): import("lit").TemplateResult<1>;
     cancelSourceDialog(): void;
     openSourceDialog(event: CustomEvent): void;
+    stripDomainForFacIcon(url: string): string;
     renderSourceDialog(): import("lit").TemplateResult<1>;
     render(): import("lit").TemplateResult<1>;
 }

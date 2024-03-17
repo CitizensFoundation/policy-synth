@@ -846,6 +846,12 @@ export class PsChatAssistant extends YpBaseElement {
     dialog.open = true;
   }
 
+  stripDomainForFacIcon(url: string) {
+    let domain = url.split('/')[2];
+    console.error(`Domain is ${domain}`);
+    return domain;
+  }
+
   renderSourceDialog() {
     return html`
       <md-dialog
@@ -863,8 +869,9 @@ export class PsChatAssistant extends YpBaseElement {
                 <div class="layout vertical">
                   <div class="layout horizontal center-center">
                     <img
-                      src="https://www.google.com/s2/favicons?domain=${this
-                        .currentDocumentSourceToDisplay}&sz=24"
+                      src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
+                      this.currentDocumentSourceToDisplay.url
+                    )}&sz=24"
                       slot="icon"
                       width="24"
                       height="24"
