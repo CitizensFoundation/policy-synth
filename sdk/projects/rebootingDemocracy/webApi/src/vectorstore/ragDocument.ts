@@ -330,7 +330,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .do();
 
 
-      console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
+      //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
 
       return results.data.Get.RagDocumentChunk as PsRagChunk[];
       //return Array.from(ragDocumentsMap.values());
