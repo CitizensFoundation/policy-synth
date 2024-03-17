@@ -377,6 +377,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
           allOtherReferences: document.allOtherReferences,
           allImageUrls: document.allImageUrls,
           documentDate: document.documentDate,
+          compressedFullDescriptionOfAllContents: document.compressedFullDescriptionOfAllContents,
           documentMetaData: document.documentMetaData,
         });
       });

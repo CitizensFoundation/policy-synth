@@ -21,8 +21,6 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   @property({ type: Array })
   chatLogFromServer: PsAiChatWsMessage[] | undefined;
 
-  showCleanupButton = true;
-
   onlyUseTextField = true;
 
   serverApi: ResearchServerApi;

@@ -31,7 +31,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         this.userScrolled = false;
         this.currentFollowUpQuestions = '';
         this.programmaticScroll = false;
-        this.showCleanupButton = false;
+        this.showCleanupButtonAtBottom = false;
         this.scrollStart = 0;
         this.defaultDevWsPort = 8000;
         this.api = new BaseChatBotServerApi();
@@ -468,7 +468,6 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
 
         @media (max-width: 600px) {
           .chat-window {
-
           }
 
           .you-chat-element {
@@ -492,6 +491,29 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
 
         .darkModeButton {
           margin-right: 16px;
+        }
+
+        .currentSourceTitle {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 4px;
+        }
+
+        .currentSourceDescription {
+          margin-top: 8px;
+          margin-bottom: 8px;
+        }
+
+        .sourceLinkButton {
+          margin-top: 16px;
+          margin-bottom: 320px;
+        }
+
+        .currentSourceUrl {
+          max-width: 40ch;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 12px;
         }
 
         md-outlined-text-field {
@@ -580,7 +602,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     renderChatInput() {
         return html `
-      ${this.showCleanupButton
+      ${this.showCleanupButtonAtBottom
             ? html `
         <md-outlined-icon-button
           class="restartButton"
@@ -636,11 +658,70 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
           >`}
     `;
     }
+    cancelSourceDialog() {
+        this.currentDocumentSourceToDisplay = undefined;
+        const dialog = this.$$('#sourceDialog');
+        dialog.open = false;
+    }
+    openSourceDialog(event) {
+        this.currentDocumentSourceToDisplay = event.detail;
+        this.requestUpdate();
+        const dialog = this.$$('#sourceDialog');
+        dialog.open = true;
+    }
     renderSourceDialog() {
         return html `
-      <md-dialog id="sourceDialog">
-        ${this.currentDocumentSourceToDisplay ? html `` : nothing}
-
+      <md-dialog
+        id="sourceDialog"
+        @closed="${() => this.cancelSourceDialog()}"
+        ?fullscreen="${!this.wide}"
+        class="dialog"
+        id="dialog"
+      >
+        ${this.currentDocumentSourceToDisplay
+            ? html ` <div slot="headline">
+                ${this.currentDocumentSourceToDisplay.title}
+              </div>
+              <div slot="content" id="content">
+                <div class="layout vertical">
+                  <div class="currentSourceDescription">
+                    ${this.currentDocumentSourceToDisplay
+                .compressedFullDescriptionOfAllContents}
+                  </div>
+                  <div class="layout horizontal center-center sourceLinkButton">
+                    ${this.currentDocumentSourceToDisplay.url
+                .toLowerCase()
+                .indexOf('.pdf') > -1
+                ? html `
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                            download
+                          >
+                            <md-filled-button>
+                              ${this.t('Open PDF')}
+                            </md-filled-button>
+                          </a>
+                        `
+                : html `
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                          >
+                            <md-filled-button>
+                              ${this.t('Visit Website')}
+                            </md-filled-button>
+                          </a>
+                        `}
+                  </div>
+                </div>
+              </div>`
+            : nothing}
+        <div slot="actions">
+          <md-text-button @click="${() => this.cancelSourceDialog()}">
+            ${this.t('cancel')}
+          </md-text-button>
+        </div>
       </md-dialog>
     `;
     }
@@ -649,7 +730,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
       ${this.renderSourceDialog()}
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
-          <yp-chatbot-item-base
+          <ps-ai-chat-element
             ?hidden="${!this.defaultInfoMessage}"
             class="chatElement bot-chat-element"
             .detectedLanguage="${this.language}"
@@ -664,6 +745,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                   ?thinking="${chatElement.type === 'thinking' ||
             chatElement.type === 'noStreaming'}"
                   @followup-question="${this.followUpQuestion}"
+                  @ps-open-source-dialog="${this.openSourceDialog}"
                   .clusterId="${this.clusterId}"
                   class="chatElement ${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
@@ -710,6 +792,9 @@ __decorate([
     property({ type: Boolean })
 ], PsChatAssistant.prototype, "onlyUseTextField", void 0);
 __decorate([
+    property({ type: Object })
+], PsChatAssistant.prototype, "currentDocumentSourceToDisplay", void 0);
+__decorate([
     property({ type: Number })
 ], PsChatAssistant.prototype, "clusterId", void 0);
 __decorate([
@@ -729,7 +814,7 @@ __decorate([
 ], PsChatAssistant.prototype, "programmaticScroll", void 0);
 __decorate([
     property({ type: Boolean })
-], PsChatAssistant.prototype, "showCleanupButton", void 0);
+], PsChatAssistant.prototype, "showCleanupButtonAtBottom", void 0);
 __decorate([
     property({ type: Number })
 ], PsChatAssistant.prototype, "scrollStart", void 0);

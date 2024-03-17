@@ -330,7 +330,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
           max-width: 250px;
           max-height: 60px;
           height: 60px;
-          line-height: 1.1;
+          line-height: 1.2;
           white-space: collapse balance;
           font-size: 12px;
           --md-elevated-button-container-height: 60px !important;
@@ -342,6 +342,10 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
         .sourceContainer {
           text-align: left;
         }
+
+        a {
+          color: var(--md-sys-color-primary);
+         }
       `,
         ];
     }
@@ -358,7 +362,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
         return html ``;
     }
     renderInfo() {
-        if (this.wsMessage.data && this.wsMessage.data) {
+        if (this.wsMessage && this.wsMessage.data && this.wsMessage.data) {
             const data = this.wsMessage.data;
             if (data.name === 'sourceDocuments') {
                 console.error(JSON.stringify(data));
@@ -379,7 +383,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
                     class="sourceFavIcon"
                   />
                   <div class="documentShortDescription">
-                   ${this.shortenText(`${this.capitalizeFirstLetter(document.title)}: ${document.description}`, 65)}
+                    ${this.shortenText(`${this.capitalizeFirstLetter(document.title)}: ${document.description}`, 65)}
                   </div>
                 </div>
               </md-elevated-button>
