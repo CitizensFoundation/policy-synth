@@ -36,6 +36,7 @@ export declare class PsAiChatElement extends YpBaseElement {
     renderJson(): import("lit").TemplateResult<1>;
     renderInfo(): import("lit").TemplateResult<1> | typeof nothing;
     shortenText(text: string, maxLength: number): string;
+    capitalizeFirstLetter(text: string): string;
     stripDomainForFacIcon(url: string): string;
     renderChatGPT(): any;
     parseFollowUpQuestions(): void;

@@ -372,18 +372,20 @@ export class PsAiChatElement extends YpBaseElement {
           margin-bottom: 16px;
         }
 
-        .documentShortDescription {
+        .sourceFavIcon {
+          margin-right: 8px;
         }
 
         .sourceButton {
           margin: 8px;
           padding: 8px;
-          max-width: 270px;
-          max-height: 50px;
-          height: 50px;
+          max-width: 250px;
+          max-height: 60px;
+          height: 60px;
+          line-height: 0.95;
           white-space: collapse balance;
           font-size: 12px;
-          --md-elevated-button-container-height: 50px !important;
+          --md-elevated-button-container-height: 60px !important;
           --md-elevated-button-hover-label-text-color: var(
             --md-sys-color-on-surface
           );
@@ -418,7 +420,7 @@ export class PsAiChatElement extends YpBaseElement {
       if (data.name === 'sourceDocuments') {
         console.error(JSON.stringify(data));
         return html`<div
-          class="layout horizontal wrap sourceDocumentsContainer"
+          class="layout horizontal  wrap sourceDocumentsContainer"
         >
           ${data.message.map(
             document => html`
@@ -431,17 +433,18 @@ export class PsAiChatElement extends YpBaseElement {
                     src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
                       document.url
                     )}&sz=24"
+                    slot="icon"
                     width="24"
                     height="24"
-                    style="padding-right: 8px; maring-left: -8px;"
+                    class="sourceFavIcon"
                   />
                   <div class="documentShortDescription">
-                   ${this.shortenText(`${document.title}: ${document.description}`, 50)}
+                   ${this.shortenText(`${this.capitalizeFirstLetter(document.title)}: ${document.description}`, 70)}
                   </div>
                 </div>
               </md-elevated-button>
             `
-          )}+
+          )}
         </div>`;
       } else {
         return nothing;
@@ -457,6 +460,12 @@ export class PsAiChatElement extends YpBaseElement {
     } else {
       return text;
     }
+  }
+
+  capitalizeFirstLetter(text: string): string {
+    if (text.length === 0) return text;
+
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
   }
 
   stripDomainForFacIcon(url: string) {
