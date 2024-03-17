@@ -69,6 +69,7 @@ export declare class PsChatAssistant extends YpBaseElement {
     reset(): void;
     toggleDarkMode(): void;
     renderChatInput(): import("lit").TemplateResult<1>;
+    renderSourceDialog(): import("lit").TemplateResult<1>;
     render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-chat-assistant.d.ts.map

@@ -330,7 +330,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
           max-width: 250px;
           max-height: 60px;
           height: 60px;
-          line-height: 0.95;
+          line-height: 1.1;
           white-space: collapse balance;
           font-size: 12px;
           --md-elevated-button-container-height: 60px !important;
@@ -379,7 +379,7 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
                     class="sourceFavIcon"
                   />
                   <div class="documentShortDescription">
-                   ${this.shortenText(`${this.capitalizeFirstLetter(document.title)}: ${document.description}`, 70)}
+                   ${this.shortenText(`${this.capitalizeFirstLetter(document.title)}: ${document.description}`, 65)}
                   </div>
                 </div>
               </md-elevated-button>

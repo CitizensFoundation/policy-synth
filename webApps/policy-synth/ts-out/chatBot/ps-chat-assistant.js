@@ -636,8 +636,17 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
           >`}
     `;
     }
+    renderSourceDialog() {
+        return html `
+      <md-dialog id="sourceDialog">
+        ${this.currentDocumentSourceToDisplay ? html `` : nothing}
+
+      </md-dialog>
+    `;
+    }
     render() {
         return html `
+      ${this.renderSourceDialog()}
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
           <yp-chatbot-item-base
