@@ -212,7 +212,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             if (chunk.subChunks) {
                 for (const subChunk of chunk.subChunks) {
                     console.log(`Middle Level Loop: Processing subChunk ${subChunk.chapterIndex}`);
-                    await postChunkRecursively(subChunk, documentId, chunkId, allSiblingChunksIncludingMe);
+                    await postChunkRecursively(subChunk, documentId, chunkId, chunk.subChunks);
                 }
             }
             return chunkId;

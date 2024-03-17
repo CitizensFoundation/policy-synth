@@ -341,7 +341,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             subChunk,
             documentId,
             chunkId,
-            allSiblingChunksIncludingMe
+            chunk.subChunks
           );
         }
       }
