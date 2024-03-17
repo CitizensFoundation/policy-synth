@@ -3,7 +3,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "../ingestion/baseAgent.js";
 
 export class PsRagRouter extends BaseIngestionAgent {
-  systemMessage = (schema: string, about: string, chatHistory: string) =>
+  systemMessageFull = (schema: string, about: string, chatHistory: string) =>
     new SystemMessage(`You are an expert user question analyzer for a RAG based chatbot. We will use the information to decide what documents to retrieve for the user through a vector database search.
 
 Instructions:
@@ -32,6 +32,30 @@ JSON Output:
   isAskingAboutOneSpecificDetail: string;
   isAskingAboutOneSpecificProject: string;
   rewrittenUserQuestionVectorDatabaseSearch: string;
+}
+`);
+
+systemMessage = (schema: string, about: string, chatHistory: string) =>
+new SystemMessage(`You are an expert user question analyzer for a RAG based chatbot. We will use the information to decide what documents to retrieve for the user through a vector database search.
+
+Instructions:
+- Always keep a track of what topic you are discussing with the user from your chat history and include that topic in the "rewrittenUserQuestionVectorDatabaseSearch" JSON field.
+- Still allow the user to change the topic if they want to in a middle of the converstation, when it's clear and in that case do not include the old topic in the new user question.
+- Always rewrite the user question based on your conversation history with the user as needed for the best possible vector search query and include it in "rewrittenUserQuestionVectorDatabaseSearch" JSON field.
+- If the user question does not need rewriting, you can leave the "rewrittenUserQuestionVectorDatabaseSearch" JSON with "".
+
+Your conversation history with the user:
+${chatHistory}
+
+About this project:
+${about}
+
+Available primary and secondary categories:
+${schema}
+
+JSON Output:
+{
+rewrittenUserQuestionVectorDatabaseSearch: string;
 }
 `);
 
