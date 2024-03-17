@@ -14,6 +14,10 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
   ) {
     const recursiveChunkId = (chunk: PsRagChunk, documentUrl: string) => {
       chunk.id = this.getChunkId(chunk, documentUrl);
+      if (!chunk.id) {
+        console.error("!!!!!!!!!!!!!!!!!!!! Chunk ID is undefined");
+        throw "Chunk ID is undefined";
+      }
       if (chunk.inChunk) {
         chunk.inChunk.forEach((subChunk) => {
           recursiveChunkId(subChunk, documentUrl);
@@ -334,8 +338,17 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         }
       };
 
-      Array.from(chunksMap.values()).forEach((chunk) => {
-        recursiveSortChunks(chunk);
+      Array.from(documentsMap.values()).forEach((document) => {
+        console.log(`Sorting chunks for document: ${document.url} ${document.chunks!.length}`);
+        for (const chunk of document.chunks!) {
+          if (chunk.id) {
+            console.log(`Sorting chunks for chunk: ${chunk.id}`);
+            const currentChunk = chunksMap.get(chunk.id!)!;
+            recursiveSortChunks(currentChunk);
+          } else {
+            console.error("!!!!!!!!!!!!!!!!!!!! TODO: Look into chunk is undefined: "+JSON.stringify(chunk));
+          }
+        }
       });
 
       //TODO: Filter out documents with the lowest relevanceEloRating, qualityEloRating, and substanceEloRating
@@ -360,7 +373,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
 
     documents.forEach((doc) => {
       if (!doc.title && !doc.url) return; // Skip empty DocumentSource
-      console.log(`Formatting document: ${doc.shortDescription || doc.title}`);
+      console.log(`Formatting document: ${doc.relevanceEloRating} ${doc.substanceEloRating} ${doc.shortDescription || doc.title}`);
       output += `Document: ${doc.shortDescription || doc.title}\nURL: ${
         doc.url
       }\n\n`;
@@ -374,7 +387,19 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
   appendChunks(chunks: PsRagChunk[], level: number): string {
     let chunkOutput = "";
 
-    chunks.forEach((chunk) => {
+    chunks.sort((a, b) => a.chapterIndex - b.chapterIndex);
+
+    // Deduplicate chunks on chapterIndex
+    const uniqueChunks = [];
+    const seenChapterIndexes = new Set();
+    for (const chunk of chunks) {
+      if (!seenChapterIndexes.has(chunk.chapterIndex)) {
+        uniqueChunks.push(chunk);
+        seenChapterIndexes.add(chunk.chapterIndex);
+      }
+    }
+
+    uniqueChunks.forEach((chunk) => {
       const debugPefix = `${" ".repeat(level * 2)}Chapter (${
         chunk.compressedContent ? "Content" : "Summary"
       }) Chapter ${chunk.chapterIndex} Elo r ${Math.round(
