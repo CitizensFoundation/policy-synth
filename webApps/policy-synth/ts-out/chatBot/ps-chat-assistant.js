@@ -684,6 +684,16 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
               </div>
               <div slot="content" id="content">
                 <div class="layout vertical">
+                  <div class="layout horizontal center-center">
+                    <img
+                      src="https://www.google.com/s2/favicons?domain=${this
+                .currentDocumentSourceToDisplay}&sz=24"
+                      slot="icon"
+                      width="24"
+                      height="24"
+                      class="sourceFavIcon"
+                    />
+                  </div>
                   <div class="currentSourceDescription">
                     ${this.currentDocumentSourceToDisplay
                 .compressedFullDescriptionOfAllContents}
