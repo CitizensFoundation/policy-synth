@@ -215,11 +215,12 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
         return bEloAverage - aEloAverage;
       } else {
         // Log an error if any of the required ELO ratings are undefined
-        console.error("!!!!!!!!!!!!!!!! ELO ratings are not defined for one or more sibling chunks");
+        console.error(
+          "!!!!!!!!!!!!!!!! ELO ratings are not defined for one or more sibling chunks"
+        );
         return 0;
       }
     });
-
 
     // Take the top 2 chunks based on the sorted list
     const topEloRatedChunks = filteredSiblings.slice(0, 2);
@@ -254,7 +255,7 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     userQuestion: string,
     routingData: PsRagRoutingResponse,
     dataLayout: PsIngestionDataLayout
-  ): Promise<string> {
+  ): Promise<PsVectorSearchResponse> {
     const vectorStore = new PsRagDocumentVectorStore();
     try {
       if (
@@ -311,10 +312,9 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
 
         this.addMostRelevantChunks(chunk, chunksMap, documentsMap);
         this.addTopEloRatedSiblingChunks(chunk, chunksMap, documentsMap);
-
-        // Add the two top ELO rated substance and relevance chunks in allSiblingChunks that are not me and not in mostRElevantSiblingChunks
       });
 
+      //TODO: Find out why this is not working
       const recursiveSortChunks = (chunk: PsRagChunk) => {
         if (chunk.subChunks && chunk.subChunks.length) {
           // First, sort by chapterIndex
@@ -339,14 +339,21 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
       };
 
       Array.from(documentsMap.values()).forEach((document) => {
-        console.log(`Sorting chunks for document: ${document.url} ${document.chunks!.length}`);
+        console.log(
+          `Sorting chunks for document: ${document.url} ${
+            document.chunks!.length
+          }`
+        );
         for (const chunk of document.chunks!) {
           if (chunk.id) {
             console.log(`Sorting chunks for chunk: ${chunk.id}`);
             const currentChunk = chunksMap.get(chunk.id!)!;
             recursiveSortChunks(currentChunk);
           } else {
-            console.error("!!!!!!!!!!!!!!!!!!!! TODO: Look into chunk is undefined: "+JSON.stringify(chunk));
+            console.error(
+              "!!!!!!!!!!!!!!!!!!!! TODO: Look into chunk is undefined: " +
+                JSON.stringify(chunk)
+            );
           }
         }
       });
@@ -354,10 +361,35 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
       //TODO: Filter out documents with the lowest relevanceEloRating, qualityEloRating, and substanceEloRating
 
       console.log("Processed chunk assignments complete.");
-      return this.formatOutput(Array.from(documentsMap.values()));
+
+      const returnDocuments: PsSimpleDocumentSource[] = [];
+
+      Array.from(documentsMap.values()).forEach((document) => {
+        returnDocuments.push({
+          id: document.id!,
+          url: document.url,
+          relevanceEloRating: document.relevanceEloRating,
+          substanceEloRating: document.substanceEloRating,
+          title: document.title,
+          description: document.shortDescription,
+          contentType: document.contentType,
+          allReferencesWithUrls: document.allReferencesWithUrls,
+          allOtherReferences: document.allOtherReferences,
+          allImageUrls: document.allImageUrls,
+          documentDate: document.documentDate,
+          documentMetaData: document.documentMetaData,
+        });
+      });
+      return {
+        responseText: this.formatOutput(Array.from(documentsMap.values())),
+        documents: returnDocuments,
+      };
     } catch (error) {
       console.error("Error in search:", error);
-      return "Error in search";
+      return {
+        responseText: "Unexpected error in search, please apologize",
+        documents: [],
+      };
     }
   }
 
@@ -373,7 +405,11 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
 
     documents.forEach((doc) => {
       if (!doc.title && !doc.url) return; // Skip empty DocumentSource
-      console.log(`Formatting document: ${doc.relevanceEloRating} ${doc.substanceEloRating} ${doc.shortDescription || doc.title}`);
+      console.log(
+        `Formatting document: ${doc.relevanceEloRating} ${
+          doc.substanceEloRating
+        } ${doc.shortDescription || doc.title}`
+      );
       output += `Document: ${doc.shortDescription || doc.title}\nURL: ${
         doc.url
       }\n\n`;

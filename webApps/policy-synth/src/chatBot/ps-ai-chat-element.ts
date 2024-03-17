@@ -7,6 +7,7 @@ import '@material/web/checkbox/checkbox.js';
 
 import '@material/web/button/outlined-button.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/filled-text-field.js';
 
 import '@material/web/progress/circular-progress.js';
@@ -20,6 +21,9 @@ import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export class PsAiChatElement extends YpBaseElement {
   @property({ type: String })
   message!: string;
+
+  @property({ type: Object })
+  wsMessage!: PsAiChatWsMessage;
 
   @property({ type: String })
   updateMessage: string;
@@ -367,6 +371,27 @@ export class PsAiChatElement extends YpBaseElement {
           color: var(--md-sys-color-primary);
           margin-bottom: 16px;
         }
+
+        .documentShortDescription {
+        }
+
+        .sourceButton {
+          margin: 8px;
+          padding: 8px;
+          max-width: 270px;
+          max-height: 50px;
+          height: 50px;
+          white-space: collapse balance;
+          font-size: 12px;
+          --md-elevated-button-container-height: 50px !important;
+          --md-elevated-button-hover-label-text-color: var(
+            --md-sys-color-on-surface
+          );
+        }
+
+        .sourceContainer {
+          text-align: left;
+        }
       `,
     ];
   }
@@ -385,6 +410,59 @@ export class PsAiChatElement extends YpBaseElement {
 
   renderJson() {
     return html``;
+  }
+
+  renderInfo() {
+    if (this.wsMessage.data && this.wsMessage.data) {
+      const data = this.wsMessage.data as PsRagDocumentSourcesWsData;
+      if (data.name === 'sourceDocuments') {
+        console.error(JSON.stringify(data));
+        return html`<div
+          class="layout horizontal wrap sourceDocumentsContainer"
+        >
+          ${data.message.map(
+            document => html`
+              <md-elevated-button
+                class="sourceButton"
+                @click=${() => this.fire('ps-open-source-dialog', document)}
+              >
+                <div class="layout horizontal sourceContainer">
+                  <img
+                    src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
+                      document.url
+                    )}&sz=24"
+                    width="24"
+                    height="24"
+                    style="padding-right: 8px; maring-left: -8px;"
+                  />
+                  <div class="documentShortDescription">
+                   ${this.shortenText(`${document.title}: ${document.description}`, 50)}
+                  </div>
+                </div>
+              </md-elevated-button>
+            `
+          )}+
+        </div>`;
+      } else {
+        return nothing;
+      }
+    } else {
+      return nothing;
+    }
+  }
+
+  shortenText(text: string, maxLength: number) {
+    if (text.length > maxLength) {
+      return text.substr(0, maxLength) + '...';
+    } else {
+      return text;
+    }
+  }
+
+  stripDomainForFacIcon(url: string) {
+    let domain = url.split('/')[2];
+    console.error(`Domain is ${domain}`);
+    return domain;
   }
 
   renderChatGPT(): any {
@@ -529,6 +607,8 @@ export class PsAiChatElement extends YpBaseElement {
       return this.renderThinking();
     } else if (this.sender === 'bot' && this.type === 'noStreaming') {
       return this.renderNoStreaming();
+    } else if (this.sender === 'bot' && this.type === 'info') {
+      return this.renderInfo();
     } else if (this.sender === 'bot') {
       return this.renderChatGPT();
     }

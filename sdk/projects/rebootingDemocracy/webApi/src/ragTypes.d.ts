@@ -51,6 +51,30 @@ interface PsRagDocumentSource extends PsEloRateable {
   documentMetaData: { [key: string]: string };
 }
 
+interface PsSimpleDocumentSource {
+  id: string;
+  url: string;
+  description?: string;
+  shortDescription?: string;
+  compressedFullDescriptionOfAllContents?: string;
+  title?: string;
+  contentType: string;
+  allReferencesWithUrls: string[];
+  allOtherReferences: string[];
+  allImageUrls: string[];
+  documentDate: string;
+  relevanceEloRating?: number;
+  substanceEloRating?: number;
+  primaryCategory?: string;
+  secondaryCategory?: string;
+  documentMetaData: { [key: string]: string };
+}
+
+interface PsVectorSearchResponse {
+  responseText: string;
+  documents: PsSimpleDocumentSource[];
+}
+
 interface PsRagDocumentSourceGraphQlResponse {
   data: {
     Get: {

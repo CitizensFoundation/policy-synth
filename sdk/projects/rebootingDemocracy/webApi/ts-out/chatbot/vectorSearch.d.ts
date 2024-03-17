@@ -5,7 +5,7 @@ export declare class PsRagVectorSearch extends PolicySynthAgentBase {
     processChunk(documentUrl: string, chunk: PsRagChunk, chunksMap: Map<string, PsRagChunk>, documentsMap: Map<string, PsRagDocumentSource>, addedChunkIdsMap: Map<string, Set<string>>): void;
     addMostRelevantChunks(chunk: PsRagChunk, chunksMap: Map<string, PsRagChunk>, documentsMap: Map<string, PsRagDocumentSource>): void;
     addTopEloRatedSiblingChunks(chunk: PsRagChunk, chunksMap: Map<string, PsRagChunk>, documentsMap: Map<string, PsRagDocumentSource>): void;
-    search(userQuestion: string, routingData: PsRagRoutingResponse, dataLayout: PsIngestionDataLayout): Promise<string>;
+    search(userQuestion: string, routingData: PsRagRoutingResponse, dataLayout: PsIngestionDataLayout): Promise<PsVectorSearchResponse>;
     formatOutput(documents: PsRagDocumentSource[]): string;
     appendChunks(chunks: PsRagChunk[], level: number): string;
     getEloAverage(chunk: PsRagChunk): number;

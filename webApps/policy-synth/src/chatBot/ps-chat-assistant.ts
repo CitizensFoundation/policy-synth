@@ -375,6 +375,7 @@ export class PsChatAssistant extends YpBaseElement {
     return this.chatElements![this.chatElements!.length - 1];
   }
 
+
   async addChatBotElement(wsMessage: PsAiChatWsMessage) {
     switch (wsMessage.type) {
       case 'hello_message':
@@ -458,7 +459,18 @@ export class PsChatAssistant extends YpBaseElement {
         this.requestUpdate();
         break;
       case 'info':
-        this.infoMessage = wsMessage.message;
+        if (wsMessage.message) {
+          this.infoMessage = wsMessage.message;
+        } else if (wsMessage.data) {
+          const data = wsMessage.data as PsRagDocumentSourcesWsData;
+          if (data.name === 'sourceDocuments') {
+            this.fire('source-documents', data.message);
+            this.addToChatLogWithMessage(wsMessage);
+          }
+          if (this.lastChatUiElement) {
+            this.lastChatUiElement.spinnerActive = false;
+          }
+        }
         break;
       case 'moderation_error':
         wsMessage.message =
@@ -518,6 +530,7 @@ export class PsChatAssistant extends YpBaseElement {
     this.scrollDown();
   }
 
+
   addChatUserElement(data: PsAiChatWsMessage) {
     this.chatLog = [...this.chatLog, data];
   }
@@ -540,6 +553,7 @@ export class PsChatAssistant extends YpBaseElement {
     let chatLog = this.chatLog.filter(
       chatMessage =>
         chatMessage.type != 'thinking' &&
+        chatMessage.type != 'info' &&
         chatMessage.type != 'noStreaming' &&
         chatMessage.message
     );
@@ -621,7 +635,7 @@ export class PsChatAssistant extends YpBaseElement {
 
         @media (max-width: 600px) {
           .chat-window {
-           
+
           }
 
           .you-chat-element {
@@ -817,6 +831,7 @@ export class PsChatAssistant extends YpBaseElement {
                   .clusterId="${this.clusterId}"
                   class="chatElement ${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
+                  .wsMessage="${chatElement}"
                   .message="${chatElement.message}"
                   @scroll-down-enabled="${() => (this.userScrolled = false)}"
                   .type="${chatElement.type}"

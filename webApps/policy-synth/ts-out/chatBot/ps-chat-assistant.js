@@ -317,7 +317,19 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 this.requestUpdate();
                 break;
             case 'info':
-                this.infoMessage = wsMessage.message;
+                if (wsMessage.message) {
+                    this.infoMessage = wsMessage.message;
+                }
+                else if (wsMessage.data) {
+                    const data = wsMessage.data;
+                    if (data.name === 'sourceDocuments') {
+                        this.fire('source-documents', data.message);
+                        this.addToChatLogWithMessage(wsMessage);
+                    }
+                    if (this.lastChatUiElement) {
+                        this.lastChatUiElement.spinnerActive = false;
+                    }
+                }
                 break;
             case 'moderation_error':
                 wsMessage.message =
@@ -376,6 +388,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     get simplifiedChatLog() {
         let chatLog = this.chatLog.filter(chatMessage => chatMessage.type != 'thinking' &&
+            chatMessage.type != 'info' &&
             chatMessage.type != 'noStreaming' &&
             chatMessage.message);
         return chatLog.map(chatMessage => {
@@ -455,7 +468,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
 
         @media (max-width: 600px) {
           .chat-window {
-           
+
           }
 
           .you-chat-element {
@@ -645,6 +658,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                   .clusterId="${this.clusterId}"
                   class="chatElement ${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
+                  .wsMessage="${chatElement}"
                   .message="${chatElement.message}"
                   @scroll-down-enabled="${() => (this.userScrolled = false)}"
                   .type="${chatElement.type}"

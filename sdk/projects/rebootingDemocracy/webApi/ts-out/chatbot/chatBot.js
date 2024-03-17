@@ -27,7 +27,23 @@ ${context}
 
 Your thoughtful answer in markdown:
 `;
-    rebootingDemocracyConversation = async (chatLog, dataLayout) => {
+    sendSourceDocuments(document) {
+        const botMessage = {
+            sender: "bot",
+            type: "info",
+            data: {
+                name: "sourceDocuments",
+                message: document,
+            },
+        };
+        if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+        }
+        else {
+            console.error("No wsClientSocket found");
+        }
+    }
+    async rebootingDemocracyConversation(chatLog, dataLayout) {
         this.setChatLog(chatLog);
         const userLastMessage = chatLog[chatLog.length - 1].message;
         console.log(`userLastMessage: ${userLastMessage}`);
@@ -54,7 +70,7 @@ Your thoughtful answer in markdown:
         const finalUserQuestionText = `Original user question: ${userLastMessage} \nRewritten user question (for vector search): ${routingData.rewrittenUserQuestionVectorDatabaseSearch}`;
         const userMessage = {
             role: "user",
-            content: this.mainStreamingUserPrompt(finalUserQuestionText, searchContext),
+            content: this.mainStreamingUserPrompt(finalUserQuestionText, searchContext.responseText),
         };
         messages.push(userMessage);
         console.log(`Messages to chatbot: ${JSON.stringify(messages, null, 2)}`);
@@ -66,11 +82,12 @@ Your thoughtful answer in markdown:
                 temperature: 0.0,
                 stream: true,
             });
+            this.sendSourceDocuments(searchContext.documents);
             await this.streamWebSocketResponses(stream);
         }
         catch (err) {
             console.error(`Error in Rebooting Democracy chatbot: ${err}`);
         }
-    };
+    }
 }
 //# sourceMappingURL=chatBot.js.map

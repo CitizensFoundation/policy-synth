@@ -189,8 +189,8 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                 this.processChunk(chunk.inDocument[0].url, chunk, chunksMap, documentsMap, addedChunkIdsMap);
                 this.addMostRelevantChunks(chunk, chunksMap, documentsMap);
                 this.addTopEloRatedSiblingChunks(chunk, chunksMap, documentsMap);
-                // Add the two top ELO rated substance and relevance chunks in allSiblingChunks that are not me and not in mostRElevantSiblingChunks
             });
+            //TODO: Find out why this is not working
             const recursiveSortChunks = (chunk) => {
                 if (chunk.subChunks && chunk.subChunks.length) {
                     // First, sort by chapterIndex
@@ -219,17 +219,41 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
                         recursiveSortChunks(currentChunk);
                     }
                     else {
-                        console.error("!!!!!!!!!!!!!!!!!!!! TODO: Look into chunk is undefined: " + JSON.stringify(chunk));
+                        console.error("!!!!!!!!!!!!!!!!!!!! TODO: Look into chunk is undefined: " +
+                            JSON.stringify(chunk));
                     }
                 }
             });
             //TODO: Filter out documents with the lowest relevanceEloRating, qualityEloRating, and substanceEloRating
             console.log("Processed chunk assignments complete.");
-            return this.formatOutput(Array.from(documentsMap.values()));
+            const returnDocuments = [];
+            Array.from(documentsMap.values()).forEach((document) => {
+                returnDocuments.push({
+                    id: document.id,
+                    url: document.url,
+                    relevanceEloRating: document.relevanceEloRating,
+                    substanceEloRating: document.substanceEloRating,
+                    title: document.title,
+                    description: document.shortDescription,
+                    contentType: document.contentType,
+                    allReferencesWithUrls: document.allReferencesWithUrls,
+                    allOtherReferences: document.allOtherReferences,
+                    allImageUrls: document.allImageUrls,
+                    documentDate: document.documentDate,
+                    documentMetaData: document.documentMetaData,
+                });
+            });
+            return {
+                responseText: this.formatOutput(Array.from(documentsMap.values())),
+                documents: returnDocuments,
+            };
         }
         catch (error) {
             console.error("Error in search:", error);
-            return "Error in search";
+            return {
+                responseText: "Unexpected error in search, please apologize",
+                documents: [],
+            };
         }
     }
     formatOutput(documents) {

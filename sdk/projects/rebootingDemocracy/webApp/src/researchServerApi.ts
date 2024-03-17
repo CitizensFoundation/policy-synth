@@ -10,7 +10,7 @@ export class ResearchServerApi extends YpServerApi {
     memoryId: string
   ): Promise<{chatLog: PsSimpleChatLog[], totalCosts: number}> {
     return (await this.fetchWrapper(
-      this.baseUrlPath + `/live_research_chat/${memoryId}`
+      this.baseUrlPath + `/rd_chat/${memoryId}`
     )) as {chatLog: PsSimpleChatLog[], totalCosts: number};
   }
 
@@ -23,7 +23,7 @@ export class ResearchServerApi extends YpServerApi {
     percentOfTopResultsToScan: number
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `/live_research_chat/`,
+      this.baseUrlPath + `/rd_chat/`,
       {
         method: 'PUT',
         body: JSON.stringify({

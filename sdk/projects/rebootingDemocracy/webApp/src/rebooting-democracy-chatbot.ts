@@ -71,4 +71,6 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
       this.percentOfTopResultsToScan
     );
   }
+
+
 }

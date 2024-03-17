@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import { RebootingDemocracyChatBot } from "../chatbot/chatBot.js";
 
 export class ChatController extends BaseController {
-  public path = "/api/live_research_chat";
+  public path = "/api/rd_chat";
 
   constructor(wsClients: Map<string, WebSocket>) {
     super(wsClients);

@@ -35,10 +35,27 @@ ${context}
 Your thoughtful answer in markdown:
 `;
 
-  rebootingDemocracyConversation = async (
+  sendSourceDocuments(document: PsSimpleDocumentSource[]) {
+    const botMessage = {
+      sender: "bot",
+      type: "info",
+      data: {
+        name: "sourceDocuments",
+        message: document,
+      } as PsAgentStartWsOptions,
+    } as PsAiChatWsMessage;
+
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
+  }
+
+  async rebootingDemocracyConversation(
     chatLog: PsSimpleChatLog[],
     dataLayout: PsIngestionDataLayout
-  ) => {
+  ) {
     this.setChatLog(chatLog);
 
     const userLastMessage = chatLog[chatLog.length - 1].message;
@@ -86,11 +103,14 @@ Your thoughtful answer in markdown:
 
     messages.unshift(systemMessage);
 
-    const finalUserQuestionText = `Original user question: ${userLastMessage} \nRewritten user question (for vector search): ${routingData.rewrittenUserQuestionVectorDatabaseSearch}`
+    const finalUserQuestionText = `Original user question: ${userLastMessage} \nRewritten user question (for vector search): ${routingData.rewrittenUserQuestionVectorDatabaseSearch}`;
 
     const userMessage = {
       role: "user",
-      content: this.mainStreamingUserPrompt(finalUserQuestionText, searchContext),
+      content: this.mainStreamingUserPrompt(
+        finalUserQuestionText,
+        searchContext.responseText
+      ),
     };
 
     messages.push(userMessage);
@@ -104,9 +124,10 @@ Your thoughtful answer in markdown:
         temperature: 0.0,
         stream: true,
       });
+      this.sendSourceDocuments(searchContext.documents);
       await this.streamWebSocketResponses(stream);
     } catch (err) {
       console.error(`Error in Rebooting Democracy chatbot: ${err}`);
     }
-  };
+  }
 }

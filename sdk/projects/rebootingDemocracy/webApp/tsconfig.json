@@ -33,7 +33,7 @@
     "src/**/*.ts",
     "./node_modules/@policysynth/webapp/@yrpri/types.d.ts",
     "./node_modules/@policysynth/agents/**/*.d.ts",
-    "./node_modules/@policysynth/webapp/src/types.d.ts"
+    "./node_modules/@policysynth/webapp/**/*.d.ts"
 , "types.d.ts"  ],
   "importHelpers": true,
   "plugins": [
