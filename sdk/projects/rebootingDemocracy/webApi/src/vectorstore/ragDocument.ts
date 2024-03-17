@@ -210,7 +210,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .get()
         .withClassName("RagDocumentChunk")
         .withNearText({ concepts: [query] })
-        .withLimit(12)
+        .withLimit(1)
         .withWhere({
           operator: "And",
           operands: where,
@@ -245,10 +245,21 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         mostRelevantSiblingChunks {
           ... on RagDocumentChunk {
             title
-            chunkIndex
             chapterIndex
-            mainExternalUrlFound
-            shortSummary
+            chunkIndex
+            fullSummary
+            relevanceEloRating
+            qualityEloRating
+            substanceEloRating
+            compressedContent
+          }
+        }
+
+        allSiblingChunks {
+          ... on RagDocumentChunk {
+            title
+            chapterIndex
+            chunkIndex
             fullSummary
             relevanceEloRating
             qualityEloRating
@@ -267,7 +278,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             fullSummary
             relevanceEloRating
             qualityEloRating
-            substanceEloRating
             compressedContent
 
             inChunk {

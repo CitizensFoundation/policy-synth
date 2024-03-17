@@ -136,13 +136,107 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
     }
   }
 
+  addMostRelevantChunks(
+    chunk: PsRagChunk,
+    chunksMap: Map<string, PsRagChunk>,
+    documentsMap: Map<string, PsRagDocumentSource>
+  ) {
+    const currentChunk = chunksMap.get(chunk.id!)!;
+
+    if (
+      chunk.mostRelevantSiblingChunks &&
+      chunk.mostRelevantSiblingChunks.length
+    ) {
+      chunk.mostRelevantSiblingChunks.forEach((siblingChunk) => {
+        if (currentChunk.inChunk && currentChunk.inChunk.length) {
+          const parentChunk = chunksMap.get(currentChunk.inChunk[0].id!);
+          if (parentChunk) {
+            parentChunk.subChunks!.push(siblingChunk);
+            console.log(
+              `Sibling chunk assigned to parent chunk: ${parentChunk.id}`
+            );
+          } else {
+            console.error(
+              `!!!!!!!!!!!!!!!!!!!!!!!!!!! Sibling chunk not assigned to any parent: ${
+                siblingChunk.compressedContent ? "Content" : "Summary"
+              } ${siblingChunk.title}`
+            );
+          }
+        } else if (currentChunk.inDocument && currentChunk.inDocument.length) {
+          console.log(
+            `Sibling chunk assigned to document: ${currentChunk.inDocument[0]
+              .url!}`
+          );
+          const currentDocument = documentsMap.get(
+            currentChunk.inDocument[0].url!
+          )!;
+          currentDocument.chunks!.push(siblingChunk);
+        }
+      });
+    }
+  }
+
+  addTopEloRatedSiblingChunks(
+    chunk: PsRagChunk,
+    chunksMap: Map<string, PsRagChunk>,
+    documentsMap: Map<string, PsRagDocumentSource>
+) {
+    const currentChunk = chunksMap.get(chunk.id!)!;
+    const allSiblings = chunk.allSiblingChunks ? chunk.allSiblingChunks : [];
+    const mostRelevantSiblings = chunk.mostRelevantSiblingChunks ? new Set(chunk.mostRelevantSiblingChunks.map(s => s.id)) : new Set();
+
+    // Exclude current chunk and most relevant siblings from the list
+    let filteredSiblings = allSiblings.filter(sibling => sibling.id !== chunk.id && !mostRelevantSiblings.has(sibling.id));
+
+    // Sort by substance and then relevance ELO ratings
+    filteredSiblings.sort((a, b) => {
+      if (a.qualityEloRating !=undefined && b.qualityEloRating!=undefined && a.relevanceEloRating!=undefined && b.relevanceEloRating!=undefined) {
+        let diff = b.qualityEloRating! - a.qualityEloRating!;
+        if (diff === 0) diff = b.relevanceEloRating! - a.relevanceEloRating!;
+        return diff;
+      } else {
+        console.error("!!!!!!!!!!!!!!!! ELO ratings are not defined for the sibling chunks")
+        return 0;
+      }
+    });
+
+    // Take the top 2 chunks based on the sorted list
+    const topEloRatedChunks = filteredSiblings.slice(0, 2);
+
+    // Process the selected top ELO rated chunks
+    topEloRatedChunks.forEach(siblingChunk => {
+        // This follows the same logic as in addMostRelevantChunks for assigning chunks
+        if (currentChunk.inChunk && currentChunk.inChunk.length) {
+            const parentChunk = chunksMap.get(currentChunk.inChunk[0].id!);
+            if (parentChunk && parentChunk.subChunks) {
+                parentChunk.subChunks.push(siblingChunk);
+                console.log(`Top ELO Rated Sibling chunk assigned to parent chunk: ${parentChunk.id}`);
+            }
+        } else if (currentChunk.inDocument && currentChunk.inDocument.length) {
+            console.log(`Top ELO Rated Sibling chunk assigned to document: ${currentChunk.inDocument[0].url!}`);
+            const currentDocument = documentsMap.get(currentChunk.inDocument[0].url!)!;
+            if (currentDocument.chunks) {
+                currentDocument.chunks.push(siblingChunk);
+            }
+        }
+    });
+}
+
+
   async search(
     userQuestion: string,
-    routingData: any,
-    dataLayout: any
+    routingData: PsRagRoutingResponse,
+    dataLayout: PsIngestionDataLayout
   ): Promise<string> {
     const vectorStore = new PsRagDocumentVectorStore();
     try {
+      if (
+        routingData.rewrittenUserQuestionVectorDatabaseSearch &&
+        routingData.rewrittenUserQuestionVectorDatabaseSearch != ""
+      ) {
+        userQuestion = routingData.rewrittenUserQuestionVectorDatabaseSearch;
+      }
+
       const chunkResults: PsRagChunk[] =
         await vectorStore.searchChunksWithReferences(userQuestion);
 
@@ -188,65 +282,11 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
           addedChunkIdsMap
         );
 
-        const currentChunk = chunksMap.get(chunk.id!)!;
+        this.addMostRelevantChunks(chunk, chunksMap, documentsMap);
+        this.addTopEloRatedSiblingChunks(chunk, chunksMap, documentsMap);
 
-
-        if (chunk.mostRelevantSiblingChunks && chunk.mostRelevantSiblingChunks.length) {
-          chunk.mostRelevantSiblingChunks.forEach((siblingChunk) => {
-            if (currentChunk.inChunk && currentChunk.inChunk.length) {
-              const parentChunk = chunksMap.get(currentChunk.inChunk[0].id!);
-              if (parentChunk) {
-                parentChunk.subChunks!.push(siblingChunk);
-                console.log(`Sibling chunk assigned to parent chunk: ${parentChunk.id}`);
-              } else {
-                console.error(
-                  `!!!!!!!!!!!!!!!!!!!!!!!!!!! Sibling chunk not assigned to any parent: ${
-                    siblingChunk.compressedContent ? "Content" : "Summary"
-                  } ${siblingChunk.title}`
-                );
-              }
-            } else if (currentChunk.inDocument && currentChunk.inDocument.length) {
-              console.log(`Sibling chunk assigned to document: ${currentChunk.inDocument[0].url!}`);
-              const currentDocument = documentsMap.get(currentChunk.inDocument[0].url!)!;
-              currentDocument.chunks!.push(siblingChunk);
-            }
-          });
-        }
+        // Add the two top ELO rated substance and relevance chunks in allSiblingChunks that are not me and not in mostRElevantSiblingChunks
       });
-
-      /*console.log(
-        `\n\n\n\addedChunkIdsMap keys:\n${JSON.stringify(
-          Array.from(addedChunkIdsMap.keys()),
-          null,
-          2
-        )}\n\n`
-      );
-
-      console.log(
-        `\n\addedChunkIdsMap values:\n${JSON.stringify(
-          Array.from(addedChunkIdsMap.values()),
-          null,
-          2
-        )}\n\n\n\n`
-      );*/
-
-      console.log(
-        "----------------------------------------------------------------------"
-      );
-
-
-      /*console.log(
-        `\n\nDocuments values:\n${JSON.stringify(
-          Array.from(documentsMap.values()),
-          null,
-          2
-        )}\n\n`
-      );*/
-
-      // Wait 3 minutes withn a promise
-      /*const wait = (ms: number) =>
-        new Promise((resolve) => setTimeout(resolve, ms));
-      await wait(180000);*/
 
       const recursiveSortChunks = (chunk: PsRagChunk) => {
         if (chunk.subChunks && chunk.subChunks.length) {
@@ -260,6 +300,8 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
       chunkResults.forEach((chunk) => {
         recursiveSortChunks(chunk);
       });
+
+      //TODO: Filter out documents with the lowest relevanceEloRating, qualityEloRating, and substanceEloRating
 
       console.log("Processed chunk assignments complete.");
       return this.formatOutput(Array.from(documentsMap.values()));
