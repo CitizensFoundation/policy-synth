@@ -20,20 +20,27 @@ Instructions:
         let potentialSources = [];
         let potentialDescriptions = [];
         stageOneData.forEach((data) => {
-            potentialSources.push(...(data.potentialSourcesOfInformationAboutBarriersToSkillsFirstPolicies || []));
+            potentialSources.push(...(data.potentialSourcesOfInformationAboutBarriersToSkillsFirstPolicies ||
+                []));
             potentialDescriptions.push(...(data.potentialDescriptionOfBarriersToSkillsFirstPolicies || []));
         });
-        console.log(`Potential sources: ${potentialSources.length}`);
-        console.log(`Potential descriptions: ${potentialDescriptions.length}`);
-        potentialSources = await this.deduplicate(potentialSources, 3);
-        console.log(potentialSources, null, 2);
-        potentialDescriptions = await this.deduplicate(potentialDescriptions, 3);
-        console.log(potentialDescriptions, null, 2);
-        const rows = Math.max(potentialSources.length, potentialDescriptions.length);
+        // Deduplicate case-insensitively while preserving the original capitalization
+        let uniqueSourcesMap = new Map(potentialSources.map((item) => [item.toLowerCase(), item]));
+        let uniqueDescriptionsMap = new Map(potentialDescriptions.map((item) => [item.toLowerCase(), item]));
+        // Sort maps alphabetically by key and retain original case for values
+        let uniqueSources = Array.from(uniqueSourcesMap.values()).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        let uniqueDescriptions = Array.from(uniqueDescriptionsMap.values()).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+        console.log(`Unique potential sources: ${uniqueSources.length}`);
+        console.log(`Unique potential descriptions: ${uniqueDescriptions.length}`);
+        // Deduplication process; assuming this function is correctly implemented to preserve the order
+        uniqueSources = await this.deduplicate(uniqueSources, 3);
+        uniqueDescriptions = await this.deduplicate(uniqueDescriptions, 3);
+        // Preparing CSV content
+        const rows = Math.max(uniqueSources.length, uniqueDescriptions.length);
         let csvContent = "potentialSources,potentialDescriptions\n";
         for (let i = 0; i < rows; i++) {
-            const source = potentialSources[i] || "";
-            const description = potentialDescriptions[i] || "";
+            const source = uniqueSources[i] || "";
+            const description = uniqueDescriptions[i] || "";
             csvContent += `"${source}","${description}"\n`;
         }
         // Write to CSV file
@@ -44,7 +51,8 @@ Instructions:
         console.log(`Deduplicating ${deduplicatedItems.length} items...`);
         for (let i = 0; i < passes; i++) {
             // Randomize array
-            deduplicatedItems = this.shuffleArray(deduplicatedItems);
+            if (i > 0)
+                deduplicatedItems = this.shuffleArray(deduplicatedItems);
             // Split items into chunks of 20 for processing
             const chunks = this.chunkArray(deduplicatedItems, 20);
             deduplicatedItems = []; // Reset for next pass

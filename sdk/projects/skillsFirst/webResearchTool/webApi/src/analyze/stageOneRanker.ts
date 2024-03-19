@@ -4,7 +4,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 
-export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
+export class StageOneRanker extends BasePairwiseRankingsProcessor {
   rankInstructions: string | undefined;
 
   constructor(
@@ -67,9 +67,11 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
 
   async rankItems(
     itemsToRank: string[],
-    rankInstructions: string
+    rankInstructions: string | undefined = undefined
   ) {
-    this.rankInstructions = rankInstructions;
+    if (rankInstructions) {
+      this.rankInstructions = rankInstructions;
+    }
 
     this.chat = new ChatOpenAI({
       temperature: 0.0,
