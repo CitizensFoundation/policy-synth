@@ -8,10 +8,10 @@ export class StageOneRanker extends BasePairwiseRankingsProcessor {
   rankInstructions: string | undefined;
 
   constructor(
-    memory: PsBaseMemoryData,
+    memory: PsBaseMemoryData | undefined = undefined,
     progressFunction: Function | undefined = undefined
   ) {
-    super(undefined as any, memory);
+    super(undefined as any, undefined as any);
     this.progressFunction = progressFunction;
   }
 
@@ -31,16 +31,17 @@ export class StageOneRanker extends BasePairwiseRankingsProcessor {
         You are an AI expert trained to rank two items according to the users ranking instructions.
 
         Instructions:
-        1. You will see a research question.
+        1. You will see ranking instructions.
         2. You will also see two items, each marked as "Item One" and "Item Two".
-        3. Your task is to analyze, compare, and rank these search queries based on their relevance to the research question.
+        3. Your task is to analyze, compare, and rank these items based on the users ranking instructions.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `
       ),
       new HumanMessage(
         `
-        Ranking instructions: ${this.rankInstructions}
+        Ranking Instructions:
+        ${this.rankInstructions}
 
         Items to Rank:
 
@@ -77,7 +78,7 @@ export class StageOneRanker extends BasePairwiseRankingsProcessor {
       temperature: 0.0,
       maxTokens: 4000,
       modelName: "gpt-4-0125-preview",
-      verbose: false
+      verbose: true
     });
 
     this.setupRankingPrompts(

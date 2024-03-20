@@ -1,6 +1,7 @@
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { promises as fs } from "fs";
 import { OpenAI } from "openai";
+import { StageOneRanker } from "./stageOneRanker.js";
 export class StepOneAnalyzer extends PolicySynthAgentBase {
     constructor() {
         super(...arguments);
@@ -19,11 +20,22 @@ Instructions:
         const stageOneData = JSON.parse(data);
         let potentialSources = [];
         let potentialDescriptions = [];
+        const sourceUrlMap = new Map();
+        const descriptionUrlMap = new Map();
         stageOneData.forEach((data) => {
-            potentialSources.push(...(data.potentialSourcesOfInformationAboutBarriersToSkillsFirstPolicies ||
-                []));
-            potentialDescriptions.push(...(data.potentialDescriptionOfBarriersToSkillsFirstPolicies || []));
+            data.potentialSourcesOfInformationAboutBarriersToSkillsFirstPolicies?.forEach((source) => {
+                potentialSources.push(source);
+                sourceUrlMap.set(source, data);
+            });
+            data.potentialDescriptionOfBarriersToSkillsFirstPolicies?.forEach((description) => {
+                potentialDescriptions.push(description);
+                descriptionUrlMap.set(description, data);
+            });
         });
+        //potentialSources = potentialSources.slice(0,100);
+        //potentialDescriptions = potentialDescriptions.slice(0,100);
+        console.log(`Potential sources: ${potentialSources.length}`);
+        console.log(`Potential descriptions: ${potentialDescriptions.length}`);
         // Deduplicate case-insensitively while preserving the original capitalization
         let uniqueSourcesMap = new Map(potentialSources.map((item) => [item.toLowerCase(), item]));
         let uniqueDescriptionsMap = new Map(potentialDescriptions.map((item) => [item.toLowerCase(), item]));
@@ -33,18 +45,38 @@ Instructions:
         console.log(`Unique potential sources: ${uniqueSources.length}`);
         console.log(`Unique potential descriptions: ${uniqueDescriptions.length}`);
         // Deduplication process; assuming this function is correctly implemented to preserve the order
-        uniqueSources = await this.deduplicate(uniqueSources, 3);
-        uniqueDescriptions = await this.deduplicate(uniqueDescriptions, 3);
+        uniqueSources = await this.deduplicate(uniqueSources, 1);
+        uniqueDescriptions = await this.deduplicate(uniqueDescriptions, 1);
+        console.log(uniqueSources);
+        console.log(uniqueDescriptions);
+        const ranker = new StageOneRanker();
+        ranker.rankInstructions =
+            "Rank the potential sources of information about barriers to Skills First policies.\
+   Those barriers are specifically around needing university degrees where skills would be enough.\
+   Where laws and regululation puts in place barriers to implementing Skills First policies if different government departments want to.";
+        await ranker.rankItems(uniqueSources);
+        const rankedSources = ranker.getOrderedListOfItems(-1);
+        ranker.rankInstructions =
+            "Rank the potential descriptions of barriers to Skills First policies.\
+   Those barriers are specifically around needing university degrees where skills would be enough.\
+   Where laws and regululation puts in place barriers to implementing Skills First policies if different government departments want to.";
+        await ranker.rankItems(uniqueDescriptions);
+        const rankedDescriptions = ranker.getOrderedListOfItems(-1);
         // Preparing CSV content
-        const rows = Math.max(uniqueSources.length, uniqueDescriptions.length);
-        let csvContent = "potentialSources,potentialDescriptions\n";
-        for (let i = 0; i < rows; i++) {
-            const source = uniqueSources[i] || "";
-            const description = uniqueDescriptions[i] || "";
-            csvContent += `"${source}","${description}"\n`;
+        let csvContentSources = "potentialSources,summary,howThisIsRelevant,relevanceScore,url\n";
+        for (const source of rankedSources) {
+            const data = sourceUrlMap.get(source);
+            csvContentSources += `"${source}",${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
         }
         // Write to CSV file
-        await fs.writeFile("./data/out.csv", csvContent);
+        await fs.writeFile("./data/out_sources.csv", csvContentSources);
+        let csvContentDescriptions = "potentialDescriptions,summary,howThisIsRelevant,relevanceScore,url\n";
+        for (const description of rankedDescriptions) {
+            const data = descriptionUrlMap.get(description);
+            csvContentDescriptions += `"${description}","${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+        }
+        // Write to CSV file
+        await fs.writeFile("./data/out_descriptions.csv", csvContentDescriptions);
     }
     async deduplicate(items, passes = 1) {
         let deduplicatedItems = items;

@@ -2,9 +2,9 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
-export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
-    constructor(memory, progressFunction = undefined) {
-        super(undefined, memory);
+export class StageOneRanker extends BasePairwiseRankingsProcessor {
+    constructor(memory = undefined, progressFunction = undefined) {
+        super(undefined, undefined);
         this.progressFunction = progressFunction;
     }
     async voteOnPromptPair(index, promptPair) {
@@ -17,14 +17,15 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         You are an AI expert trained to rank two items according to the users ranking instructions.
 
         Instructions:
-        1. You will see a research question.
+        1. You will see ranking instructions.
         2. You will also see two items, each marked as "Item One" and "Item Two".
-        3. Your task is to analyze, compare, and rank these search queries based on their relevance to the research question.
+        3. Your task is to analyze, compare, and rank these items based on the users ranking instructions.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
             new HumanMessage(`
-        Ranking instructions: ${this.rankInstructions}
+        Ranking Instructions:
+        ${this.rankInstructions}
 
         Items to Rank:
 
@@ -39,13 +40,15 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         ];
         return await this.getResultsFromLLM(index, "rank-search-queries", IEngineConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
-    async rankItems(itemsToRank, rankInstructions) {
-        this.rankInstructions = rankInstructions;
+    async rankItems(itemsToRank, rankInstructions = undefined) {
+        if (rankInstructions) {
+            this.rankInstructions = rankInstructions;
+        }
         this.chat = new ChatOpenAI({
             temperature: 0.0,
             maxTokens: 4000,
             modelName: "gpt-4-0125-preview",
-            verbose: false
+            verbose: true
         });
         this.setupRankingPrompts(-1, itemsToRank, itemsToRank.length * 10, this.progressFunction);
         await this.performPairwiseRanking(-1);
