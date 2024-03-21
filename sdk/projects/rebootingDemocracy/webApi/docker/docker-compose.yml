@@ -8,6 +8,7 @@ x-collective-policy-synth-common: &collective-policy-synth-common
     dockerfile: webApi/docker/collective-policy-synth/Dockerfile
   image: collective-policy-synth:current
   volumes:
+    - ../../webApp:/home/node/app/webApps
     - client-app-dist:/usr/src/webApps/policy-synth/dist
   command: node ts-out/server.js
   healthcheck:
