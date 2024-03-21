@@ -11,6 +11,8 @@ import '@material/web/button/filled-button.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/icon/icon.js';
 
+import { MdDialog } from '@material/web/dialog/dialog.js';
+
 import '@material/web/iconbutton/outlined-icon-button.js';
 
 import '@yrpri/webapp/common/yp-image.js';
@@ -53,6 +55,9 @@ export class PsChatAssistant extends YpBaseElement {
   @property({ type: Boolean })
   onlyUseTextField = false;
 
+  @property({ type: Object })
+  currentDocumentSourceToDisplay: PsSimpleDocumentSource | undefined;
+
   @property({ type: Number })
   clusterId!: number;
 
@@ -72,7 +77,7 @@ export class PsChatAssistant extends YpBaseElement {
   programmaticScroll = false;
 
   @property({ type: Boolean })
-  showCleanupButton = false;
+  showCleanupButtonAtBottom = false;
 
   @property({ type: Number })
   scrollStart: number = 0;
@@ -458,7 +463,18 @@ export class PsChatAssistant extends YpBaseElement {
         this.requestUpdate();
         break;
       case 'info':
-        this.infoMessage = wsMessage.message;
+        if (wsMessage.message) {
+          this.infoMessage = wsMessage.message;
+        } else if (wsMessage.data) {
+          const data = wsMessage.data as PsRagDocumentSourcesWsData;
+          if (data.name === 'sourceDocuments') {
+            this.fire('source-documents', data.message);
+            this.addToChatLogWithMessage(wsMessage);
+          }
+          if (this.lastChatUiElement) {
+            this.lastChatUiElement.spinnerActive = false;
+          }
+        }
         break;
       case 'moderation_error':
         wsMessage.message =
@@ -540,6 +556,7 @@ export class PsChatAssistant extends YpBaseElement {
     let chatLog = this.chatLog.filter(
       chatMessage =>
         chatMessage.type != 'thinking' &&
+        chatMessage.type != 'info' &&
         chatMessage.type != 'noStreaming' &&
         chatMessage.message
     );
@@ -621,7 +638,6 @@ export class PsChatAssistant extends YpBaseElement {
 
         @media (max-width: 600px) {
           .chat-window {
-           
           }
 
           .you-chat-element {
@@ -645,6 +661,29 @@ export class PsChatAssistant extends YpBaseElement {
 
         .darkModeButton {
           margin-right: 16px;
+        }
+
+        .currentSourceTitle {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 4px;
+        }
+
+        .currentSourceDescription {
+          margin-top: 8px;
+          margin-bottom: 8px;
+        }
+
+        .sourceLinkButton {
+          margin-top: 16px;
+          margin-bottom: 320px;
+        }
+
+        .currentSourceUrl {
+          max-width: 40ch;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 12px;
         }
 
         md-outlined-text-field {
@@ -737,7 +776,7 @@ export class PsChatAssistant extends YpBaseElement {
 
   renderChatInput() {
     return html`
-      ${this.showCleanupButton
+      ${this.showCleanupButtonAtBottom
         ? html`
         <md-outlined-icon-button
           class="restartButton"
@@ -794,11 +833,99 @@ export class PsChatAssistant extends YpBaseElement {
     `;
   }
 
+  cancelSourceDialog() {
+    this.currentDocumentSourceToDisplay = undefined;
+    const dialog = this.$$('#sourceDialog') as MdDialog;
+    dialog.open = false;
+  }
+
+  openSourceDialog(event: CustomEvent) {
+    this.currentDocumentSourceToDisplay = event.detail;
+    this.requestUpdate();
+    const dialog = this.$$('#sourceDialog') as MdDialog;
+    dialog.open = true;
+  }
+
+  stripDomainForFacIcon(url: string) {
+    let domain = url.split('/')[2];
+    console.error(`Domain is ${domain}`);
+    return domain;
+  }
+
+  renderSourceDialog() {
+    return html`
+      <md-dialog
+        id="sourceDialog"
+        @closed="${() => this.cancelSourceDialog()}"
+        ?fullscreen="${!this.wide}"
+        class="dialog"
+        id="dialog"
+      >
+        ${this.currentDocumentSourceToDisplay
+          ? html` <div slot="headline">
+                ${this.currentDocumentSourceToDisplay.title}
+              </div>
+              <div slot="content" id="content">
+                <div class="layout vertical">
+                  <div class="layout horizontal center-center">
+                    <img
+                      src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
+                      this.currentDocumentSourceToDisplay.url
+                    )}&sz=24"
+                      slot="icon"
+                      width="24"
+                      height="24"
+                      class="sourceFavIcon"
+                    />
+                  </div>
+                  <div class="currentSourceDescription">
+                    ${this.currentDocumentSourceToDisplay
+                      .compressedFullDescriptionOfAllContents}
+                  </div>
+                  <div class="layout horizontal center-center sourceLinkButton">
+                    ${this.currentDocumentSourceToDisplay.url
+                      .toLowerCase()
+                      .indexOf('.pdf') > -1
+                      ? html`
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                            download
+                          >
+                            <md-filled-button>
+                              ${this.t('Open PDF')}
+                            </md-filled-button>
+                          </a>
+                        `
+                      : html`
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                          >
+                            <md-filled-button>
+                              ${this.t('Visit Website')}
+                            </md-filled-button>
+                          </a>
+                        `}
+                  </div>
+                </div>
+              </div>`
+          : nothing}
+        <div slot="actions">
+          <md-text-button @click="${() => this.cancelSourceDialog()}">
+            ${this.t('cancel')}
+          </md-text-button>
+        </div>
+      </md-dialog>
+    `;
+  }
+
   override render() {
     return html`
+      ${this.renderSourceDialog()}
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
-          <yp-chatbot-item-base
+          <ps-ai-chat-element
             ?hidden="${!this.defaultInfoMessage}"
             class="chatElement bot-chat-element"
             .detectedLanguage="${this.language}"
@@ -814,9 +941,11 @@ export class PsChatAssistant extends YpBaseElement {
                   ?thinking="${chatElement.type === 'thinking' ||
                   chatElement.type === 'noStreaming'}"
                   @followup-question="${this.followUpQuestion}"
+                  @ps-open-source-dialog="${this.openSourceDialog}"
                   .clusterId="${this.clusterId}"
                   class="chatElement ${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
+                  .wsMessage="${chatElement}"
                   .message="${chatElement.message}"
                   @scroll-down-enabled="${() => (this.userScrolled = false)}"
                   .type="${chatElement.type}"

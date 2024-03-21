@@ -59,3 +59,4 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
         return this.getOrderedListOfItems(-1, true, eloRatingKey);
     }
 }
+//# sourceMappingURL=docRanker.js.map

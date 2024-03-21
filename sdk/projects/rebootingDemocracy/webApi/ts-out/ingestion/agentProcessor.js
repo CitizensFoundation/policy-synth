@@ -170,7 +170,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 for (const subChunk of allSiblingChunksIncludingMe) {
                     if (subChunk.chapterIndex != chunk.chapterIndex) {
                         console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex} current chunk.subChunks: ${chunk.subChunks?.map(c => c.chapterIndex)}`);
-                        const subChunkId = await postChunkRecursively(subChunk, documentId, chunkId, allSiblingChunksIncludingMe);
+                        const subChunkId = await postChunkRecursively(subChunk, documentId, parentChunkId, allSiblingChunksIncludingMe);
                         if (subChunkId) {
                             subChunk.id = subChunkId;
                             allSiblingChunksWithIds.push(subChunk);
@@ -212,7 +212,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             if (chunk.subChunks) {
                 for (const subChunk of chunk.subChunks) {
                     console.log(`Middle Level Loop: Processing subChunk ${subChunk.chapterIndex}`);
-                    await postChunkRecursively(subChunk, documentId, chunkId, allSiblingChunksIncludingMe);
+                    await postChunkRecursively(subChunk, documentId, chunkId, chunk.subChunks);
                 }
             }
             return chunkId;
@@ -690,3 +690,4 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         await fs.writeFile(this.fileMetadataPath, JSON.stringify(this.fileMetadata, null, 2));
     }
 }
+//# sourceMappingURL=agentProcessor.js.map

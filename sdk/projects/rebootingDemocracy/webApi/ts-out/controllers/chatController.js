@@ -1,7 +1,7 @@
 import { BaseController } from "@policysynth/api/controllers/baseController.js";
 import { RebootingDemocracyChatBot } from "../chatbot/chatBot.js";
 export class ChatController extends BaseController {
-    path = "/api/live_research_chat";
+    path = "/api/rd_chat";
     constructor(wsClients) {
         super(wsClients);
         this.initializeRoutes();
@@ -66,3 +66,4 @@ export class ChatController extends BaseController {
         }
     };
 }
+//# sourceMappingURL=chatController.js.map

@@ -152,6 +152,8 @@ export class RebootingDemocracyChatBotApp extends PolicySynthWebApp {
 
         .menuButton {
           margin-bottom: 32px;
+          margin-left: 8px;
+          margin-right: 8px;
         }
 
         md-menu-item {
@@ -258,7 +260,14 @@ export class RebootingDemocracyChatBotApp extends PolicySynthWebApp {
       <div class="layout horizontal center-center themeToggle">
         <img src="https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/rebooting.png" style="height: 100px;margin-top: 8px;margin-left: 16px;"/>
         <div class="flex"></div>
-        <div style="margin-top: 32px">${this.renderSavedChatsDropdown()}</div>
+        <div style="margin-top: 32px;">
+          ${this.renderSavedChatsDropdown()}
+          <md-outlined-button
+            class="menuButton"
+            @click="${this.reset}"
+            >${this.t('New chat')}</md-outlined-button
+          >
+        </div>
         <div class="flex"></div>
         <div class="layout horizontal" style="margin-left: 32px">${this.renderThemeToggle(true)}</div>
       </div>

@@ -11,6 +11,7 @@ Instructions:
 - Never provide information that is not backed by your context or is common knowledge.
 - Look carefully at all in your context before you present the information to the user.
 - Be optimistic and cheerful but keep a professional nordic style of voice.
+- For longer outputs use bullet points and markdown to make the information easy to read.
 - Do not reference your contexts and the different document sources just provide the information based on those sources.
 - For all document sources we will provide the user with those you do not need to link or reference them.
 - If there are inline links in the actual document chunks, you can provide those to the user in a markdown link format.
@@ -26,7 +27,23 @@ ${context}
 
 Your thoughtful answer in markdown:
 `;
-    rebootingDemocracyConversation = async (chatLog, dataLayout) => {
+    sendSourceDocuments(document) {
+        const botMessage = {
+            sender: "bot",
+            type: "info",
+            data: {
+                name: "sourceDocuments",
+                message: document,
+            },
+        };
+        if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+        }
+        else {
+            console.error("No wsClientSocket found");
+        }
+    }
+    async rebootingDemocracyConversation(chatLog, dataLayout) {
         this.setChatLog(chatLog);
         const userLastMessage = chatLog[chatLog.length - 1].message;
         console.log(`userLastMessage: ${userLastMessage}`);
@@ -53,7 +70,7 @@ Your thoughtful answer in markdown:
         const finalUserQuestionText = `Original user question: ${userLastMessage} \nRewritten user question (for vector search): ${routingData.rewrittenUserQuestionVectorDatabaseSearch}`;
         const userMessage = {
             role: "user",
-            content: this.mainStreamingUserPrompt(finalUserQuestionText, searchContext),
+            content: this.mainStreamingUserPrompt(finalUserQuestionText, searchContext.responseText),
         };
         messages.push(userMessage);
         console.log(`Messages to chatbot: ${JSON.stringify(messages, null, 2)}`);
@@ -65,10 +82,12 @@ Your thoughtful answer in markdown:
                 temperature: 0.0,
                 stream: true,
             });
+            this.sendSourceDocuments(searchContext.documents);
             await this.streamWebSocketResponses(stream);
         }
         catch (err) {
             console.error(`Error in Rebooting Democracy chatbot: ${err}`);
         }
-    };
+    }
 }
+//# sourceMappingURL=chatBot.js.map

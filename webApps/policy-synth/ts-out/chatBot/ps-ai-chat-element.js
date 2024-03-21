@@ -11,6 +11,7 @@ import '@material/web/icon/icon.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
@@ -318,6 +319,33 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
           color: var(--md-sys-color-primary);
           margin-bottom: 16px;
         }
+
+        .sourceFavIcon {
+          margin-right: 8px;
+        }
+
+        .sourceButton {
+          margin: 8px;
+          padding: 8px;
+          max-width: 250px;
+          max-height: 60px;
+          height: 60px;
+          line-height: 1.2;
+          white-space: collapse balance;
+          font-size: 12px;
+          --md-elevated-button-container-height: 60px !important;
+          --md-elevated-button-hover-label-text-color: var(
+            --md-sys-color-on-surface
+          );
+        }
+
+        .sourceContainer {
+          text-align: left;
+        }
+
+        a {
+          color: var(--md-sys-color-primary);
+         }
       `,
         ];
     }
@@ -332,6 +360,61 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
     }
     renderJson() {
         return html ``;
+    }
+    renderInfo() {
+        if (this.wsMessage && this.wsMessage.data && this.wsMessage.data) {
+            const data = this.wsMessage.data;
+            if (data.name === 'sourceDocuments') {
+                console.error(JSON.stringify(data));
+                return html `<div
+          class="layout horizontal  wrap sourceDocumentsContainer"
+        >
+          ${data.message.map(document => html `
+              <md-elevated-button
+                class="sourceButton"
+                @click=${() => this.fire('ps-open-source-dialog', document)}
+              >
+                <div class="layout horizontal sourceContainer">
+                  <img
+                    src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(document.url)}&sz=24"
+                    slot="icon"
+                    width="24"
+                    height="24"
+                    class="sourceFavIcon"
+                  />
+                  <div class="documentShortDescription">
+                    ${this.shortenText(`${this.capitalizeFirstLetter(document.title)}: ${document.description}`, 65)}
+                  </div>
+                </div>
+              </md-elevated-button>
+            `)}
+        </div>`;
+            }
+            else {
+                return nothing;
+            }
+        }
+        else {
+            return nothing;
+        }
+    }
+    shortenText(text, maxLength) {
+        if (text.length > maxLength) {
+            return text.substr(0, maxLength) + '...';
+        }
+        else {
+            return text;
+        }
+    }
+    capitalizeFirstLetter(text) {
+        if (text.length === 0)
+            return text;
+        return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+    }
+    stripDomainForFacIcon(url) {
+        let domain = url.split('/')[2];
+        console.error(`Domain is ${domain}`);
+        return domain;
     }
     renderChatGPT() {
         return html `
@@ -464,6 +547,9 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
         else if (this.sender === 'bot' && this.type === 'noStreaming') {
             return this.renderNoStreaming();
         }
+        else if (this.sender === 'bot' && this.type === 'info') {
+            return this.renderInfo();
+        }
         else if (this.sender === 'bot') {
             return this.renderChatGPT();
         }
@@ -475,6 +561,9 @@ let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
 __decorate([
     property({ type: String })
 ], PsAiChatElement.prototype, "message", void 0);
+__decorate([
+    property({ type: Object })
+], PsAiChatElement.prototype, "wsMessage", void 0);
 __decorate([
     property({ type: String })
 ], PsAiChatElement.prototype, "updateMessage", void 0);

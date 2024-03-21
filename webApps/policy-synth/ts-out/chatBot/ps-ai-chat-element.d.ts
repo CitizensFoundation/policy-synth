@@ -1,7 +1,9 @@
+import { nothing } from 'lit';
 import '@material/web/icon/icon.js';
 import '@material/web/checkbox/checkbox.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/progress/circular-progress.js';
 import '@yrpri/webapp/common/yp-image.js';
@@ -9,6 +11,7 @@ import { BaseChatBotServerApi } from './BaseChatBotApi';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsAiChatElement extends YpBaseElement {
     message: string;
+    wsMessage: PsAiChatWsMessage;
     updateMessage: string;
     sender: 'you' | 'bot';
     detectedLanguage: string;
@@ -31,13 +34,17 @@ export declare class PsAiChatElement extends YpBaseElement {
     renderCGImage(): import("lit").TemplateResult<1>;
     renderRoboImage(): import("lit").TemplateResult<1>;
     renderJson(): import("lit").TemplateResult<1>;
+    renderInfo(): import("lit").TemplateResult<1> | typeof nothing;
+    shortenText(text: string, maxLength: number): string;
+    capitalizeFirstLetter(text: string): string;
+    stripDomainForFacIcon(url: string): string;
     renderChatGPT(): any;
     parseFollowUpQuestions(): void;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     renderUser(): any;
     renderNoStreaming(): import("lit").TemplateResult<1>;
     renderThinking(): import("lit").TemplateResult<1>;
-    getThinkingText(): "Mõeldes..." | "Hugsa..." | "Thinking...";
+    getThinkingText(): "Thinking..." | "Mõeldes..." | "Hugsa...";
     renderMessage(): any;
     render(): import("lit").TemplateResult<1>;
 }
