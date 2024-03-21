@@ -1,0 +1,72 @@
+version: '3.9'
+
+x-collective-policy-synth-common: &collective-policy-synth-common
+  env_file: .env
+  restart: always
+  build:
+    context: ../../.
+    dockerfile: webApi/docker/collective-policy-synth/Dockerfile
+  image: collective-policy-synth:current
+  volumes:
+    - ../../webApp:/home/node/app/webApps
+    - client-app-dist:/usr/src/webApps/policy-synth/dist
+  command: node ts-out/server.js
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
+    interval: 30s
+    timeout: 20s
+    retries: 3
+  network_mode: host
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "2000"
+      max-size: "25m"
+
+services:
+  redis_db:
+    image: redis:6.2.13-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    network_mode: host
+    volumes:
+      - redis-db-data:/data
+
+  webserver:
+    container_name: webserver
+    restart: always
+    env_file: .env
+    build:
+      context: ./webserver/
+      dockerfile: Dockerfile
+    #ports:
+    #  - "80:80"
+    #  - "443:443"
+    volumes:
+      - webserver:/home
+      - client-app-dist:/usr/src/webApps/policy-synth/dist
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://${FULL_HOSTNAME}/api/project/healthcheck"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "2000"
+        max-size: "25m"
+
+  collective-policy-synth-1:
+    <<: *collective-policy-synth-common
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
+    environment:
+      - PORT=9080
+
+volumes:
+  webserver:
+  client-app-dist:
+  redis-db-data:
+    driver: local
