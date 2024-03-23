@@ -27,8 +27,8 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 ## Top-Rated Community Engagement Platforms
 Policy Synth utilizes "Your Priorities", a platform we've been refining since 2008. It's recognized as the world's leading citizen engagement tool.
 
-- Rated #1 on PeoplePowered with 96/100 average score: [2024 Platform ratings](https://www.peoplepowered.org/platform-ratings)
-- Top ranking with a 94/100 score in the [2024 Digital Democracy Report](https://www.solonian-institute.com/publications)
+- Rated #1 (94/100) on PeoplePowered: [2024 Platform ratings](https://www.peoplepowered.org/platform-ratings)
+- Top ranking (96/100) in the [2024 Digital Democracy Report](https://www.solonian-institute.com/publications)
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
 ## Architecture Overview
