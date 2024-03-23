@@ -40,7 +40,7 @@ Policy Synth makes use of All Our Ideas, Citizens Foundations open source, human
 </p>
 
 ### Other Tools
-Policy Synth is flexible and can work with many other citizen engagment tools, for example Decidim and Consul, through simple data adapters.
+Policy Synth is flexible and can work with many other citizen engagment tools, for example Decidim and Consul. As a class based library Policy Synth has no limitations regarding integration with other tools. 
 
 ## Example Multi-Scale Policy Synth Agent
 ![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/c9947b97-68a1-43be-925e-4a52bc2b9ad6)
