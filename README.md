@@ -40,7 +40,20 @@ Policy Synth makes use of All Our Ideas, Citizens Foundations open source, human
 </p>
 
 ### Other Tools
-Policy Synth is flexible and can work with many other citizen engagment tools, for example Decidim and Consul. As a class based library Policy Synth has no limitations regarding integration with other tools. 
+Policy Synth is flexible and can work with many other citizen engagment tools, for example Decidim and Consul. As a class based library Policy Synth has no limitations regarding integration with other tools.
+
+## Policy Synth AI Agents
+
+### About AI Agents
+In the context of computational systems, AI agents are autonomous or semi-autonomous entities that interact with digital environments to achieve specific goals or tasks. These agents can range from simple rule-based algorithms to complex systems like Large Language Models (LLMs), capable of processing and generating text and performing simple reasoning. The essence of AI agents lies in their ability to perceive their environment through data, make decisions based on this data, and act upon these decisions to fulfill predefined objectives. In Policy Synth AI agents are used extensively for different tasks.
+
+### Fast and Slow Thinking
+![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/7d66793b-5a0c-479f-8a0c-d9a5f254e8e9)
+
+Fast (System 1) and Slow (System 2) thinking, terms popularized by psychologist Daniel Kahneman, offer a useful framework for understanding how AI, especially Large Language Models (LLMs), parallel System 1 thinking, characterized by swift, intuitive cognition without deliberate effort—much like a human's quick calculation of "what is 2+2?". While the best LLMs are also capable of limited form of System 2 thinking then this analogy suggests that LLMs excel in producing responses quickly, leveraging vast databases of information to generate answers that seem instinctive, much as System 1 thinking does for humans in certain contexts. System 2 thinking represents a more deliberate, analytical form of reasoning that humans employ for more complex tasks, such as solving "what is 17*24?" without the aid of calculators. This level of cognitive processing requires significant effort, attention, and mental manipulation of information.
+
+### Policy Synth Agent Approach
+In contrast to striving for fully autonomous System 2 capabilities with AI, Policy Synth approaches the challenge by manually constructing and integrating System 2 thinking processes through a multi-scale AI agent framework. This methodological choice allows for the deliberate orchestration of AI processes that implement a deeper System 2 thinking by combining specialized agents in a structured manner.
 
 ## Example Multi-Scale Policy Synth Agent
 ![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/c9947b97-68a1-43be-925e-4a52bc2b9ad6)
