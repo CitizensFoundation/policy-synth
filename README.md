@@ -32,9 +32,9 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
 ## Example Multi-Scale Policy Synth Agent
-![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/c4f6ae11-d6e1-4800-a9d8-8e375f35c9da)
+![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/dc7dcc3e-5b88-465f-b6c4-a5635584f38f)
 
-## Example Configuration Overview
+## Example Agent Queue Configuration
 ![Policy Synth v 42a](https://github.com/CitizensFoundation/policy-synth/assets/43699/b7e1f10a-7438-4827-a576-b48ec5a672e6)
 
 ## Draft Developer Guide
