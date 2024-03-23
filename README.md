@@ -36,7 +36,7 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 ### All Our Ideas
 Policy Synth makes use of All Our Ideas, Citizens Foundations open source, human, pairwise voting platform to provide guidance and input into different AI agents.
 <p align="center">
-  <img src="https://github.com/CitizensFoundation/policy-synth/assets/43699/4ef0c337-c298-47a1-b204-a0c04a24f8a7" alt="All Our Ideas screenshot" width="900">
+  <img src="https://github.com/CitizensFoundation/policy-synth/assets/43699/4ef0c337-c298-47a1-b204-a0c04a24f8a7" alt="All Our Ideas screenshot" width="800">
 </p>
 
 ### Other Tools
