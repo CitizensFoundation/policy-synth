@@ -10,7 +10,7 @@ Policy Synth is a Typescript class-based library for creating AI agent logic flo
 - [@policysynth/api](api/README.md)
 - [@policysynth/webApp](webApps/policy-synth/README.md)
 
-## The drive & passion behind Policy Synth
+## The mission & passion behind Policy Synth
 ### Bringing together the best of collective and artificial intelligence
 
 Policy Synth aims to help governments and citizens make better decisions together by seamlessly integrating collective and artificial intelligence. Utilizing our top-rated community engagement solutions, over 50 x GPT-4 agent types, and genetic algorithms. The drive and passion behind Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse.
