@@ -25,11 +25,19 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 ![Policy Synth v 43](https://github.com/CitizensFoundation/policy-synth/assets/43699/6956d011-4899-4d5e-ab59-b75556982f44)
 
 ## Top-Rated Community Engagement Platforms
+
+### Your Priorities
 Policy Synth utilizes "Your Priorities", a platform we've been refining since 2008. It's recognized as the world's leading citizen engagement tool.
 
 - Rated #1 on PeoplePowered: [2024 Platform ratings](https://www.peoplepowered.org/platform-ratings)
 - Top ranking in the [2024 Digital Democracy Report](https://www.solonian-institute.com/publications)
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
+
+### All Our Ideas
+Policy Synth makes use of All Our Idea, Citiens Foundation, human pairwise voting platform to provide guidance and input into different AI agents.
+
+![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/4ef0c337-c298-47a1-b204-a0c04a24f8a7)
+
 
 ## Example Multi-Scale Policy Synth Agent
 ![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/c9947b97-68a1-43be-925e-4a52bc2b9ad6)
