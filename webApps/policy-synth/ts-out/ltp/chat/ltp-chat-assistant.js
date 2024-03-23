@@ -50,7 +50,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
                 }
                 this.addToChatLogWithMessage(data, data.message);
                 break;
-            case 'validationAgentStart':
+            case 'agentStart':
                 if (lastElement) {
                     lastElement.spinnerActive = false;
                 }
@@ -71,7 +71,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
                 }
                 this.requestUpdate();
                 break;
-            case 'validationAgentCompleted':
+            case 'agentCompleted':
                 if (lastElement) {
                     lastElement.spinnerActive = false;
                 }

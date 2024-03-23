@@ -1,6 +1,6 @@
 # RateWebRootCausesProcessor
 
-This class extends `BaseProlemSolvingAgent` to rate web root causes.
+This class extends `BaseProblemSolvingAgent` to rate web root causes.
 
 ## Properties
 

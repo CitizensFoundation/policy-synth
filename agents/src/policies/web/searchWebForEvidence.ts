@@ -1,11 +1,11 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { IEngineConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 

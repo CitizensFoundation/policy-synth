@@ -1,8 +1,12 @@
 {
   "extends": "@tsconfig/node18/tsconfig.json",
   "compilerOptions": {
-    "target": "es2020",
-    "module": "esnext",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "lib": [ "es2018" ],
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,

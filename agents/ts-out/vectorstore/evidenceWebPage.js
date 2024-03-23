@@ -3,6 +3,11 @@ import { PolicySynthAgentBase } from "../baseAgent.js";
 import { IEngineConstants } from "../constants.js";
 import fs from "fs/promises";
 export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
+    //@ts-ignore
+    static client = weaviate.client({
+        scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
+        host: process.env.WEAVIATE_HOST || "localhost:8080",
+    });
     async addSchema() {
         let classObj;
         try {
@@ -637,9 +642,4 @@ export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
         return results;
     }
 }
-//@ts-ignore
-EvidenceWebPageVectorStore.client = weaviate.client({
-    scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
-    host: process.env.WEAVIATE_HOST || "localhost:8080",
-});
 //# sourceMappingURL=evidenceWebPage.js.map

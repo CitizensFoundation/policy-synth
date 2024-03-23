@@ -31,7 +31,6 @@ export declare class PsBaseChatBot {
     sendMemoryId(): void;
     saveMemory(): Promise<void>;
     renderSystemPrompt(): string;
-    sendToClient(sender: string, message: string, type?: string): void;
     sendAgentStart(name: string, hasNoStreaming?: boolean): void;
     sendAgentCompleted(name: string, lastAgent?: boolean, error?: string | undefined): void;
     sendAgentUpdate(message: string): void;
@@ -40,6 +39,7 @@ export declare class PsBaseChatBot {
     stopBroadcastingLiveCosts(): void;
     get emptyChatBotStagesData(): Record<PSChatBotMemoryStageTypes, IEngineInnovationStagesData>;
     getEmptyMemory(): PsChatBotMemoryData;
+    sendToClient(sender: string, message: string, type?: string): void;
     streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;
     getTokenCosts(estimateTokens: number, type: "in" | "out"): number;
     addToExternalSolutionsMemoryCosts(text: string, type: "in" | "out"): void;

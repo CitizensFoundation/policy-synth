@@ -1,6 +1,6 @@
 # ReduceSubProblemsProcessor
 
-This class extends `BaseProlemSolvingAgent` to process and reduce sub-problems from a given problem statement. It interacts with a language model to filter and refine sub-problems based on certain criteria.
+This class extends `BaseProblemSolvingAgent` to process and reduce sub-problems from a given problem statement. It interacts with a language model to filter and refine sub-problems based on certain criteria.
 
 ## Methods
 

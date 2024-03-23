@@ -1,16 +1,16 @@
 import { IEngineConstants } from "../../constants.js";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 
 import fetch from "node-fetch";
 //@ts-ignore
 global.fetch = fetch;
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
@@ -116,7 +116,7 @@ const externalSolutionsMisuseOfLegalSystem = [
   },
 ];
 
-export class AnalyseExternalSolutions extends BaseProlemSolvingAgent {
+export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
   folderPath!: string;
 
   async renderAnalysisPrompt(solutionDescription: string, requirement: string) {

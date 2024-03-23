@@ -1,6 +1,6 @@
 # ReapSolutionsProcessor
 
-Extends `BaseProlemSolvingAgent` to process and reap solutions based on specific requirements.
+Extends `BaseProblemSolvingAgent` to process and reap solutions based on specific requirements.
 
 ## Properties
 

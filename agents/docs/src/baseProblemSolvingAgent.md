@@ -1,4 +1,4 @@
-# BaseProlemSolvingAgent
+# BaseProblemSolvingAgent
 
 This class is an abstract base class for problem-solving agents, extending the functionality of `PolicySynthAgentBase`. It includes methods for processing and rendering information about problems, sub-problems, solutions, and entities based on the agent's memory.
 
@@ -31,11 +31,11 @@ This class is an abstract base class for problem-solving agents, extending the f
 ## Example
 
 ```typescript
-import { BaseProlemSolvingAgent } from '@policysynth/agents/baseProblemSolvingAgent.js';
+import { BaseProblemSolvingAgent } from '@policysynth/agents/baseProblemSolvingAgent.js';
 import { Job } from "bullmq";
 import { PsBaseMemoryData, IEngineProCon, IEngineAffectedEntity } from "./path/to/types";
 
-class CustomProblemSolvingAgent extends BaseProlemSolvingAgent {
+class CustomProblemSolvingAgent extends BaseProblemSolvingAgent {
   constructor(job: Job, memory: PsBaseMemoryData) {
     super(job, memory);
   }

@@ -1,6 +1,6 @@
 # CreateEvidenceSearchQueriesProcessor
 
-This class extends `BaseProlemSolvingAgent` to process and create evidence search queries for policy proposals. It utilizes various prompts to generate, refine, and rank search queries based on the policy's details and the type of evidence needed.
+This class extends `BaseProblemSolvingAgent` to process and create evidence search queries for policy proposals. It utilizes various prompts to generate, refine, and rank search queries based on the policy's details and the type of evidence needed.
 
 ## Properties
 

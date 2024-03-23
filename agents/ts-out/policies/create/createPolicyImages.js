@@ -1,9 +1,9 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { SystemMessage, HumanMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 import fs from "fs";
 import { IEngineConstants } from "../../constants.js";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
     async renderCreatePolicyImagePrompt(subProblemIndex, policy, injectText) {
         const messages = [

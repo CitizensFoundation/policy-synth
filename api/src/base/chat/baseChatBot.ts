@@ -23,7 +23,7 @@ export class PsBaseChatBot {
   broadcastingLiveCosts = false;
   liveCostsBroadcastInterval = 1000;
   liveCostsInactivityTimeout = 1000 * 60 * 10;
-  static redisMemoryKeyPrefix = "chatbot-memory";
+  static redisMemoryKeyPrefix = "ps-chatbot-memory";
   tempeture = 0.7;
   maxTokens = 4000;
   llmModel = "gpt-4-0125-preview";
@@ -142,7 +142,11 @@ export class PsBaseChatBot {
       data: this.memoryId,
     } as PsAiChatWsMessage;
 
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   async saveMemory() {
@@ -162,17 +166,6 @@ export class PsBaseChatBot {
     return `Please tell the user to replace this system prompt in a fun and friendly way. Encourage them to have a nice day. Lots of emojis`;
   }
 
-  sendToClient(sender: string, message: string, type = "stream") {
-    this.wsClientSocket.send(
-      JSON.stringify({
-        sender,
-        type: type,
-        message,
-      })
-    );
-    this.lastSentToUserAt = new Date();
-  }
-
   sendAgentStart(name: string, hasNoStreaming = true) {
     const botMessage = {
       sender: "bot",
@@ -182,7 +175,12 @@ export class PsBaseChatBot {
         noStreaming: hasNoStreaming,
       } as PsAgentStartWsOptions,
     } as PsAiChatWsMessage;
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   sendAgentCompleted(
@@ -203,7 +201,11 @@ export class PsBaseChatBot {
       } as PsAgentCompletedWsOptions,
     } as PsAiChatWsMessage;
 
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   sendAgentUpdate(message: string) {
@@ -213,7 +215,11 @@ export class PsBaseChatBot {
       message: message,
     } as PsAiChatWsMessage;
 
-    this.wsClientSocket.send(JSON.stringify(botMessage));
+    if (this.wsClientSocket) {
+      this.wsClientSocket.send(JSON.stringify(botMessage));
+    } else {
+      console.error("No wsClientSocket found");
+    }
   }
 
   startBroadcastingLiveCosts() {
@@ -235,7 +241,11 @@ export class PsBaseChatBot {
             type: "liveLlmCosts",
             data: this.fullLLMCostsForMemory,
           } as PsAiChatWsMessage;
-          this.wsClientSocket.send(JSON.stringify(botMessage));
+          if (this.wsClientSocket) {
+            this.wsClientSocket.send(JSON.stringify(botMessage));
+          } else {
+            console.error("No wsClientSocket found");
+          }
           this.lastBroacastedCosts = this.fullLLMCostsForMemory;
         }
       }
@@ -311,6 +321,17 @@ export class PsBaseChatBot {
       },
       subProblems: [],
     } as PsChatBotMemoryData;
+  }
+
+  sendToClient(sender: string, message: string, type = "stream") {
+    this.wsClientSocket.send(
+      JSON.stringify({
+        sender,
+        type: type,
+        message,
+      })
+    );
+    this.lastSentToUserAt = new Date();
   }
 
   async streamWebSocketResponses(

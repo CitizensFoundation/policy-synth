@@ -1,6 +1,6 @@
 # RankWebSolutionsProcessor
 
-This class extends `BaseProlemSolvingAgent` to rank web solutions based on their relevance and importance to a given problem. It utilizes a vector store for web pages and an AI model for ranking.
+This class extends `BaseProblemSolvingAgent` to rank web solutions based on their relevance and importance to a given problem. It utilizes a vector store for web pages and an AI model for ranking.
 
 ## Properties
 

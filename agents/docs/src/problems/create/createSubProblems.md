@@ -1,6 +1,6 @@
 # CreateSubProblemsProcessor
 
-This class extends `BaseProlemSolvingAgent` to create and refine sub-problems from a given problem statement using AI models.
+This class extends `BaseProblemSolvingAgent` to create and refine sub-problems from a given problem statement using AI models.
 
 ## Properties
 

@@ -1,6 +1,6 @@
 # ShowCounts
 
-This class extends `BaseProlemSolvingAgent` to count web pages and solutions from a vector store.
+This class extends `BaseProblemSolvingAgent` to count web pages and solutions from a vector store.
 
 ## Properties
 

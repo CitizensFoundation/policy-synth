@@ -1,6 +1,6 @@
 import ioredis from "ioredis";
 import fs from "fs/promises";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const main = async () => {
     const projectId = process.argv[2];
     const outFilePath = process.argv[3];

@@ -1,6 +1,6 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 import { OpenAI } from "openai";
 import axios from "axios";
@@ -10,44 +10,41 @@ import path from "path";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
-export class CreateSolutionImagesProcessor extends BaseProlemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.cloudflareProxy = "https://cps-images.citizens.is";
-        this.subProblemColors = [
-            "blue",
-            "orange",
-            "yellow",
-            "green",
-            "red",
-            "indigo",
-            "violet",
-            "sea Green",
-            "saddle Brown",
-            "chocolate",
-            "fire Brick",
-            "orange Red",
-            "yellow Green",
-            "gold",
-            "dark Khaki",
-            "dark Magenta",
-            "dark Violet",
-            "wheat",
-            "forest Green",
-            "tan",
-            "gray",
-            "transparent",
-        ];
-        this.secondaryColors = [
-            "gold",
-            "silver",
-            "bronze",
-            "copper",
-            "brass",
-            "steel",
-            "pewter",
-        ];
-    }
+export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
+    cloudflareProxy = "https://cps-images.citizens.is";
+    subProblemColors = [
+        "blue",
+        "orange",
+        "yellow",
+        "green",
+        "red",
+        "indigo",
+        "violet",
+        "sea Green",
+        "saddle Brown",
+        "chocolate",
+        "fire Brick",
+        "orange Red",
+        "yellow Green",
+        "gold",
+        "dark Khaki",
+        "dark Magenta",
+        "dark Violet",
+        "wheat",
+        "forest Green",
+        "tan",
+        "gray",
+        "transparent",
+    ];
+    secondaryColors = [
+        "gold",
+        "silver",
+        "bronze",
+        "copper",
+        "brass",
+        "steel",
+        "pewter",
+    ];
     async downloadImage(imageUrl, imageFilePath) {
         const response = await axios({
             method: "GET",
@@ -134,7 +131,7 @@ export class CreateSolutionImagesProcessor extends BaseProlemSolvingAgent {
             Bucket: bucket,
             Key: key,
             Body: fileContent,
-            ACL: "public-read",
+            ACL: "public-read", // Makes sure the uploaded files are publicly accessible
             ContentType: "image/png",
             ContentDisposition: "inline",
         };

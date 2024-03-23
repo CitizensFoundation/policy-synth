@@ -4,7 +4,7 @@ import { htmlToText } from "html-to-text";
 import ioredis from "ioredis";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 async function getAndProcessPdf(subProblemIndex, url, browserPage, type) {
     return new Promise(async (resolve, reject) => {
         console.log("getAndProcessPdf");
@@ -132,7 +132,7 @@ async function getAndProcessHtml(subProblemIndex, url, browserPage, type) {
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 let url = "https://edition.cnn.com/2023/07/09/politics/cluster-bombs-ukraine-reaction-cnntv/index.html";
-puppeteer.launch({ headless: "new" }).then(async (browser) => {
+puppeteer.launch({ headless: true }).then(async (browser) => {
     const page = await browser.newPage();
     if (url.includes("/pdf/") && url.includes("arxiv") && !url.endsWith(".pdf")) {
         url = `${url}.pdf`;

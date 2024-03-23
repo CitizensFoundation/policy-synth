@@ -1,6 +1,6 @@
 # BasePairwiseRankingsProcessor
 
-This abstract class extends `BaseProlemSolvingAgent` to process pairwise rankings. It is designed to shuffle items, set up ranking prompts, and perform pairwise ranking based on the Elo rating system. It also provides functionality to get an ordered list of items based on their Elo ratings.
+This abstract class extends `BaseProblemSolvingAgent` to process pairwise rankings. It is designed to shuffle items, set up ranking prompts, and perform pairwise ranking based on the Elo rating system. It also provides functionality to get an ordered list of items based on their Elo ratings.
 
 ## Properties
 

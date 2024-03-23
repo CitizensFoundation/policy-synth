@@ -1,14 +1,11 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 const DISABLE_LLM_FOR_DEBUG = false;
-export class CreateSolutionsProcessor extends BaseProlemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.webPageVectorStore = new WebPageVectorStore();
-    }
+export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
+    webPageVectorStore = new WebPageVectorStore();
     async renderRefinePrompt(results, generalTextContext, scientificTextContext, openDataTextContext, newsTextContext, subProblemIndex, alreadyCreatedSolutions = undefined) {
         const messages = [
             new SystemMessage(`As an expert, your task is to refine innovative solution components proposed for problems and associated sub-problems.

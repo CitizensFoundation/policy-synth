@@ -1,6 +1,6 @@
 # CreateRootCausesSearchQueriesProcessor
 
-This class extends `BaseProlemSolvingAgent` to create, refine, and rank search queries for identifying root causes based on a problem statement.
+This class extends `BaseProblemSolvingAgent` to create, refine, and rank search queries for identifying root causes based on a problem statement.
 
 ## Properties
 

@@ -20,7 +20,9 @@ import { writeFile, readFile, existsSync } from "fs";
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+//TODO: Look into this
+//@ts-ignore
 const metascraper = metascraperFactory([
     metascraperAuthor(),
     metascraperDate(),
@@ -218,7 +220,7 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
         this.logger.info("Finished rating all web evidence");
     }
     async getAllPages() {
-        const browser = await puppeteer.launch({ headless: "new" });
+        const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);

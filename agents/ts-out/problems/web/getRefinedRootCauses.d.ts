@@ -1,8 +1,8 @@
 import { Page } from "puppeteer";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
 export declare class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcessor {
-    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
+    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (HumanMessage | SystemMessage)[];
     getRootCauseRefinedTextAnalysis(type: PSRootCauseWebPageTypes, text: string, url: string): Promise<PSRefinedRootCause[]>;
     getRefinedRootCauseTextAIAnalysis(type: PSRootCauseWebPageTypes, text: string): Promise<PSRefinedRootCause[]>;
     mergeRefinedAnalysisData(data1: PSRefinedRootCause, data2: PSRefinedRootCause): PSRefinedRootCause;

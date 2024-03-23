@@ -1,5 +1,4 @@
-import { Page } from "puppeteer";
-import { Browser } from "puppeteer-extra";
+import { Page, Browser } from "puppeteer";
 import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
 export declare class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPagesProcessor {
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;

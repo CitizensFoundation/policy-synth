@@ -1,6 +1,6 @@
 import ioredis from "ioredis";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 

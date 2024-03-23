@@ -1,12 +1,11 @@
-import { Page } from "puppeteer";
-import { Browser } from "puppeteer-extra";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { Page, Browser } from "puppeteer";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
-export declare class GetWebPagesProcessor extends BaseProlemSolvingAgent {
+export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
     totalPagesSave: number;
-    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
+    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

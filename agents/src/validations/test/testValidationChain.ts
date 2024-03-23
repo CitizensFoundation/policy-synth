@@ -1,4 +1,4 @@
-import { Callbacks } from "langchain/callbacks";
+import { Callbacks } from "@langchain/core/callbacks/manager";
 import { PsAgentOrchestrator } from "../agentOrchestrator.js";
 import { PsBaseValidationAgent } from "../baseValidationAgent.js";
 import { PsClassificationAgent } from "../classificationAgent.js";

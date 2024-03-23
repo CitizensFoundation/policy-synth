@@ -1,6 +1,6 @@
 # GetWebPagesProcessor
 
-This class is responsible for processing web pages, extracting text from HTML and PDFs, analyzing the text for relevant information, and saving the analysis. It extends the `BaseProlemSolvingAgent` class.
+This class is responsible for processing web pages, extracting text from HTML and PDFs, analyzing the text for relevant information, and saving the analysis. It extends the `BaseProblemSolvingAgent` class.
 
 ## Properties
 

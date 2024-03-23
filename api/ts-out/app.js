@@ -11,8 +11,13 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { WebSocketServer } from "ws";
 export class PolicySynthApiApp {
+    app;
+    port;
+    httpServer;
+    ws;
+    redisClient;
+    wsClients = new Map();
     constructor(controllers, port = undefined) {
-        this.wsClients = new Map();
         this.app = express();
         this.httpServer = createServer(this.app);
         this.port = port || parseInt(process.env.PORT || "8000");

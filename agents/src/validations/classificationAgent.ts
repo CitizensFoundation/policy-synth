@@ -1,7 +1,4 @@
-import { Callbacks } from "langchain/callbacks";
-import { IEngineConstants } from "../constants.js";
 import { PsBaseValidationAgent } from "./baseValidationAgent.js";
-import WebSocket from "ws";
 
 export class PsClassificationAgent extends PsBaseValidationAgent {
   private routes: Map<string, PsValidationAgent>;
@@ -36,7 +33,7 @@ export class PsClassificationAgent extends PsBaseValidationAgent {
     if (this.options.webSocket && !this.options.disableStreaming) {
       const botMessage = {
         sender: "bot",
-        type: "validationAgentCompleted",
+        type: "agentCompleted",
         message: {
           name: this.name,
           results: {

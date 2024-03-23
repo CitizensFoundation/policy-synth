@@ -3,7 +3,7 @@ import { IEngineConstants } from "./constants.js";
 import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
 //@ts-ignore
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const logger = winston.createLogger({
     level: process.env.WORKER_LOG_LEVEL || "debug",
     format: winston.format.json(),
@@ -14,9 +14,12 @@ const logger = winston.createLogger({
     ],
 });
 export class PolicySynthAgentBase {
+    memory;
+    logger;
+    timeStart = Date.now();
+    chat;
+    rateLimits = {};
     constructor(memory = undefined) {
-        this.timeStart = Date.now();
-        this.rateLimits = {};
         if (memory) {
             this.memory = memory;
         }
@@ -70,6 +73,7 @@ export class PolicySynthAgentBase {
             "web-get-refined-evidence": {},
             "get-metadata-for-top-evidence": {},
             "validation-agent": {},
+            "ingestion-agent": {}
         };
     }
     getJsonBlock(text) {

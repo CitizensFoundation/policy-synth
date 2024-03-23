@@ -3,6 +3,30 @@ import { PolicySynthAgentBase } from "../baseAgent.js";
 import { IEngineConstants } from "../constants.js";
 import fs from "fs/promises";
 export class RootCauseWebPageVectorStore extends PolicySynthAgentBase {
+    static fieldsToExtract = "searchType groupId rootCauseRelevanceToProblemStatement \
+    allPossibleHistoricalRootCausesIdentifiedInTextContext\
+    allPossibleEconomicRootCausesIdentifiedInTextContext\
+    allPossibleScientificRootCausesIdentifiedInTextContext\
+    allPossibleCulturalRootCausesIdentifiedInTextContext\
+    allPossibleSocialRootCausesIdentifiedInTextContext\
+    allPossibleEnvironmentalRootCausesIdentifiedInTextContext\
+    allPossibleLegalRootCausesIdentifiedInTextContext\
+    allPossibleTechnologicalRootCausesIdentifiedInTextContext\
+    allPossibleGeopoliticalRootCausesIdentifiedInTextContext\
+    allPossibleEthicalRootCausesIdentifiedInTextContext\
+    allPossibleRootCausesCaseStudiesIdentifiedInTextContext\
+    rootCauseRelevanceToProblemStatementScore\
+    rootCauseRelevanceToTypeScore\
+    rootCauseQualityScore\
+    rootCauseConfidenceScore\
+    totalScore\
+    url\
+    _additional { id, distance }";
+    //@ts-ignore
+    static client = weaviate.client({
+        scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
+        host: process.env.WEAVIATE_HOST || "localhost:8080",
+    });
     async addSchema() {
         let classObj;
         try {
@@ -384,28 +408,4 @@ export class RootCauseWebPageVectorStore extends PolicySynthAgentBase {
         return results;
     }
 }
-RootCauseWebPageVectorStore.fieldsToExtract = "searchType groupId rootCauseRelevanceToProblemStatement \
-    allPossibleHistoricalRootCausesIdentifiedInTextContext\
-    allPossibleEconomicRootCausesIdentifiedInTextContext\
-    allPossibleScientificRootCausesIdentifiedInTextContext\
-    allPossibleCulturalRootCausesIdentifiedInTextContext\
-    allPossibleSocialRootCausesIdentifiedInTextContext\
-    allPossibleEnvironmentalRootCausesIdentifiedInTextContext\
-    allPossibleLegalRootCausesIdentifiedInTextContext\
-    allPossibleTechnologicalRootCausesIdentifiedInTextContext\
-    allPossibleGeopoliticalRootCausesIdentifiedInTextContext\
-    allPossibleEthicalRootCausesIdentifiedInTextContext\
-    allPossibleRootCausesCaseStudiesIdentifiedInTextContext\
-    rootCauseRelevanceToProblemStatementScore\
-    rootCauseRelevanceToTypeScore\
-    rootCauseQualityScore\
-    rootCauseConfidenceScore\
-    totalScore\
-    url\
-    _additional { id, distance }";
-//@ts-ignore
-RootCauseWebPageVectorStore.client = weaviate.client({
-    scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
-    host: process.env.WEAVIATE_HOST || "localhost:8080",
-});
 //# sourceMappingURL=rootCauseWebPage.js.map

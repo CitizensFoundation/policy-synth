@@ -1,6 +1,6 @@
 # CreateSeedPoliciesProcessor
 
-This class extends `BaseProlemSolvingAgent` to create seed policies from solutions for sub-problems.
+This class extends `BaseProblemSolvingAgent` to create seed policies from solutions for sub-problems.
 
 ## Methods
 

@@ -1,6 +1,6 @@
 # CreateEntitiesProcessor
 
-This class extends `BaseProlemSolvingAgent` to process and create entities affected by complex problem statements and subproblems.
+This class extends `BaseProblemSolvingAgent` to process and create entities affected by complex problem statements and subproblems.
 
 ## Properties
 

@@ -1,5 +1,5 @@
-import { HTTPResponse, Page } from "puppeteer";
-import puppeteer, { Browser } from "puppeteer-extra";
+import { HTTPResponse, Page, Browser } from "puppeteer";
+import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 import { PdfReader } from "pdfreader";
@@ -15,19 +15,19 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
 import { htmlToText } from "html-to-text";
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 
 import weaviate, { WeaviateClient } from "weaviate-ts-client";
 
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 import ioredis from "ioredis";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
@@ -36,7 +36,7 @@ puppeteer.use(StealthPlugin());
 
 const onlyCheckWhatNeedsToBeScanned = false;
 
-export class GetWebPagesProcessor extends BaseProlemSolvingAgent {
+export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   webPageVectorStore = new WebPageVectorStore();
 
   totalPagesSave = 0;
@@ -862,7 +862,7 @@ export class GetWebPagesProcessor extends BaseProlemSolvingAgent {
   }
 
   async getAllPages() {
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();

@@ -3,6 +3,8 @@ import { PolicySynthAgentBase } from "../baseAgent.js";
 import { IEngineConstants } from "../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 export class PsBaseValidationAgent extends PolicySynthAgentBase {
+    name;
+    options;
     constructor(name, options = {}) {
         super();
         this.name = name;
@@ -81,7 +83,7 @@ export class PsBaseValidationAgent extends PolicySynthAgentBase {
         if (this.options.webSocket && !this.options.disableStreaming) {
             const botMessage = {
                 sender: "bot",
-                type: "validationAgentStart",
+                type: "agentStart",
                 message: {
                     name: this.name,
                     noStreaming: this.options.hasNoStreaming,
@@ -98,7 +100,7 @@ export class PsBaseValidationAgent extends PolicySynthAgentBase {
         if (this.options.webSocket && !this.options.disableStreaming) {
             const botMessage = {
                 sender: "bot",
-                type: "validationAgentCompleted",
+                type: "agentCompleted",
                 message: {
                     name: this.name,
                     results: {

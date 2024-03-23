@@ -1,10 +1,10 @@
 # CreateProsConsProcessor
 
-This class extends `BaseProlemSolvingAgent` to create pros and cons for solutions to subproblems. It interacts with a language model to generate and refine pros and cons lists, ensuring they are clear, consistent, and directly applicable to the solutions.
+This class extends `BaseProblemSolvingAgent` to create pros and cons for solutions to subproblems. It interacts with a language model to generate and refine pros and cons lists, ensuring they are clear, consistent, and directly applicable to the solutions.
 
 ## Properties
 
-No properties are explicitly defined in this class beyond those inherited from `BaseProlemSolvingAgent`.
+No properties are explicitly defined in this class beyond those inherited from `BaseProblemSolvingAgent`.
 
 ## Methods
 
@@ -14,7 +14,7 @@ No properties are explicitly defined in this class beyond those inherited from `
 | renderRefinePrompt    | prosOrCons: string, results: string[], subProblemIndex: number, solution: IEngineSolution | Promise<SystemMessage[] \| HumanMessage[]> | Prepares messages for refining pros or cons of a solution.                                    |
 | renderCreatePrompt    | prosOrCons: string, subProblemIndex: number, solution: IEngineSolution     | Promise<SystemMessage[] \| HumanMessage[]> | Prepares messages for creating pros or cons of a solution.                                    |
 | createProsCons        |                                                                            | Promise<void>                      | Creates pros and cons for all solutions to subproblems.                                       |
-| process               |                                                                            | Promise<void>                      | Overrides the `process` method from `BaseProlemSolvingAgent` to initiate the pros and cons creation process. |
+| process               |                                                                            | Promise<void>                      | Overrides the `process` method from `BaseProblemSolvingAgent` to initiate the pros and cons creation process. |
 
 ## Example
 

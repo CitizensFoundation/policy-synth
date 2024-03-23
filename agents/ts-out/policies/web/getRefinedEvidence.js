@@ -1,11 +1,11 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
@@ -252,7 +252,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
         this.logger.info("Finished rating all web evidence");
     }
     async getAllPages() {
-        const browser = await puppeteer.launch({ headless: "new" });
+        const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);

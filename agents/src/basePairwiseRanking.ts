@@ -1,21 +1,10 @@
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { BaseProlemSolvingAgent } from "./baseProblemSolvingAgent.js";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
 import { IEngineConstants } from "./constants.js";
 
-export abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAgent {
+export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
   prompts: Record<number, number[][]> = {};
-  allItems: Record<
-    number,
-    | (
-        | IEngineSearchResultItem[]
-        | IEngineSolution[]
-        | IEngineProblemStatement[]
-        | IEngineAffectedEntity[]
-        | IEngineProCon[]
-        | string[]
-      )
-    | undefined
-  > = {};
+  allItems: Record<number, (PsEloRateable[] | string[]) | undefined> = {};
   INITIAL_ELO_RATING: number = 1000;
   K_FACTOR_INITIAL: number = 60; // Initial K-factor
   K_FACTOR_MIN: number = 10; // Minimum K-factor
@@ -44,13 +33,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAge
 
   setupRankingPrompts(
     subProblemIndex: number,
-    allItems:
-      | IEngineSearchResultItem[]
-      | IEngineSolution[]
-      | IEngineProblemStatement[]
-      | string[]
-      | IEngineProCon[]
-      | IEngineAffectedEntity[],
+    allItems: PsEloRateable[] | string[],
     maxPrompts: number | undefined = undefined,
     updateFunction: Function | undefined = undefined
   ) {
@@ -93,12 +76,17 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAge
     this.logger.debug(`Before randomizing MaxPrompts`);
 
     const tempPrompts = [];
-    const numToRemove = this.prompts[subProblemIndex].length - this.maxNumberOfPrompts;
+    const numToRemove =
+      this.prompts[subProblemIndex].length - this.maxNumberOfPrompts;
     if (numToRemove > 0) {
-      this.logger.info(`Current length: ${this.prompts[subProblemIndex].length}`);
+      this.logger.info(
+        `Current length: ${this.prompts[subProblemIndex].length}`
+      );
       const randomIndices = new Set<number>();
       while (randomIndices.size < this.maxNumberOfPrompts) {
-        const randomIndex = Math.floor(Math.random() * this.prompts[subProblemIndex].length);
+        const randomIndex = Math.floor(
+          Math.random() * this.prompts[subProblemIndex].length
+        );
         randomIndices.add(randomIndex);
       }
       for (const index of randomIndices) {
@@ -213,7 +201,9 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAge
           `Prompt ${p + 1} of ${this.prompts[subProblemIndex].length}`
         );
         if (this.progressFunction) {
-          this.progressFunction(`${p + 1}/${this.prompts[subProblemIndex].length}`)
+          this.progressFunction(
+            `${p + 1}/${this.prompts[subProblemIndex].length}`
+          );
         }
         const promptPair = this.prompts[subProblemIndex][p];
         this.logger.debug(`Prompt pair: ${promptPair}`);
@@ -275,18 +265,20 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAge
 
   getOrderedListOfItems(
     subProblemIndex: number,
-    returnEloRatings: boolean = false
+    setEloRatings: boolean = false,
+    customEloRatingKey: string | undefined = undefined
   ) {
     this.logger.info("Getting ordered list of items");
     let allItems = this.allItems[subProblemIndex];
-    if (returnEloRatings) {
+    if (setEloRatings) {
       for (let i = 0; i < allItems!.length; i++) {
-        (
-          allItems![i] as
-            | IEngineSolution
-            | IEngineAffectedEntity
-            | IEngineSubProblem
-        ).eloRating = this.eloRatings[subProblemIndex][i];
+        if (customEloRatingKey) {
+          (allItems![i] as any)[customEloRatingKey] =
+            this.eloRatings[subProblemIndex][i];
+        } else {
+          (allItems![i] as PsEloRateable).eloRating =
+            this.eloRatings[subProblemIndex][i];
+        }
       }
     }
 
