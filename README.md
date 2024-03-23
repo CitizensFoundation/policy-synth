@@ -31,8 +31,8 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Top ranking in the [2024 Digital Democracy Report](https://www.solonian-institute.com/publications)
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
-## Example Multi Scale Policy Synth Agent Configuration
-![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/569c35cb-c762-4113-a704-833b6840b274)
+## Example Multi-Scale Policy Synth Agent
+![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/c4f6ae11-d6e1-4800-a9d8-8e375f35c9da)
 
 ## Example Configuration Overview
 ![Policy Synth v 42a](https://github.com/CitizensFoundation/policy-synth/assets/43699/b7e1f10a-7438-4827-a576-b48ec5a672e6)
