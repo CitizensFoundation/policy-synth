@@ -34,10 +34,13 @@ Policy Synth utilizes "Your Priorities", a platform we've been refining since 20
 - Top listing in [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
 ### All Our Ideas
-Policy Synth makes use of All Our Idea, Citiens Foundation, human pairwise voting platform to provide guidance and input into different AI agents.
+Policy Synth makes use of All Our Ideas, Citizens Foundations open source, human, pairwise voting platform to provide guidance and input into different AI agents.
+<p align="center">
+  <img src="https://github.com/CitizensFoundation/policy-synth/assets/43699/4ef0c337-c298-47a1-b204-a0c04a24f8a7" alt="All Our Ideas screenshot" width="900">
+</p>
 
-![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/4ef0c337-c298-47a1-b204-a0c04a24f8a7)
-
+### Other Tools
+Policy Synth is flexible and can work with many other citizen engagment tools, for example Decidim and Consul, through simple data adapters.
 
 ## Example Multi-Scale Policy Synth Agent
 ![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/c9947b97-68a1-43be-925e-4a52bc2b9ad6)
