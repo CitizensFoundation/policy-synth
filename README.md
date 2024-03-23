@@ -13,7 +13,7 @@ Policy Synth is a Typescript class-based library for creating AI agent logic flo
 ## The mission & passion behind Policy Synth
 ### Bringing together the best of collective and artificial intelligence
 
-Policy Synth aims to help governments and citizens make better decisions together by seamlessly integrating collective and artificial intelligence. Utilizing our top-rated community engagement solutions, over 50 x LLM agent types, and genetic algorithms. The drive and passion behind Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse.
+Policy Synth aims to help governments and citizens make better decisions together by seamlessly integrating collective and artificial intelligence. Utilizing our top-rated community engagement solutions, over 50 x LLM agent types, and genetic algorithms. The mission and passion behind Policy Synth represents a distinctive effort to intertwine human insights with artificial intelligence in addressing complex policy dilemmas. We are currently developing a state-of-the-art platform where policymakers, citizens, and AI can partake in collective discourse.
 
 ## Real life impact
 Policy Synth is already having real life impact: [https://www.fastcompany.com/91001497/ai-faith-in-democracy](https://www.fastcompany.com/91001497/ai-faith-in-democracy)
