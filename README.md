@@ -24,7 +24,7 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 ## Example Policy Synth Agent Configuration
 ![Policy Synth v 43](https://github.com/CitizensFoundation/policy-synth/assets/43699/6956d011-4899-4d5e-ab59-b75556982f44)
 
-## Integrated with our Top Rated Engagment Tools
+## Integrated with our Top Rated Engagement Tools
 
 ### Your Priorities
 Policy Synth utilizes "Your Priorities", a platform we've been refining since 2008. It's recognized as the world's leading citizen engagement tool.
