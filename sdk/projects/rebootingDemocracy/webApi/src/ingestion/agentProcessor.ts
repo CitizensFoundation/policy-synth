@@ -350,6 +350,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     };
 
     for (const source of allDocumentSourcesWithChunks) {
+      const currentHashId = await documentStore.searchDocumentsByHash(source.hash)
+      if(currentHashId.data.Get.RagDocument.length>0)continue
+
       try {
         const documentId = await documentStore.postDocument(
           this.transformDocumentSourceForVectorstore(source)

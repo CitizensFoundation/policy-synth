@@ -17,6 +17,8 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       contentType allReferencesWithUrls allOtherReferences \
       allImageUrls  documentMetaData\
      _additional { id, distance, confidence }";
+  static hashField = "hash url";
+  
   static client: WeaviateClient = weaviate.client({
     scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
     host: process.env.WEAVIATE_HOST || "localhost:8080",
@@ -192,6 +194,39 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
 
     return results as PsRagDocumentSourceGraphQlResponse;
   }
+
+  async searchDocumentsByHash(hash: string): Promise<PsRagDocumentSourceGraphQlResponse> {
+    // Define the filter condition for matching the document hash
+
+    const where: any[] = [
+      {
+        operator: "Equal",
+        path: ["hash"],
+        valueString: hash,
+      }
+    ];
+  
+    let results;
+  
+    try {
+      // Execute the GraphQL query with the modified filter
+      results = await PsRagDocumentVectorStore.client.graphql
+        .get()
+        .withClassName("RagDocument")
+        .withWhere({
+          operator: "And",
+          operands: where
+          }) // Use the where condition to filter by hash
+        .withFields(PsRagDocumentVectorStore.hashField)
+        .do();
+
+    } catch (err) {
+      throw err;
+    }
+  
+    return results as PsRagDocumentSourceGraphQlResponse;
+  }
+  
 
   async searchChunksWithReferences(
     query: string

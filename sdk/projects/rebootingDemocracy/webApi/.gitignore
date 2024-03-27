@@ -1,3 +1,4 @@
+
 node_modules/
 config/config.json
 staticHomeHTML/
@@ -11,3 +12,4 @@ oldCache/
 localData/
 webPagesCache/
 .env
+src/ingestion/cache
