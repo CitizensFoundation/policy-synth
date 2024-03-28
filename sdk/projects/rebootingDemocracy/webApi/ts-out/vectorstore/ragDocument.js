@@ -171,13 +171,23 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         }
         return results;
     }
-    async searchDocumentsByHash(hash) {
+    async searchDocumentsByHash(hash, docUrl) {
         // Define the filter condition for matching the document hash
         const where = [
             {
-                operator: "Equal",
-                path: ["hash"],
-                valueString: hash,
+                operator: "Or",
+                operands: [
+                    {
+                        operator: "Equal",
+                        path: ["hash"], // Path to the hash field
+                        valueString: hash
+                    },
+                    {
+                        operator: "Equal",
+                        path: ["url"], // Path to the URL field
+                        valueString: docUrl
+                    }
+                ]
             }
         ];
         let results;
@@ -186,10 +196,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             results = await PsRagDocumentVectorStore.client.graphql
                 .get()
                 .withClassName("RagDocument")
-                .withWhere({
-                operator: "And",
-                operands: where
-            }) // Use the where condition to filter by hash
+                .withWhere(where[0]) // Use the where condition to filter by hash
                 .withFields(PsRagDocumentVectorStore.hashField)
                 .do();
         }

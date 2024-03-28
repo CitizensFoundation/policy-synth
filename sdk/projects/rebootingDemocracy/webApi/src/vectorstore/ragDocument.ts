@@ -170,7 +170,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
   }
 
   async searchDocuments(
-    query: string
+    query: string,
   ): Promise<PsRagDocumentSourceGraphQlResponse> {
     const where: any[] = [];
 
@@ -195,14 +195,24 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     return results as PsRagDocumentSourceGraphQlResponse;
   }
 
-  async searchDocumentsByHash(hash: string): Promise<PsRagDocumentSourceGraphQlResponse> {
+  async searchDocumentsByHash(hash: string, docUrl:string): Promise<PsRagDocumentSourceGraphQlResponse> {
     // Define the filter condition for matching the document hash
 
     const where: any[] = [
       {
-        operator: "Equal",
-        path: ["hash"],
-        valueString: hash,
+        operator: "Or",
+        operands: [
+          {
+            operator: "Equal",
+            path: ["hash"], // Path to the hash field
+            valueString: hash
+          },
+          {
+            operator: "Equal",
+            path: ["url"], // Path to the URL field
+            valueString: docUrl
+          }
+        ]
       }
     ];
   
@@ -213,10 +223,9 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       results = await PsRagDocumentVectorStore.client.graphql
         .get()
         .withClassName("RagDocument")
-        .withWhere({
-          operator: "And",
-          operands: where
-          }) // Use the where condition to filter by hash
+        .withWhere(
+          where[0] as any
+          ) // Use the where condition to filter by hash
         .withFields(PsRagDocumentVectorStore.hashField)
         .do();
 
