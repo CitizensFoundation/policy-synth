@@ -2,7 +2,7 @@ import { WeaviateClient } from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 export declare class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract: string;
-    static hashField: string;
+    static hashFields: string;
     static client: WeaviateClient;
     roughFastWordTokenRatio: number;
     maxChunkTokenLength: number;

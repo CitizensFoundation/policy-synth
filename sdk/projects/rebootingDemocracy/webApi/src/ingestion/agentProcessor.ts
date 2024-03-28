@@ -59,9 +59,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   async processDataLayout(): Promise<void> {
     await this.loadFileMetadata(); // Load existing metadata to compare against
     this.dataLayout = await this.readDataLayout();
+
+  
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
-    const downloadContent = false;
+    const downloadContent = true;
 
     if (downloadContent) {
       const browser = await puppeteer.launch({ headless: true });
@@ -353,10 +355,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       // Doublechek if item from fileMetadata.json has already been ingested
       const ingestDocument = await documentStore.searchDocumentsByHash(source.hash, source.url);
       const docVals = ingestDocument.data.Get.RagDocument;
-      console.log(docVals);
-      if (docVals.length > 0)
-          continue;
-
+      const duplicateHashes = await this.countDuplicateHashes(docVals);
+      
+      if (docVals.length > 1 && duplicateHashes>0) console.log(docVals.length ,' length', docVals,source.hash, source.url) 
+      continue
+      // if (docVals.length > 0) console.log(docVals.length ,' length', docVals,source.hash, source.url) 
+        
+      // else   console.log("not ingested" , source.hash, source.url) 
+      
       try {
         const documentId = await documentStore.postDocument(
           this.transformDocumentSourceForVectorstore(source)
@@ -390,6 +396,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         console.error(`Failed to post document ${source.url}:\n`, error);
       }
     }
+  }
+  async countDuplicateHashes(data: any[]) {
+    const hashCounts = data.reduce((acc, { hash }) => {
+      acc[hash] = (acc[hash] || 0) + 1;
+      return acc;
+    }, {});
+  
+    return Object.values(hashCounts).filter(count => count > 1).length;
   }
 
   async classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]) {

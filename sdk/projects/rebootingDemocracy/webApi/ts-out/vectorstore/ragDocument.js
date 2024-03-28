@@ -12,7 +12,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       contentType allReferencesWithUrls allOtherReferences \
       allImageUrls  documentMetaData\
      _additional { id, distance, confidence }";
-    static hashField = "hash url";
+    static hashFields = "hash url";
     static client = weaviate.client({
         scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
         host: process.env.WEAVIATE_HOST || "localhost:8080",
@@ -197,7 +197,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .get()
                 .withClassName("RagDocument")
                 .withWhere(where[0]) // Use the where condition to filter by hash
-                .withFields(PsRagDocumentVectorStore.hashField)
+                .withFields(PsRagDocumentVectorStore.hashFields)
                 .do();
         }
         catch (err) {
