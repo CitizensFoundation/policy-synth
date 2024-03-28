@@ -37,7 +37,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   dataLayout!: PsIngestionDataLayout;
 
-  constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
+  // constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
+  constructor(dataLayoutPath: string = "https://content.thegovlab.com/flows/trigger/a84e387c-9a82-4bb2-b41f-22780c3826a7") {
     super();
     this.dataLayoutPath = dataLayoutPath;
 
@@ -58,9 +59,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   async processDataLayout(): Promise<void> {
     await this.loadFileMetadata(); // Load existing metadata to compare against
-    this.dataLayout = await this.readDataLayout();
 
-  
+    this.dataLayout = await this.readDataLayout();
+    
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
     const downloadContent = true;
@@ -97,9 +98,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     }
 
     const filesForProcessing = this.getFilesForProcessing(true);
-    console.log("Files for processing:", filesForProcessing);
-    //await this.processFiles(filesForProcessing);
-
+    await this.processFiles(filesForProcessing);
+    
     const allDocumentSources = this.getMetaDataForAllFiles();
     await this.processAllSources(allDocumentSources);
   }
@@ -363,7 +363,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         continue
       }
       if (docVals.length > 0)   continue
-      
+      continue
       try {
         const documentId = await documentStore.postDocument(
           this.transformDocumentSourceForVectorstore(source)
@@ -513,6 +513,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
         ) {
+          console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
+          continue
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
             data,
@@ -524,7 +526,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         }
 
         // Cleanup fullContentsColumns in docAnalysis and redo the summaries
-
+        continue
         const reCleanData = false;
 
         const cleanedUpData =
@@ -746,10 +748,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   public getFilesForProcessing(forceProcessing = false): string[] {
     const filesForProcessing: string[] = [];
 
+
     // Compare current fileMetadata with initialFileMetadata
     for (const [fileId, metadata] of Object.entries(this.fileMetadata)) {
+
+      
       console.log(`Checking file ${JSON.stringify(metadata)}`);
+      
       const initialMetadata = this.initialFileMetadata[fileId];
+
       // Check if file is new or has been changed
       if (
         forceProcessing ||
@@ -814,6 +821,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     let dataLayout: PsIngestionDataLayout;
     if (this.dataLayoutPath.startsWith("file://")) {
       const filePath = this.dataLayoutPath.replace("file://", "");
+      
       const data = await fs.readFile(filePath, "utf-8");
       dataLayout = JSON.parse(data);
     } else {

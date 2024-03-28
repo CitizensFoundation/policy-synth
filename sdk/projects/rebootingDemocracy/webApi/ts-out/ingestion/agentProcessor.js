@@ -28,7 +28,8 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     chunkAnalysisAgent;
     docAnalysisAgent;
     dataLayout;
-    constructor(dataLayoutPath = "file://src/ingestion/dataLayout.json") {
+    // constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
+    constructor(dataLayoutPath = "https://content.thegovlab.com/flows/trigger/a84e387c-9a82-4bb2-b41f-22780c3826a7") {
         super();
         this.dataLayoutPath = dataLayoutPath;
         this.loadFileMetadata()
@@ -73,8 +74,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             }
         }
         const filesForProcessing = this.getFilesForProcessing(true);
-        console.log("Files for processing:", filesForProcessing);
-        //await this.processFiles(filesForProcessing);
+        await this.processFiles(filesForProcessing);
         const allDocumentSources = this.getMetaDataForAllFiles();
         await this.processAllSources(allDocumentSources);
     }
@@ -222,11 +222,13 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             const ingestDocument = await documentStore.searchDocumentsByHash(source.hash, source.url);
             const docVals = ingestDocument.data.Get.RagDocument;
             const duplicateHashes = await this.countDuplicateHashes(docVals);
-            if (docVals.length > 1 && duplicateHashes > 0)
+            if (duplicateHashes > 0) {
                 console.log(docVals.length, ' length', docVals, source.hash, source.url);
+                continue;
+            }
+            if (docVals.length > 0)
+                continue;
             continue;
-            // if (docVals.length > 0) console.log(docVals.length ,' length', docVals,source.hash, source.url) 
-            // else   console.log("not ingested" , source.hash, source.url) 
             try {
                 const documentId = await documentStore.postDocument(this.transformDocumentSourceForVectorstore(source));
                 if (documentId) {
@@ -314,11 +316,14 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 const reAnalyze = false;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
+                    console.log(this.fileMetadata[metadataEntry.fileId].documentMetaData, metadataEntry.fileId, "documentMedat");
+                    continue;
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
                     await this.saveFileMetadata();
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
                 // Cleanup fullContentsColumns in docAnalysis and redo the summaries
+                continue;
                 const reCleanData = false;
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
