@@ -362,10 +362,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         console.log(docVals.length ,' length', docVals,source.hash, source.url) 
         continue
       }
-      if (docVals.length > 1)   continue
-      // if (docVals.length > 0) console.log(docVals.length ,' length', docVals,source.hash, source.url) 
-        
-      // else   console.log("not ingested" , source.hash, source.url) 
+      if (docVals.length > 0)   continue
       
       try {
         const documentId = await documentStore.postDocument(
