@@ -363,7 +363,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         continue
       }
       if (docVals.length > 0)   continue
-      continue
+      
       try {
         const documentId = await documentStore.postDocument(
           this.transformDocumentSourceForVectorstore(source)
@@ -514,7 +514,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
         ) {
           console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
-          continue
+          
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
             data,
@@ -526,7 +526,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         }
 
         // Cleanup fullContentsColumns in docAnalysis and redo the summaries
-        continue
+        
         const reCleanData = false;
 
         const cleanedUpData =
@@ -683,12 +683,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
     );*/
 
-    const reRank = false;
+    // const reRank = false;
 
-    if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
-      await this.rankChunks(metadata);
-      await this.saveFileMetadata();
-    }
+    // if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+    //   await this.rankChunks(metadata);
+    //   await this.saveFileMetadata();
+    // }
 
     /*console.log(
       `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
