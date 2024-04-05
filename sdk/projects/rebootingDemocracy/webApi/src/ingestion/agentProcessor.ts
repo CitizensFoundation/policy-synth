@@ -513,8 +513,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
         ) {
+
         //  console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
         
+
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
             data,
@@ -683,7 +685,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
     );*/
 
-    const reRank = false;
+    // const reRank = false;
+
 
  //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
         if (reRank || metadata.chunks[0].eloRating === undefined) {
@@ -692,6 +695,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       await this.saveFileMetadata();
     } 
     
+
     /*console.log(
       `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
     );*/
