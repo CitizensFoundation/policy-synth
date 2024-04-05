@@ -39,6 +39,7 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   
         // Sample prompts
         const samplePrompts = [
+          'Can you summarize the latest research on AI and participatory decision-making in urban planning?',
           'Can you give me examples of case studies or pilot projects where AI has been successfully integrated into public engagement?',
           'How can AI help in addressing misinformation during election campaigns?'
         ];
