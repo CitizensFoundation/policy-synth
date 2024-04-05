@@ -258,7 +258,9 @@ export class RebootingDemocracyChatBotApp extends PolicySynthWebApp {
   renderApp() {
     return html` <div class="layout vertical">
       <div class="layout horizontal center-center themeToggle">
-        <img src="https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/rebooting.png" style="height: 100px;margin-top: 8px;margin-left: 16px;"/>
+      
+      <img src="https://www.citizens.is/wp-content/uploads/2020/01/cf-logo-small-final.jpg" style="height: 100px;margin-top: 8px;margin-left: 16px;margin-right: 16px;"/>
+      <div class="wordmark"> Reboot<br>Democracy<br>.AI </div>
         <div class="flex"></div>
         <div style="margin-top: 32px;">
           ${this.renderSavedChatsDropdown()}
