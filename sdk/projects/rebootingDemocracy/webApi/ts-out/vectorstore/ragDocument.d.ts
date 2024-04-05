@@ -2,7 +2,7 @@ import { WeaviateClient } from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 export declare class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     static allFieldsToExtract: string;
-    static hashFields: string;
+    static urlField: string;
     static client: WeaviateClient;
     roughFastWordTokenRatio: number;
     maxChunkTokenLength: number;
@@ -19,7 +19,7 @@ export declare class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     updateDocument(id: string, documentData: PsRagDocumentSource, quiet?: boolean): Promise<unknown>;
     getDocument(id: string): Promise<PsRagDocumentSource>;
     searchDocuments(query: string): Promise<PsRagDocumentSourceGraphQlResponse>;
-    searchDocumentsByHash(hash: string, docUrl: string): Promise<PsRagDocumentSourceGraphQlResponse>;
+    searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlResponse>;
     searchChunksWithReferences(query: string): Promise<PsRagChunk[]>;
 }
 //# sourceMappingURL=ragDocument.d.ts.map

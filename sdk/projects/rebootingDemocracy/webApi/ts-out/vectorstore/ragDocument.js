@@ -12,7 +12,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       contentType allReferencesWithUrls allOtherReferences \
       allImageUrls  documentMetaData\
      _additional { id, distance, confidence }";
-    static hashFields = "hash url";
+    static urlField = "url";
     static client = weaviate.client({
         scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
         host: process.env.WEAVIATE_HOST || "localhost:8080",
@@ -171,39 +171,39 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         }
         return results;
     }
-    async searchDocumentsByHash(hash, docUrl) {
-        // Define the filter condition for matching the document hash
+    async searchDocumentsByUrl(docUrl) {
         const where = [
             {
                 operator: "Or",
                 operands: [
                     {
                         operator: "Equal",
-                        path: ["hash"], // Path to the hash field
-                        valueString: hash
-                    },
-                    {
-                        operator: "Equal",
-                        path: ["url"], // Path to the URL field
+                        path: ["url"],
                         valueString: docUrl
                     }
                 ]
             }
         ];
-        let results;
         try {
-            // Execute the GraphQL query with the modified filter
-            results = await PsRagDocumentVectorStore.client.graphql
+            let results = await PsRagDocumentVectorStore.client.graphql
                 .get()
                 .withClassName("RagDocument")
-                .withWhere(where[0]) // Use the where condition to filter by hash
-                .withFields(PsRagDocumentVectorStore.hashFields)
+                .withWhere(where[0])
+                .withFields(PsRagDocumentVectorStore.urlField)
                 .do();
+            // Check if results are empty or null and handle accordingly
+            if (!results || results.length === 0) {
+                console.log('No documents found. Database might be empty for this query.');
+                // Handle the empty db scenario here, such as continuing with your process
+                return null; // Or however you wish to handle this scenario
+            }
+            return results;
         }
         catch (err) {
+            // Handle different errors differently, e.g., schema errors, network errors, etc.
+            console.error('Error while querying documents:', err);
             throw err;
         }
-        return results;
     }
     async searchChunksWithReferences(query) {
         let results;
