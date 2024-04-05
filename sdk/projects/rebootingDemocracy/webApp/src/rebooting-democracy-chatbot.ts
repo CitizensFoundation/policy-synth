@@ -32,7 +32,16 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   
     const checkAndPrepend = () => {
       const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chat-input') as HTMLElement;
+      
+
+      
+
       if (parentElement) {
+     
+        const nestedElement: HTMLElement | null = parentElement.querySelector('.textInput').shadowRoot?.querySelector('.field').shadowRoot?.querySelector('.container') as HTMLElement;    
+        const inputLabel = nestedElement.querySelector('.label')as HTMLElement;;
+        inputLabel.style.fontFamily = 'Space Grotesk';
+
         // Create a container for the prompts
         const promptsContainer: HTMLDivElement = document.createElement('div');
         promptsContainer.className = 'sample-prompts-container'; // Assign a class to the container for styling
@@ -83,7 +92,8 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   override connectedCallback(): void {
     super.connectedCallback();
     this.defaultInfoMessage = this.t("I'm your helpful web Rebooting Democracy assistant");
-    this.textInputLabel = this.t('How can I help?');
+    this.textInputLabel = this.t('Ask a question here!');
+    
     this.serverApi = new ResearchServerApi();
     this.prependNewElementWhenAvailable();
   }
@@ -95,6 +105,7 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
         .chat-window {
           height: 85vh;
           width: 100vw;
+          font-family: 'Space Grotesk', monospace!important;
         }
         .sample-prompts-container {
           display: flex;

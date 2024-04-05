@@ -57,7 +57,7 @@
     />
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Lato&family=Cabin&family=Roboto+Condensed&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Red+Hat+Text:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
 
@@ -73,14 +73,59 @@
     <style>
       html,
       body {
+        
         margin: 0;
         padding: 0;
-        font-family: 'Lato', sans-serif;
+
+        font-family: 'Space Grotesk', monospace!important;
         background-color: var(--md-sys-color-surface, #fefefe);
+        --md-icon-font: 'Material Symbols Rounded';
+        --md-sys-color-primary:#04787f!important; 
+        --md-sys-color-on-primary: #ffffff; 
+        --md-sys-color-primary-container: transparent!important; 
+        --md-sys-color-on-primary-container: #ffffff00; 
+        --md-sys-color-secondary: #000!important; 
+        --md-sys-color-on-secondary: #ffffff; 
+        --md-sys-color-secondary-container: #ffdad4;
+        --md-sys-color-on-secondary-container: #6d6867; 
+        --md-sys-color-tertiary: #705c2e; 
+        --md-sys-color-on-tertiary: #ffffff; 
+        --md-sys-color-tertiary-container: #fbdfa6; 
+        --md-sys-color-on-tertiary-container: #251a00; 
+        --md-sys-color-error: #ba1a1a; 
+        --md-sys-color-on-error: #ffffff; 
+        --md-sys-color-error-container: #ffdad6; 
+        --md-sys-color-on-error-container: #410002;
+        --md-sys-color-background: #fffbff; 
+        --md-sys-color-on-background: #201a19; 
+        --md-sys-color-surface: #fffbff; 
+        --md-sys-color-on-surface: #201a19; 
+        --md-sys-color-surface-variant: #f5ddda; 
+        --md-sys-color-on-surface-variant: #534341; 
+        --md-sys-color-outline: #857370; 
+        --md-sys-color-outline-variant: #d8c2be; 
+        --md-sys-color-shadow: #000000; 
+        --md-sys-color-scrim: #000000; 
+        --md-sys-color-inverse-surface: #362f2e;
+         --md-sys-color-inverse-on-surface: #fbeeec;
+         --md-sys-color-inverse-primary: #ffb4a8;
+         --md-outlined-text-field-input-text-font: 'Space Grotesk'!important;
+
+      }
+      input {
+        font-family: 'Space Grotesk', sans-serif!important;
       }
 
       :root {
         --md-icon-font: 'Material Symbols Rounded';
+        font-family: 'Space Grotesk', sans-serif!important;
+      }
+      :host{
+        font-family: 'Space Grotesk', sans-serif!important;
+      }
+      .content ::slotted(*)
+      {
+        font-family: 'Space Grotesk', sans-serif!important;
       }
     </style>
 
