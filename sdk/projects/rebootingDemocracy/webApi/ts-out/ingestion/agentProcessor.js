@@ -51,7 +51,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
         const downloadContent = true;
         if (downloadContent) {
-            const browser = await puppeteer.launch({ headless: true });
+            const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
             try {
                 this.logger.debug("Launching browser");
                 const browserPage = await browser.newPage();
@@ -218,18 +218,20 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             return chunkId;
         };
         for (const source of allDocumentSourcesWithChunks) {
-            // Doublechek if item from fileMetadata.json has already been ingested
-            const ingestDocument = await documentStore.searchDocumentsByHash(source.hash, source.url);
+            // Doublechek if item from fileMetadata.json has already been ingested and if there are duplicated URLs
+            const ingestDocument = await documentStore.searchDocumentsByUrl(source.url);
             const docVals = ingestDocument.data.Get.RagDocument;
-            const duplicateHashes = await this.countDuplicateHashes(docVals);
-            if (duplicateHashes > 0) {
-                console.log(docVals.length, ' length', docVals, source.hash, source.url);
+          
+	    const duplicateUrls = await this.countDuplicateUrls(docVals);
+// continue if there are even duplicates and log them out
+            if (duplicateUrls > 0) {
+                console.log(docVals.length, ' length', docVals, source.url);
                 continue;
             }
+        // continue if already ingested  
             if (docVals.length > 0)
                 continue;
-            continue;
-            try {
+	  try {
                 const documentId = await documentStore.postDocument(this.transformDocumentSourceForVectorstore(source));
                 if (documentId) {
                     if (source.chunks) {
@@ -253,12 +255,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             }
         }
     }
-    async countDuplicateHashes(data) {
-        const hashCounts = data.reduce((acc, { hash }) => {
-            acc[hash] = (acc[hash] || 0) + 1;
+    async countDuplicateUrls(data) {
+        const urlCounts = data.reduce((acc, { url }) => {
+            acc[url] = (acc[url] || 0) + 1;
             return acc;
         }, {});
-        return Object.values(hashCounts).filter(count => count > 1).length;
+        return Object.values(urlCounts).filter(count => count > 1).length;
     }
     async classifyDocuments(allDocumentSourcesWithChunks) {
         console.log("Classifying all documents");
@@ -316,14 +318,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 const reAnalyze = false;
                 if (reAnalyze ||
                     !this.fileMetadata[metadataEntry.fileId].documentMetaData) {
-                    console.log(this.fileMetadata[metadataEntry.fileId].documentMetaData, metadataEntry.fileId, "documentMedat");
-                    continue;
+                    //  console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
                     (await this.docAnalysisAgent.analyze(metadataEntry.fileId, data, this.fileMetadata));
                     await this.saveFileMetadata();
                     // Create Weaviate object for document with all analyzies and get and id for the parts
                 }
                 // Cleanup fullContentsColumns in docAnalysis and redo the summaries
-                continue;
                 const reCleanData = false;
                 const cleanedUpData = (!reCleanData &&
                     this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
@@ -435,10 +435,14 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         /*console.log(
           `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
         );*/
-        const reRank = false;
-        if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
-            await this.rankChunks(metadata);
-            await this.saveFileMetadata();
+        console.log("weaviateDocumentId",weaviateDocumentId);
+
+	const reRank = false;
+     //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+        if (reRank || metadata.chunks[0].eloRating === undefined) {
+        console.log("in rerank", metadata.chunks[0]);
+	      await this.rankChunks(metadata);
+              await this.saveFileMetadata();
         }
         /*console.log(
           `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`

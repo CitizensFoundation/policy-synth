@@ -67,7 +67,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     const downloadContent = true;
 
     if (downloadContent) {
-      const browser = await puppeteer.launch({ headless: true });
+      const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
       try {
         this.logger.debug("Launching browser");
 
@@ -353,11 +353,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     for (const source of allDocumentSourcesWithChunks) {
       // Doublechek if item from fileMetadata.json has already been ingested
-      const ingestDocument = await documentStore.searchDocumentsByHash(source.hash, source.url);
+      const ingestDocument = await documentStore.searchDocumentsByUrl(source.url);
       const docVals = ingestDocument.data.Get.RagDocument;
-      const duplicateHashes = await this.countDuplicateHashes(docVals);
+      const duplicateUrls = await this.countDuplicateUrls(docVals);
       
-      if (duplicateHashes>0)
+      if (duplicateUrls>0)
       {
         console.log(docVals.length ,' length', docVals,source.hash, source.url) 
         continue
@@ -398,13 +398,13 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       }
     }
   }
-  async countDuplicateHashes(data: any[]) {
-    const hashCounts = data.reduce((acc, { hash }) => {
-      acc[hash] = (acc[hash] || 0) + 1;
+  async countDuplicateUrls(data: any[]) {
+    const urlCounts = data.reduce((acc, { url }) => {
+      acc[url] = (acc[url] || 0) + 1;
       return acc;
     }, {});
   
-    return Object.values(hashCounts).filter(count => count > 1).length;
+    return Object.values(urlCounts).filter(count => count > 1).length;
   }
 
   async classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]) {
@@ -513,8 +513,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
         ) {
-          console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
-          
+
+        //  console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
+        
+
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
             data,
@@ -685,10 +687,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     // const reRank = false;
 
-    // if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
-    //   await this.rankChunks(metadata);
-    //   await this.saveFileMetadata();
-    // }
+
+ //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+        if (reRank || metadata.chunks[0].eloRating === undefined) {
+        console.log("in rerank", metadata.chunks[0]);
+      await this.rankChunks(metadata);
+      await this.saveFileMetadata();
+    } 
+    
 
     /*console.log(
       `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`

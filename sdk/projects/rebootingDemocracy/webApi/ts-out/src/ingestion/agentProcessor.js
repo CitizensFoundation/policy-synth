@@ -74,7 +74,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         }
         const filesForProcessing = this.getFilesForProcessing(true);
         console.log("Files for processing:", filesForProcessing);
-        //await this.processFiles(filesForProcessing);
+        await this.processFiles(filesForProcessing);
         const allDocumentSources = this.getMetaDataForAllFiles();
         await this.processAllSources(allDocumentSources);
     }
@@ -218,7 +218,18 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             return chunkId;
         };
         for (const source of allDocumentSourcesWithChunks) {
-            try {
+         /*   const ingestDocument = await documentStore.searchDocumentsByHash(source.hash, source.url);
+            const docVals = ingestDocument.data.Get.RagDocument;
+            const duplicateHashes = await this.countDuplicateHashes(docVals);
+            if (duplicateHashes > 0) {
+                console.log(docVals.length, ' length', docVals, source.hash, source.url);
+                continue;
+            }
+            if (docVals.length > 0)
+                continue;*/
+
+
+try {
                 const documentId = await documentStore.postDocument(this.transformDocumentSourceForVectorstore(source));
                 if (documentId) {
                     if (source.chunks) {

@@ -25,7 +25,7 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     transformChunkForVectorstore(chunk: PsRagChunk): any;
     transformDocumentSourceForVectorstore(source: PsRagDocumentSource): any;
     addDocumentsToWeaviate(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
-    countDuplicateHashes(data: any[]): Promise<number>;
+    countDuplicateUrls(data: any[]): Promise<number>;
     classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
     processSource(source: PsRagDocumentSource): Promise<void>;
     processFiles(files: string[]): Promise<void>;
