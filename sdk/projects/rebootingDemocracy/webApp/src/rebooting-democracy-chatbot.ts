@@ -36,9 +36,7 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
 
       if (parentElement) {
      
-        const nestedElement: HTMLElement | null = parentElement.querySelector('.textInput').shadowRoot?.querySelector('.field').shadowRoot?.querySelector('.container') as HTMLElement;    
-        const inputLabel = nestedElement.querySelector('.label')as HTMLElement;;
-        inputLabel.style.fontFamily = 'Space Grotesk';
+  
 
         // Create a container for the prompts
         const promptsContainer: HTMLDivElement = document.createElement('div');
@@ -63,6 +61,32 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   
         // Prepend the container of prompts before the parentElement
         parentElement.before(promptsContainer);
+
+        //adding more styles Like the chatinput styles
+        const chatInputElement: HTMLElement | null = parentElement.querySelector('.textInput').shadowRoot?.querySelector('.field').shadowRoot?.querySelector('.container') as HTMLElement;    
+        const inputLabel = chatInputElement.querySelector('.label')as HTMLElement;;
+        inputLabel.style.fontFamily = 'Space Grotesk';
+
+        //Outline styles for the prompts
+        const outlineStylesElements: HTMLElement | null = parentElement.querySelector('.chatElement').shadowRoot?.querySelector('.sourceButton') as HTMLElement;
+        console.log("outlineStylesElements",outlineStylesElements)
+        outlineStylesElements.setAttribute('style', `
+        display: flex !important;
+        width: 250px !important;
+        height: 80px !important;
+        padding: 12px !important;
+        flex-direction: column!important;
+        justify-content: space-between!important;
+        align-items: flex-start!important;
+        flex-shrink: 0!important;
+        background-color: #fff!important;
+        border: 1px solid black!important;
+        border-radius: 0 !important;
+        white-space: collapse balance!important;
+        font-size: 12px!important;
+      `);
+        
+
   
       } else if (attempts < maxAttempts) {
         // Element not found, wait and try again
