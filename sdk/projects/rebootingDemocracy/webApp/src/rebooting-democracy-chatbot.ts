@@ -92,46 +92,49 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   const checkAndApply = () => {
     const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chatElement') as HTMLElement;
     if (parentElement) {
-      console.log('found one')
-      //Outline styles for the prompts
-      const outlineStylesElements: HTMLElement | null = parentElement.shadowRoot?.querySelector('.sourceButton') as HTMLElement;
-      console.log("outlineStylesElements",outlineStylesElements)
-      outlineStylesElements.setAttribute('style', `
+ 
+      const styleEl = document.createElement('style');
+      styleEl.textContent = `
+    md-elevated-button, .sourceButton {
       display: flex !important;
       width: 250px !important;
       height: 80px !important;
       padding: 12px !important;
-      flex-direction: column!important;
-      justify-content: space-between!important;
-      align-items: flex-start!important;
-      flex-shrink: 0!important;
-      background-color: #fff!important;
-      border: 1px solid black!important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      align-items: flex-start !important;
+      flex-shrink: 0 !important;
+      background-color: #fff !important;
+      border: 1px solid black !important;
       border-radius: 0 !important;
-      white-space: collapse balance!important;
-      font-size: 12px!important;
-    `);
+      white-space: collapse balance !important;
+      font-size: 12px !important;
+    }
+  `;
+      parentElement.shadowRoot?.prepend(styleEl);
+
+      console.log('found one')
+      //Outline styles for the prompts
+      const outlineStylesElements: HTMLElement | null = parentElement.shadowRoot?.querySelector('.sourceButton') as HTMLElement;
+      console.log("outlineStylesElements",outlineStylesElements)
+    //   outlineStylesElements.setAttribute('style', `
+    //   display: flex !important;
+    //   width: 250px !important;
+    //   height: 80px !important;
+    //   padding: 12px !important;
+    //   flex-direction: column!important;
+    //   justify-content: space-between!important;
+    //   align-items: flex-start!important;
+    //   flex-shrink: 0!important;
+    //   background-color: #fff!important;
+    //   border: 1px solid black!important;
+    //   border-radius: 0 !important;
+    //   white-space: collapse balance!important;
+    //   font-size: 12px!important;
+    // `);
     console.log('applied!');
-    
-    const styleEl = document.createElement('style');
-    styleEl.textContent = `
-  md-elevated-button, .sourceButton {
-    display: flex !important;
-    width: 250px !important;
-    height: 80px !important;
-    padding: 12px !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    align-items: flex-start !important;
-    flex-shrink: 0 !important;
-    background-color: #fff !important;
-    border: 1px solid black !important;
-    border-radius: 0 !important;
-    white-space: collapse balance !important;
-    font-size: 12px !important;
-  }
-`;
-parentElement.prepend(styleEl);
+   
+parentElement.shadowRoot?.prepend(styleEl);
 
 // Prepend the style element to the head of the document
 
