@@ -101,6 +101,49 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   }
   
   
+  async applyStylesForReferences(): Promise<void> {
+
+  let attempts = 0;
+  const attemptInterval = 2000; // milliseconds
+  const maxAttempts = 20; // attempt up to 1 second
+
+  const checkAndApply = () => {
+    const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chat-input') as HTMLElement;
+    if (parentElement) {
+   
+      //Outline styles for the prompts
+      const outlineStylesElements: HTMLElement | null = parentElement.querySelector('.chatElement').shadowRoot?.querySelector('.sourceButton') as HTMLElement;
+      console.log("outlineStylesElements",outlineStylesElements)
+      outlineStylesElements.setAttribute('style', `
+      display: flex !important;
+      width: 250px !important;
+      height: 80px !important;
+      padding: 12px !important;
+      flex-direction: column!important;
+      justify-content: space-between!important;
+      align-items: flex-start!important;
+      flex-shrink: 0!important;
+      background-color: #fff!important;
+      border: 1px solid black!important;
+      border-radius: 0 !important;
+      white-space: collapse balance!important;
+      font-size: 12px!important;
+    `);
+      
+
+
+    } else if (attempts < maxAttempts) {
+      // Element not found, wait and try again
+      setTimeout(checkAndApply, attemptInterval);
+      attempts++;
+    } else {
+      console.error('Parent element not found after waiting');
+    }
+  };
+
+  checkAndApply();
+}
+
   
   handlePromptClick(promptText: string): void {
     // Assuming chatInputField is the input element where users type their messages
@@ -169,6 +212,7 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
     super.sendChatMessage();
 
     this.addUserChatBotMessage(userMessage);
+    this.applyStylesForReferences();
 
     await this.serverApi.conversation(
       this.serverMemoryId,
