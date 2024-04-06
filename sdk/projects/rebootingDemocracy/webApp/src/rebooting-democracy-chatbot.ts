@@ -90,53 +90,85 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   const maxAttempts = 20; // attempt up to 1 second
 
   const checkAndApply = () => {
-    const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chatElement') as HTMLElement;
+    const parentElement: NodeList | null = this.shadowRoot?.querySelectorAll('.chatElement') as NodeList;
     if (parentElement) {
- 
-      const styleEl = document.createElement('style');
-      styleEl.textContent = `
-    md-elevated-button, .sourceButton {
-      display: flex !important;
-      width: 250px !important;
-      height: 80px !important;
-      padding: 12px !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
-      align-items: flex-start !important;
-      flex-shrink: 0 !important;
-      background-color: #fff !important;
-      border: 1px solid black !important;
-      border-radius: 0 !important;
-      white-space: collapse balance !important;
-      font-size: 12px !important;
-    }
-  `;
-      parentElement.shadowRoot?.prepend(styleEl);
+      
+      parentElement.forEach((chatElement: Node) => {
+        // Ensure each chatElement is an HTMLElement before trying to access HTMLElement-specific properties or methods
+        if (chatElement instanceof HTMLElement && chatElement.shadowRoot) {
+          const sourceDocumentsContainer = chatElement.shadowRoot.querySelector('.sourceDocumentsContainer');
+          
+          if (sourceDocumentsContainer) {
+            // Check for existing style element
+            const existingStyleEl = chatElement.shadowRoot.querySelector('style');
+            if (!existingStyleEl) {
+              const styleEl = document.createElement('style');
+              styleEl.textContent = `
+              .sourceButton {
+                display: flex !important;
+                width: 250px !important;
+                height: 80px !important;
+                padding: 12px !important;
+                flex-direction: column !important;
+                justify-content: space-between !important;
+                align-items: flex-start !important;
+                flex-shrink: 0 !important;
+                background-color: #fff !important;
+                border: 1px solid black !important;
+                border-radius: 0 !important;
+                white-space: collapse balance !important;
+                font-size: 12px !important;
+              }
+              `;
+              chatElement.shadowRoot.prepend(styleEl);
+            }
+          }
+        }
+      })
+//       const styleEl = document.createElement('style');
+//       styleEl.textContent = `
+//     .sourceButton {
+//       display: flex !important;
+//       width: 250px !important;
+//       height: 80px !important;
+//       padding: 12px !important;
+//       flex-direction: column !important;
+//       justify-content: space-between !important;
+//       align-items: flex-start !important;
+//       flex-shrink: 0 !important;
+//       background-color: #fff !important;
+//       border: 1px solid black !important;
+//       border-radius: 0 !important;
+//       white-space: collapse balance !important;
+//       font-size: 12px !important;
+//     }
+//   `;
+//       parentElement.shadowRoot?.prepend(styleEl);
 
-      console.log('found one')
-      //Outline styles for the prompts
-      const outlineStylesElements: HTMLElement | null = parentElement.shadowRoot?.querySelector('.sourceButton') as HTMLElement;
-      console.log("outlineStylesElements",outlineStylesElements)
-    //   outlineStylesElements.setAttribute('style', `
-    //   display: flex !important;
-    //   width: 250px !important;
-    //   height: 80px !important;
-    //   padding: 12px !important;
-    //   flex-direction: column!important;
-    //   justify-content: space-between!important;
-    //   align-items: flex-start!important;
-    //   flex-shrink: 0!important;
-    //   background-color: #fff!important;
-    //   border: 1px solid black!important;
-    //   border-radius: 0 !important;
-    //   white-space: collapse balance!important;
-    //   font-size: 12px!important;
-    // `);
-    console.log('applied!');
+//       console.log('found one')
+//       //Outline styles for the prompts
+//       const outlineStylesElements: HTMLElement | null = parentElement.shadowRoot?.querySelector('.sourceButton') as HTMLElement;
+//       console.log("outlineStylesElements",outlineStylesElements)
+//     //   outlineStylesElements.setAttribute('style', `
+//     //   display: flex !important;
+//     //   width: 250px !important;
+//     //   height: 80px !important;
+//     //   padding: 12px !important;
+//     //   flex-direction: column!important;
+//     //   justify-content: space-between!important;
+//     //   align-items: flex-start!important;
+//     //   flex-shrink: 0!important;
+//     //   background-color: #fff!important;
+//     //   border: 1px solid black!important;
+//     //   border-radius: 0 !important;
+//     //   white-space: collapse balance!important;
+//     //   font-size: 12px!important;
+//     // `);
+//     console.log('applied!');
    
-parentElement.shadowRoot?.prepend(styleEl);
+// parentElement.shadowRoot?.prepend(styleEl);
 
-// Prepend the style element to the head of the document
+// // Prepend the style element to the head of the document
 
 
 
