@@ -34,8 +34,6 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
       const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chat-input') as HTMLElement;
       
 
-      
-
       if (parentElement) {
      
         const nestedElement: HTMLElement | null = parentElement.querySelector('.textInput').shadowRoot?.querySelector('.field').shadowRoot?.querySelector('.container') as HTMLElement;    
