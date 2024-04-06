@@ -67,24 +67,6 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
         const inputLabel = chatInputElement.querySelector('.label')as HTMLElement;;
         inputLabel.style.fontFamily = 'Space Grotesk';
 
-        //Outline styles for the prompts
-        const outlineStylesElements: HTMLElement | null = parentElement.querySelector('.chatElement').shadowRoot?.querySelector('.sourceButton') as HTMLElement;
-        console.log("outlineStylesElements",outlineStylesElements)
-        outlineStylesElements.setAttribute('style', `
-        display: flex !important;
-        width: 250px !important;
-        height: 80px !important;
-        padding: 12px !important;
-        flex-direction: column!important;
-        justify-content: space-between!important;
-        align-items: flex-start!important;
-        flex-shrink: 0!important;
-        background-color: #fff!important;
-        border: 1px solid black!important;
-        border-radius: 0 !important;
-        white-space: collapse balance!important;
-        font-size: 12px!important;
-      `);
         
 
   
@@ -108,11 +90,11 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   const maxAttempts = 20; // attempt up to 1 second
 
   const checkAndApply = () => {
-    const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chat-input') as HTMLElement;
+    const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chat-input').querySelector('.chatElement') as HTMLElement;
     if (parentElement) {
    
       //Outline styles for the prompts
-      const outlineStylesElements: HTMLElement | null = parentElement.querySelector('.chatElement').shadowRoot?.querySelector('.sourceButton') as HTMLElement;
+      const outlineStylesElements: HTMLElement | null = parentElement.querySelector('.chatElement') as HTMLElement;
       console.log("outlineStylesElements",outlineStylesElements)
       outlineStylesElements.setAttribute('style', `
       display: flex !important;
@@ -192,6 +174,22 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
         }
         .sample-prompt:hover {
           background-color: #0bcac42e; /* Slightly darker cyan on hover */
+        }
+        md-elevated-button, .sourceButton
+        {
+          display: flex!important;
+      width: 250px!important;
+      height: 80px!important;
+      padding: 12px!important;
+      flex-direction: column!important;
+      justify-content: space-between!important;
+      align-items: flex-start!important;
+      flex-shrink: 0!important;
+      background-color: #fff!important;
+      border: 1px solid black!important;
+      border-radius: 0 !important;
+      white-space: collapse balance!important;
+      font-size: 12px!important;
         }
       `,
     ];
