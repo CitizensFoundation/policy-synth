@@ -90,11 +90,11 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
   const maxAttempts = 20; // attempt up to 1 second
 
   const checkAndApply = () => {
-    const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chat-input').querySelector('.chatElement') as HTMLElement;
+    const parentElement: HTMLElement | null = this.shadowRoot?.querySelector('.chatElement') as HTMLElement;
     if (parentElement) {
-   
+      console.log('found one')
       //Outline styles for the prompts
-      const outlineStylesElements: HTMLElement | null = parentElement.querySelector('.chatElement') as HTMLElement;
+      const outlineStylesElements: HTMLElement | null = parentElement.shadowRoot?.querySelector('.sourceButton') as HTMLElement;
       console.log("outlineStylesElements",outlineStylesElements)
       outlineStylesElements.setAttribute('style', `
       display: flex !important;
@@ -111,11 +111,35 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
       white-space: collapse balance!important;
       font-size: 12px!important;
     `);
-      
+    console.log('applied!');
+    
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+  md-elevated-button, .sourceButton {
+    display: flex !important;
+    width: 250px !important;
+    height: 80px !important;
+    padding: 12px !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    flex-shrink: 0 !important;
+    background-color: #fff !important;
+    border: 1px solid black !important;
+    border-radius: 0 !important;
+    white-space: collapse balance !important;
+    font-size: 12px !important;
+  }
+`;
+parentElement.prepend(styleEl);
+
+// Prepend the style element to the head of the document
+
 
 
     } else if (attempts < maxAttempts) {
       // Element not found, wait and try again
+      console.log('waiting')
       setTimeout(checkAndApply, attemptInterval);
       attempts++;
     } else {
@@ -133,6 +157,7 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
     if (this.chatInputField) {
       this.chatInputField.value = promptText; // Set the input field's value to the prompt's text
       this.sendChatMessage(); // Send the message
+      
     }
   }
 
@@ -210,8 +235,8 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
     super.sendChatMessage();
 
     this.addUserChatBotMessage(userMessage);
+    
     this.applyStylesForReferences();
-
     await this.serverApi.conversation(
       this.serverMemoryId,
       this.simplifiedChatLog,
