@@ -32,8 +32,8 @@ Instructions:
                 descriptionUrlMap.set(description, data);
             });
         });
-        //potentialSources = potentialSources.slice(0,100);
-        //potentialDescriptions = potentialDescriptions.slice(0,100);
+        //potentialSources = potentialSources.slice(0,40);
+        //potentialDescriptions = potentialDescriptions.slice(0,40);
         console.log(`Potential sources: ${potentialSources.length}`);
         console.log(`Potential descriptions: ${potentialDescriptions.length}`);
         // Deduplicate case-insensitively while preserving the original capitalization
@@ -66,14 +66,24 @@ Instructions:
         let csvContentSources = "potentialSources,summary,howThisIsRelevant,relevanceScore,url\n";
         for (const source of rankedSources) {
             const data = sourceUrlMap.get(source);
-            csvContentSources += `"${source}",${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+            if (data) {
+                csvContentSources += `"${source}",${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+            }
+            else {
+                console.error(`Data not found for source: ${source}`);
+            }
         }
         // Write to CSV file
         await fs.writeFile("./data/out_sources.csv", csvContentSources);
         let csvContentDescriptions = "potentialDescriptions,summary,howThisIsRelevant,relevanceScore,url\n";
         for (const description of rankedDescriptions) {
             const data = descriptionUrlMap.get(description);
-            csvContentDescriptions += `"${description}","${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+            if (data) {
+                csvContentDescriptions += `"${description}","${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+            }
+            else {
+                console.error(`Data not found for description: ${description}`);
+            }
         }
         // Write to CSV file
         await fs.writeFile("./data/out_descriptions.csv", csvContentDescriptions);

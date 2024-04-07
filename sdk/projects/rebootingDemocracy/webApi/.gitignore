@@ -10,3 +10,4 @@ ingestion/oldCache
 oldCache/
 localData/
 webPagesCache/
+startWithEnv.sh

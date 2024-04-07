@@ -4,6 +4,6 @@ import { ChatController } from './controllers/chatController.js';
 const app = new PolicySynthApiApp([
     AnalyticsController,
     ChatController
-], 5021);
+], 5043);
 app.listen();
 //# sourceMappingURL=server.js.map

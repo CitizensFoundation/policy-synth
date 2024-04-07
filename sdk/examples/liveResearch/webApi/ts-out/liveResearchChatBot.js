@@ -94,7 +94,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
             // Rank search results
             this.sendAgentStart("Pairwise Ranking Search Results");
             const searchResultsRanker = new SearchResultsRanker(this.memory, this.sendAgentUpdate.bind(this));
-            const rankedSearchResults = await searchResultsRanker.rankSearchResults(searchResults, question);
+            const rankedSearchResults = await searchResultsRanker.rankSearchResults(searchResults, question, searchResults.length * 10);
             this.sendAgentCompleted("Pairwise Ranking Completed");
             const searchResultsToScan = rankedSearchResults.slice(0, Math.floor(rankedSearchResults.length * this.percentOfResultsToScan));
             // Scan and Research Web pages

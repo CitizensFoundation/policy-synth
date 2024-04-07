@@ -34,8 +34,8 @@ async analyze() {
     });
   });
 
-  //potentialSources = potentialSources.slice(0,100);
-  //potentialDescriptions = potentialDescriptions.slice(0,100);
+  //potentialSources = potentialSources.slice(0,40);
+  //potentialDescriptions = potentialDescriptions.slice(0,40);
 
   console.log(`Potential sources: ${potentialSources.length}`);
   console.log(`Potential descriptions: ${potentialDescriptions.length}`);
@@ -82,7 +82,11 @@ async analyze() {
     "potentialSources,summary,howThisIsRelevant,relevanceScore,url\n";
   for (const source of rankedSources) {
     const data = sourceUrlMap.get(source)!;
-    csvContentSources += `"${source}",${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+    if (data) {
+      csvContentSources += `"${source}",${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+    } else {
+      console.error(`Data not found for source: ${source}`);
+    }
   }
 
   // Write to CSV file
@@ -92,7 +96,11 @@ async analyze() {
     "potentialDescriptions,summary,howThisIsRelevant,relevanceScore,url\n";
   for (const description of rankedDescriptions) {
     const data = descriptionUrlMap.get(description)!;
-    csvContentDescriptions += `"${description}","${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+    if (data) {
+      csvContentDescriptions += `"${description}","${data.summary}","${data.howThisIsRelevant}","${data.relevanceScore}","${data.url}"\n`;
+    } else {
+      console.error(`Data not found for description: ${description}`);
+    }
   }
 
   // Write to CSV file

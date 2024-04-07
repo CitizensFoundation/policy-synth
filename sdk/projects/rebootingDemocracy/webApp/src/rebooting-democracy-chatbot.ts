@@ -7,7 +7,7 @@ import { ResearchServerApi } from './researchServerApi.js';
 @customElement('rebooting-democracy-chat-bot')
 export class RebootingDemocracyChatBot extends PsChatAssistant {
   @property({ type: Number })
-  defaultDevWsPort = 5021;
+  defaultDevWsPort = 5043;
 
   @property({ type: Number })
   numberOfSelectQueries = 5;

@@ -462,6 +462,10 @@ export class PsRagVectorSearch extends PolicySynthAgentBase {
 
   getEloAverage(chunk: PsRagChunk): number {
     const { relevanceEloRating, substanceEloRating, qualityEloRating } = chunk;
-    return (relevanceEloRating! + substanceEloRating! + qualityEloRating!) / 3;
+    if (relevanceEloRating) {
+      return (relevanceEloRating! + substanceEloRating! + qualityEloRating!) / 3;
+    } else {
+      return 0;
+    }
   }
 }
