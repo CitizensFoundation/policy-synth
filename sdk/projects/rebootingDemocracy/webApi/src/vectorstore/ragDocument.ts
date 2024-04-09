@@ -232,10 +232,30 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
     }
   }  
 
+ async mergeUniqueById(arr1:[], arr2:[]) {
+    // Helper function to filter duplicates within an array
+    const mergedArray = [...arr1, ...arr2];
+
+    // Step 2: Filter out duplicates from the merged array
+    const unique = new Map();
+    mergedArray.forEach(item => {
+      const id = item._additional?.id;
+      if (id) {
+        unique.set(id, item);
+      }
+    });
+  
+    // Convert the Map back into an array
+    return Array.from(unique.values());
+  }
+  
+
   async searchChunksWithReferences(
     query: string
   ): Promise<PsRagChunk[]> {
-    let results;
+    let resultsNearText;
+    let resultsBm25;
+    
     const where: any[] = [
       {
         path: ['compressedContent'],
@@ -243,19 +263,60 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
         valueBoolean: false
       }
     ];
+    const searchFields=`
+    title
+    chunkIndex
+    chapterIndex
+    mainExternalUrlFound
+    shortSummary
+    fullSummary
+    relevanceEloRating
+    qualityEloRating
+    substanceEloRating
+    compressedContent
+    _additional { id, distance, certainty }
 
-    try {
-      results = await PsRagDocumentVectorStore.client.graphql
-        .get()
-        .withClassName("RagDocumentChunk")
-        .withNearText({ concepts: [query] })
-        .withLimit(12)
-        .withWhere({
-          operator: "And",
-          operands: where,
-        })
-        .withFields(
-          `
+    inDocument {
+      ... on RagDocument {
+        title
+        url
+        description
+        shortDescription
+        compressedFullDescriptionOfAllContents
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+      }
+    }
+
+    mostRelevantSiblingChunks {
+      ... on RagDocumentChunk {
+        title
+        chapterIndex
+        chunkIndex
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        compressedContent
+      }
+    }
+
+    allSiblingChunks {
+      ... on RagDocumentChunk {
+        title
+        chapterIndex
+        chunkIndex
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        compressedContent
+      }
+    }
+
+    inChunk {
+      ... on RagDocumentChunk {
         title
         chunkIndex
         chapterIndex
@@ -264,59 +325,15 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
         fullSummary
         relevanceEloRating
         qualityEloRating
-        substanceEloRating
         compressedContent
-        _additional { id, distance, certainty }
-
-        inDocument {
-          ... on RagDocument {
-            title
-            url
-            description
-            shortDescription
-            compressedFullDescriptionOfAllContents
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-          }
-        }
-
-        mostRelevantSiblingChunks {
-          ... on RagDocumentChunk {
-            title
-            chapterIndex
-            chunkIndex
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            compressedContent
-          }
-        }
-
-        allSiblingChunks {
-          ... on RagDocumentChunk {
-            title
-            chapterIndex
-            chunkIndex
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            compressedContent
-          }
-        }
 
         inChunk {
           ... on RagDocumentChunk {
             title
             chunkIndex
             chapterIndex
-            mainExternalUrlFound
             shortSummary
             fullSummary
-            relevanceEloRating
-            qualityEloRating
             compressedContent
 
             inChunk {
@@ -345,17 +362,6 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
                         shortSummary
                         fullSummary
                         compressedContent
-
-                        inChunk {
-                          ... on RagDocumentChunk {
-                            title
-                            chunkIndex
-                            chapterIndex
-                            shortSummary
-                            fullSummary
-                            compressedContent
-                          }
-                        }
                       }
                     }
                   }
@@ -364,19 +370,44 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
             }
           }
         }
-      `
+      }
+    }
+  `
+
+    try {
+      resultsNearText = await PsRagDocumentVectorStore.client.graphql
+        .get()
+        .withClassName("RagDocumentChunk")
+        .withNearText({ concepts: [query] })
+        .withLimit(12)
+        .withWhere({
+          operator: "And",
+          operands: where,
+        })
+        .withFields(
+          searchFields
         )
         .do();
 
 
-      //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
+        resultsBm25 = await PsRagDocumentVectorStore.client.graphql
+        .get()
+        .withClassName("RagDocumentChunk")
+        .withBm25({ 'query':query })
+        .withLimit(2)
+        .withFields(searchFields)
+        .do();
 
-      return results.data.Get.RagDocumentChunk as PsRagChunk[];
+
+        const resultsCombined = await this.mergeUniqueById(resultsBm25.data.Get.RagDocumentChunk, resultsNearText.data.Get.RagDocumentChunk)
+
+        return resultsCombined as PsRagChunk[];
       //return Array.from(ragDocumentsMap.values());
     } catch (err) {
       console.error(err);
       throw err;
     }
   }
+
 
 }

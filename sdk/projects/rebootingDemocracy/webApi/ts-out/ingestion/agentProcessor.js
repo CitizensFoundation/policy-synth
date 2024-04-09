@@ -218,20 +218,17 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             return chunkId;
         };
         for (const source of allDocumentSourcesWithChunks) {
-            // Doublechek if item from fileMetadata.json has already been ingested and if there are duplicated URLs
+            // Doublechek if item from fileMetadata.json has already been ingested
             const ingestDocument = await documentStore.searchDocumentsByUrl(source.url);
             const docVals = ingestDocument.data.Get.RagDocument;
-          
-	    const duplicateUrls = await this.countDuplicateUrls(docVals);
-// continue if there are even duplicates and log them out
+            const duplicateUrls = await this.countDuplicateUrls(docVals);
             if (duplicateUrls > 0) {
-                console.log(docVals.length, ' length', docVals, source.url);
+                console.log(docVals.length, ' length', docVals, source.hash, source.url);
                 continue;
             }
-        // continue if already ingested  
             if (docVals.length > 0)
                 continue;
-	  try {
+            try {
                 const documentId = await documentStore.postDocument(this.transformDocumentSourceForVectorstore(source));
                 if (documentId) {
                     if (source.chunks) {
@@ -435,14 +432,12 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         /*console.log(
           `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
         );*/
-        console.log("weaviateDocumentId",weaviateDocumentId);
-
-	const reRank = false;
-     //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+        // const reRank = false;
+        //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
         if (reRank || metadata.chunks[0].eloRating === undefined) {
-        console.log("in rerank", metadata.chunks[0]);
-	      await this.rankChunks(metadata);
-              await this.saveFileMetadata();
+            console.log("in rerank", metadata.chunks[0]);
+            await this.rankChunks(metadata);
+            await this.saveFileMetadata();
         }
         /*console.log(
           `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`

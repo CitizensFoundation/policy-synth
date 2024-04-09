@@ -205,8 +205,23 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             throw err;
         }
     }
+    async mergeUniqueById(arr1, arr2) {
+        // Helper function to filter duplicates within an array
+        const mergedArray = [...arr1, ...arr2];
+        // Step 2: Filter out duplicates from the merged array
+        const unique = new Map();
+        mergedArray.forEach(item => {
+            const id = item._additional?.id;
+            if (id) {
+                unique.set(id, item);
+            }
+        });
+        // Convert the Map back into an array
+        return Array.from(unique.values());
+    }
     async searchChunksWithReferences(query) {
-        let results;
+        let resultsNearText;
+        let resultsBm25;
         const where = [
             {
                 path: ['compressedContent'],
@@ -214,17 +229,60 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 valueBoolean: false
             }
         ];
-        try {
-            results = await PsRagDocumentVectorStore.client.graphql
-                .get()
-                .withClassName("RagDocumentChunk")
-                .withNearText({ concepts: [query] })
-                .withLimit(12)
-                .withWhere({
-                operator: "And",
-                operands: where,
-            })
-                .withFields(`
+        const searchFields = `
+    title
+    chunkIndex
+    chapterIndex
+    mainExternalUrlFound
+    shortSummary
+    fullSummary
+    relevanceEloRating
+    qualityEloRating
+    substanceEloRating
+    compressedContent
+    _additional { id, distance, certainty }
+
+    inDocument {
+      ... on RagDocument {
+        title
+        url
+        description
+        shortDescription
+        compressedFullDescriptionOfAllContents
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+      }
+    }
+
+    mostRelevantSiblingChunks {
+      ... on RagDocumentChunk {
+        title
+        chapterIndex
+        chunkIndex
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        compressedContent
+      }
+    }
+
+    allSiblingChunks {
+      ... on RagDocumentChunk {
+        title
+        chapterIndex
+        chunkIndex
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        compressedContent
+      }
+    }
+
+    inChunk {
+      ... on RagDocumentChunk {
         title
         chunkIndex
         chapterIndex
@@ -233,59 +291,15 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         fullSummary
         relevanceEloRating
         qualityEloRating
-        substanceEloRating
         compressedContent
-        _additional { id, distance, certainty }
-
-        inDocument {
-          ... on RagDocument {
-            title
-            url
-            description
-            shortDescription
-            compressedFullDescriptionOfAllContents
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-          }
-        }
-
-        mostRelevantSiblingChunks {
-          ... on RagDocumentChunk {
-            title
-            chapterIndex
-            chunkIndex
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            compressedContent
-          }
-        }
-
-        allSiblingChunks {
-          ... on RagDocumentChunk {
-            title
-            chapterIndex
-            chunkIndex
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            compressedContent
-          }
-        }
 
         inChunk {
           ... on RagDocumentChunk {
             title
             chunkIndex
             chapterIndex
-            mainExternalUrlFound
             shortSummary
             fullSummary
-            relevanceEloRating
-            qualityEloRating
             compressedContent
 
             inChunk {
@@ -314,17 +328,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                         shortSummary
                         fullSummary
                         compressedContent
-
-                        inChunk {
-                          ... on RagDocumentChunk {
-                            title
-                            chunkIndex
-                            chapterIndex
-                            shortSummary
-                            fullSummary
-                            compressedContent
-                          }
-                        }
                       }
                     }
                   }
@@ -333,10 +336,31 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             }
           }
         }
-      `)
+      }
+    }
+  `;
+        try {
+            resultsNearText = await PsRagDocumentVectorStore.client.graphql
+                .get()
+                .withClassName("RagDocumentChunk")
+                .withNearText({ concepts: [query] })
+                .withLimit(12)
+                .withWhere({
+                operator: "And",
+                operands: where,
+            })
+                .withFields(searchFields)
                 .do();
-            //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
-            return results.data.Get.RagDocumentChunk;
+            resultsBm25 = await PsRagDocumentVectorStore.client.graphql
+                .get()
+                .withClassName("RagDocumentChunk")
+                .withBm25({ 'query': query })
+                .withLimit(2)
+                .withFields(searchFields)
+                .do();
+            const resultsCombined = await this.mergeUniqueById(resultsBm25.data.Get.RagDocumentChunk, resultsNearText.data.Get.RagDocumentChunk);
+            console.log('combined results',resultsCombined)
+            return resultsCombined;
             //return Array.from(ragDocumentsMap.values());
         }
         catch (err) {
