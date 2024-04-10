@@ -135,10 +135,10 @@ export class RebootingDemocracyChatBotApp extends PolicySynthWebApp {
           width: 100vw;
           height: 100%;
         }
-
-        .themeToggle {
-          margin-bottom: 12px;
-        }
+.menuButton , .lightDarkContainer
+{
+display:none!important;
+}
 
         md-slider {
           width: 220px;
@@ -155,7 +155,17 @@ export class RebootingDemocracyChatBotApp extends PolicySynthWebApp {
           margin-left: 8px;
           margin-right: 8px;
         }
-
+.themeToggle
+{
+margin-bottom: 12px;
+    flex-direction: row;
+    align-items: center;
+    display: flex !important;
+    flex-wrap: nowrap;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: center !important;
+}
         md-menu-item {
           width: 250px;
         }
@@ -257,21 +267,14 @@ export class RebootingDemocracyChatBotApp extends PolicySynthWebApp {
 
   renderApp() {
     return html` <div class="layout vertical">
-      <div class="layout horizontal center-center themeToggle">
+      <div class="layout horizontal center-center themeToggle" style="display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;">
       
       <img src="https://www.citizens.is/wp-content/uploads/2020/01/cf-logo-small-final.jpg" style="height: 100px;margin-top: 8px;margin-left: 16px;margin-right: 16px;"/>
       <div class="wordmark"> Reboot<br>Democracy<br>.AI </div>
-        <div class="flex"></div>
-        <div style="margin-top: 32px;">
-          ${this.renderSavedChatsDropdown()}
-          <md-outlined-button
-            class="menuButton"
-            @click="${this.reset}"
-            >${this.t('New chat')}</md-outlined-button
-          >
-        </div>
-        <div class="flex"></div>
-        <div class="layout horizontal" style="margin-left: 32px">${this.renderThemeToggle(true)}</div>
       </div>
       <rebooting-democracy-chat-bot
         @llm-total-cost-update=${this.handleCostUpdate}
