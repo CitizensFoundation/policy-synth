@@ -1,1 +1,2 @@
 .env
+weaviate_data_*/

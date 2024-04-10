@@ -432,7 +432,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         /*console.log(
           `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
         );*/
-        // const reRank = false;
+        const reRank = false;
         //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
         if (reRank || metadata.chunks[0].eloRating === undefined) {
             console.log("in rerank", metadata.chunks[0]);
