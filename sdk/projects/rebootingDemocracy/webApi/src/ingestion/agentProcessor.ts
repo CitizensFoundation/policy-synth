@@ -685,7 +685,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
     );*/
 
-    // const reRank = false;
+    const reRank = false;
 
 
  //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {

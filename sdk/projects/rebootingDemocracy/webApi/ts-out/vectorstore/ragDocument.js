@@ -359,7 +359,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .withFields(searchFields)
                 .do();
             const resultsCombined = await this.mergeUniqueById(resultsBm25.data.Get.RagDocumentChunk, resultsNearText.data.Get.RagDocumentChunk);
-            console.log('combined results',resultsCombined)
             return resultsCombined;
             //return Array.from(ragDocumentsMap.values());
         }
