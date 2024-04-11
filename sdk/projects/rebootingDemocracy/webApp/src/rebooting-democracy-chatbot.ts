@@ -58,7 +58,9 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
           promptElement.addEventListener('click', () => this.handlePromptClick(promptText));
           promptsContainer.appendChild(promptElement); // Append the prompt to the container
         });
-  promptsContainer.prepend(`Welcome to the Reboot Democracy Bot. Trained on research and writing from the GovLab and the Reboot Blog, I answer your questions about technology, governance and democracy.Type a question you have about AI, democracy and governance in the box below. Here are some sample prompts to get you started!`)
+ const introText: HTMLDivElement = document.createElement('div');
+ introText.innerHTML = `Welcome to the Reboot Democracy Bot. Trained on research and writing from the GovLab and the Reboot Blog, I answer your questions about technology, governance and democracy.<br> <br>Type a question you have about AI, democracy and governance in the box below. Here are some sample prompts to get you started!`;
+  promptsContainer.prepend(introText);
         // Prepend the container of prompts before the parentElement
         parentElement.prepend(promptsContainer);
 
@@ -212,7 +214,7 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
 
 
         .chat-window {
-          height: 85vh;
+          height: 78vh;
           width: 100vw;
           font-family: 'Space Grotesk', monospace!important;
 border: 1px solid #65d0f0;      

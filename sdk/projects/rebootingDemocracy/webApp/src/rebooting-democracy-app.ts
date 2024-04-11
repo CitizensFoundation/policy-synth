@@ -266,16 +266,7 @@ margin-bottom: 12px;
   }
 
   renderApp() {
-    return html` <div class="layout vertical">
-      <div class="layout horizontal center-center themeToggle" style="display: flex;
-    flex-direction: row;
-    justify-content: center;
-    flex-wrap: wrap;
-    align-items: center;">
-      
-      <img src="https://www.citizens.is/wp-content/uploads/2020/01/cf-logo-small-final.jpg" style="height: 100px;margin-top: 8px;margin-left: 16px;margin-right: 16px;"/>
-      <div class="wordmark"> Reboot<br>Democracy<br>.AI </div>
-      </div>
+    return html` 
       <rebooting-democracy-chat-bot
         @llm-total-cost-update=${this.handleCostUpdate}
         @server-memory-id-created=${this.handleServerMemoryIdCreated}
