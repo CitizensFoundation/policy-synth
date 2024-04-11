@@ -374,39 +374,39 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
     }
   `
 
-    try {
-      resultsNearText = await PsRagDocumentVectorStore.client.graphql
-        .get()
-        .withClassName("RagDocumentChunk")
-        .withNearText({ concepts: [query] })
-        .withLimit(12)
-        .withWhere({
-          operator: "And",
-          operands: where,
-        })
-        .withFields(
-          searchFields
-        )
-        .do();
 
+try {
+  // Start both promises simultaneously and wait for all to finish
+  const [resultsNearText, resultsBm25] = await Promise.all([
+    PsRagDocumentVectorStore.client.graphql
+      .get()
+      .withClassName("RagDocumentChunk")
+      .withNearText({ concepts: [query] })
+      .withLimit(12)
+      .withWhere({
+        operator: "And",
+        operands: where,
+      })
+      .withFields(searchFields)
+      .do(),
+    PsRagDocumentVectorStore.client.graphql
+      .get()
+      .withClassName("RagDocumentChunk")
+      .withBm25({ 'query': query })
+      .withLimit(2)
+      .withFields(searchFields)
+      .do()
+  ]);
 
-        resultsBm25 = await PsRagDocumentVectorStore.client.graphql
-        .get()
-        .withClassName("RagDocumentChunk")
-        .withBm25({ 'query':query })
-        .withLimit(2)
-        .withFields(searchFields)
-        .do();
+  // Assuming mergeUniqueById is already defined and can be used here directly
+  const resultsCombined = await this.mergeUniqueById(resultsBm25.data.Get.RagDocumentChunk, resultsNearText.data.Get.RagDocumentChunk);
 
+  return resultsCombined as PsRagChunk[];
+} catch (err) {
+  console.error(err);
+  throw err;
+}
 
-        const resultsCombined = await this.mergeUniqueById(resultsBm25.data.Get.RagDocumentChunk, resultsNearText.data.Get.RagDocumentChunk)
-
-        return resultsCombined as PsRagChunk[];
-      //return Array.from(ragDocumentsMap.values());
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
   }
 
 
