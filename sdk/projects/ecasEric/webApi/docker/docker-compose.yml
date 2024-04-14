@@ -11,7 +11,7 @@ x-collective-policy-synth-common: &collective-policy-synth-common
     - client-app-dist:/usr/src/webApps/dist
   command: node ts-out/server.js
   healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
+    test: ["CMD", "curl", "-f", "http://localhost:4078/api/project/healthcheck"]
     interval: 30s
     timeout: 20s
     retries: 3
@@ -60,9 +60,9 @@ services:
   collective-policy-synth-1:
     <<: *collective-policy-synth-common
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
+      test: ["CMD", "curl", "-f", "http://localhost:4078/api/project/healthcheck"]
     environment:
-      - PORT=9080
+      - PORT=4078
 
   weaviate:
     command:

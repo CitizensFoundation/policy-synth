@@ -23,8 +23,8 @@ COPY --chown=node:node ./sdk/projects/ecasEric/webApi .
 # Copy your webApps directory to the WORKDIR
 COPY --chown=node:node ./sdk/projects/ecasEric/webApp .
 
-ENV PORT=9080
+ENV PORT=4078
 
-EXPOSE 9080
+EXPOSE 4078
 
 CMD [ "node", "ts-out/server.js" ]
