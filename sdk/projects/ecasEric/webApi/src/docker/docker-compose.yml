@@ -1,0 +1,96 @@
+version: '3.9'
+
+x-collective-policy-synth-common: &collective-policy-synth-common
+  env_file: .env
+  restart: always
+  build:
+    context: ../../../../.
+    dockerfile: sdk/projects/ecasEric/webApi/docker/policy-synth/Dockerfile
+  image: policy-synth-ecasEric:current
+  volumes:
+    - client-app-dist:/usr/src/webApps/dist
+  command: node dist/server.js
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
+    interval: 30s
+    timeout: 20s
+    retries: 3
+  network_mode: host
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "2000"
+      max-size: "25m"
+
+services:
+  redis_db:
+    image: redis:6.2.13-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    network_mode: host
+    volumes:
+      - redis-db-data:/data
+
+  webserver:
+    container_name: webserver
+    restart: always
+    env_file: .env
+    build:
+      context: ./webserver/
+      dockerfile: Dockerfile
+    #ports:
+    #  - "80:80"
+    #  - "443:443"
+    volumes:
+      - webserver:/home
+      - client-app-dist:/usr/src/webApps/collective-policy-synth/dist
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://${FULL_HOSTNAME}/api/project/healthcheck"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "2000"
+        max-size: "25m"
+
+  collective-policy-synth-1:
+    <<: *collective-policy-synth-common
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
+    environment:
+      - PORT=9080
+
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.24.1
+    ports:
+    - 8080:8080
+    - 50051:50051
+    volumes:
+    - weaviate_data:/home/robert/data/weaviate_ps_chatbot
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 50
+      DISK_USE_READONLY_PERCENTAGE: 0
+      DISK_USE_WARNING_PERCENTAGE: 0
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      DEFAULT_VECTORIZER_MODULE: text2vec-openai
+      ENABLE_MODULES: ' text2vec-openai'
+      OPENAI_APIKEY: ${OPENAI_API_KEY}
+      CLUSTER_HOSTNAME: 'node1'
+volumes:
+  webserver:
+  client-app-dist:
+  redis-db-data:
+    driver: local
+  weaviate_data:

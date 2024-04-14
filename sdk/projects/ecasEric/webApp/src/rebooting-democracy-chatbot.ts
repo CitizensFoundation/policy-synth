@@ -27,7 +27,7 @@ export class EcasYeaChatBot extends PsChatAssistant {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this.defaultInfoMessage = this.t("I'm your helpful web Rebooting Democracy assistant");
+    this.defaultInfoMessage = this.t("Hello I'm Eric your assistant, how can I help you with question about EU Residence right of third country nationals who are EU citizen’s family members?");
     this.textInputLabel = this.t('Your question on EU Residence right of third country nationals who are EU citizen’s family member?');
     this.serverApi = new ResearchServerApi();
   }

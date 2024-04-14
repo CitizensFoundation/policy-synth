@@ -8,7 +8,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@policysynth/webapp": "^1.2.1"
+    "@policysynth/webapp": "^1.2.1",
+    "rollup-plugin-commonjs": "^10.1.0"
   },
   "scripts": {
     "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
@@ -31,7 +32,6 @@
   },
   "type": "module",
   "devDependencies": {
-    "rollup-plugin-copy": "^3.5.0",
     "@babel/plugin-transform-runtime": "^7.18.10",
     "@babel/preset-env": "^7.16.6",
     "@babel/runtime": "^7.18.9",
@@ -69,6 +69,7 @@
     "rimraf": "^4.2.0",
     "rollup": "^2.78.1",
     "rollup-plugin-analyzer": "^4.0.0",
+    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-workbox": "^6.2.0",
     "sinon": "^15.0.1",
