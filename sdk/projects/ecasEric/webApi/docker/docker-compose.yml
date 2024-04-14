@@ -6,7 +6,7 @@ x-collective-policy-synth-common: &collective-policy-synth-common
   build:
     context: ../../../../.
     dockerfile: sdk/projects/ecasEric/webApi/docker/policy-synth/Dockerfile
-  image: policy-synth-ecasEric:current
+  image: policy-synth-ecas-eric:current
   volumes:
     - client-app-dist:/usr/src/webApps/dist
   command: node dist/server.js
