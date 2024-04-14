@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:20
 
 LABEL maintainer="Robert Vidar Bjarnason <robert@citizens.is>"
 

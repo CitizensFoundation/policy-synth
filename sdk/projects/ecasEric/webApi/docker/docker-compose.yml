@@ -4,12 +4,12 @@ x-collective-policy-synth-common: &collective-policy-synth-common
   env_file: .env
   restart: always
   build:
-    context: ../../../../.
+    context: ../../../../../.
     dockerfile: sdk/projects/ecasEric/webApi/docker/policy-synth/Dockerfile
   image: policy-synth-ecas-eric:current
   volumes:
     - client-app-dist:/usr/src/webApps/dist
-  command: node dist/server.js
+  command: node ts-out/server.js
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:9080/api/project/healthcheck"]
     interval: 30s
