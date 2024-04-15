@@ -67,6 +67,7 @@ export class PolicySynthApiApp {
   }
 
   setupStaticPaths() {
+    console.log("Setting up static paths api original");
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
 

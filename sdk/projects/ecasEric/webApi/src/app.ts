@@ -8,7 +8,7 @@ import { PolicySynthApiApp } from '@policysynth/api/app.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export class EcasYeaServerApi extends PolicySynthApiApp {
-  setupStaticPaths() {
+  override setupStaticPaths() {
     console.log("Setting up static paths");
     console.log(`__dirname: ${__dirname}`);
 
