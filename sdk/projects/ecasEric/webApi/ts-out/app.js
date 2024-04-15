@@ -5,8 +5,8 @@ import { PolicySynthApiApp } from '@policysynth/api/app.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class EcasYeaServerApi extends PolicySynthApiApp {
     setupStaticPaths() {
-        this.app.use(express.static(path.join(__dirname, "../webApp/dist")));
-        this.app.use("/projects*", express.static(path.join(__dirname, "../webApp/dist")));
+        this.app.use(express.static(path.join(__dirname, "../dist")));
+        this.app.use("/chat*", express.static(path.join(__dirname, "../dist")));
     }
 }
 //# sourceMappingURL=app.js.map

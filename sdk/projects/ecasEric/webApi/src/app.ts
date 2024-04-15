@@ -10,12 +10,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export class EcasYeaServerApi extends PolicySynthApiApp {
   setupStaticPaths() {
     this.app.use(
-      express.static(path.join(__dirname, "../webApp/dist"))
+      express.static(path.join(__dirname, "../dist"))
     );
 
     this.app.use(
-      "/projects*",
-      express.static(path.join(__dirname, "../webApp/dist"))
+      "/chat*",
+      express.static(path.join(__dirname, "../dist"))
     );
   }
 }
