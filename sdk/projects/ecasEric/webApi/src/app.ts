@@ -9,6 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export class EcasYeaServerApi extends PolicySynthApiApp {
   setupStaticPaths() {
+    console.log("Setting up static paths");
+    console.log(`__dirname: ${__dirname}`);
+
     this.app.use(
       express.static(path.join(__dirname, "../webApp/dist"))
     );
