@@ -197,9 +197,11 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   ): void {
     // Get the server memory id from the url
     let path = window.location.pathname;
+    path = path.replace("/chat/", "");
     path = path.replace("chat/", "");
     if (path.length > 1) {
       this.serverMemoryId = path.substring(1);
+      console.log("Server memory id from url: ", this.serverMemoryId);
     }
     if (this.serverMemoryId) {
       this.getChatLogFromServer();
@@ -216,7 +218,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
       this.serverMemoryId
     ) {
       if (this.privateChatLogs && !this.isChatLogIdValid(this.serverMemoryId)) {
-        console.error('Access denied: Chat log ID is not in the saved list.');
+        console.error('Access denied: Chat log ID is not in the saved list.', this.serverMemoryId);
         return; // Prevent access if ID is not valid
       }
 
