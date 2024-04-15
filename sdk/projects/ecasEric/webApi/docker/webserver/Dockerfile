@@ -11,4 +11,7 @@ ADD nginx.conf /etc/nginx/nginx.conf
 ADD self_signed/bundle.pem /root/bundle.pem
 ADD self_signed/private.pem /root/private.pem
 
+# Optionally add .htpasswd file
+ADD .htpasswd /etc/nginx/.htpasswd
+
 EXPOSE 443
