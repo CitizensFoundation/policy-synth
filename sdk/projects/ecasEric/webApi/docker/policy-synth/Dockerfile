@@ -21,7 +21,7 @@ RUN npm install
 COPY --chown=node:node ./sdk/projects/ecasEric/webApi .
 
 # Copy your webApps directory to the WORKDIR
-COPY --chown=node:node ./sdk/projects/ecasEric/webApp .
+COPY --chown=node:node ./sdk/projects/ecasEric/webApp ./webApp
 
 ENV PORT=4078
 
