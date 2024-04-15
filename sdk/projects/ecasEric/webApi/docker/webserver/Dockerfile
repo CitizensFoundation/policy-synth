@@ -11,10 +11,7 @@ ADD nginx.conf /etc/nginx/nginx.conf
 ADD self_signed/bundle.pem /root/bundle.pem
 ADD self_signed/private.pem /root/private.pem
 
-# Optionally add the .htpasswd file
-COPY .htpasswd /tmp/.htpasswd
-COPY add-htpasswd.sh /usr/local/bin/add-htpasswd.sh
-
-RUN /usr/local/bin/add-htpasswd.sh
+# Optionally add .htpasswd file
+ADD .htpass* /etc/nginx/
 
 EXPOSE 443
