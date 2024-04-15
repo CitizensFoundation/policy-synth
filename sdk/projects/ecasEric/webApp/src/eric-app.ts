@@ -9,10 +9,10 @@ import '@material/web/menu/menu.js';
 import { MdMenu } from '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 
-import './rebooting-democracy-chatbot.js';
+import './eric-chatbot.js';
 import { PolicySynthWebApp } from '@policysynth/webapp/ps-app.js';
 import { ResearchServerApi } from './researchServerApi.js';
-import { EcasYeaChatBot } from './rebooting-democracy-chatbot.js';
+import { EcasEricChatBot } from './eric-chatbot.js';
 import { PropertyValueMap } from '@lit/reactive-element';
 
 type SavedChat = {
@@ -20,11 +20,11 @@ type SavedChat = {
   questionSnippet: string;
 };
 
-@customElement('rebooting-democracy-chatbot-app')
+@customElement('eric-chatbot-app')
 export class EcasYeaChatBotApp extends PolicySynthWebApp {
   themeColor = '#004f9f';
-  localStorageThemeColorKey = 'md3-ecas-yea-theme-color';
-  localeStorageChatsKey= "ecas-yea-chats-v1"
+  localStorageThemeColorKey = 'md3-ecas-eric-theme-color';
+  localeStorageChatsKey= "ecas-eric-chats-v1"
 
   @property({ type: Number })
   numberOfSelectQueries = 5;
@@ -34,6 +34,9 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   @property({ type: Number })
   percentOfTopResultsToScan = 0.25;
+
+  @property({ type: Boolean })
+  privateChatLogs = true;
 
   @property({ type: String })
   serverMemoryId: string | undefined;
@@ -72,8 +75,8 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   saveChatToLocalStorage(): void {
     const chatBotElement = this.$$(
-      'rebooting-democracy-chat-bot'
-    ) as EcasYeaChatBot;
+      'eric-chat-bot'
+    ) as EcasEricChatBot;
     if (
       chatBotElement &&
       chatBotElement.chatLog &&
@@ -193,7 +196,8 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     _changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>
   ): void {
     // Get the server memory id from the url
-    const path = window.location.pathname;
+    let path = window.location.pathname;
+    path = path.replace("chat/", "");
     if (path.length > 1) {
       this.serverMemoryId = path.substring(1);
     }
@@ -204,13 +208,18 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   async getChatLogFromServer() {
     const chatBotElemement = this.$$(
-      'rebooting-democracy-chat-bot'
-    ) as EcasYeaChatBot;
+      'eric-chat-bot'
+    ) as EcasEricChatBot;
     if (
       chatBotElemement &&
       chatBotElemement.chatLog.length == 0 &&
       this.serverMemoryId
     ) {
+      if (this.privateChatLogs && !this.isChatLogIdValid(this.serverMemoryId)) {
+        console.error('Access denied: Chat log ID is not in the saved list.');
+        return; // Prevent access if ID is not valid
+      }
+
       const { chatLog, totalCosts } = await this.serverApi.getChatLogFromServer(
         this.serverMemoryId
       );
@@ -237,20 +246,24 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     }
   }
 
+  isChatLogIdValid(serverMemoryId: string): boolean {
+    return this.savedChats.some(chat => chat.serverMemoryId === serverMemoryId);
+  }
+
   handleServerMemoryIdCreated(event: CustomEvent) {
     this.serverMemoryId = event.detail;
-    const path = `/${this.serverMemoryId}`;
-    history.pushState({}, '', path);
+    const path = `/chat/${this.serverMemoryId}`;
+    history.pushState({}, '',path);
     this.saveChatToLocalStorage();
   }
 
   private async loadChatLog(serverMemoryId: string): Promise<void> {
     this.serverMemoryId = serverMemoryId;
     (this.$$(
-      'rebooting-democracy-chat-bot'
-    ) as EcasYeaChatBot).reset();
+      'eric-chat-bot'
+    ) as EcasEricChatBot).reset();
     await this.getChatLogFromServer();
-    const path = `/${this.serverMemoryId}`;
+    const path = `/chat/${this.serverMemoryId}`;
     history.pushState({}, '', path);
     this.requestUpdate();
   }
@@ -271,7 +284,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         <div class="flex"></div>
         <div class="layout horizontal" style="margin-left: 32px">${this.renderThemeToggle(true)}</div>
       </div>
-      <rebooting-democracy-chat-bot
+      <eric-chat-bot
         @llm-total-cost-update=${this.handleCostUpdate}
         @server-memory-id-created=${this.handleServerMemoryIdCreated}
         @start-process=${this.startTimer}
@@ -282,7 +295,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         .numberOfSelectQueries=${this.numberOfSelectQueries}
         .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
         .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}
-      ></rebooting-democracy-chat-bot>
+      ></eric-chat-bot>
 
     </div>`;
   }
@@ -319,7 +332,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   }
 
   reset() {
-    (this.$$('rebooting-democracy-chat-bot') as EcasYeaChatBot).reset();
+    (this.$$('eric-chat-bot') as EcasEricChatBot).reset();
     this.serverMemoryId = undefined;
     this.chatLogFromServer = undefined;
     history.pushState({}, '', '');

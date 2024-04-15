@@ -4,8 +4,8 @@ import { css } from 'lit';
 import { PsChatAssistant } from '@policysynth/webapp/chatBot/ps-chat-assistant.js';
 import { ResearchServerApi } from './researchServerApi.js';
 
-@customElement('rebooting-democracy-chat-bot')
-export class EcasYeaChatBot extends PsChatAssistant {
+@customElement('eric-chat-bot')
+export class EcasEricChatBot extends PsChatAssistant {
   @property({ type: Number })
   defaultDevWsPort = 4078;
 

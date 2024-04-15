@@ -84,11 +84,12 @@
       }
     </style>
 
-    <title>Rebooting Democracy Chatbot</title>
+    <title>ECAS ERIC Chatbot</title>
   </head>
 
   <body>
-    <rebooting-democracy-chatbot-app></rebooting-democracy-chatbot-app>
+    <eric-chatbot-app></eric-chatbot-app>
+    <script type="module" src="./ts-out/src/eric-app.js"></script>
     <script type="module">
       if (!window.ElementInternals) {
         import('./node_modules/element-internals-polyfill/dist/index.js');
@@ -97,6 +98,5 @@
         await import("urlpattern-polyfill");
       }
     </script>
-    <script type="module" src="./ts-out/src/rebooting-democracy-app.js"></script>
   </body>
 </html>
