@@ -18,11 +18,24 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       allImageUrls  documentMetaData\
      _additional { id, distance, confidence }";
   static urlField = "url";
-  
+
+  static weaviateKey =  PsRagDocumentVectorStore.getWeaviateKey();
+
   static client: WeaviateClient = weaviate.client({
     scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
     host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: new weaviate.ApiKey(PsRagDocumentVectorStore.weaviateKey),
+    headers: {
+      'X-OpenAI-Api-Key': process.env.OPENAI_API_KEY,
+    },
   });
+  
+  private static getWeaviateKey(): string {
+    const key = process.env.WEAVIATE_APIKEY || "";  // Provide a default empty string if the key is undefined
+    console.log(`Weaviate API Key: ${key ? 'Retrieved successfully' : 'Not found or is empty'}`);
+    return key;
+  }
+  
 
   roughFastWordTokenRatio: number = 1.25;
   maxChunkTokenLength: number = 500;
@@ -286,6 +299,8 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
         relevanceEloRating
         qualityEloRating
         substanceEloRating
+        allReferencesWithUrls
+        contentType
       }
     }
 

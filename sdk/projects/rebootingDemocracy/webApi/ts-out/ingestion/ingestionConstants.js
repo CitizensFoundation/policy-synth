@@ -13,7 +13,7 @@ const gpt4_TPM = 150000 * 3;
 const gpt4_RPM = 10000 * 3;
 export class PsIngestionConstants {
     static ingestionMainModel = {
-        name: "gpt-4-0125-preview",
+        name: "gpt-4-turbo",
         temperature: 0.0,
         maxOutputTokens: 4095,
         tokenLimit: gpt4TotalTokenLimit,
@@ -24,7 +24,7 @@ export class PsIngestionConstants {
         verbose: true
     };
     static ingestionRankingModel = {
-        name: "gpt-4-0125-preview",
+        name: "gpt-4-turbo",
         temperature: 0.0,
         maxOutputTokens: 3,
         tokenLimit: gpt4TotalTokenLimit,
