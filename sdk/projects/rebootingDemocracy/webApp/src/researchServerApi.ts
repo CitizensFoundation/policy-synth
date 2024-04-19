@@ -22,7 +22,8 @@ export class ResearchServerApi extends YpServerApi {
     percentOfTopQueriesToSearch: number,
     percentOfTopResultsToScan: number
   ): Promise<void> {
-    return this.fetchWrapper(
+	console.log(wsClientId,chatLog)
+    const a= this.fetchWrapper(
       this.baseUrlPath + `/rd_chat/`,
       {
         method: 'PUT',
@@ -37,5 +38,7 @@ export class ResearchServerApi extends YpServerApi {
       },
       false
     ) as Promise<void>;
+	console.log(a);   
+return a
   }
 }

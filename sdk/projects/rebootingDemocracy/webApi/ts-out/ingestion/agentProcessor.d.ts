@@ -29,6 +29,7 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
     processSource(source: PsRagDocumentSource): Promise<void>;
     processFiles(files: string[]): Promise<void>;
+    updateReferencesWithUrls(allReferencesWithUrls: any, newUrls: any): Promise<any>;
     aggregateChunkData: (chunks: LlmDocumentChunksStrategy[]) => string;
     createTreeChunks(metadata: PsRagDocumentSource, cleanedUpData: string): Promise<void>;
     processFilePartTree(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void>;

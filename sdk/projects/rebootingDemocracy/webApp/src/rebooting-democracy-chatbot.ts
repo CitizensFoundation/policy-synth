@@ -204,7 +204,8 @@ export class RebootingDemocracyChatBot extends PsChatAssistant {
     this.textInputLabel = this.t('Ask a question here!');
     
     this.serverApi = new ResearchServerApi();
-    this.prependNewElementWhenAvailable();
+    console.log("am I here?")    
+this.prependNewElementWhenAvailable();
   }
 
   static override get styles() {
@@ -275,7 +276,7 @@ border: 1px solid #65d0f0;
     super.sendChatMessage();
 
     this.addUserChatBotMessage(userMessage);
-    
+
     this.applyStylesForReferences();
     await this.serverApi.conversation(
       this.serverMemoryId,
@@ -285,7 +286,7 @@ border: 1px solid #65d0f0;
       this.percentOfTopQueriesToSearch,
       this.percentOfTopResultsToScan
     );
-  }
-
+ console.log("answer received afterwards!"); 
+ }
 
 }
