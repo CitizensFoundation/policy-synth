@@ -306,6 +306,7 @@ export class RbAiChatElement extends PsAiChatElement {
 
   renderInfo() {
     if (this.wsMessage && this.wsMessage.data && this.wsMessage.data) {
+console.log(this.wsMessage, this.wsMessage.data)
       const data = this.wsMessage.data as PsRagDocumentSourcesWsData;
       if (data.name === 'sourceDocuments') {
         console.error(JSON.stringify(data));

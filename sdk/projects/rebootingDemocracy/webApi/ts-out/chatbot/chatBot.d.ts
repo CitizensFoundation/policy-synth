@@ -5,5 +5,6 @@ export declare class RebootingDemocracyChatBot extends PsBaseChatBot {
     mainStreamingUserPrompt: (latestQuestion: string, context: string) => string;
     sendSourceDocuments(document: PsSimpleDocumentSource[]): void;
     rebootingDemocracyConversation(chatLog: PsSimpleChatLog[], dataLayout: PsIngestionDataLayout): Promise<void>;
+    updateUrls(searchContext: []): Promise<[]>;
 }
 //# sourceMappingURL=chatBot.d.ts.map
