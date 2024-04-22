@@ -289,6 +289,74 @@ border: 1px solid #65d0f0;
     );
   }
 
+   renderSourceDialog() {
+    return html`
+      <md-dialog
+        id="sourceDialog"
+        @closed="${() => this.cancelSourceDialog()}"
+        ?fullscreen="${!this.wide}"
+        class="dialog"
+        id="dialog"
+      >
+        ${this.currentDocumentSourceToDisplay
+          ? html` <div slot="headline">
+                ${this.currentDocumentSourceToDisplay.title}
+              </div>
+              <div slot="content" id="content">
+                <div class="layout vertical">
+                  <div class="layout horizontal center-center">
+                    <img
+                      src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
+                      this.currentDocumentSourceToDisplay.url
+                    )}&sz=24"
+                      slot="icon"
+                      width="24"
+                      height="24"
+                      class="sourceFavIcon"
+                    />
+                  </div>
+                  <div class="currentSourceDescription">
+                    ${this.currentDocumentSourceToDisplay
+                      .compressedFullDescriptionOfAllContents}
+                  </div>
+                  <div class="layout horizontal center-center sourceLinkButton">
+                    ${this.currentDocumentSourceToDisplay.url
+                      .toLowerCase()
+                      .indexOf('.pdf') > -1
+                      ? html`
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                            download
+                          >
+                            <md-filled-button>
+                              ${this.t('Open PDF')}
+                            </md-filled-button>
+                          </a>
+                        `
+                      : html`
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                          >
+                            <md-filled-button>
+                              ${this.t('Visit Website')}
+                            </md-filled-button>
+                          </a>
+                        `}
+                  </div>
+                </div>
+              </div>`
+          : nothing}
+        <div slot="actions">
+          <md-text-button @click="${() => this.cancelSourceDialog()}">
+            ${this.t('cancel')}
+          </md-text-button>
+        </div>
+      </md-dialog>
+    `;
+  }
+
   override render() {
     return html`
       ${this.renderSourceDialog()}
