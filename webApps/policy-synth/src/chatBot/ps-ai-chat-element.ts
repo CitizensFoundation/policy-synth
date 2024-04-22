@@ -43,6 +43,7 @@ export class PsAiChatElement extends YpBaseElement {
     | 'error'
     | 'moderation_error'
     | 'info'
+    | 'welcomeMessage'
     | 'message'
     | 'thinking'
     | 'noStreaming'

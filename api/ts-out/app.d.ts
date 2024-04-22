@@ -8,8 +8,9 @@ export declare class PolicySynthApiApp {
     redisClient: any;
     wsClients: Map<string, WebSocket>;
     constructor(controllers: Array<any>, port?: number | undefined);
-    private initializeMiddlewares;
-    private initializeControllers;
+    setupStaticPaths(): void;
+    initializeMiddlewares(): void;
+    initializeControllers(controllers: Array<any>): void;
     listen(): void;
 }
 //# sourceMappingURL=app.d.ts.map

@@ -25,12 +25,13 @@ Instructions:
   mainStreamingUserPrompt = (
     latestQuestion: string,
     context: string
-  ) => `<LATEST_USER_QUESTION>
-${latestQuestion}</LATEST_USER_QUESTION>
-
-<CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
+  ) => `<CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
 ${context}
 </CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
+
+<LATEST_USER_QUESTION>
+${latestQuestion}
+</LATEST_USER_QUESTION>
 
 Your thoughtful answer in markdown:
 `;

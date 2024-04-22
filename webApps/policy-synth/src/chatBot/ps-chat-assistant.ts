@@ -930,7 +930,7 @@ export class PsChatAssistant extends YpBaseElement {
             class="chatElement bot-chat-element"
             .detectedLanguage="${this.language}"
             .message="${this.defaultInfoMessage}"
-            type="info"
+            type="welcomeMessage"
             sender="bot"
           ></ps-ai-chat-element>
           ${this.chatLog

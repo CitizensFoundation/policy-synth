@@ -48,6 +48,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
           this.numberOfQueriesToGenerate,
           question
         );
+
       const searchQueries =
         await searchQueriesGenerator.generateSearchQueries();
       this.sendAgentCompleted(
