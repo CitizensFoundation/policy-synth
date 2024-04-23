@@ -221,6 +221,20 @@ this.prependNewElementWhenAvailable();
           font-family: 'Space Grotesk', monospace!important;
 border: 1px solid #65d0f0;      
   }
+
+md-icon
+{
+    padding-right: 5px;
+}
+.link-list
+	{
+    color: var(--teal-text);
+    display: flex;
+    align-content: center;
+    justify-content: flex-start;
+    flex-direction: row;
+}
+
         .sample-prompts-container {
           display: flex;
           flex-direction: column;
@@ -352,12 +366,12 @@ interface Reference {
           
                 ${references.length > 0 && this.currentDocumentSourceToDisplay.contentType.includes('json')
                   ? html`
-                <md-list style="max-width: 300px;">
- <md-list-item> <h3 style="color: var(--teal-text);">Links:</h3>
- </md-list-item>
+                <md-list style="max-width: 450px;">
                       ${references.map(ref => html`
  <md-list-item>
-                        <a href="${ref.url}" target="_blank">${ref.reference}</a>    
+                        <a class="link-list" href="${ref.url}" target="_blank"> <md-icon slot="end">open_in_new</md-icon>${ref.reference}
+
+</a>    
 </md-list-item>
                       `)}
 </md-list>
