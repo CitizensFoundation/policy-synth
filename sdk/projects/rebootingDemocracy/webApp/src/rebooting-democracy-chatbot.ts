@@ -1,5 +1,5 @@
 import { customElement, property } from 'lit/decorators.js';
-import { css, html } from 'lit';
+import { css, html, nothing } from 'lit';
 
 import { PsChatAssistant } from '@policysynth/webapp/chatBot/ps-chat-assistant.js';
 import { ResearchServerApi } from './researchServerApi.js';
@@ -289,73 +289,94 @@ border: 1px solid #65d0f0;
     );
   }
 
-   renderSourceDialog() {
-    return html`
-      <md-dialog
-        id="sourceDialog"
-        @closed="${() => this.cancelSourceDialog()}"
-        ?fullscreen="${!this.wide}"
-        class="dialog"
-        id="dialog"
-      >
-        ${this.currentDocumentSourceToDisplay
-          ? html` <div slot="headline">
-                ${this.currentDocumentSourceToDisplay.title}
-              </div>
-              <div slot="content" id="content">
-                <div class="layout vertical">
-                  <div class="layout horizontal center-center">
-                    <img
-                      src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
-                      this.currentDocumentSourceToDisplay.url
-                    )}&sz=24"
-                      slot="icon"
-                      width="24"
-                      height="24"
-                      class="sourceFavIcon"
-                    />
-                  </div>
-                  <div class="currentSourceDescription">
-                    ${this.currentDocumentSourceToDisplay
-                      .compressedFullDescriptionOfAllContents}
-                  </div>
-                  <div class="layout horizontal center-center sourceLinkButton">
-                    ${this.currentDocumentSourceToDisplay.url
-                      .toLowerCase()
-                      .indexOf('.pdf') > -1
-                      ? html`
-                          <a
-                            href="${this.currentDocumentSourceToDisplay.url}"
-                            target="_blank"
-                            download
-                          >
-                            <md-filled-button>
-                              ${this.t('Open PDF')}
-                            </md-filled-button>
-                          </a>
-                        `
-                      : html`
-                          <a
-                            href="${this.currentDocumentSourceToDisplay.url}"
-                            target="_blank"
-                          >
-                            <md-filled-button>
-                              ${this.t('Visit Website')}
-                            </md-filled-button>
-                          </a>
-                        `}
-                  </div>
-                </div>
-              </div>`
-          : nothing}
-        <div slot="actions">
-          <md-text-button @click="${() => this.cancelSourceDialog()}">
-            ${this.t('cancel')}
-          </md-text-button>
-        </div>
-      </md-dialog>
-    `;
+
+renderSourceDialog() {
+
+interface Reference {
+    url: string;
+    reference: string;
+}
+
+  let references: Reference[] = [];
+
+  try {
+    const jsonString = this.currentDocumentSourceToDisplay.allReferencesWithUrls as unknown as string;
+    references = JSON.parse(jsonString) as Reference[];
+  } catch (error) {
+    console.error("Failed to parse references:", error);
   }
+
+  return html`
+    <md-dialog
+      id="sourceDialog"
+      @closed="${() => this.cancelSourceDialog()}"
+      ?fullscreen="${!this.wide}"
+      class="dialog"
+      id="dialog"
+    >
+      ${this.currentDocumentSourceToDisplay
+        ? html`
+          <div slot="headline">
+            ${this.currentDocumentSourceToDisplay.title}
+          </div>
+          <div slot="content" id="content">
+            <div class="layout vertical">
+              <div class="layout horizontal center-center">
+                <img
+                  src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(this.currentDocumentSourceToDisplay.url)}&sz=24"
+                  slot="icon"
+                  width="24"
+                  height="24"
+                  class="sourceFavIcon"
+                />
+              </div>
+              <div class="currentSourceDescription">
+                ${this.currentDocumentSourceToDisplay.compressedFullDescriptionOfAllContents}
+              </div>
+<div class="layout horizontal center-center sourceLinkButton">
+  ${this.currentDocumentSourceToDisplay.url.toLowerCase().indexOf('.pdf') > -1 && !this.currentDocumentSourceToDisplay.contentType.includes('json')
+    ? html`
+      <a href="${this.currentDocumentSourceToDisplay.url}" target="_blank" download>
+        <md-filled-button>${this.t('Open PDF')}</md-filled-button>
+      </a>
+    `
+    : !this.currentDocumentSourceToDisplay.contentType.includes('json')
+      ? html`
+        <a href="${this.currentDocumentSourceToDisplay.url}" target="_blank">
+          <md-filled-button>${this.t('Visit Website')}</md-filled-button>
+        </a>
+      `
+      : nothing
+  }
+
+          
+                ${references.length > 0 && this.currentDocumentSourceToDisplay.contentType.includes('json')
+                  ? html`
+                <md-list style="max-width: 300px;">
+ <md-list-item> <h3 style="color: var(--teal-text);">Links:</h3>
+ </md-list-item>
+                      ${references.map(ref => html`
+ <md-list-item>
+                        <a href="${ref.url}" target="_blank">${ref.reference}</a>    
+</md-list-item>
+                      `)}
+</md-list>
+                  `
+                  : nothing}
+    </div>
+            </div>
+          </div>`
+        : nothing}
+      <div slot="actions">
+        <md-text-button @click="${() => this.cancelSourceDialog()}">
+          ${this.t('cancel')}
+        </md-text-button>
+      </div>
+    </md-dialog>
+  `;
+}
+
+
 
   override render() {
     return html`
