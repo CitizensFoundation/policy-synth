@@ -8,7 +8,7 @@ const app = new PolicySynthApiApp(
     AnalyticsController,
     ChatController
   ],
-  5043,
+9080,
 );
 
 app.listen();

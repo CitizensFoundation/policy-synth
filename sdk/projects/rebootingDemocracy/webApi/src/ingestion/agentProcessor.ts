@@ -37,7 +37,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   dataLayout!: PsIngestionDataLayout;
 
-  constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
+  // constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
+  constructor(dataLayoutPath: string = "https://content.thegovlab.com/flows/trigger/a84e387c-9a82-4bb2-b41f-22780c3826a7") {
     super();
     this.dataLayoutPath = dataLayoutPath;
 
@@ -58,13 +59,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
   async processDataLayout(): Promise<void> {
     await this.loadFileMetadata(); // Load existing metadata to compare against
+
     this.dataLayout = await this.readDataLayout();
+    
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
-    const downloadContent = false;
+    const downloadContent = true;
 
     if (downloadContent) {
-      const browser = await puppeteer.launch({ headless: true });
+      const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
       try {
         this.logger.debug("Launching browser");
 
@@ -95,9 +98,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     }
 
     const filesForProcessing = this.getFilesForProcessing(true);
-    console.log("Files for processing:", filesForProcessing);
-    //await this.processFiles(filesForProcessing);
-
+    await this.processFiles(filesForProcessing);
+    
     const allDocumentSources = this.getMetaDataForAllFiles();
     await this.processAllSources(allDocumentSources);
   }
@@ -350,6 +352,18 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     };
 
     for (const source of allDocumentSourcesWithChunks) {
+      // Doublechek if item from fileMetadata.json has already been ingested
+      const ingestDocument = await documentStore.searchDocumentsByUrl(source.url);
+      const docVals = ingestDocument.data.Get.RagDocument;
+      const duplicateUrls = await this.countDuplicateUrls(docVals);
+      
+      if (duplicateUrls>0)
+      {
+        console.log(docVals.length ,' length', docVals,source.hash, source.url) 
+        continue
+      }
+      if (docVals.length > 0)   continue
+      
       try {
         const documentId = await documentStore.postDocument(
           this.transformDocumentSourceForVectorstore(source)
@@ -383,6 +397,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         console.error(`Failed to post document ${source.url}:\n`, error);
       }
     }
+  }
+  async countDuplicateUrls(data: any[]) {
+    const urlCounts = data.reduce((acc, { url }) => {
+      acc[url] = (acc[url] || 0) + 1;
+      return acc;
+    }, {});
+  
+    return Object.values(urlCounts).filter(count => count > 1).length;
   }
 
   async classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]) {
@@ -491,6 +513,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
         ) {
+
+        //  console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
+        
+
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
             data,
@@ -502,7 +528,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         }
 
         // Cleanup fullContentsColumns in docAnalysis and redo the summaries
-
+        
         const reCleanData = false;
 
         const cleanedUpData =
@@ -535,9 +561,64 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       } catch (error) {
         console.error(`Failed to process file ${filePath}:`, error);
       }
+
+      if(path.extname(filePath).toLowerCase() == ".json")
+        {
+          
+          const response = await fetch(metadataEntry.url);
+          const jsonData = await response.json();
+          const sourceUrls = this.getExternalUrlsFromJson(jsonData)
+      
+      const updatedReferences = await this.updateReferencesWithUrls(metadataEntry.allReferencesWithUrls, sourceUrls);
+
+      console.log(updatedReferences)
+        }
+
     }
     await this.saveFileMetadata();
   }
+
+async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
+    let missingLinkIndex = 1;  // Start counting missing links from 1
+
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    for (const newUrl of newUrls) {
+        const urlExists = allReferencesWithUrls.some(ref => ref.url === newUrl);
+
+        if (!urlExists) {
+            try {
+                const page = await browser.newPage();
+                await page.setUserAgent(IEngineConstants.currentUserAgent);
+                await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
+
+                // Evaluate the title within the page context
+                const title = await page.evaluate(() => {
+                    const metaTitle = document.querySelector('meta[name="title"]');
+                    return metaTitle ? metaTitle.content : document.title;
+                });
+
+                console.log(title);  // Log the title to the console
+
+                const newReference = {
+                    reference: title || `Link${missingLinkIndex}`,
+                    url: newUrl
+                };
+                // Add the new reference to the beginning of the array
+                allReferencesWithUrls.unshift(newReference);
+            } catch (error) {
+                console.error("Failed to fetch URL:", error);
+                const fallbackReference = {
+                    reference: `Link${missingLinkIndex}`,
+                    url: newUrl
+                };
+                allReferencesWithUrls.unshift(fallbackReference);
+            }
+            missingLinkIndex++;
+        }
+    }
+    await browser.close();
+    return allReferencesWithUrls;
+}
 
   aggregateChunkData = (chunks: LlmDocumentChunksStrategy[]): string => {
     return chunks.reduce((acc, chunk) => {
@@ -661,10 +742,14 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const reRank = false;
 
-    if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+
+ //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+        if (reRank || metadata.chunks[0].eloRating === undefined) {
+        console.log("in rerank", metadata.chunks[0]);
       await this.rankChunks(metadata);
       await this.saveFileMetadata();
-    }
+    } 
+    
 
     /*console.log(
       `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
@@ -724,10 +809,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   public getFilesForProcessing(forceProcessing = false): string[] {
     const filesForProcessing: string[] = [];
 
+
     // Compare current fileMetadata with initialFileMetadata
     for (const [fileId, metadata] of Object.entries(this.fileMetadata)) {
+
+      
       console.log(`Checking file ${JSON.stringify(metadata)}`);
+      
       const initialMetadata = this.initialFileMetadata[fileId];
+
       // Check if file is new or has been changed
       if (
         forceProcessing ||
@@ -792,6 +882,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     let dataLayout: PsIngestionDataLayout;
     if (this.dataLayoutPath.startsWith("file://")) {
       const filePath = this.dataLayoutPath.replace("file://", "");
+      
       const data = await fs.readFile(filePath, "utf-8");
       dataLayout = JSON.parse(data);
     } else {

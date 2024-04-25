@@ -8,8 +8,9 @@
     />
     <meta
       name="Description"
-      content="A simple Policy Synth Example."
+      content="A simple Policy Synth Example. for testing."
     />
+    <link rel="stylesheet" href="https://rebootdemocracy.ai/assets/index.991bb421.css">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script
@@ -57,16 +58,18 @@
     />
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Lato&family=Cabin&family=Roboto+Condensed&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Red+Hat+Text:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
       rel="stylesheet"
     />
-
+<link rel="stylesheet" href="https://rebootdemocracy.ai/assets/index.991bb421.css">
     <link
       rel="icon"
       type="image/png"
       sizes="256x256"
       href="https://cps-images.citizens.is/icons/cpsfavtest2.png"
     />
+
+<link rel="stylesheet" href="https://kit.fontawesome.com/59ddbfe387.css" crossorigin="anonymous">
 
     <base href="/" />
 
@@ -75,20 +78,149 @@
       body {
         margin: 0;
         padding: 0;
-        font-family: 'Lato', sans-serif;
+
+        font-family: 'Space Grotesk', monospace!important;
         background-color: var(--md-sys-color-surface, #fefefe);
+        --md-icon-font: 'Material Symbols Rounded';
+        --md-sys-color-primary:#04787f!important; 
+        --md-sys-color-on-primary: #ffffff; 
+        --md-sys-color-primary-container: transparent!important; 
+        --md-sys-color-on-primary-container: #ffffff00; 
+        --md-sys-color-secondary: #000!important; 
+        --md-sys-color-on-secondary: #ffffff; 
+        --md-sys-color-secondary-container: #ffdad4;
+        --md-sys-color-on-secondary-container: #6d6867; 
+        --md-sys-color-tertiary: #705c2e; 
+        --md-sys-color-on-tertiary: #ffffff; 
+        --md-sys-color-tertiary-container: #fbdfa6; 
+        --md-sys-color-on-tertiary-container: #251a00; 
+        --md-sys-color-error: #ba1a1a; 
+        --md-sys-color-on-error: #ffffff; 
+        --md-sys-color-error-container: #ffdad6; 
+        --md-sys-color-on-error-container: #410002;
+        --md-sys-color-background: #fffbff; 
+        --md-sys-color-on-background: #201a19; 
+        --md-sys-color-surface: #fffbff; 
+        --md-sys-color-on-surface: #201a19; 
+        --md-sys-color-surface-variant: #f5ddda; 
+        --md-sys-color-on-surface-variant: #534341; 
+        --md-sys-color-outline: #857370; 
+        --md-sys-color-outline-variant: #d8c2be; 
+        --md-sys-color-shadow: #000000; 
+        --md-sys-color-scrim: #000000; 
+        --md-sys-color-inverse-surface: #362f2e;
+         --md-sys-color-inverse-on-surface: #fbeeec;
+         --md-sys-color-inverse-primary: #ffb4a8;
+         --md-outlined-text-field-input-text-font: 'Space Grotesk'!important;
+         --md-elevated-button-label-text-font: 'Space Grotesk'!important;
+         --md-sys-typescale-label-large-font:  'Space Grotesk'!important;
+         --md-ref-typeface-plain: 'Space Grotesk'!important;
+         --_label-text-font: 'Space Grotesk'!important;
+         --md-dialog-supporting-text-font: 'Space Grotesk'!important;
+         --md-sys-typescale-body-medium-font: 'Space Grotesk'!important;
+         --md-ref-typeface-plain: 'Space Grotesk'!important;
+         --_label-text-font : 'Space Grotesk'!important;
+         --md-filled-button-label-text-font : 'Space Grotesk'!important;
+         --md-sys-typescale-label-large-font: 'Space Grotesk'!important;
+         --md-ref-typeface-plain: 'Space Grotesk'!important;
+--md-elevated-button-container-color:#fff!important;
+--md-sys-color-surface-container-low:#fff!important;
+--md-sys-color-surface-container: #fff!important;
+--md-dialog-headline-font: 'Space Grotesk'!important;
+--md-sys-typescale-headline-small-font: 'Space Grotesk'!important;
+--md-ref-typeface-brand: 'Space Grotesk'!important;         
+--md-dialog-container-color:#fff!important;
+--md-sys-color-surface-container-high:#fff!important;
+
+         
+
+      }
+      md-elevated-button, .sourceButton
+      {
+        display: flex!important;
+    width: 250px!important;
+    height: 80px!important;
+    padding: 12px!important;
+    flex-direction: column!important;
+    justify-content: space-between!important;
+    align-items: flex-start!important;
+    flex-shrink: 0!important;
+    background-color: #fff!important;
+    border: 1px solid black!important;
+    border-radius: 0 !important;
+    white-space: collapse balance!important;
+    font-size: 12px!important;
+      }
+      input {
+        font-family: 'Space Grotesk', sans-serif!important;
       }
 
+      .close-button {
+            display: none;
+        }
       :root {
         --md-icon-font: 'Material Symbols Rounded';
+        font-family: 'Space Grotesk', sans-serif!important;
       }
+      :host{
+        font-family: 'Space Grotesk', sans-serif!important;
+      }
+      .content ::slotted(*)
+      {
+        font-family: 'Space Grotesk', sans-serif!important;
+      }
+
+.top-container 
+{
+padding: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    /* height: 85vh; */
+    max-width: 100vw;
+    align-content: flex-end;
+    align-items: center;
+}
+
+
+.wordmark
+{
+    text-decoration: none;
+    color: #000;
+
+}
+@media screen and (max-width: 767px) {
+.bot-header
+{
+    width: 100%;
+}
+.top-container
+{
+flex-wrap: wrap;
+}
+}
     </style>
 
     <title>Rebooting Democracy Chatbot</title>
   </head>
 
   <body>
+<i onclick="closeWindow()"  id="closeButton"  class="fa-regular close-button fa-circle-xmark bot-close"></i>
+<div class="top-container">
+<a href="https://rebootdemocracy.ai" class="wordmark">Reboot<br>Democracy<br>.AI </a>
+<div><a href="https://www.citizens.is" target="_blank"><img src="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png" style="height: 50px;/* margin-top:8px; *//* margin-left:16;/* margin-right:16px; */t:16px">
+
+</a><br>Policy Synth</div>
+
+<div class="bot-header"> <h4 style="
+    /* width: 800px; */
+">The Reboot Bot<br><div style="font-size:.9rem;font-weight:400">Your Personal Participatory Democracy Assistant</div></h4> </div></div>
     <rebooting-democracy-chatbot-app></rebooting-democracy-chatbot-app>
+<div style="padding: 10px;display: flex;flex-direction: row;justify-content: space-evenly;flex-wrap: wrap;/* height: 85vh; */max-width: 100vw;align-content: flex-end;align-items: center;"><p class="bot-feedback">Have feedback about this tool? Email us at hello@thegovlab.org</p><p class="bot-feedback"><i>Powered by ChatGPT.</i><br>The use of this chatbot is governed by <a href="https://openai.com/policies" target="blank">OpenAI's terms of use </a>. <br>Do not enter any personally identifiable information. </p>
+
+</div>
+
+
     <script type="module">
       if (!window.ElementInternals) {
         import('./node_modules/element-internals-polyfill/dist/index.js');
@@ -96,6 +228,23 @@
       if (!window.URLPattern) {
         await import("urlpattern-polyfill");
       }
+    </script>
+ <script>
+
+window.addEventListener('message', function(event) {
+            // Check for the openerScript property in the message
+	console.log('message',event)            
+console.log( document.getElementById('closeButton').style.display)
+if (event.data.openerScript) {
+                document.getElementById('closeButton').style.display = 'block';
+console.log( document.getElementById('closeButton').style.display)            
+}
+        }, false);
+
+        function closeWindow() {
+            window.close();
+            // Attempting to focus the opener window might not work across all browsers due to security restrictions
+        }
     </script>
     <script type="module" src="./ts-out/src/rebooting-democracy-app.js"></script>
   </body>

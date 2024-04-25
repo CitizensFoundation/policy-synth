@@ -17,10 +17,25 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       contentType allReferencesWithUrls allOtherReferences \
       allImageUrls  documentMetaData\
      _additional { id, distance, confidence }";
+  static urlField = "url";
+
+  static weaviateKey =  PsRagDocumentVectorStore.getWeaviateKey();
+
   static client: WeaviateClient = weaviate.client({
     scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",
     host: process.env.WEAVIATE_HOST || "localhost:8080",
+    apiKey: new weaviate.ApiKey(PsRagDocumentVectorStore.weaviateKey),
+    headers: {
+      'X-OpenAI-Api-Key': process.env.OPENAI_API_KEY,
+    },
   });
+  
+  private static getWeaviateKey(): string {
+    const key = process.env.WEAVIATE_APIKEY || "";  // Provide a default empty string if the key is undefined
+    console.log(`Weaviate API Key: ${key ? 'Retrieved successfully' : 'Not found or is empty'}`);
+    return key;
+  }
+  
 
   roughFastWordTokenRatio: number = 1.25;
   maxChunkTokenLength: number = 500;
@@ -168,7 +183,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
   }
 
   async searchDocuments(
-    query: string
+    query: string,
   ): Promise<PsRagDocumentSourceGraphQlResponse> {
     const where: any[] = [];
 
@@ -193,10 +208,67 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     return results as PsRagDocumentSourceGraphQlResponse;
   }
 
+async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlResponse> {
+    const where: any[] = [
+      {
+        operator: "Or",
+        operands: [
+          {
+            operator: "Equal",
+            path: ["url"],
+            valueString: docUrl
+          }
+        ]
+      }
+    ];
+  
+    try {
+      let results = await PsRagDocumentVectorStore.client.graphql
+        .get()
+        .withClassName("RagDocument")
+        .withWhere(where[0] as any)
+        .withFields(PsRagDocumentVectorStore.urlField)
+        .do();
+  
+      // Check if results are empty or null and handle accordingly
+      if (!results || results.length === 0) {
+        console.log('No documents found. Database might be empty for this query.');
+        // Handle the empty db scenario here, such as continuing with your process
+        return null; // Or however you wish to handle this scenario
+      }
+  
+      return results as PsRagDocumentSourceGraphQlResponse;
+    } catch (err) {
+      // Handle different errors differently, e.g., schema errors, network errors, etc.
+      console.error('Error while querying documents:', err);
+      throw err;
+    }
+  }  
+
+ async mergeUniqueById(arr1:[], arr2:[]) {
+    // Helper function to filter duplicates within an array
+    const mergedArray = [...arr1, ...arr2];
+
+    // Step 2: Filter out duplicates from the merged array
+    const unique = new Map();
+    mergedArray.forEach(item => {
+      const id = item._additional?.id;
+      if (id) {
+        unique.set(id, item);
+      }
+    });
+  
+    // Convert the Map back into an array
+    return Array.from(unique.values());
+  }
+  
+
   async searchChunksWithReferences(
     query: string
   ): Promise<PsRagChunk[]> {
-    let results;
+    let resultsNearText;
+    let resultsBm25;
+    
     const where: any[] = [
       {
         path: ['compressedContent'],
@@ -204,19 +276,62 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         valueBoolean: false
       }
     ];
+    const searchFields=`
+    title
+    chunkIndex
+    chapterIndex
+    mainExternalUrlFound
+    shortSummary
+    fullSummary
+    relevanceEloRating
+    qualityEloRating
+    substanceEloRating
+    compressedContent
+    _additional { id, distance, certainty }
 
-    try {
-      results = await PsRagDocumentVectorStore.client.graphql
-        .get()
-        .withClassName("RagDocumentChunk")
-        .withNearText({ concepts: [query] })
-        .withLimit(12)
-        .withWhere({
-          operator: "And",
-          operands: where,
-        })
-        .withFields(
-          `
+    inDocument {
+      ... on RagDocument {
+        title
+        url
+        description
+        shortDescription
+        compressedFullDescriptionOfAllContents
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        allReferencesWithUrls
+        contentType
+      }
+    }
+
+    mostRelevantSiblingChunks {
+      ... on RagDocumentChunk {
+        title
+        chapterIndex
+        chunkIndex
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        compressedContent
+      }
+    }
+
+    allSiblingChunks {
+      ... on RagDocumentChunk {
+        title
+        chapterIndex
+        chunkIndex
+        fullSummary
+        relevanceEloRating
+        qualityEloRating
+        substanceEloRating
+        compressedContent
+      }
+    }
+
+    inChunk {
+      ... on RagDocumentChunk {
         title
         chunkIndex
         chapterIndex
@@ -225,59 +340,15 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         fullSummary
         relevanceEloRating
         qualityEloRating
-        substanceEloRating
         compressedContent
-        _additional { id, distance, certainty }
-
-        inDocument {
-          ... on RagDocument {
-            title
-            url
-            description
-            shortDescription
-            compressedFullDescriptionOfAllContents
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-          }
-        }
-
-        mostRelevantSiblingChunks {
-          ... on RagDocumentChunk {
-            title
-            chapterIndex
-            chunkIndex
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            compressedContent
-          }
-        }
-
-        allSiblingChunks {
-          ... on RagDocumentChunk {
-            title
-            chapterIndex
-            chunkIndex
-            fullSummary
-            relevanceEloRating
-            qualityEloRating
-            substanceEloRating
-            compressedContent
-          }
-        }
 
         inChunk {
           ... on RagDocumentChunk {
             title
             chunkIndex
             chapterIndex
-            mainExternalUrlFound
             shortSummary
             fullSummary
-            relevanceEloRating
-            qualityEloRating
             compressedContent
 
             inChunk {
@@ -306,17 +377,6 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                         shortSummary
                         fullSummary
                         compressedContent
-
-                        inChunk {
-                          ... on RagDocumentChunk {
-                            title
-                            chunkIndex
-                            chapterIndex
-                            shortSummary
-                            fullSummary
-                            compressedContent
-                          }
-                        }
                       }
                     }
                   }
@@ -325,19 +385,44 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
             }
           }
         }
-      `
-        )
-        .do();
-
-
-      //console.log(JSON.stringify(results.data.Get.RagDocumentChunk, null, 2));
-
-      return results.data.Get.RagDocumentChunk as PsRagChunk[];
-      //return Array.from(ragDocumentsMap.values());
-    } catch (err) {
-      console.error(err);
-      throw err;
+      }
     }
+  `
+
+
+try {
+  // Start both promises simultaneously and wait for all to finish
+  const [resultsNearText, resultsBm25] = await Promise.all([
+    PsRagDocumentVectorStore.client.graphql
+      .get()
+      .withClassName("RagDocumentChunk")
+      .withNearText({ concepts: [query] })
+      .withLimit(12)
+      .withWhere({
+        operator: "And",
+        operands: where,
+      })
+      .withFields(searchFields)
+      .do(),
+    PsRagDocumentVectorStore.client.graphql
+      .get()
+      .withClassName("RagDocumentChunk")
+      .withBm25({ 'query': query })
+      .withLimit(2)
+      .withFields(searchFields)
+      .do()
+  ]);
+
+  // Assuming mergeUniqueById is already defined and can be used here directly
+  const resultsCombined = await this.mergeUniqueById(resultsBm25.data.Get.RagDocumentChunk, resultsNearText.data.Get.RagDocumentChunk);
+
+  return resultsCombined as PsRagChunk[];
+} catch (err) {
+  console.error(err);
+  throw err;
+}
+
   }
+
 
 }

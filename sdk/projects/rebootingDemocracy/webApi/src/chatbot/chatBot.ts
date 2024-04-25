@@ -37,7 +37,15 @@ Your thoughtful answer in markdown:
 `;
 
   sendSourceDocuments(document: PsSimpleDocumentSource[]) {
-    const botMessage = {
+    document.forEach((d,i)=>{
+      if(d.contentType.includes('json'))
+        {
+          const refurls =JSON.parse(d.allReferencesWithUrls) 
+          if(refurls.length>0)document[i].url = refurls[0].url;
+        }
+    })  
+
+  const botMessage = {
       sender: "bot",
       type: "info",
       data: {
@@ -81,12 +89,13 @@ Your thoughtful answer in markdown:
 
     this.sendAgentStart("Searching Rebooting Democracy...");
     const vectorSearch = new PsRagVectorSearch();
-    const searchContext = await vectorSearch.search(
+const searchContextRaw = await vectorSearch.search(
       userLastMessage,
       routingData,
       dataLayout
     );
-
+    const searchContext = await this.updateUrls(searchContextRaw);   
+ console.log("search_context",searchContext);
     console.log("In Rebooting Democracy conversation");
     let messages: any[] = chatLogWithoutLastUserMessage.map(
       (message: PsSimpleChatLog) => {
@@ -119,7 +128,7 @@ Your thoughtful answer in markdown:
     console.log(`Messages to chatbot: ${JSON.stringify(messages, null, 2)}`);
     try {
       const stream = await this.openaiClient.chat.completions.create({
-        model: "gpt-4-0125-preview",
+        model: "gpt-4-turbo",
         messages,
         max_tokens: 4000,
         temperature: 0.0,
@@ -130,5 +139,35 @@ Your thoughtful answer in markdown:
     } catch (err) {
       console.error(`Error in Rebooting Democracy chatbot: ${err}`);
     }
+  }
+
+
+  async updateUrls(searchContext:[]) {
+    const documents = searchContext.documents;
+    let updatedResponseText = searchContext.responseText;
+  
+    documents.forEach((document, index) => {
+      if (document.contentType && document.contentType.includes('json')) {
+        console.log('Original URL:', document.url);
+  
+        // Parse the JSON string of allReferencesWithUrls
+        const refUrls = JSON.parse(document.allReferencesWithUrls);
+  
+        // Check if there are any URLs available to update
+        if (refUrls.length > 0) {
+          // Store the old URL before updating
+          const oldUrl = document.url;
+          // Update the document's URL to the first reference URL
+          // documents[index].url = refUrls[0].url;
+          // Replace the old URL in the responseText with the new URL
+          updatedResponseText = updatedResponseText.replace(oldUrl, refUrls[0].url);
+  
+          console.log('Updated URL:', documents[index].url);
+        }
+      }
+    });
+    searchContext.responseText = updatedResponseText;
+    return searchContext
+    
   }
 }

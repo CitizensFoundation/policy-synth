@@ -11,6 +11,7 @@ async function main() {
         const processor = new RebootingDemocracyIngestionProcessor();
         await processor.processDataLayout();
         console.log("Data layout processing completed successfully.");
+process.exit(0);
     } catch (error) {
         console.error("Failed to process data layout:", error);
     }
