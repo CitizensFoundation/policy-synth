@@ -1,0 +1,222 @@
+{
+  "class": "RagDocument",
+  "description": "An RAG Document",
+  "vectorIndexType": "hnsw",
+  "vectorizer": "text2vec-openai",
+  "moduleConfig": {
+    "text2vec-openai": {
+      "model": "text-embedding-3-large",
+      "vectorizeClassName": true
+    }
+  },
+  "properties": [
+    {
+      "name": "title",
+      "description": "Title of the article",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      },
+      "indexFilterable": true,
+      "indexSearchable": true
+    },
+    {
+      "name": "key",
+      "description": "Unique key for the document",
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "url",
+      "description": "URL of the document",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "date",
+      "description": "Last modified date of the document",
+      "dataType": ["date"]
+    },
+    {
+      "name": "size",
+      "description": "Size of the document",
+      "dataType": ["int"]
+    },
+    {
+      "name": "description",
+      "description": "Description of the document",
+      "dataType": ["text"]
+    },
+    {
+      "name": "shortDescription",
+      "description": "Short description of the document",
+      "dataType": ["text"]
+    },
+    {
+      "name": "fullDescriptionOfAllContents",
+      "description": "Full description of all contents of the document",
+      "dataType": ["text"]
+    },
+    {
+      "name": "compressedFullDescriptionOfAllContents",
+      "description": "Compressed full description of all contents of the document",
+      "dataType": ["text"]
+    },
+    {
+      "name": "contentType",
+      "description": "Content type of the document",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "allReferencesWithUrls",
+      "description": "All references with URLs in the document",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "allOtherReferences",
+      "description": "All other references in the document",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "primaryCategory",
+      "description": "Primary category",
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "secondaryCategory",
+      "description": "Secondary category",
+      "dataType": ["string"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "allImageUrls",
+      "description": "All image URLs in the document",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "documentMetaData",
+      "description": "Meta data of the document",
+      "dataType": ["text"],
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "relevanceEloRating",
+      "description": "Elo rating for relevance",
+      "dataType": ["number"]
+    },
+    {
+      "name": "qualityEloRating",
+      "description": "Elo rating for quality",
+      "dataType": ["number"]
+    },
+    {
+      "name": "substanceEloRating",
+      "description": "Elo rating for substance",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category1EloRating",
+      "description": "Elo rating for category 1",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category2EloRating",
+      "description": "Elo rating for category 2",
+      "dataType": ["number"]
+    },
+    {
+
+      "name": "category3EloRating",
+      "description": "Elo rating for category 3",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category4EloRating",
+      "description": "Elo rating for category 4",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category5EloRating",
+      "description": "Elo rating for category 5",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category6EloRating",
+      "description": "Elo rating for category 6",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category7EloRating",
+      "description": "Elo rating for category 7",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category8EloRating",
+      "description": "Elo rating for category 8",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category9EloRating",
+      "description": "Elo rating for category 9",
+      "dataType": ["number"]
+    },
+    {
+      "name": "category10EloRating",
+      "description": "Elo rating for category 10",
+      "dataType": ["number"]
+    }
+  ],
+  "invertedIndexConfig": {
+    "indexTimestamps": true,
+    "indexNullState": true,
+    "indexPropertyLength": true
+  },
+  "multiTenancyConfig": {
+    "enabled": false
+  }
+}

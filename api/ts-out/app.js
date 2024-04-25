@@ -7,12 +7,16 @@ import RedisStore from "connect-redis";
 import session from "express-session";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { WebSocketServer } from "ws";
 export class PolicySynthApiApp {
+    app;
+    port;
+    httpServer;
+    ws;
+    redisClient;
+    wsClients = new Map();
     constructor(controllers, port = undefined) {
-        this.wsClients = new Map();
         this.app = express();
         this.httpServer = createServer(this.app);
         this.port = port || parseInt(process.env.PORT || "8000");
@@ -49,32 +53,21 @@ export class PolicySynthApiApp {
             });
         });
         this.initializeMiddlewares();
+        this.setupStaticPaths();
         this.initializeControllers(controllers);
     }
-    initializeMiddlewares() {
+    setupStaticPaths() {
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = dirname(__filename);
-        this.app.use(bodyParser.json());
-        const staticHomeHTMLPath = path.join(__dirname, "../../staticHomeHTML");
-        if (fs.existsSync(staticHomeHTMLPath)) {
-            console.log("Serving static home HTML");
-            const filePath = path.join(staticHomeHTMLPath, "index.html");
-            // Check if the index.html file exists
-            if (fs.existsSync(filePath)) {
-                this.app.get("/", (req, res) => {
-                    res.sendFile(filePath);
-                });
-            }
-            else {
-                console.error("index.html does not exist");
-            }
-        }
         this.app.use(express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         this.app.use("/projects*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         this.app.use("/crt*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         this.app.use("/webResearch*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         this.app.use("/policies*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         this.app.use("/solutions*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
+    }
+    initializeMiddlewares() {
+        this.app.use(bodyParser.json());
         this.app.use(session({
             store: new RedisStore({
                 client: this.redisClient,

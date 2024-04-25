@@ -31,7 +31,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         this.userScrolled = false;
         this.currentFollowUpQuestions = '';
         this.programmaticScroll = false;
-        this.showCleanupButton = false;
+        this.showCleanupButtonAtBottom = false;
         this.scrollStart = 0;
         this.defaultDevWsPort = 8000;
         this.api = new BaseChatBotServerApi();
@@ -253,7 +253,6 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 this.lastChatUiElement.spinnerActive = true;
                 break;
             case 'agentStart':
-            case 'validationAgentStart':
                 console.log('agentStart');
                 if (this.lastChatUiElement) {
                     this.lastChatUiElement.spinnerActive = false;
@@ -283,7 +282,6 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 this.fire('server-memory-id-created', wsMessage.data);
                 break;
             case 'agentCompleted':
-            case 'validationAgentCompleted':
                 console.log('agentCompleted...');
                 const completedOptions = wsMessage.data;
                 if (this.lastChatUiElement) {
@@ -319,7 +317,19 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                 this.requestUpdate();
                 break;
             case 'info':
-                this.infoMessage = wsMessage.message;
+                if (wsMessage.message) {
+                    this.infoMessage = wsMessage.message;
+                }
+                else if (wsMessage.data) {
+                    const data = wsMessage.data;
+                    if (data.name === 'sourceDocuments') {
+                        this.fire('source-documents', data.message);
+                        this.addToChatLogWithMessage(wsMessage);
+                    }
+                    if (this.lastChatUiElement) {
+                        this.lastChatUiElement.spinnerActive = false;
+                    }
+                }
                 break;
             case 'moderation_error':
                 wsMessage.message =
@@ -378,6 +388,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     get simplifiedChatLog() {
         let chatLog = this.chatLog.filter(chatMessage => chatMessage.type != 'thinking' &&
+            chatMessage.type != 'info' &&
             chatMessage.type != 'noStreaming' &&
             chatMessage.message);
         return chatLog.map(chatMessage => {
@@ -435,9 +446,9 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         }
 
         .you-chat-element {
-          align-self: flex-end;
+          align-self: flex-start;
           max-width: 80%;
-          justify-content: flex-end;
+          justify-content: flex-start;
           margin-right: 32px;
         }
 
@@ -457,7 +468,6 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
 
         @media (max-width: 600px) {
           .chat-window {
-            height: 100%;
           }
 
           .you-chat-element {
@@ -483,6 +493,29 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
           margin-right: 16px;
         }
 
+        .currentSourceTitle {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 4px;
+        }
+
+        .currentSourceDescription {
+          margin-top: 8px;
+          margin-bottom: 8px;
+        }
+
+        .sourceLinkButton {
+          margin-top: 16px;
+          margin-bottom: 320px;
+        }
+
+        .currentSourceUrl {
+          max-width: 40ch;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 12px;
+        }
+
         md-outlined-text-field {
           flex: 1;
           border-radius: 10px;
@@ -496,8 +529,8 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
         }
 
         .chatElement[thinking] {
-          margin-top: 8px;
-          margin-bottom: 0px;
+          margin-top: 16px;
+          margin-bottom: 8px;
         }
 
         @media (max-width: 960px) {
@@ -569,7 +602,7 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
     }
     renderChatInput() {
         return html `
-      ${this.showCleanupButton
+      ${this.showCleanupButtonAtBottom
             ? html `
         <md-outlined-icon-button
           class="restartButton"
@@ -625,15 +658,98 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
           >`}
     `;
     }
+    cancelSourceDialog() {
+        this.currentDocumentSourceToDisplay = undefined;
+        const dialog = this.$$('#sourceDialog');
+        dialog.open = false;
+    }
+    openSourceDialog(event) {
+        this.currentDocumentSourceToDisplay = event.detail;
+        this.requestUpdate();
+        const dialog = this.$$('#sourceDialog');
+        dialog.open = true;
+    }
+    stripDomainForFacIcon(url) {
+        let domain = url.split('/')[2];
+        console.error(`Domain is ${domain}`);
+        return domain;
+    }
+    renderSourceDialog() {
+        return html `
+      <md-dialog
+        id="sourceDialog"
+        @closed="${() => this.cancelSourceDialog()}"
+        ?fullscreen="${!this.wide}"
+        class="dialog"
+        id="dialog"
+      >
+        ${this.currentDocumentSourceToDisplay
+            ? html ` <div slot="headline">
+                ${this.currentDocumentSourceToDisplay.title}
+              </div>
+              <div slot="content" id="content">
+                <div class="layout vertical">
+                  <div class="layout horizontal center-center">
+                    <img
+                      src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(this.currentDocumentSourceToDisplay.url)}&sz=24"
+                      slot="icon"
+                      width="24"
+                      height="24"
+                      class="sourceFavIcon"
+                    />
+                  </div>
+                  <div class="currentSourceDescription">
+                    ${this.currentDocumentSourceToDisplay
+                .compressedFullDescriptionOfAllContents}
+                  </div>
+                  <div class="layout horizontal center-center sourceLinkButton">
+                    ${this.currentDocumentSourceToDisplay.url
+                .toLowerCase()
+                .indexOf('.pdf') > -1
+                ? html `
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                            download
+                          >
+                            <md-filled-button>
+                              ${this.t('Open PDF')}
+                            </md-filled-button>
+                          </a>
+                        `
+                : html `
+                          <a
+                            href="${this.currentDocumentSourceToDisplay.url}"
+                            target="_blank"
+                          >
+                            <md-filled-button>
+                              ${this.t('Visit Website')}
+                            </md-filled-button>
+                          </a>
+                        `}
+                  </div>
+                </div>
+              </div>`
+            : nothing}
+        <div slot="actions">
+          <md-text-button @click="${() => this.cancelSourceDialog()}">
+            ${this.t('cancel')}
+          </md-text-button>
+        </div>
+      </md-dialog>
+    `;
+    }
     render() {
         return html `
+      ${this.renderSourceDialog()}
       <div class="chat-window" id="chat-window">
         <div class="chat-messages" id="chat-messages">
           <ps-ai-chat-element
+            ?hidden="${!this.defaultInfoMessage}"
             class="chatElement bot-chat-element"
             .detectedLanguage="${this.language}"
             .message="${this.defaultInfoMessage}"
-            type="info"
+            type="welcomeMessage"
             sender="bot"
           ></ps-ai-chat-element>
           ${this.chatLog
@@ -643,9 +759,11 @@ let PsChatAssistant = class PsChatAssistant extends YpBaseElement {
                   ?thinking="${chatElement.type === 'thinking' ||
             chatElement.type === 'noStreaming'}"
                   @followup-question="${this.followUpQuestion}"
+                  @ps-open-source-dialog="${this.openSourceDialog}"
                   .clusterId="${this.clusterId}"
                   class="chatElement ${chatElement.sender}-chat-element"
                   .detectedLanguage="${this.language}"
+                  .wsMessage="${chatElement}"
                   .message="${chatElement.message}"
                   @scroll-down-enabled="${() => (this.userScrolled = false)}"
                   .type="${chatElement.type}"
@@ -688,6 +806,9 @@ __decorate([
     property({ type: Boolean })
 ], PsChatAssistant.prototype, "onlyUseTextField", void 0);
 __decorate([
+    property({ type: Object })
+], PsChatAssistant.prototype, "currentDocumentSourceToDisplay", void 0);
+__decorate([
     property({ type: Number })
 ], PsChatAssistant.prototype, "clusterId", void 0);
 __decorate([
@@ -707,7 +828,7 @@ __decorate([
 ], PsChatAssistant.prototype, "programmaticScroll", void 0);
 __decorate([
     property({ type: Boolean })
-], PsChatAssistant.prototype, "showCleanupButton", void 0);
+], PsChatAssistant.prototype, "showCleanupButtonAtBottom", void 0);
 __decorate([
     property({ type: Number })
 ], PsChatAssistant.prototype, "scrollStart", void 0);

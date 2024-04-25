@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import puppeteer from "puppeteer-extra";
 import { createGzip } from "zlib";
 import { promisify } from "util";
@@ -10,9 +10,12 @@ const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 export class WebPageScanner extends GetWebPagesProcessor {
+    jsonSchemaForResults;
+    systemPromptOverride;
+    collectedWebPages = [];
+    progressFunction;
     constructor(memory) {
         super(undefined, memory);
-        this.collectedWebPages = [];
     }
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         return [
@@ -93,7 +96,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
         });
         this.logger.info("Web Pages Scanner");
         this.totalPagesSave = 0;
-        const browser = await puppeteer.launch({ headless: "new" });
+        const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);

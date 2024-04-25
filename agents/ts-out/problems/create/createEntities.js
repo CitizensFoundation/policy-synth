@@ -1,8 +1,8 @@
-import { BaseProlemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
-export class CreateEntitiesProcessor extends BaseProlemSolvingAgent {
+export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
     async renderRefinePrompt(subProblemIndex, results) {
         const messages = [
             new SystemMessage(`

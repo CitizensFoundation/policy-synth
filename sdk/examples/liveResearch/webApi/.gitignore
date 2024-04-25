@@ -4,3 +4,4 @@ staticHomeHTML/
 backups/
 dist/
 webPagesCache/
+startWithEnv.sh

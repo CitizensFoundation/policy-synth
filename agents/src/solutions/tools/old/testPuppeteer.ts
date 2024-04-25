@@ -1,4 +1,4 @@
-import puppeteer, { Page } from "puppeteer-extra";
+import puppeteer from "puppeteer-extra";
 
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { htmlToText } from "html-to-text";
@@ -7,8 +7,9 @@ import { htmlToText } from "html-to-text";
 import ioredis from "ioredis";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
+import { Page } from "puppeteer";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
@@ -169,7 +170,7 @@ puppeteer.use(StealthPlugin());
 
 let url = "https://edition.cnn.com/2023/07/09/politics/cluster-bombs-ukraine-reaction-cnntv/index.html";
 
-puppeteer.launch({ headless: "new" }).then(async (browser) => {
+puppeteer.launch({ headless: true }).then(async (browser) => {
   const page = await browser.newPage();
 
   if (url.includes("/pdf/") && url.includes("arxiv") && !url.endsWith(".pdf")) {

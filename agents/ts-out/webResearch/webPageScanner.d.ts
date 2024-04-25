@@ -1,4 +1,4 @@
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Page } from "puppeteer";
 import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
 export declare class WebPageScanner extends GetWebPagesProcessor {
@@ -7,7 +7,7 @@ export declare class WebPageScanner extends GetWebPagesProcessor {
     collectedWebPages: any[];
     progressFunction: Function | undefined;
     constructor(memory: PsBaseMemoryData);
-    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
+    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

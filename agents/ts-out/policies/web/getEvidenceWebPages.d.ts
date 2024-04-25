@@ -1,11 +1,10 @@
-import { Page } from "puppeteer";
-import { Browser } from "puppeteer-extra";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { Page, Browser } from "puppeteer";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export declare class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
-    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
+    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (HumanMessage | SystemMessage)[];
     getEvidenceTokenCount(text: string, subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

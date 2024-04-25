@@ -1,51 +1,48 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
 class EvidenceTypeLookup {
+    static evidenceTypeMapping = {
+        positiveEvidence: "allPossiblePositiveEvidenceIdentifiedInTextContext",
+        negativeEvidence: "allPossibleNegativeEvidenceIdentifiedInTextContext",
+        neutralEvidence: "allPossibleNeutralEvidenceIdentifiedInTextContext",
+        economicEvidence: "allPossibleEconomicEvidenceIdentifiedInTextContext",
+        scientificEvidence: "allPossibleScientificEvidenceIdentifiedInTextContext",
+        culturalEvidence: "allPossibleCulturalEvidenceIdentifiedInTextContext",
+        environmentalEvidence: "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
+        legalEvidence: "allPossibleLegalEvidenceIdentifiedInTextContext",
+        technologicalEvidence: "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
+        geopoliticalEvidence: "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
+        caseStudies: "allPossibleCaseStudiesIdentifiedInTextContext",
+        stakeholderOpinions: "allPossibleStakeholderOpinionsIdentifiedInTextContext",
+        expertOpinions: "allPossibleExpertOpinionsIdentifiedInTextContext",
+        publicOpinions: "allPossiblePublicOpinionsIdentifiedInTextContext",
+        historicalContext: "allPossibleHistoricalContextIdentifiedInTextContext",
+        ethicalConsiderations: "allPossibleEthicalConsiderationsIdentifiedInTextContext",
+        longTermImpact: "allPossibleLongTermImpactIdentifiedInTextContext",
+        shortTermImpact: "allPossibleShortTermImpactIdentifiedInTextContext",
+        localPerspective: "allPossibleLocalPerspectiveIdentifiedInTextContext",
+        globalPerspective: "allPossibleGlobalPerspectiveIdentifiedInTextContext",
+        costAnalysis: "allPossibleCostAnalysisIdentifiedInTextContext",
+        implementationFeasibility: "allPossibleImplementationFeasibilityIdentifiedInTextContext",
+    };
     static getPropertyName(evidenceType) {
         return this.evidenceTypeMapping[evidenceType];
     }
 }
-EvidenceTypeLookup.evidenceTypeMapping = {
-    positiveEvidence: "allPossiblePositiveEvidenceIdentifiedInTextContext",
-    negativeEvidence: "allPossibleNegativeEvidenceIdentifiedInTextContext",
-    neutralEvidence: "allPossibleNeutralEvidenceIdentifiedInTextContext",
-    economicEvidence: "allPossibleEconomicEvidenceIdentifiedInTextContext",
-    scientificEvidence: "allPossibleScientificEvidenceIdentifiedInTextContext",
-    culturalEvidence: "allPossibleCulturalEvidenceIdentifiedInTextContext",
-    environmentalEvidence: "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
-    legalEvidence: "allPossibleLegalEvidenceIdentifiedInTextContext",
-    technologicalEvidence: "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
-    geopoliticalEvidence: "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
-    caseStudies: "allPossibleCaseStudiesIdentifiedInTextContext",
-    stakeholderOpinions: "allPossibleStakeholderOpinionsIdentifiedInTextContext",
-    expertOpinions: "allPossibleExpertOpinionsIdentifiedInTextContext",
-    publicOpinions: "allPossiblePublicOpinionsIdentifiedInTextContext",
-    historicalContext: "allPossibleHistoricalContextIdentifiedInTextContext",
-    ethicalConsiderations: "allPossibleEthicalConsiderationsIdentifiedInTextContext",
-    longTermImpact: "allPossibleLongTermImpactIdentifiedInTextContext",
-    shortTermImpact: "allPossibleShortTermImpactIdentifiedInTextContext",
-    localPerspective: "allPossibleLocalPerspectiveIdentifiedInTextContext",
-    globalPerspective: "allPossibleGlobalPerspectiveIdentifiedInTextContext",
-    costAnalysis: "allPossibleCostAnalysisIdentifiedInTextContext",
-    implementationFeasibility: "allPossibleImplementationFeasibilityIdentifiedInTextContext",
-};
 export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
-    constructor() {
-        super(...arguments);
-        this.evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-    }
+    evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     renderEvidenceScanningPrompt(subProblemIndex, policy, type, text) {
         const nameOfColumn = EvidenceTypeLookup.getPropertyName(type);
         if (!nameOfColumn) {
@@ -258,15 +255,15 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
                 ...(data2.allPossibleImplementationFeasibilityIdentifiedInTextContext ||
                     []),
             ],
-            relevanceToPolicyProposal: data1.relevanceToPolicyProposal,
+            relevanceToPolicyProposal: data1.relevanceToPolicyProposal, // Assuming you want data from data1. Adjust as needed.
             confidenceScore: data1.confidenceScore || data2.confidenceScore,
             relevanceScore: data1.relevanceScore || data2.relevanceScore,
             qualityScore: data1.qualityScore || data2.qualityScore,
             tags: [...(data1.tags || []), ...(data2.tags || [])],
             entities: [...(data1.entities || []), ...(data2.entities || [])],
             contacts: [...(data1.contacts || []), ...(data2.contacts || [])],
-            summary: data1.summary,
-            url: data1.url,
+            summary: data1.summary, // Assuming you want the summary from data1. Adjust as needed.
+            url: data1.url, // Assuming you want the url from data1. Adjust as needed.
             searchType: data1.searchType,
             subProblemIndex: data1.subProblemIndex,
             entityIndex: data1.entityIndex,
@@ -375,7 +372,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         await Promise.all(promises);
     }
     async getAllPages() {
-        const browser = await puppeteer.launch({ headless: "new" });
+        const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);

@@ -1,20 +1,17 @@
-import { BaseProlemSolvingAgent } from "./baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
 import { IEngineConstants } from "./constants.js";
-export class BasePairwiseRankingsProcessor extends BaseProlemSolvingAgent {
-    constructor() {
-        super(...arguments);
-        this.prompts = {};
-        this.allItems = {};
-        this.INITIAL_ELO_RATING = 1000;
-        this.K_FACTOR_INITIAL = 60; // Initial K-factor
-        this.K_FACTOR_MIN = 10; // Minimum K-factor
-        this.NUM_COMPARISONS_FOR_MIN_K = 20; // Number of comparisons for K to reach its minimum
-        this.maxNumberOfPrompts = IEngineConstants.maxNumberOfPairwiseRankingPrompts;
-        this.numComparisons = {};
-        this.KFactors = {};
-        this.eloRatings = {};
-        this.progressFunction = undefined;
-    }
+export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
+    prompts = {};
+    allItems = {};
+    INITIAL_ELO_RATING = 1000;
+    K_FACTOR_INITIAL = 60; // Initial K-factor
+    K_FACTOR_MIN = 10; // Minimum K-factor
+    NUM_COMPARISONS_FOR_MIN_K = 20; // Number of comparisons for K to reach its minimum
+    maxNumberOfPrompts = IEngineConstants.maxNumberOfPairwiseRankingPrompts;
+    numComparisons = {};
+    KFactors = {};
+    eloRatings = {};
+    progressFunction = undefined;
     fisherYatesShuffle(array) {
         if (array && array.length > 0) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -182,12 +179,19 @@ export class BasePairwiseRankingsProcessor extends BaseProlemSolvingAgent {
             throw error;
         }
     }
-    getOrderedListOfItems(subProblemIndex, returnEloRatings = false) {
+    getOrderedListOfItems(subProblemIndex, setEloRatings = false, customEloRatingKey = undefined) {
         this.logger.info("Getting ordered list of items");
         let allItems = this.allItems[subProblemIndex];
-        if (returnEloRatings) {
+        if (setEloRatings) {
             for (let i = 0; i < allItems.length; i++) {
-                allItems[i].eloRating = this.eloRatings[subProblemIndex][i];
+                if (customEloRatingKey) {
+                    allItems[i][customEloRatingKey] =
+                        this.eloRatings[subProblemIndex][i];
+                }
+                else {
+                    allItems[i].eloRating =
+                        this.eloRatings[subProblemIndex][i];
+                }
             }
         }
         const orderedItems = allItems.map((item, index) => {

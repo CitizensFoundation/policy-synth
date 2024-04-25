@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { HTTPResponse, Page } from "puppeteer";
-import puppeteer, { Browser } from "puppeteer-extra";
+import puppeteer from "puppeteer-extra";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 
@@ -185,7 +185,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     this.totalPagesSave = 0;
 
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();

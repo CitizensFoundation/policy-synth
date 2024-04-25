@@ -1,6 +1,6 @@
 # RateWebEvidenceProcessor
 
-This class extends `BaseProlemSolvingAgent` to process and rate web evidence related to policy proposals. It utilizes a vector store for evidence web pages and interfaces with language models for generating ratings.
+This class extends `BaseProblemSolvingAgent` to process and rate web evidence related to policy proposals. It utilizes a vector store for evidence web pages and interfaces with language models for generating ratings.
 
 ## Properties
 

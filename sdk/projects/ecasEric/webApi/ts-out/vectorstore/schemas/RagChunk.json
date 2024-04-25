@@ -1,0 +1,37 @@
+{
+  "class": "EcasYeaRagDocumentChunk",
+  "description": "A RAG document chunk",
+  "vectorIndexType": "hnsw",
+  "vectorizer": "text2vec-openai",
+  "moduleConfig": {
+    "text2vec-openai": {
+      "model": "text-embedding-3-large",
+      "vectorizeClassName": true
+    }
+  },
+  "properties": [
+    {
+      "name": "question",
+      "description": "The question",
+      "dataType": ["text"]
+    },
+    {
+      "name": "answer",
+      "description": "The answer",
+      "dataType": ["text"]
+    },
+    {
+      "name": "isEuWideOrCountrySpecific",
+      "description": "isEuWideOrCountrySpecific",
+      "dataType": ["text"]
+    }
+  ],
+  "invertedIndexConfig": {
+    "indexTimestamps": true,
+    "indexNullState": true,
+    "indexPropertyLength": true
+  },
+  "multiTenancyConfig": {
+    "enabled": false
+  }
+}

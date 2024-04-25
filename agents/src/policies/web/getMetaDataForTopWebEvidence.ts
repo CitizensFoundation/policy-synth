@@ -1,5 +1,5 @@
-import { Page } from "puppeteer";
-import puppeteer, { Browser } from "puppeteer-extra";
+import { Page, Browser } from "puppeteer";
+import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 import metascraperFactory from "metascraper";
@@ -13,9 +13,9 @@ import metascraperPublisher from "metascraper-publisher";
 import metascraperTitle from "metascraper-title";
 import metascraperUrl from "metascraper-url";
 
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
@@ -33,10 +33,12 @@ const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
+//TODO: Look into this
+//@ts-ignore
 const metascraper = metascraperFactory([
   metascraperAuthor(),
   metascraperDate(),
@@ -374,7 +376,7 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
   }
 
   async getAllPages() {
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();

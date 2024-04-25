@@ -1,6 +1,6 @@
 import { Job } from "bullmq";
 import { PolicySynthAgentBase } from "./baseAgent.js";
-export declare abstract class BaseProlemSolvingAgent extends PolicySynthAgentBase {
+export declare abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
     memory: PsBaseMemoryData;
     job: Job;
     currentSubProblemIndex: number | undefined;

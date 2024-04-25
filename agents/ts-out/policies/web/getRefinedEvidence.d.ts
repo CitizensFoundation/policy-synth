@@ -1,9 +1,8 @@
-import { Page } from "puppeteer";
-import { Browser } from "puppeteer-extra";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { Page, Browser } from "puppeteer";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
 export declare class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
-    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
+    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (HumanMessage | SystemMessage)[];
     getEvidenceTextAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSRefinedPolicyEvidence>;
     getRefinedEvidenceTextAIAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSRefinedPolicyEvidence>;
     mergeRefinedAnalysisData(data1: PSRefinedPolicyEvidence, data2: PSRefinedPolicyEvidence): PSRefinedPolicyEvidence;

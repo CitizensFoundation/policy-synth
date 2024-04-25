@@ -2,13 +2,10 @@ import { IEngineConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const FORCE_RESEARCH = false;
 export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
-    constructor() {
-        super(...arguments);
-        this.searchCounter = 0;
-    }
+    searchCounter = 0;
     async searchWeb() {
         const problemStatement = this.memory.problemStatement;
         if (!problemStatement.rootCauseSearchResults) {

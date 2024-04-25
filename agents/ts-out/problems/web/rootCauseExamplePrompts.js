@@ -27,6 +27,21 @@ export class RootCauseExamplePrompts {
                 throw new Error("Unknown root cause type");
         }
     }
+    static prompt = `
+  Please analyze the text below to find the root causes for the provided problem statement. Only provide analysis from the text that is directly related to the problem statement and its root causes.  The root causes should relate to the root cause category: historicalRootCause
+
+  Output as JSON in this format [ { rootCauseRelevanceToProblemStatement, allPossibleHistoricalRootCausesIdentifiedInTextContext } ]. Only output the JSON object and nothing else. You should refer to "the website" instead of "the text". rootCauseRelevanceToProblemStatement should be a one-sentence explanation.
+
+  Problem Statement:
+
+  In 2022, only 54% of our 4th graders in Boston, and 63% of 4th graders nationally, achieved basic reading proficiency on the National Assessment of Educational Progress (NAEP). These drastic gaps in reading achievement are due in part to differences in resources and opportunities available to students. While there has been a new national reckoning regarding evidence-based literacy practices and some school districts are changing  curricula, we know that we can serve our students better and make change happen faster.
+
+  <text context>
+
+  </text context>
+
+  Your JSON output:
+  `;
     static renderHistoricalRootCause() {
         return `
     Literacy By Any Means Necessary: The History of Anti-Literacy Laws in the U.S
@@ -620,19 +635,4 @@ export class RootCauseExamplePrompts {
   `;
     }
 }
-RootCauseExamplePrompts.prompt = `
-  Please analyze the text below to find the root causes for the provided problem statement. Only provide analysis from the text that is directly related to the problem statement and its root causes.  The root causes should relate to the root cause category: historicalRootCause
-
-  Output as JSON in this format [ { rootCauseRelevanceToProblemStatement, allPossibleHistoricalRootCausesIdentifiedInTextContext } ]. Only output the JSON object and nothing else. You should refer to "the website" instead of "the text". rootCauseRelevanceToProblemStatement should be a one-sentence explanation.
-
-  Problem Statement:
-
-  In 2022, only 54% of our 4th graders in Boston, and 63% of 4th graders nationally, achieved basic reading proficiency on the National Assessment of Educational Progress (NAEP). These drastic gaps in reading achievement are due in part to differences in resources and opportunities available to students. While there has been a new national reckoning regarding evidence-based literacy practices and some school districts are changing  curricula, we know that we can serve our students better and make change happen faster.
-
-  <text context>
-
-  </text context>
-
-  Your JSON output:
-  `;
 //# sourceMappingURL=rootCauseExamplePrompts.js.map

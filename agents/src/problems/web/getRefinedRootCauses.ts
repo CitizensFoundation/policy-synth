@@ -1,11 +1,11 @@
 import { Page } from "puppeteer";
-import puppeteer, { Browser } from "puppeteer-extra";
+import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { RootCauseExamplePrompts } from "./rootCauseExamplePrompts.js";
@@ -13,7 +13,7 @@ import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
@@ -358,7 +358,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
   }
 
   async getAllPages() {
-    const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({ headless: true });
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();

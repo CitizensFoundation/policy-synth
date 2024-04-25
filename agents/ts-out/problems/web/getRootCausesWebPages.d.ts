@@ -1,11 +1,10 @@
-import { Page } from "puppeteer";
-import { Browser } from "puppeteer-extra";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { Page, Browser } from "puppeteer";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export declare class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
-    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
+    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (HumanMessage | SystemMessage)[];
     getRootCauseTokenCount(text: string, type: PSRootCauseWebPageTypes): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

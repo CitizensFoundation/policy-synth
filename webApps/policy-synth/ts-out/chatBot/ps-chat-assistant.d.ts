@@ -25,13 +25,14 @@ export declare class PsChatAssistant extends YpBaseElement {
     ws: WebSocket;
     inputIsFocused: boolean;
     onlyUseTextField: boolean;
+    currentDocumentSourceToDisplay: PsSimpleDocumentSource | undefined;
     clusterId: number;
     userScrolled: boolean;
     communityId: number;
     textInputLabel: string;
     currentFollowUpQuestions: string;
     programmaticScroll: boolean;
-    showCleanupButton: boolean;
+    showCleanupButtonAtBottom: boolean;
     scrollStart: number;
     serverMemoryId: string | undefined;
     defaultDevWsPort: number;
@@ -69,6 +70,10 @@ export declare class PsChatAssistant extends YpBaseElement {
     reset(): void;
     toggleDarkMode(): void;
     renderChatInput(): import("lit").TemplateResult<1>;
+    cancelSourceDialog(): void;
+    openSourceDialog(event: CustomEvent): void;
+    stripDomainForFacIcon(url: string): string;
+    renderSourceDialog(): import("lit").TemplateResult<1>;
     render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-chat-assistant.d.ts.map

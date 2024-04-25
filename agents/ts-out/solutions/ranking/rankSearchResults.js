@@ -1,13 +1,13 @@
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { HumanMessage, SystemMessage } from "langchain/schema";
+import { ChatOpenAI } from "@langchain/openai";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
-    constructor() {
-        super(...arguments);
-        this.subProblemIndex = 0;
-        this.entitiesIndex = 0;
-    }
+    subProblemIndex = 0;
+    entitiesIndex = 0;
+    currentEntity;
+    searchResultType;
+    searchResultTarget;
     renderProblemDetail() {
         let detail = ``;
         if (this.searchResultTarget === "problemStatement") {

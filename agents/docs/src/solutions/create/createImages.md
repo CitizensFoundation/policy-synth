@@ -1,6 +1,6 @@
 # CreateSolutionImagesProcessor
 
-This class is responsible for creating images for solutions using Stability AI or OpenAI's DALL-E, downloading these images, and uploading them to an S3 bucket. It extends the `BaseProlemSolvingAgent` class.
+This class is responsible for creating images for solutions using Stability AI or OpenAI's DALL-E, downloading these images, and uploading them to an S3 bucket. It extends the `BaseProblemSolvingAgent` class.
 
 ## Properties
 

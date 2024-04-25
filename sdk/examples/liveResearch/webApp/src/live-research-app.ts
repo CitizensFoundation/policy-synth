@@ -78,7 +78,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
       chatBotElement.chatLog &&
       chatBotElement.chatLog.length > 0
     ) {
-      const questionSnippet = chatBotElement.chatLog[0].message.slice(0, 25);
+      const questionSnippet = chatBotElement.chatLog[0].message.slice(0, 40);
       const newChat: SavedChat = {
         serverMemoryId: this.serverMemoryId as string,
         questionSnippet,
@@ -153,6 +153,10 @@ export class LiveResearchApp extends PolicySynthWebApp {
           margin-bottom: 32px;
         }
 
+        md-menu-item {
+          width: 250px;
+        }
+
         .sliderScopes,
         .estTime {
           font-size: 12px;
@@ -221,6 +225,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
               : 'you',
           };
         });
+        this.requestUpdate();
       } else {
         console.error('No chat log from server');
       }
@@ -236,11 +241,15 @@ export class LiveResearchApp extends PolicySynthWebApp {
     this.saveChatToLocalStorage();
   }
 
-  private loadChatLog(serverMemoryId: string): void {
+  private async loadChatLog(serverMemoryId: string): Promise<void> {
     this.serverMemoryId = serverMemoryId;
-    this.getChatLogFromServer();
+    (this.$$(
+      'live-research-chat-bot'
+    ) as LiveResearchChatBot).reset();
+    await this.getChatLogFromServer();
     const path = `/${this.serverMemoryId}`;
     history.pushState({}, '', path);
+    this.requestUpdate();
   }
 
   renderApp() {
@@ -376,7 +385,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
               @change="${this.updateNumberOfQueries}"
             ></md-slider>
             <div class="sliderTitle">
-              ${this.t('Number of search queries')} -
+              ${this.t('Number of search queries')}:
               ${this.numberOfSelectQueries.toString()}
             </div>
           </div>
@@ -392,7 +401,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
               @change="${this.updatePercentOfQueries}"
             ></md-slider>
             <div class="sliderTitle">
-              ${this.t('Use % of top search queries')} -
+              ${this.t('Use % of top search queries')}:
               ${Math.round(this.percentOfTopQueriesToSearch * 100)}%
             </div>
           </div>
@@ -406,7 +415,7 @@ export class LiveResearchApp extends PolicySynthWebApp {
               @change="${this.updatePercentOfResults}"
             ></md-slider>
             <div class="sliderTitle">
-              ${this.t('Use % of top search results')} -
+              ${this.t('Use % of top search results')}:
               ${Math.round(this.percentOfTopResultsToScan * 100)}%
             </div>
           </div>

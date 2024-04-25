@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="Description"
+      content="A simple Policy Synth Example."
+    />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
+      integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script src="https://backbonejs.org/backbone-min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/graphlib/2.0.0/graphlib.min.js"
+      integrity="sha512-upZKfS54zbYU/k0YT7CI31M32Kf4yfRBD3IgxCTN4f79kBz5P7Qy4SA1JDH1ROUNyA7bIm93TfAiWKDicKxP4g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.core.js"
+      integrity="sha512-Qd5fXxlBsJrNmb0gHFxyhUOFDhjbdJzXOys+VhzBYwKZA1QWRDzbY/WmvxjlI0l+uaU65/YgMwkm2wb7B+ukQQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <meta property="og:title" content="Simple Policy Synth Example" />
+    <meta
+      property="og:description"
+      content="A simple Policy Synth Example."
+    />
+    <meta
+      property="og:image"
+      content="https://yrpri-usa-production-direct-assets.s3.amazonaws.com/Robert_Bjarnason_High_quality_abstract_new_high_tech_new_wave.__61a9b3d8-7533-4841-a99e-ef036fed1fbf.png"
+    />
+
+    <!--TODO: Have icons a part of the bundle - maybe rollup plugin?-->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0"
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato&family=Cabin&family=Roboto+Condensed&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="256x256"
+      href="https://cps-images.citizens.is/icons/cpsfavtest2.png"
+    />
+
+    <base href="/" />
+
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Lato', sans-serif;
+        background-color: var(--md-sys-color-surface, #fefefe);
+      }
+
+      :root {
+        --md-icon-font: 'Material Symbols Rounded';
+      }
+    </style>
+
+    <title>Live Research Policy Synth Example</title>
+  </head>
+
+  <body>
+    <live-research-app></live-research-app>
+    <script type="module">
+      if (!window.ElementInternals) {
+        import('./node_modules/element-internals-polyfill/dist/index.js');
+      }
+      if (!window.URLPattern) {
+        await import("urlpattern-polyfill");
+      }
+    </script>
+    <script type="module" src="./ts-out/src/live-research-app.js"></script>
+  </body>
+</html>

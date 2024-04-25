@@ -1,6 +1,9 @@
 import { PolicySynthAgentBase } from "./baseAgent.js";
 import { IEngineConstants } from "./constants.js";
-export class BaseProlemSolvingAgent extends PolicySynthAgentBase {
+export class BaseProblemSolvingAgent extends PolicySynthAgentBase {
+    memory;
+    job;
+    currentSubProblemIndex;
     constructor(job, memory) {
         super();
         this.job = job;

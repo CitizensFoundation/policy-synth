@@ -62,27 +62,14 @@ export class PolicySynthApiApp {
     });
 
     this.initializeMiddlewares();
+    this.setupStaticPaths();
     this.initializeControllers(controllers);
   }
 
-  private initializeMiddlewares() {
+  setupStaticPaths() {
+    console.log("Setting up static paths api original");
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-
-    this.app.use(bodyParser.json());
-    const staticHomeHTMLPath = path.join(__dirname, "../../staticHomeHTML");
-    if (fs.existsSync(staticHomeHTMLPath)) {
-      console.log("Serving static home HTML");
-      const filePath = path.join(staticHomeHTMLPath, "index.html");
-      // Check if the index.html file exists
-      if (fs.existsSync(filePath)) {
-        this.app.get("/", (req, res) => {
-          res.sendFile(filePath);
-        });
-      } else {
-        console.error("index.html does not exist");
-      }
-    }
 
     this.app.use(
       express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
@@ -112,6 +99,10 @@ export class PolicySynthApiApp {
       "/solutions*",
       express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
     );
+  }
+
+  initializeMiddlewares() {
+    this.app.use(bodyParser.json());
 
     this.app.use(
       session({
@@ -143,7 +134,7 @@ export class PolicySynthApiApp {
     }
   }
 
-  private initializeControllers(controllers: Array<any>) {
+  initializeControllers(controllers: Array<any>) {
     controllers.forEach((ControllerClass) => {
       const controller = new ControllerClass(this.wsClients);
       this.app.use("/", controller.router);

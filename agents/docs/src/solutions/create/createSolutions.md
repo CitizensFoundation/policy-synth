@@ -1,6 +1,6 @@
 # CreateSolutionsProcessor
 
-This class extends `BaseProlemSolvingAgent` to create innovative solution components for problems and associated sub-problems. It utilizes various contexts such as General, Scientific, Open Data, and News to inspire the creation of solutions. The class also refines previously generated solutions and ensures the solutions are simple, actionable, innovative, and equitable.
+This class extends `BaseProblemSolvingAgent` to create innovative solution components for problems and associated sub-problems. It utilizes various contexts such as General, Scientific, Open Data, and News to inspire the creation of solutions. The class also refines previously generated solutions and ensures the solutions are simple, actionable, innovative, and equitable.
 
 ## Properties
 

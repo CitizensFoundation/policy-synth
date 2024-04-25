@@ -3,3 +3,4 @@ config/config.json
 staticHomeHTML/
 backups/
 dist/
+startWithEnv.sh

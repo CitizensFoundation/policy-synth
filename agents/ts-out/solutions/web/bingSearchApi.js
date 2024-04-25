@@ -2,8 +2,9 @@ import axios from "axios";
 import { IEngineConstants } from "../../constants.js";
 import { PolicySynthAgentBase } from "../../baseAgent.js";
 import ioredis from "ioredis";
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class BingSearchApi extends PolicySynthAgentBase {
+    SUBSCRIPTION_KEY;
     constructor() {
         super();
         this.SUBSCRIPTION_KEY = process.env.AZURE_BING_SEARCH_KEY;

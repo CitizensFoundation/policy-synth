@@ -1,8 +1,8 @@
-import { HumanMessage, SystemMessage } from "langchain/schema";
-import { BaseProlemSolvingAgent } from "./baseProblemSolvingAgent.js";
-export declare abstract class BasePairwiseRankingsProcessor extends BaseProlemSolvingAgent {
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
+export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
     prompts: Record<number, number[][]>;
-    allItems: Record<number, (IEngineSearchResultItem[] | IEngineSolution[] | IEngineProblemStatement[] | IEngineAffectedEntity[] | IEngineProCon[] | string[]) | undefined>;
+    allItems: Record<number, (PsEloRateable[] | string[]) | undefined>;
     INITIAL_ELO_RATING: number;
     K_FACTOR_INITIAL: number;
     K_FACTOR_MIN: number;
@@ -13,7 +13,7 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProlemSo
     eloRatings: Record<number, Record<number, number>>;
     progressFunction: Function | undefined;
     fisherYatesShuffle(array: any[]): any[];
-    setupRankingPrompts(subProblemIndex: number, allItems: IEngineSearchResultItem[] | IEngineSolution[] | IEngineProblemStatement[] | string[] | IEngineProCon[] | IEngineAffectedEntity[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
+    setupRankingPrompts(subProblemIndex: number, allItems: PsEloRateable[] | string[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
     abstract voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<IEnginePairWiseVoteResults>;
     getResultsFromLLM(subProblemIndex: number, stageName: PsMemoryStageTypes, modelConstant: IEngineBaseAIModelConstants, messages: (HumanMessage | SystemMessage)[], itemOneIndex: number, itemTwoIndex: number): Promise<{
         subProblemIndex: number;
@@ -22,6 +22,6 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProlemSo
     }>;
     getUpdatedKFactor(numComparisons: number): number;
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
-    getOrderedListOfItems(subProblemIndex: number, returnEloRatings?: boolean): (string | IEngineProblemStatement | IEngineSearchResultItem | IEngineProCon | IEngineSolution | IEngineAffectedEntity)[];
+    getOrderedListOfItems(subProblemIndex: number, setEloRatings?: boolean, customEloRatingKey?: string | undefined): (string | PsEloRateable)[];
 }
 //# sourceMappingURL=basePairwiseRanking.d.ts.map

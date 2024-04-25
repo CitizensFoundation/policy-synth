@@ -1,6 +1,6 @@
 # CreateSearchQueriesProcessor
 
-This class extends BaseProlemSolvingAgent to create search queries based on problem statements and affected entities. It generates high-quality search queries for different categories such as General, Scientific, OpenData, and News.
+This class extends BaseProblemSolvingAgent to create search queries based on problem statements and affected entities. It generates high-quality search queries for different categories such as General, Scientific, OpenData, and News.
 
 ## Methods
 
