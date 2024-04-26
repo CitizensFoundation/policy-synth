@@ -29,13 +29,13 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
       'X-OpenAI-Api-Key': process.env.OPENAI_API_KEY,
     },
   });
-  
+
   private static getWeaviateKey(): string {
     const key = process.env.WEAVIATE_APIKEY || "";  // Provide a default empty string if the key is undefined
     console.log(`Weaviate API Key: ${key ? 'Retrieved successfully' : 'Not found or is empty'}`);
     return key;
   }
-  
+
 
   roughFastWordTokenRatio: number = 1.25;
   maxChunkTokenLength: number = 500;
@@ -208,7 +208,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     return results as PsRagDocumentSourceGraphQlResponse;
   }
 
-async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlResponse> {
+async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlResponse | undefined | null> {
     const where: any[] = [
       {
         operator: "Or",
@@ -221,7 +221,7 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
         ]
       }
     ];
-  
+
     try {
       let results = await PsRagDocumentVectorStore.client.graphql
         .get()
@@ -229,23 +229,23 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
         .withWhere(where[0] as any)
         .withFields(PsRagDocumentVectorStore.urlField)
         .do();
-  
+
       // Check if results are empty or null and handle accordingly
-      if (!results || results.length === 0) {
+      if (!results) {
         console.log('No documents found. Database might be empty for this query.');
         // Handle the empty db scenario here, such as continuing with your process
         return null; // Or however you wish to handle this scenario
       }
-  
+
       return results as PsRagDocumentSourceGraphQlResponse;
     } catch (err) {
       // Handle different errors differently, e.g., schema errors, network errors, etc.
       console.error('Error while querying documents:', err);
       throw err;
     }
-  }  
+  }
 
- async mergeUniqueById(arr1:[], arr2:[]) {
+ async mergeUniqueById(arr1:any[], arr2:any[]) {
     // Helper function to filter duplicates within an array
     const mergedArray = [...arr1, ...arr2];
 
@@ -257,18 +257,18 @@ async searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlRe
         unique.set(id, item);
       }
     });
-  
+
     // Convert the Map back into an array
     return Array.from(unique.values());
   }
-  
+
 
   async searchChunksWithReferences(
     query: string
   ): Promise<PsRagChunk[]> {
     let resultsNearText;
     let resultsBm25;
-    
+
     const where: any[] = [
       {
         path: ['compressedContent'],

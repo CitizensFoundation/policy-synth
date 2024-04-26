@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BaseIngestionAgent } from "../ingestion/baseAgent.js";
+import { BaseIngestionAgent } from "@policysynth/agents/rag/ingestion/baseAgent.js";
 export declare class PsRagRouter extends BaseIngestionAgent {
     systemMessageFull: (schema: string, about: string, chatHistory: string) => SystemMessage;
     systemMessage: (schema: string, about: string, chatHistory: string) => SystemMessage;

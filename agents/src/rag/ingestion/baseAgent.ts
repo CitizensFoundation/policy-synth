@@ -3,7 +3,7 @@ import crypto, { createHash } from "crypto";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthAgentBase } from "../../baseAgent.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
 
 export abstract class BaseIngestionAgent extends PolicySynthAgentBase {

@@ -4,19 +4,19 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
-import { DocumentCleanupAgent } from "./docCleanup.js";
-import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
-import { BaseIngestionAgent } from "./baseAgent.js";
-import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
-import { IngestionContentParser } from "./contentParser.js";
-import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
-import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
-import { IngestionChunkRanker } from "./chunkRanker.js";
-import { IngestionDocumentRanker } from "./docRanker.js";
-import { DocumentClassifierAgent } from "./docClassifier.js";
-import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
-import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
-export class IngestionAgentProcessor extends BaseIngestionAgent {
+import { IngestionAgentProcessor } from "@policysynth/agents/rag/ingestion/processor.js";
+import { DocumentCleanupAgent } from "@policysynth/agents/rag/ingestion/docCleanup.js";
+import { DocumentTreeSplitAgent } from "@policysynth/agents/rag/ingestion/docTreeSplitter.js";
+import { IngestionChunkCompressorAgent } from "@policysynth/agents/rag/ingestion/chunkCompressorAgent.js";
+import { IngestionContentParser } from "@policysynth/agents/rag/ingestion/contentParser.js";
+import { DocumentAnalyzerAgent } from "@policysynth/agents/rag/ingestion/docAnalyzer.js";
+import { IngestionChunkAnalzyerAgent } from "@policysynth/agents/rag/ingestion/chunkAnalyzer.js";
+import { IngestionChunkRanker } from "@policysynth/agents/rag/ingestion/chunkRanker.js";
+import { IngestionDocumentRanker } from "@policysynth/agents/rag/ingestion/docRanker.js";
+import { DocumentClassifierAgent } from "@policysynth/agents/rag/ingestion/docClassifier.js";
+import { PsRagDocumentVectorStore } from "@policysynth/agents/rag/vectorstore/ragDocument.js";
+import { PsRagChunkVectorStore } from "@policysynth/agents/rag/vectorstore/ragChunk.js";
+export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcessor {
     dataLayoutPath;
     cachedFiles = [];
     fileMetadataPath = "./src/ingestion/cache/fileMetadata.json";
@@ -27,7 +27,6 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
     chunkCompressor;
     chunkAnalysisAgent;
     docAnalysisAgent;
-    dataLayout;
     // constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
     constructor(dataLayoutPath = "https://content.thegovlab.com/flows/trigger/a84e387c-9a82-4bb2-b41f-22780c3826a7") {
         super();
@@ -51,7 +50,10 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
         this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
         const downloadContent = true;
         if (downloadContent) {
-            const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ["--no-sandbox", "--disable-setuid-sandbox"],
+            });
             try {
                 this.logger.debug("Launching browser");
                 const browserPage = await browser.newPage();
@@ -163,13 +165,14 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 const parentChunkBeacon = `weaviate://localhost/RagDocumentChunk/${parentChunkId}`;
                 await chunkStore.addCrossReference(chunkId, "inChunk", parentChunkBeacon, "RagDocumentChunk");
             }
-            if (allSiblingChunksIncludingMe && allSiblingChunksIncludingMe.length > 1) {
+            if (allSiblingChunksIncludingMe &&
+                allSiblingChunksIncludingMe.length > 1) {
                 console.log(`Processing sibling chunks for ${chunkId}`);
                 console.log(`4. importantContextChunkIndexes ${JSON.stringify(chunk.importantContextChunkIndexes)}`);
                 const allSiblingChunksWithIds = [];
                 for (const subChunk of allSiblingChunksIncludingMe) {
                     if (subChunk.chapterIndex != chunk.chapterIndex) {
-                        console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex} current chunk.subChunks: ${chunk.subChunks?.map(c => c.chapterIndex)}`);
+                        console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex} current chunk.subChunks: ${chunk.subChunks?.map((c) => c.chapterIndex)}`);
                         const subChunkId = await postChunkRecursively(subChunk, documentId, parentChunkId, allSiblingChunksIncludingMe);
                         if (subChunkId) {
                             subChunk.id = subChunkId;
@@ -207,7 +210,9 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
                 }
             }
             else {
-                console.log(`No sibling chunks to process for ${chunkId} length ${allSiblingChunksIncludingMe ? allSiblingChunksIncludingMe.length : -1}`);
+                console.log(`No sibling chunks to process for ${chunkId} length ${allSiblingChunksIncludingMe
+                    ? allSiblingChunksIncludingMe.length
+                    : -1}`);
             }
             if (chunk.subChunks) {
                 for (const subChunk of chunk.subChunks) {
@@ -223,7 +228,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             const docVals = ingestDocument.data.Get.RagDocument;
             const duplicateUrls = await this.countDuplicateUrls(docVals);
             if (duplicateUrls > 0) {
-                console.log(docVals.length, ' length', docVals, source.hash, source.url);
+                console.log(docVals.length, " length", docVals, source.hash, source.url);
                 continue;
             }
             if (docVals.length > 0)
@@ -257,7 +262,7 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             acc[url] = (acc[url] || 0) + 1;
             return acc;
         }, {});
-        return Object.values(urlCounts).filter(count => count > 1).length;
+        return Object.values(urlCounts).filter((count) => count > 1).length;
     }
     async classifyDocuments(allDocumentSourcesWithChunks) {
         console.log("Classifying all documents");
@@ -341,53 +346,66 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             catch (error) {
                 console.error(`Failed to process file ${filePath}:`, error);
             }
-            if (path.extname(filePath).toLowerCase() == ".json") {
-                const response = await fetch(metadataEntry.url);
-                const jsonData = await response.json();
-                const sourceUrls = this.getExternalUrlsFromJson(jsonData);
-                const updatedReferences = await this.updateReferencesWithUrls(metadataEntry.allReferencesWithUrls, sourceUrls);
-                console.log(updatedReferences);
-            }
+            //TODO: Look at
+            /*if (path.extname(filePath).toLowerCase() == ".json") {
+              const response = await fetch(metadataEntry.url);
+              const jsonData = await response.json();
+              const sourceUrls = this.getExternalUrlsFromJson(jsonData);
+      
+              const updatedReferences = await this.updateReferencesWithUrls(
+                metadataEntry.allReferencesWithUrls,
+                sourceUrls
+              );
+      
+              console.log(updatedReferences);
+            }*/
         }
         await this.saveFileMetadata();
     }
-    async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
-        let missingLinkIndex = 1; // Start counting missing links from 1
-        const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-        for (const newUrl of newUrls) {
-            const urlExists = allReferencesWithUrls.some(ref => ref.url === newUrl);
-            if (!urlExists) {
-                try {
-                    const page = await browser.newPage();
-                    await page.setUserAgent(IEngineConstants.currentUserAgent);
-                    await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
-                    // Evaluate the title within the page context
-                    const title = await page.evaluate(() => {
-                        const metaTitle = document.querySelector('meta[name="title"]');
-                        return metaTitle ? metaTitle.content : document.title;
-                    });
-                    console.log(title); // Log the title to the console
-                    const newReference = {
-                        reference: title || `Link${missingLinkIndex}`,
-                        url: newUrl
-                    };
-                    // Add the new reference to the beginning of the array
-                    allReferencesWithUrls.unshift(newReference);
-                }
-                catch (error) {
-                    console.error("Failed to fetch URL:", error);
-                    const fallbackReference = {
-                        reference: `Link${missingLinkIndex}`,
-                        url: newUrl
-                    };
-                    allReferencesWithUrls.unshift(fallbackReference);
-                }
-                missingLinkIndex++;
-            }
+    /*async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
+      let missingLinkIndex = 1; // Start counting missing links from 1
+  
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+      for (const newUrl of newUrls) {
+        const urlExists = allReferencesWithUrls.some((ref) => ref.url === newUrl);
+  
+        if (!urlExists) {
+          try {
+            const page = await browser.newPage();
+            await page.setUserAgent(IEngineConstants.currentUserAgent);
+            await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
+  
+            // Evaluate the title within the page context
+            const title = await page.evaluate(() => {
+              const metaTitle = document.querySelector('meta[name="title"]');
+              return metaTitle ? metaTitle.content : document.title;
+            });
+  
+            console.log(title); // Log the title to the console
+  
+            const newReference = {
+              reference: title || `Link${missingLinkIndex}`,
+              url: newUrl,
+            };
+            // Add the new reference to the beginning of the array
+            allReferencesWithUrls.unshift(newReference);
+          } catch (error) {
+            console.error("Failed to fetch URL:", error);
+            const fallbackReference = {
+              reference: `Link${missingLinkIndex}`,
+              url: newUrl,
+            };
+            allReferencesWithUrls.unshift(fallbackReference);
+          }
+          missingLinkIndex++;
         }
-        await browser.close();
-        return allReferencesWithUrls;
-    }
+      }
+      await browser.close();
+      return allReferencesWithUrls;
+    }*/
     aggregateChunkData = (chunks) => {
         return chunks.reduce((acc, chunk) => {
             const chunkData = chunk.chunkData || "";

@@ -1,6 +1,6 @@
-import { IngestionAgentProcessor } from "./agentProcessor.js";
+import { RebootingDemocracyIngestionProcessor } from "./agentProcessor.js";
 
-export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcessor {
+export class RebootingDemocracyIngestionProcessorWorker extends RebootingDemocracyIngestionProcessor {
     // Your class implementation here.
     // If you need specific functionality for RebootingDemocracyIngestionProcessor, add it here.
 }

@@ -8,21 +8,22 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
-import { DocumentCleanupAgent } from "./docCleanup.js";
-import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
-import { BaseIngestionAgent } from "./baseAgent.js";
-import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
-import { IngestionContentParser } from "./contentParser.js";
-import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
-import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
-import { IngestionChunkRanker } from "./chunkRanker.js";
-import { IngestionDocumentRanker } from "./docRanker.js";
-import { DocumentClassifierAgent } from "./docClassifier.js";
-import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
-import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
+import { IngestionAgentProcessor } from "@policysynth/agents/rag/ingestion/processor.js";
+import { DocumentCleanupAgent } from "@policysynth/agents/rag/ingestion/docCleanup.js";
+import { DocumentTreeSplitAgent } from "@policysynth/agents/rag/ingestion/docTreeSplitter.js";
+import { BaseIngestionAgent } from "@policysynth/agents/rag/ingestion/baseAgent.js";
+import { IngestionChunkCompressorAgent } from "@policysynth/agents/rag/ingestion/chunkCompressorAgent.js";
+import { IngestionContentParser } from "@policysynth/agents/rag/ingestion/contentParser.js";
+import { DocumentAnalyzerAgent } from "@policysynth/agents/rag/ingestion/docAnalyzer.js";
+import { IngestionChunkAnalzyerAgent } from "@policysynth/agents/rag/ingestion/chunkAnalyzer.js";
+import { IngestionChunkRanker } from "@policysynth/agents/rag/ingestion/chunkRanker.js";
+import { IngestionDocumentRanker } from "@policysynth/agents/rag/ingestion/docRanker.js";
+import { DocumentClassifierAgent } from "@policysynth/agents/rag/ingestion/docClassifier.js";
+import { PsRagDocumentVectorStore } from "@policysynth/agents/rag/vectorstore/ragDocument.js";
+import { PsRagChunkVectorStore } from "@policysynth/agents/rag/vectorstore/ragChunk.js";
 import { isArray } from "util";
 
-export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
+export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcessor {
   dataLayoutPath: string;
   cachedFiles: string[] = [];
   fileMetadataPath: string = "./src/ingestion/cache/fileMetadata.json";
@@ -35,10 +36,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
   docAnalysisAgent: DocumentAnalyzerAgent;
 
-  dataLayout!: PsIngestionDataLayout;
-
   // constructor(dataLayoutPath: string = "file://src/ingestion/dataLayout.json") {
-  constructor(dataLayoutPath: string = "https://content.thegovlab.com/flows/trigger/a84e387c-9a82-4bb2-b41f-22780c3826a7") {
+  constructor(
+    dataLayoutPath: string = "https://content.thegovlab.com/flows/trigger/a84e387c-9a82-4bb2-b41f-22780c3826a7"
+  ) {
     super();
     this.dataLayoutPath = dataLayoutPath;
 
@@ -61,13 +62,16 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     await this.loadFileMetadata(); // Load existing metadata to compare against
 
     this.dataLayout = await this.readDataLayout();
-    
+
     this.initialFileMetadata = JSON.parse(JSON.stringify(this.fileMetadata)); // Deep copy for initial state comparison
 
     const downloadContent = true;
 
     if (downloadContent) {
-      const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
       try {
         this.logger.debug("Launching browser");
 
@@ -99,7 +103,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const filesForProcessing = this.getFilesForProcessing(true);
     await this.processFiles(filesForProcessing);
-    
+
     const allDocumentSources = this.getMetaDataForAllFiles();
     await this.processAllSources(allDocumentSources);
   }
@@ -198,7 +202,6 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       parentChunkId: string | undefined,
       allSiblingChunksIncludingMe: PsRagChunk[]
     ) => {
-
       // Construct the unique identifier for the current chunk
       const chunkIdentifier = `${documentId}-${chunk.chunkIndex}-${chunk.chapterIndex}`;
       // Check if this chunk has already been processed
@@ -246,7 +249,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         );
       }
 
-      if (allSiblingChunksIncludingMe && allSiblingChunksIncludingMe.length > 1) {
+      if (
+        allSiblingChunksIncludingMe &&
+        allSiblingChunksIncludingMe.length > 1
+      ) {
         console.log(`Processing sibling chunks for ${chunkId}`);
         console.log(
           `4. importantContextChunkIndexes ${JSON.stringify(
@@ -257,7 +263,13 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         const allSiblingChunksWithIds = [];
         for (const subChunk of allSiblingChunksIncludingMe) {
           if (subChunk.chapterIndex != chunk.chapterIndex) {
-            console.log(`Bottom level loop: Processing sibling chunk ${subChunk.chapterIndex} current chunk.subChunks: ${chunk.subChunks?.map(c => c.chapterIndex)}`)
+            console.log(
+              `Bottom level loop: Processing sibling chunk ${
+                subChunk.chapterIndex
+              } current chunk.subChunks: ${chunk.subChunks?.map(
+                (c) => c.chapterIndex
+              )}`
+            );
             const subChunkId = await postChunkRecursively(
               subChunk,
               documentId,
@@ -268,7 +280,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
               subChunk.id = subChunkId;
               allSiblingChunksWithIds.push(subChunk);
             } else {
-              console.error(`Error: Failed to post sibling chunk ${subChunk.chapterIndex} NO CHUNK ID`)
+              console.error(
+                `Error: Failed to post sibling chunk ${subChunk.chapterIndex} NO CHUNK ID`
+              );
             }
           } else {
             console.log(
@@ -331,14 +345,18 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       } else {
         console.log(
           `No sibling chunks to process for ${chunkId} length ${
-            allSiblingChunksIncludingMe ? allSiblingChunksIncludingMe.length : -1
+            allSiblingChunksIncludingMe
+              ? allSiblingChunksIncludingMe.length
+              : -1
           }`
         );
       }
 
       if (chunk.subChunks) {
         for (const subChunk of chunk.subChunks) {
-          console.log(`Middle Level Loop: Processing subChunk ${subChunk.chapterIndex}`)
+          console.log(
+            `Middle Level Loop: Processing subChunk ${subChunk.chapterIndex}`
+          );
           await postChunkRecursively(
             subChunk,
             documentId,
@@ -353,17 +371,24 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     for (const source of allDocumentSourcesWithChunks) {
       // Doublechek if item from fileMetadata.json has already been ingested
-      const ingestDocument = await documentStore.searchDocumentsByUrl(source.url);
-      const docVals = ingestDocument.data.Get.RagDocument;
+      const ingestDocument = await documentStore.searchDocumentsByUrl(
+        source.url
+      );
+      const docVals = ingestDocument!.data.Get.RagDocument;
       const duplicateUrls = await this.countDuplicateUrls(docVals);
-      
-      if (duplicateUrls>0)
-      {
-        console.log(docVals.length ,' length', docVals,source.hash, source.url) 
-        continue
+
+      if (duplicateUrls > 0) {
+        console.log(
+          docVals.length,
+          " length",
+          docVals,
+          source.hash,
+          source.url
+        );
+        continue;
       }
-      if (docVals.length > 0)   continue
-      
+      if (docVals.length > 0) continue;
+
       try {
         const documentId = await documentStore.postDocument(
           this.transformDocumentSourceForVectorstore(source)
@@ -372,7 +397,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         if (documentId) {
           if (source.chunks) {
             for (const chunk of source.chunks) {
-              console.log(`Top Level Loop: Processing chunk ${chunk.chapterIndex} for ${source.url}`);
+              console.log(
+                `Top Level Loop: Processing chunk ${chunk.chapterIndex} for ${source.url}`
+              );
               try {
                 await postChunkRecursively(
                   chunk,
@@ -403,8 +430,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       acc[url] = (acc[url] || 0) + 1;
       return acc;
     }, {});
-  
-    return Object.values(urlCounts).filter(count => count > 1).length;
+
+    return Object.values(urlCounts).filter((count) => count > 1).length;
   }
 
   async classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]) {
@@ -513,9 +540,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
         ) {
-
-        //  console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
-        
+          //  console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
 
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
@@ -528,7 +553,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         }
 
         // Cleanup fullContentsColumns in docAnalysis and redo the summaries
-        
+
         const reCleanData = false;
 
         const cleanedUpData =
@@ -562,63 +587,67 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         console.error(`Failed to process file ${filePath}:`, error);
       }
 
-      if(path.extname(filePath).toLowerCase() == ".json")
-        {
-          
-          const response = await fetch(metadataEntry.url);
-          const jsonData = await response.json();
-          const sourceUrls = this.getExternalUrlsFromJson(jsonData)
-      
-      const updatedReferences = await this.updateReferencesWithUrls(metadataEntry.allReferencesWithUrls, sourceUrls);
+      //TODO: Look at
+      /*if (path.extname(filePath).toLowerCase() == ".json") {
+        const response = await fetch(metadataEntry.url);
+        const jsonData = await response.json();
+        const sourceUrls = this.getExternalUrlsFromJson(jsonData);
 
-      console.log(updatedReferences)
-        }
+        const updatedReferences = await this.updateReferencesWithUrls(
+          metadataEntry.allReferencesWithUrls,
+          sourceUrls
+        );
 
+        console.log(updatedReferences);
+      }*/
     }
     await this.saveFileMetadata();
   }
 
-async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
-    let missingLinkIndex = 1;  // Start counting missing links from 1
+  /*async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
+    let missingLinkIndex = 1; // Start counting missing links from 1
 
-    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     for (const newUrl of newUrls) {
-        const urlExists = allReferencesWithUrls.some(ref => ref.url === newUrl);
+      const urlExists = allReferencesWithUrls.some((ref) => ref.url === newUrl);
 
-        if (!urlExists) {
-            try {
-                const page = await browser.newPage();
-                await page.setUserAgent(IEngineConstants.currentUserAgent);
-                await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
+      if (!urlExists) {
+        try {
+          const page = await browser.newPage();
+          await page.setUserAgent(IEngineConstants.currentUserAgent);
+          await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
 
-                // Evaluate the title within the page context
-                const title = await page.evaluate(() => {
-                    const metaTitle = document.querySelector('meta[name="title"]');
-                    return metaTitle ? metaTitle.content : document.title;
-                });
+          // Evaluate the title within the page context
+          const title = await page.evaluate(() => {
+            const metaTitle = document.querySelector('meta[name="title"]');
+            return metaTitle ? metaTitle.content : document.title;
+          });
 
-                console.log(title);  // Log the title to the console
+          console.log(title); // Log the title to the console
 
-                const newReference = {
-                    reference: title || `Link${missingLinkIndex}`,
-                    url: newUrl
-                };
-                // Add the new reference to the beginning of the array
-                allReferencesWithUrls.unshift(newReference);
-            } catch (error) {
-                console.error("Failed to fetch URL:", error);
-                const fallbackReference = {
-                    reference: `Link${missingLinkIndex}`,
-                    url: newUrl
-                };
-                allReferencesWithUrls.unshift(fallbackReference);
-            }
-            missingLinkIndex++;
+          const newReference = {
+            reference: title || `Link${missingLinkIndex}`,
+            url: newUrl,
+          };
+          // Add the new reference to the beginning of the array
+          allReferencesWithUrls.unshift(newReference);
+        } catch (error) {
+          console.error("Failed to fetch URL:", error);
+          const fallbackReference = {
+            reference: `Link${missingLinkIndex}`,
+            url: newUrl,
+          };
+          allReferencesWithUrls.unshift(fallbackReference);
         }
+        missingLinkIndex++;
+      }
     }
     await browser.close();
     return allReferencesWithUrls;
-}
+  }*/
 
   aggregateChunkData = (chunks: LlmDocumentChunksStrategy[]): string => {
     return chunks.reduce((acc, chunk) => {
@@ -742,14 +771,12 @@ async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
 
     const reRank = false;
 
-
- //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
-        if (reRank || metadata.chunks[0].eloRating === undefined) {
-        console.log("in rerank", metadata.chunks[0]);
+    //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
+    if (reRank || metadata.chunks[0].eloRating === undefined) {
+      console.log("in rerank", metadata.chunks[0]);
       await this.rankChunks(metadata);
       await this.saveFileMetadata();
-    } 
-    
+    }
 
     /*console.log(
       `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
@@ -809,13 +836,10 @@ async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
   public getFilesForProcessing(forceProcessing = false): string[] {
     const filesForProcessing: string[] = [];
 
-
     // Compare current fileMetadata with initialFileMetadata
     for (const [fileId, metadata] of Object.entries(this.fileMetadata)) {
-
-      
       console.log(`Checking file ${JSON.stringify(metadata)}`);
-      
+
       const initialMetadata = this.initialFileMetadata[fileId];
 
       // Check if file is new or has been changed
@@ -882,7 +906,7 @@ async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
     let dataLayout: PsIngestionDataLayout;
     if (this.dataLayoutPath.startsWith("file://")) {
       const filePath = this.dataLayoutPath.replace("file://", "");
-      
+
       const data = await fs.readFile(filePath, "utf-8");
       dataLayout = JSON.parse(data);
     } else {

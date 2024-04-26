@@ -21,8 +21,8 @@ export declare class PsRagDocumentVectorStore extends PolicySynthAgentBase {
     updateDocument(id: string, documentData: PsRagDocumentSource, quiet?: boolean): Promise<unknown>;
     getDocument(id: string): Promise<PsRagDocumentSource>;
     searchDocuments(query: string): Promise<PsRagDocumentSourceGraphQlResponse>;
-    searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlResponse>;
-    mergeUniqueById(arr1: [], arr2: []): Promise<any[]>;
+    searchDocumentsByUrl(docUrl: string): Promise<PsRagDocumentSourceGraphQlResponse | undefined | null>;
+    mergeUniqueById(arr1: any[], arr2: any[]): Promise<any[]>;
     searchChunksWithReferences(query: string): Promise<PsRagChunk[]>;
 }
 //# sourceMappingURL=ragDocument.d.ts.map

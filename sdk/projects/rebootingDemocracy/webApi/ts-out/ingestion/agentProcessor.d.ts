@@ -1,12 +1,12 @@
 /// <reference types="node" />
 import { Page } from "puppeteer";
-import { DocumentCleanupAgent } from "./docCleanup.js";
-import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
-import { BaseIngestionAgent } from "./baseAgent.js";
-import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
-import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
-import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
-export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent {
+import { IngestionAgentProcessor } from "@policysynth/agents/rag/ingestion/processor.js";
+import { DocumentCleanupAgent } from "@policysynth/agents/rag/ingestion/docCleanup.js";
+import { DocumentTreeSplitAgent } from "@policysynth/agents/rag/ingestion/docTreeSplitter.js";
+import { IngestionChunkCompressorAgent } from "@policysynth/agents/rag/ingestion/chunkCompressorAgent.js";
+import { DocumentAnalyzerAgent } from "@policysynth/agents/rag/ingestion/docAnalyzer.js";
+import { IngestionChunkAnalzyerAgent } from "@policysynth/agents/rag/ingestion/chunkAnalyzer.js";
+export declare class RebootingDemocracyIngestionProcessor extends IngestionAgentProcessor {
     dataLayoutPath: string;
     cachedFiles: string[];
     fileMetadataPath: string;
@@ -17,7 +17,6 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     chunkCompressor: IngestionChunkCompressorAgent;
     chunkAnalysisAgent: IngestionChunkAnalzyerAgent;
     docAnalysisAgent: DocumentAnalyzerAgent;
-    dataLayout: PsIngestionDataLayout;
     constructor(dataLayoutPath?: string);
     processDataLayout(): Promise<void>;
     processAllSources(allDocumentSources: PsRagDocumentSource[]): Promise<void>;
@@ -29,7 +28,6 @@ export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent
     classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]): Promise<void>;
     processSource(source: PsRagDocumentSource): Promise<void>;
     processFiles(files: string[]): Promise<void>;
-    updateReferencesWithUrls(allReferencesWithUrls: any, newUrls: any): Promise<any>;
     aggregateChunkData: (chunks: LlmDocumentChunksStrategy[]) => string;
     createTreeChunks(metadata: PsRagDocumentSource, cleanedUpData: string): Promise<void>;
     processFilePartTree(fileId: string, cleanedUpData: string, weaviateDocumentId: string): Promise<void>;

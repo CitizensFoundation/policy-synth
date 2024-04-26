@@ -1,5 +1,5 @@
-import { IngestionAgentProcessor } from "./agentProcessor.js";
-export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcessor {
+import { RebootingDemocracyIngestionProcessor } from "./agentProcessor.js";
+export class RebootingDemocracyIngestionProcessorWorker extends RebootingDemocracyIngestionProcessor {
 }
 // Asynchronous main function to run the script
 async function main() {

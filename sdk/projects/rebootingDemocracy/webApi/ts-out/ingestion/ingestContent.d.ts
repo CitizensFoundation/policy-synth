@@ -1,4 +1,4 @@
-import { IngestionAgentProcessor } from "./agentProcessor.js";
-export declare class RebootingDemocracyIngestionProcessor extends IngestionAgentProcessor {
+import { RebootingDemocracyIngestionProcessor } from "./agentProcessor.js";
+export declare class RebootingDemocracyIngestionProcessorWorker extends RebootingDemocracyIngestionProcessor {
 }
 //# sourceMappingURL=ingestContent.d.ts.map

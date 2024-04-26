@@ -18,18 +18,19 @@ Instructions:
 - Use markdown to format your answers, always use formatting so the response comes alive to the user.
 - Keep your answers short and to the point except when the user asks for detail.
 `;
-    mainStreamingUserPrompt = (latestQuestion, context) => `<LATEST_USER_QUESTION>
-${latestQuestion}</LATEST_USER_QUESTION>
-
-<CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
+    mainStreamingUserPrompt = (latestQuestion, context) => `<CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
 ${context}
 </CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
+
+<LATEST_USER_QUESTION>
+${latestQuestion}
+</LATEST_USER_QUESTION>
 
 Your thoughtful answer in markdown:
 `;
     sendSourceDocuments(document) {
         document.forEach((d, i) => {
-            if (d.contentType.includes('json')) {
+            if (d.contentType.includes("json")) {
                 const refurls = JSON.parse(d.allReferencesWithUrls);
                 if (refurls.length > 0)
                     document[i].url = refurls[0].url;
@@ -102,8 +103,8 @@ Your thoughtful answer in markdown:
         const documents = searchContext.documents;
         let updatedResponseText = searchContext.responseText;
         documents.forEach((document, index) => {
-            if (document.contentType && document.contentType.includes('json')) {
-                console.log('Original URL:', document.url);
+            if (document.contentType && document.contentType.includes("json")) {
+                console.log("Original URL:", document.url);
                 // Parse the JSON string of allReferencesWithUrls
                 const refUrls = JSON.parse(document.allReferencesWithUrls);
                 // Check if there are any URLs available to update
@@ -114,7 +115,7 @@ Your thoughtful answer in markdown:
                     // documents[index].url = refUrls[0].url;
                     // Replace the old URL in the responseText with the new URL
                     updatedResponseText = updatedResponseText.replace(oldUrl, refUrls[0].url);
-                    console.log('Updated URL:', documents[index].url);
+                    console.log("Updated URL:", documents[index].url);
                 }
             }
         });

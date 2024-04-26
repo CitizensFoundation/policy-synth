@@ -202,7 +202,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .withFields(PsRagDocumentVectorStore.urlField)
                 .do();
             // Check if results are empty or null and handle accordingly
-            if (!results || results.length === 0) {
+            if (!results) {
                 console.log('No documents found. Database might be empty for this query.');
                 // Handle the empty db scenario here, such as continuing with your process
                 return null; // Or however you wish to handle this scenario

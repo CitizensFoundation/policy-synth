@@ -1,6 +1,6 @@
-import { PsIngestionConstants } from "../ingestion/ingestionConstants.js";
+import { PsIngestionConstants } from "@policysynth/agents/rag/ingestion/ingestionConstants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BaseIngestionAgent } from "../ingestion/baseAgent.js";
+import { BaseIngestionAgent } from "@policysynth/agents/rag/ingestion/baseAgent.js";
 export class PsRagRouter extends BaseIngestionAgent {
     systemMessageFull = (schema, about, chatHistory) => new SystemMessage(`You are an expert user question analyzer for a RAG based chatbot. We will use the information to decide what documents to retrieve for the user through a vector database search.
 

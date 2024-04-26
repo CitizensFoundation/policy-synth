@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -30,6 +30,10 @@
     "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
     "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
     "test": "gulp test:local",
+    "createWeaviateRagDocument": "npm run build;cp -R src/rag/vectorstore/schemas ts-out/vectorstore/;node ts-out/rag/vectorstore/tools/createRagDocument.js",
+    "createWeaviateRagChunk": "npm run build;cp -R src/rag/vectorstore/schemas ts-out/vectorstore/;node ts-out/rag/vectorstore/tools/createRagChunk.js",
+    "destroyWeaviateRagChunk": "node ts-out/rag/vectorstore/tools/destroyRagChunk.js",
+    "destroyWeaviateRagDocument": "node ts-out/rag/vectorstore/tools/destroyRagDocument.js",
     "build": "tsc --project ./ --outDir ./ts-out",
     "start": "nodemon -q ts-out/queue.js",
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ts-out/queue.js"
