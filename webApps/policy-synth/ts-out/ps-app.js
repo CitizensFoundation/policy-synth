@@ -57,8 +57,8 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
         this.totalNumberOfVotes = 0;
         this.showAllCosts = false;
         this.collectionType = 'domain';
-        this.localStorageThemeColorKey = 'md3-ps-theme-color';
-        this.themeColor = '#3f5fce';
+        this.localStorageThemeColorKey = 'md3-ps-theme-color-v2';
+        this.themeColor = '#df2302';
         this.themePrimaryColor = '#000000';
         this.themeSecondaryColor = '#000000';
         this.themeTertiaryColor = '#000000';
@@ -465,7 +465,7 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
             }
             this.themeColor = bootResponse.configuration.theme_color
                 ? bootResponse.configuration.theme_color
-                : '#3f5fce';
+                : '#df2302';
             this.themePrimaryColor = bootResponse.configuration.theme_primary_color;
             this.themeSecondaryColor =
                 bootResponse.configuration.theme_secondary_color;

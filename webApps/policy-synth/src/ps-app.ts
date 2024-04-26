@@ -128,10 +128,10 @@ export class PolicySynthWebApp extends YpBaseElement {
   tempPassword: string | undefined;
 
   @property({ type: String })
-  localStorageThemeColorKey = 'md3-ps-theme-color';
+  localStorageThemeColorKey = 'md3-ps-theme-color-v2';
 
   @property({ type: String })
-  themeColor = '#3f5fce';
+  themeColor = '#df2302';
 
   @property({ type: String })
   themePrimaryColor = '#000000';
@@ -604,7 +604,7 @@ export class PolicySynthWebApp extends YpBaseElement {
 
       this.themeColor = bootResponse.configuration.theme_color
         ? bootResponse.configuration.theme_color
-        : '#3f5fce';
+        : '#df2302';
       this.themePrimaryColor = bootResponse.configuration.theme_primary_color;
       this.themeSecondaryColor =
         bootResponse.configuration.theme_secondary_color;

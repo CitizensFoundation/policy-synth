@@ -9,7 +9,7 @@ type PSRootCauseWebPageTypes =
   | "technologicalRootCause"
   | "geopoliticalRootCause"
   | "ethicalRootCause"
-  | "caseStudies";
+  | "caseStudies"
 
 interface PSRootCause {
   rootCauseTitle: string;

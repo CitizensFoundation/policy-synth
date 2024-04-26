@@ -10,7 +10,7 @@ import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
 
 
-const recreateImagesNeeded = true;
+const recreateImagesNeeded = false;
 
 export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
   async renderCreatePrompt(subProblemIndex: number) {

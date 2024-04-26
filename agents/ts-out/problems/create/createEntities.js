@@ -18,8 +18,9 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
         6. If important and related negative and positive effects are missing from the entities, please add them if needed.
         7. Only add positive effects if the sub problem really has a positive effect on the entity, that rarely happens in this analysis as we are analysis problems.
         8. If no positive effects are identified leave the positiveEffects array empty.
-        9. Always output in exactly this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
-        10. Let's think step by step.
+        9. Always output three negativeEffects but only output any positiveEffects if they are relevant
+        10. Always output in exactly this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
+        11. Let's think step by step.
         `),
             new HumanMessage(`
          ${this.renderProblemStatement()}

@@ -24,7 +24,7 @@ class RootCauseTypeLookup {
         technologicalRootCause: "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
         geopoliticalRootCause: "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
         ethicalRootCause: "allPossibleEthicalRootCausesIdentifiedInTextContext",
-        caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
+        caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext"
     };
     static getPropertyName(rootCauseType) {
         return this.rootCauseTypeMapping[rootCauseType];

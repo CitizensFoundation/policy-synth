@@ -4,7 +4,7 @@ import { IEngineConstants } from "../../constants.js";
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
-const recreateImagesNeeded = true;
+const recreateImagesNeeded = false;
 export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
     async renderCreatePrompt(subProblemIndex) {
         const messages = [

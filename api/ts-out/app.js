@@ -57,6 +57,7 @@ export class PolicySynthApiApp {
         this.initializeControllers(controllers);
     }
     setupStaticPaths() {
+        console.log("Setting up static paths api original");
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = dirname(__filename);
         this.app.use(express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));

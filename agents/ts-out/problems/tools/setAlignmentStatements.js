@@ -255,13 +255,13 @@ const setupProjectFour = (memory) => {
     memory.customInstructions.createSolutions = `
   1. Never create solution components in the form of frameworks or holistic approaches
   2. Solution components should include only one core idea
-  3. Remember that the main facilitator for implementation will be international philanthropic organizations working alongside civil society organizations, community-based organizations, and legal advocacy groups.
-  4. The solution component description should clearly articulate what action the international philanthropic organization needs to take in order to implement the solution.
+  3. Remember that the main facilitator for implementation will be parents, students, teachers, policymakers, and other education stakeholders.
+  4. The solution component description should clearly articulate what action is needed to implement the solution.
   5. The solution component description should clearly articulate how the solution component addresses an aspect of the problem.
   6. The solution title should indicate the intended outcomes and impacts of implementing the solution.
 `;
     memory.customInstructions.rankSolutions = `
-    1. Solution components will be implemented by international philanthropic organizations in partnership with civil society organizations, community-based organizations, and legal advocacy groups.
+    1. Solution components will be implemented by will be parents, students, teachers, policymakers, and other education stakeholders.
   `;
     memory.customInstructions.rateSolutionsJsonFormat = `
     {
@@ -275,10 +275,10 @@ const setupProjectFour = (memory) => {
       otherRatings: {
         benefitsForCitizens,
         benefitsForGovernments,
-        benefitsForCivilSociety,
-        benefitsForPrivateSector,
-        benefitsForTheClimate,
-        benefitsForEcology,
+        benefitsForSchools,
+        benefitsForTeachers,
+        benefitsForStudents,
+        benefitsForParents,
       }
     }
   `;

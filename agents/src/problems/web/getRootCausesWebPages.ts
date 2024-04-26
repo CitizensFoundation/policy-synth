@@ -30,7 +30,7 @@ class RootCauseTypeLookup {
     technologicalRootCause: "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
     geopoliticalRootCause: "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
     ethicalRootCause: "allPossibleEthicalRootCausesIdentifiedInTextContext",
-    caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
+    caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext"
   };
 
   public static getPropertyName(rootCauseType: PSRootCauseWebPageTypes): string | undefined {
