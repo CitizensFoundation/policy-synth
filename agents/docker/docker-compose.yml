@@ -1,5 +1,3 @@
----
-version: '3.4'
 services:
   weaviate:
     command:
@@ -9,21 +7,23 @@ services:
     - '8080'
     - --scheme
     - http
-    image: semitechnologies/weaviate:1.22.5
+    image: cr.weaviate.io/semitechnologies/weaviate:1.24.1
     ports:
     - 8080:8080
-    restart: on-failure:0
+    - 50051:50051
     volumes:
-      - /var/weaviate_policy_synth:/var/lib/weaviate_ps
+    - weaviate_data:/var/lib/weaviate_ps_0424
+    restart: on-failure:0
     environment:
-      LOG_LEVEL: 'debug'
-      QUERY_DEFAULTS_LIMIT: 20
-      DISK_USE_READONLY_PERCENTAGE: 99
-      DISK_USE_WARNING_PERCENTAGE: 95
-      BACKUP_FILESYSTEM_PATH: "/var/weaviate_policy_synth_backups"
+      QUERY_DEFAULTS_LIMIT: 50
+      DISK_USE_READONLY_PERCENTAGE: 0
+      DISK_USE_WARNING_PERCENTAGE: 0
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
-      PERSISTENCE_DATA_PATH: "/var/lib/weaviate_ps"
       DEFAULT_VECTORIZER_MODULE: text2vec-openai
-      ENABLE_MODULES: backup-filesystem,text2vec-openai
+      ENABLE_MODULES: ' text2vec-openai'
       OPENAI_APIKEY: ${OPENAI_API_KEY}
       CLUSTER_HOSTNAME: 'node1'
+volumes:
+  weaviate_data:
+
+

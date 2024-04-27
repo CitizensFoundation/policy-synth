@@ -89,7 +89,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
             this.logger.info(`Ranking Entity ${subProblemIndex}-${e} for ${searchResultType} search results`);
             this.currentEntity = this.memory.subProblems[subProblemIndex].entities[e];
             let resultsToRank = this.memory.subProblems[subProblemIndex].entities[e].searchResults.pages[searchResultType];
-            this.setupRankingPrompts(subProblemIndex * e, resultsToRank);
+            this.setupRankingPrompts(subProblemIndex * e, resultsToRank, resultsToRank.length * 5);
             await this.performPairwiseRanking(subProblemIndex * e);
             this.memory.subProblems[subProblemIndex].entities[e].searchResults.pages[searchResultType] =
                 this.getOrderedListOfItems(subProblemIndex * e, true);

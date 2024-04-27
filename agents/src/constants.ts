@@ -446,7 +446,7 @@ export class IEngineConstants {
   static rankingLLMmaxRetryCount = 40;
 
   // See also hardcoded 3 for project 1 in createSolutions
-  static maxTopEntitiesToSearch = 4;
+  static maxTopEntitiesToSearch = 3;
 
   static maxTopEntitiesToRender = 3;
 

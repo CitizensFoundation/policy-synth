@@ -3,9 +3,8 @@
   "vectorizer": "text2vec-openai",
   "moduleConfig": {
     "text2vec-openai": {
-      "model": "ada",
-      "modelVersion": "002",
-      "type": "text"
+      "model": "text-embedding-3-large",
+      "vectorizeClassName": true
     }
   },
   "invertedIndexConfig": {
@@ -63,6 +62,8 @@
       "indexFilterable": true,
       "indexSearchable": true,
       "invertedIndexConfig": {
+        "indexTimestamps": true,
+        "indexNullState": true,
         "indexPropertyLength": true
       }
     },

@@ -30,10 +30,10 @@ if (projectId) {
   //memory.currentStage = "reduce-sub-problems";
   //memory.currentStage = "rank-sub-problems";
   //memory.currentStage = "create-sub-problem-images";
-  memory.currentStage = "create-entities";
+  //memory.currentStage = "create-entities";
   //memory.currentStage = "rank-entities";
   //memory.currentStage = "create-search-queries";
-  //memory.currentStage = "rank-search-queries";
+  memory.currentStage = "rank-search-queries";
 
   await redis.set(redisKey, JSON.stringify(memory));
 
