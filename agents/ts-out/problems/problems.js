@@ -140,13 +140,20 @@ export class AgentProblems extends BaseAgentProcessor {
         }
     }
 }
+const redisConfig = {
+    host: "localhost",
+    port: 6379,
+};
 const agent = new Worker("agent-problems", async (job) => {
     console.log(`Agent Problems Processing job ${job.id}`);
     const agent = new AgentProblems();
     await agent.setup(job);
     await agent.process();
     return job.data;
-}, { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") });
+}, {
+    connection: redisConfig,
+    concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1"),
+});
 process.on("SIGINT", async () => {
     await agent.close();
 });

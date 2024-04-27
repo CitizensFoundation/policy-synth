@@ -83,7 +83,10 @@ export class AgentPolicies extends BaseAgentProcessor {
         await search.process();
         break;
       case "web-get-evidence-pages":
-        const getPages = new GetEvidenceWebPagesProcessor(this.job, this.memory);
+        const getPages = new GetEvidenceWebPagesProcessor(
+          this.job,
+          this.memory
+        );
         await getPages.process();
         break;
       case "rank-web-evidence":
@@ -99,7 +102,10 @@ export class AgentPolicies extends BaseAgentProcessor {
         await refiner.process();
         break;
       case "get-metadata-for-top-evidence":
-        const meta = new GetMetaDataForTopWebEvidenceProcessor(this.job, this.memory);
+        const meta = new GetMetaDataForTopWebEvidenceProcessor(
+          this.job,
+          this.memory
+        );
         await meta.process();
         break;
 
@@ -108,6 +114,11 @@ export class AgentPolicies extends BaseAgentProcessor {
     }
   }
 }
+
+const redisConfig = {
+  host: "localhost",
+  port: 6379,
+};
 
 const agent = new Worker(
   "agent-policies",
@@ -118,7 +129,7 @@ const agent = new Worker(
     await agent.process();
     return job.data;
   },
-  { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") }
+  { connection: redisConfig, concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") }
 );
 
 process.on("SIGINT", async () => {

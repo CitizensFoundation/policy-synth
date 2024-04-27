@@ -41,7 +41,7 @@ export class AgentSolutions extends BaseAgentProcessor {
                         scientific: [],
                         news: [],
                         openData: [],
-                    }
+                    },
                 },
             },
             subProblems: [],
@@ -113,13 +113,20 @@ export class AgentSolutions extends BaseAgentProcessor {
         }
     }
 }
+const redisConfig = {
+    host: "localhost",
+    port: 6379,
+};
 const agent = new Worker("agent-solutions", async (job) => {
     console.log(`Agent Solutions Processing job ${job.id}`);
     const agent = new AgentSolutions();
     await agent.setup(job);
     await agent.process();
     return job.data;
-}, { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") });
+}, {
+    connection: redisConfig,
+    concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1"),
+});
 process.on("SIGINT", async () => {
     await agent.close();
 });

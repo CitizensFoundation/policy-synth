@@ -30,8 +30,7 @@ export class AgentSolutions extends BaseAgentProcessor {
       stages: PolicySynthAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
-      customInstructions: {
-      },
+      customInstructions: {},
       problemStatement: {
         description: jobData.initialProblemStatement,
         searchQueries: {
@@ -46,7 +45,7 @@ export class AgentSolutions extends BaseAgentProcessor {
             scientific: [],
             news: [],
             openData: [],
-          }
+          },
         },
       },
       subProblems: [],
@@ -134,14 +133,14 @@ export class AgentSolutions extends BaseAgentProcessor {
         );
         await searchWebProcessor.process();
         break;
-        case "rank-search-results":
-          const rankSearchResultsProcessor = new RankSearchResultsProcessor(
-            this.job,
-            this.memory
-          );
-          await rankSearchResultsProcessor.process();
-          break;
-        case "evolve-create-population":
+      case "rank-search-results":
+        const rankSearchResultsProcessor = new RankSearchResultsProcessor(
+          this.job,
+          this.memory
+        );
+        await rankSearchResultsProcessor.process();
+        break;
+      case "evolve-create-population":
         const createPopulationProcessor = new EvolvePopulationProcessor(
           this.job,
           this.memory
@@ -156,10 +155,15 @@ export class AgentSolutions extends BaseAgentProcessor {
         await reapSolutionsProcessor.process();
         break;
       default:
-      console.log("No stage matched");
+        console.log("No stage matched");
     }
   }
 }
+
+const redisConfig = {
+  host: "localhost",
+  port: 6379,
+};
 
 const agent = new Worker(
   "agent-solutions",
@@ -170,7 +174,10 @@ const agent = new Worker(
     await agent.process();
     return job.data;
   },
-  { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") }
+  {
+    connection: redisConfig,
+    concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1"),
+  }
 );
 
 process.on("SIGINT", async () => {
