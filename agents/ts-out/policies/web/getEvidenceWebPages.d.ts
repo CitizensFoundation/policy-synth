@@ -4,7 +4,7 @@ import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export declare class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
-    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
+    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (HumanMessage | SystemMessage)[];
     getEvidenceTokenCount(text: string, subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

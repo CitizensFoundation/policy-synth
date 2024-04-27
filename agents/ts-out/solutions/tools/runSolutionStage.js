@@ -10,12 +10,12 @@ if (projectId) {
     //memory.currentStage = "web-search";
     //memory.currentStage = "rank-search-results";
     //memory.currentStage = "web-get-pages";
-    memory.currentStage = "rank-web-solutions";
+    //memory.currentStage = "rank-web-solutions";
     //memory.currentStage = "create-seed-solutions";
     //memory.currentStage = "create-pros-cons";
     //memory.currentStage = "rank-pros-cons";
     //memory.currentStage = "rank-solutions";
-    //memory.currentStage = "create-solution-images";
+    memory.currentStage = "create-solution-images";
     //Repeat for each GA generation
     //memory.currentStage = "evolve-create-population";
     //memory.currentStage = "evolve-reap-population";

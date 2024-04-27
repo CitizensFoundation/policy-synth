@@ -51,7 +51,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
 
         Important Instructions:
 
-        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
+        1. Always generate and output ${IEngineConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
         2. Each ${prosconsSingle} should be directly applicable to the solution.
         3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
         4. The ${prosOrCons} must be in line with the context given by the problem.

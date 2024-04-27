@@ -2,8 +2,8 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
 export declare class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     renderSolution(solution: IEngineSolution): string;
-    renderRecombinationPrompt(parentA: IEngineSolution, parentB: IEngineSolution, subProblemIndex: number): (SystemMessage | HumanMessage)[];
-    renderMutatePrompt(individual: IEngineSolution, subProblemIndex: number, mutateRate: IEngineMutationRates): (SystemMessage | HumanMessage)[];
+    renderRecombinationPrompt(parentA: IEngineSolution, parentB: IEngineSolution, subProblemIndex: number): (HumanMessage | SystemMessage)[];
+    renderMutatePrompt(individual: IEngineSolution, subProblemIndex: number, mutateRate: IEngineMutationRates): (HumanMessage | SystemMessage)[];
     performRecombination(parentA: IEngineSolution, parentB: IEngineSolution, subProblemIndex: number): Promise<IEngineSolution>;
     recombine(parentA: IEngineSolution, parentB: IEngineSolution, subProblemIndex: number): Promise<IEngineSolution>;
     performMutation(individual: IEngineSolution, subProblemIndex: number, mutateRate: IEngineMutationRates): Promise<IEngineSolution>;

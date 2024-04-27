@@ -178,7 +178,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
         5. Never output prompts involving chess or chess pieces.
         6. Never output prompts involving asking for text to be written out, like on a document.
         7. No explanations are needed only output the prompt.
-        9. Let's think step by step.
+        8. Keep the images simple and vibrant with no complicated ideas or details or many people.
         ${injectText ? injectText : ""}`),
             new HumanMessage(`
          Solution component:
