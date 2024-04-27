@@ -10,6 +10,7 @@ export declare class WebPageVectorStore extends PolicySynthAgentBase {
     }>;
     postWebPage(webPageAnalysis: IEngineWebPageAnalysisData): Promise<unknown>;
     updateWebPage(id: string, webPageAnalysis: IEngineWebPageAnalysisData): Promise<unknown>;
+    deleteWebSolution(id: string, quiet?: boolean): Promise<void>;
     updateWebSolutions(id: string, webSolutions: string[], quiet?: boolean): Promise<unknown>;
     getWebPage(id: string): Promise<IEngineWebPageAnalysisData>;
     getWebPagesForProcessing(groupId: number, subProblemIndex: number | null | undefined, entityIndex: number | null | undefined, searchType: IEngineSearchQueries | undefined, limit?: number, offset?: number, solutionCountLimit?: number | undefined): Promise<IEngineWebPageGraphQlResults>;

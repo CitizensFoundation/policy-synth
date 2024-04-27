@@ -5,6 +5,8 @@ import { IEngineConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore = new WebPageVectorStore();
+    allUrls = new Set();
+    duplicateUrls = [];
     async renderProblemPrompt(solutionsToRank, subProblemIndex) {
         return [
             new SystemMessage(`You are an expert in filtering and ranking solutions to problems.
@@ -12,7 +14,7 @@ export class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
          1. Rank solutions by importance to problem.
          2. Remove irrelevant and in-actionable solutions.
          3. Eliminate duplicates or near duplicates.
-         4. Always and only output a JSON string Array: [ "" ].
+         4. Always and only output a JSON string Array with the ranked solutions: [ "" ].
 
          Let's think step by step. Never explain your actions.`),
             new HumanMessage(`
@@ -45,6 +47,13 @@ export class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
                 for (const retrievedObject of results.data.Get["WebPage"]) {
                     const webPage = retrievedObject;
                     const id = webPage._additional.id;
+                    if (this.allUrls.has(webPage.url)) {
+                        this.duplicateUrls.push(webPage.url);
+                        continue;
+                    }
+                    else {
+                        this.allUrls.add(webPage.url);
+                    }
                     /*this.logger.debug(
                       `${id} - Solutions before ranking:
                        ${JSON.stringify(
@@ -53,10 +62,12 @@ export class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
                         2
                       )}`
                     );*/
+                    this.logger.info(`Length before: ${webPage.solutionsIdentifiedInTextContext.length}`);
                     let rankedSolutions = await this.callLLM("rank-web-solutions", IEngineConstants.rankWebSolutionsModel, await this.renderProblemPrompt(webPage.solutionsIdentifiedInTextContext, subProblemIndex));
                     this.logger.debug(`${id} - Solutions after ranking:
              ${JSON.stringify(rankedSolutions, null, 2)}`);
                     await this.webPageVectorStore.updateWebSolutions(id, rankedSolutions, true);
+                    this.logger.info(`Length after: ${rankedSolutions.length} removed ${webPage.solutionsIdentifiedInTextContext.length - rankedSolutions.length} solutions`);
                     this.logger.info(`${subProblemIndex} - (+${offset + (pageCounter++)}) - ${id} - Updated`);
                     if (false) {
                         const testWebPageBack = await this.webPageVectorStore.getWebPage(id);
@@ -122,6 +133,7 @@ export class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
             }*/
         });
         await Promise.all(subProblemsPromises);
+        console.log(`Duplicate URLs: ${JSON.stringify(this.duplicateUrls, null, 2)}`);
         this.logger.info("Finished ranking all web solutions");
     }
 }

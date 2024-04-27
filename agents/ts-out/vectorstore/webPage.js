@@ -107,6 +107,23 @@ export class WebPageVectorStore extends PolicySynthAgentBase {
             });
         });
     }
+    async deleteWebSolution(id, quiet = false) {
+        try {
+            const response = await WebPageVectorStore.client.data
+                .deleter()
+                .withClassName("WebPage")
+                .withId(id)
+                .do();
+            if (!quiet) {
+                this.logger.info(`Weaviate: Deleted web solution with ID ${id}`);
+            }
+            return response;
+        }
+        catch (err) {
+            this.logger.error(err?.stack || err);
+            throw err;
+        }
+    }
     async updateWebSolutions(id, webSolutions, quiet = false) {
         return new Promise((resolve, reject) => {
             WebPageVectorStore.client.data
