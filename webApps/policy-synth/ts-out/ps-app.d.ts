@@ -70,6 +70,7 @@ export declare class PolicySynthWebApp extends YpBaseElement {
     totalCons: number;
     drawer: MdNavigationDrawer;
     constructor();
+    setupDebugScroll(): void;
     renderSolutionPage(): TemplateResult;
     renderPoliciesPage(): TemplateResult;
     setupCurrentProjectFromRoute(newProjectId: number, clearAll?: boolean): void;

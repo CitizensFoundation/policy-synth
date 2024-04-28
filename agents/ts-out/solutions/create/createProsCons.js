@@ -89,7 +89,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
                         this.logger.info(`Skipping ${prosOrCons} for solution ${solutionIndex} of sub problem ${subProblemIndex} as it already exists`);
                     }
                     else {
-                        const maxPointRetries = 5;
+                        const maxPointRetries = 25;
                         let retries = 0;
                         let gotFullPoints = false;
                         while (!gotFullPoints && retries < maxPointRetries) {

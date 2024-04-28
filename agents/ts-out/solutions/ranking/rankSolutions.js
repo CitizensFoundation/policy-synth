@@ -70,8 +70,6 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", IEngineConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblem(subProblemIndex) {
-        if (subProblemIndex != 6)
-            return;
         const lastPopulationIndex = this.lastPopulationIndex(subProblemIndex);
         this.logger.info(`Ranking solution components for sub problem ${subProblemIndex} population ${lastPopulationIndex}`);
         this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex), IEngineConstants.minimumNumberOfPairwiseVotesForPopulation *

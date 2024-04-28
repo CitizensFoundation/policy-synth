@@ -104,7 +104,6 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
   }
 
   async processSubProblem(subProblemIndex: number) {
-    if (subProblemIndex!=6) return;
     const lastPopulationIndex = this.lastPopulationIndex(subProblemIndex);
     this.logger.info(
       `Ranking solution components for sub problem ${subProblemIndex} population ${lastPopulationIndex}`

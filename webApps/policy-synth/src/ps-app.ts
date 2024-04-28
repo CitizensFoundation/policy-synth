@@ -208,7 +208,43 @@ export class PolicySynthWebApp extends YpBaseElement {
     }
 
     window.psAppGlobals.activity('pageview');
+
+    this.setupDebugScroll();
   }
+
+  setupDebugScroll() {
+    let isScrolling = false;
+    let scrollInterval: string | number | NodeJS.Timeout;
+
+    const startScrolling = () => {
+      if (!isScrolling) {
+        isScrolling = true;
+        scrollInterval = setInterval(() => {
+          window.scrollBy(0, 1); // Scroll down by 10 pixels
+        }, 4); // Every 100 milliseconds
+      }
+    };
+
+    const stopScrolling = () => {
+      if (isScrolling) {
+        clearInterval(scrollInterval);
+        isScrolling = false;
+      }
+    };
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 's' && !isScrolling) {
+        startScrolling();
+      }
+    });
+
+    window.addEventListener('keyup', (event) => {
+      if (event.key === 's') {
+        stopScrolling();
+      }
+    });
+  }
+
 
   renderSolutionPage() {
     return this.renderContentOrLoader(html`
