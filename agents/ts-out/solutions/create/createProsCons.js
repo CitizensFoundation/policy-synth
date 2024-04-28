@@ -28,7 +28,8 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
         5. The ${prosOrCons} should be outputed as an JSON array: [ "...", "..." ].
         6. Reorder the points based on importance to the problem
         7. Never offer explanations.
-        8. Follow a step-by-step approach in your thought process.
+        8. Always output ${IEngineConstants.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array.
+        9. Follow a step-by-step approach in your thought process.
         `),
             new HumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
@@ -59,7 +60,8 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
         6. The ${prosOrCons} should be outputted as an JSON array: [ "...", "..." ].
         7. Never output the index number of the ${prosOrCons} in the text.
         8. Never offer explanations.
-        9. Let's think step by step.
+        9. Always output ${IEngineConstants.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array
+        10. Let's think step by step.
         `),
             new HumanMessage(`
          ${this.renderSubProblem(subProblemIndex, true)}
@@ -87,13 +89,28 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
                         this.logger.info(`Skipping ${prosOrCons} for solution ${solutionIndex} of sub problem ${subProblemIndex} as it already exists`);
                     }
                     else {
-                        let results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderCreatePrompt(prosOrCons, subProblemIndex, solution), true, false, 135));
-                        if (IEngineConstants.enable.refine.createProsCons) {
-                            results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderRefinePrompt(prosOrCons, results, subProblemIndex, solution), true, false, 135));
+                        const maxPointRetries = 5;
+                        let retries = 0;
+                        let gotFullPoints = false;
+                        while (!gotFullPoints && retries < maxPointRetries) {
+                            let results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderCreatePrompt(prosOrCons, subProblemIndex, solution), true, false, 135));
+                            if (IEngineConstants.enable.refine.createProsCons) {
+                                results = (await this.callLLM("create-pros-cons", IEngineConstants.createProsConsModel, await this.renderRefinePrompt(prosOrCons, results, subProblemIndex, solution), true, false, 135));
+                            }
+                            if (results && results.length === IEngineConstants.maxNumberGeneratedProsConsForSolution) {
+                                gotFullPoints = true;
+                                this.logger.debug(`${prosOrCons}: ${JSON.stringify(results, null, 2)}`);
+                                solution[prosOrCons] = results;
+                                await this.saveMemory();
+                            }
+                            else {
+                                retries++;
+                                this.logger.error(`Retrying - but Failed to get full points for ${prosOrCons} for solution ${solutionIndex} of sub problem ${subProblemIndex}`);
+                            }
                         }
-                        this.logger.debug(`${prosOrCons}: ${JSON.stringify(results, null, 2)}`);
-                        solution[prosOrCons] = results;
-                        await this.saveMemory();
+                        if (!gotFullPoints) {
+                            this.logger.error(`Failed to get full points for ${prosOrCons} for solution ${solutionIndex} of sub problem ${subProblemIndex}`);
+                        }
                     }
                 }
             }

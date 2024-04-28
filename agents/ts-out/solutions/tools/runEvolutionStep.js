@@ -15,7 +15,6 @@ if (projectId) {
         "evolve-create-population",
         "evolve-reap-population",
         "create-pros-cons",
-        "create-pros-cons", // Just to be sure to mop up any empty pros/cons arrays from the first pass, probably not needed anymore after a prompt fix
         "rank-pros-cons",
         "rank-solutions",
         "create-solution-images",
