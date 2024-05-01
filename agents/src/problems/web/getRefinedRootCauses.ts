@@ -52,6 +52,9 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
         Root Cause Type: ${type}
 
+        General information about what we are looking for:
+        ${this.memory.customInstructions.createSubProblems}
+
         <text context>
         ${text}
         </text context>

@@ -170,14 +170,14 @@ export class IEngineConstants {
         verbose: false,
     };
     static getPageAnalysisModel = {
-        name: "gpt-3.5-turbo-1106",
+        name: "gpt-4-turbo-2024-04-09",
         temperature: 0.0,
-        maxOutputTokens: 2048,
-        tokenLimit: 16385,
-        inTokenCostUSD: gpt35_16kInTokenPrice,
-        outTokenCostUSD: gpt35_16kOutTokenPrice,
-        limitTPM: gpt35_16k_TPM,
-        limitRPM: gpt35_16k_RPM,
+        maxOutputTokens: 4000,
+        tokenLimit: gpt4TotalTokenLimit,
+        inTokenCostUSD: gpt4InTokenPrice,
+        outTokenCostUSD: gpt4OutTokenPrice,
+        limitTPM: gpt4_TPM,
+        limitRPM: gpt4_RPM,
         verbose: false,
     };
     static getSolutionsPagesAnalysisModel = {
@@ -401,10 +401,10 @@ export class IEngineConstants {
     static maxTopEntitiesToRender = 3;
     static maxTopQueriesToSearchPerType = 5;
     static maxTopEvidenceQueriesToSearchPerType = 4;
-    static maxTopRootCauseQueriesToSearchPerType = 5;
-    static maxRootCausePercentOfSearchResultWebPagesToGet = 0.65;
+    static maxTopRootCauseQueriesToSearchPerType = 6;
+    static maxRootCausePercentOfSearchResultWebPagesToGet = 0.7;
     static maxRootCausesToUseForRatingRootCauses = 5;
-    static topWebPagesToGetForRefineRootCausesScan = 10;
+    static topWebPagesToGetForRefineRootCausesScan = 25;
     static mainSearchRetryCount = 40;
     static maxDalleRetryCount = 7;
     static maxTopWebPagesToGet = 5;
@@ -416,7 +416,7 @@ export class IEngineConstants {
     static numberOfSearchTypes = 4;
     static webPageNavTimeout = 30 * 1000;
     static subProblemsRankingMinNumberOfMatches = 10;
-    static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
+    static currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36";
     static topItemsToKeepForTopicClusterPruning = 3;
     static chances = {
         createSolutions: {
