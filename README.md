@@ -28,6 +28,7 @@ This agent flow automates and scales GovLabs' crowdsourcing approach to channel 
 
 ![Policy Synth v 49](https://github.com/CitizensFoundation/policy-synth/assets/43699/e7cc413c-3c0b-4a1e-adc9-2bf4b85bbca2)
 
+
 ### RAG Chatbot
 The RAG Chatbot powers the Rebooting Democracy initiative by utilizing hundreds of documents to inform its responses. It serves to engage users effectively by providing well-sourced, context-rich information.
 
@@ -37,6 +38,7 @@ The RAG Chatbot powers the Rebooting Democracy initiative by utilizing hundreds 
 
 ![PS - Rebooting Democracy Chatbot-3](https://github.com/CitizensFoundation/policy-synth/assets/43699/ea7eaa3e-a1ab-402c-a6dc-b23c85c454bb)
 
+
 ### Find Skills-First Policy Barriers (Improve laws & regulation)
 This flow agent uses AI to analyze extensive data sets, helping to identify and recommend changes to barriers in skills-first policies across US states. It focuses on enhancing legal frameworks to support skills-based education and employment initiatives.
 
@@ -45,6 +47,7 @@ This flow agent uses AI to analyze extensive data sets, helping to identify and 
 ![Skills-First-2](https://github.com/CitizensFoundation/policy-synth/assets/43699/f1e4df6d-67b5-4240-8858-668c9d0365ab)
 
 ![Skills-First-3](https://github.com/CitizensFoundation/policy-synth/assets/43699/1f1b85c4-0a2b-4777-a7fc-a04fd14dcf3a)
+
 
 ## Integrated with our Top Rated Engagement Tools
 
