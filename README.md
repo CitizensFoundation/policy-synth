@@ -21,8 +21,27 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 ## Example Results
 - <a href="https://policy-synth.ai/projects/1/"><strong>Open Results: Democracy in Distress</strong></a><br>
 
-## Example Policy Synth Agent Configuration
+## Example Policy Synth Agent Configurations
+
+### Smarter Crowdsourcing (Scaling up GovLabs proven methodology)
+This agent automates and scales GovLabs' crowdsourcing approach to channel expert collective intelligence into actionable policy solutions. It aims to streamline the generation of innovative solutions for complex policy challenges.
+
 ![Policy Synth v 49](https://github.com/CitizensFoundation/policy-synth/assets/43699/e7cc413c-3c0b-4a1e-adc9-2bf4b85bbca2)
+
+### RAG Chatbot
+The RAG Chatbot powers the Rebooting Democracy initiative by utilizing hundreds of documents to inform its responses. It serves to engage users effectively by providing well-sourced, context-rich information.
+
+![PS - Rebooting Democracy Chatbot-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/40ac60f8-a52c-4732-8f53-68cd78ba67f4)
+![PS - Rebooting Democracy Chatbot-2](https://github.com/CitizensFoundation/policy-synth/assets/43699/6939cbe1-0f33-4685-93a5-cd25d1467775)
+![PS - Rebooting Democracy Chatbot-3](https://github.com/CitizensFoundation/policy-synth/assets/43699/ea7eaa3e-a1ab-402c-a6dc-b23c85c454bb)
+
+### Find Skills-First Policy Barriers (Improve laws & regulation)
+This agent uses AI to analyze extensive data sets, helping to identify and recommend changes to barriers in skills-first policies across US states. It focuses on enhancing legal frameworks to support skills-based education and employment initiatives.
+
+![Skills-First-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/b8eef289-1397-427d-a035-0c8907995688)
+![Skills-First-2](https://github.com/CitizensFoundation/policy-synth/assets/43699/f1e4df6d-67b5-4240-8858-668c9d0365ab)
+![Skills-First-3](https://github.com/CitizensFoundation/policy-synth/assets/43699/1f1b85c4-0a2b-4777-a7fc-a04fd14dcf3a)
+
 
 ## Integrated with our Top Rated Engagement Tools
 
