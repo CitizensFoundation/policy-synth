@@ -22,7 +22,7 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 - <a href="https://policy-synth.ai/projects/1/"><strong>Open Results: Democracy in Distress</strong></a><br>
 
 ## Example Policy Synth Agent Configuration
-![Policy Synth v 43](https://github.com/CitizensFoundation/policy-synth/assets/43699/33435280-e9e8-4cc9-afdb-39ea9889eebc)
+![Policy Synth v 45](https://github.com/CitizensFoundation/policy-synth/assets/43699/095557d6-e2dc-4e39-9dd6-0242bbb5806b)
 
 ## Integrated with our Top Rated Engagement Tools
 
