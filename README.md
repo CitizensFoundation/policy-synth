@@ -44,7 +44,7 @@ This flow agent uses AI to analyze extensive data sets, helping to identify and 
 
 ![Skills-First-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/b8eef289-1397-427d-a035-0c8907995688)
 
-![Skills-First-2](https://github.com/CitizensFoundation/policy-synth/assets/43699/f1e4df6d-67b5-4240-8858-668c9d0365ab)
+![Skills-First AI-2b](https://github.com/CitizensFoundation/policy-synth/assets/43699/ee3ba0ab-7404-4de4-8115-5142ec11bdd7)
 
 ![Skills-First-3](https://github.com/CitizensFoundation/policy-synth/assets/43699/1f1b85c4-0a2b-4777-a7fc-a04fd14dcf3a)
 
