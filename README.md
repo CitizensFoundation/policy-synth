@@ -24,7 +24,7 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 ## Example Policy Synth Agent Configurations
 
 ### Smarter Crowdsourcing (Scaling up GovLabs proven methodology)
-This agent automates and scales GovLabs' crowdsourcing approach to channel expert collective intelligence into actionable policy solutions. It aims to streamline the generation of innovative solutions for complex policy challenges.
+This agent flow automates and scales GovLabs' crowdsourcing approach to channel expert collective intelligence into actionable policy solutions. It aims to streamline the generation of innovative solutions for complex policy challenges.
 
 ![Policy Synth v 49](https://github.com/CitizensFoundation/policy-synth/assets/43699/e7cc413c-3c0b-4a1e-adc9-2bf4b85bbca2)
 
@@ -36,7 +36,7 @@ The RAG Chatbot powers the Rebooting Democracy initiative by utilizing hundreds 
 ![PS - Rebooting Democracy Chatbot-3](https://github.com/CitizensFoundation/policy-synth/assets/43699/ea7eaa3e-a1ab-402c-a6dc-b23c85c454bb)
 
 ### Find Skills-First Policy Barriers (Improve laws & regulation)
-This agent uses AI to analyze extensive data sets, helping to identify and recommend changes to barriers in skills-first policies across US states. It focuses on enhancing legal frameworks to support skills-based education and employment initiatives.
+This flow agent uses AI to analyze extensive data sets, helping to identify and recommend changes to barriers in skills-first policies across US states. It focuses on enhancing legal frameworks to support skills-based education and employment initiatives.
 
 ![Skills-First-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/b8eef289-1397-427d-a035-0c8907995688)
 ![Skills-First-2](https://github.com/CitizensFoundation/policy-synth/assets/43699/f1e4df6d-67b5-4240-8858-668c9d0365ab)
