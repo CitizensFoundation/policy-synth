@@ -21,7 +21,7 @@ Policy Synth is already having real life impact: [https://www.fastcompany.com/91
 ## Example Results
 - <a href="https://policy-synth.ai/projects/1/"><strong>Open Results: Democracy in Distress</strong></a><br>
 
-## Example Policy Synth Agent Configurations
+## Example Policy Synth Multi-Scale Agent Configurations
 
 ### Smarter Crowdsourcing (Scaling up GovLabs proven methodology)
 This agent flow automates and scales GovLabs' crowdsourcing approach to channel expert collective intelligence into actionable policy solutions. It aims to streamline the generation of innovative solutions for complex policy challenges.
@@ -79,9 +79,6 @@ Fast (System 1) and Slow (System 2) thinking, terms popularized by psychologist 
 
 ### Policy Synth Agent Approach
 In contrast to striving for fully autonomous System 2 capabilities with AI, Policy Synth approaches the challenge by manually constructing and integrating System 2 thinking processes through a multi-scale AI agent framework. This methodological choice allows for the deliberate orchestration of AI processes that implement a deeper System 2 thinking by combining specialized agents in a structured manner.
-
-## Example Multi-Scale Policy Synth Agent
-![image](https://github.com/CitizensFoundation/policy-synth/assets/43699/c9947b97-68a1-43be-925e-4a52bc2b9ad6)
 
 ## Example Agent Queue Configuration
 ![Policy Synth v 42a](https://github.com/CitizensFoundation/policy-synth/assets/43699/b7e1f10a-7438-4827-a576-b48ec5a672e6)
