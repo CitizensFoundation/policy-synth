@@ -376,10 +376,17 @@ const setupProjectSeven = (memory) => {
     if (!memory.customInstructions) {
         memory.customInstructions = {};
     }
-    memory.problemStatement.description = `There is an urgent need to better understand the impact of artificial intelligence (AI)-driven job displacement in the context of New Jersey's workforce and economy, and in particular, how AI-driven changes in the workplace might create barriers to economic growth, affect the demand for skills, and transform employment opportunities in New Jersey.
-  There is great concern among American workers about AI-driven job displacement, with 82% of U.S. workers saying it is very or somewhat important that the federal government ensures that AI technologies do not cause U.S. workers to lose their jobs. AI-driven job displacement is an especially important concern among workers in lower-income households, workers of color, and workers without a college degree.
-  There are many unknowns when it comes to the impact of generative AI on New Jersey's economy and job market. While it is possible that companies will automate certain roles as a way of cutting costs, we do not yet know how prevalent this practice will be or which jobs or roles will be impacted. While there is great concern among workers about AI-driven job displacement, it is still too early to confidently say how and to what extent AI will augment or automate jobs. While AI is likely to create new job opportunities – including both AI-specific jobs and AI-adjacent roles – it is unclear which sectors and job types will be impacted.
-  We need to better understand which sectors, industries, and job types in New Jersey are most likely to be affected by AI, and whether and to what degree AI-driven changes will lead to barriers to economic growth in New Jersey's economy.`;
+    memory.problemStatement.description = `There is an urgent need to better understand the impact of artificial intelligence (AI) on New Jersey's workforce and economy.
+  Here are a few examples, but not an exhaustive list, of potential problem categories and root causes we want to understand in regards to whether and how AI-driven changes in New Jersey may:
+  - Lead to job displacement and economic instability
+  - Create barriers to economic growth
+  - Affect the demand for skills
+  - Transform employment opportunities in New Jersey
+  - Erode workers’ privacy and autonomy
+  - Create biases in talent management
+  - Weaken workers’ collective power and ability to engage in collective action
+  - Create new occupational health and safety risks
+  `;
     memory.customInstructions.createSubProblems = `Broad challenge of AI-driven job displacement.
   Identify subproblems that specifically reflect the unique demographic, economic, and industrial landscape of New Jersey.
   Consider both immediate and long-term impacts of AI on New Jersey's workforce and other states, including changes in job types, shifts in skill requirements, and the overall economic environment.

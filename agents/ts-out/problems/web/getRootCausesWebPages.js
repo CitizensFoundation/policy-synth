@@ -5,7 +5,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
-import { RootCauseExamplePrompts } from "./rootCauseExamplePrompts.js";
+import { RootCauseTypeTypeDefs } from "./rootCauseTypeTypeDef.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -32,6 +32,7 @@ class RootCauseTypeLookup {
 }
 export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
+    hasPrintedPrompt = false;
     renderRootCauseScanningPrompt(type, text) {
         const nameOfColumn = RootCauseTypeLookup.getPropertyName(type);
         if (!nameOfColumn) {
@@ -43,21 +44,19 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         Your are an expert in analyzing textual data:
 
         Important Instructions:
-        1. Examine the "Text context" to identify root causes for the specified problem statement.
-        2. Identify any specific raw potential ${type} in the "Text Context" and include them in the '${nameOfColumn}' JSON array. We will analyse this later.
-        3. Always write out the relevanceToProblemStatement & ${nameOfColumn}
+        1. Examine the <TextContext> to identify root causes for the specified problem statement.
+        2. Identify all specific potential ${type} in the <TextContext> and include them in the '${nameOfColumn}' JSON array in one short paragraph. We will analyse this later.
+        3. Always write out the relevanceToProblemStatement and ${nameOfColumn}
 
-        - Only use information found within the "Text Context" - do not create your own data.
+        - Only use information found within the <TextContext> - do not create your own data.
         - Never output in markdown format.
         - Always output your results in the JSON format with no additional explanation.
         - Let's think step-by-step.
 
-        Example:
-
         Web page type: ${type}
 
-        Text context:
-        ${RootCauseExamplePrompts.render(type)}
+        JSON Output Definition:
+        ${RootCauseTypeTypeDefs.render(type)}
         `),
             // Only add what is required here
             new HumanMessage(`
@@ -65,8 +64,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
         Web page type: ${type}
 
-        Text Context:
+        <TextContext>
         ${text}
+        </TextContext>
 
         JSON Output:
         `),
@@ -121,6 +121,10 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     async getRootCauseAIAnalysis(type, text) {
         this.logger.info("Get Root Cause AI Analysis");
         const messages = this.renderRootCauseScanningPrompt(type, text);
+        if (!this.hasPrintedPrompt) {
+            console.log(JSON.stringify(messages, null, 2));
+            this.hasPrintedPrompt = true;
+        }
         const analysis = (await this.callLLM("web-get-root-causes-pages", IEngineConstants.getPageAnalysisModel, messages, true, true));
         return analysis;
     }

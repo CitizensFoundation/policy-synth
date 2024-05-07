@@ -1,8 +1,8 @@
-import {RootCauseWebPageVectorStore} from "../rootCauseWebPage.js"
+import { RootCauseWebPageVectorStore } from "../rootCauseWebPage.js";
 
 async function run() {
     const store = new RootCauseWebPageVectorStore();
-    await store.addSchema();
+    await store.deleteScheme();
     process.exit(0);
 }
 

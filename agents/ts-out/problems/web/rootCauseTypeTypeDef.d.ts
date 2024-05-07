@@ -1,4 +1,4 @@
-export declare class RootCauseExamplePrompts {
+export declare class RootCauseTypeTypeDefs {
     static render(categoryType: PSRootCauseWebPageTypes): string;
     static renderHistoricalRootCause(): string;
     static renderEconomicRootCause(): string;
@@ -12,4 +12,4 @@ export declare class RootCauseExamplePrompts {
     static renderEthicalRootCause(): string;
     static renderCaseStudies(): string;
 }
-//# sourceMappingURL=rootCauseExamplePrompts.d.ts.map
+//# sourceMappingURL=rootCauseTypeTypeDef.d.ts.map

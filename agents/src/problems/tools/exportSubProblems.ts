@@ -15,10 +15,10 @@ const main = async () => {
     const redisKey = `st_mem:${projectId}:id`;
     const currentProject =  JSON.parse(await redis.get(redisKey) || "") as PsBaseMemoryData;
 ​
-    let outCsvFile = `Description,Title,"Why important","Elo Rating","Search type"`;
+    let outCsvFile = `Description,Title,"Why important","Elo Rating","Search type","URL"`;
     // trim this.memory.subProblems with newLength
     currentProject.subProblems.forEach((subProblem) => {
-      outCsvFile += `\n"${subProblem.description}","${subProblem.title}","${subProblem.whyIsSubProblemImportant}","${subProblem.eloRating}","${subProblem.fromSearchType}"`;
+      outCsvFile += `\n"${subProblem.description}","${subProblem.title}","${subProblem.whyIsSubProblemImportant}","${subProblem.eloRating}","${subProblem.fromSearchType}","${subProblem.fromUrl}"`;
     });
 ​
     await fs.writeFile(outFilePath, outCsvFile);

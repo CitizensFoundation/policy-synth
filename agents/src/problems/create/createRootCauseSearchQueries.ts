@@ -25,11 +25,10 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
         2. Always focus your search queries on the problem statement and its core ideas.
         3. Use your knowledge and experience to create the best possible search queries.
         4. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
-        5. You will be provided with a search query type, use this to guide your creation
-        6. Create 12 high quality search queries
-        7. All search queries should be focused on finding root causes for the problem.
-        8. List the search queries in a JSON string array
-        9. Never explain, just output JSON.
+        5. You will be provided with a search query type, always use this type to guide your creation
+        6. Always create 25 high quality search queries with a wide range
+        7. List the search queries in a JSON string array
+        8. Never explain, just output JSON.
 ​
         Let's think step by step.
 ​

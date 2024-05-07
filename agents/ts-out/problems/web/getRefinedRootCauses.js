@@ -27,7 +27,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
               rootCauseConfidenceScore: number;
             }
           ]
-        3. rootCauseDescription should describe each root cause in one clear sentence maximum 25 words, never more, and don't include any other information or solutions.
+        3. rootCauseDescription should describe each root cause in one clear paragraph
         4. Never use acronyms in rootCauseDescription even if they are used in the text context
         5. Never use the words "is a root cause" in the rootCauseDescription
         6. Output scores in the ranges of 0-100.
@@ -67,7 +67,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
                     let nextAnalysis = await this.getRefinedRootCauseTextAIAnalysis(type, currentText);
                     if (nextAnalysis) {
                         for (let rootCause of nextAnalysis) {
-                            //this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
+                            this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`);
                             if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
                                 this.memory.subProblems.push({
                                     title: rootCause.rootCauseTitle,
@@ -108,9 +108,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
             else {
                 textAnalysis = await this.getRefinedRootCauseTextAIAnalysis(type, text);
                 for (let rootCause of textAnalysis) {
-                    //this.logger.debug(
-                    //  `Root Cause: ${JSON.stringify(rootCause, null, 2)}`
-                    //);
+                    this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`);
                     if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
                         this.memory.subProblems.push({
                             title: rootCause.rootCauseTitle,
