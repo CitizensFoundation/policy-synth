@@ -5,6 +5,7 @@ import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.
 export declare class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
     hasPrintedPrompt: boolean;
+    processesUrls: Set<string>;
     renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
     getRootCauseTokenCount(text: string, type: PSRootCauseWebPageTypes): Promise<{
         totalTokenCount: number;

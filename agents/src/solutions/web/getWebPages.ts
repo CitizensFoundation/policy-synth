@@ -4,6 +4,7 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
+import crypto from 'crypto';
 
 import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
@@ -425,6 +426,15 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
   }
 
+  generateFileName(url: string) {
+    // Use SHA-256 hash function
+    const hash = crypto.createHash('sha256');
+    hash.update(url);
+    // Generate hash and convert it to a hexadecimal string
+    const hashedFileName = hash.digest('hex');
+    return hashedFileName + '.gz';
+  }
+
   //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
   // https://github.com/hwchase17/langchain/blob/master/langchain/document_loaders/arxiv.py
   // https://info.arxiv.org/help/api/basics.html
@@ -446,7 +456,14 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         let pdfBuffer;
 
         const directoryPath = `webPagesCache/${this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`}`;
-        const fileName = encodeURIComponent(url) + '.gz';
+        let fileName;
+        if (encodeURIComponent(url).length>230) {
+          this.logger.debug(`URL too long, generating hash for filename`)
+          fileName = this.generateFileName(url);
+        } else {
+          fileName = encodeURIComponent(url) + '.gz';
+        }
+
         const fullPath = join(directoryPath, fileName);
 
         // Create the directory if it doesn't exist
@@ -547,7 +564,15 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       this.logger.debug(`Getting HTML for ${url}`);
 
       const directoryPath = `webPagesCache/${this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`}`;
-      const fileName = encodeURIComponent(url) + '.gz';
+
+      let fileName;
+      if (encodeURIComponent(url).length>230) {
+        this.logger.debug(`URL too long, generating hash for filename`)
+        fileName = this.generateFileName(url);
+      } else {
+        fileName = encodeURIComponent(url) + '.gz';
+      }
+
       const fullPath = join(directoryPath, fileName);
 
       // Create the directory if it doesn't exist

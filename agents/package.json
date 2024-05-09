@@ -74,7 +74,7 @@
     "pdfjs-dist": "^3.8.162",
     "pdfreader": "^3.0.0",
     "pg": "^8.11.5",
-    "puppeteer": "^22.7.1",
+    "puppeteer": "^22.8.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "weaviate-ts-client": "^2.1.1",

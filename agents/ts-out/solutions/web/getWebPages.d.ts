@@ -20,6 +20,7 @@ export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     getAIAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<IEngineWebPageAnalysisData>;
     getTextAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<IEngineWebPageAnalysisData>;
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
+    generateFileName(url: string): string;
     getAndProcessPdf(subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
     getAndProcessHtml(subProblemIndex: number | undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
     getAndProcessPage(subProblemIndex: number | undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined): Promise<boolean>;

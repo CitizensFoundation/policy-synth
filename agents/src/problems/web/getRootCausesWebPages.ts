@@ -56,45 +56,41 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
   rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
   hasPrintedPrompt = false;
 
+  processesUrls = new Set<string>();
+
   renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string) {
     return [
       new SystemMessage(
-        `You are an expert in analyzing root causes for a particular problem statement:
+        `You are an expert in identifying and analyzing root causes for a particular problem statement in a given text context.
 
         Important Instructions:
-        1. Examine the "<text context>" and analyze it for root causes that relate to the specified problem statement and root cause type.
+        1. Examine the contents of the "<textContext>" section in detail, identify all specific root causes in the context that relate to the problem statement presented by the user.
         2. Always output your results in the following JSON format:
          [
             {
               rootCauseDescription: string;
               rootCauseTitle: string;
               whyRootCauseIsImportant: string;
-              rootCauseRelevanceToTypeScore: number;
               rootCauseRelevanceScore: number;
               rootCauseQualityScore: number;
               rootCauseConfidenceScore: number;
             }
           ]
-        3. rootCauseDescription should describe each root cause in one clear paragraph
-        4. Never use acronyms in rootCauseDescription even if they are used in the text context
-        5. Never use the words "is a root cause" in the rootCauseDescription
-        6. Output scores in the ranges of 0-100.
+        3. rootCauseDescription should describe each root cause you find in the <textContext> in one or two clear paragraphs.
+        4. Never use acronyms in rootCauseDescription even if they are used in the text context.
+        5. Never use the words "is a root cause" in the rootCauseDescription.
+        6. Make sure to explain how the root cause relateds to the problem statement in the rootCauseDescription.
+        7. Output scores in the ranges of 0-100 for the score JSON attributes.
+        8. If you do not find any relevant root causes in the <textContext> then just output an empty JSON array, never make up your own root causes.
         `
       ),
       new HumanMessage(
         `
         ${this.renderProblemStatement()}
 
-        Root Cause Type: ${type}
-
-        General information about what we are looking for:
-        ${this.memory.customInstructions.createSubProblems}
-
-        <text context>
+        <textContext>
         ${text}
-        </text context>
-
-        Let's think step by step.
+        </textContext>
 
         JSON Output:
         `
@@ -180,6 +176,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                   whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
                   fromSearchType: type,
                   fromUrl: url,
+                  relevanceScore: rootCause.rootCauseRelevanceScore,
+                  qualityScore: rootCause.rootCauseQualityScore,
+                  confidenceScore: rootCause.rootCauseConfidenceScore,
                   solutions: {
                     populations: [],
                   },
@@ -228,7 +227,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
               whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
               fromSearchType: type,
               fromUrl: url,
-              relevanceToTypeScore: rootCause.rootCauseRelevanceToTypeScore,
               relevanceScore: rootCause.rootCauseRelevanceScore,
               qualityScore: rootCause.rootCauseQualityScore,
               confidenceScore: rootCause.rootCauseConfidenceScore,
@@ -379,11 +377,19 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     entityIndex: number | undefined,
     policy: undefined = undefined
   ) {
+
+    if (this.processesUrls.has(url)) {
+      this.logger.info(`Already processed ${url}`);
+      return;
+    } else {
+      this.processesUrls.add(url);
+    }
+
     this.logger.debug(
       `Processing page text ${text.slice(
         0,
         150
-      )} for ${url} for ${type} search results`
+      )} for ${url} for ${type} search results (total urls processed ${this.processesUrls.size})`
     );
 
     try {
@@ -393,29 +399,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         url
       )) as unknown as PSRootCauseRawWebPageData;
 
-      if (textAnalysis) {
-        textAnalysis.url = url;
-        textAnalysis.searchType = type as PSRootCauseWebPageTypes;
-        textAnalysis.groupId = this.memory.groupId;
-        textAnalysis.communityId = this.memory.communityId;
-        textAnalysis.domainId = this.memory.domainId;
-
-        this.logger.debug(
-          `Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`
-        );
-
-        try {
-          await this.rootCauseWebPageVectorStore.postWebPage(textAnalysis);
-          this.totalPagesSave += 1;
-          this.logger.info(`Total ${this.totalPagesSave} saved pages`);
-        } catch (e: any) {
-          this.logger.error(`Error posting web page for url ${url}`);
-          this.logger.error(e);
-          this.logger.error(e.stack);
-        }
-      } else {
-        this.logger.warn(`No text analysis for ${url}`);
-      }
+      await this.saveMemory();
     } catch (e: any) {
       this.logger.error(`Error in processPageText`);
       this.logger.error(e.stack || e);
@@ -434,37 +418,16 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
       this.logger.info("Skipping the current url:" + url);
       return true;
     }
-    let hasPage = undefined;
-    if (onlyCheckWhatNeedsToBeScanned) {
-      try {
-        this.logger.info("Checking if a page exists " + url);
-        hasPage = await this.rootCauseWebPageVectorStore.webPageExist(
-          this.memory.groupId,
-          url,
-          type
-        );
-        if (hasPage) {
-          this.logger.warn(`Already have scanned ${type} / ${url}`);
-        } else {
-          this.logger.warn(`Need to scan ${type} / ${url}`);
-        }
-      } catch (e: any) {
-        this.logger.error("Error with try in getAndProcessRootCausePage");
-        this.logger.error(e);
-      }
-    }
-    if (!hasPage) {
-      if (url.toLowerCase().endsWith(".pdf")) {
-        await this.getAndProcessPdf(undefined, url, type, undefined);
-      } else {
-        await this.getAndProcessHtml(
-          undefined,
-          url,
-          browserPage,
-          type,
-          undefined
-        );
-      }
+    if (url.toLowerCase().endsWith(".pdf")) {
+      await this.getAndProcessPdf(undefined, url, type, undefined);
+    } else {
+      await this.getAndProcessHtml(
+        undefined,
+        url,
+        browserPage,
+        type,
+        undefined
+      );
     }
 
     return true;
@@ -472,10 +435,23 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
   async processRootCauses(browser: Browser) {
     const problemStatement = this.memory.problemStatement;
-    const newPage = await browser.newPage();
-    newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-    await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+    const browserPage = await browser.newPage();
+    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+
+    const clearSubProblems = true;
+
+    if (clearSubProblems) {
+      this.memory.subProblems = [];
+    }
+
+    if (this.memory.customInstructions.rootCauseUrlsToScan) {
+      for (const url of this.memory.customInstructions.rootCauseUrlsToScan) {
+        console.log(`Processing ${url}`);
+        await this.getAndProcessRootCausePage(url, browserPage, "adminSubmitted");
+      }
+    }
 
     for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
       let urlsToGet =
@@ -491,7 +467,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         for (let i = 0; i < urlsToGet.length; i++) {
           await this.getAndProcessRootCausePage(
             urlsToGet[i].url,
-            newPage,
+            browserPage,
             searchResultType
           );
         }
@@ -504,7 +480,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
       await this.saveMemory();
     }
 
-    await newPage.close();
+    await browserPage.close();
 
     this.logger.info("Finished and closed page for current problem");
   }

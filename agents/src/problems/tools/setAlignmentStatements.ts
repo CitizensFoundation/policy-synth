@@ -521,7 +521,7 @@ const setupProjectSeven = (memory: PsBaseMemoryData) => {
 
     /* BATCH B */
   memory.problemStatement.description = `There is an urgent need to better understand the impact of artificial intelligence (AI) on New Jersey's workforce and economy.
-    Here are key categories we want to understand in this research regards to whether and how AI-driven changes in New Jersey may:
+    Here are very wide categories we want to understand in this research regards to whether and how AI-driven changes in New Jersey may:
       Erode workers’ privacy and autonomy
       Create biases in talent management
       Weaken workers’ collective power and ability to engage in collective action

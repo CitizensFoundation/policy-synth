@@ -21,7 +21,6 @@ if (projectId) {
   //memory.currentStage = "rank-root-causes-search-results"
   memory.currentStage = "web-get-root-causes-pages"
 
-
   //memory.currentStage = "create-problem-statement-image";
   //memory.currentStage = "create-sub-problems";
   //memory.currentStage = "rank-sub-problems";
