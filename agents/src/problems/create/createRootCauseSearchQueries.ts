@@ -20,18 +20,16 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
 
   async renderCreatePrompt(searchResultType: PSRootCauseWebPageTypes) {
     return [
-      new SystemMessage(`Adhere to the following guidelines:
-        1. You generate high quality search queries for identifying root causes based on a Problem Statement.
-        2. Always focus your search queries on the problem statement and its core ideas.
-        3. Use your knowledge and experience to create the best possible search queries.
-        4. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
-        5. You will be provided with a search query type, always use this type to guide your creation
-        6. Always create 25 high quality search queries with a wide range
-        7. List the search queries in a JSON string array
-        8. Never explain, just output JSON.
+      new SystemMessage(`Instructions:
+      1. You generate high quality search queries for identifying root causes based on a Problem Statement and a Search Query Type.
+      2. Always focus your search queries on the problem statement and its core ideas, frame creatively with the Search Query Type provided.
+      3. Use your knowledge and experience to create the best possible search queries.
+      4. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
+      5. Always create 25 high quality search queries with a wide range
+      6. List the search queries in a JSON string array
+      7. Never explain, just output JSON.
 ​
-        Let's think step by step.
-​
+      Let's think step by step.
         `),
       new HumanMessage(`
          ${this.renderProblemStatement()}
@@ -100,6 +98,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
   async createRootCauseSearchQueries() {
     const problemStatement = this.memory.problemStatement;
     const rankeSearchQueriesHere = false;
+    const refineSearchQueriesHere = false;
     const regenerate = true;
     if (!problemStatement.rootCauseSearchQueries) {
       //@ts-ignore
@@ -114,12 +113,14 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
           IEngineConstants.createRootCauseSearchQueriesModel,
           await this.renderCreatePrompt(searchResultType),
         );
-        this.logger.info(`Refine root cause search queries for ${searchResultType} search results`);
-        searchResults = await this.callLLM(
-          "create-root-causes-search-queries",
-          IEngineConstants.createRootCauseSearchQueriesModel,
-          await this.renderRefinePrompt(searchResultType, searchResults),
-        );
+        if (refineSearchQueriesHere) {
+          this.logger.info(`Refine root cause search queries for ${searchResultType} search results`);
+          searchResults = await this.callLLM(
+            "create-root-causes-search-queries",
+            IEngineConstants.createRootCauseSearchQueriesModel,
+            await this.renderRefinePrompt(searchResultType, searchResults),
+          );
+        }
         if (rankeSearchQueriesHere) {
           this.logger.info(`Ranking root cause search queries for ${searchResultType} search results`);
           searchResults = await this.callLLM(

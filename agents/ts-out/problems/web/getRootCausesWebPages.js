@@ -5,7 +5,6 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
-import { RootCauseTypeTypeDefs } from "./rootCauseTypeTypeDef.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -24,7 +23,9 @@ class RootCauseTypeLookup {
         technologicalRootCause: "allPossibleTechnologicalRootCausesIdentifiedInTextContext",
         geopoliticalRootCause: "allPossibleGeopoliticalRootCausesIdentifiedInTextContext",
         ethicalRootCause: "allPossibleEthicalRootCausesIdentifiedInTextContext",
-        caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext"
+        caseStudies: "allPossibleRootCausesCaseStudiesIdentifiedInTextContext",
+        //TODO: Figure this out better than doubling up on socialRootCause
+        adminSubmitted: "allPossibleSocialRootCausesIdentifiedInTextContext",
     };
     static getPropertyName(rootCauseType) {
         return this.rootCauseTypeMapping[rootCauseType];
@@ -34,39 +35,41 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     hasPrintedPrompt = false;
     renderRootCauseScanningPrompt(type, text) {
-        const nameOfColumn = RootCauseTypeLookup.getPropertyName(type);
-        if (!nameOfColumn) {
-            throw new Error(`No corresponding property found for type: ${type}`);
-        }
         return [
-            // Update with our own problem statement from GPT
-            new SystemMessage(`
-        Your are an expert in analyzing textual data:
+            new SystemMessage(`You are an expert in analyzing root causes for a particular problem statement:
 
         Important Instructions:
-        1. Examine the <TextContext> to identify root causes for the specified problem statement.
-        2. Identify all specific potential ${type} in the <TextContext> and include them in the '${nameOfColumn}' JSON array in one short paragraph. We will analyse this later.
-        3. Always write out the relevanceToProblemStatement and ${nameOfColumn}
-
-        - Only use information found within the <TextContext> - do not create your own data.
-        - Never output in markdown format.
-        - Always output your results in the JSON format with no additional explanation.
-        - Let's think step-by-step.
-
-        Web page type: ${type}
-
-        JSON Output Definition:
-        ${RootCauseTypeTypeDefs.render(type)}
+        1. Examine the "<text context>" and analyze it for root causes that relate to the specified problem statement and root cause type.
+        2. Always output your results in the following JSON format:
+         [
+            {
+              rootCauseDescription: string;
+              rootCauseTitle: string;
+              whyRootCauseIsImportant: string;
+              rootCauseRelevanceToTypeScore: number;
+              rootCauseRelevanceScore: number;
+              rootCauseQualityScore: number;
+              rootCauseConfidenceScore: number;
+            }
+          ]
+        3. rootCauseDescription should describe each root cause in one clear paragraph
+        4. Never use acronyms in rootCauseDescription even if they are used in the text context
+        5. Never use the words "is a root cause" in the rootCauseDescription
+        6. Output scores in the ranges of 0-100.
         `),
-            // Only add what is required here
             new HumanMessage(`
         ${this.renderProblemStatement()}
 
-        Web page type: ${type}
+        Root Cause Type: ${type}
 
-        <TextContext>
+        General information about what we are looking for:
+        ${this.memory.customInstructions.createSubProblems}
+
+        <text context>
         ${text}
-        </TextContext>
+        </text context>
+
+        Let's think step by step.
 
         JSON Output:
         `),
@@ -76,17 +79,24 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         const emptyMessages = this.renderRootCauseScanningPrompt(type, "");
         const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
         const textForTokenCount = new HumanMessage(text);
-        const textTokenCount = await this.chat.getNumTokensFromMessages([textForTokenCount]);
-        const totalTokenCount = promptTokenCount.totalCount + textTokenCount.totalCount + IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+        const textTokenCount = await this.chat.getNumTokensFromMessages([
+            textForTokenCount,
+        ]);
+        const totalTokenCount = promptTokenCount.totalCount +
+            textTokenCount.totalCount +
+            IEngineConstants.getPageAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
-    async getRootCauseTextAnalysis(type, text) {
+    async getRootCauseTextAnalysis(type, text, url) {
         try {
             const { totalTokenCount, promptTokenCount } = await this.getRootCauseTokenCount(text, type);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
+            this.logger.debug(`Searching ${url}...`);
             let textAnalysis;
             if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit - promptTokenCount.totalCount - 512;
+                const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit -
+                    promptTokenCount.totalCount -
+                    512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
                 const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
@@ -94,13 +104,39 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                     const currentText = splitText[t];
                     let nextAnalysis = await this.getRootCauseAIAnalysis(type, currentText);
                     if (nextAnalysis) {
-                        if (t == 0) {
-                            textAnalysis = nextAnalysis;
+                        for (let rootCause of nextAnalysis) {
+                            this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`);
+                            if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
+                                this.memory.subProblems.push({
+                                    title: rootCause.rootCauseTitle,
+                                    description: rootCause.rootCauseDescription,
+                                    whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                                    fromSearchType: type,
+                                    fromUrl: url,
+                                    solutions: {
+                                        populations: [],
+                                    },
+                                    entities: [],
+                                    searchQueries: {
+                                        general: [],
+                                        scientific: [],
+                                        news: [],
+                                        openData: [],
+                                    },
+                                    searchResults: {
+                                        pages: {
+                                            general: [],
+                                            scientific: [],
+                                            news: [],
+                                            openData: [],
+                                        },
+                                    },
+                                });
+                            }
+                            else {
+                                this.logger.warn(`No title or description found for ${JSON.stringify(rootCause, null, 2)}`);
+                            }
                         }
-                        else {
-                            textAnalysis = this.mergeAnalysisData(textAnalysis, nextAnalysis);
-                        }
-                        this.logger.debug(`Refined root cause text analysis (${t}): ${JSON.stringify(textAnalysis, null, 2)}`);
                     }
                     else {
                         this.logger.error(`Error getting AI analysis for text ${currentText}`);
@@ -109,7 +145,46 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             }
             else {
                 textAnalysis = await this.getRootCauseAIAnalysis(type, text);
-                this.logger.debug(`Text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
+                for (let rootCause of textAnalysis) {
+                    this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`);
+                    if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
+                        this.memory.subProblems.push({
+                            title: rootCause.rootCauseTitle,
+                            description: rootCause.rootCauseDescription,
+                            whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                            fromSearchType: type,
+                            fromUrl: url,
+                            relevanceToTypeScore: rootCause.rootCauseRelevanceToTypeScore,
+                            relevanceScore: rootCause.rootCauseRelevanceScore,
+                            qualityScore: rootCause.rootCauseQualityScore,
+                            confidenceScore: rootCause.rootCauseConfidenceScore,
+                            solutions: {
+                                populations: [],
+                            },
+                            entities: [],
+                            searchQueries: {
+                                general: [],
+                                scientific: [],
+                                news: [],
+                                openData: [],
+                            },
+                            searchResults: {
+                                pages: {
+                                    general: [],
+                                    scientific: [],
+                                    news: [],
+                                    openData: [],
+                                },
+                            },
+                        });
+                    }
+                    else {
+                        this.logger.warn(`No title or description found for ${JSON.stringify(rootCause, null, 2)}`);
+                    }
+                }
+                //this.logger.debug(
+                //  `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
+                //);
             }
             return textAnalysis;
         }
@@ -143,20 +218,26 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                 ...(data2.allPossibleCulturalRootCausesIdentifiedInTextContext || []),
             ],
             allPossibleEnvironmentalRootCausesIdentifiedInTextContext: [
-                ...(data1.allPossibleEnvironmentalRootCausesIdentifiedInTextContext || []),
-                ...(data2.allPossibleEnvironmentalRootCausesIdentifiedInTextContext || []),
+                ...(data1.allPossibleEnvironmentalRootCausesIdentifiedInTextContext ||
+                    []),
+                ...(data2.allPossibleEnvironmentalRootCausesIdentifiedInTextContext ||
+                    []),
             ],
             allPossibleLegalRootCausesIdentifiedInTextContext: [
                 ...(data1.allPossibleLegalRootCausesIdentifiedInTextContext || []),
                 ...(data2.allPossibleLegalRootCausesIdentifiedInTextContext || []),
             ],
             allPossibleTechnologicalRootCausesIdentifiedInTextContext: [
-                ...(data1.allPossibleTechnologicalRootCausesIdentifiedInTextContext || []),
-                ...(data2.allPossibleTechnologicalRootCausesIdentifiedInTextContext || []),
+                ...(data1.allPossibleTechnologicalRootCausesIdentifiedInTextContext ||
+                    []),
+                ...(data2.allPossibleTechnologicalRootCausesIdentifiedInTextContext ||
+                    []),
             ],
             allPossibleGeopoliticalRootCausesIdentifiedInTextContext: [
-                ...(data1.allPossibleGeopoliticalRootCausesIdentifiedInTextContext || []),
-                ...(data2.allPossibleGeopoliticalRootCausesIdentifiedInTextContext || []),
+                ...(data1.allPossibleGeopoliticalRootCausesIdentifiedInTextContext ||
+                    []),
+                ...(data2.allPossibleGeopoliticalRootCausesIdentifiedInTextContext ||
+                    []),
             ],
             allPossibleHistoricalRootCausesIdentifiedInTextContext: [
                 ...(data1.allPossibleHistoricalRootCausesIdentifiedInTextContext || []),
@@ -171,12 +252,16 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                 ...(data2.allPossibleSocialRootCausesIdentifiedInTextContext || []),
             ],
             allPossibleRootCausesCaseStudiesIdentifiedInTextContext: [
-                ...(data1.allPossibleRootCausesCaseStudiesIdentifiedInTextContext || []),
-                ...(data2.allPossibleRootCausesCaseStudiesIdentifiedInTextContext || []),
+                ...(data1.allPossibleRootCausesCaseStudiesIdentifiedInTextContext ||
+                    []),
+                ...(data2.allPossibleRootCausesCaseStudiesIdentifiedInTextContext ||
+                    []),
             ],
             rootCauseRelevanceToProblemStatement: data1.rootCauseRelevanceToProblemStatement,
-            rootCauseRelevanceToProblemStatementScore: data1.rootCauseRelevanceToProblemStatementScore || data2.rootCauseRelevanceToProblemStatementScore,
-            rootCauseRelevanceToTypeScore: data1.rootCauseRelevanceToTypeScore || data2.rootCauseRelevanceToTypeScore,
+            rootCauseRelevanceToProblemStatementScore: data1.rootCauseRelevanceToProblemStatementScore ||
+                data2.rootCauseRelevanceToProblemStatementScore,
+            rootCauseRelevanceToTypeScore: data1.rootCauseRelevanceToTypeScore ||
+                data2.rootCauseRelevanceToTypeScore,
             rootCauseConfidenceScore: data1.rootCauseConfidenceScore || data2.rootCauseConfidenceScore,
             rootCauseQualityScore: data1.rootCauseQualityScore || data2.rootCauseQualityScore,
             url: data1.url,
@@ -190,7 +275,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     async processPageText(text, subProblemIndex = undefined, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results`);
         try {
-            const textAnalysis = (await this.getRootCauseTextAnalysis(type, text));
+            const textAnalysis = (await this.getRootCauseTextAnalysis(type, text, url));
             if (textAnalysis) {
                 textAnalysis.url = url;
                 textAnalysis.searchType = type;
@@ -219,14 +304,15 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         }
     }
     async getAndProcessRootCausePage(url, browserPage, type) {
-        if (url == "https://www.oecd.org/pisa/PISA%202018%20Insights%20and%20Interpretations%20FINAL%20PDF.pdf") {
+        if (url ==
+            "https://www.oecd.org/pisa/PISA%202018%20Insights%20and%20Interpretations%20FINAL%20PDF.pdf") {
             this.logger.info("Skipping the current url:" + url);
             return true;
         }
         let hasPage = undefined;
         if (onlyCheckWhatNeedsToBeScanned) {
             try {
-                this.logger.info('Checking if a page exists ' + url);
+                this.logger.info("Checking if a page exists " + url);
                 hasPage = await this.rootCauseWebPageVectorStore.webPageExist(this.memory.groupId, url, type);
                 if (hasPage) {
                     this.logger.warn(`Already have scanned ${type} / ${url}`);
@@ -259,7 +345,8 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
             let urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
             if (urlsToGet) {
-                urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length * IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
+                urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length *
+                    IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
                 for (let i = 0; i < urlsToGet.length; i++) {
                     await this.getAndProcessRootCausePage(urlsToGet[i].url, newPage, searchResultType);
                 }

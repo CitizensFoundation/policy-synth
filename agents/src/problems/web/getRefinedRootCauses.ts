@@ -67,7 +67,11 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     ];
   }
 
-  async getRootCauseRefinedTextAnalysis(type: PSRootCauseWebPageTypes, text: string, url: string) {
+  async getRootCauseRefinedTextAnalysis(
+    type: PSRootCauseWebPageTypes,
+    text: string,
+    url: string
+  ) {
     try {
       const { totalTokenCount, promptTokenCount } =
         await this.getRootCauseTokenCount(text, type);
@@ -110,7 +114,9 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
           if (nextAnalysis) {
             for (let rootCause of nextAnalysis) {
-              this.logger.debug(`Root Cause: ${JSON.stringify(rootCause, null, 2)}`)
+              this.logger.debug(
+                `Root Cause: ${JSON.stringify(rootCause, null, 2)}`
+              );
               if (rootCause.rootCauseTitle && rootCause.rootCauseDescription) {
                 this.memory.subProblems.push({
                   title: rootCause.rootCauseTitle,
@@ -256,9 +262,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
-    this.logger.debug(
-      `Processing ${url} for ${type}`
-    );
+    this.logger.debug(`Processing ${url} for ${type}`);
 
     try {
       const refinedAnalysis = (await this.getRootCauseRefinedTextAnalysis(
@@ -302,61 +306,76 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
     let typeCount = 0;
 
-    this.memory.subProblems = [];
+    const clearSubProblems = false;
 
-    try {
-      for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
-        typeCount++;
-        const searchType =
-          IEngineConstants.simplifyRootCauseType(rootCauseType);
-        const results =
-          await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
-            this.memory.groupId,
-            searchType,
-            limit
+    if (clearSubProblems) {
+      this.memory.subProblems = [];
+    }
+
+    if (this.memory.customInstructions.rootCauseUrlsToScan) {
+      for (const url of this.memory.customInstructions.rootCauseUrlsToScan) {
+        console.log(`Processing ${url}`);
+        await this.getAndProcessRootCausePage(url, page, "adminSubmitted");
+      }
+    }
+
+    const runMainEvent = false;
+
+    if (runMainEvent) {
+      try {
+        for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
+          typeCount++;
+          const searchType =
+            IEngineConstants.simplifyRootCauseType(rootCauseType);
+          const results =
+            await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
+              this.memory.groupId,
+              searchType,
+              limit
+            );
+
+          this.logger.debug(
+            `Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`
           );
 
-        this.logger.debug(
-          `Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`
-        );
+          if (results.data.Get["RootCauseWebPage"].length === 0) {
+            this.logger.error(`No results for ${searchType}`);
+            continue;
+          }
 
-        if (results.data.Get["RootCauseWebPage"].length === 0) {
-          this.logger.error(`No results for ${searchType}`);
-          continue;
-        }
+          let pageCounter = 0;
+          for (const retrievedObject of results.data.Get["RootCauseWebPage"]) {
+            const webPage = retrievedObject as PSRootCauseRawWebPageData;
+            const id = webPage._additional!.id!;
 
-        let pageCounter = 0;
-        for (const retrievedObject of results.data.Get["RootCauseWebPage"]) {
-          const webPage = retrievedObject as PSRootCauseRawWebPageData;
-          const id = webPage._additional!.id!;
+            this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
+            if (webPage.totalScore && webPage.totalScore > 0) {
+              this.logger.debug(
+                `All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`
+              );
 
-          this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
-          if (webPage.totalScore && webPage.totalScore > 0) {
-            this.logger.debug(
-              `All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`
-            );
+              // TODO: need to store vectorStoreId some other way (see getMetaDataForTopWebRootCauses.processPageText)
+              // policy.vectorStoreId = id;
 
-            // TODO: need to store vectorStoreId some other way (see getMetaDataForTopWebRootCauses.processPageText)
-            // policy.vectorStoreId = id;
-
-            await this.getAndProcessRootCausePage(
-              webPage.url,
-              page,
-              searchType as PSRootCauseWebPageTypes
-            );
-          } else {
+              await this.getAndProcessRootCausePage(
+                webPage.url,
+                page,
+                searchType as PSRootCauseWebPageTypes
+              );
+            } else {
+              this.logger.info(
+                "Skipping the current WebPage as it has a score of 0/null"
+              );
+            }
             this.logger.info(
-              "Skipping the current WebPage as it has a score of 0/null"
+              `(+${pageCounter++}) - ${rootCauseType} - ${typeCount} - Updated`
             );
           }
-          this.logger.info(
-            `(+${pageCounter++}) - ${rootCauseType} - ${typeCount} - Updated`
-          );
         }
+      } catch (error: any) {
+        this.logger.error(error.stack || error);
+        throw error;
       }
-    } catch (error: any) {
-      this.logger.error(error.stack || error);
-      throw error;
     }
   }
 

@@ -81,6 +81,10 @@ interface IEngineSubProblem extends PsEloRateable {
   imageUrl?: string;
   imagePrompt?: string;
   whyIsSubProblemImportant: string;
+  relevanceToTypeScore?: number;
+  relevanceScore?: number;
+  qualityScore?: number;
+  confidenceScore?: number;
   fromSearchType?: PSRootCauseWebPageTypes;
   fromUrl?: string;
   entities: IEngineAffectedEntity[];
@@ -312,6 +316,7 @@ interface PsBaseMemoryData extends IEngineMemoryData {
     rateSolutionsJsonFormat?: string;
     subProblemColors?: string[];
     secondaryColors?: string[];
+    rootCauseUrlsToScan?: string[];
   };
   subProblems: IEngineSubProblem[];
   allSubProblems?: IEngineSubProblem[];

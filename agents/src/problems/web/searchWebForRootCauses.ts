@@ -7,7 +7,7 @@ import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCaus
 
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
-const FORCE_RESEARCH = false;
+const FORCE_RESEARCH = true;
 
 export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
   searchCounter = 0;

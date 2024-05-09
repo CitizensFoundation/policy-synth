@@ -10,6 +10,7 @@ type PSRootCauseWebPageTypes =
   | "geopoliticalRootCause"
   | "ethicalRootCause"
   | "caseStudies"
+  | "adminSubmitted"
 
 interface PSRootCause {
   rootCauseTitle: string;
@@ -22,6 +23,7 @@ interface PSRefinedRootCause extends PSRootCause {
   rootCauseRelevanceToProblemStatement?: string;
   rootCauseRelevanceToProblemStatementScore?: number;
   rootCauseRelevanceToTypeScore?: number;
+  rootCauseRelevanceScore?: number;
   rootCauseQualityScore?: number;
   rootCauseConfidenceScore?: number;
   hasBeenRefined?: boolean;

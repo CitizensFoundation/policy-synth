@@ -11,13 +11,10 @@ if (projectId) {
     //memory.currentStage = "rank-root-causes-search-queries"
     //memory.currentStage = "web-search-root-causes"
     //memory.currentStage = "rank-root-causes-search-results"
-    //memory.currentStage = "web-get-root-causes-pages"
-    //memory.currentStage = "rank-web-root-causes"
-    //memory.currentStage = "rate-web-root-causes"
-    //memory.currentStage = "web-get-refined-root-causes"
+    memory.currentStage = "web-get-root-causes-pages";
     //memory.currentStage = "create-problem-statement-image";
     //memory.currentStage = "create-sub-problems";
-    memory.currentStage = "rank-sub-problems";
+    //memory.currentStage = "rank-sub-problems";
     //memory.currentStage = "reduce-sub-problems";
     //memory.currentStage = "rank-sub-problems";
     //memory.currentStage = "create-sub-problem-images";
@@ -25,6 +22,10 @@ if (projectId) {
     //memory.currentStage = "rank-entities";
     //memory.currentStage = "create-search-queries";
     //memory.currentStage = "rank-search-queries";
+    // OLD
+    //memory.currentStage = "rank-web-root-causes"
+    //memory.currentStage = "rate-web-root-causes"
+    //memory.currentStage = "web-get-refined-root-causes"
     await redis.set(redisKey, JSON.stringify(memory));
     console.log("Adding job to queue");
     await myQueue.add("agent-problems", {

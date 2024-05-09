@@ -5,7 +5,7 @@ import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.
 export declare class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
     hasPrintedPrompt: boolean;
-    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (HumanMessage | SystemMessage)[];
+    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
     getRootCauseTokenCount(text: string, type: PSRootCauseWebPageTypes): Promise<{
         totalTokenCount: number;
         promptTokenCount: {
@@ -13,8 +13,8 @@ export declare class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor
             countPerMessage: number[];
         };
     }>;
-    getRootCauseTextAnalysis(type: PSRootCauseWebPageTypes, text: string): Promise<PSRootCauseRawWebPageData | PSRefinedRootCause[]>;
-    getRootCauseAIAnalysis(type: PSRootCauseWebPageTypes, text: string): Promise<PSRootCauseRawWebPageData>;
+    getRootCauseTextAnalysis(type: PSRootCauseWebPageTypes, text: string, url: string): Promise<PSRootCauseRawWebPageData | PSRefinedRootCause[]>;
+    getRootCauseAIAnalysis(type: PSRootCauseWebPageTypes, text: string): Promise<PSRefinedRootCause[]>;
     mergeAnalysisData(data1: PSRootCauseRawWebPageData, data2: PSRootCauseRawWebPageData): PSRootCauseRawWebPageData;
     processPageText(text: string, subProblemIndex: undefined, url: string, type: IEngineWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: undefined): Promise<void>;
     getAndProcessRootCausePage(url: string, browserPage: Page, type: PSRootCauseWebPageTypes): Promise<boolean>;

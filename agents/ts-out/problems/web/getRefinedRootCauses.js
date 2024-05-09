@@ -196,38 +196,50 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     async refineWebRootCauses(page) {
         const limit = IEngineConstants.topWebPagesToGetForRefineRootCausesScan;
         let typeCount = 0;
-        this.memory.subProblems = [];
-        try {
-            for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
-                typeCount++;
-                const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
-                const results = await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(this.memory.groupId, searchType, limit);
-                this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
-                if (results.data.Get["RootCauseWebPage"].length === 0) {
-                    this.logger.error(`No results for ${searchType}`);
-                    continue;
-                }
-                let pageCounter = 0;
-                for (const retrievedObject of results.data.Get["RootCauseWebPage"]) {
-                    const webPage = retrievedObject;
-                    const id = webPage._additional.id;
-                    this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
-                    if (webPage.totalScore && webPage.totalScore > 0) {
-                        this.logger.debug(`All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`);
-                        // TODO: need to store vectorStoreId some other way (see getMetaDataForTopWebRootCauses.processPageText)
-                        // policy.vectorStoreId = id;
-                        await this.getAndProcessRootCausePage(webPage.url, page, searchType);
-                    }
-                    else {
-                        this.logger.info("Skipping the current WebPage as it has a score of 0/null");
-                    }
-                    this.logger.info(`(+${pageCounter++}) - ${rootCauseType} - ${typeCount} - Updated`);
-                }
+        const clearSubProblems = false;
+        if (clearSubProblems) {
+            this.memory.subProblems = [];
+        }
+        if (this.memory.customInstructions.rootCauseUrlsToScan) {
+            for (const url of this.memory.customInstructions.rootCauseUrlsToScan) {
+                console.log(`Processing ${url}`);
+                await this.getAndProcessRootCausePage(url, page, "adminSubmitted");
             }
         }
-        catch (error) {
-            this.logger.error(error.stack || error);
-            throw error;
+        const runMainEvent = false;
+        if (runMainEvent) {
+            try {
+                for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
+                    typeCount++;
+                    const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
+                    const results = await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(this.memory.groupId, searchType, limit);
+                    this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
+                    if (results.data.Get["RootCauseWebPage"].length === 0) {
+                        this.logger.error(`No results for ${searchType}`);
+                        continue;
+                    }
+                    let pageCounter = 0;
+                    for (const retrievedObject of results.data.Get["RootCauseWebPage"]) {
+                        const webPage = retrievedObject;
+                        const id = webPage._additional.id;
+                        this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
+                        if (webPage.totalScore && webPage.totalScore > 0) {
+                            this.logger.debug(`All scores ${webPage.rootCauseRelevanceToProblemStatementScore} ${webPage.rootCauseRelevanceToTypeScore} ${webPage.rootCauseConfidenceScore} ${webPage.rootCauseQualityScore}`);
+                            // TODO: need to store vectorStoreId some other way (see getMetaDataForTopWebRootCauses.processPageText)
+                            // policy.vectorStoreId = id;
+                            await this.getAndProcessRootCausePage(webPage.url, page, searchType);
+                        }
+                        else {
+                            this.logger.info("Skipping the current WebPage as it has a score of 0/null");
+                        }
+                        this.logger.info(`(+${pageCounter++}) - ${rootCauseType} - ${typeCount} - Updated`);
+                    }
+                }
+            }
+            catch (error) {
+                this.logger.error(error.stack || error);
+                throw error;
+            }
         }
     }
     async getAllPages() {
