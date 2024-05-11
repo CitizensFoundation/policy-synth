@@ -73,7 +73,8 @@ export class PolicySynthAgentBase {
             "web-get-refined-evidence": {},
             "get-metadata-for-top-evidence": {},
             "validation-agent": {},
-            "ingestion-agent": {}
+            "ingestion-agent": {},
+            "engineering-agent": {}
         };
     }
     getJsonBlock(text) {

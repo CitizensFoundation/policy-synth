@@ -57,6 +57,7 @@ export declare class PolicySynthAgentBase {
         "get-metadata-for-top-evidence": {};
         "validation-agent": {};
         "ingestion-agent": {};
+        "engineering-agent": {};
     };
     getJsonBlock(text: string): string;
     get fullLLMCostsForMemory(): number | undefined;

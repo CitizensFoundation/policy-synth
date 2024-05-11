@@ -1,0 +1,40 @@
+import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { Project, SourceFile } from "ts-morph";
+export declare class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
+    memory: PsEngineerMemoryData;
+    otherFilesToKeepInContextContent?: string;
+    documentationFilesInContextContent?: string;
+    maxPlanRetries: number;
+    maxCodingRetries: number;
+    tsMorphProject: Project | undefined;
+    currentFileContents: string | undefined | null;
+    otherLikelyToChangeFilesContents: string | undefined | null;
+    constructor(memory: PsEngineerMemoryData);
+    implementChangesToFile(fileName: string): Promise<void>;
+    get codingSystemPrompt(): string;
+    codingUserPrompt(codingPlan: string, currentFileName: string, currentFileContents: string | null | undefined, otherFilesContents: string | null | undefined): string;
+    getCodeChanges(fileName: string, codingPlan: string): Promise<PsEngineerCodeChange[]>;
+    implementCodingPlan(fileName: string, codingPlan: string): Promise<void>;
+    addFunction(file: SourceFile, functionName: string, functionDetails: PsTsMorphNewOrUpdatedFunction): void;
+    deleteFunction(file: SourceFile, functionName: string): void;
+    changeFunction(file: SourceFile, functionName: string, functionDetails: PsTsMorphNewOrUpdatedFunction): void;
+    addProperty(file: SourceFile, propertyDetails: PsTsMorphNewOrUpdatedProperty): void;
+    changeProperty(file: SourceFile, propertyDetails: PsTsMorphNewOrUpdatedProperty): void;
+    deleteProperty(file: SourceFile, propertyInfo: PsTsMorphNewOrUpdatedProperty): void;
+    changeImport(file: SourceFile, originalModuleName: string, newModuleName: string): void;
+    addDependency(dependancy: string): void;
+    addFile(filePath: string, content: string): void;
+    deleteFile(filePath: string): void;
+    addImport(file: SourceFile, moduleName: string, symbols: string[]): void;
+    deleteImport(file: SourceFile, moduleName: string): void;
+    deleteDependency(dependencyName: string): void;
+    changeDependency(dependencyName: string, version: string): void;
+    planSystemPrompt(): string;
+    getUserPlanPrompt(fileName: string, reviewLog: string): string;
+    reviewSystemPrompt(): string;
+    getUserReviewPrompt(fileName: string, codingPlan: string, reviewLog: string): string;
+    getCodingPlan(fileName: string): Promise<string | undefined>;
+    implementTask(): Promise<void>;
+    loadFileContents(fileName: string): string | null;
+}
+//# sourceMappingURL=programmingAgent.d.ts.map

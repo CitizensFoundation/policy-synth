@@ -291,82 +291,14 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     return analysis;
   }
 
-  mergeAnalysisData(
-    data1: PSRootCauseRawWebPageData,
-    data2: PSRootCauseRawWebPageData
-  ): PSRootCauseRawWebPageData {
-    return {
-      allPossibleEconomicRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleEconomicRootCausesIdentifiedInTextContext || []),
-        ...(data2.allPossibleEconomicRootCausesIdentifiedInTextContext || []),
-      ],
-      allPossibleScientificRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleScientificRootCausesIdentifiedInTextContext || []),
-        ...(data2.allPossibleScientificRootCausesIdentifiedInTextContext || []),
-      ],
-      allPossibleCulturalRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleCulturalRootCausesIdentifiedInTextContext || []),
-        ...(data2.allPossibleCulturalRootCausesIdentifiedInTextContext || []),
-      ],
-      allPossibleEnvironmentalRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleEnvironmentalRootCausesIdentifiedInTextContext ||
-          []),
-        ...(data2.allPossibleEnvironmentalRootCausesIdentifiedInTextContext ||
-          []),
-      ],
-      allPossibleLegalRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleLegalRootCausesIdentifiedInTextContext || []),
-        ...(data2.allPossibleLegalRootCausesIdentifiedInTextContext || []),
-      ],
-      allPossibleTechnologicalRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleTechnologicalRootCausesIdentifiedInTextContext ||
-          []),
-        ...(data2.allPossibleTechnologicalRootCausesIdentifiedInTextContext ||
-          []),
-      ],
-      allPossibleGeopoliticalRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleGeopoliticalRootCausesIdentifiedInTextContext ||
-          []),
-        ...(data2.allPossibleGeopoliticalRootCausesIdentifiedInTextContext ||
-          []),
-      ],
-      allPossibleHistoricalRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleHistoricalRootCausesIdentifiedInTextContext || []),
-        ...(data2.allPossibleHistoricalRootCausesIdentifiedInTextContext || []),
-      ],
-      allPossibleEthicalRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleEthicalRootCausesIdentifiedInTextContext || []),
-        ...(data2.allPossibleEthicalRootCausesIdentifiedInTextContext || []),
-      ],
-      allPossibleSocialRootCausesIdentifiedInTextContext: [
-        ...(data1.allPossibleSocialRootCausesIdentifiedInTextContext || []),
-        ...(data2.allPossibleSocialRootCausesIdentifiedInTextContext || []),
-      ],
-      allPossibleRootCausesCaseStudiesIdentifiedInTextContext: [
-        ...(data1.allPossibleRootCausesCaseStudiesIdentifiedInTextContext ||
-          []),
-        ...(data2.allPossibleRootCausesCaseStudiesIdentifiedInTextContext ||
-          []),
-      ],
-      rootCauseRelevanceToProblemStatement:
-        data1.rootCauseRelevanceToProblemStatement,
-      rootCauseRelevanceToProblemStatementScore:
-        data1.rootCauseRelevanceToProblemStatementScore ||
-        data2.rootCauseRelevanceToProblemStatementScore,
-      rootCauseRelevanceToTypeScore:
-        data1.rootCauseRelevanceToTypeScore ||
-        data2.rootCauseRelevanceToTypeScore,
-      rootCauseConfidenceScore:
-        data1.rootCauseConfidenceScore || data2.rootCauseConfidenceScore,
-      rootCauseQualityScore:
-        data1.rootCauseQualityScore || data2.rootCauseQualityScore,
-      url: data1.url,
-      searchType: data1.searchType,
-      groupId: data1.groupId,
-      communityId: data1.communityId,
-      domainId: data1.domainId,
-      _additional: data1._additional || data2._additional,
-    };
+  isUrlInSubProblemMemory(url: string) {
+    for (let subProblem of this.memory.subProblems) {
+      if (subProblem.fromUrl == url) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   async processPageText(
@@ -383,6 +315,12 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
       return;
     } else {
       this.processesUrls.add(url);
+    }
+
+    if (this.isUrlInSubProblemMemory(url)) {
+      this.logger.info(`Already in memory ${url}`);
+      this.processesUrls.add(url);
+      return;
     }
 
     this.logger.debug(
@@ -449,6 +387,11 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     if (this.memory.customInstructions.rootCauseUrlsToScan) {
       for (const url of this.memory.customInstructions.rootCauseUrlsToScan) {
         console.log(`Processing ${url}`);
+        if (this.isUrlInSubProblemMemory(url)) {
+          this.logger.info(`Already in memory ${url}`);
+          this.processesUrls.add(url);
+          continue;
+        }
         await this.getAndProcessRootCausePage(url, browserPage, "adminSubmitted");
       }
     }

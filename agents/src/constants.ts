@@ -431,6 +431,18 @@ export class IEngineConstants {
     verbose: false
   };
 
+  static engineerModel: IEngineBaseAIModelConstants = {
+    name: "gpt-4-turbo-2024-04-09",
+    temperature: 0.0,
+    maxOutputTokens: 4095,
+    tokenLimit: gpt4TotalTokenLimit,
+    inTokenCostUSD: gpt4InTokenPrice,
+    outTokenCostUSD: gpt4OutTokenPrice,
+    limitTPM: gpt4_TPM,
+    limitRPM: gpt4_RPM,
+    verbose: false
+  };
+
   static getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
 
   static maxSubProblems = 7;
@@ -456,7 +468,7 @@ export class IEngineConstants {
 
   static maxTopRootCauseQueriesToSearchPerType = 12;
 
-  static maxRootCausePercentOfSearchResultWebPagesToGet = 0.8;
+  static maxRootCausePercentOfSearchResultWebPagesToGet = 0.9;
 
   static maxRootCausesToUseForRatingRootCauses = 5;
 

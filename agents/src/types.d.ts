@@ -226,6 +226,7 @@ type PsMemoryStageTypes =
   | "get-metadata-for-top-evidence"
   | "ingestion-agent"
   | "validation-agent"
+  | "engineering-agent"
   ;
 
 interface IEngineUserFeedback {

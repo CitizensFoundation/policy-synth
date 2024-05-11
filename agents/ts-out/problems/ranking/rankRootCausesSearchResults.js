@@ -61,11 +61,11 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
                 seenUrls.add(item.url);
                 return true;
             });
-            this.setupRankingPrompts(index, queriesToRank);
+            this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 5);
             await this.performPairwiseRanking(index);
-            this.logger.info(`Ranking before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`);
+            this.logger.info(`Ranking search results before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`);
             this.memory.problemStatement.rootCauseSearchResults[searchQueryType] = this.getOrderedListOfItems(index);
-            this.logger.info(`Ranking after: ${JSON.stringify(this.memory.problemStatement.rootCauseSearchResults[searchQueryType].map(item => item.title), null, 2)}`);
+            this.logger.info(`Ranking results after: ${JSON.stringify(this.memory.problemStatement.rootCauseSearchResults[searchQueryType].map(item => item.title), null, 2)}`);
         }
         await this.saveMemory();
         this.logger.info("Rank Root Causes Search Results Processor: Done");

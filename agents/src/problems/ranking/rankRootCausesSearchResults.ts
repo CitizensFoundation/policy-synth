@@ -89,12 +89,12 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
         return true;
       });
 
-      this.setupRankingPrompts(index, queriesToRank);
+      this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 5);
 
       await this.performPairwiseRanking(index);
 
       this.logger.info(
-        `Ranking before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`
+        `Ranking search results before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`
       );
 
       this.memory.problemStatement.rootCauseSearchResults![
@@ -102,7 +102,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
       ] = this.getOrderedListOfItems(index) as IEngineSearchResultItem[];
 
       this.logger.info(
-        `Ranking after: ${JSON.stringify(
+        `Ranking results after: ${JSON.stringify(
           this.memory.problemStatement.rootCauseSearchResults![
             searchQueryType as PSRootCauseWebPageTypes
           ].map(item => item.title),

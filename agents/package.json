@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -8,7 +8,6 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "nodemon": "^3.1.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/density-clustering": "^1.3.1",
     "@types/html-to-text": "^9.0.1",
@@ -19,6 +18,7 @@
     "@types/puppeteer": "^7.0.4",
     "@types/winston": "^2.4.4",
     "@types/ws": "^8.5.10",
+    "nodemon": "^3.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.4.5"
   },
@@ -44,9 +44,7 @@
   ],
   "type": "module",
   "dependencies": {
-    "mammoth": "^1.7.2",
-    "xlsx": "^0.18.5",
-    "@langchain/core": "^0.1.61",
+    "@langchain/core": "^0.1.62",
     "@langchain/openai": "^0.0.28",
     "aws-sdk": "^2.1608.0",
     "axios": "^1.6.8",
@@ -57,6 +55,7 @@
     "html-to-text": "^9.0.5",
     "ioredis": "^5.4.1",
     "jsonrepair": "^3.7.0",
+    "mammoth": "^1.7.2",
     "metascraper": "^5.45.5",
     "metascraper-author": "^5.45.0",
     "metascraper-clearbit": "^5.45.0",
@@ -74,11 +73,12 @@
     "pdfjs-dist": "^3.8.162",
     "pdfreader": "^3.0.0",
     "pg": "^8.11.5",
-    "puppeteer": "^22.8.0",
+    "puppeteer": "22.7.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "weaviate-ts-client": "^2.1.1",
     "winston": "^3.13.0",
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "xlsx": "^0.18.5"
   }
 }

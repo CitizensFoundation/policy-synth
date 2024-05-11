@@ -460,18 +460,21 @@ const setupProjectSeven = (memory) => {
     }
     /* BATCH A
     memory.problemStatement.description = `There is an urgent need to better understand the impact of artificial intelligence (AI) on New Jersey's workforce and economy.
-      Here are a few examples, but not an exhaustive list, of potential problem categories and root causes we want to understand in regards to whether and how AI-driven changes in New Jersey may:
+    Here are wide categories we want to understand in this research in regards to whether and how AI-driven changes in New Jersey may:
       Lead to job displacement and economic instability
       Create barriers to economic growth
       Affect the demand for skills
-      Transform employment opportunities in New Jersey`; */
-    /* BATCH B */
+      Transform employment opportunities in New Jersey`;*/
+    /* BATCH B
     memory.problemStatement.description = `There is an urgent need to better understand the impact of artificial intelligence (AI) on New Jersey's workforce and economy.
-    Here are very wide categories we want to understand in this research regards to whether and how AI-driven changes in New Jersey may:
-      Erode workers’ privacy and autonomy
-      Create biases in talent management
-      Weaken workers’ collective power and ability to engage in collective action
-      Create new occupational health and safety risks.`;
+      Here are wide categories we want to understand in this research in regards to whether and how AI-driven changes in New Jersey may:
+        Erode workers’ privacy and autonomy
+        Create biases in talent management
+        Weaken workers’ collective power and ability to engage in collective action
+        Create new occupational health and safety risks.`;*/
+    /* BATCH C */
+    memory.problemStatement.description = `The integration of artificial intelligence (AI) into New Jersey's economic and employment landscape necessitates a comprehensive exploration of its widespread impacts.
+Understanding how AI-driven changes might reshape workforce dynamics, economic stability, and overall employment structures is crucial. This exploration aims to identify and address both known and unforeseen challenges that AI may introduce to the workforce, economy, and societal norms in New Jersey.`;
     memory.customInstructions.createSubProblems = `Broad challenge of AI-driven job displacement.
   Identify subproblems that specifically reflect the unique demographic, economic, and industrial landscape of New Jersey.
   Consider both immediate and long-term impacts of AI on New Jersey's workforce and other states, including changes in job types, shifts in skill requirements, and the overall economic environment.

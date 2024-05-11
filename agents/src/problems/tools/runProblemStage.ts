@@ -47,7 +47,7 @@ if (projectId) {
       communityId: 1,
       domainId: 1,
     },
-    { removeOnComplete: true, removeOnFail: true }
+    { removeOnComplete: true, removeOnFail: true}
   );
 
   console.log("After adding job to queue");
