@@ -1,27 +1,25 @@
 # SearchWebForRootCausesProcessor
 
-This class extends `SearchWebProcessor` to implement the functionality for searching the web for root causes related to a problem statement. It manages the search process, including handling API rate limits and storing search results.
+This class extends `SearchWebProcessor` to specifically handle the searching of web data for root causes related to a problem statement. It manages API rate limits, logs search activities, and stores search results.
 
 ## Properties
 
-| Name           | Type   | Description               |
-|----------------|--------|---------------------------|
-| searchCounter  | number | Tracks the number of searches performed. |
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| searchCounter | number | Counter for the number of searches performed. |
 
 ## Methods
 
-| Name        | Parameters | Return Type | Description |
-|-------------|------------|-------------|-------------|
-| searchWeb   |            | Promise<void> | Performs the web search for root causes based on predefined queries and stores the results. |
-| process     |            | Promise<void> | Initiates the search process and logs the progress and completion of the search for root causes. |
+| Name       | Parameters        | Return Type | Description                 |
+|------------|-------------------|-------------|-----------------------------|
+| searchWeb  | -                 | Promise<void> | Performs web searches for root causes, handles API rate limits, and logs activities. |
+| process    | -                 | Promise<void> | Initiates the process of searching for root causes on the web and logs the process flow. |
 
 ## Example
 
-```javascript
+```typescript
 import { SearchWebForRootCausesProcessor } from '@policysynth/agents/problems/web/searchWebForRootCauses.js';
 
 const searchProcessor = new SearchWebForRootCausesProcessor();
-searchProcessor.process()
-  .then(() => console.log('Search for root causes completed.'))
-  .catch(error => console.error('Error during search for root causes:', error));
+await searchProcessor.process();
 ```

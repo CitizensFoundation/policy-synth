@@ -1,35 +1,41 @@
 # SearchQueriesGenerator
 
-This class extends `PolicySynthAgentBase` to generate search queries based on a given question. It utilizes a language model to produce a specified number of high-quality search queries.
+This class is responsible for generating search queries based on a given question. It extends the `PolicySynthAgentBase` class and utilizes the OpenAI API to generate queries.
 
 ## Properties
 
-| Name                     | Type   | Description                                                                 |
-|--------------------------|--------|-----------------------------------------------------------------------------|
-| systemPrompt             | string | The prompt given to the system for generating search queries.               |
-| userPrompt               | string | The prompt representing the user's research question.                       |
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| systemPrompt  | string | The system prompt used for generating queries. |
+| userPrompt    | string | The user prompt based on the research question. |
 
 ## Methods
 
-| Name                  | Parameters                                                                                                   | Return Type      | Description                                                                                   |
-|-----------------------|--------------------------------------------------------------------------------------------------------------|------------------|-----------------------------------------------------------------------------------------------|
-| constructor           | memory: PsBaseMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string | None             | Initializes the class with memory, number of queries to generate, question, and optional prompts. |
-| renderMessages        | None                                                                                                         | Promise<Message[]> | Prepares system and human messages based on the prompts.                                      |
-| generateSearchQueries | None                                                                                                         | Promise<string[]> | Generates search queries using the language model based on the provided question.             |
+| Name                 | Parameters        | Return Type       | Description                 |
+|----------------------|-------------------|-------------------|-----------------------------|
+| constructor          | memory: PsBaseMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string | - | Initializes the generator with memory, number of queries to generate, question, and optional overrides for prompts. |
+| renderMessages       | -                 | Promise<SystemMessage[] \| HumanMessage[]> | Prepares the system and user prompts as messages. |
+| generateSearchQueries| -                 | Promise<string[]> | Generates search queries using the configured OpenAI model and prompts. |
 
 ## Example
 
 ```typescript
 import { SearchQueriesGenerator } from '@policysynth/agents/webResearch/searchQueriesGenerator.js';
-import { PsBaseMemoryData } from 'path/to/PsBaseMemoryData';
+import { PsBaseMemoryData } from '@policysynth/agents/baseAgent.js';
 
-const memoryData: PsBaseMemoryData = /* Initialize memory data */;
-const numberOfQueries = 5;
-const question = "What are the impacts of climate change on polar bears?";
+const memoryData: PsBaseMemoryData = {
+  // example memory data
+};
 
-const searchQueriesGenerator = new SearchQueriesGenerator(memoryData, numberOfQueries, question);
+const generator = new SearchQueriesGenerator(
+  memoryData,
+  5,
+  "What are the impacts of climate change on polar bears?",
+  "Optional system prompt override",
+  "Optional user prompt override"
+);
 
-searchQueriesGenerator.generateSearchQueries().then((queries) => {
+generator.generateSearchQueries().then(queries => {
   console.log(queries);
 });
 ```

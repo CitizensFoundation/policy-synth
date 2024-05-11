@@ -1,41 +1,34 @@
 # AgentProblems
 
-This class extends `BaseAgentProcessor` to handle various stages of problem-solving processes, including creating sub-problems, entities, search queries, ranking entities, search queries, search results, and processing web data for root causes.
+This class extends `BaseAgentProcessor` to handle various stages of problem processing in a policy synthesis context.
 
 ## Properties
 
-| Name    | Type                | Description |
-|---------|---------------------|-------------|
-| memory  | PsBaseMemoryData    | Holds the state and data required for processing the current job. |
+| Name    | Type             | Description               |
+|---------|------------------|---------------------------|
+| memory  | PsBaseMemoryData | Holds the state and data specific to the agent's current task. |
 
 ## Methods
 
-| Name                  | Parameters            | Return Type | Description |
-|-----------------------|-----------------------|-------------|-------------|
-| initializeMemory      | job: Job              | Promise<void> | Initializes the memory with job data and sets the current stage to "create-sub-problems". |
-| setStage              | stage: PsMemoryStageTypes | Promise<void> | Sets the current stage in the memory and updates the start time for the stage. |
-| processSubProblems    | None                  | Promise<void> | Processes the sub-problems by creating them. |
-| process               | None                  | Promise<void> | Main processing function that handles the logic for transitioning between different stages based on the current stage in memory. |
+| Name              | Parameters            | Return Type | Description                                           |
+|-------------------|-----------------------|-------------|-------------------------------------------------------|
+| initializeMemory  | job: Job              | Promise<void> | Initializes the memory with job-specific data.       |
+| setStage          | stage: PsMemoryStageTypes | Promise<void> | Sets the current stage of processing and updates the start time. |
+| processSubProblems|                       | Promise<void> | Processes sub-problems by creating them.             |
+| process           |                       | Promise<void> | Main processing function that handles different stages based on the current memory stage. |
 
 ## Example
 
 ```typescript
-import { Worker, Job } from "bullmq";
 import { AgentProblems } from '@policysynth/agents/problems/problems.js';
+import { Job } from "bullmq";
 
-const agent = new Worker(
-  "agent-problems",
-  async (job: Job) => {
-    console.log(`Agent Problems Processing job ${job.id}`);
-    const agent = new AgentProblems();
-    await agent.setup(job);
-    await agent.process();
-    return job.data;
-  },
-  { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") }
-);
+const job = new Job(); // Assuming job is already defined and configured elsewhere
+const agentProblems = new AgentProblems();
 
-process.on("SIGINT", async () => {
-  await agent.close();
-});
+// Example of initializing and processing a job
+(async () => {
+  await agentProblems.initializeMemory(job);
+  await agentProblems.process();
+})();
 ```

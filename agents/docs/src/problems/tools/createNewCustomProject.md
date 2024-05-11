@@ -1,14 +1,14 @@
 # createNewCustomProject
 
-This script is used for creating a new custom project in the PolicySynth platform. It initializes a project with a unique ID, sets its initial parameters, and stores it in Redis. If a project with the given ID already exists, it will not overwrite the existing project unless the `force` parameter is used.
+This script is used to create a new custom project in the system. It checks if a project with the given ID already exists and, based on the presence of a 'force' parameter, either overwrites the existing project or aborts the operation.
 
 ## Properties
 
-No properties are directly defined in this script.
+No properties are directly exposed by this script as it primarily functions through the execution of its internal logic.
 
 ## Methods
 
-No methods are directly defined in this script.
+No methods are defined in this script as it is a standalone executable script designed for direct execution.
 
 ## Example
 
@@ -17,7 +17,7 @@ import { Queue } from "bullmq";
 import ioredis from "ioredis";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
@@ -26,7 +26,7 @@ const force = process.argv[3];
 
 if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
-  const problemStatement = ``
+  const problemStatement = ``;
 
   const currentProject = await redis.get(`st_mem:${projectId}:id`);
 
@@ -34,7 +34,6 @@ if (projectId) {
     console.error("Project already exists, use force as second parameter to overwrite");
     process.exit(1);
   } else if (!currentProject || (currentProject && force)) {
-
     const project = {
       redisKey: redisKey,
       groupId: parseInt(projectId),
@@ -45,9 +44,7 @@ if (projectId) {
       stages: PolicySynthAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
-      customInstructions: {
-
-      },
+      customInstructions: {},
       problemStatement: {
         description: problemStatement,
         searchQueries: {
@@ -69,14 +66,15 @@ if (projectId) {
       currentStageData: undefined,
     } as PsBaseMemoryData;
 
-
     await redis.set(redisKey, JSON.stringify(project));
   }
 
   console.log("Project created");
   process.exit(0);
 } else {
-  console.log("Usage: node @policysynth/agents/problems/tools/createNewCustomProject <projectId>");
+  console.log("Usage: node createNewCustomProject <projectId>");
   process.exit(1);
 }
 ```
+
+This example demonstrates how to use the script to create a new custom project. It requires the `projectId` as a command-line argument and optionally accepts a `force` argument to overwrite an existing project.

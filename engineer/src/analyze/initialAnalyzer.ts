@@ -21,7 +21,10 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
   }
 
   readNpmDependencies() {
-    const packageJsonPath = path.join(this.memory.workspaceFolder, "package.json");
+    const packageJsonPath = path.join(
+      this.memory.workspaceFolder,
+      "package.json"
+    );
     const packageJsonData = fs.readFileSync(packageJsonPath, "utf8");
     const packageJsonObj = JSON.parse(packageJsonData);
     console.log(packageJsonObj.dependencies);
@@ -78,20 +81,26 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       const files: string[] = [];
       const items = fs.readdirSync(folderPath);
       for (const item of items) {
-      const itemPath = path.join(folderPath, item);
-      const stat = fs.statSync(itemPath);
-      if (stat.isDirectory() && item !== "ts-out" && item !== "node_modules") {
-        files.push(...getAllDocumentationFiles(itemPath));
-      } else if (path.extname(item) === ".md") {
-        files.push(itemPath);
-      }
+        const itemPath = path.join(folderPath, item);
+        const stat = fs.statSync(itemPath);
+        if (
+          stat.isDirectory() &&
+          item !== "ts-out" &&
+          item !== "node_modules"
+        ) {
+          files.push(...getAllDocumentationFiles(itemPath));
+        } else if (path.extname(item) === ".md") {
+          files.push(itemPath);
+        }
       }
       return files;
     };
 
-    const allDocumentationFiles = getAllDocumentationFiles(this.memory.workspaceFolder);
+    const allDocumentationFiles = getAllDocumentationFiles(
+      this.memory.workspaceFolder
+    );
 
-    console.log(`-----! ${IEngineConstants.engineerModel}`)
+    console.log(`-----! ${IEngineConstants.engineerModel}`);
 
     const analyzisResults = (await this.callLLM(
       "engineering-agent",
@@ -104,17 +113,24 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             allDocumentationFiles
           )
         ),
-      ], true
+      ],
+      true
     )) as PsEngineerPlanningResults;
 
     this.memory.typeScriptFilesLikelyToChange =
       analyzisResults.typeScriptFilesLikelyToChange;
+
     this.memory.otherTypescriptFilesToKeepInContext =
       analyzisResults.otherTypescriptFilesToKeepInContext;
+
     this.memory.likelyRelevantNpmPackageDependencies =
       analyzisResults.likelyRelevantNpmPackageDependencies;
+
     this.memory.needsDocumentionsAndExamples =
       analyzisResults.needsDocumentionsAndExamples;
+
+    this.memory.documentationFilesToKeepInContext =
+      analyzisResults.documentationFilesToKeepInContext;
 
     this.memory.actionLog.push(
       `Have done initial analysis${

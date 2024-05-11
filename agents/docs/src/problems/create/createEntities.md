@@ -1,31 +1,32 @@
 # CreateEntitiesProcessor
 
-This class extends `BaseProblemSolvingAgent` to process and create entities affected by complex problem statements and subproblems.
+This class extends `BaseProblemSolvingAgent` to handle the creation and refinement of entities affected by complex problem statements and subproblems.
 
 ## Properties
 
-No properties are documented as public for external interaction.
+No public properties are documented for this class.
 
 ## Methods
 
-| Name                  | Parameters                                  | Return Type                        | Description                                                                 |
-|-----------------------|---------------------------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| renderRefinePrompt    | subProblemIndex: number, results: IEngineAffectedEntity[] | Promise<SystemMessage[] \| HumanMessage[]> | Generates messages for refining the entities affected by a subproblem.      |
-| renderCreatePrompt    | subProblemIndex: number                     | Promise<SystemMessage[] \| HumanMessage[]> | Generates messages for creating entities affected by a subproblem.          |
-| createEntities        |                                             | Promise<void>                     | Processes subproblems to create and refine entities.                        |
-| process               |                                             | Promise<void>                     | Initiates the entity creation process for all subproblems.                  |
+| Name                  | Parameters                                  | Return Type | Description                                                                 |
+|-----------------------|---------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| renderRefinePrompt    | subProblemIndex: number, results: IEngineAffectedEntity[] | Promise<SystemMessage[] \| HumanMessage[]> | Generates messages for refining previously identified entities.             |
+| renderCreatePrompt    | subProblemIndex: number                     | Promise<SystemMessage[] \| HumanMessage[]> | Generates messages for the initial creation of entities based on subproblems. |
+| createEntities        |                                             | Promise<void> | Manages the creation and optional refinement of entities for all subproblems. |
+| process               |                                             | Promise<void> | Orchestrates the overall process of entity creation and logs the process.    |
 
 ## Example
 
 ```typescript
 // Example usage of CreateEntitiesProcessor
 import { CreateEntitiesProcessor } from '@policysynth/agents/problems/create/createEntities.js';
-import { IEngineConstants } from '@policysynth/agents/constants.js';
 
 const processor = new CreateEntitiesProcessor();
 
-// Assuming IEngineConstants and other required setups are already configured
+// Assuming necessary setup and context are provided
 processor.process().then(() => {
-  console.log("Entities creation and refinement process completed.");
+  console.log("Entity processing complete.");
+}).catch(error => {
+  console.error("An error occurred during entity processing:", error);
 });
 ```

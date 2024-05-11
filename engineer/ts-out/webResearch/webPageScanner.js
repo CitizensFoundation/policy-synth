@@ -11,9 +11,11 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 export class WebPageScanner extends GetWebPagesProcessor {
     scanType;
+    instructions;
     collectedWebPages = [];
-    constructor(memory) {
+    constructor(memory, instructions) {
         super(undefined, memory);
+        this.instructions = instructions;
     }
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         let systemMessage = new SystemMessage("");
@@ -23,7 +25,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
         Important Instructions:
         1. Examine the <TextContext> and copy all documentation highly relevant to the task provided by the user.
         2. Just copy highly relevant documentation from the <TextContext> word by word do not add anything except formating.
-        3. If no highly relevant, to the user provided task, documentation is found, output an empty string "".
+        3. If no highly relevant, to the user provided task, documentation is found, output nothing just an empty string.
         4. Output in Markdown format otherwise.
 `);
         }
@@ -33,7 +35,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
           Important Instructions:
           1. Examine the <TextContext> and output all source code examples that are highly relvant to the task provided by the user.
           2. Just copy highly relevant source code examples from the <TextContext> word by word do not add anything except formating.
-          3. If no relevant, to the user provided task, source code examples are found, output an empty string "".
+          3. If no relevant, to the user provided task, source code examples are found, output nothing just an emptry string.
           4. Output in Markdown format otherwise.`);
         }
         else {
@@ -42,9 +44,13 @@ export class WebPageScanner extends GetWebPagesProcessor {
         }
         return [
             systemMessage,
-            new HumanMessage(`Task title: ${this.memory.taskTitle}
-        Task description: ${this.memory.taskDescription}
-        Task instructions: ${this.memory.taskInstructions}
+            new HumanMessage(`<TextContext>:
+        ${text}
+        </TextContext>
+
+        The overall task we are gathering practical information about: ${this.memory.taskTitle}
+        Overall task we are researching description: ${this.memory.taskDescription}
+        Overall task we are researching instructions (not for you to follow now, just FYI): ${this.memory.taskInstructions}
 
         All likely npm package.json dependencies:
         ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
@@ -52,9 +58,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
         All likely typescript files in workspace likely to change:
         ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
 
-        <TextContext>:
-        ${text}
-        </TextContext>
+        Important instructions: ${this.instructions}
 
         Markdown Output:
         `),

@@ -1,31 +1,32 @@
 # BingSearchApi
 
-This class is responsible for performing searches using the Bing Search API and caching the results in Redis. It extends the `PolicySynthAgentBase` class.
+This class provides functionality to perform search queries using the Bing Search API and handles caching of results using Redis.
 
 ## Properties
 
-| Name              | Type                      | Description                                           |
-|-------------------|---------------------------|-------------------------------------------------------|
-| SUBSCRIPTION_KEY  | string \| undefined       | The subscription key for the Bing Search API.         |
+| Name              | Type                  | Description                                   |
+|-------------------|-----------------------|-----------------------------------------------|
+| SUBSCRIPTION_KEY  | string \| undefined   | The subscription key for the Bing Search API. |
 
 ## Methods
 
-| Name    | Parameters            | Return Type                     | Description                                                                 |
-|---------|-----------------------|---------------------------------|-----------------------------------------------------------------------------|
-| search  | query: string         | Promise<IEngineSearchResultItem[]> | Performs a search using the Bing Search API and returns the search results. |
+| Name   | Parameters        | Return Type                         | Description |
+|--------|-------------------|-------------------------------------|-------------|
+| search | query: string     | Promise<IEngineSearchResultItem[]> | Performs a search using the Bing Search API and caches the results in Redis. Handles retries and logs detailed information about the search process and results. |
 
 ## Example
 
-```javascript
+```typescript
 import { BingSearchApi } from '@policysynth/agents/solutions/web/bingSearchApi.js';
 
 const bingSearchApi = new BingSearchApi();
+const searchQuery = "example search query";
 
-bingSearchApi.search("example query")
+bingSearchApi.search(searchQuery)
   .then(results => {
-    console.log(results);
+    console.log("Search Results:", results);
   })
   .catch(error => {
-    console.error("Search failed:", error);
+    console.error("Error performing search:", error);
   });
 ```

@@ -48,6 +48,7 @@
     - [dedupSubProblems](src/problems/tools/dedupSubProblems.md)
     - [destroyQueue](src/problems/tools/destroyQueue.md)
     - [exportSubProblems](src/problems/tools/exportSubProblems.md)
+    - [importSubProblems](src/problems/tools/importSubProblems.md)
     - [runProblemStage](src/problems/tools/runProblemStage.md)
     - [setAlignmentStatements](src/problems/tools/setAlignmentStatements.md)
     - [trimSubProblems](src/problems/tools/trimSubProblems.md)
@@ -56,8 +57,31 @@
     - [getRefinedRootCauses](src/problems/web/getRefinedRootCauses.md)
     - [getRootCausesWebPages](src/problems/web/getRootCausesWebPages.md)
     - [rootCauseExamplePrompts](src/problems/web/rootCauseExamplePrompts.md)
+    - [rootCauseTypeTypeDef](src/problems/web/rootCauseTypeTypeDef.md)
     - [searchWebForRootCauses](src/problems/web/searchWebForRootCauses.md)
 - [queue](src/src/queue.md)
+- rag
+  - ingestion
+    - [baseAgent](src/rag/ingestion/baseAgent.md)
+    - [chunkAnalyzer](src/rag/ingestion/chunkAnalyzer.md)
+    - [chunkCompressorAgent](src/rag/ingestion/chunkCompressorAgent.md)
+    - [chunkRanker](src/rag/ingestion/chunkRanker.md)
+    - [contentParser](src/rag/ingestion/contentParser.md)
+    - [docAnalyzer](src/rag/ingestion/docAnalyzer.md)
+    - [docClassifier](src/rag/ingestion/docClassifier.md)
+    - [docCleanup](src/rag/ingestion/docCleanup.md)
+    - [docRanker](src/rag/ingestion/docRanker.md)
+    - [docTreeSplitter](src/rag/ingestion/docTreeSplitter.md)
+    - [ingestionConstants](src/rag/ingestion/ingestionConstants.md)
+    - [processor](src/rag/ingestion/processor.md)
+  - vectorstore
+    - [ragChunk](src/rag/vectorstore/ragChunk.md)
+    - [ragDocument](src/rag/vectorstore/ragDocument.md)
+    - tools
+      - [createRagChunk](src/rag/vectorstore/tools/createRagChunk.md)
+      - [createRagDocument](src/rag/vectorstore/tools/createRagDocument.md)
+      - [destroyRagChunk](src/rag/vectorstore/tools/destroyRagChunk.md)
+      - [destroyRagDocument](src/rag/vectorstore/tools/destroyRagDocument.md)
 - solutions
   - create
     - [createImages](src/solutions/create/createImages.md)
@@ -89,6 +113,7 @@
       - [dedupSearchResults](src/solutions/tools/oneOff/dedupSearchResults.md)
       - [replacePopulation](src/solutions/tools/oneOff/replacePopulation.md)
       - [testJsonRepair](src/solutions/tools/oneOff/testJsonRepair.md)
+    - [removeDuplicateWebSolutions](src/solutions/tools/removeDuplicateWebSolutions.md)
     - [runEvolutionStep](src/solutions/tools/runEvolutionStep.md)
     - [runSolutionStage](src/solutions/tools/runSolutionStage.md)
   - web
@@ -114,6 +139,8 @@
   - test
     - [testValidationChain](src/validations/test/testValidationChain.md)
 - vectorstore
+  - base
+    - [baseVectorStoreClient](src/vectorstore/base/baseVectorStoreClient.md)
   - [evidenceWebPage](src/vectorstore/evidenceWebPage.md)
   - [rootCauseWebPage](src/vectorstore/rootCauseWebPage.md)
   - utils
@@ -121,6 +148,7 @@
     - [createRootCauseWebPageClass](src/vectorstore/utils/createRootCauseWebPageClass.md)
     - [createWebPageClass](src/vectorstore/utils/createWebPageClass.md)
     - [deleteEvidenceWebPageClass](src/vectorstore/utils/deleteEvidenceWebPageClass.md)
+    - [deleteRouteCausesPageClass](src/vectorstore/utils/deleteRouteCausesPageClass.md)
     - [deleteWebPageClass](src/vectorstore/utils/deleteWebPageClass.md)
     - [showCounts](src/vectorstore/utils/showCounts.md)
     - [showSchema](src/vectorstore/utils/showSchema.md)

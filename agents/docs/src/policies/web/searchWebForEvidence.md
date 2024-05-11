@@ -1,31 +1,25 @@
 # SearchWebForEvidenceProcessor
 
-This class extends `SearchWebProcessor` to implement the functionality for searching the web for evidence related to policies. It manages the process of generating search queries, executing these queries via a search API, and storing the results.
+This class extends `SearchWebProcessor` to implement the functionality of searching the web for evidence related to policies. It manages the search queries, handles API rate limits, and logs the progress and results of the searches.
 
 ## Properties
 
 | Name          | Type   | Description               |
 |---------------|--------|---------------------------|
-| searchCounter | number | Tracks the number of searches performed. |
+| searchCounter | number | Counter for the number of searches performed. |
 
 ## Methods
 
-| Name       | Parameters                                                                 | Return Type | Description                                                                                   |
-|------------|----------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------|
-| searchWeb  | policy: PSPolicy, subProblemIndex: number, policyIndex: number             | Promise<void> | Searches the web for evidence related to a specific policy and stores the results.            |
-| process    |                                                                            | Promise<void> | Orchestrates the process of searching the web for evidence across all policies and subproblems. |
+| Name       | Parameters                                             | Return Type | Description |
+|------------|--------------------------------------------------------|-------------|-------------|
+| searchWeb  | policy: PSPolicy, subProblemIndex: number, policyIndex: number | Promise<void> | Performs web searches based on the evidence search queries associated with a policy, handles API rate limits, and logs the search progress. |
+| process    | -                                                      | Promise<void> | Orchestrates the web search process for all policies across all subproblems, manages URL deduplication, and logs the overall progress. |
 
 ## Example
 
-```javascript
-// Example usage of SearchWebForEvidenceProcessor
+```typescript
 import { SearchWebForEvidenceProcessor } from '@policysynth/agents/policies/web/searchWebForEvidence.js';
 
 const searchProcessor = new SearchWebForEvidenceProcessor();
-
-// Assuming existence of policy, subProblemIndex, and policyIndex variables
-await searchProcessor.searchWeb(policy, subProblemIndex, policyIndex);
-
-// To process all policies and subproblems
 await searchProcessor.process();
 ```

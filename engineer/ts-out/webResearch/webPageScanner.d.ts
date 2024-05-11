@@ -4,8 +4,9 @@ import { GetWebPagesProcessor } from "@policysynth/agents/solutions/web/getWebPa
 export declare class WebPageScanner extends GetWebPagesProcessor {
     memory: PsEngineerMemoryData;
     scanType?: "documentation" | "codeExamples";
+    instructions: string;
     collectedWebPages: any[];
-    constructor(memory: PsEngineerMemoryData);
+    constructor(memory: PsEngineerMemoryData, instructions: string);
     renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;

@@ -1,18 +1,22 @@
 # addCustomUrls
 
-This function adds custom search URLs to specific subProblems within a project's memory in Redis.
+This function adds custom search URLs to specific sub-problems in a project's memory data stored in Redis.
+
+## Properties
+
+No properties are defined in this function.
 
 ## Methods
 
-| Name         | Parameters | Return Type | Description                                                                 |
-|--------------|------------|-------------|-----------------------------------------------------------------------------|
-| addCustomUrls |            | Promise<void> | Adds custom search URLs to the memory of a specified project in Redis. |
+| Name          | Parameters        | Return Type | Description                 |
+|---------------|-------------------|-------------|-----------------------------|
+| addCustomUrls | None              | Promise<void> | Adds custom search URLs to the memory data of a specified project in Redis. |
 
 ## Example
 
 ```typescript
+// Example usage of addCustomUrls
 import { addCustomUrls } from '@policysynth/agents/tools/addCustomSearchUrls.js';
 
-// Assuming the project ID is provided as a command line argument
 addCustomUrls().catch(console.error);
 ```

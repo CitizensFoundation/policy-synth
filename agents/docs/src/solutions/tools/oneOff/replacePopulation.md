@@ -1,19 +1,18 @@
 # replacePopulation
 
-This function fetches a memory object from Redis, reads a memory object from a local file, and replaces a specific population in the memory object fetched from Redis with the population from the memory object read from the file. Finally, it saves the updated memory object back to Redis.
+This function is designed to replace specific population data in a memory structure stored in Redis with data from a local JSON file.
 
 ## Methods
 
 | Name              | Parameters | Return Type | Description |
 |-------------------|------------|-------------|-------------|
-| replacePopulation |            | Promise<void> | Fetches a memory object from Redis, replaces a specific population with one from a local file, and saves the updated memory object back to Redis. |
+| replacePopulation |            | Promise<void> | Replaces population data in a memory structure from Redis with data from a local file. |
 
 ## Example
 
 ```typescript
 import { replacePopulation } from '@policysynth/agents/solutions/tools/oneOff/replacePopulation.js';
 
-(async () => {
-  await replacePopulation();
-})();
+// Calling the function to replace population data
+replacePopulation().catch(console.error);
 ```

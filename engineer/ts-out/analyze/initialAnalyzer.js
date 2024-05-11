@@ -69,7 +69,9 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             for (const item of items) {
                 const itemPath = path.join(folderPath, item);
                 const stat = fs.statSync(itemPath);
-                if (stat.isDirectory() && item !== "ts-out" && item !== "node_modules") {
+                if (stat.isDirectory() &&
+                    item !== "ts-out" &&
+                    item !== "node_modules") {
                     files.push(...getAllDocumentationFiles(itemPath));
                 }
                 else if (path.extname(item) === ".md") {
@@ -92,6 +94,8 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             analyzisResults.likelyRelevantNpmPackageDependencies;
         this.memory.needsDocumentionsAndExamples =
             analyzisResults.needsDocumentionsAndExamples;
+        this.memory.documentationFilesToKeepInContext =
+            analyzisResults.documentationFilesToKeepInContext;
         this.memory.actionLog.push(`Have done initial analysis${analyzisResults.needsDocumentionsAndExamples
             ? " and we need to search for context"
             : ""}`);

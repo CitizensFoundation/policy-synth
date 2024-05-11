@@ -1,52 +1,41 @@
-# Puppeteer Utility Functions
+# Puppeteer Processing Module
 
-This document outlines utility functions for processing PDF and HTML content using Puppeteer, Redis for caching, and additional tools for text extraction and PDF reading.
+This module provides functionality to process and extract text from both PDF and HTML web pages using Puppeteer, Redis for caching, and additional tools for PDF reading and HTML to text conversion.
+
+## Properties
+
+No properties are directly exposed by this module.
 
 ## Methods
 
-| Name              | Parameters                                                                                   | Return Type | Description                                                                                   |
-|-------------------|----------------------------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------|
-| getAndProcessPdf  | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | Promise<void> | Processes a PDF from a given URL, caches it in Redis, and extracts text from it.              |
-| getAndProcessHtml | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | Promise<void> | Retrieves HTML content from a given URL, caches it in Redis, and converts it to plain text.   |
+| Name              | Parameters                                              | Return Type | Description                                                                 |
+|-------------------|---------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| getAndProcessPdf  | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | Promise<void> | Processes a PDF from a URL, caches it, and extracts text.                   |
+| getAndProcessHtml | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | Promise<void> | Fetches an HTML page, caches it, and converts it to plain text.             |
 
 ## Example
 
-```javascript
-// Example usage of Puppeteer utility functions
-import puppeteer, { Page } from "puppeteer-extra";
+```typescript
+import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import ioredis from "ioredis";
+import { Page } from "puppeteer";
+import { getAndProcessPdf, getAndProcessHtml } from '@policysynth/agents/solutions/tools/old/testPuppeteer.js';
 
-// Initialize Puppeteer with StealthPlugin
 puppeteer.use(StealthPlugin());
 
-// Example URL to process
-let url = "https://example.com/sample.pdf";
-
-// Launch Puppeteer browser instance
-puppeteer.launch({ headless: true }).then(async (browser) => {
+async function processWebContent() {
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
+  const url = "https://example.com/document.pdf";
 
-  // Adjust URL if necessary (specific to this example logic)
-  if (url.includes("/pdf/") && url.includes("arxiv") && !url.endsWith(".pdf")) {
-    url = `${url}.pdf`;
-  }
-
-  console.log(url);
-
-  // Determine whether to process a PDF or HTML content based on URL
   if (url.endsWith(".pdf")) {
-    await getAndProcessPdf(1, url, page, "general");
+    await getAndProcessPdf(undefined, url, page, "general");
   } else {
-    await getAndProcessHtml(1, url, page, "general");
+    await getAndProcessHtml(undefined, url, page, "general");
   }
 
-  // Close the browser instance after processing
   await browser.close();
+}
 
-  // Exit the process
-  process.exit(0);
-});
+processWebContent();
 ```
-
-This example demonstrates how to use the `getAndProcessPdf` and `getAndProcessHtml` functions to process content from a given URL using Puppeteer. It includes logic to adjust the URL for specific cases, determine the content type (PDF or HTML), and process the content accordingly. The example also shows how to initialize Puppeteer with the `StealthPlugin` to avoid detection and use Redis for caching.

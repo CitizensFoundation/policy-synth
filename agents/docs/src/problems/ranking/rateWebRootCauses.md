@@ -1,44 +1,44 @@
 # RateWebRootCausesProcessor
 
-This class extends `BaseProblemSolvingAgent` to rate web root causes.
+This class extends `BaseProblemSolvingAgent` to provide functionality for rating web root causes based on their relevance and quality.
 
 ## Properties
 
-| Name                        | Type                              | Description |
-|-----------------------------|-----------------------------------|-------------|
-| rootCauseWebPageVectorStore | RootCauseWebPageVectorStore       | Instance of `RootCauseWebPageVectorStore` used for storing and retrieving web page vectors. |
+| Name                        | Type                             | Description                                       |
+|-----------------------------|----------------------------------|---------------------------------------------------|
+| rootCauseWebPageVectorStore | RootCauseWebPageVectorStore      | Store for managing root cause web page vectors.   |
 
 ## Methods
 
-| Name                    | Parameters                                                                                                      | Return Type | Description |
-|-------------------------|-----------------------------------------------------------------------------------------------------------------|-------------|-------------|
-| simplifyRootCauseType   | rootCauseType: string                                                                                           | string      | Simplifies the root cause type by removing specific substrings. |
-| renderProblemPrompt     | rawWebData: PSRootCauseRawWebPageData, rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData | Promise     | Prepares the problem prompt for the language model based on the root causes to rank. |
-| rateWebRootCauses       |                                                                                                                 | Promise     | Rates all web root causes by interacting with the language model and updating the vector store. |
-| process                 |                                                                                                                 | Promise     | Processes the task of rating web root causes. Initializes the chat model and handles errors. |
+| Name                   | Parameters                                                                                      | Return Type | Description                                                                 |
+|------------------------|-------------------------------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| simplifyRootCauseType  | rootCauseType: string                                                                           | string      | Simplifies the root cause type by removing specific substrings.             |
+| renderProblemPrompt    | rawWebData: PSRootCauseRawWebPageData, rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData | Promise<SystemMessage[] \| HumanMessage[]> | Prepares the problem prompt for the human message interface.                |
+| rateWebRootCauses      | -                                                                                               | Promise<void> | Rates all web root causes by processing each type and updating scores.      |
+| process                | -                                                                                               | Promise<void> | Processes the rating of web root causes, initializes chat configurations.   |
 
 ## Example
 
-```javascript
+```typescript
 import { RateWebRootCausesProcessor } from '@policysynth/agents/problems/ranking/rateWebRootCauses.js';
+import { PSRootCauseRawWebPageData } from '@policysynth/agents/problems/ranking/types.js';
 
-// Initialize the processor
 const processor = new RateWebRootCausesProcessor();
 
-// Example usage of simplifying root cause type
-const simplifiedType = processor.simplifyRootCauseType('allPossibleIdentifiedInTextContextRootCause');
-console.log(simplifiedType); // Output: RootCause
+// Example usage of rendering a problem prompt
+const exampleWebData: PSRootCauseRawWebPageData = {
+  url: "https://example.com",
+  someRootCauseField: ["Example Root Cause 1", "Example Root Cause 2"]
+};
 
-// Assuming existence of PSRootCauseRawWebPageData, rootCausesToRank, and rootCauseType
-// Example usage of renderProblemPrompt (async call)
-processor.renderProblemPrompt(rawWebData, rootCausesToRank, rootCauseType)
-  .then(prompt => console.log(prompt));
+processor.renderProblemPrompt(exampleWebData, exampleWebData.someRootCauseField, 'someRootCauseField').then(messages => {
+  messages.forEach(message => console.log(message.content));
+});
 
-// Example usage of rateWebRootCauses (async call)
-processor.rateWebRootCauses()
-  .then(() => console.log('Rating completed'));
-
-// Example usage of process (async call)
-processor.process()
-  .then(() => console.log('Processing completed'));
+// Example usage of processing ratings
+processor.process().then(() => {
+  console.log("Processing complete.");
+}).catch(error => {
+  console.error("Error during processing:", error);
+});
 ```

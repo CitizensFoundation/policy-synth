@@ -1,40 +1,34 @@
 # AgentPolicies
 
-This class extends `BaseAgentProcessor` to implement the policy synthesis agent's processing logic, handling various stages of policy creation and evidence gathering.
+This class extends `BaseAgentProcessor` and is responsible for managing the lifecycle and processing of policy-related tasks in a job queue system.
 
 ## Properties
 
-| Name    | Type              | Description |
-|---------|-------------------|-------------|
-| memory  | PsBaseMemoryData  | Holds the state and data relevant to the current job being processed by the agent. |
+| Name   | Type                | Description                           |
+|--------|---------------------|---------------------------------------|
+| memory | PsBaseMemoryData    | Holds the state and data for a job.   |
 
 ## Methods
 
-| Name              | Parameters            | Return Type | Description |
-|-------------------|-----------------------|-------------|-------------|
-| initializeMemory  | job: Job              | Promise<void> | Initializes the agent's memory with the job's data, setting up the initial state for processing. |
-| setStage          | stage: PsMemoryStageTypes | Promise<void> | Updates the current stage in the agent's memory and records the start time for the stage. |
-| process           | None                  | Promise<void> | Processes the job based on the current stage set in the agent's memory, executing the appropriate actions for each stage. |
+| Name             | Parameters            | Return Type | Description                                                                 |
+|------------------|-----------------------|-------------|-----------------------------------------------------------------------------|
+| initializeMemory | job: Job              | Promise<void> | Initializes the memory for the agent with the job's data.                   |
+| setStage         | stage: PsMemoryStageTypes | Promise<void> | Sets the current stage of processing and updates the memory.                |
+| process          | -                     | Promise<void> | Processes the job based on the current stage in the memory.                 |
 
 ## Example
 
 ```typescript
-import { Worker, Job } from "bullmq";
 import { AgentPolicies } from '@policysynth/agents/policies/policies.js';
+import { Job } from "bullmq";
 
-const agent = new Worker(
-  "agent-policies",
-  async (job: Job) => {
-    console.log(`Agent Policies Processing job ${job.id}`);
-    const agent = new AgentPolicies();
-    await agent.setup(job);
-    await agent.process();
-    return job.data;
-  },
-  { concurrency: parseInt(process.env.AGENT_INNOVATION_CONCURRENCY || "1") }
-);
+const job = new Job(); // Assuming job is already created and configured elsewhere
+const agentPolicies = new AgentPolicies();
 
-process.on("SIGINT", async () => {
-  await agent.close();
+// Example of initializing memory and processing a job
+agentPolicies.initializeMemory(job).then(() => {
+  agentPolicies.process().then(() => {
+    console.log("Processing complete.");
+  });
 });
 ```

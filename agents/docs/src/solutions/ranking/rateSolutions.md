@@ -1,28 +1,34 @@
 # RateSolutionsProcessor
 
-`RateSolutionsProcessor` extends `BaseProblemSolvingAgent` to rate solutions for sub-problems using a language model.
+This class extends `BaseProblemSolvingAgent` to provide functionality for rating solutions based on various attributes.
+
+## Properties
+
+No public properties are documented for this class.
 
 ## Methods
 
-| Name                | Parameters                                  | Return Type                  | Description                                                                 |
-|---------------------|---------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
-| renderRatePrompt    | subProblemIndex: number, solution: IEngineSolution | Promise<SystemMessage[]> | Generates messages for rating a solution component.                         |
-| rateSolutions       | None                                        | Promise<void>                | Rates all solutions for all sub-problems.                                   |
-| process             | None                                        | Promise<void>                | Initializes the chat model and processes the rating of solution components. |
+| Name               | Parameters                          | Return Type       | Description                                                                 |
+|--------------------|-------------------------------------|-------------------|-----------------------------------------------------------------------------|
+| renderRatePrompt   | subProblemIndex: number, solution: IEngineSolution | Promise<SystemMessage[]> | Generates prompt messages for rating a solution.                            |
+| rateSolutions      | None                                | Promise<void>     | Processes all sub-problems and their solutions, and applies ratings.        |
+| process            | None                                | Promise<void>     | Initializes the chat model and handles the rating process for solutions.    |
 
 ## Example
 
-```javascript
+```typescript
 // Example usage of RateSolutionsProcessor
 import { RateSolutionsProcessor } from '@policysynth/agents/solutions/ranking/rateSolutions.js';
 
-const rateSolutionsProcessor = new RateSolutionsProcessor();
+const rateProcessor = new RateSolutionsProcessor();
 
-(async () => {
+async function runRating() {
   try {
-    await rateSolutionsProcessor.process();
+    await rateProcessor.process();
   } catch (error) {
-    console.error("Error processing solution ratings:", error);
+    console.error('Error during solution rating:', error);
   }
-})();
+}
+
+runRating();
 ```

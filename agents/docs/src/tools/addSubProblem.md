@@ -1,14 +1,23 @@
 # addSubProblem
 
-This script is used to add a sub-problem to a project's memory data in Redis. It takes a project ID as an argument, retrieves the project's current memory data, adds a new sub-problem to it, and then updates the project's memory data in Redis.
+This script is used to add a sub-problem to a project's problem statement in a Redis database. It requires a project ID as a command-line argument.
 
 ## Properties
 
-No properties are directly defined in this script.
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| redis         | ioredis | Redis client instance.    |
+| projectId     | string | ID of the project.        |
+| subProblem    | IEngineSubProblem | Object representing a sub-problem to be added. |
+| redisKey      | string | Redis key under which project data is stored. |
+| projectTxt    | string | JSON string retrieved from Redis. |
+| project       | PsBaseMemoryData | Project data parsed from `projectTxt`. |
 
 ## Methods
 
-No methods are directly defined in this script.
+| Name       | Parameters        | Return Type | Description                 |
+|------------|-------------------|-------------|-----------------------------|
+| None       | None              | None        | This script does not define methods but executes a sequence of operations based on the presence of `projectId`. |
 
 ## Example
 
@@ -16,15 +25,15 @@ No methods are directly defined in this script.
 import { Queue } from "bullmq";
 import ioredis from "ioredis";
 
-// Initialize Redis connection
-const redis = new ioredis.default(
+// Example usage of addSubProblem
+import '@policysynth/agents/tools/addSubProblem.js';
+
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-// The project ID is passed as a command-line argument
 const projectId = process.argv[2];
 
-// Define the sub-problem to be added
 const subProblem = {
   title: "Legal System Misuse for Political Advantage",
   description: "Authoritarians are increasingly exploiting the legal system to suppress opposition and manipulate election outcomes. This involves a range of tactics, from altering election administration and policies to weaponizing the judiciary against dissent.",
@@ -32,25 +41,19 @@ const subProblem = {
 } as IEngineSubProblem;
 
 if (projectId) {
-  // Construct the Redis key for the project's memory data
   const redisKey = `st_mem:${projectId}:id`;
 
-  // Retrieve the project's current memory data from Redis
   const projectTxt = await redis.get(`st_mem:${projectId}:id`);
   const project = JSON.parse(
     projectTxt!
   ) as PsBaseMemoryData;
 
-  // Add the new sub-problem to the project's memory data
   project.subProblems.push(subProblem);
 
-  // Update the project's memory data in Redis
   await redis.set(redisKey, JSON.stringify(project));
   process.exit(0);
 } else {
-  console.log("Usage: node addSubProblem <projectId>");
+  console.log("Usage: node addProblemStatement <projectId>");
   process.exit(1);
 }
 ```
-
-This example demonstrates how to use the script to add a sub-problem to a project's memory data stored in Redis. It requires the `ioredis` package for Redis operations and expects a project ID as a command-line argument.

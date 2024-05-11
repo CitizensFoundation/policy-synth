@@ -1,26 +1,30 @@
 # RankEntitiesProcessor
 
-This class extends `BasePairwiseRankingsProcessor` to implement a specific ranking process for entities affected by sub-problems. It ranks entities based on their impact by comparing them pairwise.
+This class extends `BasePairwiseRankingsProcessor` to implement a specific ranking process for entities affected by sub-problems in a complex problem statement. It uses a chat model to rank entities based on their impact.
+
+## Properties
+
+| Name   | Type   | Description               |
+|--------|--------|---------------------------|
+| chat   | ChatOpenAI | Instance of ChatOpenAI used for communication with the language model. |
 
 ## Methods
 
-| Name              | Parameters                                  | Return Type                        | Description                                                                 |
-|-------------------|---------------------------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| voteOnPromptPair  | subProblemIndex: number, promptPair: number[] | Promise<IEnginePairWiseVoteResults> | Compares two entities affected by a sub-problem and decides which one is more significantly impacted. |
-| process           |                                             | Promise<void>                      | Processes all sub-problems, ranks entities within them, and updates the memory with the ranked entities. |
+| Name              | Parameters                                    | Return Type                     | Description |
+|-------------------|-----------------------------------------------|---------------------------------|-------------|
+| voteOnPromptPair  | subProblemIndex: number, promptPair: number[] | Promise<IEnginePairWiseVoteResults> | Processes a pair of prompts and uses a language model to determine which entity is more affected. |
+| process           | -                                             | Promise<void>                   | Processes all sub-problems and ranks entities based on their impact using pairwise comparison. |
 
 ## Example
 
-```javascript
+```typescript
+// Example usage of RankEntitiesProcessor
 import { RankEntitiesProcessor } from '@policysynth/agents/problems/ranking/rankEntities.js';
 
-// Assuming `memory` and `logger` are already defined and initialized
-const rankEntitiesProcessor = new RankEntitiesProcessor(memory, logger);
+const processor = new RankEntitiesProcessor();
 
-// Example method call to start the ranking process
-rankEntitiesProcessor.process().then(() => {
-  console.log('Ranking process completed.');
-}).catch(error => {
-  console.error('An error occurred during the ranking process:', error);
+// Example method calls
+processor.process().then(() => {
+  console.log("Ranking process completed.");
 });
 ```

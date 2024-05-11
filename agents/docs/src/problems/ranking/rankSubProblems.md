@@ -1,6 +1,6 @@
 # RankSubProblemsProcessor
 
-This class extends `BasePairwiseRankingsProcessor` to implement the functionality for ranking sub-problems based on their relevance to a main problem statement.
+This class extends `BasePairwiseRankingsProcessor` to specifically handle the ranking of sub-problems related to a main problem statement using pairwise comparison.
 
 ## Properties
 
@@ -10,20 +10,26 @@ This class extends `BasePairwiseRankingsProcessor` to implement the functionalit
 
 ## Methods
 
-| Name             | Parameters                                      | Return Type                     | Description                                                                 |
-|------------------|-------------------------------------------------|---------------------------------|-----------------------------------------------------------------------------|
-| voteOnPromptPair | subProblemIndex: number, promptPair: number[]   | Promise<IEnginePairWiseVoteResults> | Processes a pair of sub-problems and votes on which one is more relevant.  |
-| process          |                                                 | Promise<void>                   | Orchestrates the process of ranking sub-problems based on their relevance. |
+| Name             | Parameters                                             | Return Type                     | Description |
+|------------------|--------------------------------------------------------|---------------------------------|-------------|
+| voteOnPromptPair | subProblemIndex: number, promptPair: number[]          | Promise<IEnginePairWiseVoteResults> | Processes a pair of sub-problems and uses an AI model to determine which one is more relevant to the main problem. |
+| process          | -                                                      | Promise<void>                   | Orchestrates the entire process of ranking sub-problems by setting up prompts, performing pairwise ranking, and updating the memory with the ranked list. |
 
 ## Example
 
 ```typescript
-// Example usage of RankSubProblemsProcessor
 import { RankSubProblemsProcessor } from '@policysynth/agents/problems/ranking/rankSubProblems.js';
 
-const rankSubProblemsProcessor = new RankSubProblemsProcessor();
+const processor = new RankSubProblemsProcessor();
 
-// Assuming setup and initialization are done here
-// Example method calls
-await rankSubProblemsProcessor.process();
+// Example setup and usage
+processor.setupRankingPrompts(-1, someSubProblemsArray, maxPrompts);
+processor.performPairwiseRanking(-1).then(() => {
+  console.log("Pairwise ranking completed.");
+});
+
+// To process and rank sub-problems
+processor.process().then(() => {
+  console.log("Sub-problems have been ranked and memory is updated.");
+});
 ```

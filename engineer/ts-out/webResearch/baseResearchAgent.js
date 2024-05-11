@@ -5,7 +5,7 @@ import { ResearchWeb } from "./searchWeb.js";
 import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
 export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-    numberOfQueriesToGenerate = 20;
+    numberOfQueriesToGenerate = 25;
     percentOfQueriesToSearch = 0.4;
     percentOfResultsToScan = 0.4;
     async doWebResearch() {
@@ -33,7 +33,7 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
             const searchResultsToScan = rankedSearchResults.slice(0, Math.floor(rankedSearchResults.length * this.percentOfResultsToScan));
             // Scan and Research Web pages
             this.logger.info("Scan and Research Web pages");
-            const webPageResearch = new WebPageScanner(this.memory);
+            const webPageResearch = new WebPageScanner(this.memory, this.searchInstructions);
             const webScanResults = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.scanType);
             this.logger.info("Website Scanning Completed", true);
             console.log(`webScan: (${webScanResults.length}) ${JSON.stringify(webScanResults, null, 2)}`);

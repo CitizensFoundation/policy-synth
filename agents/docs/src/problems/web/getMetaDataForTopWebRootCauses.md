@@ -1,40 +1,37 @@
 # GetMetaDataForTopWebRootCausesProcessor
 
-This class extends `GetRootCausesWebPagesProcessor` to process web pages and extract metadata for top web root causes. It includes methods for processing HTML and PDF pages, refining web root causes, and orchestrating the overall process of fetching and processing web pages.
+This class processes web pages to extract metadata for top web root causes. It extends the `GetRootCausesWebPagesProcessor` class and includes methods to handle PDF and HTML content, caching mechanisms, and metadata extraction using the `metascraper` library.
+
+## Properties
+
+No properties are explicitly defined in this class that are not inherited.
 
 ## Methods
 
 | Name                          | Parameters                                                                                                                                                                                                 | Return Type | Description                                                                                   |
 |-------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------|
-| processPageText               | text: string, subProblemIndex: number \| undefined, url: string, type: IEngineWebPageTypes \| PSEvidenceWebPageTypes \| PSRootCauseWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined | Promise<void> | Processes the text of a page to extract metadata and save it.                                 |
-| getAndProcessPdf              | subProblemIndex: number \| undefined, url: string, type: IEngineWebPageTypes \| PSEvidenceWebPageTypes \| PSRootCauseWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined          | Promise<void> | Fetches a PDF from a URL, processes its text, and extracts metadata.                          |
-| getAndProcessHtml             | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes \| PSEvidenceWebPageTypes \| PSRootCauseWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined | Promise<void> | Fetches an HTML page from a URL, processes its text, and extracts metadata.                   |
-| getAndProcessRootCausePage    | url: string, browserPage: Page, type: PSRootCauseWebPageTypes                                                                                                                                               | Promise<boolean> | Determines the type of a web page (HTML or PDF) and processes it accordingly.                 |
-| refineWebRootCauses           | page: Page                                                                                                                                                                                                  | Promise<void> | Refines web root causes by processing top pages for each root cause type.                     |
-| processSubProblems            | browser: Browser                                                                                                                                                                                            | Promise<void> | Orchestrates the process of refining root causes by opening a new browser page.               |
-| getAllPages                   |                                                                                                                                                                                                             | Promise<void> | Launches a browser, processes sub-problems, saves memory, and closes the browser.             |
-| process                       |                                                                                                                                                                                                             | Promise<void> | Main method to start the process of getting web metadata for top web root causes.             |
+| processPageText               | text: string, subProblemIndex: number \| undefined, url: string, type: IEngineWebPageTypes \| PSEvidenceWebPageTypes \| PSRootCauseWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined | Promise<void> | Processes the text of a web page to extract metadata and save it.                             |
+| getAndProcessPdf              | subProblemIndex: number \| undefined, url: string, type: IEngineWebPageTypes \| PSEvidenceWebPageTypes \| PSRootCauseWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined           | Promise<void> | Handles the processing of a PDF file by extracting text and processing it for metadata.       |
+| getAndProcessHtml             | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes \| PSEvidenceWebPageTypes \| PSRootCauseWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined | Promise<void> | Processes an HTML page to extract text and subsequently extract metadata.                     |
+| getAndProcessRootCausePage    | url: string, browserPage: Page, type: PSRootCauseWebPageTypes                                                                                                                                               | Promise<boolean> | Determines the type of web page (PDF or HTML) and processes it accordingly.                   |
+| refineWebRootCauses           | page: Page                                                                                                                                                                                                  | Promise<void> | Processes multiple web pages to refine root causes by extracting and analyzing their metadata. |
+| processSubProblems            | browser: Browser                                                                                                                                                                                            | Promise<void> | Manages the process of refining root causes for all subproblems in a session.                  |
+| getAllPages                   | -                                                                                                                                                                                                           | Promise<void> | Initializes a browser session and processes all subproblems.                                  |
+| process                       | -                                                                                                                                                                                                           | Promise<void> | Main method to start the metadata extraction process for web pages.                           |
 
 ## Example
 
-```javascript
-// Example usage of GetMetaDataForTopWebRootCausesProcessor
-import puppeteer from "puppeteer-extra";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
+```typescript
 import { GetMetaDataForTopWebRootCausesProcessor } from '@policysynth/agents/problems/web/getMetaDataForTopWebRootCauses.js';
+import puppeteer from "puppeteer";
 
-// Apply the stealth plugin to avoid detection
-puppeteer.use(StealthPlugin());
-
-async function main() {
+async function runMetaDataExtraction() {
   const browser = await puppeteer.launch({ headless: true });
-  const processor = new GetMetaDataForTopWebRootCausesProcessor();
+  const metaDataProcessor = new GetMetaDataForTopWebRootCausesProcessor();
 
-  // Start the process
-  await processor.process();
-
+  await metaDataProcessor.process();
   await browser.close();
 }
 
-main().catch(console.error);
+runMetaDataExtraction();
 ```

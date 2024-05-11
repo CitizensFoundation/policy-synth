@@ -1,67 +1,27 @@
-# runProblemStage.js
+# runProblemStage
 
-This script is designed to update the current stage of a problem-solving process in a Redis database and then add a job to a BullMQ queue for further processing. It requires a project ID as a command-line argument.
+This script is used to manage the problem-solving stages for a given project by interacting with a Redis database and a BullMQ queue.
 
 ## Properties
 
-No properties are documented as this script does not define a class or object structure with properties.
+| Name       | Type                     | Description                                   |
+|------------|--------------------------|-----------------------------------------------|
+| redis      | ioredis.Redis            | Instance of ioredis connected to Redis server.|
+| myQueue    | Queue                    | BullMQ Queue instance for managing jobs.      |
+| projectId  | string \| undefined      | Project ID passed as a command-line argument. |
 
 ## Methods
 
-No methods are documented as this script does not define a class or object structure with methods.
+| Name       | Parameters               | Return Type | Description                 |
+|------------|--------------------------|-------------|-----------------------------|
+| (none)     | (none)                   | (none)      | (no methods, script execution) |
 
 ## Example
 
 ```typescript
-import { Queue } from "bullmq";
-import ioredis from "ioredis";
+// Example usage of runProblemStage
+import { runProblemStage } from '@policysynth/agents/problems/tools/runProblemStage.js';
 
-// Initialize Redis connection
-const redis = new ioredis.default(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-);
-
-// Create a new queue for handling agent problems
-const myQueue = new Queue("agent-problems");
-
-// Retrieve the project ID from command line arguments
-const projectId = process.argv[2];
-
-if (projectId) {
-  // Construct the Redis key for storing memory data
-  const redisKey = `st_mem:${projectId}:id`;
-  
-  // Retrieve the current memory data from Redis
-  const output = await redis.get(redisKey);
-  
-  // Parse the memory data
-  const memory = JSON.parse(output!) as PsBaseMemoryData;
-  
-  // Update the current stage in the memory data
-  memory.currentStage = "create-problem-statement-image";
-  
-  // Save the updated memory data back to Redis
-  await redis.set(redisKey, JSON.stringify(memory));
-  
-  console.log("Adding job to queue");
-  
-  // Add a new job to the BullMQ queue with specific job data and options
-  await myQueue.add(
-    "agent-problems",
-    {
-      groupId: projectId,
-      communityId: 1,
-      domainId: 1,
-    },
-    { removeOnComplete: true, removeOnFail: true }
-  );
-  
-  console.log("After adding job to queue");
-  process.exit(0);
-} else {
-  console.log("Usage: node runProblemStage <projectId>");
-  process.exit(0);
-}
+// Assuming environment variables and Redis are configured:
+// Command line usage: node runProblemStage <projectId>
 ```
-
-This example demonstrates how to use the script to update the problem-solving stage in a Redis database and enqueue a job for further processing. It emphasizes the need for a project ID as input and outlines the steps taken when the ID is provided.

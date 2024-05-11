@@ -6,9 +6,9 @@ import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
 
 export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-  numberOfQueriesToGenerate = 10;
-  percentOfQueriesToSearch = 0.2;
-  percentOfResultsToScan = 0.2;
+  numberOfQueriesToGenerate = 25;
+  percentOfQueriesToSearch = 0.4;
+  percentOfResultsToScan = 0.4;
 
   abstract searchInstructions: string;
   abstract scanType: "documentation" | "codeExamples";
@@ -71,7 +71,8 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
       this.logger.info("Scan and Research Web pages");
 
       const webPageResearch = new WebPageScanner(
-        this.memory as PsEngineerMemoryData
+        this.memory as PsEngineerMemoryData,
+        this.searchInstructions
       );
 
       const webScanResults = await webPageResearch.scan(

@@ -1,33 +1,32 @@
 # RankWebRootCausesProcessor
 
-This class extends `BaseProblemSolvingAgent` to rank web root causes by importance to a problem statement. It utilizes a vector store for root cause web pages and leverages language models for processing and ranking.
+This class extends `BaseProblemSolvingAgent` to rank web root causes by processing and updating root cause data from a vector store.
 
 ## Properties
 
-| Name                         | Type                                  | Description                                      |
-|------------------------------|---------------------------------------|--------------------------------------------------|
-| rootCauseWebPageVectorStore  | RootCauseWebPageVectorStore           | Instance of RootCauseWebPageVectorStore.         |
+| Name                        | Type                             | Description                                       |
+|-----------------------------|----------------------------------|---------------------------------------------------|
+| rootCauseWebPageVectorStore | RootCauseWebPageVectorStore      | Instance of RootCauseWebPageVectorStore.          |
 
 ## Methods
 
-| Name                  | Parameters                                                                                   | Return Type                  | Description                                                                                   |
-|-----------------------|----------------------------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------------------------|
-| renderProblemPrompt   | rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData                   | Promise<SystemMessage[]>    | Generates the problem prompt for the language model to filter and rank root causes.          |
-| rankWebRootCauses     |                                                                                              | Promise<void>               | Iterates over root cause types, retrieves web pages, and ranks root causes using a language model. |
-| process               |                                                                                              | Promise<void>               | Initializes the chat model and starts the process of ranking web root causes.                |
+| Name                  | Parameters                                                                 | Return Type       | Description                                                                                     |
+|-----------------------|----------------------------------------------------------------------------|-------------------|-------------------------------------------------------------------------------------------------|
+| renderProblemPrompt   | rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData | Promise<Message[]> | Generates the problem prompt messages for ranking root causes.                                  |
+| rankWebRootCauses     | -                                                                          | Promise<void>     | Processes and ranks web root causes by fetching, ranking, and updating them in the vector store.|
+| process               | -                                                                          | Promise<void>     | Initializes the chat model and processes the ranking of web root causes.                        |
 
 ## Example
 
-```javascript
+```typescript
 import { RankWebRootCausesProcessor } from '@policysynth/agents/problems/ranking/rankWebRootCauses.js';
 
-// Initialize the processor with necessary configurations
 const processor = new RankWebRootCausesProcessor();
 
-// Example method call to start the process
+// Example usage to process and rank web root causes
 processor.process().then(() => {
-  console.log("Finished ranking all web root causes");
+  console.log("Processing and ranking of web root causes completed.");
 }).catch(error => {
-  console.error("Error during ranking process:", error);
+  console.error("An error occurred:", error);
 });
 ```

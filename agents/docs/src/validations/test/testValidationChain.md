@@ -1,133 +1,134 @@
 # PsAgentOrchestrator
 
-The orchestrator for PolicySynth agents, managing the execution and chaining of various validation and classification agents.
+This class orchestrates the execution of various agents for processing and validation tasks.
 
 ## Properties
 
-| Name          | Type   | Description               |
-|---------------|--------|---------------------------|
-| No properties are explicitly defined in the provided code snippet. | | |
+No properties are documented for this class.
 
 ## Methods
 
-| Name       | Parameters        | Return Type | Description                 |
-|------------|-------------------|-------------|-----------------------------|
-| execute    | agent: PsBaseValidationAgent, effect: string | Promise<any> | Executes the given agent with the provided effect, managing the flow of validation and classification tasks. |
+| Name    | Parameters | Return Type | Description                             |
+|---------|------------|-------------|-----------------------------------------|
+| execute | agent: PsBaseValidationAgent, input: any | Promise<any> | Executes the given agent with the specified input and returns the result. |
 
 ## Example
 
-```javascript
+```typescript
 import { PsAgentOrchestrator } from '@policysynth/agents/validations/test/testValidationChain.js';
 
 const agentOrchestrator = new PsAgentOrchestrator();
-const effect = `Car's engine will not start`;
-const causees = [`Engine needs fuel in order to run`, `Fuel is not getting into the engine`];
-
-let userMessage = `Effect: ${effect}\n`;
-causees.forEach((cause, index) => {
-  userMessage += `Cause ${index + 1}: ${cause}\n`;
-});
-
-// Define your agents here
-
-const result = await agentOrchestrator.execute(parallelAgent, effect);
-
-console.log(`Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`);
+const result = await agentOrchestrator.execute(someAgent, someInput);
 ```
+
+---
 
 # PsBaseValidationAgent
 
-A base class for creating validation agents that can evaluate sentences, logic, or any other criteria based on a system prompt and user message.
+This class represents a base agent for validation tasks, capable of handling system and user messages.
 
 ## Properties
 
 | Name          | Type   | Description               |
 |---------------|--------|---------------------------|
-| nextAgent     | PsBaseValidationAgent \| undefined | The next agent to execute in the validation chain. |
+| systemMessage | string | The system message for validation. |
+| userMessage   | string | The user message to be validated. |
+| streamingCallbacks | Callbacks | Callbacks for handling streaming outputs. |
+| disableStreaming | boolean | Flag to disable streaming, if necessary. |
+| nextAgent     | PsBaseValidationAgent | The next agent to execute in the chain. |
 
 ## Methods
 
 | Name       | Parameters        | Return Type | Description                 |
 |------------|-------------------|-------------|-----------------------------|
-| addRoute   | key: string, agent: PsBaseValidationAgent | void | Adds a routing condition to direct the flow to different agents based on the evaluation result. |
+| addRoute   | key: string, agent: PsBaseValidationAgent | void | Adds a routing path for the agent based on the given key. |
 
 ## Example
 
-```javascript
+```typescript
 import { PsBaseValidationAgent } from '@policysynth/agents/validations/test/testValidationChain.js';
 
-const systemPrompt = `Your system prompt here`;
-const userMessage = `Your user message here`;
-
-const validationAgent = new PsBaseValidationAgent("Agent Name", {
-  systemMessage: systemPrompt,
-  userMessage,
-  // Optional properties
+const validationAgent = new PsBaseValidationAgent("Example Agent", {
+  systemMessage: "System prompt here",
+  userMessage: "User message here",
+  streamingCallbacks: someCallbacks
 });
-
-// Define next agent or routes if necessary
 ```
 
-# PsParallelValidationAgent
-
-A specialized agent for executing multiple validation agents in parallel, collecting and aggregating their results.
-
-## Properties
-
-| Name          | Type   | Description               |
-|---------------|--------|---------------------------|
-| agents        | PsBaseValidationAgent[] | The list of agents to be executed in parallel. |
-
-## Methods
-
-| Name       | Parameters        | Return Type | Description                 |
-|------------|-------------------|-------------|-----------------------------|
-| No specific methods are defined in the provided code snippet other than those inherited from its base class. | | | |
-
-## Example
-
-```javascript
-import { PsParallelValidationAgent } from '@policysynth/agents/validations/test/testValidationChain.js';
-
-const parallelAgent = new PsParallelValidationAgent(
-  "Parallel Sentence Validation",
-  {},
-  [effectSentenceValidator, ...sentenceValidators]
-);
-
-// Define the next agent if necessary
-parallelAgent.nextAgent = validLogicalStatement;
-```
+---
 
 # PsClassificationAgent
 
-A validation agent designed for classifying sentences based on specific criteria provided in the system prompt.
+This class extends PsBaseValidationAgent for classification tasks.
 
 ## Properties
 
 | Name          | Type   | Description               |
 |---------------|--------|---------------------------|
-| No specific properties are defined in the provided code snippet other than those inherited from its base class. | | |
+| classificationType | string | The type of classification performed by the agent. |
+
+## Methods
+
+No additional methods documented beyond those inherited from PsBaseValidationAgent.
+
+## Example
+
+```typescript
+import { PsClassificationAgent } from '@policysynth/agents/validations/test/testValidationChain.js';
+
+const classificationAgent = new PsClassificationAgent("Metric Classification", {
+  systemMessage: "System prompt for classification",
+  userMessage: "User message for classification",
+  streamingCallbacks: someCallbacks
+});
+```
+
+---
+
+# PsParallelValidationAgent
+
+This class is used to execute multiple validation agents in parallel.
+
+## Properties
+
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| agents        | PsBaseValidationAgent[] | Array of agents to be executed in parallel. |
 
 ## Methods
 
 | Name       | Parameters        | Return Type | Description                 |
 |------------|-------------------|-------------|-----------------------------|
-| addRoute   | key: string, agent: PsBaseValidationAgent | void | Adds a routing condition to direct the flow to different agents based on the classification result. |
+| setAgents  | agents: PsBaseValidationAgent[] | void | Sets the agents to be executed in parallel. |
 
 ## Example
 
-```javascript
-import { PsClassificationAgent } from '@policysynth/agents/validations/test/testValidationChain.js';
+```typescript
+import { PsParallelValidationAgent } from '@policysynth/agents/validations/test/testValidationChain.js';
 
-const classification = new PsClassificationAgent("Metric Classification", {
-  systemMessage: systemPrompt2,
-  userMessage,
-  streamingCallbacks,
-});
+const parallelAgent = new PsParallelValidationAgent("Parallel Agent", {}, [agent1, agent2]);
+```
 
-// Define routes based on classification results
-classification.addRoute("derived", syllogisticEvaluationDerived);
-classification.addRoute("direct", syllogisticEvaluationMoreThanOne);
-classification.addRoute("nometric", syllogisticEvaluationMoreThanOne);
+---
+
+# Callbacks
+
+This type defines the structure for callbacks used in streaming scenarios.
+
+## Properties
+
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| handleLLMNewToken | (token: string) => void | Function to handle new tokens from a language model. |
+
+## Example
+
+```typescript
+import { Callbacks } from '@langchain/core/callbacks/manager';
+
+const callbacks: Callbacks = {
+  handleLLMNewToken: (token: string) => {
+    console.log(token);
+  }
+};
 ```

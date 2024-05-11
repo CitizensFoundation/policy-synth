@@ -1,34 +1,35 @@
 # SearchWebProcessor
 
-This class extends `BaseProblemSolvingAgent` to perform web searches using either Google or Bing search APIs based on the environment configuration. It processes search queries for problem statements, sub-problems, and entities, deduplicates the results, and updates the memory with the search results.
+This class extends `BaseProblemSolvingAgent` to perform web searches using either Google or Bing search APIs based on environment configurations. It processes search queries related to problem statements, sub-problems, and entities, deduplicates the results, and updates the memory with the search results.
 
 ## Properties
 
-| Name     | Type                        | Description                                   |
-|----------|-----------------------------|-----------------------------------------------|
-| seenUrls | Map<string, Set<string>>    | Stores URLs that have been seen to avoid duplicates in search results. |
+| Name     | Type                     | Description                                   |
+|----------|--------------------------|-----------------------------------------------|
+| seenUrls | Map<string, Set<string>> | Stores URLs that have been seen to avoid duplicates in search results. |
 
 ## Methods
 
-| Name                   | Parameters                                      | Return Type                             | Description                                                                 |
-|------------------------|-------------------------------------------------|-----------------------------------------|-----------------------------------------------------------------------------|
-| callSearchApi          | query: string                                   | Promise<IEngineSearchResultItem[]>     | Calls the appropriate search API (Google or Bing) based on environment variables and returns the search results. |
-| getQueryResults        | queriesToSearch: string[], id: string           | Promise<{ searchResults: IEngineSearchResultItem[] }> | Fetches search results for given queries and deduplicates them based on URLs. |
-| processSubProblems     | searchQueryType: IEngineWebPageTypes            | Promise<void>                           | Processes search queries for all sub-problems based on the given search query type. |
-| processEntities        | subProblemIndex: number, searchQueryType: IEngineWebPageTypes | Promise<void>                           | Processes search queries for entities within a sub-problem based on the given search query type. |
-| processProblemStatement| searchQueryType: IEngineWebPageTypes            | Promise<void>                           | Processes search queries for the problem statement based on the given search query type. |
-| process                |                                                 | Promise<void>                           | Orchestrates the processing of problem statement, sub-problems, and entities search queries. |
+| Name                    | Parameters                                  | Return Type                             | Description                                                                 |
+|-------------------------|---------------------------------------------|-----------------------------------------|-----------------------------------------------------------------------------|
+| callSearchApi           | query: string                               | Promise<IEngineSearchResultItem[]>      | Calls the appropriate search API (Google or Bing) based on environment settings and returns search results. |
+| getQueryResults         | queriesToSearch: string[], id: string       | Promise<{ searchResults: IEngineSearchResultItem[] }> | Processes a list of queries, fetches and deduplicates the search results. |
+| processSubProblems      | searchQueryType: IEngineWebPageTypes        | Promise<void>                           | Processes search queries for all sub-problems based on the type of search query. |
+| processEntities         | subProblemIndex: number, searchQueryType: IEngineWebPageTypes | Promise<void>                           | Processes search queries for entities within a specific sub-problem. |
+| processProblemStatement | searchQueryType: IEngineWebPageTypes        | Promise<void>                           | Processes search queries for the problem statement. |
+| process                 |                                             | Promise<void>                           | Orchestrates the processing of problem statements, sub-problems, and entities. Calls search APIs and updates memory with results. |
 
 ## Example
 
-```javascript
-// Example usage of SearchWebProcessor
+```typescript
 import { SearchWebProcessor } from '@policysynth/agents/solutions/web/searchWeb.js';
 
-const searchWebProcessor = new SearchWebProcessor();
+const searchProcessor = new SearchWebProcessor();
 
-// Assuming environment variables for search API keys are set
-searchWebProcessor.process()
-  .then(() => console.log('Finished processing web search'))
-  .catch(error => console.error('Error processing web search', error));
+// Example usage to process web searches
+searchProcessor.process().then(() => {
+  console.log("Processing complete.");
+}).catch(error => {
+  console.error("Error during processing:", error);
+});
 ```

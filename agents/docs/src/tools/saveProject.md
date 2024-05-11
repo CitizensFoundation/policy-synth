@@ -1,43 +1,18 @@
 # saveProject
 
-This script is designed to retrieve project data from a Redis database and save it to a local file. It uses the `ioredis` package to connect to Redis and the `fs/promises` module to handle file operations asynchronously.
+This function retrieves project data from a Redis database and saves it to a local file based on the project ID provided via command line arguments.
 
 ## Methods
 
-| Name       | Parameters | Return Type | Description |
-|------------|------------|-------------|-------------|
-| saveProject |  | Promise<void> | Retrieves project data from Redis and saves it to a local file. If no project ID is provided, it logs an error and exits. |
+| Name       | Parameters        | Return Type | Description                 |
+|------------|-------------------|-------------|-----------------------------|
+| saveProject | None             | Promise<void> | Retrieves project data from Redis and saves it to a local file. |
 
 ## Example
 
-```
-// Example usage of saveProject
-import 'dotenv/config';
-import ioredis from 'ioredis';
-import fs from 'fs/promises';
+```typescript
+import { saveProject } from '@policysynth/agents/tools/saveProject.js';
 
-const redis = new ioredis.default(
-  process.env.REDIS_MEMORY_URL || 'redis://localhost:6379'
-);
-
-const projectId = process.argv[2];
-
-const saveProject = async (): Promise<void> => {
-  if (projectId) {
-    const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!);
-
-    console.log('output', JSON.stringify(memory, null, 2));
-
-    const fileName = `currentProject${projectId}.json`;
-    await fs.writeFile(fileName, JSON.stringify(memory, null, 2));
-    console.log(`Project data has been saved to ${fileName}`);
-    process.exit(0);
-  } else {
-    console.log('No project id provided - save project');
-    process.exit(1);
-  }
-};
-
+// Run the function to save project data
 saveProject().catch(console.error);
 ```

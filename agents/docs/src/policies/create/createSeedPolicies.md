@@ -1,44 +1,59 @@
 # CreateSeedPoliciesProcessor
 
-This class extends `BaseProblemSolvingAgent` to create seed policies from solutions for sub-problems.
+This class is responsible for creating seed policies based on solutions to subproblems. It extends the `BaseProblemSolvingAgent` and utilizes methods to render prompts, refine, and choose the best policy proposals.
+
+## Properties
+
+| Name          | Type   | Description               |
+|---------------|--------|---------------------------|
+| chat          | ChatOpenAI | Instance of ChatOpenAI used for communication with OpenAI's API. |
 
 ## Methods
 
-| Name                           | Parameters                                                                 | Return Type            | Description                                                                 |
-|--------------------------------|----------------------------------------------------------------------------|------------------------|-----------------------------------------------------------------------------|
-| renderCurrentSolution          | solution: IEngineSolution                                                  | string                 | Renders the current solution into a formatted string.                       |
-| renderCreatePrompt             | subProblemIndex: number, solution: IEngineSolution                         | Promise<SystemMessage[]> | Prepares the prompt for creating policy proposals based on a solution.      |
-| renderRefinePrompt             | subProblemIndex: number, solution: IEngineSolution, policyProposalsToRefine: PSPolicy[] | Promise<SystemMessage[]> | Prepares the prompt for refining policy proposals.                          |
-| renderChoosePrompt             | subProblemIndex: number, solution: IEngineSolution, policyProposalsToChooseFrom: PSPolicy[] | Promise<SystemMessage[]> | Prepares the prompt for choosing the best policy proposal.                  |
-| createSeedPolicyForSolution    | populationIndex: number, subProblemIndex: number, solution: IEngineSolution, solutionIndex: number | Promise<PSPolicy>      | Creates a seed policy for a given solution.                                 |
-| createSeedPolicies             | -                                                                          | Promise<void>          | Creates seed policies for all solutions of all sub-problems.                |
-| process                        | -                                                                          | Promise<void>          | Main method to start the process of creating seed policies.                 |
+| Name                          | Parameters                                             | Return Type         | Description                                                                 |
+|-------------------------------|--------------------------------------------------------|---------------------|-----------------------------------------------------------------------------|
+| renderCurrentSolution         | solution: IEngineSolution                              | string              | Renders the current solution details into a formatted string.               |
+| renderCreatePrompt            | subProblemIndex: number, solution: IEngineSolution     | Promise<SystemMessage[]> | Generates messages for creating policy proposals based on a solution.       |
+| renderRefinePrompt            | subProblemIndex: number, solution: IEngineSolution, policyProposalsToRefine: PSPolicy[] | Promise<SystemMessage[]> | Generates messages for refining existing policy proposals.                 |
+| renderChoosePrompt            | subProblemIndex: number, solution: IEngineSolution, policyProposalsToChooseFrom: PSPolicy[] | Promise<SystemMessage[]> | Generates messages for choosing the best policy proposal.                   |
+| createSeedPolicyForSolution   | populationIndex: number, subProblemIndex: number, solution: IEngineSolution, solutionIndex: number | Promise<PSPolicy>  | Creates a seed policy for a given solution.                                |
+| createSeedPolicies            | None                                                   | Promise<void>       | Orchestrates the creation of seed policies for all subproblems.            |
+| process                       | None                                                   | Promise<void>       | Main method to start the policy creation process.                          |
 
 ## Example
 
-```javascript
+```typescript
 // Example usage of CreateSeedPoliciesProcessor
 import { CreateSeedPoliciesProcessor } from '@policysynth/agents/policies/create/createSeedPolicies.js';
-import { IEngineSolution, PSPolicy } from 'path/to/interfaces'; // Assume these are defined elsewhere
+import { IEngineSolution, PSPolicy } from 'path_to_solution_and_policy_types';
 
 const processor = new CreateSeedPoliciesProcessor();
 
-// Example of creating a seed policy for a specific solution
-const solution: IEngineSolution = {
-  title: 'Example Solution',
-  description: 'An example solution description.',
-  mainBenefitOfSolutionComponent: 'Main benefit of the solution.',
-  mainObstacleToSolutionComponentAdoption: 'Main obstacle to adoption.',
-  pros: [],
-  cons: []
+// Example solution object
+const exampleSolution: IEngineSolution = {
+  title: "Solution Example",
+  description: "Detailed description of the solution.",
+  mainBenefitOfSolutionComponent: "Main benefit of the solution.",
+  mainObstacleToSolutionComponentAdoption: "Main obstacle for adoption.",
+  pros: [{ detail: "Pro detail" }],
+  cons: [{ detail: "Con detail" }]
 };
 
-processor.createSeedPolicyForSolution(0, 1, solution, 2)
-  .then(policy => console.log(policy))
-  .catch(error => console.error(error));
+// Render current solution
+console.log(processor.renderCurrentSolution(exampleSolution));
 
-// Starting the process of creating seed policies
-processor.process()
-  .then(() => console.log('Finished creating seed policies'))
-  .catch(error => console.error(error));
+// Create, refine, and choose policy proposals
+async function handlePolicies() {
+  const createMessages = await processor.renderCreatePrompt(0, exampleSolution);
+  console.log(createMessages);
+
+  const policyProposals: PSPolicy[] = [{ title: "Policy 1", description: "Description 1" }];
+  const refineMessages = await processor.renderRefinePrompt(0, exampleSolution, policyProposals);
+  console.log(refineMessages);
+
+  const chooseMessages = await processor.renderChoosePrompt(0, exampleSolution, policyProposals);
+  console.log(chooseMessages);
+}
+
+handlePolicies();
 ```

@@ -1,43 +1,31 @@
 # ReapSolutionsProcessor
 
-Extends `BaseProblemSolvingAgent` to process and reap solutions based on specific requirements.
+This class extends `BaseProblemSolvingAgent` to implement the functionality of reaping solutions based on specific requirements. It interacts with a language model to evaluate if a solution fits the given requirements and manages the population of solutions accordingly.
 
 ## Properties
 
-No public properties documented.
+No public properties are documented.
 
 ## Methods
 
-| Name                        | Parameters                                      | Return Type            | Description                                                                 |
-|-----------------------------|-------------------------------------------------|------------------------|-----------------------------------------------------------------------------|
-| renderReapPrompt            | solution: IEngineSolution                       | Promise<SystemMessage[]> | Prepares the prompt for reaping by generating system and human messages.    |
-| reapSolutionsForSubProblem  | subProblemIndex: number, solutions: Array<IEngineSolution> | Promise<void>          | Processes and flags solutions for a specific subproblem based on reaping criteria. |
-| reapSolutions               | None                                            | Promise<void>          | Iterates over subproblems to reap solutions across all.                     |
-| process                     | None                                            | Promise<void>          | Initiates the reaping process for solution components.                      |
+| Name                        | Parameters                                      | Return Type       | Description                                                                 |
+|-----------------------------|-------------------------------------------------|-------------------|-----------------------------------------------------------------------------|
+| renderReapPrompt            | solution: IEngineSolution                       | Promise<SystemMessage[]> | Prepares the prompt messages for the language model based on the solution.  |
+| reapSolutionsForSubProblem  | subProblemIndex: number, solutions: IEngineSolution[] | Promise<void>     | Processes each solution for a subproblem to determine if it should be reaped. |
+| reapSolutions               | None                                            | Promise<void>     | Manages the reaping process for all subproblems.                            |
+| process                     | None                                            | Promise<void>     | Overrides the base process method to initiate the reaping process.          |
 
 ## Example
 
-```javascript
+```typescript
 // Example usage of ReapSolutionsProcessor
 import { ReapSolutionsProcessor } from '@policysynth/agents/solutions/evolve/reapPopulation.js';
 
-const reapProcessor = new ReapSolutionsProcessor();
+const processor = new ReapSolutionsProcessor();
 
-// Assuming `solution` is an IEngineSolution object and `subProblemIndex` is the index of the current subproblem
-reapProcessor.renderReapPrompt(solution).then(messages => {
-  console.log(messages);
-});
-
-// To reap solutions for a specific subproblem
-reapProcessor.reapSolutionsForSubProblem(subProblemIndex, solutions);
-
-// To start the reaping process across all subproblems
-reapProcessor.reapSolutions();
-
-// To process and handle the entire reaping operation
-reapProcessor.process().then(() => {
-  console.log('Reaping process completed.');
+processor.process().then(() => {
+  console.log("Reaping process completed.");
 }).catch(error => {
-  console.error('Error during reaping process:', error);
+  console.error("Error during reaping process:", error);
 });
 ```

@@ -1,67 +1,37 @@
-# runEvolutionStep
+# EvolutionStepRunner
 
-This script is designed to run a series of stages for evolving solutions in a project. It utilizes a Redis queue to manage and execute tasks asynchronously.
+This script manages the execution of various stages in the evolution process of agent solutions using a Redis-backed queue system.
 
 ## Properties
 
-No properties are directly defined in this script.
+| Name          | Type                         | Description               |
+|---------------|------------------------------|---------------------------|
+| myQueue       | Queue                        | BullMQ Queue instance for managing jobs. |
+| redis         | ioredis.Redis                | Redis client instance for data storage and retrieval. |
+| queueEvents   | QueueEvents                  | BullMQ QueueEvents instance for monitoring job events. |
+| projectId     | string \| undefined          | Project identifier passed as a command-line argument. |
+| redisKey      | string                       | Redis key constructed for storing memory data related to the project. |
+| stages        | PsMemoryStageTypes           | Array of stages in the evolution process. |
 
 ## Methods
 
-| Name               | Parameters                  | Return Type       | Description                                                                 |
-|--------------------|-----------------------------|-------------------|-----------------------------------------------------------------------------|
-| getInnovationData  |                             | Promise<any>      | Retrieves innovation data from Redis based on a project ID.                 |
-| runStages          | startStage: PsMemoryStageTypes | Promise<void>    | Runs the specified stages for the project, starting from the given stage.   |
+| Name            | Parameters                  | Return Type       | Description                 |
+|-----------------|-----------------------------|-------------------|-----------------------------|
+| getInnovationData | none                      | Promise<PsBaseMemoryData> | Retrieves and parses the innovation data from Redis. |
+| runStages       | startStage: PsMemoryStageTypes | Promise<void>   | Executes the specified stages in order, handling job creation, execution, and monitoring. |
 
 ## Example
 
 ```typescript
-import { Queue, QueueEvents } from "bullmq";
+// Example usage of EvolutionStepRunner
+import { Queue, Job, QueueEvents } from "bullmq";
 import ioredis from "ioredis";
+import { runEvolutionStep } from '@policysynth/agents/solutions/tools/runEvolutionStep.js';
 
-// Initialization of Redis and Queue
-const myQueue = new Queue("agent-solutions");
-const redis = new ioredis.default(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-const queueEvents = new QueueEvents("agent-solutions");
+const projectId = "123";
+const startStage = "evolve-create-population";
 
-// Example usage of running evolution steps
-const projectId = "exampleProjectId";
-if (projectId) {
-  const redisKey = `st_mem:${projectId}:id`;
-  const getInnovationData = async () => {
-    const output = await redis.get(redisKey);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
-    return memory;
-  };
-
-  const stages = [
-    "evolve-create-population",
-    "evolve-reap-population",
-    "create-pros-cons",
-    "rank-pros-cons",
-    "rank-solutions",
-    "create-solution-images",
-    "group-solutions"
-  ] as unknown as PsMemoryStageTypes;
-
-  const runStages = async (startStage = stages[0]) => {
-    // Implementation of running stages
-  };
-
-  const startStage = process.argv[3] || stages[0];
-  runStages(startStage)
-    .then(() => {
-      console.log("All stages completed successfully.");
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error(`Error running stages: ${error}`);
-      process.exit(1);
-    });
-} else {
-  console.log("Usage: npm runEvolutionStep <projectId>");
-  process.exit(0);
-}
+runEvolutionStep(projectId, startStage)
+  .then(() => console.log("Evolution process completed successfully."))
+  .catch(error => console.error("Failed to complete the evolution process:", error));
 ```
-
-Note: This example assumes the existence of `PsBaseMemoryData` and `PsMemoryStageTypes` types, which are not defined in the provided script.

@@ -21,11 +21,13 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
             temperature: 0.0,
             maxTokens: 4000,
             modelName: IEngineConstants.engineerModel.name,
-            verbose: true,
+            verbose: false
         });
     }
     async implementChangesToFile(fileName) {
+        console.log(`Implementing changes to ${fileName}`);
         const codingPlan = await this.getCodingPlan(fileName);
+        console.log(`Coding plan: ${codingPlan}`);
         if (codingPlan) {
             await this.implementCodingPlan(fileName, codingPlan);
         }
@@ -40,6 +42,7 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
       1. Review the task name, description and general instructions.
       2. Review the documentation, examples, code and typedefs.
       3. Use the provided coding plan to implement the changes.
+      4. Only add new files if you really must and can't change the existing ones without bloat.
 
       interface PsTsMorphNewOrUpdatedFunction
       {
@@ -56,12 +59,14 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
         className: string; // The name of the main class in the file
       }
 
-      JSON Output Schema:
-      {
-        action: "changeFunction" | "addFunction" | "deleteFunction" | "addProperty" | "deleteProperty" | "changeProperty" | "addFile" | "deleteFile" | "addImport" | "deleteImport" | "changeImport" | "addDependency" | "deleteDependency" | "changeDependency";
-        functionOrPropertyImportDependencyName: string;
-        fullCodeToInsertOrChange: PsTsMorphNewOrUpdatedFunction | PsTsMorphNewOrUpdatedProperty | string | undefined;
-      }
+      JSON Array Output Schema:
+      [
+        {
+          action: "changeFunction" | "addFunction" | "deleteFunction" | "addProperty" | "deleteProperty" | "changeProperty" | "addFile" | "deleteFile" | "addImport" | "deleteImport" | "changeImport" | "addDependency" | "deleteDependency" | "changeDependency";
+          functionOrPropertyImportDependencyName: string;
+          fullCodeToInsertOrChange: PsTsMorphNewOrUpdatedFunction | PsTsMorphNewOrUpdatedProperty | string | undefined;
+        }
+      ]
     `;
     }
     codingUserPrompt(codingPlan, currentFileName, currentFileContents, otherFilesContents) {
@@ -79,7 +84,7 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
             ? `Other potentially relevant source code files:\n${otherFilesContents}`
             : ``}
 
-    ${otherFilesContents ? `Local documentation:\n${otherFilesContents}` : ``}
+    ${this.documentationFilesInContextContent ? `Local documentation:\n${this.documentationFilesInContextContent}` : ``}
 
     File we are working on:
     ${currentFileName}
@@ -105,13 +110,15 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
         const codeChanges = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
             new SystemMessage(this.codingSystemPrompt),
             new HumanMessage(this.codingUserPrompt(codingPlan, fileName, this.currentFileContents, this.otherLikelyToChangeFilesContents)),
-        ]);
+        ], true);
         return codeChanges;
     }
     async implementCodingPlan(fileName, codingPlan) {
         const file = this.tsMorphProject?.getSourceFileOrThrow(fileName);
         if (file) {
+            console.log(`Implementing changes to ${fileName}`);
             const codeChanges = await this.getCodeChanges(fileName, codingPlan);
+            console.log(`Code changes: ${JSON.stringify(codeChanges, null, 2)}`);
             for (let codeChange of codeChanges) {
                 console.log(`Implementing change: ${codeChange.action}`);
                 switch (codeChange.action) {
@@ -276,6 +283,7 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
     1. Review the file name and its current contents.
     2. Consider the overall task title, description, and instructions.
     3. Create a detailed, step-by-step coding plan that specifies the code changes needed to accomplish the task.
+    4. Do not include documentation tasks, that is already done automatically, focus on the programming changes.
 
     Expected Output:
     Provide a detailed step-by-step plan in natural language or pseudo-code, explaining the changes to be made, why they are necessary, and how they should be implemented.
@@ -297,8 +305,9 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
     Overall task instructions:
     ${this.memory.taskInstructions}
 
-    Review Log:
-    ${reviewLog}
+    ${this.documentationFilesInContextContent ? `Local documentation:\n${this.documentationFilesInContextContent}` : ``}
+
+    ${reviewLog ? `<LastReviewOnThisPlan>${reviewLog}</LastReviewOnThisPlan>` : ``}
 
     Please provide a detailed, step-by-step coding plan based on the information above. Include rationale for each change and suggestions on how to implement them.
     `;
@@ -309,7 +318,9 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
     Instructions:
     1. Review the proposed coding plan.
     2. Assess its feasibility, correctness, and completeness.
-    3. Provide detailed feedback or approve the plan if it meets the criteria.
+    3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Coding plan looks good".
+    4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
+    5. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
 
     Expected Output:
     Provide feedback on the coding plan. If the plan is not suitable, suggest necessary adjustments. If the plan is acceptable, confirm that it is ready for implementation.
@@ -319,11 +330,22 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
         return `File to review:
     ${fileName}
 
+    Current file contents:
+    ${this.currentFileContents}
+
+    Overall task title:
+    ${this.memory.taskTitle}
+
+    Overall task description:
+    ${this.memory.taskDescription}
+
+    Overall task instructions:
+    ${this.memory.taskInstructions}
+
+    ${this.documentationFilesInContextContent ? `Local documentation:\n${this.documentationFilesInContextContent}` : ``}
+
     Proposed coding plan:
     ${codingPlan}
-
-    Review log so far:
-    ${reviewLog}
 
     Please review the coding plan for feasibility, correctness, and completeness. Provide detailed feedback on each step of the plan or confirm its readiness for implementation. Mention specific areas for improvement if any.
     `;
@@ -339,22 +361,25 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
                 .filter((file) => file !== fileName)
                 .map((file) => this.loadFileContents(file))
                 .join("\n");
-        while (!planReady && planRetries > this.maxPlanRetries) {
+        while (!planReady && planRetries < this.maxPlanRetries) {
+            console.log(`Getting coding plan for ${fileName} attempt ${planRetries + 1}`);
             codingPlan = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
                 new SystemMessage(this.planSystemPrompt()),
                 new HumanMessage(this.getUserPlanPrompt(fileName, reviewLog)),
-            ]);
+            ], false);
             if (codingPlan) {
+                console.log(`Coding plan received: ${codingPlan}`);
                 const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
                     new SystemMessage(this.reviewSystemPrompt()),
                     new HumanMessage(this.getUserReviewPrompt(fileName, codingPlan, reviewLog)),
-                ]);
+                ], false);
                 if ((review && review.indexOf("Coding plan looks good") > -1) ||
                     review.indexOf("No changes needed to this code") > -1) {
                     planReady = true;
+                    console.log("Coding plan approved");
                 }
                 else {
-                    reviewLog += review + `\n`;
+                    reviewLog = review + `\n`;
                     planRetries++;
                 }
             }
@@ -382,16 +407,15 @@ export class PsEngineerProgrammingAgent extends PolicySynthAgentBase {
             this.memory.documentationFilesToKeepInContext
                 .map((fileName) => this.loadFileContents(fileName))
                 .join("\n");
-        for (let fileNameToChange in this.memory.typeScriptFilesLikelyToChange) {
+        for (let fileNameToChange of this.memory.typeScriptFilesLikelyToChange) {
             await this.implementChangesToFile(fileNameToChange);
             this.memory.actionLog.push(`Implemented changes to ${fileNameToChange}`);
         }
         return;
     }
     loadFileContents(fileName) {
-        const filePath = path.join(this.memory.workspaceFolder, fileName);
         try {
-            const content = fs.readFileSync(filePath, "utf-8");
+            const content = fs.readFileSync(fileName, "utf-8");
             return content;
         }
         catch (error) {

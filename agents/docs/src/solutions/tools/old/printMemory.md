@@ -1,36 +1,29 @@
-# RedisMemoryManager
+# RedisMemoryRetriever
 
-This class demonstrates how to interact with Redis to retrieve and parse memory data.
+This module retrieves memory data from a Redis database and parses it into a structured format.
 
 ## Properties
 
-No properties are defined in this example.
+No properties are defined in this module.
 
 ## Methods
 
-No methods are defined in this example.
+No methods are defined in this module.
 
 ## Example
 
 ```typescript
 import ioredis from "ioredis";
 
-// Initialize Redis client
-const redis = new ioredis.default(
+const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-// Asynchronously retrieve memory data from Redis
 const output = await redis.get("st_mem:1:id");
 
-// Parse the retrieved JSON string into PsBaseMemoryData type
-const memory: PsBaseMemoryData | undefined = JSON.parse(output!);
+const memory = JSON.parse(output!) as PsBaseMemoryData;
 
-// Log the parsed memory data
 console.log("output", JSON.stringify(memory, null, 2));
 
-// Exit the process
 process.exit(0);
 ```
-
-Note: This example assumes the existence of a `PsBaseMemoryData` type, which is not defined in the provided code snippet. Ensure to define or import this type appropriately in your actual implementation.

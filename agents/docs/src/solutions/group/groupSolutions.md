@@ -1,30 +1,27 @@
 # GroupSolutionsProcessor
 
-This class extends `BaseProblemSolvingAgent` to process and group solutions based on their core ideas using a language model.
+This class processes and groups solutions based on their core ideas using a language model, extending the capabilities of `BaseProblemSolvingAgent`.
 
 ## Methods
 
-| Name                             | Parameters                                                                 | Return Type            | Description                                                                                   |
-|----------------------------------|----------------------------------------------------------------------------|------------------------|-----------------------------------------------------------------------------------------------|
-| renderGroupPrompt                | solutionsToGroup: IEngineSolutionForGroupCheck[]                          | Promise<SystemMessage[]> | Prepares the prompt for the language model to group solutions.                                |
-| groupSolutionsForSubProblem      | subProblemIndex: number, solutions: Array<IEngineSolution>                | Promise<void>          | Groups solutions for a specific sub-problem based on their core ideas.                        |
-| calculateGroupStats              | solutions: Array<IEngineSolution>                                         | Promise<void>          | Calculates statistics for the grouped solutions, such as total groups and ungrouped solutions.|
-| groupSolutions                   | None                                                                     | Promise<void>          | Groups solutions across all sub-problems.                                                     |
-| process                          | None                                                                     | Promise<void>          | Initiates the process of grouping solution components.                                         |
+| Name                               | Parameters                                             | Return Type      | Description                                                                 |
+|------------------------------------|--------------------------------------------------------|------------------|-----------------------------------------------------------------------------|
+| renderGroupPrompt                  | solutionsToGroup: IEngineSolutionForGroupCheck[]       | Promise<SystemMessage[]> | Prepares the prompt for the language model to group solutions.              |
+| groupSolutionsForSubProblem        | subProblemIndex: number, solutions: IEngineSolution[]  | Promise<void>    | Groups solutions for a specific subproblem.                                 |
+| calculateGroupStats                | solutions: IEngineSolution[]                           | Promise<void>    | Calculates statistics for the grouped solutions.                            |
+| groupSolutions                     | -                                                      | Promise<void>    | Groups solutions for all subproblems up to a specified limit.               |
+| process                            | -                                                      | Promise<void>    | Processes the grouping of solution components using a language model.       |
 
 ## Example
 
-```javascript
+```typescript
 // Example usage of GroupSolutionsProcessor
 import { GroupSolutionsProcessor } from '@policysynth/agents/solutions/group/groupSolutions.js';
 
-const groupSolutionsProcessor = new GroupSolutionsProcessor();
-
-groupSolutionsProcessor.process()
-  .then(() => {
-    console.log('Grouping of solutions completed.');
-  })
-  .catch(error => {
-    console.error('An error occurred during the grouping process:', error);
-  });
+const processor = new GroupSolutionsProcessor();
+processor.process().then(() => {
+  console.log("Grouping completed.");
+}).catch(error => {
+  console.error("Error during grouping:", error);
+});
 ```

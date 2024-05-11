@@ -1,22 +1,22 @@
 # BaseAgentProcessor
 
-This class extends the `PolicySynthAgentBase` and is designed to handle job processing with memory management using Redis. It is an abstract class that requires the implementation of `initializeMemory` and `process` methods for specific job processing logic.
+This class extends `PolicySynthAgentBase` and provides an abstract structure for processing jobs with memory management using Redis.
 
 ## Properties
 
 | Name | Type | Description |
 |------|------|-------------|
-| job  | Job  | The job instance from BullMQ. |
+| job  | Job  | The current job being processed. |
 
 ## Methods
 
-| Name          | Parameters       | Return Type     | Description |
-|---------------|------------------|-----------------|-------------|
-| getRedisKey   | groupId: number  | string          | Generates a Redis key using the provided group ID. |
-| initializeMemory | job: Job      | Promise<void>   | Abstract method to initialize memory for the job. Must be implemented by subclasses. |
-| process       | -                | Promise<void>   | Abstract method to process the job. Must be implemented by subclasses. |
-| setup         | job: Job         | Promise<void>   | Sets up the job processing environment, including loading memory data from Redis. |
-| saveMemory    | -                | Promise<void>   | Saves the current memory state to Redis. |
+| Name            | Parameters       | Return Type     | Description |
+|-----------------|------------------|-----------------|-------------|
+| getRedisKey     | groupId: number  | string          | Returns a Redis key string based on the provided group ID. |
+| initializeMemory| job: Job         | Promise<void>   | Abstract method to initialize memory for the job. |
+| process         | -                | Promise<void>   | Abstract method to process the job. |
+| setup           | job: Job         | Promise<void>   | Sets up the job and initializes memory by fetching from Redis or logs an error if not found. |
+| saveMemory      | -                | Promise<void>   | Saves the current memory state to Redis or logs an error if memory is undefined. |
 
 ## Example
 
@@ -26,17 +26,18 @@ import { Job } from "bullmq";
 
 class MyAgentProcessor extends BaseAgentProcessor {
   async initializeMemory(job: Job): Promise<void> {
-    // Implementation for initializing memory specific to MyAgentProcessor
+    // Implementation specific to initializing memory
   }
 
   async process(): Promise<void> {
-    // Implementation for processing the job specific to MyAgentProcessor
+    // Implementation specific to processing the job
   }
 }
 
 // Example usage
-const myAgentProcessor = new MyAgentProcessor();
-const job = new Job(); // Assuming job is already created or obtained from a queue
-await myAgentProcessor.setup(job);
-await myAgentProcessor.process();
+const job = new Job(); // Assuming job is created or fetched appropriately
+const myProcessor = new MyAgentProcessor();
+await myProcessor.setup(job);
+await myProcessor.process();
+await myProcessor.saveMemory();
 ```
