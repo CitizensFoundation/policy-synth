@@ -70,6 +70,7 @@ interface PsEngineerMemoryData extends PSMemoryData {
   taskTitle: string;
   taskInstructions: string;
   actionLog: string[];
+  docsSiteToScan?: string[];
   allTypescriptSrcFiles?: string[];
   typeScriptFilesLikelyToChange: string[];
   otherTypescriptFilesToKeepInContext: string[];

@@ -127,8 +127,12 @@ export class WebPageScanner extends GetWebPagesProcessor {
         browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
         browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
         await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        if (this.memory.docsSiteToScan) {
+            listOfUrls = [...listOfUrls, ...this.memory.docsSiteToScan];
+        }
         for (let i = 0; i < listOfUrls.length; i++) {
             this.logger.info(`${i + 1}/${listOfUrls.length}`);
+            this.logger.info(`------> Searching ${listOfUrls[i]} <------`);
             await this.getAndProcessPage(5021, listOfUrls[i], browserPage, "news", undefined);
         }
         await browser.close();

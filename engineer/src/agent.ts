@@ -16,16 +16,25 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     super();
     this.memory = {
       actionLog: [],
-      workspaceFolder: "/home/robert/Scratch/psAgentsTest",
+      workspaceFolder:
+        "/home/robert/Scratch/policy-synth-engineer-tests/agents",
       taskTitle:
         "Integrate LLM Abstractions for Claude Opus and Google Gemini into LangChain TS",
       taskDescription:
         "Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure. The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future.",
       taskInstructions: `1. Create a new base chat class policy synth model in src/models/baseModel.ts
-      2. Then src/models/claudeOpus.ts and src/models/googleGemini.ts
-      3. Then in the baseAgent class add an extra option so you can use the new chat models.
-      4. Set default configurations so that no modifications are needed in the existing codebase that utilizes the base agent class.`,
+      2. Then src/models/openAi.ts, src/models/claudeOpus.ts and src/models/googleGemini.ts
+      3. For the cloudeOpus use the @langchain/anthropic npm
+      4. For the googleGemini use the @google/generative-ai npm
+      5. For the openAi one use @langchain/openai as currently
+      6. Then in the baseAgent.ts refactor it so it uses the models from the src/models class
+      7. In callLLM add an optional option for setting the model type to one of those three, then use that. But make sure to default to openAi so we don't need to change any code that uses callLLM`,
       stages: PSEngineerAgent.emptyDefaultStages,
+      docsSiteToScan: [
+        "https://ai.google.dev/gemini-api/docs/get-started/node",
+        "https://www.npmjs.com/package/@google/generative-ai",
+        "https://www.npmjs.com/package/@langchain/anthropic",
+      ],
     } as unknown as PsEngineerMemoryData;
   }
 
@@ -72,8 +81,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     );
 
     this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
-      .map(filePath => {
-        console.log(`Checking file ${filePath}`);
+      .map((filePath) => {
         if (filePath.endsWith(".d.ts")) {
           const content = this.loadFileContents(filePath);
           return `${path.basename(filePath)}\n${content}`;

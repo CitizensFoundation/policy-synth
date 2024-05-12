@@ -62,14 +62,18 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions)),
         ], false);
         console.log(`\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n`);
-        const directory = path.dirname(fileName);
+        let fullFileName = fileName;
+        if (fullFileName.indexOf(this.memory.workspaceFolder) === -1) {
+            fullFileName = path.join(this.memory.workspaceFolder, fileName);
+        }
+        const directory = path.dirname(fullFileName);
         if (!fs.existsSync(directory)) {
             fs.mkdirSync(directory, { recursive: true });
         }
         if (fileAction === "change" && currentFileToUpdateContents) {
-            fs.writeFileSync(`${fileName}.bkc`, currentFileToUpdateContents);
+            fs.writeFileSync(`${fullFileName}.bkc`, currentFileToUpdateContents);
         }
-        fs.writeFileSync(fileName, newCode);
+        fs.writeFileSync(fullFileName, newCode);
         return newCode;
     }
     async implementCodingActionPlan(actionPlan) {
