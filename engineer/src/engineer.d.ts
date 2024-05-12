@@ -75,17 +75,20 @@ interface PsEngineerMemoryData extends PSMemoryData {
   otherTypescriptFilesToKeepInContext: string[];
   documentationFilesToKeepInContext: string[];
   needsDocumentionsAndExamples?: boolean;
+  allTypeDefsContents?: string;
   likelyRelevantNpmPackageDependencies: string[];
   docsContextItems?: string[];
   exampleContextItems?: string[];
 }
+
+type PsEngineerFileActions = "add" | "change" | "delete";
 
 interface PsEngineerCodingActionPlanItem {
   fullPathToNewOrUpdatedFile: string;
   codingTaskTitle: string;
   codingTaskFullDescription: string;
   status?: "completed" | "inProgress" | "notStarted" | "error";
-  fileAction: "add" | "change" | "delete";
+  fileAction: PsEngineerFileActions;
 }
 
 interface PsTsMorphNewOrUpdatedFunction {

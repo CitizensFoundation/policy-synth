@@ -49,6 +49,18 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     }
     async run() {
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
+        this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
+            .map(filePath => {
+            console.log(`Checking file ${filePath}`);
+            if (filePath.endsWith(".d.ts")) {
+                const content = this.loadFileContents(filePath);
+                return `${path.basename(filePath)}\n${content}`;
+            }
+            return null;
+        })
+            .filter(Boolean)
+            .join("\n");
+        //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
         const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
         await analyzeAgent.analyzeAndSetup();
         if (false && this.memory.needsDocumentionsAndExamples === true) {
@@ -56,6 +68,16 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         }
         const programmer = new PsEngineerProgrammingAgent(this.memory);
         await programmer.implementTask();
+    }
+    loadFileContents(fileName) {
+        try {
+            const content = fs.readFileSync(fileName, "utf-8");
+            return content;
+        }
+        catch (error) {
+            console.error(`Error reading file ${fileName}: ${error}`);
+            return null;
+        }
     }
 }
 //# sourceMappingURL=agent.js.map

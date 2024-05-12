@@ -2,7 +2,6 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
-    actionPlan;
     havePrintedFirstUserDebugMessage = false;
     get codingSystemPrompt() {
         return `Your are an expert software engineering programmer.
@@ -18,78 +17,78 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       3. Use markdown typescript for output.
 `;
     }
-    codingUserPrompt(action, curentFileToUpdateContents) {
-        return `<ContextFromOnlineSearch>${this.memory.exampleContextItems &&
-            this.memory.exampleContextItems.length > 0
-            ? `Potentally relevant code examples from web search:
-    ${this.memory.exampleContextItems.map((i) => i)}`
-            : ``}
-    ${this.memory.docsContextItems && this.memory.docsContextItems.length > 0
-            ? `Potentally relevant documentation from a web search:
-    ${this.memory.docsContextItems.map((i) => i)}`
+    codingUserPrompt(fileName, fileAction, currentActions, curentFileToUpdateContents, completedActions, futureActions) {
+        return `${this.renderDefaultTaskAndContext()}
+
+    ${completedActions && completedActions.length > 0
+            ? `Already completed actions in this process:\n${JSON.stringify(completedActions, null, 2)}`
             : ``}
 
-    ${this.renderDefaultTaskAndContext()}
-
-    Full Overall Action Plan:
+    ${futureActions && futureActions.length > 0
+            ? `FYI: Future actions in this process:\n${JSON.stringify(futureActions, null, 2)}`
+            : ``}
 
     Your Action/Task now:
-    ${JSON.stringify(action, null, 2)}
+    ${JSON.stringify(currentActions, null, 2)}
 
     ${curentFileToUpdateContents
-            ? `Current file your are changing:\n${action.fullPathToNewOrUpdatedFile}:\n${curentFileToUpdateContents}`
+            ? `<CurrentFileYouAreChangin>:\n${fileName}:\n${curentFileToUpdateContents}</<CurrentFileYouAreChangin>`
             : ``}
 
-    Output the ${action.fileAction == "change" ? "changed " : "new"} file ${action.fileAction == "change" ? "again " : ""}in typescript:
+    Output the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in typescript:
     `;
     }
-    async implementAction(action) {
-        console.log(`Working on file: ${action.fullPathToNewOrUpdatedFile}`);
-        console.log(JSON.stringify(action, null, 2));
+    async implementFileActions(fileName, fileAction, completedActions, currentActions, futureActions) {
+        console.log(`Working on file: ${fileName}`);
+        console.log(JSON.stringify(currentActions, null, 2));
         let curentFileToUpdateContents;
-        if (action.fileAction === "change") {
-            curentFileToUpdateContents =
-                this.loadFileContents(action.fullPathToNewOrUpdatedFile) || "";
+        if (fileAction === "change") {
+            curentFileToUpdateContents = this.loadFileContents(fileName);
+            if (!curentFileToUpdateContents) {
+                console.error(`Error loading file ${fileName}`);
+                throw new Error(`Error loading file ${fileName}`);
+            }
         }
         if (!this.havePrintedFirstUserDebugMessage) {
-            console.log(`Code user prompt:\n${this.codingUserPrompt(action, curentFileToUpdateContents)}\n\n`);
+            console.log(`Code user prompt:\n${this.codingUserPrompt(fileName, fileAction, currentActions, curentFileToUpdateContents, completedActions, futureActions)}\n\n`);
             this.havePrintedFirstUserDebugMessage = true;
         }
         const newCode = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
             new SystemMessage(this.codingSystemPrompt),
-            new HumanMessage(this.codingUserPrompt(action, curentFileToUpdateContents)),
+            new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, curentFileToUpdateContents, completedActions, futureActions)),
         ], false);
-        console.log(`-------------------> New code:\n${newCode}\n\n`);
+        console.log(`\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n`);
         return newCode;
     }
-    sortActionPlan(actionPlan) {
-        actionPlan.sort((a, b) => {
-            if (a.fileAction === "add" && b.fileAction !== "add") {
-                return -1;
-            }
-            else if (a.fileAction !== "add" && b.fileAction === "add") {
-                return 1;
-            }
-            else if (a.fileAction === "change" && b.fileAction === "change") {
-                return -1;
-            }
-            else if (a.fileAction === "delete" && b.fileAction === "delete") {
-                return 1;
-            }
-            else {
-                return 0;
-            }
-        });
-    }
     async implementCodingActionPlan(actionPlan) {
-        this.actionPlan = actionPlan;
-        this.sortActionPlan(this.actionPlan);
-        for (const action of actionPlan) {
-            action.status = "inProgress";
-            console.log(`Implementing action: ${JSON.stringify(action, null, 2)}`);
-            await this.implementAction(action);
-            action.status = "completed";
+        let currentActions = [];
+        let completedActions = actionPlan.filter((action) => action.status === "completed");
+        let futureActions = [];
+        // Determine the first uncompleted action
+        const firstUncompletedAction = actionPlan.find((action) => action.status !== "completed");
+        if (firstUncompletedAction) {
+            // Get all actions for the same file that are not completed
+            currentActions = actionPlan.filter((action) => action.fullPathToNewOrUpdatedFile ===
+                firstUncompletedAction.fullPathToNewOrUpdatedFile &&
+                action.status !== "completed");
+            // Mark all current actions as inProgress
+            currentActions.forEach((action) => {
+                action.status = "inProgress";
+            });
+            // Update futureActions excluding the current and completed ones
+            futureActions = actionPlan.filter((action) => action.fullPathToNewOrUpdatedFile !==
+                firstUncompletedAction.fullPathToNewOrUpdatedFile &&
+                action.status !== "completed");
+            console.log(`Implementing action: ${JSON.stringify(currentActions, null, 2)}`);
+            await this.implementFileActions(firstUncompletedAction.fullPathToNewOrUpdatedFile, firstUncompletedAction.fileAction, completedActions, currentActions, futureActions);
+            // Process all current actions
+            for (const action of currentActions) {
+                action.status = "completed";
+                completedActions.push(action);
+            }
         }
+        console.log(`Completed Actions: ${JSON.stringify(completedActions, null, 2)}`);
+        console.log(`Future Actions: ${JSON.stringify(futureActions, null, 2)}`);
     }
     deleteDependency(dependencyName) {
         console.log(`NOT IMPLEMENTED: Deleted dependency: ${dependencyName}`);

@@ -1,21 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
-import { ChatOpenAI } from "@langchain/openai";
-
-import {
-  ClassDeclaration,
-  FunctionDeclarationStructure,
-  Project,
-  SourceFile,
-} from "ts-morph";
-
-import fs from "fs";
-import path from "path";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
-  actionPlan!: PsEngineerCodingActionPlanItem[];
   havePrintedFirstUserDebugMessage = false;
 
   get codingSystemPrompt() {
@@ -34,55 +21,76 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
   }
 
   codingUserPrompt(
-    action: PsEngineerCodingActionPlanItem,
-    curentFileToUpdateContents: string | undefined
+    fileName: string,
+    fileAction: PsEngineerFileActions,
+    currentActions: PsEngineerCodingActionPlanItem[],
+    curentFileToUpdateContents: string | undefined | null,
+    completedActions: PsEngineerCodingActionPlanItem[],
+    futureActions: PsEngineerCodingActionPlanItem[]
   ) {
-    return `<ContextFromOnlineSearch>${
-      this.memory.exampleContextItems &&
-      this.memory.exampleContextItems.length > 0
-        ? `Potentally relevant code examples from web search:
-    ${this.memory.exampleContextItems.map((i) => i)}`
-        : ``
-    }
+    return `${this.renderDefaultTaskAndContext()}
+
     ${
-      this.memory.docsContextItems && this.memory.docsContextItems.length > 0
-        ? `Potentally relevant documentation from a web search:
-    ${this.memory.docsContextItems.map((i) => i)}`
+      completedActions && completedActions.length > 0
+        ? `Already completed actions in this process:\n${JSON.stringify(
+            completedActions,
+            null,
+            2
+          )}`
         : ``
     }
 
-    ${this.renderDefaultTaskAndContext()}
-
-    Full Overall Action Plan:
+    ${
+      futureActions && futureActions.length > 0
+        ? `FYI: Future actions in this process:\n${JSON.stringify(
+            futureActions,
+            null,
+            2
+          )}`
+        : ``
+    }
 
     Your Action/Task now:
-    ${JSON.stringify(action, null, 2)}
+    ${JSON.stringify(currentActions, null, 2)}
 
     ${
       curentFileToUpdateContents
-        ? `Current file your are changing:\n${action.fullPathToNewOrUpdatedFile}:\n${curentFileToUpdateContents}`
+        ? `<CurrentFileYouAreChangin>:\n${fileName}:\n${curentFileToUpdateContents}</<CurrentFileYouAreChangin>`
         : ``
     }
 
-    Output the ${action.fileAction == "change" ? "changed " : "new"} file ${
-      action.fileAction == "change" ? "again " : ""
+    Output the ${fileAction == "change" ? "changed" : "new"} file ${
+      fileAction == "change" ? "again " : ""
     }in typescript:
     `;
   }
 
-  async implementAction(action: PsEngineerCodingActionPlanItem) {
-    console.log(`Working on file: ${action.fullPathToNewOrUpdatedFile}`);
-    console.log(JSON.stringify(action, null, 2));
-    let curentFileToUpdateContents: string | undefined;
-    if (action.fileAction === "change") {
-      curentFileToUpdateContents =
-        this.loadFileContents(action.fullPathToNewOrUpdatedFile) || "";
+  async implementFileActions(
+    fileName: string,
+    fileAction: PsEngineerFileActions,
+    completedActions: PsEngineerCodingActionPlanItem[],
+    currentActions: PsEngineerCodingActionPlanItem[],
+    futureActions: PsEngineerCodingActionPlanItem[]
+  ) {
+    console.log(`Working on file: ${fileName}`);
+    console.log(JSON.stringify(currentActions, null, 2));
+    let curentFileToUpdateContents: string | undefined | null;
+    if (fileAction === "change") {
+      curentFileToUpdateContents = this.loadFileContents(fileName);
+      if (!curentFileToUpdateContents) {
+        console.error(`Error loading file ${fileName}`);
+        throw new Error(`Error loading file ${fileName}`);
+      }
     }
     if (!this.havePrintedFirstUserDebugMessage) {
       console.log(
         `Code user prompt:\n${this.codingUserPrompt(
-          action,
-          curentFileToUpdateContents
+          fileName,
+          fileAction,
+          currentActions,
+          curentFileToUpdateContents,
+          completedActions,
+          futureActions
         )}\n\n`
       );
       this.havePrintedFirstUserDebugMessage = true;
@@ -93,44 +101,83 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       [
         new SystemMessage(this.codingSystemPrompt),
         new HumanMessage(
-          this.codingUserPrompt(action, curentFileToUpdateContents)
+          this.codingUserPrompt(
+            fileName,
+            fileAction,
+            currentActions,
+            curentFileToUpdateContents,
+            completedActions,
+            futureActions
+          )
         ),
       ],
       false
     );
 
-    console.log(`-------------------> New code:\n${newCode}\n\n`);
+    console.log(
+      `\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n`
+    );
 
     return newCode as string;
-  }
-
-  sortActionPlan(actionPlan: PsEngineerCodingActionPlanItem[]) {
-    actionPlan.sort((a, b) => {
-      if (a.fileAction === "add" && b.fileAction !== "add") {
-        return -1;
-      } else if (a.fileAction !== "add" && b.fileAction === "add") {
-        return 1;
-      } else if (a.fileAction === "change" && b.fileAction === "change") {
-        return -1;
-      } else if (a.fileAction === "delete" && b.fileAction === "delete") {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
   }
 
   async implementCodingActionPlan(
     actionPlan: PsEngineerCodingActionPlanItem[]
   ) {
-    this.actionPlan = actionPlan;
-    this.sortActionPlan(this.actionPlan);
-    for (const action of actionPlan) {
-      action.status = "inProgress";
-      console.log(`Implementing action: ${JSON.stringify(action, null, 2)}`);
-      await this.implementAction(action);
-      action.status = "completed";
+    let currentActions: PsEngineerCodingActionPlanItem[] = [];
+    let completedActions: PsEngineerCodingActionPlanItem[] = actionPlan.filter(
+      (action) => action.status === "completed"
+    );
+    let futureActions: PsEngineerCodingActionPlanItem[] = [];
+
+    // Determine the first uncompleted action
+    const firstUncompletedAction = actionPlan.find(
+      (action) => action.status !== "completed"
+    );
+    if (firstUncompletedAction) {
+      // Get all actions for the same file that are not completed
+      currentActions = actionPlan.filter(
+        (action) =>
+          action.fullPathToNewOrUpdatedFile ===
+            firstUncompletedAction.fullPathToNewOrUpdatedFile &&
+          action.status !== "completed"
+      );
+
+      // Mark all current actions as inProgress
+      currentActions.forEach((action) => {
+        action.status = "inProgress";
+      });
+
+      // Update futureActions excluding the current and completed ones
+      futureActions = actionPlan.filter(
+        (action) =>
+          action.fullPathToNewOrUpdatedFile !==
+            firstUncompletedAction.fullPathToNewOrUpdatedFile &&
+          action.status !== "completed"
+      );
+
+      console.log(
+        `Implementing action: ${JSON.stringify(currentActions, null, 2)}`
+      );
+      await this.implementFileActions(
+        firstUncompletedAction.fullPathToNewOrUpdatedFile,
+        firstUncompletedAction.fileAction,
+        completedActions,
+        currentActions,
+        futureActions
+      );
+
+      // Process all current actions
+      for (const action of currentActions) {
+        action.status = "completed";
+        completedActions.push(action);
+      }
     }
+
+    console.log(
+      `Completed Actions: ${JSON.stringify(completedActions, null, 2)}`
+    );
+    console.log(`Future Actions: ${JSON.stringify(futureActions, null, 2)}`);
   }
 
   deleteDependency(dependencyName: string) {

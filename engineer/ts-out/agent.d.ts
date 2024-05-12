@@ -5,5 +5,6 @@ export declare class PSEngineerAgent extends PolicySynthAgentBase {
     doWebResearch(): Promise<void>;
     readAllTypescriptFileNames(folderPath: string): Promise<string[]>;
     run(): Promise<void>;
+    loadFileContents(fileName: string): string | null;
 }
 //# sourceMappingURL=agent.d.ts.map

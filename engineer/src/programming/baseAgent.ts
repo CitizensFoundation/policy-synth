@@ -16,7 +16,8 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
 
   tsMorphProject: Project | undefined;
 
-  constructor(memory: PsEngineerMemoryData,
+  constructor(
+    memory: PsEngineerMemoryData,
     likelyToChangeFilesContents: string | null | undefined = undefined,
     otherFilesToKeepInContextContent: string | null | undefined = undefined,
     documentationFilesInContextContent: string | null | undefined = undefined,
@@ -39,32 +40,56 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
   }
 
   renderDefaultTaskAndContext() {
-    return `<Task>
-        Overall task title:
-        ${this.memory.taskTitle}
+    const hasContextFromSearch =
+      this.memory.exampleContextItems || this.memory.docsContextItems;
 
-        Overall task description:
-        ${this.memory.taskDescription}
-
-        Overall task instructions:
-        ${this.memory.taskInstructions}
-      </Task>
-
-      <Context>
-        Typescript file that might have to change:
-        ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
-
+    return `${
+      hasContextFromSearch
+        ? `<ContextFromOnlineSearch>${
+            this.memory.exampleContextItems &&
+            this.memory.exampleContextItems.length > 0
+              ? `Potentally relevant code examples from web search:
+        ${this.memory.exampleContextItems.map((i) => i)}`
+                  : ``
+              }
         ${
-          this.documentationFilesInContextContent
-            ? `Local documentation:\n${this.documentationFilesInContextContent}`
+          this.memory.docsContextItems && this.memory.docsContextItems.length > 0
+            ? `Potentally relevant documentation from a web search:
+        ${this.memory.docsContextItems.map((i) => i)}`
+            : ``
+        }<ContextFromOnlineSearch>`
             : ``
         }
+        <Context>
+            Typescript file that might have to change:
+            ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
 
-        <ContentOfFilesThatMightChange>
-          ${this.likelyToChangeFilesContents}
-        </ContentOfFilesThatMightChange>
+            ${
+              this.documentationFilesInContextContent
+                ? `Local documentation:\n${this.documentationFilesInContextContent}`
+                : ``
+            }
 
-      </Context>`;
+            All typedefs:
+            ${this.memory.allTypeDefsContents}
+
+            <ContentOfFilesThatMightChange>
+              ${this.likelyToChangeFilesContents}
+            </ContentOfFilesThatMightChange>
+
+          </Context>
+
+          <Project>
+            Overall project title:
+            ${this.memory.taskTitle}
+
+            Overall project description:
+            ${this.memory.taskDescription}
+
+            Overall project instructions:
+            ${this.memory.taskInstructions}
+          </Project>
+`;
   }
 
   loadFileContents(fileName: string) {
@@ -79,10 +104,10 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
 
   getFileContentsWithFileName(fileNames: string[]): string {
     return fileNames
-    .map((fileName) => {
-      const fileContent = this.loadFileContents(fileName);
-      return `${fileName}\n${fileContent}`;
-    })
-    .join("\n");
+      .map((fileName) => {
+        const fileContent = this.loadFileContents(fileName);
+        return `${fileName}\n${fileContent}`;
+      })
+      .join("\n");
   }
 }
