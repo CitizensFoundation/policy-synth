@@ -4,8 +4,8 @@ export declare class PsEngineerProgrammingPlanningAgent extends PsEngineerBasePr
     planSystemPrompt(): string;
     getUserPlanPrompt(reviewLog: string): string;
     reviewSystemPrompt(): string;
-    actionPlanReviewSystemPrompt(): string;
     getUserReviewPrompt(codingPlan: string): string;
+    actionPlanReviewSystemPrompt(): string;
     getUserActionPlanReviewPrompt(actionPlan: PsEngineerCodingActionPlanItem[]): string;
     getActionPlanSystemPrompt(): string;
     getUserActionPlanPrompt(codingPlan: string, reviewLog: string): string;

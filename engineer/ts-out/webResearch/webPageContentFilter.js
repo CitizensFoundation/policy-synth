@@ -20,7 +20,8 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
       Instructions:
       1. Review the task name, description and instructions.
       2. You will see content from the web to decide if it's relevant to the task or not, to help inform the programming of this task.
-      3. Only answer with: Yes or No if the content is relevant or not to the task.
+      3. If ther content to evalute is empty just answer No
+      4. Only answer with: Yes or No if the content is relevant or not to the task.
     `;
     }
     filterUserPrompt(contentToEvaluate) {
@@ -44,15 +45,20 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
     async filterContent(webContentToFilter) {
         const filteredContent = [];
         for (const content of webContentToFilter) {
-            const analyzisResults = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
-                new SystemMessage(this.filterSystemPrompt),
-                new HumanMessage(this.filterUserPrompt(content)),
-            ], false));
-            if (analyzisResults.trim() === "Yes") {
-                filteredContent.push(content);
+            if (content && content.trim() !== "") {
+                const analyzisResults = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+                    new SystemMessage(this.filterSystemPrompt),
+                    new HumanMessage(this.filterUserPrompt(content)),
+                ], false));
+                if (analyzisResults.trim() === "Yes") {
+                    filteredContent.push(content);
+                }
+                else {
+                    console.log(`--------!!!!> Content is not relevant to the task: ${content}`);
+                }
             }
             else {
-                console.log(`--------!!!!> Content is not relevant to the task: ${content}`);
+                console.log("Removing empty white space ");
             }
         }
         return filteredContent;

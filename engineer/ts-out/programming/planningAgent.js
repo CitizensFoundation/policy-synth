@@ -39,6 +39,15 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     7. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     `;
     }
+    getUserReviewPrompt(codingPlan) {
+        return `${this.renderDefaultTaskAndContext()}
+
+  Proposed coding plan:
+  ${codingPlan}
+
+  Please review the coding plan for feasibility, correctness, and completeness. Provide detailed feedback on each step of the plan or confirm its readiness for implementation. Mention specific areas for improvement if any.
+    `;
+    }
     actionPlanReviewSystemPrompt() {
         return `You are an expert software engineering planner.
 
@@ -48,15 +57,6 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Action plan looks good".
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
     5. If the plan is good only output "Action plan looks good".
-    `;
-    }
-    getUserReviewPrompt(codingPlan) {
-        return `${this.renderDefaultTaskAndContext()}
-
-  Proposed coding plan:
-  ${codingPlan}
-
-  Please review the coding plan for feasibility, correctness, and completeness. Provide detailed feedback on each step of the plan or confirm its readiness for implementation. Mention specific areas for improvement if any.
     `;
     }
     getUserActionPlanReviewPrompt(actionPlan) {
@@ -92,7 +92,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         return `${this.renderDefaultTaskAndContext()}
 
       ${reviewLog
-            ? `Take note --> <ReviewOnYourLastAttemptAtCreatingCodinActionPlan>${reviewLog}</ReviewOnYourLastAttemptAtCreatingCodinActionPlan>`
+            ? `Take note --> <ReviewOnYourLastAttemptAtCreatingCodingActionPlan>${reviewLog}</ReviewOnYourLastAttemptAtCreatingCodingActionPlan>`
             : ``}
 
       Coding plan to use for your Coding Action Plan:

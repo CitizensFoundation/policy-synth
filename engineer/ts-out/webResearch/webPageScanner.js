@@ -25,7 +25,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
         Important Instructions:
         1. Examine the <TextContext> and copy all documentation highly relevant to the task provided by the user.
         2. Just copy highly relevant documentation from the <TextContext> word by word do not add anything except formating.
-        3. If no highly relevant, to the user provided task, documentation is found, output nothing just an empty string.
+        3. If no highly relevant, to the user provided task, documentation is found, output only a string with one empty white space.
         4. Output in Markdown format otherwise.
 `);
         }

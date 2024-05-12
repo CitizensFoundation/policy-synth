@@ -50,6 +50,16 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     `;
   }
 
+  getUserReviewPrompt(codingPlan: string) {
+    return `${this.renderDefaultTaskAndContext()}
+
+  Proposed coding plan:
+  ${codingPlan}
+
+  Please review the coding plan for feasibility, correctness, and completeness. Provide detailed feedback on each step of the plan or confirm its readiness for implementation. Mention specific areas for improvement if any.
+    `;
+  }
+
   actionPlanReviewSystemPrompt() {
     return `You are an expert software engineering planner.
 
@@ -59,16 +69,6 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Action plan looks good".
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
     5. If the plan is good only output "Action plan looks good".
-    `;
-  }
-
-  getUserReviewPrompt(codingPlan: string) {
-    return `${this.renderDefaultTaskAndContext()}
-
-  Proposed coding plan:
-  ${codingPlan}
-
-  Please review the coding plan for feasibility, correctness, and completeness. Provide detailed feedback on each step of the plan or confirm its readiness for implementation. Mention specific areas for improvement if any.
     `;
   }
 
@@ -108,7 +108,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
       ${
         reviewLog
-          ? `Take note --> <ReviewOnYourLastAttemptAtCreatingCodinActionPlan>${reviewLog}</ReviewOnYourLastAttemptAtCreatingCodinActionPlan>`
+          ? `Take note --> <ReviewOnYourLastAttemptAtCreatingCodingActionPlan>${reviewLog}</ReviewOnYourLastAttemptAtCreatingCodingActionPlan>`
           : ``
       }
 
@@ -153,7 +153,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
           false
         );
 
-        console.log(`\n\nReview received: ${review}\n\n`)
+        console.log(`\n\nReview received: ${review}\n\n`);
 
         if (
           (review && review.indexOf("Coding plan looks good") > -1) ||
@@ -211,7 +211,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             false
           );
 
-          console.log(`\n\Coding Action Plan Review received: ${review}\n\n`)
+          console.log(`\n\Coding Action Plan Review received: ${review}\n\n`);
 
           if (review && review.indexOf("Action plan looks good") > -1) {
             planReady = true;

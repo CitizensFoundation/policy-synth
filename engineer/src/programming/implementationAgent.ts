@@ -14,10 +14,12 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       1. Review the task name, description and general instructions.
       2. Review the documentation, examples, code and typedefs.
       3. Use the provided coding plan to implement the changes.
+      4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
+      5. Always output the full new or changed typescript file, do not leave anyything out, otherwise code will get lost.
 
       Output:
       1. Always output the full changed typescript file, do not leave anyything out.
-      2. Output nothing else than the change typescript file.
+      2. Output nothing else than the new or changed typescript file.
       3. Use markdown typescript for output.
 `;
   }
@@ -28,7 +30,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     currentActions: PsEngineerCodingActionPlanItem[],
     currentFileToUpdateContents: string | undefined | null,
     completedActions: PsEngineerCodingActionPlanItem[],
-    futureActions: PsEngineerCodingActionPlanItem[]
+    futureActions: PsEngineerCodingActionPlanItem[],
+    reviewLog: string
   ) {
     return `${this.renderDefaultTaskAndContext()}
 
@@ -57,8 +60,14 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     </YourCurrentTask>
 
     ${
+      reviewLog
+        ? `Take note --> <ReviewOnYourLastAttemptAtCreatingCode>${reviewLog}</ReviewOnYourLastAttemptAtCreatingCode>`
+        : ``
+    }
+
+    ${
       currentFileToUpdateContents
-        ? `<CurrentFileYouAreChangin>:\n${fileName}:\n${currentFileToUpdateContents}</<CurrentFileYouAreChangin>`
+        ? `<CurrentFileYouAreChanging>:\n${fileName}:\n${currentFileToUpdateContents}</<CurrentFileYouAreChanging>`
         : ``
     }
 
@@ -68,6 +77,25 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     `;
   }
 
+  reviewSystemPrompt() {
+    return `You are an expert software engineering code analyzer.
+
+    Instructions:
+    1. Review the proposed code for the given task.
+    2. Assess its feasibility, correctness, and completeness.
+    3. Provide detailed feedback if you find issues or approve the code if it meets the criteria with the words "Code looks good".
+    `;
+  }
+
+  getUserReviewPrompt(codeToReview: string) {
+    return `${this.renderDefaultTaskAndContext()}
+
+    Code for your review:
+    ${codeToReview}
+
+    Your review: `;
+  }
+
   async implementFileActions(
     fileName: string,
     fileAction: PsEngineerFileActions,
@@ -75,9 +103,16 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     currentActions: PsEngineerCodingActionPlanItem[],
     futureActions: PsEngineerCodingActionPlanItem[]
   ) {
+    let retryCount = 0;
+    let hasPassedReview = false;
+    let newCode = "";
+    let reviewLog = "";
+
     console.log(`Working on file: ${fileName}`);
     console.log(JSON.stringify(currentActions, null, 2));
+
     let currentFileToUpdateContents: string | undefined | null;
+
     if (fileAction === "change") {
       currentFileToUpdateContents = this.loadFileContents(fileName);
       if (!currentFileToUpdateContents) {
@@ -85,6 +120,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         throw new Error(`Error loading file ${fileName}`);
       }
     }
+
     if (!this.havePrintedFirstUserDebugMessage) {
       console.log(
         `Code user prompt:\n${this.codingUserPrompt(
@@ -93,34 +129,73 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
           currentActions,
           currentFileToUpdateContents,
           completedActions,
-          futureActions
+          futureActions,
+          reviewLog
         )}\n\n`
       );
       this.havePrintedFirstUserDebugMessage = true;
     }
-    console.log(`Calling LLM...`)
-    const newCode = await this.callLLM(
-      "engineering-agent",
-      IEngineConstants.engineerModel,
-      [
-        new SystemMessage(this.codingSystemPrompt),
-        new HumanMessage(
-          this.codingUserPrompt(
-            fileName,
-            fileAction,
-            currentActions,
-            currentFileToUpdateContents,
-            completedActions,
-            futureActions
-          )
-        ),
-      ],
-      false
-    );
+
+    while (!hasPassedReview && retryCount < this.maxRetries) {
+      console.log(`Calling LLM... Attempt ${retryCount + 1}`);
+      newCode = await this.callLLM(
+        "engineering-agent",
+        IEngineConstants.engineerModel,
+        [
+          new SystemMessage(this.codingSystemPrompt),
+          new HumanMessage(
+            this.codingUserPrompt(
+              fileName,
+              fileAction,
+              currentActions,
+              currentFileToUpdateContents,
+              completedActions,
+              futureActions,
+              reviewLog
+            )
+          ),
+        ],
+        false
+      );
+
+      if (newCode) {
+        console.log(`Coding received: ${newCode}`);
+        const review = await this.callLLM(
+          "engineering-agent",
+          IEngineConstants.engineerModel,
+          [
+            new SystemMessage(this.reviewSystemPrompt()),
+            new HumanMessage(this.getUserReviewPrompt(newCode)),
+          ],
+          false
+        );
+
+        console.log(`\n\nCode review received: ${review}\n\n`);
+
+        if (review && review.indexOf("Code looks good") > -1) {
+          hasPassedReview = true;
+          console.log("Code approved");
+        } else {
+          reviewLog = review + `\n`;
+          retryCount++;
+        }
+      } else {
+        console.error("No plan received");
+        retryCount++;
+      }
+    }
 
     console.log(
       `\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n`
     );
+
+    newCode = newCode.trim();
+
+    newCode.replace(/```typescript/g, "");
+
+    if (newCode.endsWith("```")) {
+      newCode = newCode.slice(0, -3);
+    }
 
     let fullFileName = fileName;
 

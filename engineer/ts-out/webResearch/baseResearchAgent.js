@@ -7,9 +7,9 @@ import { WebPageScanner } from "./webPageScanner.js";
 import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
 import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-    numberOfQueriesToGenerate = 12;
-    percentOfQueriesToSearch = 0.3;
-    percentOfResultsToScan = 0.3;
+    numberOfQueriesToGenerate = 10;
+    percentOfQueriesToSearch = 0.2;
+    percentOfResultsToScan = 0.2;
     async doWebResearch() {
         try {
             console.log(`In web research: ${this.searchInstructions}`);
