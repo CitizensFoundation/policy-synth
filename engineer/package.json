@@ -13,8 +13,6 @@
     "src/engineer.d.ts"
   ],
   "dependencies": {
-    "@google/generative-ai": "^0.11.1",
-    "@langchain/anthropic": "^0.1.17",
     "@policysynth/agents": "1.2.4",
     "@tsconfig/node18": "^18.2.4",
     "@tsconfig/node20": "^20.1.4",

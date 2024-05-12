@@ -44,6 +44,8 @@
   ],
   "type": "module",
   "dependencies": {
+    "@google/generative-ai": "^0.11.1",
+    "@langchain/anthropic": "^0.1.17",
     "@langchain/core": "^0.1.62",
     "@langchain/openai": "^0.0.28",
     "aws-sdk": "^2.1608.0",
