@@ -7,7 +7,7 @@ import fs from "fs";
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedFirstUserDebugMessage = false;
 
-  get codingSystemPrompt() {
+  codingSystemPrompt(currentErrors: string | undefined) {
     return `Your are an expert software engineering programmer.
 
       Instructions:
@@ -15,7 +15,12 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       2. Review the documentation, examples, code and typedefs.
       3. Use the provided coding plan to implement the changes.
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
-      5. Always output the full new or changed typescript file, do not leave anyything out, otherwise code will get lost.
+      5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
+      ${
+        currentErrors
+          ? `6. You have already build the project and now you need to fix errors provided by the user`
+          : ``
+      }
 
       Output:
       1. Always output the full changed typescript file, do not leave anyything out.
@@ -31,7 +36,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     futureActions: PsEngineerCodingActionPlanItem[],
     currentFileToUpdateContents: string | undefined | null,
     reviewCount: number,
-    reviewLog: string
+    reviewLog: string,
+    currentErrors: string | undefined
   ) {
     return `${
       completedActions && completedActions.length > 0
@@ -64,6 +70,12 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     }
 
     ${
+      currentErrors
+        ? `<ErrorsOnYourLastAttemptAtCreatingCode>${currentErrors}</ErrorsOnYourLastAttemptAtCreatingCode>`
+        : ``
+    }
+
+    ${
       reviewLog
         ? `IMPORTANT: This is your ${
             reviewCount + 1
@@ -81,7 +93,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     completedActions: PsEngineerCodingActionPlanItem[],
     futureActions: PsEngineerCodingActionPlanItem[],
     reviewCount: number,
-    reviewLog: string
+    reviewLog: string,
+    currentErrors: string | undefined
   ) {
     return `${this.renderDefaultTaskAndContext()}
 
@@ -92,7 +105,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       futureActions,
       currentFileToUpdateContents,
       reviewCount,
-      reviewLog
+      reviewLog,
+      currentErrors
     )}
 
     Output the ${fileAction == "change" ? "changed" : "new"} file ${
@@ -108,10 +122,10 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     1. Review the proposed code for the given task.
     2. Assess its feasibility, correctness, and completeness.
     3. Never ask for documentation, we generate those with GPT-4 seperatly for everything that changes or is new.
-    4. Provide detailed feedback if you find critical issues with the code.
+    4. Provide feedback only if you find critical issues with the code.
     5. You will see previous reviews, we are in a loop until the code is good.
-    6. If you have gone over 3 reviews already make sure only to comment on the most critical issues.
-    7. If there are no big issues with the code only output: Code looks good.
+    6. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
+    7. If there are no critical issues with the code only output: Code looks good.
     `;
   }
 
@@ -123,7 +137,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     completedActions: PsEngineerCodingActionPlanItem[],
     futureActions: PsEngineerCodingActionPlanItem[],
     reviewCount: number,
-    reviewLog: string
+    reviewLog: string,
+    currentErrors: string | undefined
   ) {
     return `${this.renderDefaultTaskAndContext()}
 
@@ -134,13 +149,15 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         futureActions,
         currentFileToUpdateContents,
         reviewCount,
-        reviewLog
+        "", // Leave review empty to avoid infinite loop
+        currentErrors
       )}
 
-      Code for your review:
-      ${codeToReview}
+      <CodeForYourReview>
+        ${codeToReview}
+      </CodeForYourReview>
 
-      Your review: `;
+      Your review of <CodeForYourReview>: `;
   }
 
   async implementFileActions(
@@ -148,7 +165,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     fileAction: PsEngineerFileActions,
     completedActions: PsEngineerCodingActionPlanItem[],
     currentActions: PsEngineerCodingActionPlanItem[],
-    futureActions: PsEngineerCodingActionPlanItem[]
+    futureActions: PsEngineerCodingActionPlanItem[],
+    currentErrors: string | undefined
   ) {
     let retryCount = 0;
     let hasPassedReview = false;
@@ -169,20 +187,22 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     }
 
     if (!this.havePrintedFirstUserDebugMessage) {
-      console.log(
-        `Code user prompt:\n${this.codingUserPrompt(
-          fileName,
-          fileAction,
-          currentActions,
-          currentFileToUpdateContents,
-          completedActions,
-          futureActions,
-          retryCount,
-          reviewLog
-        )}\n\n`
-      );
-      //this.havePrintedFirstUserDebugMessage = true;
+      this.havePrintedFirstUserDebugMessage = true;
     }
+
+    console.log(
+      `\n\n\n\n\n\n\n\n\n===============X============> Code user prompt:\n${this.codingUserPrompt(
+        fileName,
+        fileAction,
+        currentActions,
+        currentFileToUpdateContents,
+        completedActions,
+        futureActions,
+        retryCount,
+        reviewLog,
+        currentErrors
+      )}\n\n\n\n\n\n\n\n`
+    );
 
     while (!hasPassedReview && retryCount < this.maxRetries) {
       console.log(`Calling LLM... Attempt ${retryCount + 1}`);
@@ -190,7 +210,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         "engineering-agent",
         IEngineConstants.engineerModel,
         [
-          new SystemMessage(this.codingSystemPrompt),
+          new SystemMessage(this.codingSystemPrompt(currentErrors)),
           new HumanMessage(
             this.codingUserPrompt(
               fileName,
@@ -200,7 +220,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
               completedActions,
               futureActions,
               retryCount,
-              reviewLog
+              reviewLog,
+              currentErrors
             )
           ),
         ],
@@ -223,7 +244,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
                 completedActions,
                 futureActions,
                 retryCount,
-                reviewLog
+                reviewLog,
+                currentErrors
               )
             ),
           ],
@@ -236,7 +258,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
           hasPassedReview = true;
           console.log("Code approved");
         } else {
-          reviewLog = `${reviewLog}\nReview number: ${
+          reviewLog = `\h${reviewLog}\nReview number: ${
             retryCount + 1
           }:\n${review}`;
           retryCount++;
@@ -248,7 +270,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     }
 
     console.log(
-      `\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n`
+      `\n\n\n\n\n\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n\n\n\n\n\n`
     );
 
     newCode = newCode.trim();
@@ -284,7 +306,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
   async implementCodingActionPlan(
     actionPlan: PsEngineerCodingActionPlanItem[],
-    currentErrors: string | undefined = undefined
+    currentErrors: string | undefined
   ) {
     let currentActions: PsEngineerCodingActionPlanItem[] = [];
     let completedActions: PsEngineerCodingActionPlanItem[] = actionPlan.filter(
@@ -326,7 +348,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         firstUncompletedAction.fileAction,
         completedActions,
         currentActions,
-        futureActions
+        futureActions,
+        currentErrors
       );
 
       // Process all current actions

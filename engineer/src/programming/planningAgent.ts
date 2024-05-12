@@ -9,7 +9,7 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedDebugPrompt = false;
 
-  planSystemPrompt() {
+  planSystemPrompt(currentErrors: string | undefined) {
     return `You are an expert software engineering analyzer.
 
     Instructions:
@@ -18,14 +18,25 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     3. Create a detailed, step-by-step coding plan that specifies the code changes needed to accomplish the task.
     4. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
     5. We always create and modify typescript .ts files.
+    ${
+      currentErrors
+        ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user`
+        : ``
+    }
 
     Expected Output:
     Provide a detailed step-by-step plan in natural language or pseudo-code, explaining the changes to be made, why they are necessary, and how they should be implemented.
     `;
   }
 
-  getUserPlanPrompt(reviewLog: string) {
+  getUserPlanPrompt(reviewLog: string, currentErrors: string | undefined) {
     return `${this.renderDefaultTaskAndContext()}
+
+    ${
+      currentErrors
+        ? `<CurrentErrorsToFixInYourPlan>${currentErrors}</CurrentErrorsToFixInYourPlan>`
+        : ``
+    }
 
     ${
       reviewLog
@@ -37,7 +48,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     `;
   }
 
-  reviewSystemPrompt() {
+  reviewSystemPrompt(currentErrors: string | undefined) {
     return `You are an expert software engineering analyzer.
 
     Instructions:
@@ -47,11 +58,22 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
     5. We always create and modify typescript .ts files.
     7. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
+    ${
+      currentErrors
+        ? `8. You have already build the project and now you need a new coding plan to fix errors provided by the user`
+        : ``
+    }
     `;
   }
 
-  getUserReviewPrompt(codingPlan: string) {
+  getUserReviewPrompt(codingPlan: string, currentErrors: string | undefined) {
     return `${this.renderDefaultTaskAndContext()}
+
+    ${
+      currentErrors
+        ? `<CurrentErrorsToFixInYourPlan>${currentErrors}</CurrentErrorsToFixInYourPlan>`
+        : ``
+    }
 
   Proposed coding plan:
   ${codingPlan}
@@ -128,15 +150,15 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     while (!planReady && planRetries < this.maxRetries) {
       console.log(`Getting coding plan attempt ${planRetries + 1}`);
       if (!this.havePrintedDebugPrompt) {
-        console.log(`PLANNING PROMPT: ${this.getUserPlanPrompt(reviewLog)}`);
+        console.log(`PLANNING PROMPT: ${this.getUserPlanPrompt(reviewLog, currentErrors)}`);
         this.havePrintedDebugPrompt = true;
       }
       codingPlan = await this.callLLM(
         "engineering-agent",
         IEngineConstants.engineerModel,
         [
-          new SystemMessage(this.planSystemPrompt()),
-          new HumanMessage(this.getUserPlanPrompt(reviewLog)),
+          new SystemMessage(this.planSystemPrompt(currentErrors)),
+          new HumanMessage(this.getUserPlanPrompt(reviewLog, currentErrors)),
         ],
         false
       );
@@ -147,8 +169,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
           "engineering-agent",
           IEngineConstants.engineerModel,
           [
-            new SystemMessage(this.reviewSystemPrompt()),
-            new HumanMessage(this.getUserReviewPrompt(codingPlan)),
+            new SystemMessage(this.reviewSystemPrompt(currentErrors)),
+            new HumanMessage(this.getUserReviewPrompt(codingPlan, currentErrors)),
           ],
           false
         );

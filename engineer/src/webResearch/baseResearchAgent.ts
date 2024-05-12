@@ -8,8 +8,8 @@ import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
 import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 
 export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-  numberOfQueriesToGenerate = 10;
-  percentOfQueriesToSearch = 0.2;
+  numberOfQueriesToGenerate = 8;
+  percentOfQueriesToSearch = 0.15;
   percentOfResultsToScan = 0.2;
 
   abstract searchInstructions: string;

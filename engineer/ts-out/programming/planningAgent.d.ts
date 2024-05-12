@@ -1,10 +1,10 @@
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export declare class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt: boolean;
-    planSystemPrompt(): string;
-    getUserPlanPrompt(reviewLog: string): string;
-    reviewSystemPrompt(): string;
-    getUserReviewPrompt(codingPlan: string): string;
+    planSystemPrompt(currentErrors: string | undefined): string;
+    getUserPlanPrompt(reviewLog: string, currentErrors: string | undefined): string;
+    reviewSystemPrompt(currentErrors: string | undefined): string;
+    getUserReviewPrompt(codingPlan: string, currentErrors: string | undefined): string;
     actionPlanReviewSystemPrompt(): string;
     getUserActionPlanReviewPrompt(actionPlan: PsEngineerCodingActionPlanItem[]): string;
     getActionPlanSystemPrompt(): string;

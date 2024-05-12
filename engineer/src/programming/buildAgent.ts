@@ -17,7 +17,7 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
 
       if (stderr) {
         console.error("Build errors:", stderr);
-        return stderr;
+        return `${stderr}\n${stdout}`;
       }
 
       return undefined;
