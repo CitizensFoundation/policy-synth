@@ -11,22 +11,17 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
   constructor(
     memory: PsEngineerMemoryData,
     numberOfQueriesToGenerate: number,
-    instructions: string,
-    overRideSystemPrompt?: string,
-    overRideUserPrompt?: string
+    instructions: string
   ) {
     super(memory);
     this.memory = memory;
     this.systemPrompt =
-      overRideSystemPrompt ||
-      `
-      Given the instructions below, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
+      `Inspired by the instructions below, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
 
       Always output as a JSON array of strings, where each string is a high quality search query:
         [searchQuery1, searchQuery2, ...]
     `;
     this.userPrompt =
-      overRideUserPrompt ||
       `Instructions: ${instructions}
        Overall task title:
        ${this.memory.taskTitle}

@@ -56,6 +56,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             console.log(`Code user prompt:\n${this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions)}\n\n`);
             this.havePrintedFirstUserDebugMessage = true;
         }
+        console.log(`Calling LLM...`);
         const newCode = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
             new SystemMessage(this.codingSystemPrompt),
             new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions)),

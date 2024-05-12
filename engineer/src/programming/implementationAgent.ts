@@ -98,6 +98,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       );
       this.havePrintedFirstUserDebugMessage = true;
     }
+    console.log(`Calling LLM...`)
     const newCode = await this.callLLM(
       "engineering-agent",
       IEngineConstants.engineerModel,

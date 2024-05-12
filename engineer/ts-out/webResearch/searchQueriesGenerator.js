@@ -6,20 +6,17 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
     systemPrompt;
     userPrompt;
     memory;
-    constructor(memory, numberOfQueriesToGenerate, instructions, overRideSystemPrompt, overRideUserPrompt) {
+    constructor(memory, numberOfQueriesToGenerate, instructions) {
         super(memory);
         this.memory = memory;
         this.systemPrompt =
-            overRideSystemPrompt ||
-                `
-      Given the instructions below, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
+            `Inspired by the instructions below, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
 
       Always output as a JSON array of strings, where each string is a high quality search query:
         [searchQuery1, searchQuery2, ...]
     `;
         this.userPrompt =
-            overRideUserPrompt ||
-                `Instructions: ${instructions}
+            `Instructions: ${instructions}
        Overall task title:
        ${this.memory.taskTitle}
 
@@ -29,8 +26,8 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
        Overall task instructions: ${this.memory.taskInstructions}
 
        ${this.memory.likelyRelevantNpmPackageDependencies?.length > 0
-                    ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join(`\n`)}`
-                    : ``}
+                ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join(`\n`)}`
+                : ``}
 
     `;
         console.log(`User prompt is: ${this.userPrompt}`);
