@@ -33,7 +33,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     reviewCount: number,
     reviewLog: string
   ) {
-    `${
+    return `${
       completedActions && completedActions.length > 0
         ? `<AlreadyCompletedTasks>${JSON.stringify(
             completedActions,

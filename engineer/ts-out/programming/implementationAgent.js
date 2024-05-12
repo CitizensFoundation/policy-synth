@@ -22,7 +22,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 `;
     }
     renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog) {
-        `${completedActions && completedActions.length > 0
+        return `${completedActions && completedActions.length > 0
             ? `<AlreadyCompletedTasks>${JSON.stringify(completedActions, null, 2)}</AlreadyCompletedTasks>`
             : ``}
 
