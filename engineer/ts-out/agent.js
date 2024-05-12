@@ -51,7 +51,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
         const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
         await analyzeAgent.analyzeAndSetup();
-        if (this.memory.needsDocumentionsAndExamples === true) {
+        if (false && this.memory.needsDocumentionsAndExamples === true) {
             await this.doWebResearch();
         }
         const programmer = new PsEngineerProgrammingAgent(this.memory);
