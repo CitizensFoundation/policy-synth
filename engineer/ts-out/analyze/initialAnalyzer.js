@@ -32,7 +32,8 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       3. You will see a list of all npm module dependencies, you should output likely to be relevant to likelyRelevantNpmPackageDependencies.
       4. You will see a list of all possible documentation files, you should output likely to be relevant to documentationFilesToKeepInContext.
       5. Always include all typedef d.ts files in the otherTypescriptFilesToKeepInContext at the end.
-      6. If the task is likely to need documentation or examples from online sources, set needsDocumentionsAndExamples to true - this will trigger an automated Google search for the task.
+      6. Always output the full path into all the JSON string arrays.
+      7. If the task is likely to need documentation or examples from online sources, set needsDocumentionsAndExamples to true - this will trigger an automated Google search for the task.
 
       JSON Output Schema:
       {

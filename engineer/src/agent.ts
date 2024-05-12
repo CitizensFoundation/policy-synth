@@ -19,9 +19,9 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       workspaceFolder:
         "/home/robert/Scratch/policy-synth-engineer-tests/agents",
       taskTitle:
-        "Integrate LLM Abstractions for Claude Opus and Google Gemini into LangChain TS",
+        "Integrate LLM Abstractions for Claude Opus and Google Gemini into Base Agent Class",
       taskDescription:
-        "Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure. The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future.",
+        "Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure. The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.",
       taskInstructions: `1. Create a new base chat class policy synth model in src/models/baseModel.ts
       2. Then src/models/openAi.ts, src/models/claudeOpus.ts and src/models/googleGemini.ts
       3. For the cloudeOpus use the @langchain/anthropic npm
@@ -80,6 +80,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       this.memory.workspaceFolder
     );
 
+    //TODO: Get .d.ts file for npms also likely to be relevant from the nodes_modules folder
     this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
       .map((filePath) => {
         if (filePath.endsWith(".d.ts")) {

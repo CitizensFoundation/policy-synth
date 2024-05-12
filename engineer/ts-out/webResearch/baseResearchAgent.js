@@ -4,10 +4,12 @@ import { SearchQueriesRanker } from "./searchQueriesRanker.js";
 import { ResearchWeb } from "./searchWeb.js";
 import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
+import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
+import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-    numberOfQueriesToGenerate = 10;
-    percentOfQueriesToSearch = 0.25;
-    percentOfResultsToScan = 0.2;
+    numberOfQueriesToGenerate = 12;
+    percentOfQueriesToSearch = 0.3;
+    percentOfResultsToScan = 0.3;
     async doWebResearch() {
         try {
             console.log(`In web research: ${this.searchInstructions}`);
@@ -34,11 +36,18 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
             // Scan and Research Web pages
             this.logger.info("Scan and Research Web pages");
             const webPageResearch = new WebPageScanner(this.memory, this.searchInstructions);
-            const webScanResults = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.scanType);
+            let webScanResults = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.scanType);
             this.logger.info("Website Scanning Completed", true);
             console.log(`webScan: (${webScanResults.length}) ${JSON.stringify(webScanResults, null, 2)}`);
-            // TODO: Add a review agent and compare to the actual source code file contents
-            return webScanResults;
+            const filter = new PsEngineerWebContentFilter(this.memory);
+            webScanResults = await filter.filterContent(webScanResults);
+            if (webScanResults.length > 3) {
+                const ranker = new PsEngineerWebContentRanker(this.memory);
+                webScanResults = await ranker.rankWebContent(webScanResults, this.searchInstructions, searchResults.length * 10);
+            }
+            const topWebScanResults = webScanResults.slice(0, 3);
+            console.log("Top Web Scan Results:", topWebScanResults);
+            return topWebScanResults;
         }
         catch (err) {
             console.error(`Error in search the web: ${err}`);

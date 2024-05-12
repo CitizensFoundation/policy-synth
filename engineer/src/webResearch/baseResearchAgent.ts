@@ -4,11 +4,13 @@ import { SearchQueriesRanker } from "./searchQueriesRanker.js";
 import { ResearchWeb } from "./searchWeb.js";
 import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
+import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
+import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 
 export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-  numberOfQueriesToGenerate = 10;
-  percentOfQueriesToSearch = 0.25;
-  percentOfResultsToScan = 0.2;
+  numberOfQueriesToGenerate = 12;
+  percentOfQueriesToSearch = 0.3;
+  percentOfResultsToScan = 0.3;
 
   abstract searchInstructions: string;
   abstract scanType: "documentation" | "codeExamples";
@@ -75,7 +77,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
         this.searchInstructions
       );
 
-      const webScanResults = await webPageResearch.scan(
+      let webScanResults = await webPageResearch.scan(
         searchResultsToScan.map((i) => i.url),
         this.scanType
       );
@@ -89,9 +91,26 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
         )}`
       );
 
-      // TODO: Add a review agent and compare to the actual source code file contents
+      const filter = new PsEngineerWebContentFilter(
+        this.memory as PsEngineerMemoryData
+      );
+      webScanResults = await filter.filterContent(webScanResults);
 
-      return webScanResults;
+      if (webScanResults.length > 3) {
+        const ranker = new PsEngineerWebContentRanker(
+          this.memory as PsEngineerMemoryData
+        );
+        webScanResults = await ranker.rankWebContent(
+          webScanResults,
+          this.searchInstructions,
+          searchResults.length * 10
+        );
+      }
+
+      const topWebScanResults = webScanResults.slice(0, 3);
+      console.log("Top Web Scan Results:", topWebScanResults);
+
+      return topWebScanResults;
     } catch (err) {
       console.error(`Error in search the web: ${err}`);
     }

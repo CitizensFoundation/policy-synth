@@ -16,14 +16,15 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
         [searchQuery1, searchQuery2, ...]
     `;
         this.userPrompt =
-            `Instructions: ${instructions}
-       Overall task title:
+            `Overall project title:
        ${this.memory.taskTitle}
 
-       Overall task description:
+       Overall project description:
        ${this.memory.taskDescription}
 
-       Overall task instructions: ${this.memory.taskInstructions}
+       Overall project instructions: ${this.memory.taskInstructions}
+
+       User Instructions: ${instructions}
 
        ${this.memory.likelyRelevantNpmPackageDependencies?.length > 0
                 ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join(`\n`)}`

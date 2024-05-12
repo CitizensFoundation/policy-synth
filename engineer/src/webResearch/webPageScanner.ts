@@ -221,6 +221,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     if (this.memory.docsSiteToScan) {
       listOfUrls = [...listOfUrls, ...this.memory.docsSiteToScan];
+      console.log(`Adding docsSiteToScan ${this.memory.docsSiteToScan}`)
     }
 
     for (let i = 0; i < listOfUrls.length; i++) {
