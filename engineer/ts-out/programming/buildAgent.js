@@ -12,13 +12,13 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
             console.log("Build output:", stdout);
             if (stderr) {
                 console.error("Build errors:", stderr);
-                return stderr;
+                return `${stderr}\n${stdout}`;
             }
             return undefined;
         }
         catch (error) {
             console.error("Error during the build process:", error);
-            return error instanceof Error ? error.message : "Unknown error during build";
+            return `Error during the build process: ${error.message}\nAttempted build output:\n${error.stdout}`;
         }
     }
 }

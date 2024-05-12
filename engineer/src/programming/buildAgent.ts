@@ -21,9 +21,9 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
       }
 
       return undefined;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during the build process:", error);
-      return error instanceof Error ? error.message : "Unknown error during build";
+      return `Error during the build process: ${error.message}\nAttempted build output:\n${error.stdout}`;
     }
   }
 }

@@ -12,7 +12,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
   documentationFilesInContextContent: string | undefined | null;
   currentFileContents: string | undefined | null;
   likelyToChangeFilesContents: string | undefined | null;
-  maxRetries = 7;
+  maxRetries = 27;
 
   tsMorphProject: Project | undefined;
 
