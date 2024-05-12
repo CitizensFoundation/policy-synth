@@ -45,7 +45,7 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
     async filterContent(webContentToFilter) {
         const filteredContent = [];
         for (const content of webContentToFilter) {
-            if (content && content.trim() !== "") {
+            if (content && content.trim().length > 70) {
                 const analyzisResults = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
                     new SystemMessage(this.filterSystemPrompt),
                     new HumanMessage(this.filterUserPrompt(content)),
@@ -58,7 +58,7 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
                 }
             }
             else {
-                console.log("Removing empty white space ");
+                console.log("Removing empty content from the list of content to filter.");
             }
         }
         return filteredContent;
