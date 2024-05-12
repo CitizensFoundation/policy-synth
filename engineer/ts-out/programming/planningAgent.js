@@ -115,6 +115,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     async getCodingPlan(currentErrors = undefined) {
         let planReady = false;
         let planRetries = 0;
+        let reviewRetries = 0;
+        const maxReviewsRetries = 10;
         let reviewLog = "";
         let codingPlan;
         while (!planReady && planRetries < this.maxRetries) {
@@ -129,19 +131,25 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             ], false);
             if (codingPlan) {
                 console.log(`Coding plan received: ${codingPlan}`);
-                const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
-                    new SystemMessage(this.reviewSystemPrompt(currentErrors)),
-                    new HumanMessage(this.getUserReviewPrompt(codingPlan, currentErrors)),
-                ], false);
-                console.log(`\n\nReview received: ${review}\n\n`);
-                if ((review && review.indexOf("Coding plan looks good") > -1) ||
-                    review.indexOf("No changes needed to this code") > -1) {
-                    planReady = true;
-                    console.log("Coding plan approved");
+                if (maxReviewsRetries <= reviewRetries) {
+                    const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+                        new SystemMessage(this.reviewSystemPrompt(currentErrors)),
+                        new HumanMessage(this.getUserReviewPrompt(codingPlan, currentErrors)),
+                    ], false);
+                    console.log(`\n\nReview received: ${review}\n\n`);
+                    if ((review && review.indexOf("Coding plan looks good") > -1) ||
+                        review.indexOf("No changes needed to this code") > -1) {
+                        planReady = true;
+                        console.log("Coding plan approved");
+                    }
+                    else {
+                        reviewLog = review + `\n`;
+                        planRetries++;
+                        reviewRetries++;
+                    }
                 }
                 else {
-                    reviewLog = review + `\n`;
-                    planRetries++;
+                    console.warn("Max review retries reached, continuing without review");
                 }
             }
             else {
