@@ -18,7 +18,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
       ${
         currentErrors
-          ? `6. You have already build the project and now you need to fix errors provided by the user`
+          ? `6. You have already build the project and now you need to fix errors provided by the user.`
           : ``
       }
 
@@ -111,7 +111,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     Output the ${fileAction == "change" ? "changed" : "new"} file ${
       fileAction == "change" ? "again " : ""
-    }in typescript:
+    }in full in typescript:
     `;
   }
 

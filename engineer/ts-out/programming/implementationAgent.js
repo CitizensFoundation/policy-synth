@@ -15,7 +15,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
       ${currentErrors
-            ? `6. You have already build the project and now you need to fix errors provided by the user`
+            ? `6. You have already build the project and now you need to fix errors provided by the user.`
             : ``}
 
       Output:
@@ -55,7 +55,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     ${this.renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog, currentErrors)}
 
-    Output the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in typescript:
+    Output the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in full in typescript:
     `;
     }
     reviewSystemPrompt() {
