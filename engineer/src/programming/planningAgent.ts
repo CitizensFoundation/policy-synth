@@ -20,12 +20,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     5. We always create and modify typescript .ts files.
     ${
       currentErrors
-        ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors nothing else.`
+        ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes you've made.`
         : ``
     }
-
-    Expected Output:
-    Provide a detailed step-by-step plan in natural language or pseudo-code, explaining the changes to be made, why they are necessary, and how they should be implemented.
     `;
   }
 
@@ -60,7 +57,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     7. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     ${
       currentErrors
-        ? `8. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors nothing else.`
+        ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes you've made.`
         : ``
     }
     `;
@@ -144,6 +141,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
   async getCodingPlan(currentErrors: string | undefined = undefined) {
     let planReady = false;
     let planRetries = 0;
+    let reviewRetries = 0;
+    const maxReviewsRetries = 10;
     let reviewLog = "";
     let codingPlan: string | undefined;
 
@@ -165,27 +164,32 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
       if (codingPlan) {
         console.log(`Coding plan received: ${codingPlan}`);
-        const review = await this.callLLM(
-          "engineering-agent",
-          IEngineConstants.engineerModel,
-          [
-            new SystemMessage(this.reviewSystemPrompt(currentErrors)),
-            new HumanMessage(this.getUserReviewPrompt(codingPlan, currentErrors)),
-          ],
-          false
-        );
+        if (maxReviewsRetries <= reviewRetries) {
+          const review = await this.callLLM(
+            "engineering-agent",
+            IEngineConstants.engineerModel,
+            [
+              new SystemMessage(this.reviewSystemPrompt(currentErrors)),
+              new HumanMessage(this.getUserReviewPrompt(codingPlan, currentErrors)),
+            ],
+            false
+          );
 
-        console.log(`\n\nReview received: ${review}\n\n`);
+          console.log(`\n\nReview received: ${review}\n\n`);
 
-        if (
-          (review && review.indexOf("Coding plan looks good") > -1) ||
-          review.indexOf("No changes needed to this code") > -1
-        ) {
-          planReady = true;
-          console.log("Coding plan approved");
+          if (
+            (review && review.indexOf("Coding plan looks good") > -1) ||
+            review.indexOf("No changes needed to this code") > -1
+          ) {
+            planReady = true;
+            console.log("Coding plan approved");
+          } else {
+            reviewLog = review + `\n`;
+            planRetries++;
+            reviewRetries++;
+          }
         } else {
-          reviewLog = review + `\n`;
-          planRetries++;
+          console.warn("Max review retries reached, continuing without review");
         }
       } else {
         console.error("No plan received");

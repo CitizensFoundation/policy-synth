@@ -13,11 +13,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     4. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
     5. We always create and modify typescript .ts files.
     ${currentErrors
-            ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors nothing else.`
+            ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes you've made.`
             : ``}
-
-    Expected Output:
-    Provide a detailed step-by-step plan in natural language or pseudo-code, explaining the changes to be made, why they are necessary, and how they should be implemented.
     `;
     }
     getUserPlanPrompt(reviewLog, currentErrors) {
@@ -45,7 +42,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     5. We always create and modify typescript .ts files.
     7. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     ${currentErrors
-            ? `8. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors nothing else.`
+            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes you've made.`
             : ``}
     `;
     }
