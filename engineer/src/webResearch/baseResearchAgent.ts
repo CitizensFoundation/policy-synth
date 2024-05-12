@@ -6,9 +6,9 @@ import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
 
 export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-  numberOfQueriesToGenerate = 25;
-  percentOfQueriesToSearch = 0.4;
-  percentOfResultsToScan = 0.4;
+  numberOfQueriesToGenerate = 12;
+  percentOfQueriesToSearch = 0.3;
+  percentOfResultsToScan = 0.3;
 
   abstract searchInstructions: string;
   abstract scanType: "documentation" | "codeExamples";

@@ -36,7 +36,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
         ${this.memory.docsContextItems && this.memory.docsContextItems.length > 0
                 ? `Potentally relevant documentation from a web search:
         ${this.memory.docsContextItems.map((i) => i)}`
-                : ``}<ContextFromOnlineSearch>`
+                : ``}</ContextFromOnlineSearch>`
             : ``}
         <Context>
             Typescript file that might have to change:

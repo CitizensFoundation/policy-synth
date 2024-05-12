@@ -21,9 +21,10 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "Integrate LLM Abstractions for Claude Opus and Google Gemini into LangChain TS",
       taskDescription:
         "Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure. The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future.",
-      taskInstructions: `1. Implement the new abstractions within the PolicySynthAgentBase class.
-      2. Use the modelName parameter to determine the appropriate abstraction for each model.
-      3. Set default configurations so that no modifications are needed in the existing codebase that utilizes the base agent class. This should ensure backward compatibility.`,
+      taskInstructions: `1. Create a new base chat class policy synth model in src/models/baseModel.ts
+      2. Then src/models/claudeOpus.ts and src/models/googleGemini.ts
+      3. Then in the baseAgent class add an extra option so you can use the new chat models.
+      4. Set default configurations so that no modifications are needed in the existing codebase that utilizes the base agent class.`,
       stages: PSEngineerAgent.emptyDefaultStages,
     } as unknown as PsEngineerMemoryData;
   }
@@ -87,7 +88,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
     await analyzeAgent.analyzeAndSetup();
 
-    if (false && this.memory.needsDocumentionsAndExamples === true) {
+    if (this.memory.needsDocumentionsAndExamples === true) {
       await this.doWebResearch();
     }
 

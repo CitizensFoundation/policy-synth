@@ -1,6 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
+import path from "path";
+import fs from "fs";
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedFirstUserDebugMessage = false;
     get codingSystemPrompt() {
@@ -17,22 +19,23 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       3. Use markdown typescript for output.
 `;
     }
-    codingUserPrompt(fileName, fileAction, currentActions, curentFileToUpdateContents, completedActions, futureActions) {
+    codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions) {
         return `${this.renderDefaultTaskAndContext()}
 
     ${completedActions && completedActions.length > 0
-            ? `Already completed actions in this process:\n${JSON.stringify(completedActions, null, 2)}`
+            ? `<AlreadyCompletedTasks>${JSON.stringify(completedActions, null, 2)}</AlreadyCompletedTasks>`
             : ``}
 
     ${futureActions && futureActions.length > 0
-            ? `FYI: Future actions in this process:\n${JSON.stringify(futureActions, null, 2)}`
+            ? `<FutureTasksNotImplementedByYou>${JSON.stringify(futureActions, null, 2)}</FutureTasksNotImplementedByYou>`
             : ``}
 
-    Your Action/Task now:
+    <YourCurrentTask>:
     ${JSON.stringify(currentActions, null, 2)}
+    </YourCurrentTask>
 
-    ${curentFileToUpdateContents
-            ? `<CurrentFileYouAreChangin>:\n${fileName}:\n${curentFileToUpdateContents}</<CurrentFileYouAreChangin>`
+    ${currentFileToUpdateContents
+            ? `<CurrentFileYouAreChangin>:\n${fileName}:\n${currentFileToUpdateContents}</<CurrentFileYouAreChangin>`
             : ``}
 
     Output the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in typescript:
@@ -41,23 +44,31 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     async implementFileActions(fileName, fileAction, completedActions, currentActions, futureActions) {
         console.log(`Working on file: ${fileName}`);
         console.log(JSON.stringify(currentActions, null, 2));
-        let curentFileToUpdateContents;
+        let currentFileToUpdateContents;
         if (fileAction === "change") {
-            curentFileToUpdateContents = this.loadFileContents(fileName);
-            if (!curentFileToUpdateContents) {
+            currentFileToUpdateContents = this.loadFileContents(fileName);
+            if (!currentFileToUpdateContents) {
                 console.error(`Error loading file ${fileName}`);
                 throw new Error(`Error loading file ${fileName}`);
             }
         }
         if (!this.havePrintedFirstUserDebugMessage) {
-            console.log(`Code user prompt:\n${this.codingUserPrompt(fileName, fileAction, currentActions, curentFileToUpdateContents, completedActions, futureActions)}\n\n`);
+            console.log(`Code user prompt:\n${this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions)}\n\n`);
             this.havePrintedFirstUserDebugMessage = true;
         }
         const newCode = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
             new SystemMessage(this.codingSystemPrompt),
-            new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, curentFileToUpdateContents, completedActions, futureActions)),
+            new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions)),
         ], false);
         console.log(`\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n`);
+        const directory = path.dirname(fileName);
+        if (!fs.existsSync(directory)) {
+            fs.mkdirSync(directory, { recursive: true });
+        }
+        if (fileAction === "change" && currentFileToUpdateContents) {
+            fs.writeFileSync(`${fileName}.bkc`, currentFileToUpdateContents);
+        }
+        fs.writeFileSync(fileName, newCode);
         return newCode;
     }
     async implementCodingActionPlan(actionPlan) {
@@ -84,7 +95,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             // Process all current actions
             for (const action of currentActions) {
                 action.status = "completed";
-                completedActions.push(action);
             }
         }
         console.log(`Completed Actions: ${JSON.stringify(completedActions, null, 2)}`);

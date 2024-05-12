@@ -89,6 +89,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     1. Review the provided <Context> and <Task> information.
     2. Review the coding plan and create a detailed coding action plan in JSON for implementing the changes.
     3. We always create and modify typescript .ts files no .js files in the plan.
+    4. If you are adding a new file always output "add" in the fileAction field if you are changing an existing file output "change" and if you are deleting a file output "delete" in the fileAction JSON field.
 
     Expected JSON Array Output:
     [

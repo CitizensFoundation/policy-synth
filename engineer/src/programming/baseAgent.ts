@@ -57,7 +57,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
             ? `Potentally relevant documentation from a web search:
         ${this.memory.docsContextItems.map((i) => i)}`
             : ``
-        }<ContextFromOnlineSearch>`
+        }</ContextFromOnlineSearch>`
             : ``
         }
         <Context>

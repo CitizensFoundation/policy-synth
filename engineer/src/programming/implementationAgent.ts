@@ -1,6 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
+import path from "path";
+import fs from "fs";
 
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedFirstUserDebugMessage = false;
@@ -24,7 +26,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     fileName: string,
     fileAction: PsEngineerFileActions,
     currentActions: PsEngineerCodingActionPlanItem[],
-    curentFileToUpdateContents: string | undefined | null,
+    currentFileToUpdateContents: string | undefined | null,
     completedActions: PsEngineerCodingActionPlanItem[],
     futureActions: PsEngineerCodingActionPlanItem[]
   ) {
@@ -32,30 +34,31 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     ${
       completedActions && completedActions.length > 0
-        ? `Already completed actions in this process:\n${JSON.stringify(
+        ? `<AlreadyCompletedTasks>${JSON.stringify(
             completedActions,
             null,
             2
-          )}`
+          )}</AlreadyCompletedTasks>`
         : ``
     }
 
     ${
       futureActions && futureActions.length > 0
-        ? `FYI: Future actions in this process:\n${JSON.stringify(
+        ? `<FutureTasksNotImplementedByYou>${JSON.stringify(
             futureActions,
             null,
             2
-          )}`
+          )}</FutureTasksNotImplementedByYou>`
         : ``
     }
 
-    Your Action/Task now:
+    <YourCurrentTask>:
     ${JSON.stringify(currentActions, null, 2)}
+    </YourCurrentTask>
 
     ${
-      curentFileToUpdateContents
-        ? `<CurrentFileYouAreChangin>:\n${fileName}:\n${curentFileToUpdateContents}</<CurrentFileYouAreChangin>`
+      currentFileToUpdateContents
+        ? `<CurrentFileYouAreChangin>:\n${fileName}:\n${currentFileToUpdateContents}</<CurrentFileYouAreChangin>`
         : ``
     }
 
@@ -74,10 +77,10 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
   ) {
     console.log(`Working on file: ${fileName}`);
     console.log(JSON.stringify(currentActions, null, 2));
-    let curentFileToUpdateContents: string | undefined | null;
+    let currentFileToUpdateContents: string | undefined | null;
     if (fileAction === "change") {
-      curentFileToUpdateContents = this.loadFileContents(fileName);
-      if (!curentFileToUpdateContents) {
+      currentFileToUpdateContents = this.loadFileContents(fileName);
+      if (!currentFileToUpdateContents) {
         console.error(`Error loading file ${fileName}`);
         throw new Error(`Error loading file ${fileName}`);
       }
@@ -88,7 +91,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
           fileName,
           fileAction,
           currentActions,
-          curentFileToUpdateContents,
+          currentFileToUpdateContents,
           completedActions,
           futureActions
         )}\n\n`
@@ -105,7 +108,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             fileName,
             fileAction,
             currentActions,
-            curentFileToUpdateContents,
+            currentFileToUpdateContents,
             completedActions,
             futureActions
           )
@@ -117,6 +120,17 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     console.log(
       `\n\n\n\n\n-------------------> New code:\n${newCode}\n\n<-------------------\n\n\n\n\n`
     );
+
+    const directory = path.dirname(fileName);
+    if (!fs.existsSync(directory)) {
+      fs.mkdirSync(directory, { recursive: true });
+    }
+
+    if (fileAction === "change" && currentFileToUpdateContents) {
+      fs.writeFileSync(`${fileName}.bkc`, currentFileToUpdateContents);
+    }
+
+    fs.writeFileSync(fileName, newCode);
 
     return newCode as string;
   }
@@ -170,7 +184,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       // Process all current actions
       for (const action of currentActions) {
         action.status = "completed";
-        completedActions.push(action);
       }
     }
 

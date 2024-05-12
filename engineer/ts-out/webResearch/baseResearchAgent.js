@@ -5,9 +5,9 @@ import { ResearchWeb } from "./searchWeb.js";
 import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
 export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-    numberOfQueriesToGenerate = 25;
-    percentOfQueriesToSearch = 0.4;
-    percentOfResultsToScan = 0.4;
+    numberOfQueriesToGenerate = 12;
+    percentOfQueriesToSearch = 0.3;
+    percentOfResultsToScan = 0.3;
     async doWebResearch() {
         try {
             console.log(`In web research: ${this.searchInstructions}`);

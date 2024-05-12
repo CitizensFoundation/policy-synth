@@ -10,8 +10,17 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         const actionPlan = await planningAgent.getActionPlan();
         console.log(`Coding plan: ${JSON.stringify(actionPlan, null, 2)}`);
         if (actionPlan) {
-            const implementationAgents = new PsEngineerProgrammingImplementationAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
-            await implementationAgents.implementCodingActionPlan(actionPlan);
+            const implementationAgent = new PsEngineerProgrammingImplementationAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+            // Loop until all actions are completed
+            let allCompleted = false;
+            while (!allCompleted) {
+                await implementationAgent.implementCodingActionPlan(actionPlan);
+                // Check if all actions are completed
+                allCompleted = actionPlan.every(action => action.status === "completed");
+                if (!allCompleted) {
+                    console.log("Not all actions completed, running again...");
+                }
+            }
         }
         else {
             console.error(`No coding plan received`);
