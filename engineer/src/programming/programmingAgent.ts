@@ -6,32 +6,32 @@ import { PsEngineerProgrammingPlanningAgent } from "./planningAgent.js";
 import { PsEngineerProgrammingImplementationAgent } from "./implementationAgent.js";
 
 export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
-  async implementChangesToFile(fileName: string) {
-    console.log(`Implementing changes to ${fileName}`);
+  async implementChanges() {
+    console.log(`Implementing changes `);
 
-    const planningAgent = new PsEngineerProgrammingPlanningAgent(this.memory);
-    const codingPlan = await planningAgent.getCodingPlan(
-      fileName,
+    const planningAgent = new PsEngineerProgrammingPlanningAgent(
+      this.memory,
+      this.likelyToChangeFilesContents,
       this.otherFilesToKeepInContextContent,
       this.documentationFilesInContextContent,
       this.tsMorphProject!
     );
 
-    console.log(`Coding plan: ${codingPlan}`);
+    const actionPlan = await planningAgent.getActionPlan();
 
-    if (codingPlan) {
+    console.log(`Coding plan: ${JSON.stringify(actionPlan, null, 2)}`);
+
+    if (actionPlan) {
       const implementationAgents = new PsEngineerProgrammingImplementationAgent(
-        this.memory
-      );
-      await implementationAgents.implementCodingPlan(
-        fileName,
-        codingPlan,
+        this.memory,
+        this.likelyToChangeFilesContents,
         this.otherFilesToKeepInContextContent,
         this.documentationFilesInContextContent,
         this.tsMorphProject!
       );
+      await implementationAgents.implementCodingActionPlan(actionPlan);
     } else {
-      console.error(`No coding plan received for ${fileName}`);
+      console.error(`No coding plan received`);
     }
   }
 
@@ -47,20 +47,20 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
 
     this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
 
-    this.otherFilesToKeepInContextContent =
+    this.otherFilesToKeepInContextContent = this.getFileContentsWithFileName(
       this.memory.otherTypescriptFilesToKeepInContext
-        .map((fileName) => this.loadFileContents(fileName))
-        .join("\n");
+    );
 
-    this.documentationFilesInContextContent =
+    this.likelyToChangeFilesContents = this.getFileContentsWithFileName(
+      this.memory.typeScriptFilesLikelyToChange
+    );
+
+    this.documentationFilesInContextContent = this.getFileContentsWithFileName(
       this.memory.documentationFilesToKeepInContext
-        .map((fileName) => this.loadFileContents(fileName))
-        .join("\n");
+    );
 
-    for (let fileNameToChange of this.memory.typeScriptFilesLikelyToChange) {
-      await this.implementChangesToFile(fileNameToChange);
-      this.memory.actionLog.push(`Implemented changes to ${fileNameToChange}`);
-    }
+    await this.implementChanges();
+    this.memory.actionLog.push(`Implemented changes`);
 
     return;
   }

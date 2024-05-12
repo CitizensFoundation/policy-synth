@@ -7,11 +7,16 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
     otherFilesToKeepInContextContent;
     documentationFilesInContextContent;
     currentFileContents;
-    otherLikelyToChangeFilesContents;
+    likelyToChangeFilesContents;
     maxRetries = 7;
     tsMorphProject;
-    constructor(memory) {
+    constructor(memory, likelyToChangeFilesContents = undefined, otherFilesToKeepInContextContent = undefined, documentationFilesInContextContent = undefined, tsMorphProject = undefined) {
         super(memory);
+        this.likelyToChangeFilesContents = likelyToChangeFilesContents;
+        this.otherFilesToKeepInContextContent = otherFilesToKeepInContextContent;
+        this.documentationFilesInContextContent =
+            documentationFilesInContextContent;
+        this.tsMorphProject = tsMorphProject;
         this.memory = memory;
         this.chat = new ChatOpenAI({
             temperature: 0.0,
@@ -19,6 +24,32 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
             modelName: IEngineConstants.engineerModel.name,
             verbose: false,
         });
+    }
+    renderDefaultTaskAndContext() {
+        return `<Task>
+        Overall task title:
+        ${this.memory.taskTitle}
+
+        Overall task description:
+        ${this.memory.taskDescription}
+
+        Overall task instructions:
+        ${this.memory.taskInstructions}
+      </Task>
+
+      <Context>
+        Typescript file that might have to change:
+        ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
+
+        ${this.documentationFilesInContextContent
+            ? `Local documentation:\n${this.documentationFilesInContextContent}`
+            : ``}
+
+        <ContentOfFilesThatMightChange>
+          ${this.likelyToChangeFilesContents}
+        </ContentOfFilesThatMightChange>
+
+      </Context>`;
     }
     loadFileContents(fileName) {
         try {
@@ -29,6 +60,14 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
             console.error(`Error reading file ${fileName}: ${error}`);
             return null;
         }
+    }
+    getFileContentsWithFileName(fileNames) {
+        return fileNames
+            .map((fileName) => {
+            const fileContent = this.loadFileContents(fileName);
+            return `${fileName}\n${fileContent}`;
+        })
+            .join("\n");
     }
 }
 //# sourceMappingURL=baseAgent.js.map

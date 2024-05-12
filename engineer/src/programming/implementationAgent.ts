@@ -15,6 +15,9 @@ import path from "path";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
+  actionPlan!: PsEngineerCodingActionPlanItem[];
+  havePrintedFirstUserDebugMessage = false;
+
   get codingSystemPrompt() {
     return `Your are an expert software engineering programmer.
 
@@ -24,21 +27,20 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       3. Use the provided coding plan to implement the changes.
 
       Output:
-      1. Always output the full changed typescript file again, nothing else.
-      2. Use markdown typescript for output.
+      1. Always output the full changed typescript file, do not leave anyything out.
+      2. Output nothing else than the change typescript file.
+      3. Use markdown typescript for output.
 `;
   }
 
   codingUserPrompt(
-    codingPlan: string,
-    currentFileName: string,
-    currentFileContents: string | null | undefined,
-    otherFilesContents: string | null | undefined
+    action: PsEngineerCodingActionPlanItem,
+    curentFileToUpdateContents: string | undefined
   ) {
-    return `${
+    return `<ContextFromOnlineSearch>${
       this.memory.exampleContextItems &&
       this.memory.exampleContextItems.length > 0
-        ? `Potentally relevant code examples:
+        ? `Potentally relevant code examples from web search:
     ${this.memory.exampleContextItems.map((i) => i)}`
         : ``
     }
@@ -49,301 +51,86 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         : ``
     }
 
+    ${this.renderDefaultTaskAndContext()}
+
+    Full Overall Action Plan:
+
+    Your Action/Task now:
+    ${JSON.stringify(action, null, 2)}
+
     ${
-      otherFilesContents
-        ? `Other potentially relevant source code files:\n${otherFilesContents}`
+      curentFileToUpdateContents
+        ? `Current file your are changing:\n${action.fullPathToNewOrUpdatedFile}:\n${curentFileToUpdateContents}`
         : ``
     }
 
-    ${
-      this.documentationFilesInContextContent
-        ? `Local documentation:\n${this.documentationFilesInContextContent}`
-        : ``
-    }
-
-    File we are working on:
-    ${currentFileName}
-
-    Current file:
-    ${currentFileContents}
-
-    Overall task title:
-    ${this.memory.taskTitle}
-
-    Overall task description:
-    ${this.memory.taskDescription}
-
-    Overall task instructions: ${this.memory.taskInstructions}
-
-    Coding plan for this current file:
-    ${codingPlan}
-
-    Output the whole file in typescript:
+    Output the ${action.fileAction == "change" ? "changed " : "new"} file ${
+      action.fileAction == "change" ? "again " : ""
+    }in typescript:
     `;
   }
 
-  async getCodeChanges(fileName: string, codingPlan: string) {
-    console.log(
-      `Code user prompt: ${this.codingUserPrompt(
-        codingPlan,
-        fileName,
-        this.currentFileContents,
-        this.otherLikelyToChangeFilesContents
-      )}`
-    );
-    const codeChanges = await this.callLLM(
+  async implementAction(action: PsEngineerCodingActionPlanItem) {
+    console.log(`Working on file: ${action.fullPathToNewOrUpdatedFile}`);
+    console.log(JSON.stringify(action, null, 2));
+    let curentFileToUpdateContents: string | undefined;
+    if (action.fileAction === "change") {
+      curentFileToUpdateContents =
+        this.loadFileContents(action.fullPathToNewOrUpdatedFile) || "";
+    }
+    if (!this.havePrintedFirstUserDebugMessage) {
+      console.log(
+        `Code user prompt:\n${this.codingUserPrompt(
+          action,
+          curentFileToUpdateContents
+        )}\n\n`
+      );
+      this.havePrintedFirstUserDebugMessage = true;
+    }
+    const newCode = await this.callLLM(
       "engineering-agent",
       IEngineConstants.engineerModel,
       [
         new SystemMessage(this.codingSystemPrompt),
         new HumanMessage(
-          this.codingUserPrompt(
-            codingPlan,
-            fileName,
-            this.currentFileContents,
-            this.otherLikelyToChangeFilesContents
-          )
+          this.codingUserPrompt(action, curentFileToUpdateContents)
         ),
       ],
       false
     );
 
-    return codeChanges as PsEngineerCodeChange[];
+    console.log(`-------------------> New code:\n${newCode}\n\n`);
+
+    return newCode as string;
   }
 
-  async implementCodingPlan(
-    fileName: string,
-    codingPlan: string,
-    otherFilesToKeepInContextContent: string | undefined,
-    documentationFilesInContextContent: string | undefined,
-    tsMorphProject: Project
-  ) {
-    this.tsMorphProject = tsMorphProject;
-    this.currentFileContents = this.loadFileContents(fileName);
-    this.otherLikelyToChangeFilesContents = otherFilesToKeepInContextContent;
-    this.documentationFilesInContextContent =
-      documentationFilesInContextContent;
-
-    const file = this.tsMorphProject?.getSourceFileOrThrow(fileName);
-    if (file) {
-      console.log(`Implementing changes to ${fileName}`);
-      const codeChanges = await this.getCodeChanges(fileName, codingPlan);
-      console.log(`Code changes: ${JSON.stringify(codeChanges, null, 2)}`);
-
-      for (let codeChange of codeChanges) {
-        console.log(`Implementing change: ${codeChange.action}`);
-
-        switch (codeChange.action) {
-          case "addFunction":
-            this.addFunction(
-              file,
-              codeChange.functionOrPropertyImportDependencyName,
-              codeChange.fullCodeToInsertOrChange as PsTsMorphNewOrUpdatedFunction
-            );
-            break;
-          case "changeFunction":
-            this.changeFunction(
-              file,
-              codeChange.functionOrPropertyImportDependencyName,
-              codeChange.fullCodeToInsertOrChange as PsTsMorphNewOrUpdatedFunction
-            );
-            break;
-          case "deleteFunction":
-            this.deleteFunction(
-              file,
-              codeChange.functionOrPropertyImportDependencyName
-            );
-            break;
-          case "addProperty":
-            this.addProperty(file, codeChange.fullCodeToInsertOrChange);
-            break;
-          case "changeProperty":
-            this.changeProperty(file, codeChange.fullCodeToInsertOrChange);
-            break;
-          case "deleteProperty":
-            this.deleteProperty(file, codeChange.fullCodeToInsertOrChange);
-            break;
-          case "addFile":
-            this.addFile(
-              codeChange.functionOrPropertyImportDependencyName,
-              codeChange.fullCodeToInsertOrChange
-            );
-            break;
-          case "deleteFile":
-            this.deleteFile(codeChange.functionOrPropertyImportDependencyName);
-            break;
-          case "addImport":
-            this.addImport(
-              file,
-              codeChange.functionOrPropertyImportDependencyName,
-              codeChange.fullCodeToInsertOrChange
-            );
-            break;
-          case "deleteImport":
-            this.deleteImport(
-              file,
-              codeChange.functionOrPropertyImportDependencyName
-            );
-            break;
-          case "changeImport":
-            this.changeImport(
-              file,
-              codeChange.functionOrPropertyImportDependencyName,
-              codeChange.fullCodeToInsertOrChange
-            );
-            break;
-          case "addDependency":
-            this.addDependency(
-              codeChange.functionOrPropertyImportDependencyName
-            );
-            break;
-          case "deleteDependency":
-            this.deleteDependency(
-              codeChange.functionOrPropertyImportDependencyName
-            );
-            break;
-          case "changeDependency":
-            this.changeDependency(
-              codeChange.functionOrPropertyImportDependencyName,
-              codeChange.fullCodeToInsertOrChange
-            );
-            break;
-          default:
-            console.error(`Invalid action: ${codeChange.action}`);
-            break;
-        }
+  sortActionPlan(actionPlan: PsEngineerCodingActionPlanItem[]) {
+    actionPlan.sort((a, b) => {
+      if (a.fileAction === "add" && b.fileAction !== "add") {
+        return -1;
+      } else if (a.fileAction !== "add" && b.fileAction === "add") {
+        return 1;
+      } else if (a.fileAction === "change" && b.fileAction === "change") {
+        return -1;
+      } else if (a.fileAction === "delete" && b.fileAction === "delete") {
+        return 1;
+      } else {
+        return 0;
       }
-      // Make a copy of the current file to the same name but with a .bkc ending and then save the typescript file over the current file
-      const backupFileName = fileName + ".bkc";
-      fs.copyFileSync(fileName, backupFileName);
-      file.saveSync();
-
-      console.log(file.getText());
-    } else {
-      console.error(`File not found: ${fileName}`);
-    }
-  }
-
-  addFunction(
-    file: SourceFile,
-    functionName: string,
-    functionDetails: PsTsMorphNewOrUpdatedFunction
-  ) {
-    const existingFunction = file.getFunction(functionName);
-    if (existingFunction) {
-      existingFunction.set({
-        parameters: functionDetails.parameters,
-        returnType: functionDetails.returnType,
-        statements: functionDetails.statements,
-      });
-    } else {
-      file.addFunction({
-        name: functionDetails.name,
-        parameters: functionDetails.parameters,
-        returnType: functionDetails.returnType,
-        statements: functionDetails.statements,
-      });
-    }
-  }
-
-  deleteFunction(file: SourceFile, functionName: string) {
-    const existingFunction = file.getFunction(functionName);
-    existingFunction?.remove();
-  }
-
-  // Change existing function
-  changeFunction(
-    file: SourceFile,
-    functionName: string,
-    functionDetails: PsTsMorphNewOrUpdatedFunction
-  ) {
-    const existingFunction = file.getFunction(functionName);
-    if (existingFunction) {
-      existingFunction.set({
-        parameters: functionDetails.parameters,
-        returnType: functionDetails.returnType,
-        statements: functionDetails.statements,
-      });
-    }
-  }
-
-  // Add property to a class
-  addProperty(
-    file: SourceFile,
-    propertyDetails: PsTsMorphNewOrUpdatedProperty
-  ) {
-    const classDeclaration = file.getClass(propertyDetails.className);
-    if (classDeclaration) {
-      classDeclaration.addProperty({
-        name: propertyDetails.name,
-        type: propertyDetails.type,
-      });
-    }
-  }
-
-  // Change property in a class
-  changeProperty(
-    file: SourceFile,
-    propertyDetails: PsTsMorphNewOrUpdatedProperty
-  ) {
-    const classDeclaration = file.getClass(propertyDetails.className);
-    if (classDeclaration) {
-      const property = classDeclaration.getProperty(propertyDetails.name);
-      if (property) {
-        property.setType(propertyDetails.type);
-      }
-    }
-  }
-
-  // Delete property from a class
-  deleteProperty(
-    file: SourceFile,
-    propertyInfo: PsTsMorphNewOrUpdatedProperty
-  ) {
-    const classDeclaration = file.getClass(propertyInfo.className);
-    if (classDeclaration) {
-      const property = classDeclaration.getProperty(propertyInfo.name);
-      property?.remove();
-    }
-  }
-
-  // Change import
-  changeImport(
-    file: SourceFile,
-    originalModuleName: string,
-    newModuleName: string
-  ) {
-    const importDecl = file.getImportDeclaration(originalModuleName);
-    if (importDecl) {
-      importDecl.setModuleSpecifier(newModuleName);
-    }
-  }
-
-  // Add dependency
-  addDependency(dependancy: string) {
-    console.log(`NOT IMPLEMENTED: Added dependency: ${dependancy}`);
-  }
-
-  // File operations
-  addFile(filePath: string, content: string) {
-    fs.writeFileSync(filePath, content, { encoding: "utf8" });
-  }
-
-  deleteFile(filePath: string) {
-    fs.unlinkSync(filePath);
-  }
-
-  // Import operations
-  addImport(file: SourceFile, moduleName: string, symbols: string[]) {
-    file.addImportDeclaration({
-      moduleSpecifier: moduleName,
-      namedImports: symbols.map((symbol) => ({ name: symbol })),
     });
   }
 
-  deleteImport(file: SourceFile, moduleName: string) {
-    const importDecl = file.getImportDeclaration(moduleName);
-    importDecl?.remove();
+  async implementCodingActionPlan(
+    actionPlan: PsEngineerCodingActionPlanItem[]
+  ) {
+    this.actionPlan = actionPlan;
+    this.sortActionPlan(this.actionPlan);
+    for (const action of actionPlan) {
+      action.status = "inProgress";
+      console.log(`Implementing action: ${JSON.stringify(action, null, 2)}`);
+      await this.implementAction(action);
+      action.status = "completed";
+    }
   }
 
   deleteDependency(dependencyName: string) {

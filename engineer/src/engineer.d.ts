@@ -80,6 +80,14 @@ interface PsEngineerMemoryData extends PSMemoryData {
   exampleContextItems?: string[];
 }
 
+interface PsEngineerCodingActionPlanItem {
+  fullPathToNewOrUpdatedFile: string;
+  codingTaskTitle: string;
+  codingTaskFullDescription: string;
+  status?: "completed" | "inProgress" | "notStarted" | "error";
+  fileAction: "add" | "change" | "delete";
+}
+
 interface PsTsMorphNewOrUpdatedFunction {
   name: string;
   parameters: { name: string; type: string }[];

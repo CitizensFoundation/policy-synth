@@ -1,10 +1,14 @@
-import { Project } from "ts-morph";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export declare class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     planSystemPrompt(): string;
-    getUserPlanPrompt(fileName: string, reviewLog: string): string;
+    getUserPlanPrompt(reviewLog: string): string;
     reviewSystemPrompt(): string;
-    getUserReviewPrompt(fileName: string, codingPlan: string, reviewLog: string): string;
-    getCodingPlan(fileName: string, otherFilesToKeepInContextContent: string | undefined, documentationFilesInContextContent: string | undefined, tsMorphProject: Project): Promise<string | undefined>;
+    actionPlanReviewSystemPrompt(): string;
+    getUserReviewPrompt(codingPlan: string): string;
+    getUserActionPlanReviewPrompt(actionPlan: PsEngineerCodingActionPlanItem[]): string;
+    getActionPlanSystemPrompt(): string;
+    getUserActionPlanPrompt(codingPlan: string, reviewLog: string): string;
+    getCodingPlan(): Promise<string | undefined>;
+    getActionPlan(): Promise<PsEngineerCodingActionPlanItem[] | undefined>;
 }
 //# sourceMappingURL=planningAgent.d.ts.map

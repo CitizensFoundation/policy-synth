@@ -4,17 +4,17 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 import { PsEngineerProgrammingPlanningAgent } from "./planningAgent.js";
 import { PsEngineerProgrammingImplementationAgent } from "./implementationAgent.js";
 export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
-    async implementChangesToFile(fileName) {
-        console.log(`Implementing changes to ${fileName}`);
-        const planningAgent = new PsEngineerProgrammingPlanningAgent(this.memory);
-        const codingPlan = await planningAgent.getCodingPlan(fileName, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
-        console.log(`Coding plan: ${codingPlan}`);
-        if (codingPlan) {
-            const implementationAgents = new PsEngineerProgrammingImplementationAgent(this.memory);
-            await implementationAgents.implementCodingPlan(fileName, codingPlan, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+    async implementChanges() {
+        console.log(`Implementing changes `);
+        const planningAgent = new PsEngineerProgrammingPlanningAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+        const actionPlan = await planningAgent.getActionPlan();
+        console.log(`Coding plan: ${JSON.stringify(actionPlan, null, 2)}`);
+        if (actionPlan) {
+            const implementationAgents = new PsEngineerProgrammingImplementationAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+            await implementationAgents.implementCodingActionPlan(actionPlan);
         }
         else {
-            console.error(`No coding plan received for ${fileName}`);
+            console.error(`No coding plan received`);
         }
     }
     async implementTask() {
@@ -26,18 +26,11 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
             tsConfigFilePath: path.join(this.memory.workspaceFolder, "tsconfig.json"),
         });
         this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
-        this.otherFilesToKeepInContextContent =
-            this.memory.otherTypescriptFilesToKeepInContext
-                .map((fileName) => this.loadFileContents(fileName))
-                .join("\n");
-        this.documentationFilesInContextContent =
-            this.memory.documentationFilesToKeepInContext
-                .map((fileName) => this.loadFileContents(fileName))
-                .join("\n");
-        for (let fileNameToChange of this.memory.typeScriptFilesLikelyToChange) {
-            await this.implementChangesToFile(fileNameToChange);
-            this.memory.actionLog.push(`Implemented changes to ${fileNameToChange}`);
-        }
+        this.otherFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.otherTypescriptFilesToKeepInContext);
+        this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.typeScriptFilesLikelyToChange);
+        this.documentationFilesInContextContent = this.getFileContentsWithFileName(this.memory.documentationFilesToKeepInContext);
+        await this.implementChanges();
+        this.memory.actionLog.push(`Implemented changes`);
         return;
     }
 }
