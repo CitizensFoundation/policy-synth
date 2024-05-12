@@ -91,7 +91,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         }
         if (!this.havePrintedFirstUserDebugMessage) {
             console.log(`Code user prompt:\n${this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog)}\n\n`);
-            this.havePrintedFirstUserDebugMessage = true;
+            //this.havePrintedFirstUserDebugMessage = true;
         }
         while (!hasPassedReview && retryCount < this.maxRetries) {
             console.log(`Calling LLM... Attempt ${retryCount + 1}`);
@@ -138,9 +138,10 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             fs.writeFileSync(`${fullFileName}.bkc`, currentFileToUpdateContents);
         }
         fs.writeFileSync(fullFileName, newCode);
+        this.updateMemoryWithFileContents(fullFileName, newCode);
         return newCode;
     }
-    async implementCodingActionPlan(actionPlan) {
+    async implementCodingActionPlan(actionPlan, currentErrors = undefined) {
         let currentActions = [];
         let completedActions = actionPlan.filter((action) => action.status === "completed");
         let futureActions = [];

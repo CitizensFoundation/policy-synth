@@ -7,7 +7,7 @@ export declare class PsEngineerProgrammingImplementationAgent extends PsEngineer
     reviewSystemPrompt(): string;
     getUserReviewPrompt(codeToReview: string, fileName: string, currentActions: PsEngineerCodingActionPlanItem[], currentFileToUpdateContents: string | undefined | null, completedActions: PsEngineerCodingActionPlanItem[], futureActions: PsEngineerCodingActionPlanItem[], reviewCount: number, reviewLog: string): string;
     implementFileActions(fileName: string, fileAction: PsEngineerFileActions, completedActions: PsEngineerCodingActionPlanItem[], currentActions: PsEngineerCodingActionPlanItem[], futureActions: PsEngineerCodingActionPlanItem[]): Promise<string>;
-    implementCodingActionPlan(actionPlan: PsEngineerCodingActionPlanItem[]): Promise<void>;
+    implementCodingActionPlan(actionPlan: PsEngineerCodingActionPlanItem[], currentErrors?: string | undefined): Promise<void>;
     deleteDependency(dependencyName: string): void;
     changeDependency(dependencyName: string, version: string): void;
 }

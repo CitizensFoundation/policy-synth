@@ -4,11 +4,24 @@ import path from "path";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 import { PsEngineerProgrammingPlanningAgent } from "./planningAgent.js";
 import { PsEngineerProgrammingImplementationAgent } from "./implementationAgent.js";
+import { PsEngineerProgrammingBuildAgent } from "./buildAgent.js";
 
 export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
   async implementChanges() {
     console.log(`Implementing changes `);
 
+    let retryCount = 0;
+    let hasCompleted = false;
+    let currentErrors: string | undefined = undefined;
+
+    while (!hasCompleted && retryCount < this.maxRetries) {
+      await this.createAndRunActionPlan(currentErrors);
+      const buildAgent = new PsEngineerProgrammingBuildAgent(this.memory);
+      currentErrors = await buildAgent.build();
+    }
+  }
+
+  async createAndRunActionPlan(currentErrors: string | undefined = undefined) {
     const planningAgent = new PsEngineerProgrammingPlanningAgent(
       this.memory,
       this.likelyToChangeFilesContents,
@@ -17,7 +30,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       this.tsMorphProject!
     );
 
-    const actionPlan = await planningAgent.getActionPlan();
+    const actionPlan = await planningAgent.getActionPlan(currentErrors);
 
     console.log(`Coding plan: ${JSON.stringify(actionPlan, null, 2)}`);
 
@@ -33,7 +46,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       // Loop until all actions are completed
       let allCompleted = false;
       while (!allCompleted) {
-        await implementationAgent.implementCodingActionPlan(actionPlan);
+        await implementationAgent.implementCodingActionPlan(actionPlan, currentErrors);
 
         // Check if all actions are completed
         allCompleted = actionPlan.every(action => action.status === "completed");

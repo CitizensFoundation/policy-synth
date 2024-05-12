@@ -119,7 +119,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     `;
   }
 
-  async getCodingPlan() {
+  async getCodingPlan(currentErrors: string | undefined = undefined) {
     let planReady = false;
     let planRetries = 0;
     let reviewLog = "";
@@ -174,13 +174,13 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     return codingPlan;
   }
 
-  async getActionPlan() {
+  async getActionPlan(currentErrors: string | undefined = undefined) {
     let planReady = false;
     let planRetries = 0;
     let reviewLog = "";
     let actionPlan: PsEngineerCodingActionPlanItem[] | undefined;
 
-    const codingPlan = await this.getCodingPlan();
+    const codingPlan = await this.getCodingPlan(currentErrors);
 
     if (codingPlan) {
       while (!planReady && planRetries < this.maxRetries) {

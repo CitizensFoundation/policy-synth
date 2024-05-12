@@ -25,6 +25,23 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
             verbose: false,
         });
     }
+    updateMemoryWithFileContents(fileName, content) {
+        if (!this.memory.currentTask)
+            this.memory.currentTask = { filesCompleted: [] };
+        if (!this.memory.currentTask.filesCompleted)
+            this.memory.currentTask.filesCompleted = [];
+        const existingFileIndex = this.memory.currentTask.filesCompleted.findIndex((f) => f.fileName === fileName);
+        if (existingFileIndex > -1) {
+            this.memory.currentTask.filesCompleted[existingFileIndex].content =
+                content;
+        }
+        else {
+            this.memory.currentTask.filesCompleted.push({
+                fileName,
+                content: content,
+            });
+        }
+    }
     renderDefaultTaskAndContext() {
         const hasContextFromSearch = this.memory.exampleContextItems || this.memory.docsContextItems;
         return `${hasContextFromSearch
@@ -33,38 +50,51 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
                 ? `Potentally relevant code examples from web search:
         ${this.memory.exampleContextItems.map((i) => i)}`
                 : ``}
-        ${this.memory.docsContextItems && this.memory.docsContextItems.length > 0
+        ${this.memory.docsContextItems &&
+                this.memory.docsContextItems.length > 0
                 ? `Potentally relevant documentation from a web search:
         ${this.memory.docsContextItems.map((i) => i)}`
                 : ``}</ContextFromOnlineSearch>`
             : ``}
         <Context>
-            Typescript file that might have to change:
-            ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
+          Typescript file that might have to change:
+          ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
 
-            ${this.documentationFilesInContextContent
+          ${this.documentationFilesInContextContent
             ? `Local documentation:\n${this.documentationFilesInContextContent}`
             : ``}
 
-            All typedefs:
-            ${this.memory.allTypeDefsContents}
+          All typedefs:
+          ${this.memory.allTypeDefsContents}
 
-            <ContentOfFilesThatMightChange>
-              ${this.likelyToChangeFilesContents}
-            </ContentOfFilesThatMightChange>
+          <ContentOfFilesThatMightChange>
+            ${this.likelyToChangeFilesContents}
+          </ContentOfFilesThatMightChange>
 
-          </Context>
+          ${this.memory.currentTask &&
+            this.memory.currentTask.filesCompleted &&
+            this.memory.currentTask.filesCompleted.length > 0
+            ? `
+          <CodeFilesYouHaveAlreadyCompleted>
+            ${this.memory.currentTask.filesCompleted
+                .map((f) => `${f.fileName}:\n${f.content}\n`)
+                .join("\n")}
+          </CodeFilesYouHaveAlreadyCompleted>
+          `
+            : ``}
 
-          <Project>
-            Overall project title:
-            ${this.memory.taskTitle}
+        </Context>
 
-            Overall project description:
-            ${this.memory.taskDescription}
+        <Project>
+          Overall project title:
+          ${this.memory.taskTitle}
 
-            Overall project instructions:
-            ${this.memory.taskInstructions}
-          </Project>
+          Overall project description:
+          ${this.memory.taskDescription}
+
+          Overall project instructions:
+          ${this.memory.taskInstructions}
+        </Project>
 `;
     }
     loadFileContents(fileName) {
@@ -81,8 +111,11 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
         return fileNames
             .map((fileName) => {
             const fileContent = this.loadFileContents(fileName);
-            return `${fileName}\n${fileContent}`;
+            if (fileContent) {
+                return `${fileName}\n${fileContent}`;
+            }
         })
+            .filter(Boolean)
             .join("\n");
     }
 }

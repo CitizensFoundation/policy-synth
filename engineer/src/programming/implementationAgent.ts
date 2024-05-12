@@ -181,7 +181,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
           reviewLog
         )}\n\n`
       );
-      this.havePrintedFirstUserDebugMessage = true;
+      //this.havePrintedFirstUserDebugMessage = true;
     }
 
     while (!hasPassedReview && retryCount < this.maxRetries) {
@@ -277,11 +277,14 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     fs.writeFileSync(fullFileName, newCode);
 
+    this.updateMemoryWithFileContents(fullFileName, newCode);
+
     return newCode as string;
   }
 
   async implementCodingActionPlan(
-    actionPlan: PsEngineerCodingActionPlanItem[]
+    actionPlan: PsEngineerCodingActionPlanItem[],
+    currentErrors: string | undefined = undefined
   ) {
     let currentActions: PsEngineerCodingActionPlanItem[] = [];
     let completedActions: PsEngineerCodingActionPlanItem[] = actionPlan.filter(

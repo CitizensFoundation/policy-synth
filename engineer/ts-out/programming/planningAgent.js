@@ -101,7 +101,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       Your action plan in JSON array:
     `;
     }
-    async getCodingPlan() {
+    async getCodingPlan(currentErrors = undefined) {
         let planReady = false;
         let planRetries = 0;
         let reviewLog = "";
@@ -140,12 +140,12 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         }
         return codingPlan;
     }
-    async getActionPlan() {
+    async getActionPlan(currentErrors = undefined) {
         let planReady = false;
         let planRetries = 0;
         let reviewLog = "";
         let actionPlan;
-        const codingPlan = await this.getCodingPlan();
+        const codingPlan = await this.getCodingPlan(currentErrors);
         if (codingPlan) {
             while (!planReady && planRetries < this.maxRetries) {
                 console.log(`Getting action plan attempt ${planRetries + 1}`);
