@@ -74,7 +74,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     return allFiles;
   }
 
-  searchDtsFilesInNodeModules(): Promise<string[]> {
+  async searchDtsFilesInNodeModules(): Promise<string[]> {
     const dtsFiles: string[] = [];
 
     const readDtsFilesRecursively = async (directory: string) => {

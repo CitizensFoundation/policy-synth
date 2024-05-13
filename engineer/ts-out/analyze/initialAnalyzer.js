@@ -13,7 +13,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             temperature: 0.0,
             maxTokens: 4000,
             modelName: IEngineConstants.engineerModel.name,
-            verbose: true,
+            verbose: false,
         });
     }
     readNpmDependencies() {
@@ -89,6 +89,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             new SystemMessage(this.analyzeSystemPrompt),
             new HumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
         ], true));
+        console.log(`Results: ${JSON.stringify(analyzisResults, null, 2)}`);
         this.memory.existingTypeScriptFilesLikelyToChange =
             analyzisResults.existingTypeScriptFilesLikelyToChange;
         this.memory.existingOtherTypescriptFilesToKeepInContext =

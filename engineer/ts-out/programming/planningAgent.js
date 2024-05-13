@@ -71,7 +71,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user
            9. The fileAction files you have already implemented should now be "change" not "add", as you already added them last time around.`
             : ``}
-    Important: If the plan is good, with no major issues, only there should be "Action plan looks good".
+    Important: If the action plan is good, with no major issues, only output "Action plan looks good", nothing else.
     `;
     }
     getUserActionPlanReviewPrompt(actionPlan) {

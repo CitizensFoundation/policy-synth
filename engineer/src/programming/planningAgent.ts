@@ -89,7 +89,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
            9. The fileAction files you have already implemented should now be "change" not "add", as you already added them last time around.`
         : ``
     }
-    Important: If the plan is good, with no major issues, only output "Action plan looks good", nothing else.
+    Important: If the action plan is good, with no major issues, only output "Action plan looks good", nothing else.
     `;
   }
 

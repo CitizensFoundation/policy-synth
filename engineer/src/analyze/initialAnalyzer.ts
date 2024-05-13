@@ -16,7 +16,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       temperature: 0.0,
       maxTokens: 4000,
       modelName: IEngineConstants.engineerModel.name,
-      verbose: true,
+      verbose: false,
     });
   }
 
@@ -27,7 +27,6 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
     );
     const packageJsonData = fs.readFileSync(packageJsonPath, "utf8");
     const packageJsonObj = JSON.parse(packageJsonData);
-    console.log(packageJsonObj.dependencies);
 
     return packageJsonObj.dependencies;
   }
@@ -103,8 +102,6 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       this.memory.workspaceFolder
     );
 
-    console.log(`-----! ${IEngineConstants.engineerModel}`);
-
     const analyzisResults = (await this.callLLM(
       "engineering-agent",
       IEngineConstants.engineerModel,
@@ -119,6 +116,8 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       ],
       true
     )) as PsEngineerPlanningResults;
+
+    console.log(`Results: ${JSON.stringify(analyzisResults, null, 2)}`)
 
     this.memory.existingTypeScriptFilesLikelyToChange =
       analyzisResults.existingTypeScriptFilesLikelyToChange;
