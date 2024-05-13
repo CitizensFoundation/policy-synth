@@ -173,7 +173,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
             ${this.memory.taskInstructions}
           </OverAllTaskInstructions>:
 
-        </Project>
+        </ProjectInstructions>
 `;
   }
 

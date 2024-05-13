@@ -9,15 +9,15 @@ import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 import fs from "fs";
 export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
     numberOfQueriesToGenerate = 12;
-    percentOfQueriesToSearch = 0.2;
-    percentOfResultsToScan = 0.2;
+    percentOfQueriesToSearch = 0.25;
+    percentOfResultsToScan = 0.3;
     maxTopContentResultsToUse = 5;
-    useDebugCache = false;
+    useDebugCache = true;
     debugCache = [];
     async doWebResearch() {
         if (this.useDebugCache) {
             // Read and JSON.parse the debug cache from ./webPageCache/${this.scanType}.json
-            const cacheFilePath = `./webPageCache/${this.scanType}.json`;
+            const cacheFilePath = `/tmp/${this.scanType}_webResearchCach.json`;
             try {
                 const cacheFileContent = fs.readFileSync(cacheFilePath, {
                     encoding: "utf8",
@@ -68,7 +68,7 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
             const topWebScanResults = webScanResults.slice(0, this.maxTopContentResultsToUse);
             console.log("Top Web Scan Results:", topWebScanResults);
             if (this.useDebugCache) {
-                const cacheFilePath = `./webPageCache/${this.scanType}.json`;
+                const cacheFilePath = `/tmp/${this.scanType}_webResearchCach.json`;
                 try {
                     fs.writeFileSync(cacheFilePath, JSON.stringify(topWebScanResults, null, 2));
                 }

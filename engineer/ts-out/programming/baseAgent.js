@@ -130,7 +130,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
             ${this.memory.taskInstructions}
           </OverAllTaskInstructions>:
 
-        </Project>
+        </ProjectInstructions>
 `;
     }
     renderOriginalFiles() {
