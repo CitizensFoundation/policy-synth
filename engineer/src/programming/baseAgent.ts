@@ -82,6 +82,16 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     const hasContextFromSearch =
       this.memory.exampleContextItems || this.memory.docsContextItems;
 
+    let hasCompletedFiles = false;
+
+    if (
+      this.memory.currentTask &&
+      this.memory.currentTask.filesCompleted &&
+      this.memory.currentTask.filesCompleted.length > 0
+    ) {
+      hasCompletedFiles = true;
+    }
+
     return `${
       hasContextFromSearch
         ? `<ContextFromOnlineSearch>${
@@ -113,18 +123,22 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
           All typedefs:
           ${this.memory.allTypeDefsContents}
 
-          <ContentOfFilesThatMightChange>
+          ${
+            !hasCompletedFiles
+              ? `<ContentOfFilesThatMightChange>
             ${this.likelyToChangeFilesContents}
-          </ContentOfFilesThatMightChange>
+          </ContentOfFilesThatMightChange>`
+              : ``
+          }
 
           ${
-            this.memory.currentTask &&
-            this.memory.currentTask.filesCompleted &&
-            this.memory.currentTask.filesCompleted.length > 0
+            hasCompletedFiles
               ? `
           <CodeFilesYouHaveAlreadyCompleted>
-            ${this.memory.currentTask.filesCompleted
-              .map((f) => `${f.fileName}:\n${f.content}\n`)
+            ${this.memory
+              .currentTask!.filesCompleted!.map(
+                (f) => `${f.fileName}:\n${f.content}\n`
+              )
               .join("\n")}
           </CodeFilesYouHaveAlreadyCompleted>
           `
@@ -160,7 +174,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     </OriginalCodefilesBeforeYourChanges>
     `
         : ``
-    }`
+    }`;
   }
 
   loadFileContents(fileName: string) {

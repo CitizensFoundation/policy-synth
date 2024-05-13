@@ -57,6 +57,12 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
     }
     renderDefaultTaskAndContext() {
         const hasContextFromSearch = this.memory.exampleContextItems || this.memory.docsContextItems;
+        let hasCompletedFiles = false;
+        if (this.memory.currentTask &&
+            this.memory.currentTask.filesCompleted &&
+            this.memory.currentTask.filesCompleted.length > 0) {
+            hasCompletedFiles = true;
+        }
         return `${hasContextFromSearch
             ? `<ContextFromOnlineSearch>${this.memory.exampleContextItems &&
                 this.memory.exampleContextItems.length > 0
@@ -80,17 +86,17 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
           All typedefs:
           ${this.memory.allTypeDefsContents}
 
-          <ContentOfFilesThatMightChange>
+          ${!hasCompletedFiles
+            ? `<ContentOfFilesThatMightChange>
             ${this.likelyToChangeFilesContents}
-          </ContentOfFilesThatMightChange>
+          </ContentOfFilesThatMightChange>`
+            : ``}
 
-          ${this.memory.currentTask &&
-            this.memory.currentTask.filesCompleted &&
-            this.memory.currentTask.filesCompleted.length > 0
+          ${hasCompletedFiles
             ? `
           <CodeFilesYouHaveAlreadyCompleted>
-            ${this.memory.currentTask.filesCompleted
-                .map((f) => `${f.fileName}:\n${f.content}\n`)
+            ${this.memory
+                .currentTask.filesCompleted.map((f) => `${f.fileName}:\n${f.content}\n`)
                 .join("\n")}
           </CodeFilesYouHaveAlreadyCompleted>
           `
