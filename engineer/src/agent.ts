@@ -136,7 +136,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
           const content = this.removeCommentsFromCode(
             this.loadFileContents(filePath) || ""
           );
-          return `\n${path.basename(filePath)}:\n${content}`;
+          return `\n${filePath}:\n${content}`;
         }
         return null;
       })
@@ -158,7 +158,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
           const content = this.removeCommentsFromCode(
             this.loadFileContents(filePath) || ""
           );
-          return `\n${path.basename(filePath)}:\n${content}`;
+          return `\n${filePath}:\n${content}`;
         })
         .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
     } else {
