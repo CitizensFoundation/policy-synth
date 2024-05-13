@@ -16,12 +16,12 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
       6. Make sure to output all functions in the files, do not leave anything out.
       7. Always export all classes as modules, everything is modules.
-      8. Never add any explanations or comments before or after the code.
+      8. Pay special attention to <YourCurrentTask> and for support <OverAllTaskInstructions>
+      9. Never add any explanations or comments before or after the code.
       ${currentErrors
-            ? `9. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
-             10. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
-            : ``}
-`;
+            ? `10. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
+             11. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
+            : ``}`;
     }
     renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog, currentErrors) {
         return `${completedActions && completedActions.length > 0
@@ -33,7 +33,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             : ``}
 
     <YourCurrentTask>:
-    ${JSON.stringify(currentActions, null, 2)}
+      ${JSON.stringify(currentActions, null, 2)}
     </YourCurrentTask>
 
     ${currentFileToUpdateContents
