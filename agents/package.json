@@ -45,6 +45,7 @@
   "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.20.9",
+    "@azure/openai": "^1.0.0-beta.12",
     "@google/generative-ai": "^0.11.1",
     "@langchain/core": "^0.1.62",
     "@langchain/openai": "^0.0.28",
