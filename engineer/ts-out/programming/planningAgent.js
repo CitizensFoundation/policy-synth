@@ -11,8 +11,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     1. Review the provided <Context> and <Task> information.
     2. Consider the overall task title, description, and instructions.
     3. Create a detailed, step-by-step coding plan that specifies the code changes needed to accomplish the task.
-    4. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
-    5. We always create and modify typescript .ts files.
+    4. Do not write any actual code focus on the programming strategy, a high-level plan for the changes needed for each file and each task.
+    5. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
+    6. We always create and modify typescript .ts files.
     ${this.currentErrors
             ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent additions or changes you've made.`
             : ``}
@@ -41,7 +42,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     3. Provide feedback if you find critical issues or approve the plan if it meets the criteria with the words "Coding plan looks good".
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
     5. We always create and modify typescript .ts files.
-    6. The coding plan does not have to include every detail, the goal is to provide a high-level plan for the changes needed for each file and each task.
+    6. There should not be much actual code rather a high-level plan for the changes needed for each file and each task.
+    7. The coding plan does not have to include every detail, the goal is to provide a high-level plan for the changes needed for each file and each task.
     ${this.currentErrors
             ? `7.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes or additions you've made.`
             : ``}
@@ -172,9 +174,6 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             }
         }
         return codingPlan;
-    }
-    removeWorkspacePathFromFileIfNeeded(filePath) {
-        return filePath.replace(this.memory.workspaceFolder, "");
     }
     async getActionPlan(currentErrors = undefined) {
         let planReady = false;

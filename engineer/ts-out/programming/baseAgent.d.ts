@@ -16,6 +16,7 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynth
     getCompletedFileContent(): string[] | undefined;
     setCurrentErrors(errors: string | undefined): void;
     renderCurrentErrorsAndOriginalFiles(): string;
+    removeWorkspacePathFromFileIfNeeded(filePath: string): string;
     renderDefaultTaskAndContext(): string;
     renderProjectDescription(): string;
     renderOriginalFiles(): string;

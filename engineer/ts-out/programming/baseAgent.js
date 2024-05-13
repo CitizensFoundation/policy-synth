@@ -85,6 +85,9 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
             ? `\n<PreviousErrorsYouWereTryingToFix>${this.previousCurrentErrors}</PreviousErrorsYouWereTryingToFix>`
             : ``}`;
     }
+    removeWorkspacePathFromFileIfNeeded(filePath) {
+        return filePath.replace(this.memory.workspaceFolder, "");
+    }
     renderDefaultTaskAndContext() {
         const hasContextFromSearch = this.memory.exampleContextItems || this.memory.docsContextItems;
         let hasCompletedFiles = false;

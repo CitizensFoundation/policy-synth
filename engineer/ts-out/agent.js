@@ -38,6 +38,9 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     removeCommentsFromCode(code) {
         return strip(code);
     }
+    removeWorkspacePathFromFileIfNeeded(filePath) {
+        return filePath.replace(this.memory.workspaceFolder, "");
+    }
     async doWebResearch() {
         const exampleResearcher = new PsEngineerExamplesWebResearchAgent(this.memory);
         const docsResearcher = new PsEngineerDocsWebResearchAgent(this.memory);
@@ -108,7 +111,12 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             .map((filePath) => {
             if (filePath.endsWith(".d.ts")) {
                 const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
-                return `\n${filePath}:\n${content}`;
+                if (content && content.length > 75) {
+                    return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
+                }
+                else {
+                    return null;
+                }
             }
             return null;
         })
@@ -123,8 +131,14 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
                 .map((filePath) => {
                 const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
-                return `\n${filePath}:\n${content}`;
+                if (content && content.length > 75) {
+                    return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
+                }
+                else {
+                    return null;
+                }
             })
+                .filter(Boolean)
                 .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
         }
         else {

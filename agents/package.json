@@ -44,8 +44,8 @@
   ],
   "type": "module",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.9",
     "@google/generative-ai": "^0.11.1",
-    "@langchain/anthropic": "^0.1.17",
     "@langchain/core": "^0.1.62",
     "@langchain/openai": "^0.0.28",
     "aws-sdk": "^2.1608.0",
@@ -69,7 +69,7 @@
     "metascraper-title": "^5.45.0",
     "metascraper-url": "^5.45.0",
     "node-fetch": "^3.3.2",
-    "openai": "^4.20.1",
+    "openai": "^4.46.0",
     "pdf-parse": "^1.1.1",
     "pdf2json": "^3.0.4",
     "pdfjs-dist": "^3.8.162",
