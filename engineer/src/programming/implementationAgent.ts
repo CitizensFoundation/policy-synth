@@ -18,12 +18,13 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
       6. Make sure to output all functions in the files, do not leave anything out.
       7. Always export all classes as modules, everything is modules.
-      8. Pay special attention to <YourCurrentTask> and for support <OverAllTaskInstructions>
-      9. Never add any explanations or comments before or after the code.
+      8. "interfaces" in type d.ts files do not need to be exported or imported, they are global by default.
+      9. Pay special attention to <YourCurrentTask> and for support <OverAllTaskInstructions>
+      10. Never add any explanations or comments before or after the code.
       ${
         currentErrors
-          ? `10. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
-             11. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
+          ? `11. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
+             12. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
           : ``
       }`;
   }
@@ -117,8 +118,9 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     4. Provide feedback only if you find critical issues with the code.
     5. You will see previous reviews, we are in a loop until the code is good.
     6. There should never be any explanations or comments before or after the code.
-    7. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
-    8. If there are no critical issues with the code only output: Code looks good.
+    7. "interfaces" in type d.ts files do not need to be exported or imported, they are global by default.
+    8. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
+    9. If there are no critical issues with the code only output: Code looks good.
     `;
   }
 

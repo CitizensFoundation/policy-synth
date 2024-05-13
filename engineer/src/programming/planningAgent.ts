@@ -18,7 +18,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     3. Create a detailed, step-by-step coding plan that specifies the code changes needed to accomplish the task.
     4. Do not write any actual code focus on the programming strategy, a high-level plan for the changes needed for each file and each task.
     5. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
-    6. We always create and modify typescript .ts files.
+    6. "interfaces" in type d.ts files do not need to be exported or imported, they are global by default.
+    7. We always create and modify typescript .ts files.
     ${
       this.currentErrors
         ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent additions or changes you've made.`
