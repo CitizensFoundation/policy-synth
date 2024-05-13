@@ -15,7 +15,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
     this.chat = new ChatOpenAI({
       temperature: 0.0,
       maxTokens: 4000,
-      modelName: IEngineConstants.engineerModel.name,
+      modelName: "gpt-4o",
       verbose: false,
     });
   }
@@ -78,6 +78,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
   }
 
   async analyzeAndSetup() {
+    this.logger.info(`Analyzing and setting up task`)
     const allNpmPackageDependencies = this.readNpmDependencies();
     const getAllDocumentationFiles = (folderPath: string): string[] => {
       const files: string[] = [];

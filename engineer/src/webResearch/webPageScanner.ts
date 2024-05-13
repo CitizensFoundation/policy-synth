@@ -211,7 +211,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.chat = new ChatOpenAI({
       temperature: 0.0,
       maxTokens: 4096,
-      modelName: IEngineConstants.engineerModel.name,
+      modelName: "gpt-4o",
       verbose: true,
     });
 

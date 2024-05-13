@@ -3,6 +3,7 @@ import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
+    filesAdded = [];
     planSystemPrompt() {
         return `You are an expert software engineering analyzer.
 
@@ -41,10 +42,10 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
     5. We always create and modify typescript .ts files.
     6. The coding plan does not have to include every detail, the goal is to provide a high-level plan for the changes needed for each file and each task.
-    7. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     ${this.currentErrors
-            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes or additions you've made.`
+            ? `7.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes or additions you've made.`
             : ``}
+    Important: If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     `;
     }
     getUserReviewPrompt(codingPlan) {
@@ -91,7 +92,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     1. Review the provided <Context> and <Task> information.
     2. Review the coding plan and create a detailed coding action plan in JSON for implementing the changes.
     3. We always create and modify typescript .ts files no .js files in the plan.
-    4. For new files you are adding output "add" in the fileAction field.
+    4. For new files you are adding or have created, output "add" in the fileAction field.
     5. For files you are changing output "change" in the fileAction JSON field.
     6. If you are deleting a file output "delete" in the fileAction JSON field.
     7. Put a full detailed description from the coding plan in the codingTaskFullDescription field.
@@ -209,6 +210,21 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             }
             actionPlan?.forEach((action) => {
                 action.status = "notStarted";
+            });
+            // Go through actoinplan and add all actions with "add" to filesAdded
+            actionPlan?.forEach((action) => {
+                if (action.fileAction === "add") {
+                    this.filesAdded.push(action.fullPathToNewOrUpdatedFile);
+                }
+            });
+            // Go through the action plan and look at all actions with "change", if those are in the filesAdded change them back to "add"
+            actionPlan?.forEach((action) => {
+                if (action.fileAction === "change") {
+                    if (this.filesAdded.includes(action.fullPathToNewOrUpdatedFile)) {
+                        action.fileAction = "add";
+                        console.log(`Changing action back to add: ${action.fullPathToNewOrUpdatedFile}`);
+                    }
+                }
             });
             return actionPlan;
         }

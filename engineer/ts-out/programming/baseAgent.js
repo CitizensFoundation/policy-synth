@@ -1,5 +1,4 @@
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 import fs from "fs";
 export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
@@ -22,8 +21,8 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
         this.memory = memory;
         this.chat = new ChatOpenAI({
             temperature: 0.0,
-            maxTokens: 4000,
-            modelName: IEngineConstants.engineerModel.name,
+            maxTokens: 4096,
+            modelName: "gpt-4o",
             verbose: false,
         });
     }

@@ -1,6 +1,7 @@
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export declare class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt: boolean;
+    filesAdded: string[];
     planSystemPrompt(): string;
     getUserPlanPrompt(reviewLog: string): string;
     reviewSystemPrompt(): string;

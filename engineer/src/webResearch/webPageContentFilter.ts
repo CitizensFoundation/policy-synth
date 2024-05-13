@@ -14,7 +14,7 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
     this.chat = new ChatOpenAI({
       temperature: 0.0,
       maxTokens: 3,
-      modelName: IEngineConstants.engineerModel.name,
+      modelName: "gpt-4o",
       verbose: true,
     });
   }

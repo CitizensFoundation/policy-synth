@@ -47,7 +47,7 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
     this.chat = new ChatOpenAI({
       temperature: IEngineConstants.createSearchQueriesModel.temperature,
       maxTokens: IEngineConstants.createSearchQueriesModel.maxOutputTokens,
-      modelName: IEngineConstants.createSearchQueriesModel.name,
+      modelName: "gpt-4o",
       verbose: IEngineConstants.createSearchQueriesModel.verbose,
     });
   }

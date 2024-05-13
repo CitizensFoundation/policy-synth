@@ -35,8 +35,8 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     this.memory = memory;
     this.chat = new ChatOpenAI({
       temperature: 0.0,
-      maxTokens: 4000,
-      modelName: IEngineConstants.engineerModel.name,
+      maxTokens: 4096,
+      modelName: "gpt-4o",
       verbose: false,
     });
   }

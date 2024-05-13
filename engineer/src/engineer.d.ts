@@ -82,6 +82,7 @@ interface PsEngineerMemoryData extends PSMemoryData {
   }
   solutionsToErrorsSearchResults?: string;
   allTypescriptSrcFiles?: string[];
+  currentFilesBeingAdded?: string[];
   existingTypeScriptFilesLikelyToChange: string[];
   existingOtherTypescriptFilesToKeepInContext: string[];
   documentationFilesToKeepInContext: string[];
