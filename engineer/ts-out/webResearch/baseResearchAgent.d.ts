@@ -7,7 +7,7 @@ export declare abstract class PsEngineerBaseWebResearchAgent extends PolicySynth
     useDebugCache: boolean;
     debugCache: string[] | undefined;
     abstract searchInstructions: string;
-    abstract scanType: "documentation" | "codeExamples";
+    abstract scanType: PsEngineerWebResearchTypes;
     doWebResearch(): Promise<any[] | undefined>;
 }
 //# sourceMappingURL=baseResearchAgent.d.ts.map

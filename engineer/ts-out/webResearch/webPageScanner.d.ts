@@ -3,7 +3,7 @@ import { Page } from "puppeteer";
 import { GetWebPagesProcessor } from "@policysynth/agents/solutions/web/getWebPages.js";
 export declare class WebPageScanner extends GetWebPagesProcessor {
     memory: PsEngineerMemoryData;
-    scanType?: "documentation" | "codeExamples";
+    scanType?: PsEngineerWebResearchTypes;
     instructions: string;
     collectedWebPages: any[];
     constructor(memory: PsEngineerMemoryData, instructions: string);
@@ -19,6 +19,6 @@ export declare class WebPageScanner extends GetWebPagesProcessor {
     getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined): string;
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
     getAndProcessPage(subProblemIndex: number | undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined): Promise<boolean>;
-    scan(listOfUrls: string[], scanType: "documentation" | "codeExamples"): Promise<any[]>;
+    scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes): Promise<any[]>;
 }
 //# sourceMappingURL=webPageScanner.d.ts.map

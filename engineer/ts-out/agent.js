@@ -59,31 +59,41 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         }
         return allFiles;
     }
-    async searchDtsFilesInNodeModules() {
+    searchDtsFilesInNodeModules() {
         const dtsFiles = [];
-        if (this.memory.likelyRelevantNpmPackageDependencies &&
-            this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
-            for (const packageName of this.memory
-                .likelyRelevantNpmPackageDependencies) {
-                const packagePath = path.join(this.memory.workspaceFolder, "node_modules", packageName);
-                try {
-                    const files = fs.readdirSync(packagePath, { withFileTypes: true });
-                    for (const file of files) {
-                        if (file.isFile() && file.name.endsWith(".d.ts")) {
-                            const filePath = path.join(packagePath, file.name);
-                            dtsFiles.push(filePath);
-                        }
+        const readDtsFilesRecursively = async (directory) => {
+            try {
+                const entries = fs.readdirSync(directory, { withFileTypes: true });
+                for (const entry of entries) {
+                    const fullPath = path.join(directory, entry.name);
+                    if (entry.isDirectory()) {
+                        // Recursively read nested directories
+                        await readDtsFilesRecursively(fullPath);
+                    }
+                    else if (entry.isFile() && entry.name.endsWith(".d.ts")) {
+                        // Add file to list if it's a .d.ts file
+                        dtsFiles.push(fullPath);
                     }
                 }
-                catch (error) {
-                    console.error(`Error reading directory ${packagePath}: ${error}`);
+            }
+            catch (error) {
+                console.error(`Error reading directory ${directory}: ${error}`);
+            }
+        };
+        const searchPackages = async () => {
+            if (this.memory.likelyRelevantNpmPackageDependencies &&
+                this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
+                for (const packageName of this.memory
+                    .likelyRelevantNpmPackageDependencies) {
+                    const packagePath = path.join(this.memory.workspaceFolder, "node_modules", packageName);
+                    await readDtsFilesRecursively(packagePath);
                 }
             }
-        }
-        else {
-            this.logger.warn("No npm packages to search .d.ts files");
-        }
-        return dtsFiles;
+            else {
+                this.logger.warn("No npm packages to search .d.ts files");
+            }
+        };
+        return searchPackages().then(() => dtsFiles);
     }
     async run() {
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
@@ -110,6 +120,11 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
                 return `${path.basename(filePath)}:\n${content}`;
             })
                 .join("\n")}\n</AllNodeModuleTypescriptDefs>`;
+            this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
+        }
+        else {
+            this.logger.warn("No .d.ts files found in node_modules");
+            process.exit(1);
         }
         if (this.memory.needsDocumentionsAndExamples === true) {
             await this.doWebResearch();
