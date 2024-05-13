@@ -27,7 +27,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       3. For the cloudeOpus use the @langchain/anthropic npm
       4. For the googleGemini use the @google/generative-ai npm
       5. For the new src/models/openAi.ts use langchain/openai as we do currently
-      6. Then in the baseAgent.ts refactor it so it uses the models from the src/models class
+      6. Then in the baseAgent.ts refactor it so it uses the models from the src/models class but keep using the this.chat property in baseAgent so it will work for all the sub classes already using this.
       7. In callLLM add an optional option for setting the model type to one of those three, then use that. But make sure to default to openAi so we don't need to change any code that uses callLLM`,
       stages: PSEngineerAgent.emptyDefaultStages,
       docsSiteToScan: [
