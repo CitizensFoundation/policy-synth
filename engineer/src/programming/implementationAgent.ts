@@ -16,10 +16,11 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       3. Use the provided coding plan to implement the changes.
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
-      6. Make sure to output all functions and classes in the file, do not leave anything out.
+      6. Make sure to output all functions in the files, do not leave anything out.
       ${
         currentErrors
-          ? `7. You have already build the project and now you need to fix errors provided by the user.`
+          ? `7. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
+             8. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
           : ``
       }
 `;
