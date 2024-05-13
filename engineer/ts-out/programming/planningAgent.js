@@ -13,7 +13,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     4. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
     5. We always create and modify typescript .ts files.
     ${this.currentErrors
-            ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes you've made.`
+            ? `6. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent additions or changes you've made.`
             : ``}
     `;
     }
@@ -43,7 +43,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     6. The coding plan does not have to include every detail, the goal is to provide a high-level plan for the changes needed for each file and each task.
     7. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     ${this.currentErrors
-            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes you've made.`
+            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes or additions you've made.`
             : ``}
     `;
     }
@@ -66,12 +66,11 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     2. Assess its feasibility, correctness, and completeness.
     3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Action plan looks good".
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
-    5. For new files you are adding output "add" in the fileAction field.
+    5. For new files you are adding or have created, output "add" in the fileAction field.
     6. For files you are changing there should be "change" in the fileAction JSON field.
     7. If you are deleting a file there should be "delete" in the fileAction JSON field.
     ${this.currentErrors
-            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user
-           9. The fileAction files you have already implemented should now be "change" not "add", as you already added them last time around.`
+            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user.`
             : ``}
     Important: If the action plan is good, with no major issues, only output "Action plan looks good", nothing else.
     `;
