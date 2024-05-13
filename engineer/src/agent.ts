@@ -25,8 +25,9 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       3. For the cloudeOpus use the @langchain/anthropic npm
       4. For the googleGemini use the @google/generative-ai npm
       5. For the new src/models/openAi.ts use the @langchain/openai npm
-      6. The baseChatModel and the child classes should implement invoke((HumanMessage|SystemMessge)[]) and getNumTokensFromMessages methods, just like the ChatOpenAI class
-      7. Do nothing else for now, just create those files and classes
+      6. Both @langchain packages also use @langchain/core so that is important also
+      7. The baseChatModel and the child classes should implement invoke((HumanMessage|SystemMessge)[]) and getNumTokensFromMessages methods, just like the ChatOpenAI class
+      8. Do nothing else for now, just create those files and classes
       `,
       stages: PSEngineerAgent.emptyDefaultStages,
       docsSiteToScan: [
