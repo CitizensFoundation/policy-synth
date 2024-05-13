@@ -12,7 +12,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   numberOfQueriesToGenerate = 12;
   percentOfQueriesToSearch = 0.2;
   percentOfResultsToScan = 0.2;
-  maxTopContentResultsToUse = 4;
+  maxTopContentResultsToUse = 5;
 
   useDebugCache = true;
   debugCache: string[] = [];
@@ -25,7 +25,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
       // Read and JSON.parse the debug cache from ./webPageCache/${this.scanType}.json
       const cacheFilePath = `./webPageCache/${this.scanType}.json`;
       try {
-        const cacheFileContent = await fs.readFileSync(cacheFilePath, {
+        const cacheFileContent = fs.readFileSync(cacheFilePath, {
           encoding: "utf8",
         });
         this.debugCache = JSON.parse(cacheFileContent);

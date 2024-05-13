@@ -15,19 +15,20 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
       6. Make sure to output all functions in the files, do not leave anything out.
+      7. Never add any explanations or comments before or after the code.
       ${currentErrors
-            ? `7. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
-             8. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
+            ? `8. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
+             9. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
             : ``}
 `;
     }
     renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog, currentErrors) {
         return `${completedActions && completedActions.length > 0
-            ? `<AlreadyCompletedTasks>${JSON.stringify(completedActions, null, 2)}</AlreadyCompletedTasks>`
+            ? `<AlreadyCompletedTasks>\n${JSON.stringify(completedActions, null, 2)}</AlreadyCompletedTasks>`
             : ``}
 
     ${futureActions && futureActions.length > 0
-            ? `<FutureTasksNotImplementedByYou>${JSON.stringify(futureActions, null, 2)}</FutureTasksNotImplementedByYou>`
+            ? `<FutureTasksNotImplementedByYou>\n${JSON.stringify(futureActions, null, 2)}</FutureTasksNotImplementedByYou>`
             : ``}
 
     <YourCurrentTask>:
@@ -64,8 +65,9 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     3. Never ask for documentation, we generate those with GPT-4 seperatly for everything that changes or is new.
     4. Provide feedback only if you find critical issues with the code.
     5. You will see previous reviews, we are in a loop until the code is good.
-    6. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
-    7. If there are no critical issues with the code only output: Code looks good.
+    6. There should never be any explanations or comments before or after the code.
+    7. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
+    8. If there are no critical issues with the code only output: Code looks good.
     `;
     }
     getUserReviewPrompt(codeToReview, fileName, currentActions, currentFileToUpdateContents, completedActions, futureActions, reviewCount, reviewLog, currentErrors) {
