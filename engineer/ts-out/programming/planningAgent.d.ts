@@ -11,6 +11,7 @@ export declare class PsEngineerProgrammingPlanningAgent extends PsEngineerBasePr
     getActionPlanSystemPrompt(): string;
     getUserActionPlanPrompt(codingPlan: string, reviewLog: string): string;
     private getCodingPlan;
+    removeWorkspacePathFromFileIfNeeded(filePath: string): string;
     getActionPlan(currentErrors?: string | undefined): Promise<PsEngineerCodingActionPlanItem[] | undefined>;
 }
 //# sourceMappingURL=planningAgent.d.ts.map

@@ -34,7 +34,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       6. Always output the full path into all the JSON string arrays.
       7. Only add files that already exist in existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields
       8. Never add new planned files to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields.
-      9. If the task is likely to need documentation or examples from online sources, set needsDocumentionsAndExamples to true - this will trigger an automated Google search for the task.
+      9. Important: If the programming task is likely to benefit documentation or examples from online sources, set needsDocumentionsAndExamples to true.
 
       JSON Output Schema:
       {

@@ -173,6 +173,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         }
         return codingPlan;
     }
+    removeWorkspacePathFromFileIfNeeded(filePath) {
+        return filePath.replace(this.memory.workspaceFolder, "");
+    }
     async getActionPlan(currentErrors = undefined) {
         let planReady = false;
         let planRetries = 0;
@@ -214,13 +217,13 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             // Go through actoinplan and add all actions with "add" to filesAdded
             actionPlan?.forEach((action) => {
                 if (action.fileAction === "add") {
-                    this.filesAdded.push(action.fullPathToNewOrUpdatedFile);
+                    this.filesAdded.push(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile));
                 }
             });
             // Go through the action plan and look at all actions with "change", if those are in the filesAdded change them back to "add"
             actionPlan?.forEach((action) => {
                 if (action.fileAction === "change") {
-                    if (this.filesAdded.includes(action.fullPathToNewOrUpdatedFile)) {
+                    if (this.filesAdded.includes(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile))) {
                         action.fileAction = "add";
                         console.log(`Changing action back to add: ${action.fullPathToNewOrUpdatedFile}`);
                     }
