@@ -28,8 +28,8 @@ This agent flow automates and scales GovLabs' crowdsourcing approach to channel 
 
 ![Policy Synth v 49](https://github.com/CitizensFoundation/policy-synth/assets/43699/e7cc413c-3c0b-4a1e-adc9-2bf4b85bbca2)
 
-### Engineer
-Policy Synth Engineer is an automated programming tool designed for Typescript projects, utilizing large language models to streamline coding tasks such as feature development, bug fixes, and refactoring. It automates extensive web research for coding assistance and is optimized for Typescript due to its syntactical structure and popularity, significantly speeding up programming tasks compared to traditional methods.
+### Policy Synth Engineer
+Policy Synth Engineer is an automated programming tool designed for Typescript projects, utilizing multi scale AI agents to streamline coding tasks such as feature development, bug fixes, and refactoring. It automates extensive web research for coding assistance and is optimized for Typescript due to its syntactical structure and popularity, significantly speeding up programming tasks compared to traditional methods.
 
 ![PS - Engineer-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/29f01ea9-6809-4f8f-be94-f7e0a9cf0425)
 
