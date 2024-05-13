@@ -5,7 +5,7 @@ import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebRe
 import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import fs from "fs";
 import path from "path";
-import { Project } from "ts-morph";
+import strip from "strip-comments";
 export class PSEngineerAgent extends PolicySynthAgentBase {
     memory;
     constructor() {
@@ -34,6 +34,9 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             ],
         };
     }
+    removeCommentsFromCode(code) {
+        return strip(code);
+    }
     async doWebResearch() {
         const exampleResearcher = new PsEngineerExamplesWebResearchAgent(this.memory);
         const docsResearcher = new PsEngineerDocsWebResearchAgent(this.memory);
@@ -60,25 +63,6 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             }
         }
         return allFiles;
-    }
-    removeCommentsFromCode(tsContent) {
-        // Initialize the project
-        const project = new Project({
-            useInMemoryFileSystem: true // Important for not needing to read/write files to disk
-        });
-        // Create a source file in memory
-        const sourceFile = project.createSourceFile('tempFile.ts', tsContent);
-        // Remove the comments
-        sourceFile.getDescendants().forEach(node => {
-            if (node.getKindName() === 'SingleLineCommentTrivia' || node.getKindName() === 'MultiLineCommentTrivia') {
-                node.replaceWithText('');
-            }
-        });
-        // Get the modified content
-        const modifiedContent = sourceFile.getFullText();
-        // Optionally, remove the temporary file from the project if not needed
-        project.removeSourceFile(sourceFile);
-        return modifiedContent;
     }
     async searchDtsFilesInNodeModules() {
         const dtsFiles = [];
