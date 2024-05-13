@@ -25,10 +25,14 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
       // Read and JSON.parse the debug cache from ./webPageCache/${this.scanType}.json
       const cacheFilePath = `/tmp/${this.scanType}_webResearchCach.json`;
       try {
-        const cacheFileContent = fs.readFileSync(cacheFilePath, {
-          encoding: "utf8",
-        });
-        this.debugCache = JSON.parse(cacheFileContent);
+        if (fs.existsSync(cacheFilePath)) {
+          const cacheFileContent = fs.readFileSync(cacheFilePath, {
+        encoding: "utf8",
+          });
+          this.debugCache = JSON.parse(cacheFileContent);
+        } else {
+          console.log("Cache file does not exist");
+        }
       } catch (err) {
         console.error(`Error reading cache file: ${err}`);
       }
