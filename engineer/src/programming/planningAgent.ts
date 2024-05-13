@@ -8,7 +8,6 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedDebugPrompt = false;
-  filesAdded: string[] = [];
 
   planSystemPrompt() {
     return `You are an expert software engineering analyzer.
@@ -276,7 +275,11 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       // Go through actoinplan and add all actions with "add" to filesAdded
       actionPlan?.forEach((action) => {
         if (action.fileAction === "add") {
-          this.filesAdded.push(
+          if (!this.memory.currentFilesBeingAdded) {
+            this.memory.currentFilesBeingAdded = [];
+          }
+
+          this.memory.currentFilesBeingAdded.push(
             this.removeWorkspacePathFromFileIfNeeded(
               action.fullPathToNewOrUpdatedFile
             )
@@ -288,7 +291,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       actionPlan?.forEach((action) => {
         if (action.fileAction === "change") {
           if (
-            this.filesAdded.includes(
+            this.memory.currentFilesBeingAdded?.includes(
               this.removeWorkspacePathFromFileIfNeeded(
                 action.fullPathToNewOrUpdatedFile
               )

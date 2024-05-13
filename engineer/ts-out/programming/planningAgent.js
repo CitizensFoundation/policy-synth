@@ -3,7 +3,6 @@ import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
-    filesAdded = [];
     planSystemPrompt() {
         return `You are an expert software engineering analyzer.
 
@@ -216,13 +215,16 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             // Go through actoinplan and add all actions with "add" to filesAdded
             actionPlan?.forEach((action) => {
                 if (action.fileAction === "add") {
-                    this.filesAdded.push(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile));
+                    if (!this.memory.currentFilesBeingAdded) {
+                        this.memory.currentFilesBeingAdded = [];
+                    }
+                    this.memory.currentFilesBeingAdded.push(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile));
                 }
             });
             // Go through the action plan and look at all actions with "change", if those are in the filesAdded change them back to "add"
             actionPlan?.forEach((action) => {
                 if (action.fileAction === "change") {
-                    if (this.filesAdded.includes(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile))) {
+                    if (this.memory.currentFilesBeingAdded?.includes(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile))) {
                         action.fileAction = "add";
                         console.log(`Changing action back to add: ${action.fullPathToNewOrUpdatedFile}`);
                     }
