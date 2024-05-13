@@ -28,18 +28,19 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
 
       Instructions:
       1. Review the task name, description and instructions.
-      2. You will see a list of all typescript files, output ones likely to change to typeScriptFilesLikelyToChange and otherTypescriptFilesToKeepInContext for files likely to be relevant.
+      2. You will see a list of all existing typescript files, output ones likely to change to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext for files likely to be relevant.
       3. You will see a list of all npm module dependencies, you should output likely to be relevant to likelyRelevantNpmPackageDependencies.
       4. You will see a list of all possible documentation files, you should output likely to be relevant to documentationFilesToKeepInContext.
-      5. Always include all typedef d.ts files in the otherTypescriptFilesToKeepInContext at the end.
+      5. Always include all typedef d.ts files in the existingOtherTypescriptFilesToKeepInContext JSON field.
       6. Always output the full path into all the JSON string arrays.
-      7. Only add files that already exist in typeScriptFilesLikelyToChange not new files that are planned.
-      8. If the task is likely to need documentation or examples from online sources, set needsDocumentionsAndExamples to true - this will trigger an automated Google search for the task.
+      7. Only add files that already exist in existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields
+      8. Never add new planned files to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields.
+      9. If the task is likely to need documentation or examples from online sources, set needsDocumentionsAndExamples to true - this will trigger an automated Google search for the task.
 
       JSON Output Schema:
       {
-        typeScriptFilesLikelyToChange: string[];
-        otherTypescriptFilesToKeepInContext: string[];
+        existingTypeScriptFilesLikelyToChange: string[];
+        existingOtherTypescriptFilesToKeepInContext: string[];
         documentationFilesToKeepInContext: string[];
         likelyRelevantNpmPackageDependencies: string[];
         needsDocumentionsAndExamples: boolean;
@@ -57,7 +58,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
     All documentation files in workspace:
     ${allDocumentationFiles.join("\n")}
 
-    All typescript files in workspace:
+    All already existing typescript files in workspace:
     ${this.memory.allTypescriptSrcFiles?.join("\n")}
 
     Your JSON Output:
@@ -88,10 +89,10 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             new SystemMessage(this.analyzeSystemPrompt),
             new HumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
         ], true));
-        this.memory.typeScriptFilesLikelyToChange =
-            analyzisResults.typeScriptFilesLikelyToChange;
-        this.memory.otherTypescriptFilesToKeepInContext =
-            analyzisResults.otherTypescriptFilesToKeepInContext;
+        this.memory.existingTypeScriptFilesLikelyToChange =
+            analyzisResults.existingTypeScriptFilesLikelyToChange;
+        this.memory.existingOtherTypescriptFilesToKeepInContext =
+            analyzisResults.existingOtherTypescriptFilesToKeepInContext;
         this.memory.likelyRelevantNpmPackageDependencies =
             analyzisResults.likelyRelevantNpmPackageDependencies;
         this.memory.needsDocumentionsAndExamples =

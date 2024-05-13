@@ -1,7 +1,4 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerInitialAnalyzer } from "./analyze/initialAnalyzer.js";
 import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
 import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
@@ -22,14 +19,16 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "Integrate LLM Abstractions for Claude Opus and Google Gemini into Base Agent Class",
       taskDescription:
         "Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure. The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.",
-      taskInstructions: `1. Create a new base chat class policy synth model in src/models/baseModel.ts
+      taskInstructions: `1. Create a new base chat class policy synth model in src/models/baseModel.ts that has the same API as ChatOpenAI
       2. Then create src/models/openAi.ts, src/models/claudeOpus.ts and src/models/googleGemini.ts
       3. For the cloudeOpus use the @langchain/anthropic npm
       4. For the googleGemini use the @google/generative-ai npm
       5. For the new src/models/openAi.ts use langchain/openai as we do currently
-      6. Then in the baseAgent.ts refactor it so it uses the models from the src/models class but keep using the this.chat property in baseAgent so it will work for all the sub classes already using this.
-      7. All the old agents use this.chat for ChatOpenAI so this.chat needs to work for both that and BaseModel and have same API
-      8. In callLLM add an optional option for setting the model type to one of those three, then use that. But make sure to default to openAi so we don't need to change any code that uses callLLM`,
+      6. Then in the baseAgent.ts refactor:
+      6.1. Make the "chat" property be chat: chat: BaseModel | ChatOpenAI | undefined
+      6.2. In callLLM add an optional option for setting the model type to one of the current three model options but default to openai.
+      6.3. Do not make any changes to baseAgent.ts that would break the current functionality of child classes.
+      `,
       stages: PSEngineerAgent.emptyDefaultStages,
       docsSiteToScan: [
         "https://ai.google.dev/gemini-api/docs/get-started/node",

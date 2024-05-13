@@ -56,7 +56,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
         ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
 
         All likely typescript files in workspace likely to change:
-        ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
+        ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
 
         Important instructions: ${this.instructions}
 

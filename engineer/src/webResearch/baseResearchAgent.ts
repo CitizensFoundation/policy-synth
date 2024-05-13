@@ -14,7 +14,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   percentOfResultsToScan = 0.2;
   maxTopContentResultsToUse = 5;
 
-  useDebugCache = true;
+  useDebugCache = false;
   debugCache: string[] = [];
 
   abstract searchInstructions: string;

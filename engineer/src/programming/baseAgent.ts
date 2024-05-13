@@ -13,6 +13,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
   currentFileContents: string | undefined | null;
   likelyToChangeFilesContents: string | undefined | null;
   maxRetries = 72;
+  currentErrors: string | undefined | null;
 
   tsMorphProject: Project | undefined;
 
@@ -78,6 +79,24 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     }
   }
 
+  getCompletedFileContent() {
+    if (!this.currentErrors) {
+      this.memory
+        .currentTask!.filesCompleted!.map(
+          (f) => `${f.fileName}:\n${f.content}\n`
+        )
+        .join("\n");
+    } else {
+      // Write out the files with line numbers
+      return this.memory.currentTask!.filesCompleted!.map((f) => {
+        const lines = f.content.split("\n");
+        return `${f.fileName}:\n${lines
+          .map((line, index) => `${index + 1}: ${line}`)
+          .join("\n")}\n`;
+      });
+    }
+  }
+
   renderDefaultTaskAndContext() {
     const hasContextFromSearch =
       this.memory.exampleContextItems || this.memory.docsContextItems;
@@ -112,7 +131,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     }
         <Context>
           Typescript file that might have to change:
-          ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
+          ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
 
           ${
             this.documentationFilesInContextContent
@@ -135,11 +154,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
             hasCompletedFiles
               ? `
           <CodeFilesYouHaveAlreadyCompleted>
-            ${this.memory
-              .currentTask!.filesCompleted!.map(
-                (f) => `${f.fileName}:\n${f.content}\n`
-              )
-              .join("\n")}
+            ${this.getCompletedFileContent()}
           </CodeFilesYouHaveAlreadyCompleted>
           `
               : ``

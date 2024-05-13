@@ -20,12 +20,14 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       4. For the googleGemini use the @google/generative-ai npm
       5. For the new src/models/openAi.ts use langchain/openai as we do currently
       6. Then in the baseAgent.ts refactor it so it uses the models from the src/models class but keep using the this.chat property in baseAgent so it will work for all the sub classes already using this.
-      7. In callLLM add an optional option for setting the model type to one of those three, then use that. But make sure to default to openAi so we don't need to change any code that uses callLLM`,
+      7. All the old agents use this.chat for ChatOpenAI so this.chat needs to work for both that and BaseModel and have same API
+      8. In callLLM add an optional option for setting the model type to one of those three, then use that. But make sure to default to openAi so we don't need to change any code that uses callLLM`,
             stages: PSEngineerAgent.emptyDefaultStages,
             docsSiteToScan: [
                 "https://ai.google.dev/gemini-api/docs/get-started/node",
                 "https://www.npmjs.com/package/@google/generative-ai",
                 "https://www.npmjs.com/package/@langchain/anthropic",
+                "https://js.langchain.com/docs/integrations/chat/openai",
                 "https://js.langchain.com/docs/modules/model_io/chat/quick_start"
             ],
         };

@@ -38,7 +38,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         }
     }
     async implementTask() {
-        if (!this.memory.typeScriptFilesLikelyToChange) {
+        if (!this.memory.existingTypeScriptFilesLikelyToChange) {
             console.error("No files to change");
             return;
         }
@@ -46,8 +46,8 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
             tsConfigFilePath: path.join(this.memory.workspaceFolder, "tsconfig.json"),
         });
         this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
-        this.otherFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.otherTypescriptFilesToKeepInContext);
-        this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.typeScriptFilesLikelyToChange);
+        this.otherFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.existingOtherTypescriptFilesToKeepInContext);
+        this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.existingTypeScriptFilesLikelyToChange);
         this.documentationFilesInContextContent = this.getFileContentsWithFileName(this.memory.documentationFilesToKeepInContext);
         await this.implementChanges();
         this.memory.actionLog.push(`Implemented changes`);

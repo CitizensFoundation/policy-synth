@@ -9,6 +9,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
     currentFileContents;
     likelyToChangeFilesContents;
     maxRetries = 72;
+    currentErrors;
     tsMorphProject;
     constructor(memory, likelyToChangeFilesContents = undefined, otherFilesToKeepInContextContent = undefined, documentationFilesInContextContent = undefined, tsMorphProject = undefined) {
         super(memory);
@@ -55,6 +56,22 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
             });
         }
     }
+    getCompletedFileContent() {
+        if (!this.currentErrors) {
+            this.memory
+                .currentTask.filesCompleted.map((f) => `${f.fileName}:\n${f.content}\n`)
+                .join("\n");
+        }
+        else {
+            // Write out the files with line numbers
+            return this.memory.currentTask.filesCompleted.map((f) => {
+                const lines = f.content.split("\n");
+                return `${f.fileName}:\n${lines
+                    .map((line, index) => `${index + 1}: ${line}`)
+                    .join("\n")}\n`;
+            });
+        }
+    }
     renderDefaultTaskAndContext() {
         const hasContextFromSearch = this.memory.exampleContextItems || this.memory.docsContextItems;
         let hasCompletedFiles = false;
@@ -77,7 +94,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
             : ``}
         <Context>
           Typescript file that might have to change:
-          ${this.memory.typeScriptFilesLikelyToChange.join("\n")}
+          ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
 
           ${this.documentationFilesInContextContent
             ? `Local documentation:\n${this.documentationFilesInContextContent}`
@@ -95,9 +112,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
           ${hasCompletedFiles
             ? `
           <CodeFilesYouHaveAlreadyCompleted>
-            ${this.memory
-                .currentTask.filesCompleted.map((f) => `${f.fileName}:\n${f.content}\n`)
-                .join("\n")}
+            ${this.getCompletedFileContent()}
           </CodeFilesYouHaveAlreadyCompleted>
           `
             : ``}

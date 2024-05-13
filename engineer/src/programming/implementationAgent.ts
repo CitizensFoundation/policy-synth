@@ -310,6 +310,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     actionPlan: PsEngineerCodingActionPlanItem[],
     currentErrors: string | undefined
   ) {
+    this.currentErrors = currentErrors;
     let currentActions: PsEngineerCodingActionPlanItem[] = [];
     let completedActions: PsEngineerCodingActionPlanItem[] = actionPlan.filter(
       (action) => action.status === "completed"

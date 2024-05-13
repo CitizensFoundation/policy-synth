@@ -11,15 +11,15 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
     numberOfQueriesToGenerate = 12;
     percentOfQueriesToSearch = 0.2;
     percentOfResultsToScan = 0.2;
-    maxTopContentResultsToUse = 4;
-    useDebugCache = true;
+    maxTopContentResultsToUse = 5;
+    useDebugCache = false;
     debugCache = [];
     async doWebResearch() {
         if (this.useDebugCache) {
             // Read and JSON.parse the debug cache from ./webPageCache/${this.scanType}.json
             const cacheFilePath = `./webPageCache/${this.scanType}.json`;
             try {
-                const cacheFileContent = await fs.readFileSync(cacheFilePath, {
+                const cacheFileContent = fs.readFileSync(cacheFilePath, {
                     encoding: "utf8",
                 });
                 this.debugCache = JSON.parse(cacheFileContent);

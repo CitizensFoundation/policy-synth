@@ -171,6 +171,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         let planRetries = 0;
         let reviewLog = "";
         let actionPlan;
+        this.currentErrors = currentErrors;
         const codingPlan = await this.getCodingPlan(currentErrors);
         if (codingPlan) {
             while (!planReady && planRetries < this.maxRetries) {
