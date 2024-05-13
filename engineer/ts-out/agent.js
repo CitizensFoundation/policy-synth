@@ -16,16 +16,10 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         this.memory = {
             actionLog: [],
             workspaceFolder: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
-            taskTitle: "Create LLM Abstractions for OpenAI, Claude Opus and Google Gemini with a common base class",
-            taskDescription: `Create LLM classes for OpenAI, Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.`,
-            taskInstructions: `1. Create a new base chat class src/models/baseChatModel.ts in a new file.
-      2. Then create src/models/openAiChat.ts, src/models/claudeOpusChat.ts and src/models/googleGeminiChat.ts for chat only
-      3. For the cloudeOpus use the @anthropic-ai/sdk npm
-      4. For the googleGemini use the @google/generative-ai npm
-      5. For the openAi use the openai npm
-      6. The baseChatModel and the child classes should only implement those two methods:
-         generate([{role:string,message:string}], streaming: boolean | undefined, streamingCallback: Function | undefined)
-         getNumTokensFromMessages([{role:string,message:string}])
+            taskTitle: "Refactor LLM model classes with a new typedef",
+            taskDescription: `We want to create a new typedef called PsModelChatItem to replace {role:string,message:string}`,
+            taskInstructions: `1. Add new interface PsModelChatItem {role:string,message:string} to src/streamingLlms.d.ts
+      2. Replace {role:string,message:string} with PsModelChatItem in src/models/baseChatModel.ts and src/models/openAiChat.ts, src/models/claudeOpusChat.ts and src/models/googleGeminiChat.ts
       `,
             stages: PSEngineerAgent.emptyDefaultStages,
             docsSiteToScan: [
