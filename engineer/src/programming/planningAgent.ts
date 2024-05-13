@@ -31,7 +31,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
     ${
       currentErrors
-        ? `<CurrentErrorsToFixInYourPlan>${currentErrors}</CurrentErrorsToFixInYourPlan>`
+        ? `${this.renderOriginalFiles()}\n<CurrentErrorsToFixInYourPlan>${currentErrors}</CurrentErrorsToFixInYourPlan>`
         : ``
     }
 
@@ -69,7 +69,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
     ${
       currentErrors
-        ? `<CurrentErrorsToFixInYourPlan>${currentErrors}</CurrentErrorsToFixInYourPlan>`
+        ? `${this.renderOriginalFiles()}\n<CurrentErrorsToFixInYourPlan>${currentErrors}</CurrentErrorsToFixInYourPlan>`
         : ``
     }
 
@@ -150,7 +150,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     while (!planReady && planRetries < this.maxRetries) {
       console.log(`Getting coding plan attempt ${planRetries + 1}`);
       if (!this.havePrintedDebugPrompt) {
-        console.log(`PLANNING PROMPT: ${this.getUserPlanPrompt(reviewLog, currentErrors)}`);
+        console.log(
+          `PLANNING PROMPT: ${this.getUserPlanPrompt(reviewLog, currentErrors)}`
+        );
         this.havePrintedDebugPrompt = true;
       }
       codingPlan = await this.callLLM(
@@ -171,7 +173,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             IEngineConstants.engineerModel,
             [
               new SystemMessage(this.reviewSystemPrompt(currentErrors)),
-              new HumanMessage(this.getUserReviewPrompt(codingPlan, currentErrors)),
+              new HumanMessage(
+                this.getUserReviewPrompt(codingPlan, currentErrors)
+              ),
             ],
             false
           );

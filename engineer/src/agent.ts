@@ -34,6 +34,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "https://ai.google.dev/gemini-api/docs/get-started/node",
         "https://www.npmjs.com/package/@google/generative-ai",
         "https://www.npmjs.com/package/@langchain/anthropic",
+        "https://js.langchain.com/docs/modules/model_io/chat/quick_start"
       ],
     } as unknown as PsEngineerMemoryData;
   }

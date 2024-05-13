@@ -64,6 +64,11 @@ interface PsEngineerExampleResearch {
   whyIsThisRelevant: string;
 }
 
+interface PsEngineerFileData {
+  fileName: string;
+  content: string;
+}
+
 interface PsEngineerMemoryData extends PSMemoryData {
   workspaceFolder: string;
   taskDescription: string;
@@ -72,10 +77,8 @@ interface PsEngineerMemoryData extends PSMemoryData {
   actionLog: string[];
   docsSiteToScan?: string[];
   currentTask?: {
-    filesCompleted?: {
-      fileName: string;
-      content: string;
-    }[]
+    filesCompleted?: PsEngineerFileData[];
+    originalFiles?: PsEngineerFileData[];
   }
   allTypescriptSrcFiles?: string[];
   typeScriptFilesLikelyToChange: string[];

@@ -42,7 +42,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             : ``}
 
     ${currentErrors
-            ? `<ErrorsOnYourLastAttemptAtCreatingCode>${currentErrors}</ErrorsOnYourLastAttemptAtCreatingCode>`
+            ? `${this.renderOriginalFiles()}\n<ErrorsOnYourLastAttemptAtCreatingCode>${currentErrors}</ErrorsOnYourLastAttemptAtCreatingCode>`
             : ``}
 
     ${reviewLog
@@ -97,6 +97,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
                 console.error(`Error loading file ${fileName}`);
                 throw new Error(`Error loading file ${fileName}`);
             }
+            this.setOriginalFileIfNeeded(fileName, currentFileToUpdateContents);
         }
         if (!this.havePrintedFirstUserDebugMessage) {
             this.havePrintedFirstUserDebugMessage = true;

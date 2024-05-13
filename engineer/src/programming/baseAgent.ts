@@ -60,6 +60,24 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     }
   }
 
+  setOriginalFileIfNeeded(fileName: string, content: string) {
+    if (!this.memory.currentTask)
+      this.memory.currentTask = { filesCompleted: [] };
+
+    if (!this.memory.currentTask.originalFiles)
+      this.memory.currentTask.originalFiles = [];
+
+    const existingFileIndex = this.memory.currentTask.originalFiles.findIndex(
+      (f) => f.fileName === fileName
+    );
+    if (existingFileIndex === -1) {
+      this.memory.currentTask.originalFiles.push({
+        fileName,
+        content: content,
+      });
+    }
+  }
+
   renderDefaultTaskAndContext() {
     const hasContextFromSearch =
       this.memory.exampleContextItems || this.memory.docsContextItems;
@@ -126,6 +144,23 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
           ${this.memory.taskInstructions}
         </Project>
 `;
+  }
+
+  renderOriginalFiles() {
+    return `
+    ${
+      this.memory.currentTask &&
+      this.memory.currentTask.originalFiles &&
+      this.memory.currentTask.originalFiles.length > 0
+        ? `
+    <OriginalCodefilesBeforeYourChanges>
+      ${this.memory.currentTask.originalFiles
+        .map((f) => `${f.fileName}:\n${f.content}\n`)
+        .join("\n")}
+    </OriginalCodefilesBeforeYourChanges>
+    `
+        : ``
+    }`
   }
 
   loadFileContents(fileName: string) {
