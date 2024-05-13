@@ -115,6 +115,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     4. For new files you are adding output "add" in the fileAction field.
     5. For files you are changing output "change" in the fileAction JSON field.
     6. If you are deleting a file output "delete" in the fileAction JSON field.
+    7. Put a full detailed description from the coding plan in the codingTaskFullDescription field.
 
     Expected JSON Array Output:
     [

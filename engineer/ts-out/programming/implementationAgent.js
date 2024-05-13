@@ -144,9 +144,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         if (!fs.existsSync(directory)) {
             fs.mkdirSync(directory, { recursive: true });
         }
-        if (fileAction === "change" && currentFileToUpdateContents) {
-            fs.writeFileSync(`${fullFileName}.bkc`, currentFileToUpdateContents);
-        }
         fs.writeFileSync(fullFileName, newCode);
         this.updateMemoryWithFileContents(fullFileName, newCode);
         return newCode;

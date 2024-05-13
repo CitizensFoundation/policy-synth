@@ -25,7 +25,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       4. For the googleGemini use the @google/generative-ai npm
       5. For the new src/models/openAi.ts use langchain/openai as we do currently
       6. Then in the baseAgent.ts refactor:
-      6.1. Make the "chat" property be chat: chat: BaseModel | ChatOpenAI | undefined
+      6.1. Make the "chat" property be chat: BaseModel | ChatOpenAI | undefined
       6.2. In callLLM add an optional option for setting the model type to one of the current three model options but default to openai.
       6.3. Do not make any changes to baseAgent.ts that would break the current functionality of child classes.
       `,
