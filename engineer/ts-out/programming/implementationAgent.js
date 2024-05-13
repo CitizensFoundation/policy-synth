@@ -23,7 +23,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
              11. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
             : ``}`;
     }
-    renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog, currentErrors) {
+    renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog) {
         return `${completedActions && completedActions.length > 0
             ? `<AlreadyCompletedTasks>\n${JSON.stringify(completedActions, null, 2)}</AlreadyCompletedTasks>`
             : ``}
@@ -47,10 +47,10 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             : ``}
     `;
     }
-    codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, reviewCount, reviewLog, currentErrors) {
+    codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, reviewCount, reviewLog) {
         return `${this.renderDefaultTaskAndContext()}
 
-    ${this.renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog, currentErrors)}
+    ${this.renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog)}
 
     Output the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in full in typescript:
     `;
@@ -69,11 +69,11 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     8. If there are no critical issues with the code only output: Code looks good.
     `;
     }
-    getUserReviewPrompt(codeToReview, fileName, currentActions, currentFileToUpdateContents, completedActions, futureActions, reviewCount, reviewLog, currentErrors) {
+    getUserReviewPrompt(codeToReview, fileName, currentActions, currentFileToUpdateContents, completedActions, futureActions, reviewCount, reviewLog) {
         return `${this.renderDefaultTaskAndContext()}
 
-      ${this.renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, "", // Leave review empty to avoid infinite loop
-        currentErrors)}
+      ${this.renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, "" // Leave review empty to avoid infinite loop
+        )}
 
       <CodeForYourReview>
         ${codeToReview}
@@ -100,18 +100,18 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         if (!this.havePrintedFirstUserDebugMessage) {
             this.havePrintedFirstUserDebugMessage = true;
         }
-        console.log(`\n\n\n\n\n\n\n\n\n===============X============> Code user prompt:\n${this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog, currentErrors)}\n\n\n\n\n\n\n\n`);
+        console.log(`\n\n\n\n\n\n\n\n\n===============X============> Code user prompt:\n${this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog)}\n\n\n\n\n\n\n\n`);
         while (!hasPassedReview && retryCount < this.maxRetries) {
             console.log(`Calling LLM... Attempt ${retryCount + 1}`);
             newCode = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
                 new SystemMessage(this.codingSystemPrompt(currentErrors)),
-                new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog, currentErrors)),
+                new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog)),
             ], false);
             if (newCode) {
                 console.log(`Coding received: ${newCode}`);
                 const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
                     new SystemMessage(this.reviewSystemPrompt()),
-                    new HumanMessage(this.getUserReviewPrompt(newCode, fileName, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog, currentErrors)),
+                    new HumanMessage(this.getUserReviewPrompt(newCode, fileName, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog)),
                 ], false);
                 console.log(`\n\nCode review received: ${review}\n\n`);
                 if (review && review.indexOf("Code looks good") > -1) {

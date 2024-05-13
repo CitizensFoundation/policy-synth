@@ -133,19 +133,22 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
 
         </Context>
 
-        <ProjectInstructions>
-          Overall project title:
-          ${this.memory.taskTitle}
-
-          Overall project description:
-          ${this.memory.taskDescription}
-
-          <OverAllTaskInstructions>:
-            ${this.memory.taskInstructions}
-          </OverAllTaskInstructions>:
-
-        </ProjectInstructions>
+        ${this.renderProjectDescription()}
 `;
+    }
+    renderProjectDescription() {
+        return `<ProjectInstructions>
+      Overall project title:
+      ${this.memory.taskTitle}
+
+      Overall project description:
+      ${this.memory.taskDescription}
+
+      <OverAllTaskInstructions>:
+        ${this.memory.taskInstructions}
+      </OverAllTaskInstructions>:
+
+    </ProjectInstructions>`;
     }
     renderOriginalFiles() {
         return `
