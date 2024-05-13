@@ -12,6 +12,7 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynth
     tsMorphProject: Project | undefined;
     constructor(memory: PsEngineerMemoryData, likelyToChangeFilesContents?: string | null | undefined, otherFilesToKeepInContextContent?: string | null | undefined, documentationFilesInContextContent?: string | null | undefined, tsMorphProject?: Project | undefined);
     updateMemoryWithFileContents(fileName: string, content: string): void;
+    renderCodingRules(): string;
     setOriginalFileIfNeeded(fileName: string, content: string): void;
     getCompletedFileContent(): string[] | undefined;
     setCurrentErrors(errors: string | undefined): void;

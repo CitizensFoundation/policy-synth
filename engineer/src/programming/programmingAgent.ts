@@ -24,6 +24,9 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       if (currentErrors && retryCount >= retriesUntilWebResearch) {
         await this.searchForSolutionsToErrors(currentErrors);
       }
+      if (!currentErrors) {
+        hasCompleted = true;
+      }
     }
   }
 

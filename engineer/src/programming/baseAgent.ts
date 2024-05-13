@@ -62,6 +62,14 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     }
   }
 
+  renderCodingRules() {
+    return `<ImportantCodingRulesForYourCodeGeneration>
+      Always export all classes at the front of the file like "export class" or "export abstract class", never at the bottom of the file.
+      Never generate import statements typescript type declarations files the *.d.ts files are global by default.
+      Never generate export statements for interfaces in typescript declaration files (*.d.ts files).
+    </ImportantCodingRulesForYourCodeGeneration>`;
+  }
+
   setOriginalFileIfNeeded(fileName: string, content: string) {
     if (!this.memory.currentTask)
       this.memory.currentTask = { filesCompleted: [] };

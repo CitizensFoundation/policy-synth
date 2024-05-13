@@ -10,23 +10,27 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
   codingSystemPrompt(currentErrors: string | undefined) {
     return `Your are an expert software engineering programmer.
 
-      Instructions:
+      <GeneralInstructions>
       1. Look at the the task name, description and general instructions.
       2. Review the documentation, examples, code and typedefs.
       3. Use the provided coding plan to implement the changes.
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
-      6. Make sure to output all functions in the files, do not leave anything out.
-      7. Always export all classes as modules, everything is modules.
-      8. "interfaces" in type d.ts files do not need to be exported or imported, they are global by default.
-      9. Pay special attention to <YourCurrentTask> and for support <OverAllTaskInstructions>
-      10. Never add any explanations or comments before or after the code.
+      7. Never add any explanations or comments before or after the code.
       ${
         currentErrors
           ? `11. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
              12. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
           : ``
-      }`;
+      }</GeneralInstructions>
+
+      ${this.renderCodingRules()}
+
+      <SpecialAttention>
+        Pay special attention to <YourCurrentTask> and for support <OverAllTaskInstructions> in your coding efforts
+      </SpecialAttention>
+
+`;
   }
 
   renderTaskContext(
@@ -102,6 +106,8 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       reviewLog
     )}
 
+    ${this.renderCodingRules()}
+
     Output the ${fileAction == "change" ? "changed" : "new"} file ${
       fileAction == "change" ? "again " : ""
     }in full in typescript:
@@ -114,13 +120,15 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     Instructions:
     1. Review the proposed code for the given task.
     2. Assess its feasibility, correctness, and completeness.
-    3. Never ask for documentation, we generate those with GPT-4 seperatly for everything that changes or is new.
+    3. Never ask for documentation, we generate those with GPT-4 seperatly for everything that changes.
     4. Provide feedback only if you find critical issues with the code.
     5. You will see previous reviews, we are in a loop until the code is good.
     6. There should never be any explanations or comments before or after the code.
-    7. "interfaces" in type d.ts files do not need to be exported or imported, they are global by default.
-    8. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
-    9. If there are no critical issues with the code only output: Code looks good.
+    7. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
+
+    ${this.renderCodingRules()}
+
+    If there are no critical issues with the code only output: Code looks good.
     `;
   }
 
