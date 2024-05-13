@@ -18,7 +18,7 @@ const readFileAsync = promisify(readFile);
 
 export class WebPageScanner extends GetWebPagesProcessor {
   declare memory: PsEngineerMemoryData;
-  scanType?: "documentation" | "codeExamples";
+  scanType?: PsEngineerWebResearchTypes;
   instructions: string;
 
   collectedWebPages: any[] = [];
@@ -54,6 +54,16 @@ export class WebPageScanner extends GetWebPagesProcessor {
           1. Examine the <TextContext> and output all source code examples that are highly relvant to the task provided by the user.
           2. Just copy highly relevant source code examples from the <TextContext> word by word do not add anything except formating.
           3. If no relevant, to the user provided task, source code examples are found, output: No relevant source code examples found.
+          4. Output in Markdown format otherwise.`
+      )
+    } else if (this.scanType=="solutionsForErrors") {
+      systemMessage = new SystemMessage(
+          `Your are an expert in extracing solutions to errors from web pages for a given task and npm modules:
+
+          Important Instructions:
+          1. Examine the <TextContext> and <UserErrors> output all potential solutions to the users errors highly relvant to the task provided by the user.
+          2. Just copy potential solutions to the users errors from the <TextContext> word by word do not add anything except formating.
+          3. If no relevant, to the user provided task, source code examples are found, output: No solutions to errors found.
           4. Output in Markdown format otherwise.`
       )
     } else {
@@ -193,7 +203,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
   async scan(
     listOfUrls: string[],
-    scanType: "documentation" | "codeExamples"
+    scanType: PsEngineerWebResearchTypes
   ) {
 
     this.scanType = scanType;

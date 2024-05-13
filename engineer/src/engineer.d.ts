@@ -101,6 +101,8 @@ interface PsEngineerCodingActionPlanItem {
   fileAction: PsEngineerFileActions;
 }
 
+type PsEngineerWebResearchTypes = "documentation" | "codeExamples" | "solutionsForErrors";
+
 interface PsTsMorphNewOrUpdatedFunction {
   name: string;
   parameters: { name: string; type: string }[];

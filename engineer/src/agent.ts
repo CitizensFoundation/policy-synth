@@ -74,7 +74,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     return allFiles;
   }
 
-  async searchDtsFilesInNodeModules(): Promise<string[]> {
+  searchDtsFilesInNodeModules() {
     const dtsFiles: string[] = [];
 
     if (
@@ -133,7 +133,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
     await analyzeAgent.analyzeAndSetup();
 
-    const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+    const nodeModuleTypeDefs = this.searchDtsFilesInNodeModules();
 
     if (nodeModuleTypeDefs.length > 0) {
       this.memory.allTypeDefsContents += `<AllNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
@@ -142,6 +142,11 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
           return `${path.basename(filePath)}:\n${content}`;
         })
         .join("\n")}\n</AllNodeModuleTypescriptDefs>`;
+
+      this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
+    } else {
+      this.logger.warn("No .d.ts files found in node_modules");
+      process.exit(1);
     }
 
     if (this.memory.needsDocumentionsAndExamples === true) {
