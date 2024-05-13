@@ -15,8 +15,8 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             taskTitle: "Create LLM Abstractions for OpenAI, Claude Opus and Google Gemini with a common base class",
             taskDescription: `Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure.
         The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.`,
-            taskInstructions: `1. Create a new base chat class src/models/baseModel.ts that has the same API as ChatOpenAI, this is a new file.
-      2. Then create src/models/openAi.ts, src/models/claudeOpus.ts and src/models/googleGemini.ts
+            taskInstructions: `1. Create a new base chat class src/models/baseChatModel.ts that has the same API as ChatOpenAI, this is a new file.
+      2. Then create src/models/openAi.ts, src/models/claudeOpus.ts and src/models/googleGemini.ts for chat only
       3. For the cloudeOpus use the @langchain/anthropic npm
       4. For the googleGemini use the @google/generative-ai npm
       5. For the new src/models/openAi.ts use langchain/openai as we do currently

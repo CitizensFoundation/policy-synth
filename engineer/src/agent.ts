@@ -19,12 +19,12 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "Create LLM Abstractions for OpenAI, Claude Opus and Google Gemini with a common base class",
       taskDescription: `Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure.
         The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.`,
-      taskInstructions: `1. Create a new base chat class src/models/baseModel.ts that has the same API as ChatOpenAI, this is a new file.
-      2. Then create src/models/openAi.ts, src/models/claudeOpus.ts and src/models/googleGemini.ts
+      taskInstructions: `1. Create a new base chat class src/models/baseChatModel.ts that has the same API as ChatOpenAI, this is a new file.
+      2. Then create src/models/openAiChat.ts, src/models/claudeOpusChat.ts and src/models/googleGeminiChat.ts for chat only
       3. For the cloudeOpus use the @langchain/anthropic npm
       4. For the googleGemini use the @google/generative-ai npm
-      5. For the new src/models/openAi.ts use langchain/openai as we do currently
-      6. Do nothing else for now, just create the files and classes with the same API as ChatOpenAI API
+      5. For the new src/models/openAi.ts use the @langchain/openai npm
+      6. Do nothing else for now, just create those files and classes
       `,
       stages: PSEngineerAgent.emptyDefaultStages,
       docsSiteToScan: [
@@ -144,12 +144,12 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
 
     if (nodeModuleTypeDefs.length > 0) {
-      this.memory.allTypeDefsContents += `<AllNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
+      this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
         .map((filePath) => {
           const content = this.loadFileContents(filePath);
           return `${path.basename(filePath)}:\n${content}`;
         })
-        .join("\n")}\n</AllNodeModuleTypescriptDefs>`;
+        .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
 
       this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
     } else {
