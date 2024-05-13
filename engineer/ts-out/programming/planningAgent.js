@@ -68,7 +68,10 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     2. Assess its feasibility, correctness, and completeness.
     3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Action plan looks good".
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
-    5. If the plan is good only output "Action plan looks good".
+    5. For new files you are adding output "add" in the fileAction field.
+    6. For files you are changing there should be "change" in the fileAction JSON field.
+    7. If you are deleting a file there should be "delete" in the fileAction JSON field.
+    8. If the plan is good only there should be "Action plan looks good".
     `;
     }
     getUserActionPlanReviewPrompt(actionPlan) {
@@ -87,7 +90,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     1. Review the provided <Context> and <Task> information.
     2. Review the coding plan and create a detailed coding action plan in JSON for implementing the changes.
     3. We always create and modify typescript .ts files no .js files in the plan.
-    4. If you are adding a new file always output "add" in the fileAction field if you are changing an existing file output "change" and if you are deleting a file output "delete" in the fileAction JSON field.
+    4. For new files you are adding output "add" in the fileAction field.
+    5. For files you are changing output "change" in the fileAction JSON field.
+    6. If you are deleting a file output "delete" in the fileAction JSON field.
 
     Expected JSON Array Output:
     [

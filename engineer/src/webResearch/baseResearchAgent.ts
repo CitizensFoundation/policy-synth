@@ -6,6 +6,7 @@ import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
 import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
 import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
+import fs from "fs";
 
 export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
   numberOfQueriesToGenerate = 12;
@@ -13,10 +14,30 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   percentOfResultsToScan = 0.2;
   maxTopContentResultsToUse = 4;
 
+  useDebugCache = true;
+  debugCache: string[] = [];
+
   abstract searchInstructions: string;
   abstract scanType: "documentation" | "codeExamples";
 
   async doWebResearch() {
+    if (this.useDebugCache) {
+      // Read and JSON.parse the debug cache from ./webPageCache/${this.scanType}.json
+      const cacheFilePath = `./webPageCache/${this.scanType}.json`;
+      try {
+        const cacheFileContent = await fs.readFileSync(cacheFilePath, {
+          encoding: "utf8",
+        });
+        this.debugCache = JSON.parse(cacheFileContent);
+      } catch (err) {
+        console.error(`Error reading cache file: ${err}`);
+      }
+
+      if (this.debugCache) {
+        return this.debugCache;
+      }
+    }
+
     try {
       console.log(`In web research: ${this.searchInstructions}`);
 
@@ -110,6 +131,14 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
 
       const topWebScanResults = webScanResults.slice(0, this.maxTopContentResultsToUse);
       console.log("Top Web Scan Results:", topWebScanResults);
+      if (this.useDebugCache) {
+        const cacheFilePath = `./webPageCache/${this.scanType}.json`;
+        try {
+          fs.writeFileSync(cacheFilePath, JSON.stringify(topWebScanResults, null, 2));
+        } catch (err) {
+          console.error(`Error writing cache file: ${err}`);
+        }
+      }
 
       return topWebScanResults;
     } catch (err) {
