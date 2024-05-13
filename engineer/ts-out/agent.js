@@ -5,6 +5,7 @@ import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebRe
 import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import fs from "fs";
 import path from "path";
+import { Project } from "ts-morph";
 export class PSEngineerAgent extends PolicySynthAgentBase {
     memory;
     constructor() {
@@ -60,32 +61,24 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         }
         return allFiles;
     }
-    removeCommentsFromCode(content) {
-        // Remove all block comments /* ... */ but avoid those within strings
-        const noBlockComments = content.replace(/\/\*[\s\S]*?\*\//g, (match, offset, string) => {
-            let isInString = false;
-            for (let i = 0; i < offset; i++) {
-                if (string[i] === '"' || string[i] === "'") {
-                    if (i === 0 || string[i - 1] !== "\\") {
-                        isInString = !isInString;
-                    }
-                }
-            }
-            return isInString ? match : "";
+    removeCommentsFromCode(tsContent) {
+        // Initialize the project
+        const project = new Project({
+            useInMemoryFileSystem: true // Important for not needing to read/write files to disk
         });
-        // Remove all line comments //, but avoid those within strings
-        const noLineComments = noBlockComments.replace(/\/\/.*/g, (match, offset, string) => {
-            let isInString = false;
-            for (let i = 0; i < offset; i++) {
-                if (string[i] === '"' || string[i] === "'") {
-                    if (i === 0 || string[i - 1] !== "\\") {
-                        isInString = !isInString;
-                    }
-                }
+        // Create a source file in memory
+        const sourceFile = project.createSourceFile('tempFile.ts', tsContent);
+        // Remove the comments
+        sourceFile.getDescendants().forEach(node => {
+            if (node.getKindName() === 'SingleLineCommentTrivia' || node.getKindName() === 'MultiLineCommentTrivia') {
+                node.replaceWithText('');
             }
-            return isInString ? match : "";
         });
-        return noLineComments;
+        // Get the modified content
+        const modifiedContent = sourceFile.getFullText();
+        // Optionally, remove the temporary file from the project if not needed
+        project.removeSourceFile(sourceFile);
+        return modifiedContent;
     }
     async searchDtsFilesInNodeModules() {
         const dtsFiles = [];
@@ -129,7 +122,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
             .map((filePath) => {
             if (filePath.endsWith(".d.ts")) {
-                const content = this.loadFileContents(filePath);
+                const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
                 return `${path.basename(filePath)}:\n${content}`;
             }
             return null;
@@ -144,17 +137,16 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         if (nodeModuleTypeDefs.length > 0) {
             this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
                 .map((filePath) => {
-                const content = this.loadFileContents(filePath);
+                const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
                 return `${path.basename(filePath)}:\n${content}`;
             })
                 .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
-            this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
         }
         else {
             this.logger.warn("No .d.ts files found in node_modules");
             process.exit(1);
         }
-        this.memory.allTypeDefsContents = this.removeCommentsFromCode(this.memory.allTypeDefsContents);
+        this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
         if (this.memory.needsDocumentionsAndExamples === true) {
             await this.doWebResearch();
         }
