@@ -37,6 +37,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         : ``
     }
 
+    Let's think step by step.
+
     Your coding plan:
     `;
   }
@@ -142,6 +144,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
       Coding plan to use for your Coding Action Plan:
       ${codingPlan}
+
+      Let's think step by step.
 
       Your action plan in JSON array:
     `;

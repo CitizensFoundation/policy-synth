@@ -20,7 +20,6 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
         const packageJsonPath = path.join(this.memory.workspaceFolder, "package.json");
         const packageJsonData = fs.readFileSync(packageJsonPath, "utf8");
         const packageJsonObj = JSON.parse(packageJsonData);
-        console.log(packageJsonObj.dependencies);
         return packageJsonObj.dependencies;
     }
     get analyzeSystemPrompt() {
@@ -84,7 +83,6 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             return files;
         };
         const allDocumentationFiles = getAllDocumentationFiles(this.memory.workspaceFolder);
-        console.log(`-----! ${IEngineConstants.engineerModel}`);
         const analyzisResults = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
             new SystemMessage(this.analyzeSystemPrompt),
             new HumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),

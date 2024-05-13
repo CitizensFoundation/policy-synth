@@ -24,7 +24,8 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       3. For the cloudeOpus use the @langchain/anthropic npm
       4. For the googleGemini use the @google/generative-ai npm
       5. For the new src/models/openAi.ts use the @langchain/openai npm
-      6. Do nothing else for now, just create those files and classes
+      6. The baseChatModel and the child classes should implement invoke((HumanMessage|SystemMessge)[]) and getNumTokensFromMessages methods, just like the ChatOpenAI class
+      7. Do nothing else for now, just create those files and classes
       `,
       stages: PSEngineerAgent.emptyDefaultStages,
       docsSiteToScan: [
@@ -72,6 +73,42 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     }
 
     return allFiles;
+  }
+
+  removeCommentsFromCode(content: string) {
+    // Remove all block comments /* ... */ but avoid those within strings
+    const noBlockComments = content.replace(
+      /\/\*[\s\S]*?\*\//g,
+      (match, offset, string) => {
+        let isInString = false;
+        for (let i = 0; i < offset; i++) {
+          if (string[i] === '"' || string[i] === "'") {
+            if (i === 0 || string[i - 1] !== "\\") {
+              isInString = !isInString;
+            }
+          }
+        }
+        return isInString ? match : "";
+      }
+    );
+
+    // Remove all line comments //, but avoid those within strings
+    const noLineComments = noBlockComments.replace(
+      /\/\/.*/g,
+      (match, offset, string) => {
+        let isInString = false;
+        for (let i = 0; i < offset; i++) {
+          if (string[i] === '"' || string[i] === "'") {
+            if (i === 0 || string[i - 1] !== "\\") {
+              isInString = !isInString;
+            }
+          }
+        }
+        return isInString ? match : "";
+      }
+    );
+
+    return noLineComments;
   }
 
   async searchDtsFilesInNodeModules(): Promise<string[]> {
@@ -151,11 +188,16 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         })
         .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
 
-      this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
     } else {
       this.logger.warn("No .d.ts files found in node_modules");
       process.exit(1);
     }
+
+    this.memory.allTypeDefsContents = this.removeCommentsFromCode(
+      this.memory.allTypeDefsContents
+    );
+
+    this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
 
     if (this.memory.needsDocumentionsAndExamples === true) {
       await this.doWebResearch();
