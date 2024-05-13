@@ -5,20 +5,30 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 import { PsEngineerProgrammingPlanningAgent } from "./planningAgent.js";
 import { PsEngineerProgrammingImplementationAgent } from "./implementationAgent.js";
 import { PsEngineerProgrammingBuildAgent } from "./buildAgent.js";
+import { PsEngineerErrorWebResearchAgent } from "../webResearch/errorsWebResearch.js";
 
 export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
   async implementChanges() {
     console.log(`Implementing changes `);
 
     let retryCount = 0;
+    const retriesUntilWebResearch = 3;
     let hasCompleted = false;
     let currentErrors: string | undefined = undefined;
 
+    const buildAgent = new PsEngineerProgrammingBuildAgent(this.memory);
+
     while (!hasCompleted && retryCount < this.maxRetries) {
       await this.createAndRunActionPlan(currentErrors);
-      const buildAgent = new PsEngineerProgrammingBuildAgent(this.memory);
       currentErrors = await buildAgent.build();
+      if (currentErrors && retryCount >= retriesUntilWebResearch) {
+        await this.searchForSolutionsToErrors(currentErrors);
+      }
     }
+  }
+
+  async searchForSolutionsToErrors(currentErrors: string) {
+    const docsResearcher = new PsEngineerErrorWebResearchAgent(this.memory);
   }
 
   async createAndRunActionPlan(currentErrors: string | undefined = undefined) {

@@ -35,8 +35,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     futureActions: PsEngineerCodingActionPlanItem[],
     currentFileToUpdateContents: string | undefined | null,
     reviewCount: number,
-    reviewLog: string,
-    currentErrors: string | undefined
+    reviewLog: string
   ) {
     return `${
       completedActions && completedActions.length > 0
@@ -88,8 +87,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     completedActions: PsEngineerCodingActionPlanItem[],
     futureActions: PsEngineerCodingActionPlanItem[],
     reviewCount: number,
-    reviewLog: string,
-    currentErrors: string | undefined
+    reviewLog: string
   ) {
     return `${this.renderDefaultTaskAndContext()}
 
@@ -100,8 +98,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       futureActions,
       currentFileToUpdateContents,
       reviewCount,
-      reviewLog,
-      currentErrors
+      reviewLog
     )}
 
     Output the ${fileAction == "change" ? "changed" : "new"} file ${
@@ -133,8 +130,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     completedActions: PsEngineerCodingActionPlanItem[],
     futureActions: PsEngineerCodingActionPlanItem[],
     reviewCount: number,
-    reviewLog: string,
-    currentErrors: string | undefined
+    reviewLog: string
   ) {
     return `${this.renderDefaultTaskAndContext()}
 
@@ -145,8 +141,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         futureActions,
         currentFileToUpdateContents,
         reviewCount,
-        "", // Leave review empty to avoid infinite loop
-        currentErrors
+        "" // Leave review empty to avoid infinite loop
       )}
 
       <CodeForYourReview>
@@ -197,8 +192,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         completedActions,
         futureActions,
         retryCount,
-        reviewLog,
-        currentErrors
+        reviewLog
       )}\n\n\n\n\n\n\n\n`
     );
 
@@ -218,8 +212,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
               completedActions,
               futureActions,
               retryCount,
-              reviewLog,
-              currentErrors
+              reviewLog
             )
           ),
         ],
@@ -242,8 +235,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
                 completedActions,
                 futureActions,
                 retryCount,
-                reviewLog,
-                currentErrors
+                reviewLog
               )
             ),
           ],

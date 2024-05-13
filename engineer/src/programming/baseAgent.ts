@@ -2,7 +2,7 @@ import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
-import { Project } from "ts-morph";
+import { Project, ReturnTypedNode } from "ts-morph";
 
 import fs from "fs";
 
@@ -186,19 +186,23 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
 
         </Context>
 
-        <ProjectInstructions>
-          Overall project title:
-          ${this.memory.taskTitle}
-
-          Overall project description:
-          ${this.memory.taskDescription}
-
-          <OverAllTaskInstructions>:
-            ${this.memory.taskInstructions}
-          </OverAllTaskInstructions>:
-
-        </ProjectInstructions>
+        ${this.renderProjectDescription()}
 `;
+  }
+
+  renderProjectDescription() {
+    return `<ProjectInstructions>
+      Overall project title:
+      ${this.memory.taskTitle}
+
+      Overall project description:
+      ${this.memory.taskDescription}
+
+      <OverAllTaskInstructions>:
+        ${this.memory.taskInstructions}
+      </OverAllTaskInstructions>:
+
+    </ProjectInstructions>`;
   }
 
   renderOriginalFiles() {

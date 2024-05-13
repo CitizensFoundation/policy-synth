@@ -80,6 +80,7 @@ interface PsEngineerMemoryData extends PSMemoryData {
     filesCompleted?: PsEngineerFileData[];
     originalFiles?: PsEngineerFileData[];
   }
+  solutionsToErrorsSearchResults?: string;
   allTypescriptSrcFiles?: string[];
   existingTypeScriptFilesLikelyToChange: string[];
   existingOtherTypescriptFilesToKeepInContext: string[];
