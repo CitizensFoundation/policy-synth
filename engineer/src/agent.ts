@@ -77,26 +77,33 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
   async searchDtsFilesInNodeModules(): Promise<string[]> {
     const dtsFiles: string[] = [];
 
-    for (const packageName of this.memory
-      .likelyRelevantNpmPackageDependencies) {
-      const packagePath = path.join(
-        this.memory.workspaceFolder,
-        "node_modules",
-        packageName
-      );
+    if (
+      this.memory.likelyRelevantNpmPackageDependencies &&
+      this.memory.likelyRelevantNpmPackageDependencies.length > 0
+    ) {
+      for (const packageName of this.memory
+        .likelyRelevantNpmPackageDependencies) {
+        const packagePath = path.join(
+          this.memory.workspaceFolder,
+          "node_modules",
+          packageName
+        );
 
-      try {
-        const files = fs.readdirSync(packagePath, { withFileTypes: true });
+        try {
+          const files = fs.readdirSync(packagePath, { withFileTypes: true });
 
-        for (const file of files) {
-          if (file.isFile() && file.name.endsWith(".d.ts")) {
-            const filePath = path.join(packagePath, file.name);
-            dtsFiles.push(filePath);
+          for (const file of files) {
+            if (file.isFile() && file.name.endsWith(".d.ts")) {
+              const filePath = path.join(packagePath, file.name);
+              dtsFiles.push(filePath);
+            }
           }
+        } catch (error) {
+          console.error(`Error reading directory ${packagePath}: ${error}`);
         }
-      } catch (error) {
-        console.error(`Error reading directory ${packagePath}: ${error}`);
       }
+    } else {
+      this.logger.warn("No npm packages to search .d.ts files");
     }
 
     return dtsFiles;
@@ -120,6 +127,12 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       .join("\n");
 
     this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
+
+    //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
+
+    const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
+    await analyzeAgent.analyzeAndSetup();
+
     const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
 
     if (nodeModuleTypeDefs.length > 0) {
@@ -130,11 +143,6 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         })
         .join("\n")}\n</AllNodeModuleTypescriptDefs>`;
     }
-
-    //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
-
-    const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
-    await analyzeAgent.analyzeAndSetup();
 
     if (this.memory.needsDocumentionsAndExamples === true) {
       await this.doWebResearch();
