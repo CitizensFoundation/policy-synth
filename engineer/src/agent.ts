@@ -6,6 +6,9 @@ import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import fs from "fs";
 import path from "path";
 import strip from "strip-comments";
+import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 
 export class PSEngineerAgent extends PolicySynthAgentBase {
   override memory: PsEngineerMemoryData;
@@ -25,7 +28,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       4. For the googleGemini use the @google/generative-ai npm
       5. For the openAi use the openai npm
       6. The baseChatModel and the child classes should only implement those two methods:
-         invoke([{role:string,message:string}])
+         generate([{role:string,message:string}], streaming: boolean | undefined, streamingCallback: Function | undefined)
          getNumTokensFromMessages([{role:string,message:string}])
       `,
       stages: PSEngineerAgent.emptyDefaultStages,
@@ -34,9 +37,16 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "https://www.npmjs.com/package/openai",
         "https://www.reconify.com/docs/anthropic/node",
         "https://www.npmjs.com/package/@google/generative-ai",
-        "https://www.npmjs.com/package/@anthropic-ai/sdk?activeTab=readme"
+        "https://www.npmjs.com/package/@anthropic-ai/sdk?activeTab=readme",
       ],
     } as unknown as PsEngineerMemoryData;
+    this.chat = new ChatOpenAI({
+      temperature: 0.0,
+      maxTokens: 4000,
+      modelName: "gpt-4o",
+      verbose: true,
+    });
+
   }
 
   removeCommentsFromCode(code: string) {
@@ -124,7 +134,42 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       }
     };
 
-    return searchPackages().then(() => dtsFiles);
+    await searchPackages();
+
+    // Call LLM to filter relevant .d.ts files
+    const relevantDtsFiles = await this.filterRelevantDtsFiles(dtsFiles);
+
+    return relevantDtsFiles;
+  }
+
+  async filterRelevantDtsFiles(dtsFiles: string[]): Promise<string[]> {
+    const prompt = `You are an expert software engineering analyzer. You will receive a list of .d.ts files. Please identify which files are likely to be relevant for the current task.
+
+Only output a JSON array with file nothing else, no explainations before or after the JSON string[].
+
+Task title: ${this.memory.taskTitle}
+Task description: ${this.memory.taskDescription}
+Task instructions: ${this.memory.taskInstructions}
+
+List of .d.ts files:
+${dtsFiles.join("\n")}
+
+Please return a JSON array of the relevant file paths:`;
+
+    const relevantFiles = await this.callLLM(
+      "engineering-agent",
+      IEngineConstants.engineerModel,
+      [new SystemMessage(prompt)],
+      true
+    ) as string[];
+
+    try {
+      console.log(JSON.stringify(relevantFiles, null, 2));
+      return relevantFiles;
+    } catch (error) {
+      console.error("Error parsing LLM response:", error);
+      return [];
+    }
   }
 
   async run() {

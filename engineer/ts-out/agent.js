@@ -6,6 +6,9 @@ import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import fs from "fs";
 import path from "path";
 import strip from "strip-comments";
+import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { SystemMessage } from "@langchain/core/messages";
+import { ChatOpenAI } from "@langchain/openai";
 export class PSEngineerAgent extends PolicySynthAgentBase {
     memory;
     constructor() {
@@ -14,26 +17,31 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             actionLog: [],
             workspaceFolder: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
             taskTitle: "Create LLM Abstractions for OpenAI, Claude Opus and Google Gemini with a common base class",
-            taskDescription: `Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure.
-        The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.`,
-            taskInstructions: `1. Create a new base chat class src/models/baseChatModel.ts that has the same API as ChatOpenAI, this is a new file.
+            taskDescription: `Create LLM classes for OpenAI, Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.`,
+            taskInstructions: `1. Create a new base chat class src/models/baseChatModel.ts in a new file.
       2. Then create src/models/openAiChat.ts, src/models/claudeOpusChat.ts and src/models/googleGeminiChat.ts for chat only
-      3. For the cloudeOpus use the @langchain/anthropic npm
+      3. For the cloudeOpus use the @anthropic-ai/sdk npm
       4. For the googleGemini use the @google/generative-ai npm
-      5. For the new src/models/openAi.ts use the @langchain/openai npm
-      6. Both @langchain packages also use @langchain/core so that is important also
-      7. The baseChatModel and the child classes should implement invoke((HumanMessage|SystemMessge)[]) and getNumTokensFromMessages methods, just like the ChatOpenAI class
-      8. Do nothing else for now, just create those files and classes
+      5. For the openAi use the openai npm
+      6. The baseChatModel and the child classes should only implement those two methods:
+         generate([{role:string,message:string}], streaming: boolean | undefined, streamingCallback: Function | undefined)
+         getNumTokensFromMessages([{role:string,message:string}])
       `,
             stages: PSEngineerAgent.emptyDefaultStages,
             docsSiteToScan: [
                 "https://ai.google.dev/gemini-api/docs/get-started/node",
+                "https://www.npmjs.com/package/openai",
+                "https://www.reconify.com/docs/anthropic/node",
                 "https://www.npmjs.com/package/@google/generative-ai",
-                "https://www.npmjs.com/package/@langchain/anthropic",
-                "https://js.langchain.com/docs/integrations/chat/openai",
-                "https://js.langchain.com/docs/modules/model_io/chat/quick_start",
+                "https://www.npmjs.com/package/@anthropic-ai/sdk?activeTab=readme",
             ],
         };
+        this.chat = new ChatOpenAI({
+            temperature: 0.0,
+            maxTokens: 4000,
+            modelName: "gpt-4o",
+            verbose: true,
+        });
     }
     removeCommentsFromCode(code) {
         return strip(code);
@@ -102,7 +110,33 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
                 this.logger.warn("No npm packages to search .d.ts files");
             }
         };
-        return searchPackages().then(() => dtsFiles);
+        await searchPackages();
+        // Call LLM to filter relevant .d.ts files
+        const relevantDtsFiles = await this.filterRelevantDtsFiles(dtsFiles);
+        return relevantDtsFiles;
+    }
+    async filterRelevantDtsFiles(dtsFiles) {
+        const prompt = `You are an expert software engineering analyzer. You will receive a list of .d.ts files. Please identify which files are likely to be relevant for the current task.
+
+Only output a JSON array with file nothing else, no explainations before or after the JSON string[].
+
+Task title: ${this.memory.taskTitle}
+Task description: ${this.memory.taskDescription}
+Task instructions: ${this.memory.taskInstructions}
+
+List of .d.ts files:
+${dtsFiles.join("\n")}
+
+Please return a JSON array of the relevant file paths:`;
+        const relevantFiles = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [new SystemMessage(prompt)], true);
+        try {
+            console.log(JSON.stringify(relevantFiles, null, 2));
+            return relevantFiles;
+        }
+        catch (error) {
+            console.error("Error parsing LLM response:", error);
+            return [];
+        }
     }
     async run() {
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);

@@ -12,7 +12,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   numberOfQueriesToGenerate = 12;
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.3;
-  maxTopContentResultsToUse = 5;
+  maxTopContentResultsToUse = 6;
 
   useDebugCache = true;
   debugCache: string[] | undefined = undefined;
@@ -21,7 +21,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   abstract scanType: PsEngineerWebResearchTypes;
 
   async doWebResearch() {
-    const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v3.json`;
+    const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v4.json`;
 
     if (this.useDebugCache) {
       try {
