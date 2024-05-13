@@ -51,9 +51,10 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     Instructions:
     1. Review the proposed coding plan.
     2. Assess its feasibility, correctness, and completeness.
-    3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Coding plan looks good".
+    3. Provide feedback if you find critical issues or approve the plan if it meets the criteria with the words "Coding plan looks good".
     4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
     5. We always create and modify typescript .ts files.
+    6. The coding plan does not have to include every detail, the goal is to provide a high-level plan for the changes needed for each file and each task.
     7. If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     ${
       currentErrors

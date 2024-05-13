@@ -131,7 +131,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             ], false);
             if (codingPlan) {
                 console.log(`Coding plan received: ${codingPlan}`);
-                if (maxReviewsRetries <= reviewRetries) {
+                if (reviewRetries < maxReviewsRetries) {
                     const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
                         new SystemMessage(this.reviewSystemPrompt(currentErrors)),
                         new HumanMessage(this.getUserReviewPrompt(codingPlan, currentErrors)),
@@ -150,6 +150,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 }
                 else {
                     console.warn("Max review retries reached, continuing without review");
+                    planReady = true;
                 }
             }
             else {
