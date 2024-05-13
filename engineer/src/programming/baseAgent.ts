@@ -121,6 +121,10 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
     }`;
   }
 
+  removeWorkspacePathFromFileIfNeeded(filePath: string) {
+    return filePath.replace(this.memory.workspaceFolder, "");
+  }
+
   renderDefaultTaskAndContext() {
     const hasContextFromSearch =
       this.memory.exampleContextItems || this.memory.docsContextItems;

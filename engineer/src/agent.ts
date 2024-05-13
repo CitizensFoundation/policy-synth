@@ -44,6 +44,10 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     return strip(code);
   }
 
+  removeWorkspacePathFromFileIfNeeded(filePath: string) {
+    return filePath.replace(this.memory.workspaceFolder, "");
+  }
+
   async doWebResearch() {
     const exampleResearcher = new PsEngineerExamplesWebResearchAgent(
       this.memory
@@ -136,7 +140,13 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
           const content = this.removeCommentsFromCode(
             this.loadFileContents(filePath) || ""
           );
-          return `\n${filePath}:\n${content}`;
+          if (content && content.length > 75) {
+            return `\n${this.removeWorkspacePathFromFileIfNeeded(
+              filePath
+            )}:\n${content}`;
+          } else {
+            return null;
+          }
         }
         return null;
       })
@@ -158,8 +168,15 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
           const content = this.removeCommentsFromCode(
             this.loadFileContents(filePath) || ""
           );
-          return `\n${filePath}:\n${content}`;
+          if (content && content.length > 75) {
+            return `\n${this.removeWorkspacePathFromFileIfNeeded(
+              filePath
+            )}:\n${content}`;
+          } else {
+            return null;
+          }
         })
+        .filter(Boolean)
         .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
     } else {
       this.logger.warn("No .d.ts files found in node_modules");

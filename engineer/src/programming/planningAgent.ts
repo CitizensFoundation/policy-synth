@@ -214,10 +214,6 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     return codingPlan;
   }
 
-  removeWorkspacePathFromFileIfNeeded(filePath: string) {
-    return filePath.replace(this.memory.workspaceFolder, "");
-  }
-
   async getActionPlan(currentErrors: string | undefined = undefined) {
     let planReady = false;
     let planRetries = 0;
