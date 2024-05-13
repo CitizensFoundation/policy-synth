@@ -14,6 +14,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
   likelyToChangeFilesContents: string | undefined | null;
   maxRetries = 72;
   currentErrors: string | undefined | null;
+  previousCurrentErrors: string | undefined | null;
 
   tsMorphProject: Project | undefined;
 
@@ -95,6 +96,29 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
           .join("\n")}\n`;
       });
     }
+  }
+
+  setCurrentErrors(errors: string | undefined) {
+    if (this.currentErrors) {
+      this.previousCurrentErrors = this.currentErrors;
+    }
+    this.currentErrors = errors;
+  }
+
+  renderCurrentErrorsAndOriginalFiles() {
+    return `${
+      this.currentErrors
+        ? `${this.renderOriginalFiles()}\n<CurrentErrorsToFixInYourPlan>${
+            this.currentErrors
+          }</CurrentErrorsToFixInYourPlan>`
+        : ``
+    }${
+      this.previousCurrentErrors
+        ? `\n<PreviousErrorsYouWereTryingToFix>${
+            this.previousCurrentErrors
+          }</PreviousErrorsYouWereTryingToFix>`
+        : ``
+    }`;
   }
 
   renderDefaultTaskAndContext() {

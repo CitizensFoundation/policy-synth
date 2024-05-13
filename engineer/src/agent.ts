@@ -17,8 +17,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "/home/robert/Scratch/policy-synth-engineer-tests/agents",
       taskTitle:
         "Create LLM Abstractions for OpenAI, Claude Opus and Google Gemini with a common base class",
-      taskDescription:
-        `Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure.
+      taskDescription: `Our current system utilizes LangChain TS for modeling abstraction and is configured to support OpenAI's models, accessible both directly and through Azure.
         The goal is to expand this capability by integrating abstractions for Claude Opus and Google Gemini, with a design that allows easy addition of other models in the future. This is a typescript based es module NodeJS modern server application.`,
       taskInstructions: `1. Create a new base chat class src/models/baseModel.ts that has the same API as ChatOpenAI, this is a new file.
       2. Then create src/models/openAi.ts, src/models/claudeOpus.ts and src/models/googleGemini.ts
@@ -33,7 +32,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "https://www.npmjs.com/package/@google/generative-ai",
         "https://www.npmjs.com/package/@langchain/anthropic",
         "https://js.langchain.com/docs/integrations/chat/openai",
-        "https://js.langchain.com/docs/modules/model_io/chat/quick_start"
+        "https://js.langchain.com/docs/modules/model_io/chat/quick_start",
       ],
     } as unknown as PsEngineerMemoryData;
   }
@@ -75,6 +74,34 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     return allFiles;
   }
 
+  async searchDtsFilesInNodeModules(): Promise<string[]> {
+    const dtsFiles: string[] = [];
+
+    for (const packageName of this.memory
+      .likelyRelevantNpmPackageDependencies) {
+      const packagePath = path.join(
+        this.memory.workspaceFolder,
+        "node_modules",
+        packageName
+      );
+
+      try {
+        const files = fs.readdirSync(packagePath, { withFileTypes: true });
+
+        for (const file of files) {
+          if (file.isFile() && file.name.endsWith(".d.ts")) {
+            const filePath = path.join(packagePath, file.name);
+            dtsFiles.push(filePath);
+          }
+        }
+      } catch (error) {
+        console.error(`Error reading directory ${packagePath}: ${error}`);
+      }
+    }
+
+    return dtsFiles;
+  }
+
   async run() {
     this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(
       this.memory.workspaceFolder
@@ -85,12 +112,24 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       .map((filePath) => {
         if (filePath.endsWith(".d.ts")) {
           const content = this.loadFileContents(filePath);
-          return `${path.basename(filePath)}\n${content}`;
+          return `${path.basename(filePath)}:\n${content}`;
         }
         return null;
       })
       .filter(Boolean)
       .join("\n");
+
+    this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
+    const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+
+    if (nodeModuleTypeDefs.length > 0) {
+      this.memory.allTypeDefsContents += `<AllNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
+        .map((filePath) => {
+          const content = this.loadFileContents(filePath);
+          return `${path.basename(filePath)}:\n${content}`;
+        })
+        .join("\n")}\n</AllNodeModuleTypescriptDefs>`;
+    }
 
     //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
 

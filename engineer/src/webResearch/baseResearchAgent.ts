@@ -21,7 +21,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   abstract scanType: "documentation" | "codeExamples";
 
   async doWebResearch() {
-    const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache.json`;
+    const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v2.json`;
 
     if (this.useDebugCache) {
       try {

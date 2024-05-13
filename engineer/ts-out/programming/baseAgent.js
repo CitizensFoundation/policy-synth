@@ -10,6 +10,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
     likelyToChangeFilesContents;
     maxRetries = 72;
     currentErrors;
+    previousCurrentErrors;
     tsMorphProject;
     constructor(memory, likelyToChangeFilesContents = undefined, otherFilesToKeepInContextContent = undefined, documentationFilesInContextContent = undefined, tsMorphProject = undefined) {
         super(memory);
@@ -71,6 +72,19 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
                     .join("\n")}\n`;
             });
         }
+    }
+    setCurrentErrors(errors) {
+        if (this.currentErrors) {
+            this.previousCurrentErrors = this.currentErrors;
+        }
+        this.currentErrors = errors;
+    }
+    renderCurrentErrorsAndOriginalFiles() {
+        return `${this.currentErrors
+            ? `${this.renderOriginalFiles()}\n<CurrentErrorsToFixInYourPlan>${this.currentErrors}</CurrentErrorsToFixInYourPlan>`
+            : ``}${this.previousCurrentErrors
+            ? `\n<PreviousErrorsYouWereTryingToFix>${this.previousCurrentErrors}</PreviousErrorsYouWereTryingToFix>`
+            : ``}`;
     }
     renderDefaultTaskAndContext() {
         const hasContextFromSearch = this.memory.exampleContextItems || this.memory.docsContextItems;

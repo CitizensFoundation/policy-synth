@@ -28,7 +28,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
                 "https://www.npmjs.com/package/@google/generative-ai",
                 "https://www.npmjs.com/package/@langchain/anthropic",
                 "https://js.langchain.com/docs/integrations/chat/openai",
-                "https://js.langchain.com/docs/modules/model_io/chat/quick_start"
+                "https://js.langchain.com/docs/modules/model_io/chat/quick_start",
             ],
         };
     }
@@ -59,6 +59,26 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         }
         return allFiles;
     }
+    async searchDtsFilesInNodeModules() {
+        const dtsFiles = [];
+        for (const packageName of this.memory
+            .likelyRelevantNpmPackageDependencies) {
+            const packagePath = path.join(this.memory.workspaceFolder, "node_modules", packageName);
+            try {
+                const files = fs.readdirSync(packagePath, { withFileTypes: true });
+                for (const file of files) {
+                    if (file.isFile() && file.name.endsWith(".d.ts")) {
+                        const filePath = path.join(packagePath, file.name);
+                        dtsFiles.push(filePath);
+                    }
+                }
+            }
+            catch (error) {
+                console.error(`Error reading directory ${packagePath}: ${error}`);
+            }
+        }
+        return dtsFiles;
+    }
     async run() {
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
         //TODO: Get .d.ts file for npms also likely to be relevant from the nodes_modules folder
@@ -66,12 +86,22 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             .map((filePath) => {
             if (filePath.endsWith(".d.ts")) {
                 const content = this.loadFileContents(filePath);
-                return `${path.basename(filePath)}\n${content}`;
+                return `${path.basename(filePath)}:\n${content}`;
             }
             return null;
         })
             .filter(Boolean)
             .join("\n");
+        this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
+        const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+        if (nodeModuleTypeDefs.length > 0) {
+            this.memory.allTypeDefsContents += `<AllNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
+                .map((filePath) => {
+                const content = this.loadFileContents(filePath);
+                return `${path.basename(filePath)}:\n${content}`;
+            })
+                .join("\n")}\n</AllNodeModuleTypescriptDefs>`;
+        }
         //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
         const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
         await analyzeAgent.analyzeAndSetup();

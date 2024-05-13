@@ -68,11 +68,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         : ``
     }
 
-    ${
-      currentErrors
-        ? `${this.renderOriginalFiles()}\n<ErrorsOnYourLastAttemptAtCreatingCode>${currentErrors}</ErrorsOnYourLastAttemptAtCreatingCode>`
-        : ``
-    }
+    ${this.renderCurrentErrorsAndOriginalFiles()}
 
     ${
       reviewLog
@@ -306,7 +302,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     actionPlan: PsEngineerCodingActionPlanItem[],
     currentErrors: string | undefined
   ) {
-    this.currentErrors = currentErrors;
+    this.setCurrentErrors(currentErrors);
     let currentActions: PsEngineerCodingActionPlanItem[] = [];
     let completedActions: PsEngineerCodingActionPlanItem[] = actionPlan.filter(
       (action) => action.status === "completed"

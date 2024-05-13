@@ -40,9 +40,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             ? `<CurrentFileYouAreChanging>:\n${fileName}:\n${currentFileToUpdateContents}</<CurrentFileYouAreChanging>`
             : ``}
 
-    ${currentErrors
-            ? `${this.renderOriginalFiles()}\n<ErrorsOnYourLastAttemptAtCreatingCode>${currentErrors}</ErrorsOnYourLastAttemptAtCreatingCode>`
-            : ``}
+    ${this.renderCurrentErrorsAndOriginalFiles()}
 
     ${reviewLog
             ? `IMPORTANT: This is your ${reviewCount + 1}. round of improvements after reviews\n<ReviewsOnYourLastAttemptAtCreatingCode>${reviewLog}</ReviewsOnYourLastAttemptAtCreatingCode>`
@@ -149,7 +147,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         return newCode;
     }
     async implementCodingActionPlan(actionPlan, currentErrors) {
-        this.currentErrors = currentErrors;
+        this.setCurrentErrors(currentErrors);
         let currentActions = [];
         let completedActions = actionPlan.filter((action) => action.status === "completed");
         let futureActions = [];
