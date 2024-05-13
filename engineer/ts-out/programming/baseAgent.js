@@ -8,7 +8,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
     documentationFilesInContextContent;
     currentFileContents;
     likelyToChangeFilesContents;
-    maxRetries = 27;
+    maxRetries = 72;
     tsMorphProject;
     constructor(memory, likelyToChangeFilesContents = undefined, otherFilesToKeepInContextContent = undefined, documentationFilesInContextContent = undefined, tsMorphProject = undefined) {
         super(memory);

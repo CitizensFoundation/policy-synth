@@ -8,9 +8,10 @@ import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
 import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 
 export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
-  numberOfQueriesToGenerate = 8;
-  percentOfQueriesToSearch = 0.15;
+  numberOfQueriesToGenerate = 12;
+  percentOfQueriesToSearch = 0.2;
   percentOfResultsToScan = 0.2;
+  maxTopContentResultsToUse = 4;
 
   abstract searchInstructions: string;
   abstract scanType: "documentation" | "codeExamples";
@@ -96,7 +97,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
       );
       webScanResults = await filter.filterContent(webScanResults);
 
-      if (webScanResults.length > 3) {
+      if (webScanResults.length > this.maxTopContentResultsToUse) {
         const ranker = new PsEngineerWebContentRanker(
           this.memory as PsEngineerMemoryData
         );
@@ -107,7 +108,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
         );
       }
 
-      const topWebScanResults = webScanResults.slice(0, 3);
+      const topWebScanResults = webScanResults.slice(0, this.maxTopContentResultsToUse);
       console.log("Top Web Scan Results:", topWebScanResults);
 
       return topWebScanResults;
