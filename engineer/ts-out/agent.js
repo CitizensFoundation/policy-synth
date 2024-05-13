@@ -107,7 +107,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             .map((filePath) => {
             if (filePath.endsWith(".d.ts")) {
                 const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
-                return `${path.basename(filePath)}:\n${content}`;
+                return `\n${path.basename(filePath)}:\n${content}`;
             }
             return null;
         })
@@ -122,7 +122,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
                 .map((filePath) => {
                 const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
-                return `${path.basename(filePath)}:\n${content}`;
+                return `\n${path.basename(filePath)}:\n${content}`;
             })
                 .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
         }

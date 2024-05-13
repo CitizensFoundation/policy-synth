@@ -80,8 +80,6 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     return allFiles;
   }
 
-
-
   async searchDtsFilesInNodeModules(): Promise<string[]> {
     const dtsFiles: string[] = [];
 
@@ -134,8 +132,10 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
       .map((filePath) => {
         if (filePath.endsWith(".d.ts")) {
-          const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
-          return `${path.basename(filePath)}:\n${content}`;
+          const content = this.removeCommentsFromCode(
+            this.loadFileContents(filePath) || ""
+          );
+          return `\n${path.basename(filePath)}:\n${content}`;
         }
         return null;
       })
@@ -154,11 +154,12 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     if (nodeModuleTypeDefs.length > 0) {
       this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
         .map((filePath) => {
-          const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
-          return `${path.basename(filePath)}:\n${content}`;
+          const content = this.removeCommentsFromCode(
+            this.loadFileContents(filePath) || ""
+          );
+          return `\n${path.basename(filePath)}:\n${content}`;
         })
         .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
-
     } else {
       this.logger.warn("No .d.ts files found in node_modules");
       process.exit(1);
