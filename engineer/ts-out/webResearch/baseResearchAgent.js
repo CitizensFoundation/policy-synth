@@ -13,7 +13,7 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
     percentOfResultsToScan = 0.3;
     maxTopContentResultsToUse = 5;
     useDebugCache = true;
-    debugCache = [];
+    debugCache = undefined;
     async doWebResearch() {
         if (this.useDebugCache) {
             // Read and JSON.parse the debug cache from ./webPageCache/${this.scanType}.json

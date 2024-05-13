@@ -92,6 +92,11 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     6. For files you are changing there should be "change" in the fileAction JSON field.
     7. If you are deleting a file there should be "delete" in the fileAction JSON field.
     8. If the plan is good only there should be "Action plan looks good".
+    ${
+      this.currentErrors
+        ? `9.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the file action on already implemented files should be "change" not add, as you already added them last time.`
+        : ``
+    }
     `;
   }
 
@@ -116,7 +121,11 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     5. For files you are changing output "change" in the fileAction JSON field.
     6. If you are deleting a file output "delete" in the fileAction JSON field.
     7. Put a full detailed description from the coding plan in the codingTaskFullDescription field.
-
+    ${
+      this.currentErrors
+        ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the file action on already implemented files should be "change" not add, as you already added them last time.`
+        : ``
+    }
     Expected JSON Array Output:
     [
       {

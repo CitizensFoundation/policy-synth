@@ -21,12 +21,12 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   abstract scanType: "documentation" | "codeExamples";
 
   async doWebResearch() {
+    const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache.json`;
+
     if (this.useDebugCache) {
-      // Read and JSON.parse the debug cache from ./webPageCache/${this.scanType}.json
-      const cacheFilePath = `/tmp/${this.scanType}_webResearchCach.json`;
       try {
-        if (fs.existsSync(cacheFilePath)) {
-          const cacheFileContent = fs.readFileSync(cacheFilePath, {
+        if (fs.existsSync(cacheDebugFilePath)) {
+          const cacheFileContent = fs.readFileSync(cacheDebugFilePath, {
         encoding: "utf8",
           });
           this.debugCache = JSON.parse(cacheFileContent);
@@ -136,9 +136,8 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
       const topWebScanResults = webScanResults.slice(0, this.maxTopContentResultsToUse);
       console.log("Top Web Scan Results:", topWebScanResults);
       if (this.useDebugCache) {
-        const cacheFilePath = `/tmp/${this.scanType}_webResearchCach.json`;
         try {
-          fs.writeFileSync(cacheFilePath, JSON.stringify(topWebScanResults, null, 2));
+          fs.writeFileSync(cacheDebugFilePath, JSON.stringify(topWebScanResults, null, 2));
         } catch (err) {
           console.error(`Error writing cache file: ${err}`);
         }
