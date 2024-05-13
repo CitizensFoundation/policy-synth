@@ -35,3 +35,8 @@ interface PsSimpleChatLog {
   sender: string;
   message: string;
 }
+
+interface PsModelChatItem {
+  role: string;
+  message: string;
+}

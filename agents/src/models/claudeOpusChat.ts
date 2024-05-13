@@ -11,7 +11,7 @@ export class ClaudeOpusChat extends BaseChatModel {
   }
 
   async generate(
-    messages: { role: string; message: string }[],
+    messages: PsModelChatItem[],
     streaming?: boolean,
     streamingCallback?: Function
   ): Promise<any> {
@@ -44,7 +44,7 @@ export class ClaudeOpusChat extends BaseChatModel {
     }
   }
 
-  async getNumTokensFromMessages(messages: { role: string; message: string }[]): Promise<number> {
+  async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
     const formattedMessages = messages.map((msg) => ({
       role: msg.role as 'user' | 'assistant',
       content: msg.message,

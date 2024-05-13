@@ -3,12 +3,12 @@
 
 export abstract class BaseChatModel {
   abstract generate(
-    messages: { role: string; message: string }[],
+    messages: PsModelChatItem[],
     streaming?: boolean,
     streamingCallback?: Function
   ): Promise<any>;
 
   abstract getNumTokensFromMessages(
-    messages: { role: string; message: string }[]
+    messages: PsModelChatItem[]
   ): Promise<number>;
 }

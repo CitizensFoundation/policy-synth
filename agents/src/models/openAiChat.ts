@@ -11,7 +11,7 @@ export class OpenAiChat extends BaseChatModel {
   }
 
   async generate(
-    messages: { role: string; message: string }[],
+    messages: PsModelChatItem[],
     streaming?: boolean,
     streamingCallback?: Function
   ): Promise<any> {
@@ -42,7 +42,7 @@ export class OpenAiChat extends BaseChatModel {
     }
   }
 
-  async getNumTokensFromMessages(messages: { role: string; message: string }[]): Promise<number> {
+  async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
     const formattedMessages = messages.map((msg) => ({
       role: msg.role as 'system' | 'user' | 'assistant',
       content: msg.message,
