@@ -9,6 +9,7 @@ Policy Synth Engineer is an automated programming tool, utilizing multi-scale AI
   
 - **Limited Testing:** Engineer has only had limited testing. The project began when we realized the potential of the GPT-4g test version (im-a-good-gpt2-chatbot) for coding. An initial version of Engineer was ready on Sunday, May 12th, and it sort of worked with GPT-4 Turbo with automated web research enabled enabled. The following day, we integrated then new GPT-4o, and it has worked for all the limited issues we've encountered so far.
 
+## Engineer Agents Overview
 
 ![PS - Engineer-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/29f01ea9-6809-4f8f-be94-f7e0a9cf0425)
 
