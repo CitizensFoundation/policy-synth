@@ -1,12 +1,17 @@
-## Policy Synth Engineer
-Policy Synth Engineer is an automated programming tool designed for Typescript projects, utilizing multi scale AI agents to streamline coding tasks such as feature development, bug fixes, and refactoring. It automates extensive web research for coding assistance and is initially created for Typescript but can automate programming of any type.
+# Policy Synth Engineer
+Policy Synth Engineer is an automated programming tool, utilizing multi-scale AI agents to streamline coding tasks such as feature development, bug fixes, and refactoring. Initially created for TypeScript, it can automate programming of any type by leveraging extensive web research for coding assistance. Policy Synth Engineer is a flexible, object-oriented library. 
 
-### Limitations
-* Designed for TypeScript but you can easily subclass the PsEngineerAgent and remove the loading of typescript data in your implementation there. You will also have to sublcass the PsEngineerInitialAnalyzer and it's System Prompt so not only to add typescript files to the Engineer's all important GPT4 context.
-* Engineer does not yet do npm installs so important to pre-install any npm packages Engineer should work on. This is important as Engineer will attempt to locate the typedefs .d.ts files in the node_modules/ folder and works best with the relevant typedefs in the context at all relevant times
-* Engineer has only had limited testing. We started this project when we realized how good the gpt2 test version was at coding. We had initial version of Engineer ready Sunday 12. May and it sort of worked with GPT-4 Turbo with the automated web research enabled. But the day after, when we plugged in GPT-4o it's worked for all the limited issues we've sent it's way.
+## Limitations
 
-### Engineer Agent Design
+- **TypeScript Focus:** Although designed for TypeScript, you can subclass the `PsEngineerAgent` to remove the loading of TypeScript data in your implementation. You'll also need to subclass the `PsEngineerInitialAnalyzer` and its system prompt to modify the Engineer's context beyond TypeScript files.
+  
+- **npm Package Management:** Engineer does not currently handle npm installs. Ensure any required npm packages are pre-installed. This is important as Engineer will attempt to locate the typedefs (`.d.ts` files) in the `node_modules/` folder and works best with the relevant typedefs in the context at all relevant times.
+  
+- **Limited Testing:** Engineer has only had limited testing. The project began when we realized the potential of the GPT-4g test version (im-a-good-gpt2-chatbot) for coding. An initial version of Engineer was ready on Sunday, May 12th, and it sort of worked with GPT-4 Turbo with automated web research enabled enabled. The following day, we integrated then new GPT-4o, and it has worked for all the limited issues we've encountered so far.
+
+## Flexibility
+By subclassing `PsEngineerAgent`, users can customize the tool to meet their specific needs. This allows for the removal or modification of TypeScript data loading, as well as other adjustments to fit different programming languages or project requirements. This flexibility makes Policy Synth Engineer adaptable to a wide range of coding tasks and environments.
+
 
 ![PS - Engineer-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/29f01ea9-6809-4f8f-be94-f7e0a9cf0425)
 
