@@ -1,5 +1,5 @@
 # Policy Synth Engineer
-Policy Synth Engineer is an automated programming tool, utilizing multi-scale AI agents to streamline coding tasks such as feature development, bug fixes, and refactoring. Initially created for TypeScript, it can automate programming of any type by leveraging extensive web research for coding assistance. Policy Synth Engineer is a flexible, object-oriented library. 
+Policy Synth Engineer is an automated programming tool, utilizing multi-scale AI agents to streamline coding tasks such as feature development, bug fixes, and refactoring. Initially created for TypeScript, it can automate programming of any type by leveraging extensive web research for coding assistance. Policy Synth Engineer is a flexible, object-oriented class library. 
 
 ## Limitations
 
@@ -8,9 +8,6 @@ Policy Synth Engineer is an automated programming tool, utilizing multi-scale AI
 - **npm Package Management:** Engineer does not currently handle npm installs. Ensure any required npm packages are pre-installed. This is important as Engineer will attempt to locate the typedefs (`.d.ts` files) in the `node_modules/` folder and works best with the relevant typedefs in the context at all relevant times.
   
 - **Limited Testing:** Engineer has only had limited testing. The project began when we realized the potential of the GPT-4g test version (im-a-good-gpt2-chatbot) for coding. An initial version of Engineer was ready on Sunday, May 12th, and it sort of worked with GPT-4 Turbo with automated web research enabled enabled. The following day, we integrated then new GPT-4o, and it has worked for all the limited issues we've encountered so far.
-
-## Flexibility
-By subclassing `PsEngineerAgent`, users can customize the tool to meet their specific needs. This allows for the removal or modification of TypeScript data loading, as well as other adjustments to fit different programming languages or project requirements. This flexibility makes Policy Synth Engineer adaptable to a wide range of coding tasks and environments.
 
 
 ![PS - Engineer-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/29f01ea9-6809-4f8f-be94-f7e0a9cf0425)
