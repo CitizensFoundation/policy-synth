@@ -7,7 +7,7 @@ Policy Synth Engineer is an automated programming tool, utilizing multi-scale AI
   
 - **npm Package Management:** Engineer does not currently handle npm installs. Ensure any required npm packages are pre-installed. This is important as Engineer will attempt to locate the typedefs (`.d.ts` files) in the `node_modules/` folder and works best with the relevant typedefs in the context at all relevant times.
   
-- **Limited Testing:** Engineer has only had limited testing. The project began when we realized the potential of the GPT-4g test version (im-a-good-gpt2-chatbot) for coding. An initial version of Engineer was ready on Sunday, May 12th, and it sort of worked with GPT-4 Turbo with automated web research enabled enabled. The following day, we integrated then new GPT-4o, and it has worked for all the limited issues we've encountered so far.
+- **Limited Testing:** Engineer has only had limited testing. The project began when we realized the potential of the GPT-4o test version (im-a-good-gpt2-chatbot) for coding. An initial version of Engineer was ready on Sunday, May 12th, and it sort of worked with GPT-4 Turbo with automated web research enabled enabled. The following day, we integrated then new GPT-4o, and it has worked for all the limited issues we've encountered so far.
 
 ## Engineer Agents Overview
 
