@@ -1,6 +1,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { BaseChatModel } from './baseChatModel';
+import { encoding_for_model, TiktokenModel } from 'tiktoken';
 
 export class ClaudeOpusChat extends BaseChatModel {
   private client: Anthropic;
@@ -45,13 +46,9 @@ export class ClaudeOpusChat extends BaseChatModel {
   }
 
   async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
-    const formattedMessages = messages.map((msg) => ({
-      role: msg.role as 'user' | 'assistant',
-      content: msg.message,
-    }));
-
-    // Assuming a token counting logic here, as the SDK does not provide a direct method for this
-    const tokenCount = formattedMessages.reduce((acc, msg) => acc + msg.content.split(' ').length, 0);
+    const encoding = encoding_for_model('cl100k_base' as TiktokenModel);
+    const formattedMessages = messages.map((msg) => msg.message).join(' ');
+    const tokenCount = encoding.encode(formattedMessages).length;
     return Promise.resolve(tokenCount);
   }
 }

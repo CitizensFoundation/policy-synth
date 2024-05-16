@@ -1,6 +1,7 @@
 
 import OpenAI from 'openai';
 import { BaseChatModel } from './baseChatModel';
+import { get_encoding, TiktokenEncoding } from 'tiktoken';
 
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
@@ -43,17 +44,14 @@ export class OpenAiChat extends BaseChatModel {
   }
 
   async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
+    const encoding = get_encoding('cl100k_base' as TiktokenEncoding);
     const formattedMessages = messages.map((msg) => ({
       role: msg.role as 'system' | 'user' | 'assistant',
       content: msg.message,
     }));
 
-    const response = await this.client.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: formattedMessages,
-    });
-
-    return response.usage?.total_tokens || 0;
+    const tokenCounts = formattedMessages.map((msg) => encoding.encode(msg.content).length);
+    return tokenCounts.reduce((acc, count) => acc + count, 0);
   }
 }
 

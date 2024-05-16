@@ -1,5 +1,6 @@
 import { OpenAIClient, AzureKeyCredential } from '@azure/openai';
 import { BaseChatModel } from './baseChatModel';
+import { encoding_for_model } from 'tiktoken';
 export class AzureOpenAiChat extends BaseChatModel {
     client;
     deploymentName;
@@ -30,12 +31,13 @@ export class AzureOpenAiChat extends BaseChatModel {
         }
     }
     async getNumTokensFromMessages(messages) {
+        const encoder = encoding_for_model('gpt-3.5-turbo');
         const chatMessages = messages.map((msg) => ({
             role: msg.role,
             content: msg.message,
         }));
-        const result = await this.client.getCompletions(this.deploymentName, chatMessages.map((msg) => msg.content), { maxTokens: 1 });
-        return result.usage.totalTokens;
+        const tokenCounts = chatMessages.map((msg) => encoder.encode(msg.content).length);
+        return tokenCounts.reduce((acc, count) => acc + count, 0);
     }
 }
 //# sourceMappingURL=azureOpenAiChat.js.map
