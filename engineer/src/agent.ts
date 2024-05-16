@@ -9,12 +9,20 @@ import strip from "strip-comments";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
+import axios from 'axios';
+
+interface GitHubIssue {
+  title: string;
+  body: string;
+}
 
 export class PSEngineerAgent extends PolicySynthAgentBase {
   override memory: PsEngineerMemoryData;
+  githubIssueUrl: string | undefined;
 
-  constructor() {
+  constructor(githubIssueUrl: string | undefined = undefined) {
     super();
+    this.githubIssueUrl = githubIssueUrl;
     this.memory = {
       actionLog: [],
       workspaceFolder:
@@ -35,6 +43,79 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       verbose: true,
     });
 
+    if (this.githubIssueUrl) {
+      this.fetchGitHubIssue(this.githubIssueUrl).then(issue => {
+
+        const parsedDescription = this.parseIssueBody(issue.body);
+        if (!parsedDescription) {
+          throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
+        }
+
+        this.memory.taskTitle = issue.title;
+        this.memory.taskDescription = parsedDescription.taskDescription;
+        this.memory.taskInstructions = parsedDescription.taskInstructions;
+        console.log(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
+        console.log(`GitHub Issue Task: ${ parsedDescription.taskInstructions}`);
+
+      }).catch(error => {
+        console.error(error.message);
+      });
+    }
+  }
+
+  async initializeFromGitHubIssue() {
+    if (this.githubIssueUrl) {
+      const issue = await this.fetchGitHubIssue(this.githubIssueUrl);
+      const parsedDescription = this.parseIssueBody(issue.body);
+      if (!parsedDescription) {
+        throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
+      }
+      this.memory.taskTitle = issue.title;
+      this.memory.taskDescription = parsedDescription.taskDescription;
+      this.memory.taskInstructions = parsedDescription.taskInstructions;
+      console.log(`GitHub Issue Title: ${issue.title}`);
+      console.log(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
+      console.log(`GitHub Issue Task: ${parsedDescription.taskInstructions}`);
+    }
+  }
+
+  async fetchGitHubIssue(url: string): Promise<GitHubIssue> {
+    try {
+      // Convert the GitHub issue URL to the API endpoint
+      const apiUrl = this.convertToApiUrl(url);
+      const response = await axios.get(apiUrl);
+      const issue: GitHubIssue = {
+        title: response.data.title,
+        body: response.data.body,
+      };
+      return issue;
+    } catch (error: any) {
+      throw new Error(`Failed to fetch issue: ${error.message}`);
+    }
+  }
+
+  convertToApiUrl(issueUrl: string): string {
+    const regex = /https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/;
+    const match = issueUrl.match(regex);
+    if (!match) {
+      throw new Error('Invalid GitHub issue URL');
+    }
+    const [, owner, repo, issueNumber] = match;
+    return `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`;
+  }
+
+  parseIssueBody(body: string): { taskDescription: string, taskInstructions: string } | null {
+    const descriptionMatch = body.match(/\*Task Description\*\s*([^*]+)/s);
+    const instructionsMatch = body.match(/\*Task Instructions\*\s*([^*]+)/s);
+
+    if (descriptionMatch && instructionsMatch) {
+      return {
+        taskDescription: descriptionMatch[1].trim(),
+        taskInstructions: instructionsMatch[1].trim(),
+      };
+    } else {
+      return null;
+    }
   }
 
   removeCommentsFromCode(code: string) {
@@ -161,6 +242,7 @@ Please return a JSON array of the relevant file paths:`;
   }
 
   async run() {
+    await this.initializeFromGitHubIssue();
     this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(
       this.memory.workspaceFolder
     );

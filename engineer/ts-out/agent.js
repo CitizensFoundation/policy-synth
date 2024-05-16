@@ -9,10 +9,13 @@ import strip from "strip-comments";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
+import axios from 'axios';
 export class PSEngineerAgent extends PolicySynthAgentBase {
     memory;
-    constructor() {
+    githubIssueUrl;
+    constructor(githubIssueUrl = undefined) {
         super();
+        this.githubIssueUrl = githubIssueUrl;
         this.memory = {
             actionLog: [],
             workspaceFolder: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
@@ -30,6 +33,73 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             modelName: "gpt-4o",
             verbose: true,
         });
+        if (this.githubIssueUrl) {
+            this.fetchGitHubIssue(this.githubIssueUrl).then(issue => {
+                const parsedDescription = this.parseIssueBody(issue.body);
+                if (!parsedDescription) {
+                    throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
+                }
+                this.memory.taskTitle = issue.title;
+                this.memory.taskDescription = parsedDescription.taskDescription;
+                this.memory.taskInstructions = parsedDescription.taskInstructions;
+                console.log(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
+                console.log(`GitHub Issue Task: ${parsedDescription.taskInstructions}`);
+            }).catch(error => {
+                console.error(error.message);
+            });
+        }
+    }
+    async initializeFromGitHubIssue() {
+        if (this.githubIssueUrl) {
+            const issue = await this.fetchGitHubIssue(this.githubIssueUrl);
+            const parsedDescription = this.parseIssueBody(issue.body);
+            if (!parsedDescription) {
+                throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
+            }
+            this.memory.taskTitle = issue.title;
+            this.memory.taskDescription = parsedDescription.taskDescription;
+            this.memory.taskInstructions = parsedDescription.taskInstructions;
+            console.log(`GitHub Issue Title: ${issue.title}`);
+            console.log(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
+            console.log(`GitHub Issue Task: ${parsedDescription.taskInstructions}`);
+        }
+    }
+    async fetchGitHubIssue(url) {
+        try {
+            // Convert the GitHub issue URL to the API endpoint
+            const apiUrl = this.convertToApiUrl(url);
+            const response = await axios.get(apiUrl);
+            const issue = {
+                title: response.data.title,
+                body: response.data.body,
+            };
+            return issue;
+        }
+        catch (error) {
+            throw new Error(`Failed to fetch issue: ${error.message}`);
+        }
+    }
+    convertToApiUrl(issueUrl) {
+        const regex = /https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/;
+        const match = issueUrl.match(regex);
+        if (!match) {
+            throw new Error('Invalid GitHub issue URL');
+        }
+        const [, owner, repo, issueNumber] = match;
+        return `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`;
+    }
+    parseIssueBody(body) {
+        const descriptionMatch = body.match(/\*Task Description\*\s*([^*]+)/s);
+        const instructionsMatch = body.match(/\*Task Instructions\*\s*([^*]+)/s);
+        if (descriptionMatch && instructionsMatch) {
+            return {
+                taskDescription: descriptionMatch[1].trim(),
+                taskInstructions: instructionsMatch[1].trim(),
+            };
+        }
+        else {
+            return null;
+        }
     }
     removeCommentsFromCode(code) {
         return strip(code);
@@ -127,6 +197,7 @@ Please return a JSON array of the relevant file paths:`;
         }
     }
     async run() {
+        await this.initializeFromGitHubIssue();
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
         //TODO: Get .d.ts file for npms also likely to be relevant from the nodes_modules folder
         this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles

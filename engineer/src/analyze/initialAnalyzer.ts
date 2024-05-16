@@ -14,9 +14,9 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
     this.memory = memory;
     this.chat = new ChatOpenAI({
       temperature: 0.0,
-      maxTokens: 4000,
+      maxTokens: 4096,
       modelName: "gpt-4o",
-      verbose: false,
+      verbose: true,
     });
   }
 
@@ -61,11 +61,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
     allNpmPackageDependencies: string[],
     allDocumentationFiles: string[]
   ) {
-    return `Task title: ${this.memory.taskTitle}
-    Task description: ${this.memory.taskDescription}
-    Task instructions: ${this.memory.taskInstructions}
-
-    All npm package.json dependencies:
+    return `All npm package.json dependencies:
     ${JSON.stringify(allNpmPackageDependencies, null, 2)}
 
     All documentation files in workspace:
@@ -73,6 +69,10 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
 
     All already existing typescript files in workspace:
     ${this.memory.allTypescriptSrcFiles?.join("\n")}
+
+    Task title: ${this.memory.taskTitle}
+    Task description: ${this.memory.taskDescription}
+    Task instructions: ${this.memory.taskInstructions}
 
     Your JSON Output:
     `;

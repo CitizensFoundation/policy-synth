@@ -17,6 +17,7 @@
     "@tsconfig/node18": "^18.2.4",
     "@tsconfig/node20": "^20.1.4",
     "@types/strip-comments": "^2.0.4",
+    "@types/utf8": "^3.0.3",
     "axios": "^1.4.0",
     "colors": "^1.4.0",
     "connect-redis": "^7.1.0",

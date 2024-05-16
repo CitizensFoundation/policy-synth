@@ -132,6 +132,13 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
           </ContentOfFilesThatMightChange>`
             : ``}
 
+          ${this.otherFilesToKeepInContextContent
+            ? `
+           <OtherFilesPossiblyRelevant>
+             ${this.otherFilesToKeepInContextContent}
+           </OtherFilesPossiblyRelevant> `
+            : ``}
+
           ${hasCompletedFiles
             ? `
           <CodeFilesYouHaveAlreadyCompleted>

@@ -1,6 +1,7 @@
 import { PSEngineerAgent } from "./agent.js";
 (async () => {
-    const agent = new PSEngineerAgent();
+    const githubIssueUrl = process.argv[2]; // Get the GitHub issue URL from the command line arguments
+    const agent = new PSEngineerAgent(githubIssueUrl);
     try {
         await agent.run();
         process.exit(0);

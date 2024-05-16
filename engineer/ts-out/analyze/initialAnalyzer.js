@@ -11,9 +11,9 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
         this.memory = memory;
         this.chat = new ChatOpenAI({
             temperature: 0.0,
-            maxTokens: 4000,
+            maxTokens: 4096,
             modelName: "gpt-4o",
-            verbose: false,
+            verbose: true,
         });
     }
     readNpmDependencies() {
@@ -33,11 +33,12 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       5. Always include all typedef d.ts files in the existingOtherTypescriptFilesToKeepInContext JSON field.
       6. Always output the full path into all the JSON string arrays.
       7. Only add files that already exist in existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields
-      8. Never add new planned files to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields.
+      8. Never add new files to add to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields add them to newLikelyFilesToAdd.
       9. Important: If the programming task is likely to benefit documentation or examples from online sources, set needsDocumentionsAndExamples to true.
 
       JSON Output Schema:
       {
+        newLikelyFilesToAdd: string[];
         existingTypeScriptFilesLikelyToChange: string[];
         existingOtherTypescriptFilesToKeepInContext: string[];
         documentationFilesToKeepInContext: string[];
@@ -47,11 +48,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
     `;
     }
     analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles) {
-        return `Task title: ${this.memory.taskTitle}
-    Task description: ${this.memory.taskDescription}
-    Task instructions: ${this.memory.taskInstructions}
-
-    All npm package.json dependencies:
+        return `All npm package.json dependencies:
     ${JSON.stringify(allNpmPackageDependencies, null, 2)}
 
     All documentation files in workspace:
@@ -59,6 +56,10 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
 
     All already existing typescript files in workspace:
     ${this.memory.allTypescriptSrcFiles?.join("\n")}
+
+    Task title: ${this.memory.taskTitle}
+    Task description: ${this.memory.taskDescription}
+    Task instructions: ${this.memory.taskInstructions}
 
     Your JSON Output:
     `;

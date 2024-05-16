@@ -28,6 +28,18 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.instructions = instructions;
   }
 
+  sanitizeInput(text: string): string {
+    try {
+      // Encode the text as UTF-8 and then decode it back to string
+      const buffer = Buffer.from(text, 'utf8');
+      const decodedText = buffer.toString('utf8');
+      return decodedText;
+    } catch (error) {
+      console.error('Error sanitizing input text:', error);
+      return ''; // Return an empty string or handle the error as needed
+    }
+  }
+
   renderScanningPrompt(
     problemStatement: IEngineProblemStatement,
     text: string,
@@ -75,7 +87,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
       systemMessage,
       new HumanMessage(
         `<TextContext>:
-        ${text}
+        ${this.sanitizeInput(text)}
         </TextContext>
 
         The overall task we are gathering practical information about: ${this.memory.taskTitle}

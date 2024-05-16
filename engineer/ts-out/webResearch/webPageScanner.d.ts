@@ -7,6 +7,7 @@ export declare class WebPageScanner extends GetWebPagesProcessor {
     instructions: string;
     collectedWebPages: any[];
     constructor(memory: PsEngineerMemoryData, instructions: string);
+    sanitizeInput(text: string): string;
     renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;

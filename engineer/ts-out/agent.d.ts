@@ -1,7 +1,19 @@
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+interface GitHubIssue {
+    title: string;
+    body: string;
+}
 export declare class PSEngineerAgent extends PolicySynthAgentBase {
     memory: PsEngineerMemoryData;
-    constructor();
+    githubIssueUrl: string | undefined;
+    constructor(githubIssueUrl?: string | undefined);
+    initializeFromGitHubIssue(): Promise<void>;
+    fetchGitHubIssue(url: string): Promise<GitHubIssue>;
+    convertToApiUrl(issueUrl: string): string;
+    parseIssueBody(body: string): {
+        taskDescription: string;
+        taskInstructions: string;
+    } | null;
     removeCommentsFromCode(code: string): string;
     removeWorkspacePathFromFileIfNeeded(filePath: string): string;
     doWebResearch(): Promise<void>;
@@ -11,4 +23,5 @@ export declare class PSEngineerAgent extends PolicySynthAgentBase {
     run(): Promise<void>;
     loadFileContents(fileName: string): string | null;
 }
+export {};
 //# sourceMappingURL=agent.d.ts.map
