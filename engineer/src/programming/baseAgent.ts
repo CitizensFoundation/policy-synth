@@ -122,9 +122,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
         : ``
     }${
       this.previousCurrentErrors
-        ? `\n<PreviousErrorsYouWereTryingToFix>${
-            this.previousCurrentErrors
-          }</PreviousErrorsYouWereTryingToFix>`
+        ? `\n<PreviousErrorsYouWereTryingToFix>${this.previousCurrentErrors}</PreviousErrorsYouWereTryingToFix>`
         : ``
     }`;
   }
@@ -183,6 +181,15 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
               ? `<ContentOfFilesThatMightChange>
             ${this.likelyToChangeFilesContents}
           </ContentOfFilesThatMightChange>`
+              : ``
+          }
+
+          ${
+            this.otherFilesToKeepInContextContent
+              ? `
+           <OtherFilesPossiblyRelevant>
+             ${this.otherFilesToKeepInContextContent}
+           </OtherFilesPossiblyRelevant> `
               : ``
           }
 

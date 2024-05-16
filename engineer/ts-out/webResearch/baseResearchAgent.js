@@ -15,7 +15,7 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
     useDebugCache = true;
     debugCache = undefined;
     async doWebResearch() {
-        const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v5.json`;
+        const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v6.json`;
         if (this.useDebugCache) {
             try {
                 if (fs.existsSync(cacheDebugFilePath)) {

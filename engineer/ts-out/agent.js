@@ -16,23 +16,17 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         this.memory = {
             actionLog: [],
             workspaceFolder: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
-            taskTitle: "Refactor LLM model classes with a new typedef",
-            taskDescription: `We want to create a new typedef called PsModelChatItem to replace {role:string,message:string}`,
-            taskInstructions: `1. Add new interface PsModelChatItem {role:string,message:string} to src/streamingLlms.d.ts
-      2. Replace {role:string,message:string} with PsModelChatItem in src/models/baseChatModel.ts and src/models/openAiChat.ts, src/models/claudeOpusChat.ts and src/models/googleGeminiChat.ts
-      `,
+            taskTitle: "Add a new LLM model class for OpenAI on Azure",
+            taskDescription: `We want to add a new model class into src/models/azureOpenAiChat.ts using the @azure/openai npm module.`,
+            taskInstructions: `1. Add a new model class in src/models/azureOpenAiChat.ts using the @azure/openai npm module based on src/models/baseChatModel.ts parent class.`,
             stages: PSEngineerAgent.emptyDefaultStages,
             docsSiteToScan: [
-                "https://ai.google.dev/gemini-api/docs/get-started/node",
-                "https://www.npmjs.com/package/openai",
-                "https://www.reconify.com/docs/anthropic/node",
-                "https://www.npmjs.com/package/@google/generative-ai",
-                "https://www.npmjs.com/package/@anthropic-ai/sdk?activeTab=readme",
+                "https://www.npmjs.com/package/@azure/openai",
             ],
         };
         this.chat = new ChatOpenAI({
             temperature: 0.0,
-            maxTokens: 4000,
+            maxTokens: 4096,
             modelName: "gpt-4o",
             verbose: true,
         });

@@ -42,11 +42,12 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
       5. Always include all typedef d.ts files in the existingOtherTypescriptFilesToKeepInContext JSON field.
       6. Always output the full path into all the JSON string arrays.
       7. Only add files that already exist in existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields
-      8. Never add new planned files to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields.
+      8. Never add new files to add to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields add them to newLikelyFilesToAdd.
       9. Important: If the programming task is likely to benefit documentation or examples from online sources, set needsDocumentionsAndExamples to true.
 
       JSON Output Schema:
       {
+        newLikelyFilesToAdd: string[];
         existingTypeScriptFilesLikelyToChange: string[];
         existingOtherTypescriptFilesToKeepInContext: string[];
         documentationFilesToKeepInContext: string[];

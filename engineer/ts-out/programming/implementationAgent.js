@@ -103,9 +103,11 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
             currentFileToUpdateContents = this.loadFileContents(fileName);
             if (!currentFileToUpdateContents) {
                 console.error(`Error loading file ${fileName}`);
-                throw new Error(`Error loading file ${fileName}`);
+                //throw new Error(`Error loading file ${fileName}`);
             }
-            this.setOriginalFileIfNeeded(fileName, currentFileToUpdateContents);
+            else {
+                this.setOriginalFileIfNeeded(fileName, currentFileToUpdateContents);
+            }
         }
         if (!this.havePrintedFirstUserDebugMessage) {
             this.havePrintedFirstUserDebugMessage = true;

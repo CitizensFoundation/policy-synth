@@ -21,20 +21,16 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         "/home/robert/Scratch/policy-synth-engineer-tests/agents",
       taskTitle:
         "Add a new LLM model class for OpenAI on Azure",
-      taskDescription: `We want to add a new model class into src/models/azureOpenAiChat.ts`,
-      taskInstructions: `1. Add a new model class in src/models/azureOpenAiChat.ts using the @azure/openai npm module based on src/models/baseChatModel.ts`,
+      taskDescription: `We want to add a new model class into src/models/azureOpenAiChat.ts using the @azure/openai npm module.`,
+      taskInstructions: `1. Add a new model class in src/models/azureOpenAiChat.ts using the @azure/openai npm module based on src/models/baseChatModel.ts parent class.`,
       stages: PSEngineerAgent.emptyDefaultStages,
       docsSiteToScan: [
-        "https://ai.google.dev/gemini-api/docs/get-started/node",
-        "https://www.npmjs.com/package/openai",
-        "https://www.reconify.com/docs/anthropic/node",
-        "https://www.npmjs.com/package/@google/generative-ai",
-        "https://www.npmjs.com/package/@anthropic-ai/sdk?activeTab=readme",
+        "https://www.npmjs.com/package/@azure/openai",
       ],
     } as unknown as PsEngineerMemoryData;
     this.chat = new ChatOpenAI({
       temperature: 0.0,
-      maxTokens: 4000,
+      maxTokens: 4096,
       modelName: "gpt-4o",
       verbose: true,
     });
