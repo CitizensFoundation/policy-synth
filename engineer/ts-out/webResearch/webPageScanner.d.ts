@@ -5,6 +5,7 @@ export declare class WebPageScanner extends GetWebPagesProcessor {
     memory: PsEngineerMemoryData;
     scanType?: PsEngineerWebResearchTypes;
     instructions: string;
+    brokenGpt4TokenizerUrls: string[];
     collectedWebPages: any[];
     constructor(memory: PsEngineerMemoryData, instructions: string);
     sanitizeInput(text: string): string;

@@ -31,12 +31,12 @@ export class WebPageScanner extends GetWebPagesProcessor {
   sanitizeInput(text: string): string {
     try {
       // Encode the text as UTF-8 and then decode it back to string
-      const buffer = Buffer.from(text, 'utf8');
-      const decodedText = buffer.toString('utf8');
+      const buffer = Buffer.from(text, "utf8");
+      const decodedText = buffer.toString("utf8");
       return decodedText;
     } catch (error) {
-      console.error('Error sanitizing input text:', error);
-      return ''; // Return an empty string or handle the error as needed
+      console.error("Error sanitizing input text:", error);
+      return ""; // Return an empty string or handle the error as needed
     }
   }
 
@@ -47,9 +47,9 @@ export class WebPageScanner extends GetWebPagesProcessor {
     entityIndex?: number
   ) {
     let systemMessage = new SystemMessage("");
-    if (this.scanType=="documentation") {
+    if (this.scanType == "documentation") {
       systemMessage = new SystemMessage(
-          `Your are an expert in extracing documentation from web pages for a given task and npm modules:
+        `Your are an expert in extracing documentation from web pages for a given task and npm modules:
 
         Important Instructions:
         1. Examine the <TextContext> and copy all documentation highly relevant to the task provided by the user.
@@ -57,27 +57,27 @@ export class WebPageScanner extends GetWebPagesProcessor {
         3. If no highly relevant, to the user provided task, documentation is found, output: No relevant documentation found.
         4. Output in Markdown format otherwise.
 `
-      )
-    } else if (this.scanType=="codeExamples") {
+      );
+    } else if (this.scanType == "codeExamples") {
       systemMessage = new SystemMessage(
-          `Your are an expert in extracing source code examples from web pages for a given task and npm modules:
+        `Your are an expert in extracing source code examples from web pages for a given task and npm modules:
 
           Important Instructions:
           1. Examine the <TextContext> and output all source code examples that are highly relvant to the task provided by the user.
           2. Just copy highly relevant source code examples from the <TextContext> word by word do not add anything except formating.
           3. If no relevant, to the user provided task, source code examples are found, output: No relevant source code examples found.
           4. Output in Markdown format otherwise.`
-      )
-    } else if (this.scanType=="solutionsForErrors") {
+      );
+    } else if (this.scanType == "solutionsForErrors") {
       systemMessage = new SystemMessage(
-          `Your are an expert in extracing solutions to errors from web pages for a given task and npm modules:
+        `Your are an expert in extracing solutions to errors from web pages for a given task and npm modules:
 
           Important Instructions:
           1. Examine the <TextContext> and <UserErrors> output all potential solutions to the users errors highly relvant to the task provided by the user.
           2. Just copy potential solutions to the users errors from the <TextContext> word by word do not add anything except formating.
           3. If no relevant, to the user provided task, source code examples are found, output: No solutions to errors found.
           4. Output in Markdown format otherwise.`
-      )
+      );
     } else {
       console.error(`Unknown scan type ${this.scanType}`);
       throw new Error(`Unknown scan type ${this.scanType}`);
@@ -87,12 +87,18 @@ export class WebPageScanner extends GetWebPagesProcessor {
       systemMessage,
       new HumanMessage(
         `<TextContext>:
-        ${this.sanitizeInput(text)}
+        ${text}
         </TextContext>
 
-        The overall task we are gathering practical information about: ${this.memory.taskTitle}
-        Overall task we are researching description: ${this.memory.taskDescription}
-        Overall task we are researching instructions (not for you to follow now, just FYI): ${this.memory.taskInstructions}
+        The overall task we are gathering practical information about: ${
+          this.memory.taskTitle
+        }
+        Overall task we are researching description: ${
+          this.memory.taskDescription
+        }
+        Overall task we are researching instructions (not for you to follow now, just FYI): ${
+          this.memory.taskInstructions
+        }
 
         All likely npm package.json dependencies:
         ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
@@ -110,10 +116,11 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
   async getTokenCount(text: string, subProblemIndex: number | undefined) {
     const words = text.split(" ");
-    const tokenCount = words.length*1.25
+    const tokenCount = words.length * 1.25;
     const promptTokenCount = { totalCount: 500, countPerMessage: [] };
     const totalTokenCount =
-      tokenCount + 500 +
+      tokenCount +
+      500 +
       IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
@@ -134,12 +141,13 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
 
-    const analysis = await this.callLLM(
+    const analysis = (await this.callLLM(
       "web-get-pages",
       IEngineConstants.getSolutionsPagesAnalysisModel,
       messages,
-      false, true
-    ) as any;
+      false,
+      true
+    )) as any;
 
     console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
     return analysis;
@@ -177,9 +185,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
       if (textAnalysis) {
         this.collectedWebPages.push(textAnalysis);
 
-        this.logger.debug(
-          `Saving text analysis ${textAnalysis}`
-        );
+        this.logger.debug(`Saving text analysis ${textAnalysis}`);
       } else {
         this.logger.warn(`No text analysis for ${url}`);
       }
@@ -213,11 +219,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     return true;
   }
 
-  async scan(
-    listOfUrls: string[],
-    scanType: PsEngineerWebResearchTypes
-  ) {
-
+  async scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes) {
     this.scanType = scanType;
 
     this.chat = new ChatOpenAI({
@@ -226,7 +228,6 @@ export class WebPageScanner extends GetWebPagesProcessor {
       modelName: "gpt-4o",
       verbose: true,
     });
-
 
     this.logger.info("Web Pages Scanner");
 
@@ -243,11 +244,11 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     if (this.memory.docsSiteToScan) {
       listOfUrls = [...listOfUrls, ...this.memory.docsSiteToScan];
-      console.log(`Adding docsSiteToScan ${this.memory.docsSiteToScan}`)
+      console.log(`Adding docsSiteToScan ${this.memory.docsSiteToScan}`);
     }
 
     for (let i = 0; i < listOfUrls.length; i++) {
-      this.logger.info(`${i+1}/${listOfUrls.length}`);
+      this.logger.info(`${i + 1}/${listOfUrls.length}`);
       this.logger.info(`------> Searching ${listOfUrls[i]} <------`);
 
       await this.getAndProcessPage(

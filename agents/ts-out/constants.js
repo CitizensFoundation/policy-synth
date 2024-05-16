@@ -9,8 +9,8 @@ const gpt35_16k_TPM = 1000000 * 3;
 const gpt35_16k_RPM = 10000 * 3;
 const gpt35_TPM = 750000;
 const gpt35_RPM = 10000;
-const gpt4_TPM = 150000 * 3;
-const gpt4_RPM = 10000 * 3;
+const gpt4_TPM = 150000 * 3 * 2;
+const gpt4_RPM = 10000 * 3 * 2;
 export class IEngineConstants {
     static createSubProblemsModel = {
         name: "gpt-4-turbo-2024-04-09",

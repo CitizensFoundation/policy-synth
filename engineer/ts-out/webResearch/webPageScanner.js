@@ -12,6 +12,10 @@ const readFileAsync = promisify(readFile);
 export class WebPageScanner extends GetWebPagesProcessor {
     scanType;
     instructions;
+    // Those URLs give a 500 error at open AI, at first a 400 error until I sanitizeInput below but after sanitation a 500 content error
+    brokenGpt4TokenizerUrls = [
+        "https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb"
+    ];
     collectedWebPages = [];
     constructor(memory, instructions) {
         super(undefined, memory);
@@ -66,7 +70,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
         return [
             systemMessage,
             new HumanMessage(`<TextContext>:
-        ${this.sanitizeInput(text)}
+        ${text}
         </TextContext>
 
         The overall task we are gathering practical information about: ${this.memory.taskTitle}
@@ -108,19 +112,26 @@ export class WebPageScanner extends GetWebPagesProcessor {
     }
     async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
-        try {
-            const textAnalysis = await this.getTextAnalysis(text);
-            if (textAnalysis) {
-                this.collectedWebPages.push(textAnalysis);
-                this.logger.debug(`Saving text analysis ${textAnalysis}`);
-            }
-            else {
-                this.logger.warn(`No text analysis for ${url}`);
-            }
+        //TODO: Handle the 400 error better if happens for other URLs
+        if (this.brokenGpt4TokenizerUrls.includes(url)) {
+            this.logger.warn(`Skipping broken GPT-4o tokenizer URL ${url}`);
+            return;
         }
-        catch (e) {
-            this.logger.error(`Error in processPageText`);
-            this.logger.error(e.stack || e);
+        else {
+            try {
+                const textAnalysis = await this.getTextAnalysis(text);
+                if (textAnalysis) {
+                    this.collectedWebPages.push(textAnalysis);
+                    this.logger.debug(`Saving text analysis ${textAnalysis}`);
+                }
+                else {
+                    this.logger.warn(`No text analysis for ${url}`);
+                }
+            }
+            catch (e) {
+                this.logger.error(`Error in processPageText`);
+                this.logger.error(e.stack || e);
+            }
         }
     }
     async getAndProcessPage(subProblemIndex, url, browserPage, type, entityIndex) {

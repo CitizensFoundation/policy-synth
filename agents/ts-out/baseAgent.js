@@ -250,6 +250,10 @@ export class PolicySynthAgentBase {
                     if (error.message && error.message.indexOf("429") > -1) {
                         this.logger.warn("429 error, retrying");
                     }
+                    if (error.message && error.message.indexOf("Failed to generate output due to special tokens in the input") > -1) {
+                        this.logger.error("Failed to generate output due to special tokens in the input stopping");
+                        retryCount = maxRetries;
+                    }
                     else {
                         this.logger.warn(error);
                         // Output the stack strace
