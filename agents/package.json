@@ -79,6 +79,7 @@
     "puppeteer": "22.7.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "tiktoken": "^1.0.15",
     "weaviate-ts-client": "^2.1.1",
     "winston": "^3.13.0",
     "ws": "^8.16.0",
