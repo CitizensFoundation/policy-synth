@@ -6,6 +6,7 @@ export declare abstract class PsEngineerBaseWebResearchAgent extends PolicySynth
     maxTopContentResultsToUse: number;
     useDebugCache: boolean;
     debugCache: string[] | undefined;
+    debugCacheVersion: string;
     abstract searchInstructions: string;
     abstract scanType: PsEngineerWebResearchTypes;
     doWebResearch(): Promise<any[] | undefined>;
