@@ -74,7 +74,7 @@ export class PolicySynthAgentBase {
             "get-metadata-for-top-evidence": {},
             "validation-agent": {},
             "ingestion-agent": {},
-            "engineering-agent": {}
+            "engineering-agent": {},
         };
     }
     getJsonBlock(text) {
@@ -93,7 +93,7 @@ export class PolicySynthAgentBase {
         let totalCost = undefined;
         if (this.memory && this.memory.stages) {
             totalCost = 0;
-            Object.values(this.memory.stages).forEach(stage => {
+            Object.values(this.memory.stages).forEach((stage) => {
                 if (stage.tokensInCost && stage.tokensOutCost) {
                     totalCost += stage.tokensInCost + stage.tokensOutCost;
                 }
@@ -250,8 +250,10 @@ export class PolicySynthAgentBase {
                     if (error.message && error.message.indexOf("429") > -1) {
                         this.logger.warn("429 error, retrying");
                     }
-                    if (error.message && error.message.indexOf("Failed to generate output due to special tokens in the input") > -1) {
-                        this.logger.error("Failed to generate output due to special tokens in the input stopping");
+                    if (error.message &&
+                        (error.message.indexOf("Failed to generate output due to special tokens in the input") > -1 ||
+                            error.message.indexOf("The model produced invalid content. Consider modifying") > -1)) {
+                        this.logger.error("Failed to generate output due to special tokens in the input stopping or The model produced invalid content.");
                         retryCount = maxRetries;
                     }
                     else {
