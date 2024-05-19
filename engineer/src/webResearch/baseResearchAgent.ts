@@ -14,14 +14,14 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
   percentOfResultsToScan = 0.3;
   maxTopContentResultsToUse = 6;
 
-  useDebugCache = false;
+  useDebugCache = true;
   debugCache: string[] | undefined = undefined;
 
   abstract searchInstructions: string;
   abstract scanType: PsEngineerWebResearchTypes;
 
   async doWebResearch() {
-    const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v6.json`;
+    const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v7.json`;
 
     if (this.useDebugCache) {
       try {

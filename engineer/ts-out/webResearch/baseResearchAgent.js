@@ -12,10 +12,10 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
     percentOfQueriesToSearch = 0.25;
     percentOfResultsToScan = 0.3;
     maxTopContentResultsToUse = 6;
-    useDebugCache = false;
+    useDebugCache = true;
     debugCache = undefined;
     async doWebResearch() {
-        const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v6.json`;
+        const cacheDebugFilePath = `/tmp/${this.scanType}_webResearchDebugCache_v7.json`;
         if (this.useDebugCache) {
             try {
                 if (fs.existsSync(cacheDebugFilePath)) {
