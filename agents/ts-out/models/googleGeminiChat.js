@@ -3,10 +3,10 @@ import { BaseChatModel } from "./baseChatModel";
 export class GoogleGeminiChat extends BaseChatModel {
     client;
     model;
-    constructor(apiKey) {
-        super();
+    constructor(apiKey, modelName = "gemini-pro") {
+        super(modelName);
         this.client = new GoogleGenerativeAI(apiKey);
-        this.model = this.client.getGenerativeModel({ model: "gemini-pro" });
+        this.model = this.client.getGenerativeModel({ model: this.modelName });
     }
     async generate(messages, streaming, streamingCallback) {
         const history = messages.map((msg) => ({

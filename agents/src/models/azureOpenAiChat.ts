@@ -7,8 +7,8 @@ export class AzureOpenAiChat extends BaseChatModel {
   private client: OpenAIClient;
   private deploymentName: string;
 
-  constructor(endpoint: string, apiKey: string, deploymentName: string) {
-    super();
+  constructor(endpoint: string, apiKey: string, deploymentName: string, modelName: string = 'gpt-4o') {
+    super(modelName);
     this.client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
     this.deploymentName = deploymentName;
   }
@@ -40,7 +40,7 @@ export class AzureOpenAiChat extends BaseChatModel {
   }
 
   async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
-    const encoder = encoding_for_model('gpt-3.5-turbo' as TiktokenModel);
+    const encoder = encoding_for_model(this.modelName as TiktokenModel);
     const chatMessages = messages.map((msg) => ({
       role: msg.role as ChatRole,
       content: msg.message,

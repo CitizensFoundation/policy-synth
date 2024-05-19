@@ -3,8 +3,8 @@ import { BaseChatModel } from './baseChatModel';
 import { get_encoding } from 'tiktoken';
 export class OpenAiChat extends BaseChatModel {
     client;
-    constructor(apiKey) {
-        super();
+    constructor(apiKey, modelName = 'gpt-4o') {
+        super(modelName);
         this.client = new OpenAI({ apiKey });
     }
     async generate(messages, streaming, streamingCallback) {
@@ -14,7 +14,7 @@ export class OpenAiChat extends BaseChatModel {
         }));
         if (streaming) {
             const stream = await this.client.chat.completions.create({
-                model: 'gpt-3.5-turbo',
+                model: this.modelName,
                 messages: formattedMessages,
                 stream: true,
             });
@@ -26,7 +26,7 @@ export class OpenAiChat extends BaseChatModel {
         }
         else {
             const response = await this.client.chat.completions.create({
-                model: 'gpt-3.5-turbo',
+                model: this.modelName,
                 messages: formattedMessages,
             });
             return response.choices[0]?.message?.content;

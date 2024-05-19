@@ -6,10 +6,10 @@ export class GoogleGeminiChat extends BaseChatModel {
   private client: GoogleGenerativeAI;
   private model: any;
 
-  constructor(apiKey: string) {
-    super();
+  constructor(apiKey: string, modelName: string = "gemini-pro") {
+    super(modelName);
     this.client = new GoogleGenerativeAI(apiKey);
-    this.model = this.client.getGenerativeModel({ model: "gemini-pro" });
+    this.model = this.client.getGenerativeModel({ model: this.modelName });
   }
 
   async generate(

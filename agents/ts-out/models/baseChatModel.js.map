@@ -1,1 +1,1 @@
-{"version":3,"file":"baseChatModel.js","sourceRoot":"","sources":["../../src/models/baseChatModel.ts"],"names":[],"mappings":"AACA,MAAM,OAAgB,aAAa;CAUlC"}
+{"version":3,"file":"baseChatModel.js","sourceRoot":"","sources":["../../src/models/baseChatModel.ts"],"names":[],"mappings":"AAGA,MAAM,OAAgB,aAAa;IACjC,SAAS,CAAyB;IAElC,YAAY,SAAiC;QAC3C,IAAI,CAAC,SAAS,GAAG,SAAS,CAAC;IAC7B,CAAC;CAWF"}

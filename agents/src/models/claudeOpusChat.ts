@@ -6,8 +6,8 @@ import { encoding_for_model, TiktokenModel } from 'tiktoken';
 export class ClaudeOpusChat extends BaseChatModel {
   private client: Anthropic;
 
-  constructor(apiKey: string) {
-    super();
+  constructor(apiKey: string, modelName: string = 'claude-3-opus-20240229') {
+    super(modelName);
     this.client = new Anthropic({ apiKey });
   }
 
@@ -25,7 +25,7 @@ export class ClaudeOpusChat extends BaseChatModel {
       const stream = await this.client.messages.create({
         max_tokens: 1024,
         messages: formattedMessages,
-        model: 'claude-3-opus-20240229',
+        model: this.modelName,
         stream: true,
       });
 
@@ -38,7 +38,7 @@ export class ClaudeOpusChat extends BaseChatModel {
       const response = await this.client.messages.create({
         max_tokens: 1024,
         messages: formattedMessages,
-        model: 'claude-3-opus-20240229',
+        model: this.modelName,
       });
 
       return response;
