@@ -56,7 +56,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     1. Review the proposed coding plan.
     2. Assess its feasibility, correctness, and completeness.
     3. Provide feedback if you find critical issues or approve the plan if it meets the criteria with the words "Coding plan looks good".
-    4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
+    4. Never create any documentation tasks for the code, that is already done automatically through a seperate process.
     5. We always create and modify typescript .ts files.
     6. There should not be much actual code rather a high-level plan for the changes needed for each file and each task.
     7. The coding plan does not have to include every detail, the goal is to provide a high-level plan for the changes needed for each file and each task.
@@ -89,7 +89,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     1. Review the proposed action plan.
     2. Assess its feasibility, correctness, and completeness.
     3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Action plan looks good".
-    4. Plan should not include documentation tasks, that is already done automatically, focus on the programming changes.
+    4. Plan should not include any code documentation tasks, that is already done automatically, focus on the programming changes.
     5. For new files you are adding or have created, output "add" in the fileAction field.
     6. For files you are changing there should be "change" in the fileAction JSON field.
     7. If you are deleting a file there should be "delete" in the fileAction JSON field.

@@ -5,7 +5,7 @@ import path from "path";
 import fs from "fs";
 
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
-  havePrintedFirstUserDebugMessage = false;
+  havePrintedFirstUserDebugMessage = true;
 
   codingSystemPrompt(currentErrors: string | undefined) {
     return `Your are an expert software engineering programmer.
@@ -16,6 +16,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       3. Use the provided coding plan to implement the changes.
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
+      6. Never remove any logging from the code except if that is a part of the task explicitly, even when refactoring.
       7. Never add any explanations or comments before or after the code.
       ${
         currentErrors
@@ -187,25 +188,23 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       } else {
         this.setOriginalFileIfNeeded(fileName, currentFileToUpdateContents);
       }
-
     }
 
     if (!this.havePrintedFirstUserDebugMessage) {
+      console.log(
+        `\n\n\n\n\n\n\n\n\n===============X============> Code user prompt:\n${this.codingUserPrompt(
+          fileName,
+          fileAction,
+          currentActions,
+          currentFileToUpdateContents,
+          completedActions,
+          futureActions,
+          retryCount,
+          reviewLog
+        )}\n\n\n\n\n\n\n\n`
+      );
       this.havePrintedFirstUserDebugMessage = true;
     }
-
-    console.log(
-      `\n\n\n\n\n\n\n\n\n===============X============> Code user prompt:\n${this.codingUserPrompt(
-        fileName,
-        fileAction,
-        currentActions,
-        currentFileToUpdateContents,
-        completedActions,
-        futureActions,
-        retryCount,
-        reviewLog
-      )}\n\n\n\n\n\n\n\n`
-    );
 
     while (!hasPassedReview && retryCount < this.maxRetries) {
       console.log(`Calling LLM... Attempt ${retryCount + 1}`);

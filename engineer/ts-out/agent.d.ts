@@ -20,7 +20,7 @@ export declare class PSEngineerAgent extends PolicySynthAgentBase {
     doWebResearch(): Promise<void>;
     readAllTypescriptFileNames(folderPath: string): Promise<string[]>;
     searchDtsFilesInNodeModules(): Promise<string[]>;
-    filterRelevantDtsFiles(dtsFiles: string[]): Promise<string[]>;
+    filterRelevantDtsFiles(dtsFiles: string[], addMinOneFileInstructions?: boolean): Promise<string[]>;
     run(): Promise<void>;
     loadFileContents(fileName: string): string | null;
 }

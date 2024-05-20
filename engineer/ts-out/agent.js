@@ -192,16 +192,19 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         console.log(`Relevant .d.ts files: ${relevantDtsFiles.join(", ")}`);
         return relevantDtsFiles;
     }
-    async filterRelevantDtsFiles(dtsFiles) {
+    async filterRelevantDtsFiles(dtsFiles, addMinOneFileInstructions = false) {
         dtsFiles = dtsFiles.map((filePath) => this.removeWorkspacePathFromFileIfNeeded(filePath));
-        const systemPrompt = `You are an expert software engineering analyzer.
+        const getSystemPrompt = (addInstruction) => `You are an expert software engineering analyzer.
 
-    Instructions:
-    1. You will receive a list of .d.ts file paths from the user to analyze.
-    2. Always output the d.ts file paths again that are possibly to be relevant for the upcoming user task.
-    3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
+Instructions:
+1. You will receive a list of .d.ts file paths from the user to analyze.
+2. Always output the d.ts file paths again that are possibly to be relevant for the upcoming user task.
+3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
+${addInstruction
+            ? "4. Always output at least one d.ts file, the best one to help with the task at hand."
+            : ""}
 
-Only output a JSON array with possibly relevant d.ts files, no explainations before or after the JSON string[].
+Only output a JSON array with possibly relevant d.ts files, no explanations before or after the JSON string[].
 
 <UpcomingUserTask>
   Task title: ${this.memory.taskTitle}
@@ -212,18 +215,29 @@ Only output a JSON array with possibly relevant d.ts files, no explainations bef
         const userPrompt = `List of .d.ts files to analyze for relevance to the task:
 ${JSON.stringify(dtsFiles, null, 2)}
 
-  Please return a JSON string array of the relevant files:`;
-        let relevantFiles = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)], true));
-        try {
-            console.log(JSON.stringify(relevantFiles, null, 2));
-            relevantFiles = relevantFiles.map((filePath) => this.addWorkspacePathToFileIfNeeded(filePath));
-            console.log("Filtered relveant files", relevantFiles);
-            return relevantFiles;
+Please return a JSON string array of the relevant files:`;
+        let relevantFiles = [];
+        let retryCount = 0;
+        while (retryCount < 5) {
+            const systemPrompt = getSystemPrompt(addMinOneFileInstructions);
+            try {
+                relevantFiles = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)], true));
+                console.log(JSON.stringify(relevantFiles, null, 2));
+                relevantFiles = relevantFiles.map((filePath) => this.addWorkspacePathToFileIfNeeded(filePath));
+                console.log("Filtered relevant files", relevantFiles);
+                if (relevantFiles.length > 0) {
+                    return relevantFiles;
+                }
+            }
+            catch (error) {
+                console.error("Error parsing LLM response:", error);
+            }
+            retryCount++;
+            if (retryCount > 0) {
+                addMinOneFileInstructions = true;
+            }
         }
-        catch (error) {
-            console.error("Error parsing LLM response:", error);
-            return [];
-        }
+        return relevantFiles;
     }
     async run() {
         await this.initializeFromGitHubIssue();
