@@ -243,9 +243,9 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
 
     Instructions:
     1. You will receive a list of .d.ts file paths from the user to analyze.
-    2. Always output the d.ts file paths again that are likely to be relevant for the upcoming user task.
+    2. Always output the d.ts file paths again that are possibly to be relevant for the upcoming user task.
 
-Only output a JSON array with the possibly relevant d.ts file, no explainations before or after the JSON string[].
+Only output a JSON array with possibly relevant d.ts files, no explainations before or after the JSON string[].
 
 <UpcomingUserTask>
   Task title: ${this.memory.taskTitle}
@@ -255,7 +255,7 @@ Only output a JSON array with the possibly relevant d.ts file, no explainations 
 `;
 
     const userPrompt = `List of .d.ts files to analyze for relevance to the task:
-${dtsFiles.join("\n")}
+${JSON.stringify(dtsFiles, null, 2)}
 
   Please return a JSON string array of the relevant files:`;
 
