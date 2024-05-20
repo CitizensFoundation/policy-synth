@@ -7,16 +7,10 @@ export class AzureOpenAiChat extends BaseChatModel {
   private client: OpenAIClient;
   private deploymentName: string;
 
-  constructor(
-    endpoint: string,
-    apiKey: string,
-    deploymentName: string,
-    modelName: string = "gpt-4o",
-    maxTokensOut: number = 4096
-  ) {
-    super(modelName, maxTokensOut);
-    this.client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
-    this.deploymentName = deploymentName;
+  constructor(config: PSAzureModelConfig) {
+    super(config.modelName || "gpt-4o", config.maxTokensOut || 4096);
+    this.client = new OpenAIClient(config.endpoint, new AzureKeyCredential(config.apiKey));
+    this.deploymentName = config.deploymentName;
   }
 
   async generate(

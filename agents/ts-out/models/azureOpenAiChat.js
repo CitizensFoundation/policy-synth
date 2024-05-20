@@ -4,10 +4,10 @@ import { encoding_for_model } from "tiktoken";
 export class AzureOpenAiChat extends BaseChatModel {
     client;
     deploymentName;
-    constructor(endpoint, apiKey, deploymentName, modelName = "gpt-4o", maxTokensOut = 4096) {
-        super(modelName, maxTokensOut);
-        this.client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
-        this.deploymentName = deploymentName;
+    constructor(config) {
+        super(config.modelName || "gpt-4o", config.maxTokensOut || 4096);
+        this.client = new OpenAIClient(config.endpoint, new AzureKeyCredential(config.apiKey));
+        this.deploymentName = config.deploymentName;
     }
     async generate(messages, streaming, streamingCallback) {
         const chatMessages = messages.map((msg) => ({

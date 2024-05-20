@@ -6,7 +6,8 @@ import { encoding_for_model, TiktokenModel } from "tiktoken";
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
 
-  constructor(apiKey: string, modelName: string = "gpt-4o", maxTokensOut: number = 4096) {
+  constructor(config: PSOpenAiModelConfig) {
+    const { apiKey, modelName = "gpt-4o", maxTokensOut = 4096 } = config;
     super(modelName, maxTokensOut);
     this.client = new OpenAI({ apiKey });
   }

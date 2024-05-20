@@ -3,7 +3,8 @@ import { BaseChatModel } from "./baseChatModel";
 import { encoding_for_model } from "tiktoken";
 export class ClaudeOpusChat extends BaseChatModel {
     client;
-    constructor(apiKey, modelName = "claude-3-opus-20240229", maxTokensOut = 4096) {
+    constructor(config) {
+        const { apiKey, modelName = "claude-3-opus-20240229", maxTokensOut = 4096 } = config;
         super(modelName, maxTokensOut);
         this.client = new Anthropic({ apiKey });
     }

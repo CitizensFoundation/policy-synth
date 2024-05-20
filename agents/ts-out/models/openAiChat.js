@@ -3,7 +3,8 @@ import { BaseChatModel } from "./baseChatModel";
 import { encoding_for_model } from "tiktoken";
 export class OpenAiChat extends BaseChatModel {
     client;
-    constructor(apiKey, modelName = "gpt-4o", maxTokensOut = 4096) {
+    constructor(config) {
+        const { apiKey, modelName = "gpt-4o", maxTokensOut = 4096 } = config;
         super(modelName, maxTokensOut);
         this.client = new OpenAI({ apiKey });
     }

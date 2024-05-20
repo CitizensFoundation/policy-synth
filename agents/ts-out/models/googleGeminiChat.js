@@ -3,9 +3,9 @@ import { BaseChatModel } from "./baseChatModel";
 export class GoogleGeminiChat extends BaseChatModel {
     client;
     model;
-    constructor(apiKey, modelName = "gemini-pro", maxTokensOut = 4096) {
-        super(modelName, maxTokensOut);
-        this.client = new GoogleGenerativeAI(apiKey);
+    constructor(config) {
+        super(config.modelName || "gemini-pro", config.maxTokensOut || 4096);
+        this.client = new GoogleGenerativeAI(config.apiKey);
         this.model = this.client.getGenerativeModel({ model: this.modelName });
     }
     async generate(messages, streaming, streamingCallback) {
