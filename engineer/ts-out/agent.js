@@ -241,24 +241,29 @@ ${JSON.stringify(dtsFiles, null, 2)}
         //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
         const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
         await analyzeAgent.analyzeAndSetup();
-        const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
-        if (nodeModuleTypeDefs.length > 0) {
-            this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
-                .map((filePath) => {
-                const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
-                if (content && content.length > 75) {
-                    return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
-                }
-                else {
-                    return null;
-                }
-            })
-                .filter(Boolean)
-                .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
+        if (this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
+            const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+            if (nodeModuleTypeDefs.length > 0) {
+                this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
+                    .map((filePath) => {
+                    const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
+                    if (content && content.length > 75) {
+                        return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
+                    }
+                    else {
+                        return null;
+                    }
+                })
+                    .filter(Boolean)
+                    .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
+            }
+            else {
+                this.logger.warn("No .d.ts files found in node_modules");
+                process.exit(1);
+            }
         }
         else {
-            this.logger.warn("No .d.ts files found in node_modules");
-            process.exit(1);
+            console.warn("No npm packages to search for .d.ts files");
         }
         this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
         if (this.memory.needsDocumentionsAndExamples === true) {
