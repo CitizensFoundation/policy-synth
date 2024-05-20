@@ -51,7 +51,7 @@ The RAG Chatbot powers the Rebooting Democracy initiative by utilizing hundreds 
 
 
 ### Find Skills-First Policy Barriers (Improve laws & regulation)
-This flow agent uses AI to analyze extensive data sets, helping to identify and recommend changes to barriers in skills-first policies in US states. It focuses on enhancing legal frameworks to support skills-based education and employment initiatives.
+This agent flow uses AI to analyze extensive data sets, helping to identify and recommend changes to barriers in skills-first policies in US states. It focuses on enhancing legal frameworks to support skills-based education and employment initiatives.
 
 ![Skills-First-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/b8eef289-1397-427d-a035-0c8907995688)
 
