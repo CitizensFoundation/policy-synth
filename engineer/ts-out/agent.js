@@ -19,11 +19,11 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         this.memory = {
             actionLog: [],
             workspaceFolder: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
-            taskTitle: "Add a new LLM model class for OpenAI on Azure",
-            taskDescription: `We want to add a new model class into src/models/azureOpenAiChat.ts using the @azure/openai npm module.`,
-            taskInstructions: `1. Add a new model class in src/models/azureOpenAiChat.ts using the @azure/openai npm module based on src/models/baseChatModel.ts parent class.`,
+            taskTitle: "",
+            taskDescription: ``,
+            taskInstructions: ``,
             stages: PSEngineerAgent.emptyDefaultStages,
-            docsSiteToScan: ["https://www.npmjs.com/package/@azure/openai"],
+            docsSiteToScan: [], // Hardcoded docs sites to scan that will be scanned even if they are not found through the autoamted web research
         };
         this.chat = new ChatOpenAI({
             temperature: 0.0,
@@ -67,7 +67,6 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     }
     async fetchGitHubIssue(url) {
         try {
-            // Convert the GitHub issue URL to the API endpoint
             const apiUrl = this.convertToApiUrl(url);
             const response = await axios.get(apiUrl);
             const issue = {
@@ -200,6 +199,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     Instructions:
     1. You will receive a list of .d.ts file paths from the user to analyze.
     2. Always output the d.ts file paths again that are possibly to be relevant for the upcoming user task.
+    3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
 
 Only output a JSON array with possibly relevant d.ts files, no explainations before or after the JSON string[].
 
