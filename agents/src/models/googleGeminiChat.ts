@@ -1,3 +1,4 @@
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BaseChatModel } from "./baseChatModel";
 
@@ -5,8 +6,8 @@ export class GoogleGeminiChat extends BaseChatModel {
   private client: GoogleGenerativeAI;
   private model: any;
 
-  constructor(apiKey: string, modelName: string = "gemini-pro") {
-    super(modelName);
+  constructor(apiKey: string, modelName: string = "gemini-pro", maxTokensOut: number = 4096) {
+    super(modelName, maxTokensOut);
     this.client = new GoogleGenerativeAI(apiKey);
     this.model = this.client.getGenerativeModel({ model: this.modelName });
   }
@@ -25,7 +26,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       const stream = await this.model.generateContentStream({
         history,
         generationConfig: {
-          maxOutputTokens: 1024,
+          maxOutputTokens: this.maxTokensOut,
         },
       });
 
@@ -41,7 +42,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       const result = await this.model.generateContent({
         history,
         generationConfig: {
-          maxOutputTokens: 1024,
+          maxOutputTokens: this.maxTokensOut,
         },
       });
 

@@ -1,12 +1,13 @@
+
 import OpenAI from "openai";
 import { BaseChatModel } from "./baseChatModel";
-import { get_encoding, TiktokenEncoding } from "tiktoken";
+import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
 
-  constructor(apiKey: string, modelName: string = "gpt-4o") {
-    super(modelName);
+  constructor(apiKey: string, modelName: string = "gpt-4o", maxTokensOut: number = 4096) {
+    super(modelName, maxTokensOut);
     this.client = new OpenAI({ apiKey });
   }
 
@@ -43,7 +44,7 @@ export class OpenAiChat extends BaseChatModel {
   }
 
   async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
-    const encoding = get_encoding("cl100k_base" as TiktokenEncoding);
+    const encoding = encoding_for_model(this.modelName as TiktokenModel);
     const formattedMessages = messages.map((msg) => ({
       role: msg.role as "system" | "user" | "assistant",
       content: msg.message,

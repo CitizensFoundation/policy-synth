@@ -1,3 +1,4 @@
+
 import { OpenAIClient, AzureKeyCredential, ChatRole } from "@azure/openai";
 import { BaseChatModel } from "./baseChatModel";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
@@ -10,9 +11,10 @@ export class AzureOpenAiChat extends BaseChatModel {
     endpoint: string,
     apiKey: string,
     deploymentName: string,
-    modelName: string = "gpt-4o"
+    modelName: string = "gpt-4o",
+    maxTokensOut: number = 4096
   ) {
-    super(modelName);
+    super(modelName, maxTokensOut);
     this.client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
     this.deploymentName = deploymentName;
   }
@@ -31,7 +33,7 @@ export class AzureOpenAiChat extends BaseChatModel {
       const events = await this.client.streamChatCompletions(
         this.deploymentName,
         chatMessages,
-        { maxTokens: 128 }
+        { maxTokens: this.maxTokensOut }
       );
       for await (const event of events) {
         for (const choice of event.choices) {
@@ -45,7 +47,7 @@ export class AzureOpenAiChat extends BaseChatModel {
       const result = await this.client.getChatCompletions(
         this.deploymentName,
         chatMessages,
-        { maxTokens: 128 }
+        { maxTokens: this.maxTokensOut }
       );
       return result.choices.map((choice) => choice.message?.content).join("");
     }

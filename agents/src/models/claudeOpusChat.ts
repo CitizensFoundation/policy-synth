@@ -1,3 +1,4 @@
+
 import Anthropic from "@anthropic-ai/sdk";
 import { BaseChatModel } from "./baseChatModel";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
@@ -5,8 +6,8 @@ import { encoding_for_model, TiktokenModel } from "tiktoken";
 export class ClaudeOpusChat extends BaseChatModel {
   private client: Anthropic;
 
-  constructor(apiKey: string, modelName: string = "claude-3-opus-20240229") {
-    super(modelName);
+  constructor(apiKey: string, modelName: string = "claude-3-opus-20240229", maxTokensOut: number = 4096) {
+    super(modelName, maxTokensOut);
     this.client = new Anthropic({ apiKey });
   }
 
@@ -22,7 +23,7 @@ export class ClaudeOpusChat extends BaseChatModel {
 
     if (streaming) {
       const stream = await this.client.messages.create({
-        max_tokens: 1024,
+        max_tokens: this.maxTokensOut,
         messages: formattedMessages,
         model: this.modelName,
         stream: true,
@@ -35,7 +36,7 @@ export class ClaudeOpusChat extends BaseChatModel {
       }
     } else {
       const response = await this.client.messages.create({
-        max_tokens: 1024,
+        max_tokens: this.maxTokensOut,
         messages: formattedMessages,
         model: this.modelName,
       });
@@ -45,7 +46,7 @@ export class ClaudeOpusChat extends BaseChatModel {
   }
 
   async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
-    const encoding = encoding_for_model("cl100k_base" as TiktokenModel);
+    const encoding = encoding_for_model(this.modelName as TiktokenModel);
     const formattedMessages = messages.map((msg) => msg.message).join(" ");
     const tokenCount = encoding.encode(formattedMessages).length;
     return Promise.resolve(tokenCount);
