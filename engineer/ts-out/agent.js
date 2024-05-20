@@ -34,6 +34,7 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         if (this.githubIssueUrl) {
             this.fetchGitHubIssue(this.githubIssueUrl)
                 .then((issue) => {
+                console.log("Github body", issue.body);
                 const parsedDescription = this.parseIssueBody(issue.body);
                 if (!parsedDescription) {
                     throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
@@ -89,17 +90,23 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         return `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`;
     }
     parseIssueBody(body) {
-        const descriptionMatch = body.match(/\*Task Description\*\s*([^*]+)/s);
-        const instructionsMatch = body.match(/\*Task Instructions\*\s*([^*]+)/s);
-        if (descriptionMatch && instructionsMatch) {
-            return {
-                taskDescription: descriptionMatch[1].trim(),
-                taskInstructions: instructionsMatch[1].trim(),
-            };
-        }
-        else {
+        const TASK_DESCRIPTION_TOKEN = "**Task Description**";
+        const TASK_INSTRUCTIONS_TOKEN = "**Task Instructions**";
+        const descriptionStart = body.indexOf(TASK_DESCRIPTION_TOKEN);
+        const instructionsStart = body.indexOf(TASK_INSTRUCTIONS_TOKEN);
+        if (descriptionStart === -1 || instructionsStart === -1) {
             return null;
         }
+        const taskDescription = body
+            .substring(descriptionStart + TASK_DESCRIPTION_TOKEN.length, instructionsStart)
+            .trim();
+        const taskInstructions = body
+            .substring(instructionsStart + TASK_INSTRUCTIONS_TOKEN.length)
+            .trim();
+        return {
+            taskDescription,
+            taskInstructions,
+        };
     }
     removeCommentsFromCode(code) {
         return strip(code);
