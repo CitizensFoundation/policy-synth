@@ -418,3 +418,19 @@ interface IEngineReapingResults {
 
 type IEngineMutationRates = "low" | "medium" | "high";
 
+interface PSModelConfig {
+  apiKey: string;
+  modelName?: string;
+  maxTokensOut?: number;
+};
+
+interface PSAzureModelConfig extends PSModelConfig {
+  endpoint: string;
+  deploymentName: string;
+};
+
+interface PSOpenAiModelConfig extends PSModelConfig {
+  projectId?: string;
+};
+
+
