@@ -16,6 +16,7 @@ export declare class PSEngineerAgent extends PolicySynthAgentBase {
     } | null;
     removeCommentsFromCode(code: string): string;
     removeWorkspacePathFromFileIfNeeded(filePath: string): string;
+    addWorkspacePathToFileIfNeeded(filePath: string): string;
     doWebResearch(): Promise<void>;
     readAllTypescriptFileNames(folderPath: string): Promise<string[]>;
     searchDtsFilesInNodeModules(): Promise<string[]>;

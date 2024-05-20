@@ -9,7 +9,7 @@ import strip from "strip-comments";
 import { IEngineConstants } from "@policysynth/agents/constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
-import axios from 'axios';
+import axios from "axios";
 
 interface GitHubIssue {
   title: string;
@@ -27,14 +27,11 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       actionLog: [],
       workspaceFolder:
         "/home/robert/Scratch/policy-synth-engineer-tests/agents",
-      taskTitle:
-        "Add a new LLM model class for OpenAI on Azure",
+      taskTitle: "Add a new LLM model class for OpenAI on Azure",
       taskDescription: `We want to add a new model class into src/models/azureOpenAiChat.ts using the @azure/openai npm module.`,
       taskInstructions: `1. Add a new model class in src/models/azureOpenAiChat.ts using the @azure/openai npm module based on src/models/baseChatModel.ts parent class.`,
       stages: PSEngineerAgent.emptyDefaultStages,
-      docsSiteToScan: [
-        "https://www.npmjs.com/package/@azure/openai",
-      ],
+      docsSiteToScan: ["https://www.npmjs.com/package/@azure/openai"],
     } as unknown as PsEngineerMemoryData;
     this.chat = new ChatOpenAI({
       temperature: 0.0,
@@ -44,22 +41,28 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     });
 
     if (this.githubIssueUrl) {
-      this.fetchGitHubIssue(this.githubIssueUrl).then(issue => {
+      this.fetchGitHubIssue(this.githubIssueUrl)
+        .then((issue) => {
+          const parsedDescription = this.parseIssueBody(issue.body);
+          if (!parsedDescription) {
+            throw new Error(
+              "Failed to parse Task Description and Task Instructions from the issue body."
+            );
+          }
 
-        const parsedDescription = this.parseIssueBody(issue.body);
-        if (!parsedDescription) {
-          throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
-        }
-
-        this.memory.taskTitle = issue.title;
-        this.memory.taskDescription = parsedDescription.taskDescription;
-        this.memory.taskInstructions = parsedDescription.taskInstructions;
-        console.log(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
-        console.log(`GitHub Issue Task: ${ parsedDescription.taskInstructions}`);
-
-      }).catch(error => {
-        console.error(error.message);
-      });
+          this.memory.taskTitle = issue.title;
+          this.memory.taskDescription = parsedDescription.taskDescription;
+          this.memory.taskInstructions = parsedDescription.taskInstructions;
+          console.log(
+            `GitHub Issue Desc: ${parsedDescription.taskDescription}`
+          );
+          console.log(
+            `GitHub Issue Task: ${parsedDescription.taskInstructions}`
+          );
+        })
+        .catch((error) => {
+          console.error(error.message);
+        });
     }
   }
 
@@ -68,7 +71,9 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
       const issue = await this.fetchGitHubIssue(this.githubIssueUrl);
       const parsedDescription = this.parseIssueBody(issue.body);
       if (!parsedDescription) {
-        throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
+        throw new Error(
+          "Failed to parse Task Description and Task Instructions from the issue body."
+        );
       }
       this.memory.taskTitle = issue.title;
       this.memory.taskDescription = parsedDescription.taskDescription;
@@ -98,13 +103,15 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     const regex = /https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/;
     const match = issueUrl.match(regex);
     if (!match) {
-      throw new Error('Invalid GitHub issue URL');
+      throw new Error("Invalid GitHub issue URL");
     }
     const [, owner, repo, issueNumber] = match;
     return `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`;
   }
 
-  parseIssueBody(body: string): { taskDescription: string, taskInstructions: string } | null {
+  parseIssueBody(
+    body: string
+  ): { taskDescription: string; taskInstructions: string } | null {
     const descriptionMatch = body.match(/\*Task Description\*\s*([^*]+)/s);
     const instructionsMatch = body.match(/\*Task Instructions\*\s*([^*]+)/s);
 
@@ -124,6 +131,10 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
 
   removeWorkspacePathFromFileIfNeeded(filePath: string) {
     return filePath.replace(this.memory.workspaceFolder, "");
+  }
+
+  addWorkspacePathToFileIfNeeded(filePath: string) {
+    return path.join(this.memory.workspaceFolder, filePath);
   }
 
   async doWebResearch() {
@@ -169,14 +180,19 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
     const readDtsFilesRecursively = async (directory: string) => {
       try {
         const entries = fs.readdirSync(directory, { withFileTypes: true });
+        console.log(`Reading directory: ${directory}`);
         for (const entry of entries) {
           const fullPath = path.join(directory, entry.name);
           if (entry.isDirectory()) {
             // Recursively read nested directories
+            console.log(`Entering directory: ${fullPath}`);
             await readDtsFilesRecursively(fullPath);
           } else if (entry.isFile() && entry.name.endsWith(".d.ts")) {
             // Add file to list if it's a .d.ts file
+            console.log(`Found .d.ts file: ${fullPath}`);
             dtsFiles.push(fullPath);
+          } else {
+            console.log(`Skipping: ${fullPath}`);
           }
         }
       } catch (error) {
@@ -189,6 +205,11 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
         this.memory.likelyRelevantNpmPackageDependencies &&
         this.memory.likelyRelevantNpmPackageDependencies.length > 0
       ) {
+        console.log(
+          `Searching packages: ${this.memory.likelyRelevantNpmPackageDependencies.join(
+            ", "
+          )}`
+        );
         for (const packageName of this.memory
           .likelyRelevantNpmPackageDependencies) {
           const packagePath = path.join(
@@ -196,44 +217,61 @@ export class PSEngineerAgent extends PolicySynthAgentBase {
             "node_modules",
             packageName
           );
+          console.log(`Searching package: ${packagePath}`);
           await readDtsFilesRecursively(packagePath);
         }
       } else {
-        this.logger.warn("No npm packages to search .d.ts files");
+        this.logger.warn("No npm packages to search for .d.ts files");
       }
     };
 
     await searchPackages();
 
     // Call LLM to filter relevant .d.ts files
+    console.log("Filtering relevant .d.ts files", dtsFiles);
     const relevantDtsFiles = await this.filterRelevantDtsFiles(dtsFiles);
+    console.log(`Relevant .d.ts files: ${relevantDtsFiles.join(", ")}`);
 
     return relevantDtsFiles;
   }
 
   async filterRelevantDtsFiles(dtsFiles: string[]): Promise<string[]> {
-    const prompt = `You are an expert software engineering analyzer. You will receive a list of .d.ts files. Please identify which files are likely to be relevant for the current task.
+    dtsFiles = dtsFiles.map((filePath) =>
+      this.removeWorkspacePathFromFileIfNeeded(filePath)
+    );
+    const systemPrompt = `You are an expert software engineering analyzer.
 
-Only output a JSON array with file nothing else, no explainations before or after the JSON string[].
+    Instructions:
+    1. You will receive a list of .d.ts file paths from the user to analyze.
+    2. Always output the d.ts file paths again that are likely to be relevant for the upcoming user task.
 
-Task title: ${this.memory.taskTitle}
-Task description: ${this.memory.taskDescription}
-Task instructions: ${this.memory.taskInstructions}
+Only output a JSON array with the possibly relevant d.ts file, no explainations before or after the JSON string[].
 
-List of .d.ts files:
+<UpcomingUserTask>
+  Task title: ${this.memory.taskTitle}
+  Task description: ${this.memory.taskDescription}
+  Task instructions: ${this.memory.taskInstructions}
+</UpcomingUserTask>
+`;
+
+    const userPrompt = `List of .d.ts files to analyze for relevance to the task:
 ${dtsFiles.join("\n")}
 
-Please return a JSON array of the relevant file paths:`;
+  Please return a JSON string array of the relevant files:`;
 
-    const relevantFiles = await this.callLLM(
+    let relevantFiles = (await this.callLLM(
       "engineering-agent",
       IEngineConstants.engineerModel,
-      [new SystemMessage(prompt)],
+      [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)],
       true
-    ) as string[];
+    )) as string[];
 
     try {
       console.log(JSON.stringify(relevantFiles, null, 2));
+      relevantFiles = relevantFiles.map((filePath) =>
+        this.addWorkspacePathToFileIfNeeded(filePath)
+      );
+      console.log("Filtered relveant files", relevantFiles);
       return relevantFiles;
     } catch (error) {
       console.error("Error parsing LLM response:", error);
