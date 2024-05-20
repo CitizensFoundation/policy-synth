@@ -1,4 +1,4 @@
-import { TiktokenModel } from 'tiktoken';
+import { TiktokenModel } from "tiktoken";
 export declare abstract class BaseChatModel {
     modelName: string | TiktokenModel;
     constructor(modelName: string | TiktokenModel);

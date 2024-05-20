@@ -1,12 +1,11 @@
-
-import OpenAI from 'openai';
-import { BaseChatModel } from './baseChatModel';
-import { get_encoding, TiktokenEncoding } from 'tiktoken';
+import OpenAI from "openai";
+import { BaseChatModel } from "./baseChatModel";
+import { get_encoding, TiktokenEncoding } from "tiktoken";
 
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
 
-  constructor(apiKey: string, modelName: string = 'gpt-4o') {
+  constructor(apiKey: string, modelName: string = "gpt-4o") {
     super(modelName);
     this.client = new OpenAI({ apiKey });
   }
@@ -17,7 +16,7 @@ export class OpenAiChat extends BaseChatModel {
     streamingCallback?: Function
   ): Promise<any> {
     const formattedMessages = messages.map((msg) => ({
-      role: msg.role as 'system' | 'user' | 'assistant',
+      role: msg.role as "system" | "user" | "assistant",
       content: msg.message,
     }));
 
@@ -30,7 +29,7 @@ export class OpenAiChat extends BaseChatModel {
 
       for await (const chunk of stream) {
         if (streamingCallback) {
-          streamingCallback(chunk.choices[0]?.delta?.content || '');
+          streamingCallback(chunk.choices[0]?.delta?.content || "");
         }
       }
     } else {
@@ -44,13 +43,15 @@ export class OpenAiChat extends BaseChatModel {
   }
 
   async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
-    const encoding = get_encoding('cl100k_base' as TiktokenEncoding);
+    const encoding = get_encoding("cl100k_base" as TiktokenEncoding);
     const formattedMessages = messages.map((msg) => ({
-      role: msg.role as 'system' | 'user' | 'assistant',
+      role: msg.role as "system" | "user" | "assistant",
       content: msg.message,
     }));
 
-    const tokenCounts = formattedMessages.map((msg) => encoding.encode(msg.content).length);
+    const tokenCounts = formattedMessages.map(
+      (msg) => encoding.encode(msg.content).length
+    );
     return tokenCounts.reduce((acc, count) => acc + count, 0);
   }
 }

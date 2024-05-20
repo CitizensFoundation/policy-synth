@@ -1,5 +1,4 @@
-
-import { TiktokenModel } from 'tiktoken';
+import { TiktokenModel } from "tiktoken";
 
 export abstract class BaseChatModel {
   modelName: string | TiktokenModel;

@@ -1,12 +1,11 @@
-
-import Anthropic from '@anthropic-ai/sdk';
-import { BaseChatModel } from './baseChatModel';
-import { encoding_for_model, TiktokenModel } from 'tiktoken';
+import Anthropic from "@anthropic-ai/sdk";
+import { BaseChatModel } from "./baseChatModel";
+import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 export class ClaudeOpusChat extends BaseChatModel {
   private client: Anthropic;
 
-  constructor(apiKey: string, modelName: string = 'claude-3-opus-20240229') {
+  constructor(apiKey: string, modelName: string = "claude-3-opus-20240229") {
     super(modelName);
     this.client = new Anthropic({ apiKey });
   }
@@ -17,7 +16,7 @@ export class ClaudeOpusChat extends BaseChatModel {
     streamingCallback?: Function
   ): Promise<any> {
     const formattedMessages = messages.map((msg) => ({
-      role: msg.role as 'user' | 'assistant',
+      role: msg.role as "user" | "assistant",
       content: msg.message,
     }));
 
@@ -46,8 +45,8 @@ export class ClaudeOpusChat extends BaseChatModel {
   }
 
   async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
-    const encoding = encoding_for_model('cl100k_base' as TiktokenModel);
-    const formattedMessages = messages.map((msg) => msg.message).join(' ');
+    const encoding = encoding_for_model("cl100k_base" as TiktokenModel);
+    const formattedMessages = messages.map((msg) => msg.message).join(" ");
     const tokenCount = encoding.encode(formattedMessages).length;
     return Promise.resolve(tokenCount);
   }

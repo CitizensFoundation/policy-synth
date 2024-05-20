@@ -1,4 +1,4 @@
-import { BaseChatModel } from './baseChatModel';
+import { BaseChatModel } from "./baseChatModel";
 export declare class AzureOpenAiChat extends BaseChatModel {
     private client;
     private deploymentName;

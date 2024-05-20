@@ -1,13 +1,17 @@
-
-import { OpenAIClient, AzureKeyCredential, ChatRole } from '@azure/openai';
-import { BaseChatModel } from './baseChatModel';
-import { encoding_for_model, TiktokenModel } from 'tiktoken';
+import { OpenAIClient, AzureKeyCredential, ChatRole } from "@azure/openai";
+import { BaseChatModel } from "./baseChatModel";
+import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 export class AzureOpenAiChat extends BaseChatModel {
   private client: OpenAIClient;
   private deploymentName: string;
 
-  constructor(endpoint: string, apiKey: string, deploymentName: string, modelName: string = 'gpt-4o') {
+  constructor(
+    endpoint: string,
+    apiKey: string,
+    deploymentName: string,
+    modelName: string = "gpt-4o"
+  ) {
     super(modelName);
     this.client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
     this.deploymentName = deploymentName;
@@ -24,7 +28,11 @@ export class AzureOpenAiChat extends BaseChatModel {
     }));
 
     if (streaming) {
-      const events = await this.client.streamChatCompletions(this.deploymentName, chatMessages, { maxTokens: 128 });
+      const events = await this.client.streamChatCompletions(
+        this.deploymentName,
+        chatMessages,
+        { maxTokens: 128 }
+      );
       for await (const event of events) {
         for (const choice of event.choices) {
           const delta = choice.delta?.content;
@@ -34,8 +42,12 @@ export class AzureOpenAiChat extends BaseChatModel {
         }
       }
     } else {
-      const result = await this.client.getChatCompletions(this.deploymentName, chatMessages, { maxTokens: 128 });
-      return result.choices.map((choice) => choice.message?.content).join('');
+      const result = await this.client.getChatCompletions(
+        this.deploymentName,
+        chatMessages,
+        { maxTokens: 128 }
+      );
+      return result.choices.map((choice) => choice.message?.content).join("");
     }
   }
 
@@ -46,7 +58,9 @@ export class AzureOpenAiChat extends BaseChatModel {
       content: msg.message,
     }));
 
-    const tokenCounts = chatMessages.map((msg) => encoder.encode(msg.content).length);
+    const tokenCounts = chatMessages.map(
+      (msg) => encoder.encode(msg.content).length
+    );
     return tokenCounts.reduce((acc, count) => acc + count, 0);
   }
 }

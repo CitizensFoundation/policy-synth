@@ -1,10 +1,10 @@
-import { OpenAIClient, AzureKeyCredential } from '@azure/openai';
-import { BaseChatModel } from './baseChatModel';
-import { encoding_for_model } from 'tiktoken';
+import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
+import { BaseChatModel } from "./baseChatModel";
+import { encoding_for_model } from "tiktoken";
 export class AzureOpenAiChat extends BaseChatModel {
     client;
     deploymentName;
-    constructor(endpoint, apiKey, deploymentName, modelName = 'gpt-4o') {
+    constructor(endpoint, apiKey, deploymentName, modelName = "gpt-4o") {
         super(modelName);
         this.client = new OpenAIClient(endpoint, new AzureKeyCredential(apiKey));
         this.deploymentName = deploymentName;
@@ -27,7 +27,7 @@ export class AzureOpenAiChat extends BaseChatModel {
         }
         else {
             const result = await this.client.getChatCompletions(this.deploymentName, chatMessages, { maxTokens: 128 });
-            return result.choices.map((choice) => choice.message?.content).join('');
+            return result.choices.map((choice) => choice.message?.content).join("");
         }
     }
     async getNumTokensFromMessages(messages) {

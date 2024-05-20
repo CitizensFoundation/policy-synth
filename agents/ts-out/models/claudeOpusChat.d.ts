@@ -1,4 +1,4 @@
-import { BaseChatModel } from './baseChatModel';
+import { BaseChatModel } from "./baseChatModel";
 export declare class ClaudeOpusChat extends BaseChatModel {
     private client;
     constructor(apiKey: string, modelName?: string);
