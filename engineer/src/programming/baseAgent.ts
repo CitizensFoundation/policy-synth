@@ -42,23 +42,35 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBas
   }
 
   updateMemoryWithFileContents(fileName: string, content: string) {
-    if (!this.memory.currentTask)
+    if (!this.memory.currentTask) {
       this.memory.currentTask = { filesCompleted: [] };
+    }
 
-    if (!this.memory.currentTask.filesCompleted)
+    if (!this.memory.currentTask.filesCompleted) {
       this.memory.currentTask.filesCompleted = [];
+    }
 
     const existingFileIndex = this.memory.currentTask.filesCompleted.findIndex(
       (f) => f.fileName === fileName
     );
+
     if (existingFileIndex > -1) {
       this.memory.currentTask.filesCompleted[existingFileIndex].content =
         content;
     } else {
-      this.memory.currentTask.filesCompleted.push({
-        fileName,
-        content: content,
-      });
+      this.memory.currentTask.filesCompleted.push({ fileName, content });
+    }
+
+    // Ensure the first two files and the last two files are always kept
+    const filesCompleted = this.memory.currentTask.filesCompleted;
+    if (filesCompleted.length > 5) {
+      // Keep the first two files and the last two files
+      const firstTwoFiles = filesCompleted.slice(0, 2);
+      const lastTwoFiles = filesCompleted.slice(-2);
+      this.memory.currentTask.filesCompleted = [
+        ...firstTwoFiles,
+        ...lastTwoFiles,
+      ];
     }
   }
 
