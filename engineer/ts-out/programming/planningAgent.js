@@ -16,7 +16,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     7. Prefer classes rather than exported functions in files.
     8. Never suggesting importing typedefs those are always automatically imported from the d.ts files
     ${this.currentErrors
-            ? `9. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent additions or changes you've made.`
+            ? `9. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing. The project is not compiling because of those recent additions or changes you've made.
+           10. Do not add new files with errors to the plan but focus on fixing the errors in the code you just did. We don't want to refactor our whole project.`
             : ``}</ImportantInstructions>
     `;
     }
