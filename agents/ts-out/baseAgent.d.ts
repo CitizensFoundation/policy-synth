@@ -61,10 +61,17 @@ export declare class PolicySynthAgentBase {
     };
     getJsonBlock(text: string): string;
     get fullLLMCostsForMemory(): number | undefined;
-    getRepairedJson(text: string): any;
+    private repairJson;
+    private parseJsonResponse;
     callLLM(stage: PsMemoryStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Callbacks): Promise<any>;
     private updateRateLimits;
     private checkRateLimits;
+    private addRequestTimestamp;
+    private addTokenEntry;
+    private slideWindowForRequests;
+    private slideWindowForTokens;
+    private getTokensFromMessages;
+    private updateMemoryStages;
     formatNumber(number: number, fractions?: number): string;
     saveMemory(): Promise<void>;
 }
