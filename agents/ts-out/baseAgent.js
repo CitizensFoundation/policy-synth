@@ -114,6 +114,10 @@ export class PolicySynthAgentBase {
     }
     parseJsonResponse(response) {
         let parsedJson;
+        response = response.replace("```json", "").trim();
+        if (response.endsWith("```")) {
+            response = response.substring(0, response.length - 3);
+        }
         try {
             parsedJson = JSON.parse(response);
         }

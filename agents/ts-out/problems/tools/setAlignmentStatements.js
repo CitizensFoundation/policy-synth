@@ -587,6 +587,86 @@ Understanding how AI-driven changes might reshape workforce dynamics, economic s
     5. Core ideas are distinct concepts or strategies that are central to the solution component.
   `;
 };
+const setupProjectEight = (memory) => {
+    if (!memory.customInstructions) {
+        memory.customInstructions = {};
+    }
+    memory.problemStatement.description = `The dropout rate among young men aged 18-24 from education and vocational training in Iceland has reached 20% and is accelerating. In comparison, Norway has the second-highest rate among Nordic countries at 14%. What are the potential causes of this trend?`;
+    memory.customInstructions.createSubProblems = undefined;
+    memory.customInstructions.rankSubProblems = `1. Assess how impactful the sub problems are as sub problems to the main problem statement.
+  2. Focus on prioritizing subproblems for further investigation and policy development, rather than proposing immediate solutions
+  3. Rank subproblems based on their anticipated impact on young men.`;
+    memory.subProblemClientColors = [
+        "#ee782d", // Orange (This is not a typical orange, but more of a dark, burnt orange)
+        "#0b60b9", // Blue (This is a strong, medium-dark blue)
+        "#face2d", // Yellow (This is a bright, somewhat orange-ish yellow)
+        "#50c363", // Green (This is a medium, somewhat light green)
+        "#ADD8E6", // Light blue
+        "#cf1103", // Red (This is a dark, slightly brownish red)
+        "#7F00FF", // Violet
+        "#3f5fce", // Blue (This is a medium, somewhat light blue, not sea green)
+    ];
+    memory.customInstructions.subProblemColors = [
+        "orange",
+        "blue",
+        "yellow",
+        "green",
+        "light blue",
+        "red",
+        "violet",
+        "sea Green",
+        "saddle Brown",
+        "chocolate",
+        "fire Brick",
+        "orange Red",
+        "yellow Green",
+        "gold",
+        "dark Khaki",
+        "dark Magenta",
+        "dark Violet",
+        "wheat",
+        "forest Green",
+        "tan",
+        "gray",
+        "transparent",
+    ];
+    memory.customInstructions.rootCauseUrlsToScan = [];
+    memory.customInstructions.createSolutions = `
+   1. Never create solution components in the form of frameworks or holistic approaches
+   2. Solution components should include only one core idea
+   3. Remember that the main facilitator for implementation will be governments.
+   4. Frame solution components with the intention of convincing politicians and governments to put them into action.
+   5. The solution component title should indicate the benefits or results of implementing the solution component.
+   6. Avoid blockchain solution components or solution components involving commercial products.`;
+    memory.customInstructions.rankSolutions = `
+    1. Solution components will be included in larger policy recommendations to governments around the world.
+  `;
+    memory.customInstructions.rateSolutionsJsonFormat = `
+    {
+      highPriorityRatings: {
+        howImportantToProblem,
+        howInnovative,
+        howPractical,
+        howEthical,
+        howComplex,
+      },
+      otherRatings: {
+        benefitsForCitizens,
+        benefitsForGovernments,
+        benefitsForCivilSociety,
+        benefitsForPolicitians,
+        benefitsForPrivateSector,
+      }
+    }
+  `;
+    memory.customInstructions.reapSolutions = `
+    1. Solution components should not include more than one core idea.
+    2. Solution components can have more than one implementation detail ideas.
+    3. If the solution components has two core ideas that are hard to implement without each other then the solution component can be included.
+    4. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
+    5. Core ideas are distinct concepts or strategies that are central to the solution component.
+  `;
+};
 //TODO: Make this database driven
 const projectId = process.argv[2];
 if (projectId) {
@@ -613,6 +693,9 @@ if (projectId) {
     }
     else if (projectId == "7") {
         setupProjectSeven(memory);
+    }
+    else if (projectId == "8") {
+        setupProjectEight(memory);
     }
     await redis.set(redisKey, JSON.stringify(memory));
     console.log("After saving");
