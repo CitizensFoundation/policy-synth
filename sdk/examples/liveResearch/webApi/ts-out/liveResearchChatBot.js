@@ -50,7 +50,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
                 messages.unshift(systemMessage);
                 try {
                     const stream = await this.openaiClient.chat.completions.create({
-                        model: "gpt-4-0125-preview",
+                        model: "gpt-4o",
                         messages,
                         max_tokens: 4000,
                         temperature: 0.7,

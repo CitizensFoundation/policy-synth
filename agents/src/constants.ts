@@ -20,7 +20,7 @@ const gpt4_RPM = 10000 * 3 * 2;
 
 export class IEngineConstants {
   static createSubProblemsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 4096,
     tokenLimit: gpt4TotalTokenLimit,
@@ -32,7 +32,7 @@ export class IEngineConstants {
   };
 
   static policiesSeedModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 4096,
     tokenLimit: gpt4TotalTokenLimit,
@@ -44,7 +44,7 @@ export class IEngineConstants {
   };
 
   static analyseExternalSolutionsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 256,
     tokenLimit: gpt4TotalTokenLimit,
@@ -56,7 +56,7 @@ export class IEngineConstants {
   };
 
   static createEntitiesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -72,7 +72,7 @@ export class IEngineConstants {
   };
 
   static createSolutionImagesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 256,
     tokenLimit: gpt4TotalTokenLimit,
@@ -84,7 +84,7 @@ export class IEngineConstants {
   };
 
   static createSearchQueriesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -96,7 +96,7 @@ export class IEngineConstants {
   };
 
   static createEvidenceSearchQueriesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.5,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -108,7 +108,7 @@ export class IEngineConstants {
   };
 
   static createRootCauseSearchQueriesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 3024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -120,7 +120,7 @@ export class IEngineConstants {
   };
 
   static searchQueryRankingsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -132,7 +132,7 @@ export class IEngineConstants {
   };
 
   static searchResultsRankingsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -144,7 +144,7 @@ export class IEngineConstants {
   };
 
   static subProblemsRankingsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -156,7 +156,7 @@ export class IEngineConstants {
   };
 
   static entitiesRankingsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -168,7 +168,7 @@ export class IEngineConstants {
   };
 
   static solutionsRankingsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -180,7 +180,7 @@ export class IEngineConstants {
   };
 
   static prosConsRankingsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -192,7 +192,7 @@ export class IEngineConstants {
   };
 
   static getPageAnalysisModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4000,
     tokenLimit: gpt4TotalTokenLimit,
@@ -204,7 +204,7 @@ export class IEngineConstants {
   };
 
   static getSolutionsPagesAnalysisModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4000,
     tokenLimit: gpt4TotalTokenLimit,
@@ -216,7 +216,7 @@ export class IEngineConstants {
   };
 
   static rankWebSolutionsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -228,7 +228,7 @@ export class IEngineConstants {
   };
 
   static reduceSubProblemsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.1,
     maxOutputTokens: 4096,
     tokenLimit: gpt4TotalTokenLimit,
@@ -240,7 +240,7 @@ export class IEngineConstants {
   };
 
   static rateWebEvidenceModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: 4096,
@@ -252,7 +252,7 @@ export class IEngineConstants {
   };
 
   static rateWebRootCausesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -264,7 +264,7 @@ export class IEngineConstants {
   };
 
   static rankWebEvidenceModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -276,7 +276,7 @@ export class IEngineConstants {
   };
 
   static rankWebRootCausesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -288,7 +288,7 @@ export class IEngineConstants {
   };
 
   static getRefinedEvidenceModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -300,7 +300,7 @@ export class IEngineConstants {
   };
 
   static getRefinedRootCausesModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 3048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -312,7 +312,7 @@ export class IEngineConstants {
   };
 
   static reapSolutionsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 128,
     tokenLimit: gpt4TotalTokenLimit,
@@ -324,7 +324,7 @@ export class IEngineConstants {
   };
 
   static groupSolutionsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4095,
     tokenLimit: gpt4TotalTokenLimit,
@@ -336,7 +336,7 @@ export class IEngineConstants {
   };
 
   static rateSolutionsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -348,7 +348,7 @@ export class IEngineConstants {
   };
 
   static createSolutionsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.5,
     maxOutputTokens: 1200,
     tokenLimit: gpt4TotalTokenLimit,
@@ -360,7 +360,7 @@ export class IEngineConstants {
   };
 
   static evolveSolutionsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.5,
     maxOutputTokens: 1200,
     tokenLimit: gpt4TotalTokenLimit,
@@ -372,7 +372,7 @@ export class IEngineConstants {
   };
 
   static createProsConsModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -384,7 +384,7 @@ export class IEngineConstants {
   };
 
   static evolutionMutateModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -396,7 +396,7 @@ export class IEngineConstants {
   };
 
   static evolutionRecombineModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -408,7 +408,7 @@ export class IEngineConstants {
   };
 
   static validationModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -420,7 +420,7 @@ export class IEngineConstants {
   };
 
   static ingestionModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4095,
     tokenLimit: gpt4TotalTokenLimit,
@@ -432,7 +432,7 @@ export class IEngineConstants {
   };
 
   static engineerModel: IEngineBaseAIModelConstants = {
-    name: "gpt-4-turbo-2024-04-09",
+    name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4095,
     tokenLimit: gpt4TotalTokenLimit,

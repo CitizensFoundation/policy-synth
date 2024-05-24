@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/api",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -13,7 +13,7 @@
     "src/api.d.ts"
   ],
   "dependencies": {
-    "@policysynth/agents": "^1.2.1",
+    "@policysynth/agents": "^1.2.6",
     "@langchain/openai": "^0.0.13",
     "axios": "^1.4.0",
     "colors": "^1.4.0",
