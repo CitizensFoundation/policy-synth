@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -72,9 +72,9 @@
     "node-fetch": "^3.3.2",
     "openai": "^4.46.0",
     "pdf-parse": "^1.1.1",
-    "pdf2json": "^3.0.4",
+    "pdf2json": "^3.1.2",
     "pdfjs-dist": "^3.8.162",
-    "pdfreader": "^3.0.0",
+    "pdfreader": "^3.0.2",
     "pg": "^8.11.5",
     "puppeteer": "22.7.1",
     "puppeteer-extra": "^3.3.6",

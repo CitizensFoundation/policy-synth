@@ -1,17 +1,17 @@
 import { Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { IEngineConstants } from "../../../constants.js";
 
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
-import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
-import { RootCauseExamplePrompts } from "./rootCauseExamplePrompts.js";
-import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
-import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
-import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
+import { GetWebPagesProcessor } from "../../../solutions/web/getWebPages.js";
+import { RootCauseExamplePrompts } from "../rootCauseExamplePrompts.js";
+import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
+import { CreateRootCausesSearchQueriesProcessor } from "../../create/createRootCauseSearchQueries.js";
+import { GetRootCausesWebPagesProcessor } from "../getRootCausesWebPages.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -33,6 +33,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
             {
               rootCauseDescription: string;
               rootCauseTitle: string;
+              rootCauseDescriptionForPairwiseRanking: string;
               whyRootCauseIsImportant: string;
               rootCauseRelevanceToTypeScore: number;
               rootCauseRelevanceScore: number;
@@ -40,10 +41,11 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
               rootCauseConfidenceScore: number;
             }
           ]
-        3. rootCauseDescription should describe each root cause in one clear paragraph
-        4. Never use acronyms in rootCauseDescription even if they are used in the text context
-        5. Never use the words "is a root cause" in the rootCauseDescription
-        6. Output scores in the ranges of 0-100.
+        3. rootCauseDescription should describe each root cause in full in one to two paragraphs.
+        4. rootCauseDescriptionForPairwiseRanking should provide a standalone description of each root cause in around 10-20 words.
+        5. Never use acronyms in rootCauseDescription even if they are used in the text context
+        6. Never use the words "is a root cause" in the rootCauseDescription or rootCauseDescriptionForPairwiseRanking fields.
+        7. Output scores in the ranges of 0-100.
         `
       ),
       new HumanMessage(
@@ -52,8 +54,12 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
         Root Cause Type: ${type}
 
-        General information about what we are looking for:
-        ${this.memory.customInstructions.createSubProblems}
+        ${
+          this.memory.customInstructions.createSubProblems
+            ? `General information about what we are looking for:
+        ${this.memory.customInstructions.createSubProblems}`
+            : ``
+        }
 
         <text context>
         ${text}
@@ -122,6 +128,8 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
                   title: rootCause.rootCauseTitle,
                   description: rootCause.rootCauseDescription,
                   whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                  shortDescriptionForPairwiseRanking:
+                    rootCause.rootCauseDescriptionForPairwiseRanking,
                   fromSearchType: type,
                   fromUrl: url,
                   solutions: {
@@ -170,6 +178,8 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
               title: rootCause.rootCauseTitle,
               description: rootCause.rootCauseDescription,
               whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+              shortDescriptionForPairwiseRanking:
+                rootCause.rootCauseDescriptionForPairwiseRanking,
               fromSearchType: type,
               fromUrl: url,
               solutions: {
@@ -232,6 +242,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     return analysis;
   }
 
+  //TODO: Look into this, do we need a merge
   mergeRefinedAnalysisData(
     data1: PSRefinedRootCause,
     data2: PSRefinedRootCause
@@ -239,6 +250,8 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     return {
       rootCauseTitle: data1.rootCauseTitle,
       rootCauseDescription: data1.rootCauseDescription,
+      rootCauseDescriptionForPairwiseRanking:
+        data1.rootCauseDescriptionForPairwiseRanking,
       whyRootCauseIsImportant: data1.whyRootCauseIsImportant,
       rootCauseRelevanceToProblemStatement:
         data1.rootCauseRelevanceToProblemStatement,

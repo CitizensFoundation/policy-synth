@@ -39,7 +39,8 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
         2. You will also see two root causes web search queries, marked as "Search Query One" and "Search Query Two".
         3. Your task is to analyze, compare, and rank these search queries based on their relevance to the given problem and importance in relation to searching for root causes.
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
-        5. Let's think step by step.
+        5. If the problem statement refers to specific places or countries, it is not necessarily better to always include the name in the search query.
+        6. Let's think step by step.
         `
       ),
       new HumanMessage(

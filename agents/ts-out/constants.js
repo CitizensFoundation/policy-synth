@@ -412,8 +412,8 @@ export class IEngineConstants {
     static maxTopEntitiesToRender = 3;
     static maxTopQueriesToSearchPerType = 5;
     static maxTopEvidenceQueriesToSearchPerType = 4;
-    static maxTopRootCauseQueriesToSearchPerType = 12;
-    static maxRootCausePercentOfSearchResultWebPagesToGet = 0.9;
+    static maxTopRootCauseQueriesToSearchPerType = 15;
+    static maxRootCausePercentOfSearchResultWebPagesToGet = 0.8;
     static maxRootCausesToUseForRatingRootCauses = 5;
     static topWebPagesToGetForRefineRootCausesScan = 100;
     static mainSearchRetryCount = 40;

@@ -451,6 +451,16 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     return new Promise<void>(async (resolve, reject) => {
       this.logger.info("getAndProcessPdf");
 
+      const brokenPdfUrls = [
+        "https://skemman.is/bitstream/1946/24768/1/Dr.%20G.%20Sunna%20Gestsd%C3%B3ttir.pdf"
+      ];
+
+      if (brokenPdfUrls.includes(url)) {
+        this.logger.warn(`Skipping broken PDF ${url}`);
+        resolve();
+        return;
+      }
+
       try {
         let finalText = "";
         let pdfBuffer;
@@ -472,7 +482,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         }
 
         if (existsSync(fullPath) && statSync(fullPath).isFile()) {
-          this.logger.info("Got cached PDF");
+          this.logger.info("Got cached PDF for: " + url);
           const cachedPdf = await readFileAsync(fullPath);
           pdfBuffer = gunzipSync(cachedPdf);
         } else {

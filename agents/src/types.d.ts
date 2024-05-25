@@ -81,6 +81,8 @@ interface IEngineSubProblem extends PsEloRateable {
   imageUrl?: string;
   imagePrompt?: string;
   whyIsSubProblemImportant: string;
+  shortDescriptionForPairwiseRanking?: string;
+  yearPublished?: number;
   relevanceToTypeScore?: number;
   relevanceScore?: number;
   qualityScore?: number;

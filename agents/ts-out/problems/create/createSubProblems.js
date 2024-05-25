@@ -2,7 +2,7 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage, } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
-const USE_SHORT_DESCRIPTIONS = true;
+const USE_SHORT_DESCRIPTIONS = false;
 export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
     async renderRefinePrompt(results) {
         const messages = [
@@ -51,7 +51,14 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
             8. A root cause should not be described as a lack of understanding of the problem.
             9. Do not provide output in markdown format.
             10. Never explain only output JSON.
-            11. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
+            11. Always output in the follwing JSON format:
+              [ {
+                  title: string;
+                  description: string;
+                  whyIsSubProblemImportant: string;
+                  shortDescriptionForPairwiseRanking: string;
+                }
+              ]
             12. Let's think step by step.
             `),
             new HumanMessage(`

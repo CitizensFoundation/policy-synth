@@ -16,7 +16,8 @@ interface PSRootCause {
   rootCauseTitle: string;
   rootCauseDescription: string;
   whyRootCauseIsImportant: string;
-  // any other fields we want to add...
+  rootCauseDescriptionForPairwiseRanking: string;
+  yearPublished?: number;
 }
 
 interface PSRefinedRootCause extends PSRootCause {

@@ -39,9 +39,8 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         1. You will receive a problem statement or a sub-problem, possibly along with entities and their impacts (both negative and positive).
         2. You will also see two web search queries, each marked as "Search Query One" and "Search Query Two".
         3. Your task is to analyze, compare, and rank these search queries based on their relevance to the given problem and affected entities.
-        4. If the problem statement refers to specific places or countries, it is not necessarily better to always include the name in the search query.
-        5. Output your decision as either "One", "Two" or "Neither". No explanation is required.
-        6. Let's think step by step.
+        4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
+        5. Let's think step by step.
         `),
             new HumanMessage(`
         ${this.renderProblemDetail(additionalData)}

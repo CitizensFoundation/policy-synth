@@ -14,7 +14,7 @@ import { GetRootCausesWebPagesProcessor } from "./web/getRootCausesWebPages.js";
 import { RankWebRootCausesProcessor } from "./ranking/rankWebRootCauses.js";
 import { RateWebRootCausesProcessor } from "./ranking/rateWebRootCauses.js";
 import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js";
-import { GetRefinedRootCausesProcessor } from "./web/getRefinedRootCauses.js";
+import { GetRefinedRootCausesProcessor } from "./web/old/getRefinedRootCauses.js";
 import { GetMetaDataForTopWebRootCausesProcessor } from "./web/getMetaDataForTopWebRootCauses.js";
 import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
 import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";

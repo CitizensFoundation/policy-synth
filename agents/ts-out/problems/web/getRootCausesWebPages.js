@@ -46,18 +46,21 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             {
               rootCauseDescription: string;
               rootCauseTitle: string;
+              rootCauseDescriptionForPairwiseRanking: string;
               whyRootCauseIsImportant: string;
+              yearPublished?: number;
               rootCauseRelevanceScore: number;
               rootCauseQualityScore: number;
-              rootCauseConfidenceScore: number;
             }
           ]
-        3. rootCauseDescription should describe each root cause you find in the <textContext> in one or two clear paragraphs.
-        4. Never use acronyms in rootCauseDescription even if they are used in the text context.
-        5. Never use the words "is a root cause" in the rootCauseDescription.
-        6. Make sure to explain how the root cause relateds to the problem statement in the rootCauseDescription.
-        7. Output scores in the ranges of 0-100 for the score JSON attributes.
-        8. If you do not find any relevant root causes in the <textContext> then just output an empty JSON array, never make up your own root causes.
+        3. rootCauseDescription should describe each root cause in full in one to two paragraphs.
+        4. rootCauseDescriptionForPairwiseRanking should provide a standalone description of each root cause in around 10-20 words.
+        5. Never use acronyms in rootCauseDescription even if they are used in the text context.
+        6. Never use the words "is a root cause" in the rootCauseDescription.
+        7. Make sure to explain how the root cause relateds to the problem statement in the rootCauseDescription.
+        8. Output scores in the ranges of 0-100 for the score JSON attributes.
+        9. Try to establish when the text was published and include in the yearPublished field if you find it.
+        10. If you do not find any relevant root causes in the <textContext> then just output an empty JSON array, never make up your own root causes.
         `),
             new HumanMessage(`
         ${this.renderProblemStatement()}
@@ -106,6 +109,8 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                                     title: rootCause.rootCauseTitle,
                                     description: rootCause.rootCauseDescription,
                                     whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                                    shortDescriptionForPairwiseRanking: rootCause.rootCauseDescriptionForPairwiseRanking,
+                                    yearPublished: rootCause.yearPublished,
                                     fromSearchType: type,
                                     fromUrl: url,
                                     relevanceScore: rootCause.rootCauseRelevanceScore,
@@ -150,6 +155,8 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                             title: rootCause.rootCauseTitle,
                             description: rootCause.rootCauseDescription,
                             whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
+                            shortDescriptionForPairwiseRanking: rootCause.rootCauseDescriptionForPairwiseRanking,
+                            yearPublished: rootCause.yearPublished,
                             fromSearchType: type,
                             fromUrl: url,
                             relevanceScore: rootCause.rootCauseRelevanceScore,
