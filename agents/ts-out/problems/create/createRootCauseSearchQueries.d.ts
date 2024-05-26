@@ -1,6 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
+    generateInLanguage: string | undefined;
     static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[];
     renderCreatePrompt(searchResultType: PSRootCauseWebPageTypes): Promise<(HumanMessage | SystemMessage)[]>;
     renderRefinePrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRefine: string[]): Promise<(HumanMessage | SystemMessage)[]>;

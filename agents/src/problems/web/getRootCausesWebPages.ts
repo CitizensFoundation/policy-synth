@@ -56,6 +56,8 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
   rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
   hasPrintedPrompt = false;
 
+  outputInLanguage: string | undefined = "English";
+
   processesUrls = new Set<string>();
 
   renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string) {
@@ -64,7 +66,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         `You are an expert in identifying and analyzing root causes for a particular problem statement in a given text context.
 
         Important Instructions:
-        1. Examine the contents of the "<textContext>" section in detail, identify all specific root causes in the context that relate to the problem statement presented by the user.
+        1. Take a deep breath and examine the contents of the "<textContext>" section in detail, identify all specific root causes in the <textContext> that could be causes of the problem statement presented by the user.
         2. Always output your results in the following JSON format:
          [
             {
@@ -85,6 +87,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         8. Output scores in the ranges of 0-100 for the score JSON attributes.
         9. Try to establish when the text was published and include in the yearPublished field if you find it.
         10. If you do not find any relevant root causes in the <textContext> then just output an empty JSON array, never make up your own root causes.
+        ${this.outputInLanguage ? `11. Always output text in the ${this.outputInLanguage} language even if the <textContext> is in a different language.` : ""}
         `
       ),
       new HumanMessage(
@@ -385,7 +388,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
     await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
 
-    const clearSubProblems = true;
+    const clearSubProblems = false;
 
     if (clearSubProblems) {
       this.memory.subProblems = [];

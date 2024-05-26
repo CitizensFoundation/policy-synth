@@ -4,6 +4,8 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 
 export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
+  generateInLanguage: string | undefined = "Icelandic";
+
   static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[] = [
     "caseStudies",
     "economicRootCause",
@@ -29,6 +31,12 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
       6. If the search query is about a specific place or country do not include the name of the place or country in the search query but in some.
       7. List the search queries in a JSON string array.
       8. Never explain, just output JSON.
+
+      ${
+        this.generateInLanguage
+          ? `9. You are generating search queries in the ${this.generateInLanguage} language.`
+          : ""
+      }
 ​
       Let's think step by step.
         `),
@@ -42,7 +50,10 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     ];
   }
 
-  async renderRefinePrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRefine: string[]) {
+  async renderRefinePrompt(
+    searchResultType: PSRootCauseWebPageTypes,
+    searchResultsToRefine: string[]
+  ) {
     return [
       new SystemMessage(`
         Adhere to the following guidelines:
@@ -70,7 +81,10 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     ];
   }
 
-  async renderRankPrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRank: string[]) {
+  async renderRankPrompt(
+    searchResultType: PSRootCauseWebPageTypes,
+    searchResultsToRank: string[]
+  ) {
     return [
       new SystemMessage(`
         Adhere to the following guidelines:
@@ -106,35 +120,53 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
       problemStatement.rootCauseSearchQueries = {};
     }
     for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-      if (regenerate || !problemStatement.rootCauseSearchQueries![searchResultType]) {
-        this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
+      if (
+        regenerate ||
+        !problemStatement.rootCauseSearchQueries![searchResultType]
+      ) {
+        this.logger.info(
+          `Creating root cause search queries for result ${searchResultType} search results`
+        );
         // create search queries for each type
         let searchResults = await this.callLLM(
           "create-root-causes-search-queries",
           IEngineConstants.createRootCauseSearchQueriesModel,
-          await this.renderCreatePrompt(searchResultType),
+          await this.renderCreatePrompt(searchResultType)
         );
         if (refineSearchQueriesHere) {
-          this.logger.info(`Refine root cause search queries for ${searchResultType} search results`);
+          this.logger.info(
+            `Refine root cause search queries for ${searchResultType} search results`
+          );
           searchResults = await this.callLLM(
             "create-root-causes-search-queries",
             IEngineConstants.createRootCauseSearchQueriesModel,
-            await this.renderRefinePrompt(searchResultType, searchResults),
+            await this.renderRefinePrompt(searchResultType, searchResults)
           );
         }
         if (rankeSearchQueriesHere) {
-          this.logger.info(`Ranking root cause search queries for ${searchResultType} search results`);
+          this.logger.info(
+            `Ranking root cause search queries for ${searchResultType} search results`
+          );
           searchResults = await this.callLLM(
             "create-root-causes-search-queries",
             IEngineConstants.createRootCauseSearchQueriesModel,
-            await this.renderRankPrompt(searchResultType, searchResults),
+            await this.renderRankPrompt(searchResultType, searchResults)
           );
         }
-        this.logger.debug(`Search query type: ${searchResultType} - ${JSON.stringify(searchResults, null, 2)}`);
-        problemStatement.rootCauseSearchQueries![searchResultType] = searchResults;
+        this.logger.debug(
+          `Search query type: ${searchResultType} - ${JSON.stringify(
+            searchResults,
+            null,
+            2
+          )}`
+        );
+        problemStatement.rootCauseSearchQueries![searchResultType] =
+          searchResults;
         await this.saveMemory();
       } else {
-        this.logger.info(`Root Cause search queries for ${searchResultType} search results already exist`);
+        this.logger.info(
+          `Root Cause search queries for ${searchResultType} search results already exist`
+        );
       }
     }
   }
@@ -143,8 +175,10 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     this.logger.info("Create Root Cause Search Queries Processor");
     super.process();
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createRootCauseSearchQueriesModel.temperature,
-      maxTokens: IEngineConstants.createRootCauseSearchQueriesModel.maxOutputTokens,
+      temperature:
+        IEngineConstants.createRootCauseSearchQueriesModel.temperature,
+      maxTokens:
+        IEngineConstants.createRootCauseSearchQueriesModel.maxOutputTokens,
       modelName: IEngineConstants.createRootCauseSearchQueriesModel.name,
       verbose: IEngineConstants.createRootCauseSearchQueriesModel.verbose,
     });

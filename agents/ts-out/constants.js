@@ -404,8 +404,8 @@ export class IEngineConstants {
     static maxSubProblems = 7;
     static maxNumberGeneratedOfEntities = 7;
     static maxStabilityRetryCount = 14;
-    static mainLLMmaxRetryCount = 40;
-    static limitedLLMmaxRetryCount = 10;
+    static mainLLMmaxRetryCount = 5;
+    static limitedLLMmaxRetryCount = 3;
     static rankingLLMmaxRetryCount = 40;
     // See also hardcoded 3 for project 1 in createSolutions
     static maxTopEntitiesToSearch = 3;

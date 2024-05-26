@@ -3,6 +3,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
 export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
+    generateInLanguage = "Icelandic";
     static rootCauseWebPageTypesArray = [
         "caseStudies",
         "economicRootCause",
@@ -27,6 +28,10 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
       6. If the search query is about a specific place or country do not include the name of the place or country in the search query but in some.
       7. List the search queries in a JSON string array.
       8. Never explain, just output JSON.
+
+      ${this.generateInLanguage
+                ? `9. You are generating search queries in the ${this.generateInLanguage} language.`
+                : ""}
 ​
       Let's think step by step.
         `),
@@ -101,7 +106,8 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
             problemStatement.rootCauseSearchQueries = {};
         }
         for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
-            if (regenerate || !problemStatement.rootCauseSearchQueries[searchResultType]) {
+            if (regenerate ||
+                !problemStatement.rootCauseSearchQueries[searchResultType]) {
                 this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
                 // create search queries for each type
                 let searchResults = await this.callLLM("create-root-causes-search-queries", IEngineConstants.createRootCauseSearchQueriesModel, await this.renderCreatePrompt(searchResultType));
@@ -114,7 +120,8 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
                     searchResults = await this.callLLM("create-root-causes-search-queries", IEngineConstants.createRootCauseSearchQueriesModel, await this.renderRankPrompt(searchResultType, searchResults));
                 }
                 this.logger.debug(`Search query type: ${searchResultType} - ${JSON.stringify(searchResults, null, 2)}`);
-                problemStatement.rootCauseSearchQueries[searchResultType] = searchResults;
+                problemStatement.rootCauseSearchQueries[searchResultType] =
+                    searchResults;
                 await this.saveMemory();
             }
             else {

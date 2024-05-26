@@ -451,8 +451,13 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     return new Promise<void>(async (resolve, reject) => {
       this.logger.info("getAndProcessPdf");
 
+      //TODO: Get PdfReader working with those (or use another library)
       const brokenPdfUrls = [
-        "https://skemman.is/bitstream/1946/24768/1/Dr.%20G.%20Sunna%20Gestsd%C3%B3ttir.pdf"
+        "https://skemman.is/bitstream/1946/13459/1/SusanEftirProfdom.pdf",
+        "https://www.stjornarradid.is/media/menntamalaraduneyti-media/media/ritogskyrslur/tomstund.pdf",
+        "https://skemman.is/bitstream/1946/24768/1/Dr.%20G.%20Sunna%20Gestsd%C3%B3ttir.pdf",
+        "https://www.althingi.is/altext/erindi/153/153-4952.pdf",
+        "https://www.althingi.is/altext/althingistidindi/L076/076_thing_1956-1957_umraedur_D.pdf"
       ];
 
       if (brokenPdfUrls.includes(url)) {

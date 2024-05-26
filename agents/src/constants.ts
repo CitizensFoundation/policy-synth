@@ -451,9 +451,9 @@ export class IEngineConstants {
 
   static maxStabilityRetryCount = 14;
 
-  static mainLLMmaxRetryCount = 40;
+  static mainLLMmaxRetryCount = 5;
 
-  static limitedLLMmaxRetryCount = 10;
+  static limitedLLMmaxRetryCount = 3;
 
   static rankingLLMmaxRetryCount = 40;
 
