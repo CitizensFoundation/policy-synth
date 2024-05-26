@@ -80,7 +80,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
          1. Refine all aspects of <PreviousVersionOfReportToRefine> with the new root causes
          2. Look at the new root causes and see which ones are already there, you can either skip it or refine the curren one
          3. If any of the new root causes is not at all represented in the current root causes in the report you can add it but we don't want hundreds of root causes in the report.
-         4. Never include duplicates or very similar root causes in the report.
+         4. NEVER include duplicates or very similar root causes in the "Likely Root Causes Summaries", pay special attention to this.
             `
                 : ""}`),
             new HumanMessage(`${this.renderProblemStatement()}
@@ -92,7 +92,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
                 ? `New root causes to refine the <PreviousVersionOfReportToRefine> with`
                 : "Root causes to report on"}: ${JSON.stringify(items, null, 2)}
 
-        Take a deep breath and think step by step and output Markdown Summary:
+        Take a deep breath and output your Markdown report:
         `),
         ];
         return messages;
