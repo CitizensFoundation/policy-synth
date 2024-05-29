@@ -1,53 +1,53 @@
 # PolicySynthAgentBase
 
-This class encapsulates the base functionalities for a policy synthesis agent, including memory management, logging, and interaction with language models.
+The `PolicySynthAgentBase` class is designed to interact with a language model, manage memory, and handle rate limits for API calls. It includes methods for parsing and repairing JSON responses, managing rate limits, and saving memory states.
 
 ## Properties
 
-| Name         | Type                          | Description                                   |
-|--------------|-------------------------------|-----------------------------------------------|
-| memory       | PsBaseMemoryData \| undefined | Optional memory data for the agent.           |
-| logger       | winston.Logger                | Logger instance for logging information.      |
-| timeStart    | number                        | Timestamp when the agent was instantiated.    |
-| chat         | ChatOpenAI \| undefined       | Optional ChatOpenAI instance for API calls.   |
-| rateLimits   | IEngineRateLimits             | Rate limits for API calls.                    |
+| Name       | Type                | Description                                                                 |
+|------------|---------------------|-----------------------------------------------------------------------------|
+| memory     | PsBaseMemoryData \| undefined | Optional memory data for the agent.                                           |
+| logger     | winston.Logger      | Logger instance for logging information and errors.                          |
+| timeStart  | number              | Timestamp indicating when the agent was instantiated.                        |
+| chat       | ChatOpenAI \| undefined | Optional instance of the ChatOpenAI class for interacting with the language model. |
+| rateLimits | IEngineRateLimits   | Object to keep track of rate limits for different models.                    |
 
 ## Methods
 
-| Name                  | Parameters                                                                                                      | Return Type            | Description                                                                 |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------|------------------------|-----------------------------------------------------------------------------|
-| getJsonBlock          | text: string                                                                                                    | string                 | Extracts a JSON block from a text string.                                   |
-| fullLLMCostsForMemory | -                                                                                                               | number \| undefined    | Calculates the full LLM costs for the memory stages.                        |
-| getRepairedJson       | text: string                                                                                                    | any                    | Attempts to repair and parse a JSON string.                                 |
-| callLLM               | stage: PsMemoryStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson: boolean, limitedRetries: boolean, tokenOutEstimate: number, streamingCallbacks?: Callbacks | any                    | Calls the LLM and handles retries, rate limits, and parsing.                |
-| updateRateLimits      | model: IEngineBaseAIModelConstants, tokensToAdd: number                                                         | Promise<void>          | Updates the rate limits for a given model based on the tokens added.        |
-| checkRateLimits       | model: IEngineBaseAIModelConstants, tokensToAdd: number                                                         | Promise<void>          | Checks and enforces rate limits for a given model.                          |
-| formatNumber          | number: number, fractions: number = 0                                                                           | string                 | Formats a number to a string with specified decimal places.                 |
-| saveMemory            | -                                                                                                               | Promise<void>          | Saves the current memory state to Redis.                                    |
+| Name                    | Parameters                                                                 | Return Type         | Description                                                                                     |
+|-------------------------|---------------------------------------------------------------------------|---------------------|-------------------------------------------------------------------------------------------------|
+| constructor             | memory: PsBaseMemoryData \| undefined = undefined                         | void                | Initializes the agent with optional memory data.                                                |
+| static emptyDefaultStages | none                                                                      | object              | Returns an object with default stages for the agent.                                            |
+| getJsonBlock            | text: string                                                               | string              | Extracts a JSON block from a given text.                                                        |
+| fullLLMCostsForMemory   | none                                                                       | number \| undefined | Calculates the total cost of memory stages in terms of tokens.                                   |
+| private repairJson      | text: string                                                               | string              | Repairs a given JSON string using the `jsonrepair` library.                                      |
+| private parseJsonResponse | response: string                                                          | any                 | Parses a JSON response, attempting to repair it if parsing fails.                               |
+| async callLLM           | stage: PsMemoryStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks?: Callbacks | Promise<any>        | Calls the language model with the given parameters and handles retries and rate limits.          |
+| private async updateRateLimits | model: IEngineBaseAIModelConstants, tokensToAdd: number               | Promise<void>       | Updates the rate limits for a given model by adding the current request and token count.         |
+| private async checkRateLimits | model: IEngineBaseAIModelConstants, tokensToAdd: number                | Promise<void>       | Checks if the rate limits for a given model have been reached and waits if necessary.            |
+| private addRequestTimestamp | model: IEngineBaseAIModelConstants                                      | void                | Adds a timestamp for the current request to the rate limits.                                     |
+| private addTokenEntry    | model: IEngineBaseAIModelConstants, tokensToAdd: number                    | void                | Adds a token entry for the current request to the rate limits.                                   |
+| private slideWindowForRequests | model: IEngineBaseAIModelConstants                                    | void                | Slides the window for request timestamps to remove old entries.                                  |
+| private slideWindowForTokens | model: IEngineBaseAIModelConstants                                      | void                | Slides the window for token entries to remove old entries.                                       |
+| private async getTokensFromMessages | messages: BaseMessage[]                                          | Promise<number>     | Gets the total number of tokens from a list of messages.                                         |
+| private updateMemoryStages | stage: PsMemoryStageTypes, tokensIn: number, tokensOut: number, modelConstants: IEngineBaseAIModelConstants | void                | Updates the memory stages with the given token counts and costs.                                 |
+| formatNumber             | number: number, fractions = 0                                              | string              | Formats a number to a string with a specified number of decimal places.                          |
+| async saveMemory         | none                                                                       | Promise<void>       | Saves the current memory state to Redis.                                                         |
 
 ## Example
 
 ```typescript
+// Example usage of PolicySynthAgentBase
 import { PolicySynthAgentBase } from '@policysynth/agents/baseAgent.js';
 
-// Initialize the agent with optional memory data
 const agent = new PolicySynthAgentBase();
-
-// Example usage of getJsonBlock method
-try {
-  const jsonContent = agent.getJsonBlock("Some text ```json {\"key\": \"value\"} ``` more text");
-  console.log(jsonContent); // Outputs: {"key": "value"}
-} catch (error) {
-  console.error("Failed to extract JSON block:", error);
-}
-
-// Example usage of callLLM method
-const messages = [new BaseMessage("Hello, world!")];
-agent.callLLM("stageType", modelConstants, messages, true, false, 120)
-  .then(response => {
-    console.log("LLM response:", response);
-  })
-  .catch(error => {
-    console.error("Failed to call LLM:", error);
-  });
+agent.callLLM(
+  'create-root-causes-search-queries',
+  modelConstants,
+  messages,
+  true,
+  false,
+  120,
+  streamingCallbacks
+);
 ```

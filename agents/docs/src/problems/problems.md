@@ -1,34 +1,35 @@
 # AgentProblems
 
-This class extends `BaseAgentProcessor` to handle various stages of problem processing in a policy synthesis context.
+The `AgentProblems` class is responsible for processing various stages of problem-solving tasks using different processors. It extends the `BaseAgentProcessor` class and utilizes the `bullmq` library for job processing.
 
 ## Properties
 
-| Name    | Type             | Description               |
-|---------|------------------|---------------------------|
-| memory  | PsBaseMemoryData | Holds the state and data specific to the agent's current task. |
+| Name          | Type                | Description               |
+|---------------|---------------------|---------------------------|
+| memory        | PsBaseMemoryData    | The memory data for the agent. |
 
 ## Methods
 
-| Name              | Parameters            | Return Type | Description                                           |
-|-------------------|-----------------------|-------------|-------------------------------------------------------|
-| initializeMemory  | job: Job              | Promise<void> | Initializes the memory with job-specific data.       |
-| setStage          | stage: PsMemoryStageTypes | Promise<void> | Sets the current stage of processing and updates the start time. |
-| processSubProblems|                       | Promise<void> | Processes sub-problems by creating them.             |
-| process           |                       | Promise<void> | Main processing function that handles different stages based on the current memory stage. |
+| Name             | Parameters                | Return Type | Description                                                                 |
+|------------------|---------------------------|-------------|-----------------------------------------------------------------------------|
+| initializeMemory | job: Job                  | Promise<void> | Initializes the memory for the agent using job data.                        |
+| setStage         | stage: PsMemoryStageTypes | Promise<void> | Sets the current stage and updates the memory.                              |
+| processSubProblems |                         | Promise<void> | Processes sub-problems using the `CreateSubProblemsProcessor`.              |
+| process          |                           | Promise<void> | Processes the current stage using the appropriate processor.                |
 
 ## Example
 
 ```typescript
+// Example usage of AgentProblems
 import { AgentProblems } from '@policysynth/agents/problems/problems.js';
-import { Job } from "bullmq";
+import { Job } from 'bullmq';
 
-const job = new Job(); // Assuming job is already defined and configured elsewhere
-const agentProblems = new AgentProblems();
+const job = new Job('example-job', { /* job data */ });
+const agent = new AgentProblems();
 
-// Example of initializing and processing a job
-(async () => {
-  await agentProblems.initializeMemory(job);
-  await agentProblems.process();
-})();
+agent.initializeMemory(job).then(() => {
+  agent.process();
+});
 ```
+
+This class handles various stages of problem-solving by delegating tasks to specific processors based on the current stage. It uses a memory object to keep track of the current state and progress. The `process` method switches between different stages and invokes the corresponding processor to handle the task.

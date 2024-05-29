@@ -6,6 +6,12 @@
 - [basePairwiseRanking](src/src/basePairwiseRanking.md)
 - [baseProblemSolvingAgent](src/src/baseProblemSolvingAgent.md)
 - [constants](src/src/constants.md)
+- models
+  - [azureOpenAiChat](src/models/azureOpenAiChat.md)
+  - [baseChatModel](src/models/baseChatModel.md)
+  - [claudeOpusChat](src/models/claudeOpusChat.md)
+  - [googleGeminiChat](src/models/googleGeminiChat.md)
+  - [openAiChat](src/models/openAiChat.md)
 - policies
   - create
     - [createEvidenceSearchQueries](src/policies/create/createEvidenceSearchQueries.md)
@@ -51,11 +57,14 @@
     - [importSubProblems](src/problems/tools/importSubProblems.md)
     - [runProblemStage](src/problems/tools/runProblemStage.md)
     - [setAlignmentStatements](src/problems/tools/setAlignmentStatements.md)
+    - [subProblemRootCausesReport](src/problems/tools/subProblemRootCausesReport.md)
     - [trimSubProblems](src/problems/tools/trimSubProblems.md)
   - web
     - [getMetaDataForTopWebRootCauses](src/problems/web/getMetaDataForTopWebRootCauses.md)
     - [getRefinedRootCauses](src/problems/web/getRefinedRootCauses.md)
     - [getRootCausesWebPages](src/problems/web/getRootCausesWebPages.md)
+    - old
+      - [getRefinedRootCauses](src/problems/web/old/getRefinedRootCauses.md)
     - [rootCauseExamplePrompts](src/problems/web/rootCauseExamplePrompts.md)
     - [rootCauseTypeTypeDef](src/problems/web/rootCauseTypeTypeDef.md)
     - [searchWebForRootCauses](src/problems/web/searchWebForRootCauses.md)

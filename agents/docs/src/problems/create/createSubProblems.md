@@ -1,47 +1,31 @@
 # CreateSubProblemsProcessor
 
-This class extends `BaseProblemSolvingAgent` to handle the creation and refinement of sub-problems derived from a main problem statement. It interacts with a language model to generate and refine sub-problems, and manages the flow of messages related to this process.
+The `CreateSubProblemsProcessor` class is a specialized agent for creating and refining sub-problems from a given problem statement. It extends the `BaseProblemSolvingAgent` class and utilizes the OpenAI language model to generate and refine sub-problems.
 
 ## Properties
 
 | Name          | Type   | Description               |
 |---------------|--------|---------------------------|
-| chat          | ChatOpenAI | Instance of ChatOpenAI used for communication with OpenAI's language models. |
+| chat          | ChatOpenAI | Instance of the ChatOpenAI class used for interacting with the language model. |
+| memory        | PsBaseMemoryData | Memory object that stores the problem statement and sub-problems. |
+| logger        | Logger | Logger instance for logging information. |
 
 ## Methods
 
-| Name                | Parameters        | Return Type            | Description                 |
-|---------------------|-------------------|------------------------|-----------------------------|
-| renderRefinePrompt  | results: IEngineSubProblem[] | Promise<BaseMessage[]> | Generates messages for refining sub-problems based on initial results. |
-| renderCreatePrompt  | -                 | Promise<BaseMessage[]> | Generates messages for creating initial sub-problems. |
-| createSubProblems   | -                 | Promise<void>          | Orchestrates the creation and optional refinement of sub-problems. |
-| process             | -                 | Promise<void>          | Overrides the `process` method from `BaseProblemSolvingAgent`, initializes chat settings, and starts the sub-problem creation process. |
+| Name                | Parameters        | Return Type | Description                 |
+|---------------------|-------------------|-------------|-----------------------------|
+| renderRefinePrompt  | results: IEngineSubProblem[] | Promise<BaseMessage[]> | Generates a prompt for refining sub-problems. |
+| renderCreatePrompt  | None              | Promise<BaseMessage[]> | Generates a prompt for creating sub-problems. |
+| createSubProblems   | None              | Promise<void> | Creates and refines sub-problems using the language model. |
+| process             | None              | Promise<void> | Main processing method that initializes the chat instance and creates sub-problems. |
 
 ## Example
 
 ```typescript
 import { CreateSubProblemsProcessor } from '@policysynth/agents/problems/create/createSubProblems.js';
-import { IEngineConstants } from '../../constants.js';
 
 const processor = new CreateSubProblemsProcessor();
-
-// Example settings for IEngineConstants
-IEngineConstants.createSubProblemsModel = {
-  temperature: 0.5,
-  maxOutputTokens: 150,
-  name: 'gpt-3.5-turbo',
-  verbose: true
-};
-
-IEngineConstants.enable = {
-  refine: {
-    createSubProblems: true
-  }
-};
-
-processor.process().then(() => {
-  console.log('Sub-problems processing completed.');
-}).catch(error => {
-  console.error('Error processing sub-problems:', error);
-});
+processor.process();
 ```
+
+This example demonstrates how to create an instance of `CreateSubProblemsProcessor` and call its `process` method to generate and refine sub-problems from a given problem statement.

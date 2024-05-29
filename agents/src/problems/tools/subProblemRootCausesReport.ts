@@ -102,11 +102,12 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
  ${
           previousSummary
             ? `
-         Important Refine Instructions:
-         1. Refine all aspects of <PreviousVersionOfReportToRefine> with the new root causes
-         2. Look at the new root causes and see which ones are already there, you can either skip it or refine the curren one
-         3. If any of the new root causes is not at all represented in the current root causes in the report you can add it but we don't want hundreds of root causes in the report.
-         4. NEVER include duplicates or very similar root causes in the "Likely Root Causes Summaries", pay special attention to this.
+         Important Refine Instructions for <PreviousVersionOfReportToRefine>:
+         1. If any of the new root causes is not at all represented in "## Likely Root Causes Summaries" you can add a new root cause.
+         2. There can be a maximum of 50 root causes in the "## Likely Root Causes Summaries", never include more, only include the most important ones.
+         3. Refine if the current root causes with the new root causes if important details are missing.
+         5. There can be a maximum of 7 root causes in the "## Additional Novel/Unexpected Root Causes For Further Investigation", never include more, only include the most important ones.
+         6. NEVER include duplicate or similar root causes summaries in the "## Likely Root Causes Summaries", pay special attention to this.
             `
             : ""
         }`
@@ -216,7 +217,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
       temperature: 0.0,
       maxTokens: 4096,
       modelName: "gpt-4o",
-      verbose: true
+      verbose: false
     });
 
     const filePath = process.argv[3]; // Path to the CSV file is passed as a command-line argument
