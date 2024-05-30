@@ -78,9 +78,9 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
                 ? `
          Important Refine Instructions for <PreviousVersionOfReportToRefine>:
          1. If any of the new root causes is not at all represented in "## Likely Root Causes Summaries" you can add a new root cause.
-         2. There can be a maximum of 50 root causes in the "## Likely Root Causes Summaries", never include more, only include the most important ones.
+         2. There can be a maximum of 50 best root causes in the "## Likely Root Causes Summaries", never include more, only include the most important ones, replace less imporant ones with new ones if needed.
          3. Refine if the current root causes with the new root causes if important details are missing.
-         5. There can be a maximum of 7 root causes in the "## Additional Novel/Unexpected Root Causes For Further Investigation", never include more, only include the most important ones.
+         5. There can be a maximum of 7 best novel root causes in the "## Additional Novel/Unexpected Root Causes For Further Investigation", never include more, only include the most important ones, replace less imporant ones with new ones if needed.
          6. NEVER include duplicate or similar root causes summaries in the "## Likely Root Causes Summaries", pay special attention to this.
             `
                 : ""}`),
