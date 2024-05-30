@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.2.7",
+  "version": "1.2.9",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -47,8 +47,8 @@
     "@anthropic-ai/sdk": "^0.20.9",
     "@azure/openai": "^1.0.0-beta.12",
     "@google/generative-ai": "^0.11.1",
-    "@langchain/core": "^0.2.0",
-    "@langchain/openai": "^0.0.33",
+    "@langchain/core": "^0.2.4",
+    "@langchain/openai": "^0.0.34",
     "aws-sdk": "^2.1608.0",
     "axios": "^1.6.8",
     "bullmq": "^5.7.6",
