@@ -87,7 +87,11 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         8. Output scores in the ranges of 0-100 for the score JSON attributes.
         9. Try to establish when the text was published and include in the yearPublished field if you find it.
         10. If you do not find any relevant root causes in the <textContext> then just output an empty JSON array, never make up your own root causes.
-        ${this.outputInLanguage ? `11. Always output text in the ${this.outputInLanguage} language even if the <textContext> is in a different language.` : ""}
+        ${
+          this.outputInLanguage
+            ? `11. Always output text in the ${this.outputInLanguage} language even if the <textContext> is in a different language.`
+            : ""
+        }
         `
       ),
       new HumanMessage(
@@ -140,7 +144,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         )}`
       );
 
-      this.logger.debug(`Searching ${url}...`)
+      this.logger.debug(`Searching ${url}...`);
 
       let textAnalysis: PSRefinedRootCause[];
 
@@ -180,7 +184,8 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                   title: rootCause.rootCauseTitle,
                   description: rootCause.rootCauseDescription,
                   whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
-                  shortDescriptionForPairwiseRanking: rootCause.rootCauseDescriptionForPairwiseRanking,
+                  shortDescriptionForPairwiseRanking:
+                    rootCause.rootCauseDescriptionForPairwiseRanking,
                   yearPublished: rootCause.yearPublished,
                   fromSearchType: type,
                   fromUrl: url,
@@ -233,7 +238,8 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
               title: rootCause.rootCauseTitle,
               description: rootCause.rootCauseDescription,
               whyIsSubProblemImportant: rootCause.whyRootCauseIsImportant,
-              shortDescriptionForPairwiseRanking: rootCause.rootCauseDescriptionForPairwiseRanking,
+              shortDescriptionForPairwiseRanking:
+                rootCause.rootCauseDescriptionForPairwiseRanking,
               yearPublished: rootCause.yearPublished,
               fromSearchType: type,
               fromUrl: url,
@@ -319,7 +325,6 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     entityIndex: number | undefined,
     policy: undefined = undefined
   ) {
-
     if (this.processesUrls.has(url)) {
       this.logger.info(`Already processed ${url}`);
       return;
@@ -337,7 +342,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
       `Processing page text ${text.slice(
         0,
         150
-      )} for ${url} for ${type} search results (total urls processed ${this.processesUrls.size})`
+      )} for ${url} for ${type} search results (total urls processed ${
+        this.processesUrls.size
+      })`
     );
 
     try {
@@ -395,14 +402,19 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     }
 
     if (this.memory.customInstructions.rootCauseUrlsToScan) {
+      this.logger.info(`Processing custom urls... ${JSON.stringify(this.memory.customInstructions.rootCauseUrlsToScan, null, 2)}`);
       for (const url of this.memory.customInstructions.rootCauseUrlsToScan) {
-        console.log(`Processing ${url}`);
+        this.logger.info(`Processing ${url}`);
         if (this.isUrlInSubProblemMemory(url)) {
           this.logger.info(`Already in memory ${url}`);
           this.processesUrls.add(url);
           continue;
         }
-        await this.getAndProcessRootCausePage(url, browserPage, "adminSubmitted");
+        await this.getAndProcessRootCausePage(
+          url,
+          browserPage,
+          "adminSubmitted"
+        );
       }
     }
 

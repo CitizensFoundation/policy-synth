@@ -89,7 +89,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
         return true;
       });
 
-      this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 5);
+      this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 7);
 
       await this.performPairwiseRanking(index);
 

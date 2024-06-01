@@ -5,7 +5,7 @@ import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
     totalPagesSave: number;
-    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
+    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

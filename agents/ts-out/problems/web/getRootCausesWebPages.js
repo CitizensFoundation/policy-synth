@@ -62,7 +62,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         8. Output scores in the ranges of 0-100 for the score JSON attributes.
         9. Try to establish when the text was published and include in the yearPublished field if you find it.
         10. If you do not find any relevant root causes in the <textContext> then just output an empty JSON array, never make up your own root causes.
-        ${this.outputInLanguage ? `11. Always output text in the ${this.outputInLanguage} language even if the <textContext> is in a different language.` : ""}
+        ${this.outputInLanguage
+                ? `11. Always output text in the ${this.outputInLanguage} language even if the <textContext> is in a different language.`
+                : ""}
         `),
             new HumanMessage(`
         ${this.renderProblemStatement()}
@@ -265,8 +267,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             this.memory.subProblems = [];
         }
         if (this.memory.customInstructions.rootCauseUrlsToScan) {
+            this.logger.info(`Processing custom urls... ${JSON.stringify(this.memory.customInstructions.rootCauseUrlsToScan, null, 2)}`);
             for (const url of this.memory.customInstructions.rootCauseUrlsToScan) {
-                console.log(`Processing ${url}`);
+                this.logger.info(`Processing ${url}`);
                 if (this.isUrlInSubProblemMemory(url)) {
                     this.logger.info(`Already in memory ${url}`);
                     this.processesUrls.add(url);

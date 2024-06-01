@@ -468,7 +468,7 @@ export class IEngineConstants {
 
   static maxTopRootCauseQueriesToSearchPerType = 15;
 
-  static maxRootCausePercentOfSearchResultWebPagesToGet = 0.8;
+  static maxRootCausePercentOfSearchResultWebPagesToGet = 0.7;
 
   static maxRootCausesToUseForRatingRootCauses = 5;
 

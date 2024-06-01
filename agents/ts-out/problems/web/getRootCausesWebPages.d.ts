@@ -7,7 +7,7 @@ export declare class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor
     hasPrintedPrompt: boolean;
     outputInLanguage: string | undefined;
     processesUrls: Set<string>;
-    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (HumanMessage | SystemMessage)[];
+    renderRootCauseScanningPrompt(type: PSRootCauseWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
     getRootCauseTokenCount(text: string, type: PSRootCauseWebPageTypes): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

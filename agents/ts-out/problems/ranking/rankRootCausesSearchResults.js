@@ -61,7 +61,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
                 seenUrls.add(item.url);
                 return true;
             });
-            this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 5);
+            this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 7);
             await this.performPairwiseRanking(index);
             this.logger.info(`Ranking search results before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`);
             this.memory.problemStatement.rootCauseSearchResults[searchQueryType] = this.getOrderedListOfItems(index);

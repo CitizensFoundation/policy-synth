@@ -453,6 +453,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
       //TODO: Get PdfReader working with those (or use another library)
       const brokenPdfUrls = [
+        "https://www.althingi.is/altext/althingistidindi/L061/061_thing_1942-1943_A_thingskjol.pdf",
         "https://skemman.is/bitstream/1946/13459/1/SusanEftirProfdom.pdf",
         "https://www.stjornarradid.is/media/menntamalaraduneyti-media/media/ritogskyrslur/tomstund.pdf",
         "https://skemman.is/bitstream/1946/24768/1/Dr.%20G.%20Sunna%20Gestsd%C3%B3ttir.pdf",
