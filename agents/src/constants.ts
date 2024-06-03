@@ -522,7 +522,7 @@ export class IEngineConstants {
 
   static maxTopSearchQueriesForSolutionCreation = 8;
 
-  static maxPercentOfSolutionsWebPagesToGet = 0.25;
+  static maxPercentOfSolutionsWebPagesToGet = 0.50;
 
   static limits = {
     webPageVectorResultsForNewSolutions: 14,

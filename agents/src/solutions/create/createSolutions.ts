@@ -10,6 +10,8 @@ const DISABLE_LLM_FOR_DEBUG = false;
 export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
   webPageVectorStore = new WebPageVectorStore();
 
+  useLanguage: string | undefined = "English";
+
   async renderRefinePrompt(
     results: IEngineSolution[],
     generalTextContext: string,
@@ -32,6 +34,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
         6. Refer to the relevant entities in your solution components, if mentioned.
         7. Ensure your output is not in markdown format.
         8. Only output JSON and offer no explanations.
+        ${this.useLanguage ? `9. Always output in ${this.useLanguage}` : ""}
         ${
           this.memory.customInstructions.createSolutions
             ? `
@@ -82,6 +85,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
       6. Never re-create solution components listed under 'Already Created Solution Components'.
       7. The General, Scientific, Open Data and News Contexts should always inform and inspire your solution components.
       8. Do not refer to the Contexts in your solution components, as the contexts won't be visible to the user.
+      ${this.useLanguage ? `9. Always output in ${this.useLanguage}` : ""}
       ${
         this.memory.customInstructions.createSolutions
           ? `
@@ -709,14 +713,14 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
           textContexts.general.selectedUrl,
           textContexts.scientific.selectedUrl,
           textContexts.openData.selectedUrl,
-          textContexts.news.selectedUrl
-        ]
+          textContexts.news.selectedUrl,
+        ];
 
         for (let solution of solutions) {
           solution.family = {
             seedUrls,
-            gen: 0
-          }
+            gen: 0,
+          };
         }
       }
 

@@ -7,6 +7,9 @@ import { IEngineConstants } from "../../constants.js";
 export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
   //TODO: Maybe add a review and refine stage here as well
 
+  //TODO: Put in memory
+  useLanguage: string | undefined = "Norwegian"
+
   renderCommonPromptSection() {
     return `
       3. Use your knowledge and experience to create the best possible search queries.
@@ -16,13 +19,15 @@ export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
       5.2. Scientific
       5.3. OpenData
       5.4. News
-      6. Create 10 search queries for each type.
+      6. Create 15 search queries for each type.
       7. All search queries should be solution focused, let's find the solution components for those entities.
       8. Never output in markdown format.
       9. Provide an output in the following JSON format:
         { general: [ queries ], scientific: [ queries ], openData: [ queries ], news: [ queries ] }.
       10. Ensure a methodical, step-by-step approach to create the best possible search queries.
       11. Never offer explanations, just output JSON.
+      ${this.useLanguage ? `12. Use ${this.useLanguage} language to create the search queries, we are searching for solutions in that language to our sub problems.
+      13. Do not include any Icelandic or the words Menntasjóður námsmanna as this will pull in the wrong content in the searches.` : ""}
     `;
   }
 
@@ -82,7 +87,7 @@ export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
       temperature: IEngineConstants.createSearchQueriesModel.temperature,
       maxTokens: IEngineConstants.createSearchQueriesModel.maxOutputTokens,
       modelName: IEngineConstants.createSearchQueriesModel.name,
-      verbose: IEngineConstants.createSearchQueriesModel.verbose,
+      verbose: false,
     });
 
     this.memory.problemStatement.searchQueries = await this.callLLM(
@@ -115,6 +120,8 @@ export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
           );
         await this.saveMemory();
 
+        console.log(JSON.stringify(this.memory.subProblems[subProblemIndex].searchQueries, null, 2));
+
         for (
           let e = 0;
           e <
@@ -134,6 +141,7 @@ export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
               )
             );
           await this.saveMemory();
+          console.log(JSON.stringify(this.memory.subProblems[subProblemIndex].entities[e].searchQueries, null, 2));
         }
       }
     );

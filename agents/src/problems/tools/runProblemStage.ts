@@ -19,7 +19,7 @@ if (projectId) {
   //memory.currentStage = "rank-root-causes-search-queries"
   //memory.currentStage = "web-search-root-causes"
   //memory.currentStage = "rank-root-causes-search-results"
-  memory.currentStage = "web-get-root-causes-pages"
+  //memory.currentStage = "web-get-root-causes-pages"
 
   //memory.currentStage = "create-problem-statement-image";
   //memory.currentStage = "create-sub-problems";
@@ -30,7 +30,7 @@ if (projectId) {
   //memory.currentStage = "create-entities";
   //memory.currentStage = "rank-entities";
   //memory.currentStage = "create-search-queries";
-  //memory.currentStage = "rank-search-queries";
+  memory.currentStage = "rank-search-queries";
 
   // OLD
   //memory.currentStage = "rank-web-root-causes"

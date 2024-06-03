@@ -6,8 +6,17 @@ const main = async () => {
     if (projectId) {
         const redisKey = `st_mem:${projectId}:id`;
         const currentProject = JSON.parse(await redis.get(redisKey) || "");
+        const newSubProblems = [];
+        newSubProblems[0] = currentProject.subProblems[0];
+        newSubProblems[1] = currentProject.subProblems[9];
+        newSubProblems[2] = currentProject.subProblems[10];
+        newSubProblems[3] = currentProject.subProblems[14];
+        newSubProblems[4] = currentProject.subProblems[18];
+        newSubProblems[5] = currentProject.subProblems[19];
+        newSubProblems[6] = currentProject.subProblems[26];
+        currentProject.subProblems = newSubProblems;
         // trim this.memory.subProblems with newLength
-        currentProject.subProblems = currentProject.subProblems.slice(0, parseInt(newLength));
+        //currentProject.subProblems = currentProject.subProblems.slice(0, parseInt(newLength));
         await redis.set(redisKey, JSON.stringify(currentProject));
         console.log("Project trimmed successfully");
         process.exit(0);

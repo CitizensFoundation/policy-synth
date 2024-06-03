@@ -73,7 +73,6 @@
     "node-fetch": "^3.3.2",
     "openai": "^4.46.0",
     "pdf-parse": "^1.1.1",
-    "pdf2json": "^3.1.3",
     "pdfjs-dist": "^3.8.162",
     "pdfreader": "^3.0.2",
     "pg": "^8.11.5",
@@ -85,8 +84,5 @@
     "winston": "^3.13.0",
     "ws": "^8.16.0",
     "xlsx": "^0.18.5"
-  },
-  "overrides": {
-    "pdf2json": "^3.1.3"
   }
 }

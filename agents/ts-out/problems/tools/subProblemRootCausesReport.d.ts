@@ -11,8 +11,8 @@ export declare class PsSubProblemsReportGenerator extends BaseProblemSolvingAgen
     constructor(memoryData: PSMemoryData);
     renderPairwiseChoicesPrompt(items: Item[], previousSummary: string | undefined): Promise<Array<HumanMessage | SystemMessage>>;
     renderSummaryPrompt50(items: Item[], previousSummary: string | undefined): Promise<Array<HumanMessage | SystemMessage>>;
-    renderSummaryPrompt25(items: Item[], previousSummary: string | undefined): Promise<Array<HumanMessage | SystemMessage>>;
     renderSummaryPrompt(items: Item[], previousSummary: string | undefined): Promise<Array<HumanMessage | SystemMessage>>;
+    renderSummaryPromptNovel(items: Item[], previousSummary: string | undefined): Promise<Array<HumanMessage | SystemMessage>>;
     summarizeItems(items: Item[], previousSummary: string | undefined): Promise<string>;
     processCSV(filePath: string): Promise<string>;
     processItemsInBatches(items: Item[]): Promise<string>;

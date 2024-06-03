@@ -134,7 +134,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
     return messages;
   }
 
-  async renderSummaryPrompt25(
+  async renderSummaryPrompt(
     items: Item[],
     previousSummary: string | undefined
   ): Promise<Array<HumanMessage | SystemMessage>> {
@@ -193,7 +193,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
     return messages;
   }
 
-  async renderSummaryPrompt(
+  async renderSummaryPromptNovel(
     items: Item[],
     previousSummary: string | undefined
   ): Promise<Array<HumanMessage | SystemMessage>> {

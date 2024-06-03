@@ -67,6 +67,7 @@ interface IEngineProblemStatement extends PsEloRateable{
   description: string;
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
+  solutionsFromSearch?: IEngineSolution[];
   rootCauseSearchQueries?: PSRootCauseSearchQueries;
   rootCauseSearchResults?: PSRootCauseSearchResults;
   haveScannedWeb?: boolean;
@@ -92,6 +93,7 @@ interface IEngineSubProblem extends PsEloRateable {
   entities: IEngineAffectedEntity[];
   searchQueries: IEngineSearchQueries;
   searchResults: IEngineSearchResults;
+  solutionsFromSearch?: IEngineSolution[];
   customSearchUrls?: string[];
   haveScannedWeb?: boolean;
   solutions: {
@@ -117,6 +119,7 @@ interface IEngineAffectedEntity extends PsEloRateable {
   negativeEffects?: IEngineAffectedEntityAffect[];
   searchQueries?: IEngineSearchQueries;
   searchResults?: IEngineSearchResults;
+  solutionsFromSearch?: IEngineSolution[];
   haveScannedWeb?: boolean;
 }
 
@@ -147,6 +150,10 @@ interface IEngineSolution extends PsEloRateable {
   mainObstacleToSolutionComponentAdoption: string;
   mainBenefitOfSolution?: string;
   mainObstacleToSolutionAdoption?: string;
+  relevanceToProblem?: string;
+  fromSearchType?: IEngineWebPageTypes;
+  fromUrl?: string;
+  contacts?: string[];
   affectedEntities?: IEngineSolutionAffectedEntity[];
   pros?: string[] | IEngineProCon[];
   cons?: string[] | IEngineProCon[];

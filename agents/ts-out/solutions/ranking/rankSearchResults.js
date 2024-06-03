@@ -74,7 +74,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
             let resultsToRank = this.memory.subProblems[s].searchResults.pages[searchResultType];
             this.subProblemIndex = s;
             this.searchResultTarget = "subProblem";
-            this.setupRankingPrompts(s, resultsToRank);
+            this.setupRankingPrompts(s, resultsToRank, resultsToRank.length * 10);
             await this.performPairwiseRanking(s);
             this.memory.subProblems[s].searchResults.pages[searchResultType] =
                 this.getOrderedListOfItems(s, true);
@@ -89,7 +89,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
             this.logger.info(`Ranking Entity ${subProblemIndex}-${e} for ${searchResultType} search results`);
             this.currentEntity = this.memory.subProblems[subProblemIndex].entities[e];
             let resultsToRank = this.memory.subProblems[subProblemIndex].entities[e].searchResults.pages[searchResultType];
-            this.setupRankingPrompts(subProblemIndex * e, resultsToRank, resultsToRank.length * 5);
+            this.setupRankingPrompts(subProblemIndex * e, resultsToRank, resultsToRank.length * 7);
             await this.performPairwiseRanking(subProblemIndex * e);
             this.memory.subProblems[subProblemIndex].entities[e].searchResults.pages[searchResultType] =
                 this.getOrderedListOfItems(subProblemIndex * e, true);
@@ -114,7 +114,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
             let resultsToRank = this.memory.problemStatement.searchResults.pages[searchResultType];
             this.searchResultTarget = "problemStatement";
             this.logger.info(`Ranking Main Problem statement for ${searchResultType} search results`);
-            this.setupRankingPrompts(-1, resultsToRank);
+            this.setupRankingPrompts(-1, resultsToRank, resultsToRank.length * 10);
             await this.performPairwiseRanking(-1);
             this.memory.problemStatement.searchResults.pages[searchResultType] = this.getOrderedListOfItems(-1, true);
             await this.processSubProblems(searchResultType);

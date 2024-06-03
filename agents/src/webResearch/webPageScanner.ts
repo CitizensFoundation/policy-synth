@@ -121,7 +121,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     );
 
     try {
-      const textAnalysis = await this.getTextAnalysis(text);
+      const textAnalysis = await this.getTextAnalysis(text) as IEngineWebPageAnalysisData;
 
       if (textAnalysis) {
         textAnalysis.url = url;

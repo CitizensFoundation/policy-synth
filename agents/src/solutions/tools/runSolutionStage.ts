@@ -15,7 +15,7 @@ if (projectId) {
 
   const memory = JSON.parse(output!) as PsBaseMemoryData;
   //memory.currentStage = "web-search";
-  //memory.currentStage = "rank-search-results";
+  memory.currentStage = "rank-search-results";
   //memory.currentStage = "web-get-pages";
   //memory.currentStage = "rank-web-solutions";
   //memory.currentStage = "create-seed-solutions";
@@ -31,7 +31,7 @@ if (projectId) {
   //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rank-solutions";
   //memory.currentStage = "create-solution-images";
-  memory.currentStage = "group-solutions";
+  //memory.currentStage = "group-solutions";
 
   await redis.set(redisKey, JSON.stringify(memory));
 

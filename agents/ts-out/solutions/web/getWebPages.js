@@ -29,12 +29,25 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             new SystemMessage(`Your are an AI expert in analyzing text for practical solutions to difficult problems:
 
         Important Instructions:
-        1. Examine the "Text context" and determine how it relates to the problem statement and any specified sub problem.
-        2. Identify solutions in the "Text Context" and add them in the 'solutionsIdentifiedInTextContext' JSON array.
-        3. If the solutions are for a specific audience, always include a reference to that audience in the text of the solution, do not have the audience as a separate field
-        4. Always output your results in this JSON format: { solutionsIdentifiedInTextContext: [ "" ], summary, relevanceToProblem,  contacts: [ "" ] } format, with no additional explanation.
-        5. Think step-by-step.
-        6. It is very important for society that you find the best solutions to those problems
+        1. Examine the <TextContext> and determine how it relates to the problem statement and any specified sub problem.
+        2. Identify all solutions or components of solutions in the <TextContext> and output in a JSON array.
+        3. Always output all your found solutions in this JSON Array format:
+        [
+          {
+            title: string;
+            description: string;
+            relevanceToProblem: string;
+            mainBenefitOfSolutionComponent: string;
+            mainObstacleToSolutionComponentAdoption: string;
+            mainBenefitOfSolution: string;
+            mainObstacleToSolutionAdoption: string;
+            contacts?: string[];
+          }
+        ]
+        4. If you find importantant contacts connected to the solutions add them to the optional contacts array.
+        5. Never offer explainations only output JSON.
+        6. Output the data part of the JSON in English.
+        7. It is very important for society that you find the best solutions to those problems.
         `),
             new HumanMessage(`
         Problem Statement:
@@ -52,8 +65,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
               `
                 : ``}
 
-        Text Context:
+        <TextContext>
         ${text}
+        </TextContext>
 
         JSON Output:
         `),
@@ -186,7 +200,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
                             textAnalysis = nextAnalysis;
                         }
                         else {
-                            textAnalysis = this.mergeAnalysisData(textAnalysis, nextAnalysis);
+                            textAnalysis = [...textAnalysis, ...nextAnalysis];
                         }
                         this.logger.debug(`Refined text analysis (${t}): ${JSON.stringify(textAnalysis, null, 2)}`);
                     }
@@ -209,16 +223,11 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
         try {
-            const textAnalysis = await this.getTextAnalysis(text, subProblemIndex, entityIndex);
-            if (textAnalysis) {
-                textAnalysis.url = url;
-                textAnalysis.subProblemIndex = subProblemIndex;
-                textAnalysis.entityIndex = entityIndex;
-                textAnalysis.searchType = type;
-                textAnalysis.groupId = this.memory.groupId;
-                textAnalysis.communityId = this.memory.communityId;
-                textAnalysis.domainId = this.memory.domainId;
-                textAnalysis.mostRelevantParagraphs = [];
+            const textAnalysisItems = await this.getTextAnalysis(text, subProblemIndex, entityIndex);
+            if (textAnalysisItems && textAnalysisItems.length > 0) {
+                const textAnalysis = textAnalysisItems[0];
+                textAnalysis.fromUrl = url;
+                textAnalysis.fromSearchType = type;
                 if (Array.isArray(textAnalysis.contacts) &&
                     textAnalysis.contacts.length > 0) {
                     if (typeof textAnalysis.contacts[0] === "object" &&
@@ -229,7 +238,25 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
                 this.logger.debug(`Saving text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
                 try {
                     this.logger.info(`Posting web page for url ${url}`);
-                    await this.webPageVectorStore.postWebPage(textAnalysis);
+                    if (subProblemIndex === undefined) {
+                        if (!this.memory.problemStatement.solutionsFromSearch) {
+                            this.memory.problemStatement.solutionsFromSearch = [];
+                        }
+                        this.memory.problemStatement.solutionsFromSearch.push(textAnalysis);
+                    }
+                    else if (entityIndex === undefined) {
+                        if (!this.memory.subProblems[subProblemIndex].solutionsFromSearch) {
+                            this.memory.subProblems[subProblemIndex].solutionsFromSearch = [];
+                        }
+                        this.memory.subProblems[subProblemIndex].solutionsFromSearch.push(textAnalysis);
+                    }
+                    else {
+                        if (!this.memory.subProblems[subProblemIndex].entities[entityIndex]
+                            .solutionsFromSearch) {
+                            this.memory.subProblems[subProblemIndex].entities[entityIndex].solutionsFromSearch = [];
+                        }
+                        this.memory.subProblems[subProblemIndex].entities[entityIndex].solutionsFromSearch.push(textAnalysis);
+                    }
                     this.totalPagesSave += 1;
                     this.logger.info(`Total ${this.totalPagesSave} saved pages`);
                 }
@@ -264,6 +291,13 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             this.logger.info("getAndProcessPdf");
             //TODO: Get PdfReader working with those (or use another library)
             const brokenPdfUrls = [
+                "https://www.hi.is/sites/default/files/bgisla/hi_2018_final_minna.pdf",
+                "https://www.umbodsmadur.is/asset/10316/skyrsla-umbodsmanns-althingis-1995.pdf",
+                "https://www.umbodsmadur.is/asset/10314/skyrsla-umbodsmanns-althingis-1992.pdf",
+                "https://www.umbodsmadur.is/asset/10319/skyrsla-umbodsmanns-althingis-2007.pdf",
+                "https://www.umbodsmadur.is/asset/10311/skyrsla-umbodsmanns-althingis-2006.pdf",
+                "https://www.althingi.is/altext/erindi/153/153-692.pdf",
+                "https://www.asi.is/media/315571/skyrsla-forseta-asi-2018.pdf",
                 "https://www.althingi.is/altext/althingistidindi/L061/061_thing_1942-1943_A_thingskjol.pdf",
                 "https://skemman.is/bitstream/1946/13459/1/SusanEftirProfdom.pdf",
                 "https://www.stjornarradid.is/media/menntamalaraduneyti-media/media/ritogskyrslur/tomstund.pdf",
@@ -362,6 +396,13 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             let finalText, htmlText;
             this.logger.debug(`Getting HTML for ${url}`);
             const directoryPath = `webPagesCache/${this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`}`;
+            const brokenHtmlUrls = [
+                "https://cs.hi.is/python/ord.txt"
+            ];
+            if (brokenHtmlUrls.includes(url)) {
+                this.logger.warn(`Skipping broken HTML ${url}`);
+                return;
+            }
             let fileName;
             if (encodeURIComponent(url).length > 230) {
                 this.logger.debug(`URL too long, generating hash for filename`);

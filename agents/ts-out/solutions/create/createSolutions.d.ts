@@ -3,6 +3,7 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
+    useLanguage: string | undefined;
     renderRefinePrompt(results: IEngineSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
     renderCreateSystemMessage(): SystemMessage;
     renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (HumanMessage | SystemMessage)[];

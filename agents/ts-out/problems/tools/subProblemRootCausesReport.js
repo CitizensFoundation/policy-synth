@@ -100,7 +100,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
         ];
         return messages;
     }
-    async renderSummaryPrompt25(items, previousSummary) {
+    async renderSummaryPrompt(items, previousSummary) {
         const messages = [
             new SystemMessage(`You are an expert in summarizing and reporting on root causes.
 
@@ -147,7 +147,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
         ];
         return messages;
     }
-    async renderSummaryPrompt(items, previousSummary) {
+    async renderSummaryPromptNovel(items, previousSummary) {
         const messages = [
             new SystemMessage(`You are an expert in summarizing and reporting on novel, unexpected and outying root causes of problems.
 
