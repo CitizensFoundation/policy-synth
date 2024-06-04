@@ -721,7 +721,7 @@ const setupProjectNine = (memory) => {
    5. The solution component title should indicate the benefits or results of implementing the solution component.
    6. Avoid blockchain solution components or solution components involving commercial products.`;
     memory.customInstructions.rankSolutions = `
-    1. Solution components will be included in larger policy recommendations to governments around the world.
+    1. Solutions that are feasible and have a high impact.
   `;
     memory.customInstructions.rateSolutionsJsonFormat = `
     {

@@ -9,8 +9,7 @@ import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
 
-
-const recreateImagesNeeded = false;
+const recreateImagesNeeded = true;
 
 export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
   async renderCreatePrompt(subProblemIndex: number) {
@@ -44,6 +43,14 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
     return messages;
   }
 
+  getDalleImagePrompt(subProblemIndex: number) {
+    return `Topic (do not reference directly in the prompt you create):
+${this.memory.subProblems[subProblemIndex].title}
+Image style: very simple abstract geometric cartoon with max 3 items in the image using those colors ${this.getSubProblemColor(
+      subProblemIndex
+    )} and ${this.randomSecondaryColor}.`;
+  }
+
   async createSubProblemImages() {
     this.currentSubProblemIndex = 0;
 
@@ -51,12 +58,17 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
       this.currentSubProblemIndex = s;
 
       if (recreateImagesNeeded || !this.memory.subProblems[s].imageUrl) {
-        let imagePrompt = (await this.callLLM(
-          "create-sub-problem-images",
-          IEngineConstants.createSolutionImagesModel,
-          await this.renderCreatePrompt(s),
-          false
-        )) as string;
+        let imagePrompt;
+        if (process.env.STABILITY_API_KEY) {
+          imagePrompt = (await this.callLLM(
+            "create-sub-problem-images",
+            IEngineConstants.createSolutionImagesModel,
+            await this.renderCreatePrompt(s),
+            false
+          )) as string;
+        } else {
+          imagePrompt = this.getDalleImagePrompt(s);
+        }
 
         this.memory.subProblems[s].imagePrompt = imagePrompt;
 

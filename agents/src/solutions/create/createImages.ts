@@ -81,7 +81,11 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     imagePrompt: string,
     imageFilePath: string,
     solutionOrPolicy: IEngineSolution | PSPolicy | undefined = undefined,
-    stylePreset: "digital-art" | "low-poly" | "pixel-art" | "sketch" = "digital-art"
+    stylePreset:
+      | "digital-art"
+      | "low-poly"
+      | "pixel-art"
+      | "sketch" = "digital-art"
   ) {
     let response;
 
@@ -137,7 +141,11 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
             imagePrompt = (await this.callLLM(
               "create-solution-images",
               IEngineConstants.createSolutionImagesModel,
-              await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy!, "8. Make it very simple and colorful with no complicated ideas or details."),
+              await this.renderCreatePrompt(
+                subProblemIndex,
+                solutionOrPolicy!,
+                "8. Make it very simple and colorful with no complicated ideas or details."
+              ),
               false
             )) as string;
             this.logger.debug(`New (altered) Image Prompt: ${imagePrompt}`);
@@ -218,9 +226,11 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     }
   }
 
-  async renderCreatePrompt(subProblemIndex: number, solution: IEngineSolution | PSPolicy, injectText?: string) {
-
-
+  async renderCreatePrompt(
+    subProblemIndex: number,
+    solution: IEngineSolution | PSPolicy,
+    injectText?: string
+  ) {
     const messages = [
       new SystemMessage(
         `
@@ -269,7 +279,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
         result = await client.images.generate({
           model: "dall-e-3",
           prompt,
-          n:1,
+          n: 1,
           quality: "hd",
           size: "1792x1024",
         });
@@ -300,6 +310,17 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     }
   }
 
+  getDalleImagePrompt(
+    subProblemIndex: number | undefined = undefined,
+    solution: IEngineSolution | undefined = undefined
+  ) {
+    return `Topic (do not reference directly in the prompt you create):
+${solution!.title}
+Image style: very simple abstract geometric cartoon with max 3 items in the image using those colors ${this.getSubProblemColor(
+      subProblemIndex!
+    )} and ${this.randomSecondaryColor}.`;
+  }
+
   async createImages() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
@@ -309,7 +330,8 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
-        const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
+        const solutions =
+          this.getActiveSolutionsLastPopulation(subProblemIndex);
 
         for (
           let solutionIndex = 0;
@@ -338,12 +360,19 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
               imagePrompt = solution.imagePrompt;
               this.logger.debug(`Using existing image prompt: ${imagePrompt}`);
             } else {
-              imagePrompt = (await this.callLLM(
-                "create-solution-images",
-                IEngineConstants.createSolutionImagesModel,
-                await this.renderCreatePrompt(subProblemIndex, solution),
-                false
-              )) as string;
+              if (process.env.STABILITY_API_KEY) {
+                imagePrompt = (await this.callLLM(
+                  "create-solution-images",
+                  IEngineConstants.createSolutionImagesModel,
+                  await this.renderCreatePrompt(subProblemIndex, solution),
+                  false
+                )) as string;
+              } else {
+                imagePrompt = this.getDalleImagePrompt(
+                  subProblemIndex,
+                  solution
+                );
+              }
             }
 
             solution.imagePrompt = imagePrompt;
@@ -365,7 +394,9 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
               )}_${solutionIndex}.png`
             );
             const randomNum = Math.floor(Math.random() * 1e10);
-            const s3ImagePath = `projects/${this.memory.groupId}/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(
+            const s3ImagePath = `projects/${
+              this.memory.groupId
+            }/solutions/images/${subProblemIndex}/${this.lastPopulationIndex(
               subProblemIndex
             )}/${solutionIndex}_${randomNum}.png`;
 
@@ -397,7 +428,8 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
               );
 
               if (process.env.DISABLE_CLOUDFLARE_IMAGE_PROXY) {
-                newImageUrl = `https://${process.env.S3_BUCKET_NAME!}.s3.amazonaws.com/${s3ImagePath}`;
+                newImageUrl = `https://${process.env
+                  .S3_BUCKET_NAME!}.s3.amazonaws.com/${s3ImagePath}`;
               } else {
                 newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
               }
@@ -409,9 +441,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
               this.logger.error("Error getting image");
             }
           } else {
-            this.logger.debug(
-              `Image URL already exists: ${solution.imageUrl}`
-            );
+            this.logger.debug(`Image URL already exists: ${solution.imageUrl}`);
           }
 
           await this.saveMemory();

@@ -14,6 +14,7 @@ import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
 import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
 import { RankSearchResultsProcessor } from "./ranking/rankSearchResults.js";
 import { PolicySynthAgentBase } from "../baseAgent.js";
+import { RemoveDuplicateWebSolutions } from "./create/dedupWebSolutions.js";
 export class AgentSolutions extends BaseAgentProcessor {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -71,6 +72,10 @@ export class AgentSolutions extends BaseAgentProcessor {
             case "rank-pros-cons":
                 const rankProsConsProcessor = new RankProsConsProcessor(this.job, this.memory);
                 await rankProsConsProcessor.process();
+                break;
+            case "dedup-web-solutions":
+                const dedup = new RemoveDuplicateWebSolutions(this.job, this.memory);
+                await dedup.process();
                 break;
             case "rank-web-solutions":
                 const rankWebSolutionsProcessor = new RankWebSolutionsProcessor(this.job, this.memory);

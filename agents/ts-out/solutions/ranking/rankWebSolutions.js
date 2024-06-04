@@ -1,140 +1,88 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { IEngineConstants } from "../../constants.js";
-import { WebPageVectorStore } from "../../vectorstore/webPage.js";
-export class RankWebSolutionsProcessor extends BaseProblemSolvingAgent {
-    webPageVectorStore = new WebPageVectorStore();
-    allUrls = new Set();
-    duplicateUrls = [];
-    async renderProblemPrompt(solutionsToRank, subProblemIndex) {
-        return [
-            new SystemMessage(`You are an expert in filtering and ranking solutions to problems.
+import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
+export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
+    async voteOnPromptPair(subProblemIndex, promptPair) {
+        const itemOneIndex = promptPair[0];
+        const itemTwoIndex = promptPair[1];
+        const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
+        const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
+        const messages = [
+            new SystemMessage(`You're an expert in evaluating and ranking solutions to problems.
 
-         1. Rank solutions by importance to problem.
-         2. Remove irrelevant and in-actionable solutions.
-         3. Eliminate duplicates or near duplicates.
-         4. Always and only output a JSON string Array with the ranked solutions: [ "" ].
-
-         Let's think step by step. Never explain your actions.`),
-            new HumanMessage(`
-        ${subProblemIndex === null ? this.renderProblemStatement() : ""}
-
-        ${subProblemIndex !== null
-                ? this.renderSubProblem(subProblemIndex, true)
+         Instructions:
+         1. Analyze a problem and two solutions, labeled "Solution One" and "Solution Two"
+         2. Determine which is more important and practical.
+         ${this.memory.customInstructions.rankSolutions
+                ? `
+           Important Instructions:\n${this.memory.customInstructions.rankSolutions}
+           `
                 : ""}
 
-        Solutions to filter and rank:
-        ${JSON.stringify(solutionsToRank, null, 2)}
+         Always output your decision as "One", "Two" or "Neither". No explanation is necessary.
 
-        Filtered and ranked solutions as a JSON string array:
-       `),
+        `),
+            new HumanMessage(`
+        ${subProblemIndex == -1
+                ? this.renderProblemStatement()
+                : this.renderSubProblem(subProblemIndex, true)}
+
+        Solutions to assess:
+
+        Solution One:
+        ${solutionOne.title}
+        ${solutionOne.description}
+
+        Solution Two:
+        ${solutionTwo.title}
+        ${solutionTwo.description}
+
+        The more important and practial solution component is:
+        `),
         ];
+        return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", IEngineConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
-    async rankWebSolutions(subProblemIndex) {
-        let offset = 0;
-        const limit = 100;
-        while (true) {
-            try {
-                const results = await this.webPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, undefined, undefined, limit, offset);
-                this.logger.debug(`Got ${results.data.Get["WebPage"].length} WebPage results from Weaviate`);
-                if (results.data.Get["WebPage"].length === 0) {
-                    this.logger.info("Exiting");
-                    break;
-                }
-                ;
-                let pageCounter = 0;
-                for (const retrievedObject of results.data.Get["WebPage"]) {
-                    const webPage = retrievedObject;
-                    const id = webPage._additional.id;
-                    if (this.allUrls.has(webPage.url)) {
-                        this.duplicateUrls.push(webPage.url);
-                        continue;
-                    }
-                    else {
-                        this.allUrls.add(webPage.url);
-                    }
-                    /*this.logger.debug(
-                      `${id} - Solutions before ranking:
-                       ${JSON.stringify(
-                        webPage.solutionsIdentifiedInTextContext,
-                        null,
-                        2
-                      )}`
-                    );*/
-                    this.logger.info(`Length before: ${webPage.solutionsIdentifiedInTextContext.length}`);
-                    let rankedSolutions = await this.callLLM("rank-web-solutions", IEngineConstants.rankWebSolutionsModel, await this.renderProblemPrompt(webPage.solutionsIdentifiedInTextContext, subProblemIndex));
-                    this.logger.debug(`${id} - Solutions after ranking:
-             ${JSON.stringify(rankedSolutions, null, 2)}`);
-                    await this.webPageVectorStore.updateWebSolutions(id, rankedSolutions, true);
-                    this.logger.info(`Length after: ${rankedSolutions.length} removed ${webPage.solutionsIdentifiedInTextContext.length - rankedSolutions.length} solutions`);
-                    this.logger.info(`${subProblemIndex} - (+${offset + (pageCounter++)}) - ${id} - Updated`);
-                    if (false) {
-                        const testWebPageBack = await this.webPageVectorStore.getWebPage(id);
-                        if (testWebPageBack) {
-                            this.logger.debug(`${id} - Solutions Test Get ${JSON.stringify(testWebPageBack.solutionsIdentifiedInTextContext, null, 2)}`);
-                        }
-                        else {
-                            this.logger.error(`${id} - Solutions Test Get Failed`);
-                        }
-                    }
-                }
-                offset += limit;
-            }
-            catch (error) {
-                this.logger.error(error.stack || error);
-                throw error;
-            }
+    async processSubProblem(subProblemIndex) {
+        this.logger.info(`Ranking web solution for sub problem ${subProblemIndex} population`);
+        if (!this.memory.subProblems[subProblemIndex].solutionsFromSearch[0]
+            .eloRating) {
+            this.setupRankingPrompts(subProblemIndex, this.memory.subProblems[subProblemIndex].solutionsFromSearch, this.memory.subProblems[subProblemIndex].solutionsFromSearch.length *
+                10);
+            await this.performPairwiseRanking(subProblemIndex);
+            this.memory.subProblems[subProblemIndex].solutionsFromSearch =
+                this.getOrderedListOfItems(subProblemIndex, true);
         }
+        await this.saveMemory();
     }
     async process() {
-        this.logger.info("Rank web solutions Processor");
+        this.logger.info("Rank Web Solutions Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.rankWebSolutionsModel.temperature,
-            maxTokens: IEngineConstants.rankWebSolutionsModel.maxOutputTokens,
-            modelName: IEngineConstants.rankWebSolutionsModel.name,
-            verbose: IEngineConstants.rankWebSolutionsModel.verbose,
-        });
-        //TODO: Get working after null check is working in the weaviate index
-        //this.logger.info("Ranking problem statement solutions");
-        //await this.rankWebSolutions(null, null);
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
-        const skipSubProblemsIndexes = [];
-        const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
-            this.logger.info(`Ranking sub problem ${subProblemIndex}`);
-            if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
-                try {
-                    await this.rankWebSolutions(subProblemIndex);
-                    this.logger.debug(`Finished ranking sub problem ${subProblemIndex}`);
-                }
-                catch (error) {
-                    this.logger.error(error.stack || error);
-                    throw error;
-                }
+        try {
+            this.chat = new ChatOpenAI({
+                temperature: IEngineConstants.solutionsRankingsModel.temperature,
+                maxTokens: IEngineConstants.solutionsRankingsModel.maxOutputTokens,
+                modelName: IEngineConstants.solutionsRankingsModel.name,
+                verbose: IEngineConstants.solutionsRankingsModel.verbose,
+            });
+            if (!this.memory.problemStatement.solutionsFromSearch[0].eloRating) {
+                this.setupRankingPrompts(-1, this.memory.problemStatement.solutionsFromSearch, this.memory.problemStatement.solutionsFromSearch.length * 10);
+                await this.performPairwiseRanking(-1);
+                this.memory.problemStatement.solutionsFromSearch =
+                    this.getOrderedListOfItems(-1, true);
             }
-            else {
-                this.logger.info(`Skipping sub problem ${subProblemIndex}`);
-            }
-            //TODO: Get working after null check is working in the weaviate index
-            /*for (
-              let e = 0;
-              e <
-              Math.min(
-                this.memory.subProblems[subProblemIndex].entities.length,
-                IEngineConstants.maxTopEntitiesToSearch
-              );
-              e++
-            ) {
-              this.logger.info(
-                `Ranking entity ${e + 1} for sub problem ${subProblemIndex}`
-              );
-              await this.rankWebSolutions(subProblemIndex, e);
-            }*/
-        });
-        await Promise.all(subProblemsPromises);
-        console.log(`Duplicate URLs: ${JSON.stringify(this.duplicateUrls, null, 2)}`);
-        this.logger.info("Finished ranking all web solutions");
+            const subProblemsPromises = Array.from({
+                length: Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems),
+            }, async (_, subProblemIndex) => this.processSubProblem(subProblemIndex));
+            await Promise.all(subProblemsPromises);
+            await this.saveMemory();
+            this.logger.info("Rank Web Solutions Processor Completed");
+        }
+        catch (error) {
+            this.logger.error("Error in Rank Web Solutions Processor");
+            this.logger.error(error);
+            throw error;
+        }
     }
 }
 //# sourceMappingURL=rankWebSolutions.js.map

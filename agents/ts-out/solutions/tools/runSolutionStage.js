@@ -8,14 +8,16 @@ if (projectId) {
     const output = await redis.get(redisKey);
     const memory = JSON.parse(output);
     //memory.currentStage = "web-search";
-    memory.currentStage = "rank-search-results";
+    //memory.currentStage = "rank-search-results";
     //memory.currentStage = "web-get-pages";
+    //memory.currentStage = "dedup-web-solutions";
     //memory.currentStage = "rank-web-solutions";
     //memory.currentStage = "create-seed-solutions";
     //memory.currentStage = "create-pros-cons";
     //memory.currentStage = "rank-pros-cons";
     //memory.currentStage = "rank-solutions";
-    //memory.currentStage = "create-solution-images";
+    //memory.currentStage = "group-solutions";
+    memory.currentStage = "create-solution-images";
     //Repeat for each GA generation
     //memory.currentStage = "evolve-create-population";
     //memory.currentStage = "evolve-reap-population";

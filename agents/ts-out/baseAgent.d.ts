@@ -31,6 +31,7 @@ export declare class PolicySynthAgentBase {
         "create-sub-problem-images": {};
         "rank-search-queries": {};
         "web-search": {};
+        "dedup-web-solutions": {};
         "rank-web-solutions": {};
         "rate-solutions": {};
         "rank-search-results": {};

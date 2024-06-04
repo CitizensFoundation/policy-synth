@@ -107,7 +107,7 @@ export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
       `;
   }
 
-  renderProblemStatementSubProblemsAndEntities(index: number) {
+  renderProblemStatementSubProblemsAndEntities(index: number, includeMainProblemStatement = true) {
     const subProblem = this.memory.subProblems[index];
     const entitiesText = `
       ${subProblem.entities
@@ -123,10 +123,7 @@ export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
         })
         .join("")}`;
     return `
-      Problem Statement:\n
-      ${this.memory.problemStatement.description}\n
-
-      Sub Problem:\n
+      ${includeMainProblemStatement ? `Problem Statement:\n${this.memory.problemStatement.description}\n\nSub Problem:\n` : `Problem:\n`}
       ${subProblem.title}\n
       ${subProblem.description}\n
 

@@ -4,8 +4,9 @@ import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
+    urlsScanned: Set<string>;
     totalPagesSave: number;
-    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
+    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {
@@ -18,7 +19,7 @@ export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     isWithinTokenLimit(allText: string, maxChunkTokenCount: number): boolean;
     splitText(fullText: string, maxChunkTokenCount: number, subProblemIndex: number | undefined): string[];
     getAIAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<IEngineWebPageAnalysisData>;
-    getTextAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<IEngineWebPageAnalysisData | IEngineSolution[]>;
+    getTextAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<IEngineSolution[] | IEngineWebPageAnalysisData>;
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
     generateFileName(url: string): string;
     getAndProcessPdf(subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;

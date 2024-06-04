@@ -219,30 +219,31 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         .join("\n");
     }
 
-    const textContexts = await this.getTextContext(
+    const solutionsForInspiration = await this.getRandomSolutions(
       subProblemIndex,
-      alreadyCreatedSolutionsText
+      undefined
     );
 
     this.logger.debug(
-      `Evolution Text contexts: ${JSON.stringify(textContexts, null, 2)}`
+      `Evolution Text contexts: ${JSON.stringify(
+        solutionsForInspiration,
+        null,
+        2
+      )}`
     );
 
     const newSolutions = await this.createSolutions(
       subProblemIndex,
-      textContexts.general.searchResults,
-      textContexts.scientific.searchResults,
-      textContexts.openData.searchResults,
-      textContexts.news.searchResults,
+      solutionsForInspiration,
       alreadyCreatedSolutionsText,
       "evolve-create-population"
     );
 
     const seedUrls = [
-      textContexts.general.selectedUrl,
-      textContexts.scientific.selectedUrl,
-      textContexts.openData.selectedUrl,
-      textContexts.news.selectedUrl,
+      solutionsForInspiration[0].fromUrl!,
+      solutionsForInspiration[1].fromUrl!,
+      solutionsForInspiration[2].fromUrl!,
+      solutionsForInspiration[3].fromUrl!,
     ];
 
     // Go over newSolutions and add selectedUrl
@@ -543,14 +544,18 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     const prunedSolutionSet = new Set<IEngineSolution>();
     for (const group of groups.values()) {
       // Keep top items by the defined constant
-      const topItems = group.slice(0, IEngineConstants.topItemsToKeepForTopicClusterPruning);
+      const topItems = group.slice(
+        0,
+        IEngineConstants.topItemsToKeepForTopicClusterPruning
+      );
 
       // Add top items to the pruned set
-      topItems.forEach(solution => prunedSolutionSet.add(solution));
+      topItems.forEach((solution) => prunedSolutionSet.add(solution));
 
       // Additionally, add solutions with eloRating > 1000 to the pruned set
-      group.filter(solution => solution.eloRating! > 1000)
-           .forEach(solution => prunedSolutionSet.add(solution));
+      group
+        .filter((solution) => solution.eloRating! > 1000)
+        .forEach((solution) => prunedSolutionSet.add(solution));
     }
 
     // Build final list of solutions in original order

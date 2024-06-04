@@ -23,8 +23,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
          Always output your decision as "One", "Two" or "Neither". No explanation is necessary.
          Let's think step by step.
         `),
-            new HumanMessage(`
-        ${this.renderSubProblem(subProblemIndex, true)}
+            new HumanMessage(`${this.renderSubProblem(subProblemIndex, true)}
 
         Solution Components to assess:
 

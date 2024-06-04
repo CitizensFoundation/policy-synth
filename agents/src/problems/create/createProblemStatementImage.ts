@@ -40,13 +40,25 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
     return messages;
   }
 
+  getDalleImagePrompt() {
+    return `Topic (do not reference directly in the prompt you create):
+${this.memory.problemStatement.description}
+Image style: very simple abstract geometric cartoon with max 3 items in the image.`;
+  }
+
   async createProblemStatementImage() {
-    let imagePrompt = (await this.callLLM(
-      "create-problem-statement-image",
-      IEngineConstants.createSolutionImagesModel,
-      await this.renderCreatePrompt(),
-      false
-    )) as string;
+    let imagePrompt;
+
+    if (process.env.STABILITY_API_KEY) {
+      imagePrompt = (await this.callLLM(
+        "create-problem-statement-image",
+        IEngineConstants.createSolutionImagesModel,
+        await this.renderCreatePrompt(),
+        false
+      )) as string;
+    } else {
+      imagePrompt = this.getDalleImagePrompt();
+    }
 
     this.memory.problemStatement.imagePrompt = imagePrompt;
 

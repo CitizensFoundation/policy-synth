@@ -1,61 +1,14 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
-    webPageVectorStore: WebPageVectorStore;
     useLanguage: string | undefined;
-    renderRefinePrompt(results: IEngineSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
     renderCreateSystemMessage(): SystemMessage;
-    renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (HumanMessage | SystemMessage)[];
-    renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
-    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsMemoryStageTypes): Promise<IEngineSolution[]>;
-    randomSearchQueryIndex(searchQueries: IEngineSearchQueries, type: IEngineWebPageTypes): number;
-    getAllTypeQueries(searchQueries: IEngineSearchQueries, subProblemIndex: number | undefined): {
-        general: string;
-        scientific: string;
-        openData: string;
-        news: string;
-    };
-    getRandomSearchQueryForType(type: IEngineWebPageTypes, problemStatementQueries: IEngineSearchQuery, subProblemQueries: IEngineSearchQuery, otherSubProblemQueries: IEngineSearchQuery, randomEntitySearchQueries: IEngineSearchQuery): string;
-    getSearchQueries(subProblemIndex: number): {
-        scientific: string;
-        general: string;
-        openData: string;
-        news: string;
-    };
-    getTextContext(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<{
-        general: {
-            searchResults: string;
-            selectedUrl: string;
-        };
-        scientific: {
-            searchResults: string;
-            selectedUrl: string;
-        };
-        openData: {
-            searchResults: string;
-            selectedUrl: string;
-        };
-        news: {
-            searchResults: string;
-            selectedUrl: string;
-        };
-    }>;
-    getWeightedRandomSolution<T>(array: T[]): "" | T;
+    renderCreatePrompt(subProblemIndex: number, solutionsForInspiration: IEngineSolution[], alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
+    createSolutions(subProblemIndex: number, solutionsForInspiration: IEngineSolution[], alreadyCreatedSolutions?: string | undefined, stageName?: PsMemoryStageTypes): Promise<IEngineSolution[]>;
     countTokensForString(text: string): Promise<number>;
+    getRandomSolutions(subProblemIndex: number, alreadyCreatedSolutions: string | undefined): IEngineSolution[];
+    getRandomItemsFromArray<T>(array: T[], count: number): T[];
     getRandomItemFromArray<T>(array: T[], useTopN?: number | undefined): "" | T;
-    renderRawSearchResults(rawSearchResults: IEngineWebPageGraphQlResults): {
-        searchResults: string;
-        selectedUrl: string;
-    };
-    searchForType(subProblemIndex: number, type: IEngineWebPageTypes, searchQuery: string, tokensLeftForType: number): Promise<{
-        searchResults: string;
-        selectedUrl: string;
-    }>;
-    getSearchQueryTextContext(subProblemIndex: number, searchQuery: string, type: IEngineWebPageTypes, alreadyCreatedSolutions?: string | undefined): Promise<{
-        searchResults: string;
-        selectedUrl: string;
-    }>;
     createAllSeedSolutions(): Promise<void>;
     process(): Promise<void>;
 }

@@ -39,8 +39,7 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         `
       ),
       new HumanMessage(
-        `
-        ${this.renderSubProblem(subProblemIndex, true)}
+        `${this.renderSubProblem(subProblemIndex, true)}
 
         Solution Components to assess:
 

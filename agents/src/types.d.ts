@@ -210,6 +210,7 @@ type PsMemoryStageTypes =
   | "rank-sub-problems"
   | "rank-entities"
   | "rank-web-solutions"
+  | "dedup-web-solutions"
   | "rank-solutions"
   | "rank-pros-cons"
   | "rate-solutions"

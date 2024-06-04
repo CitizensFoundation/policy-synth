@@ -4,7 +4,7 @@ import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { IEngineConstants } from "../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
-import crypto from 'crypto';
+import crypto from "crypto";
 
 import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
@@ -39,6 +39,7 @@ const onlyCheckWhatNeedsToBeScanned = false;
 
 export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   webPageVectorStore = new WebPageVectorStore();
+  urlsScanned = new Set<string>();
 
   totalPagesSave = 0;
 
@@ -50,7 +51,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   ) {
     return [
       new SystemMessage(
-       `Your are an AI expert in analyzing text for practical solutions to difficult problems:
+        `Your are an AI expert in analyzing text for practical solutions to difficult problems:
 
         Important Instructions:
         1. Examine the <TextContext> and determine how it relates to the problem statement and any specified sub problem.
@@ -98,6 +99,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         <TextContext>
         ${text}
         </TextContext>
+
+        Take a deep breath and pay attention to details.
 
         JSON Output:
         `
@@ -325,11 +328,11 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         for (let t = 0; t < splitText.length; t++) {
           const currentText = splitText[t];
 
-          let nextAnalysis = await this.getAIAnalysis(
+          let nextAnalysis = (await this.getAIAnalysis(
             currentText,
             subProblemIndex,
             entityIndex
-          ) as unknown as IEngineSolution[];
+          )) as unknown as IEngineSolution[];
 
           if (nextAnalysis) {
             if (t == 0) {
@@ -352,7 +355,10 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
           }
         }
       } else {
-        textAnalysis = await this.getAIAnalysis(text, subProblemIndex) as unknown as IEngineSolution[];
+        textAnalysis = (await this.getAIAnalysis(
+          text,
+          subProblemIndex
+        )) as unknown as IEngineSolution[];
         this.logger.debug(
           `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
         );
@@ -383,12 +389,19 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       )} for ${url} for ${type} search results ${subProblemIndex} sub problem index`
     );
 
+    if (this.urlsScanned.has(url)) {
+      this.logger.warn(`Already scanned ${url}, skipping`);
+      return;
+    } else {
+      this.urlsScanned.add(url);
+    }
+
     try {
-      const textAnalysisItems = await this.getTextAnalysis(
+      const textAnalysisItems = (await this.getTextAnalysis(
         text,
         subProblemIndex,
         entityIndex
-      ) as IEngineSolution[];
+      )) as IEngineSolution[];
 
       if (textAnalysisItems && textAnalysisItems.length > 0) {
         const textAnalysis = textAnalysisItems[0] as IEngineSolution;
@@ -414,12 +427,11 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         );
 
         try {
-          this.logger.info(`Posting web page for url ${url}`)
+          this.logger.info(`Posting web page for url ${url}`);
           if (subProblemIndex === undefined) {
-            if (!this.memory.problemStatement.solutionsFromSearch)
-              {
-                this.memory.problemStatement.solutionsFromSearch = [];
-              }
+            if (!this.memory.problemStatement.solutionsFromSearch) {
+              this.memory.problemStatement.solutionsFromSearch = [];
+            }
             this.memory.problemStatement.solutionsFromSearch.push(textAnalysis);
           } else if (entityIndex === undefined) {
             if (!this.memory.subProblems[subProblemIndex].solutionsFromSearch) {
@@ -448,6 +460,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
           this.logger.error(e);
           this.logger.error(e.stack);
         }
+
+        await this.saveMemory();
       } else {
         this.logger.warn(`No text analysis for ${url}`);
       }
@@ -459,11 +473,11 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
   generateFileName(url: string) {
     // Use SHA-256 hash function
-    const hash = crypto.createHash('sha256');
+    const hash = crypto.createHash("sha256");
     hash.update(url);
     // Generate hash and convert it to a hexadecimal string
-    const hashedFileName = hash.digest('hex');
-    return hashedFileName + '.gz';
+    const hashedFileName = hash.digest("hex");
+    return hashedFileName + ".gz";
   }
 
   //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
@@ -496,7 +510,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         "https://www.stjornarradid.is/media/menntamalaraduneyti-media/media/ritogskyrslur/tomstund.pdf",
         "https://skemman.is/bitstream/1946/24768/1/Dr.%20G.%20Sunna%20Gestsd%C3%B3ttir.pdf",
         "https://www.althingi.is/altext/erindi/153/153-4952.pdf",
-        "https://www.althingi.is/altext/althingistidindi/L076/076_thing_1956-1957_umraedur_D.pdf"
+        "https://www.althingi.is/altext/althingistidindi/L076/076_thing_1956-1957_umraedur_D.pdf",
       ];
 
       if (brokenPdfUrls.includes(url)) {
@@ -509,20 +523,22 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         let finalText = "";
         let pdfBuffer;
 
-        const directoryPath = `webPagesCache/${this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`}`;
+        const directoryPath = `webPagesCache/${
+          this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`
+        }`;
         let fileName;
-        if (encodeURIComponent(url).length>230) {
-          this.logger.debug(`URL too long, generating hash for filename`)
+        if (encodeURIComponent(url).length > 230) {
+          this.logger.debug(`URL too long, generating hash for filename`);
           fileName = this.generateFileName(url);
         } else {
-          fileName = encodeURIComponent(url) + '.gz';
+          fileName = encodeURIComponent(url) + ".gz";
         }
 
         const fullPath = join(directoryPath, fileName);
 
         // Create the directory if it doesn't exist
         if (!existsSync(directoryPath)) {
-            mkdirSync(directoryPath, { recursive: true });
+          mkdirSync(directoryPath, { recursive: true });
         }
 
         if (existsSync(fullPath) && statSync(fullPath).isFile()) {
@@ -617,11 +633,11 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
       this.logger.debug(`Getting HTML for ${url}`);
 
-      const directoryPath = `webPagesCache/${this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`}`;
+      const directoryPath = `webPagesCache/${
+        this.memory ? this.memory.groupId : `webResearchId${subProblemIndex}`
+      }`;
 
-      const brokenHtmlUrls = [
-        "https://cs.hi.is/python/ord.txt"
-      ];
+      const brokenHtmlUrls = ["https://cs.hi.is/python/ord.txt"];
 
       if (brokenHtmlUrls.includes(url)) {
         this.logger.warn(`Skipping broken HTML ${url}`);
@@ -629,18 +645,18 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       }
 
       let fileName;
-      if (encodeURIComponent(url).length>230) {
-        this.logger.debug(`URL too long, generating hash for filename`)
+      if (encodeURIComponent(url).length > 230) {
+        this.logger.debug(`URL too long, generating hash for filename`);
         fileName = this.generateFileName(url);
       } else {
-        fileName = encodeURIComponent(url) + '.gz';
+        fileName = encodeURIComponent(url) + ".gz";
       }
 
       const fullPath = join(directoryPath, fileName);
 
       // Create the directory if it doesn't exist
       if (!existsSync(directoryPath)) {
-          mkdirSync(directoryPath, { recursive: true });
+        mkdirSync(directoryPath, { recursive: true });
       }
 
       if (existsSync(fullPath) && statSync(fullPath).isFile()) {
@@ -775,6 +791,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
       s++
     ) {
+
       promises.push(
         (async () => {
           const newPage = await browser.newPage();
@@ -786,6 +803,18 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
           await newPage.setUserAgent(IEngineConstants.currentUserAgent);
 
           for (const searchQueryType of searchQueryTypes) {
+            await this.processEntities(s, searchQueryType, newPage);
+
+            if (
+              this.memory.subProblems[s].solutionsFromSearch &&
+              this.memory.subProblems[s].solutionsFromSearch!.length > 0
+            ) {
+              console.log(
+                `Already have solutions for sub problem ${s}, skipping`
+              );
+              continue;
+            }
+
             this.logger.info(
               `Fetching pages for ${this.memory.subProblems[s].title} for ${searchQueryType} search results`
             );
@@ -805,8 +834,6 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             }
 
             this.memory.subProblems[s].haveScannedWeb = true;
-
-            await this.processEntities(s, searchQueryType, newPage);
 
             await this.saveMemory();
           }
@@ -837,6 +864,15 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       );
       e++
     ) {
+      if (
+        this.memory.subProblems[subProblemIndex].entities[e]
+          .solutionsFromSearch &&
+        this.memory.subProblems[subProblemIndex].entities[e]
+          .solutionsFromSearch!.length > 0
+      ) {
+        console.log(`Already have solutions for entity  ${e}, skipping`);
+        return;
+      }
       const currentEntity =
         this.memory.subProblems[subProblemIndex].entities[e];
 

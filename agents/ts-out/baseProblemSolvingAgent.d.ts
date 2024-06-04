@@ -16,7 +16,7 @@ export declare abstract class BaseProblemSolvingAgent extends PolicySynthAgentBa
     renderSubProblems(): string;
     renderEntity(subProblemIndex: number, entityIndex: number): string;
     renderProblemStatement(): string;
-    renderProblemStatementSubProblemsAndEntities(index: number): string;
+    renderProblemStatementSubProblemsAndEntities(index: number, includeMainProblemStatement?: boolean): string;
     renderEntityPosNegReasons(item: IEngineAffectedEntity): string;
 }
 //# sourceMappingURL=baseProblemSolvingAgent.d.ts.map

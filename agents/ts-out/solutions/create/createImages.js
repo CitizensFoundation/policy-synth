@@ -236,6 +236,11 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
             return undefined;
         }
     }
+    getDalleImagePrompt(subProblemIndex = undefined, solution = undefined) {
+        return `Topic (do not reference directly in the prompt you create):
+${solution.title}
+Image style: very simple abstract geometric cartoon with max 3 items in the image using those colors ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}.`;
+    }
     async createImages() {
         const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
@@ -252,7 +257,12 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
                         this.logger.debug(`Using existing image prompt: ${imagePrompt}`);
                     }
                     else {
-                        imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                        if (process.env.STABILITY_API_KEY) {
+                            imagePrompt = (await this.callLLM("create-solution-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                        }
+                        else {
+                            imagePrompt = this.getDalleImagePrompt(subProblemIndex, solution);
+                        }
                     }
                     solution.imagePrompt = imagePrompt;
                     this.logger.debug(`subProblemIndex ${subProblemIndex} solutionIndex ${solutionIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}}`);
@@ -276,7 +286,8 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
                             : "File download failed.");
                         await this.uploadImageToS3(process.env.S3_BUCKET_NAME, imageFilePath, s3ImagePath);
                         if (process.env.DISABLE_CLOUDFLARE_IMAGE_PROXY) {
-                            newImageUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3ImagePath}`;
+                            newImageUrl = `https://${process.env
+                                .S3_BUCKET_NAME}.s3.amazonaws.com/${s3ImagePath}`;
                         }
                         else {
                             newImageUrl = `${this.cloudflareProxy}/${s3ImagePath}`;
