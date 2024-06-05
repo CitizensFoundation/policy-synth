@@ -38,7 +38,9 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
     this.logger.info(`Reaping solution components for subproblem ${subProblemIndex}`);
 
     this.logger.info(`Initial population size: ${solutions.length}`);
-    for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
+
+    const leaveOutFirstTopOnes = 3;
+    for (let solutionIndex = leaveOutFirstTopOnes; solutionIndex < solutions.length; solutionIndex++) {
 
       const solution = solutions[solutionIndex];
 

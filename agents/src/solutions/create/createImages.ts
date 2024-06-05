@@ -318,7 +318,9 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
 ${solution!.title}
 Image style: very simple abstract geometric cartoon with max 3 items in the image using those colors ${this.getSubProblemColor(
       subProblemIndex!
-    )} and ${this.randomSecondaryColor}.`;
+    )} and ${this.randomSecondaryColor}. Use a very light variation of ${this.getSubProblemColor(
+      subProblemIndex!
+    )} for the background.`;
   }
 
   async createImages() {

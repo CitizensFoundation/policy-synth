@@ -58,7 +58,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       ),
       new HumanMessage(
         `
-        ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
+        ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex, false)}
 
         Solution Component Parent A:
         ${this.renderSolution(parentA)}
@@ -104,7 +104,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       ),
       new HumanMessage(
         `
-        ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex)}
+        ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex, false)}
 
         Solution component to mutate:
         ${this.renderSolution(individual)}

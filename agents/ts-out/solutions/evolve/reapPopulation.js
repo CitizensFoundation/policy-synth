@@ -28,7 +28,8 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
     async reapSolutionsForSubProblem(subProblemIndex, solutions) {
         this.logger.info(`Reaping solution components for subproblem ${subProblemIndex}`);
         this.logger.info(`Initial population size: ${solutions.length}`);
-        for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
+        const leaveOutFirstTopOnes = 3;
+        for (let solutionIndex = leaveOutFirstTopOnes; solutionIndex < solutions.length; solutionIndex++) {
             const solution = solutions[solutionIndex];
             const reapedResults = await this.callLLM("evolve-reap-population", IEngineConstants.reapSolutionsModel, await this.renderReapPrompt(solution));
             if (reapedResults.solutionFitsRequirements === false) {

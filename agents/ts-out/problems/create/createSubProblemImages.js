@@ -32,7 +32,7 @@ export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcess
     getDalleImagePrompt(subProblemIndex) {
         return `Topic (do not reference directly in the prompt you create):
 ${this.memory.subProblems[subProblemIndex].title}
-Image style: very simple abstract geometric cartoon with max 3 items in the image using those colors ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}.`;
+Image style: very simple abstract geometric cartoon with max 3 items in the image using those colors ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. Use a very light variation of ${this.getSubProblemColor(subProblemIndex)} for the background.`;
     }
     async createSubProblemImages() {
         this.currentSubProblemIndex = 0;

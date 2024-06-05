@@ -24,7 +24,7 @@ if (projectId) {
   //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rank-solutions";
   //memory.currentStage = "group-solutions";
-  memory.currentStage = "create-solution-images";
+  //memory.currentStage = "create-solution-images";
 
   //Repeat for each GA generation
   //memory.currentStage = "evolve-create-population";
@@ -33,7 +33,7 @@ if (projectId) {
   //memory.currentStage = "rank-pros-cons";
   //memory.currentStage = "rank-solutions";
   //memory.currentStage = "create-solution-images";
-  //memory.currentStage = "group-solutions";
+  memory.currentStage = "group-solutions";
 
   await redis.set(redisKey, JSON.stringify(memory));
 
