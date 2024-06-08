@@ -1,0 +1,1 @@
+{"version":3,"file":"ps-connector-shape.d.ts","sourceRoot":"","sources":["../../src/operations/ps-connector-shape.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,GAAG,EAAE,MAAM,EAAW,MAAM,aAAa,CAAC;AAEnD,qBAAa,kBAAmB,SAAQ,GAAG,CAAC,WAAW;IACrD,MAAM;CAuCP;AAED,qBAAa,cAAe,SAAQ,MAAM,CAAC,QAAQ,CAAC,SAAS;IAC3D,QAAQ;IAWR,IAAI,4BAAsB;CAC3B"}
