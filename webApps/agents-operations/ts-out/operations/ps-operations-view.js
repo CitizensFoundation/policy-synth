@@ -330,6 +330,9 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         });
     }
     createAgentElement(agent) {
+        if (this.elements[this.getUniqueAgentId(agent)]) {
+            return this.elements[this.getUniqueAgentId(agent)];
+        }
         //@ts-ignore
         const el = new AgentShape({
             position: {
@@ -349,6 +352,9 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         return el;
     }
     createConnectorElement(connector) {
+        if (this.elements[this.getUniqueConnectorId(connector)]) {
+            return null; // Skip if the connector already exists
+        }
         //@ts-ignore
         const el = new ConnectorShape({
             position: {
@@ -367,6 +373,12 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         el.addTo(this.graph);
         return el;
     }
+    getUniqueConnectorId(connector) {
+        return `connector-${connector.id}`;
+    }
+    getUniqueAgentId(agent) {
+        return `agent-${agent.id}`;
+    }
     updateGraphWithAgentData() {
         // Clear the existing graph elements
         this.graph.clear();
@@ -375,14 +387,14 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         if (this.currentAgent.subAgents && this.currentAgent.subAgents.length > 0) {
             this.currentAgent.subAgents.forEach(subAgent => {
                 const el = this.createAgentElement(subAgent);
-                this.elements[subAgent.id] = el;
-                renderedNodes.add(subAgent.id);
+                this.elements[this.getUniqueAgentId(subAgent)] = el;
+                renderedNodes.add(this.getUniqueAgentId(subAgent));
                 if (subAgent.connectors &&
                     subAgent.connectors.length > 0) {
                     subAgent.connectors.forEach(connector => {
                         const el = this.createConnectorElement(connector);
-                        this.elements[connector.id] = el;
-                        renderedNodes.add(connector.id);
+                        this.elements[this.getUniqueConnectorId(connector)] = el;
+                        renderedNodes.add(this.getUniqueConnectorId(connector));
                     });
                 }
             });
@@ -391,8 +403,8 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
             this.currentAgent.connectors.length > 0) {
             this.currentAgent.connectors.forEach(connector => {
                 const el = this.createConnectorElement(connector);
-                this.elements[connector.id] = el;
-                renderedNodes.add(connector.id);
+                this.elements[this.getUniqueConnectorId(connector)] = el;
+                renderedNodes.add(this.getUniqueConnectorId(connector));
             });
         }
         // Create links between nodes and their children
@@ -544,23 +556,10 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         .connectorContainer {
           color: var(--md-sys-color-on-secondary-container);
           background-color: var(--md-sys-color-secondary-container);
-          border-radius: 0;
-          padding: 0;
-        }
-
-        .udeContainer {
-          color: var(--md-sys-color-on-tertiary-container);
-          background-color: var(--md-sys-color-tertiary-container);
-          border-radius: 8px;
-          padding: 0;
-        }
-
-        .assumptionCauseContainer {
-          color: var(--md-sys-color-on-secondary-container);
-          background-color: var(--md-sys-color-secondary-container);
           border-radius: 16px;
           padding: 0;
         }
+
 
         /* Define your component styles here */
         .jointJSCanvas {

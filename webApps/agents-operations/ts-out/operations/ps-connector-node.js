@@ -4,7 +4,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-import { css, html } from 'lit';
+import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
@@ -23,13 +23,26 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
         .image {
           width: 140px;
           height: 79px;
+          border-radius: 16px 16px 0 0;
         }
 
         .name {
-          height: 80px;
+          height: 20px;
+          margin-top: 4px;
           font-size: 14px;
           text-align: center;
           align-items: center;
+        }
+
+        .mainContainer {
+          border-radius: 16px;
+          height: 100%;
+        }
+
+        .instanceName {
+          font-weight: bold;
+          font-size: 12px;
+          height: 72px;
         }
 
         .connectorType {
@@ -74,18 +87,26 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
     `;
     }
     render() {
-        return html `
-      <div class="layout vertical mainContainer">
-        ${this.renderImage()}
-        <div class="name">${this.connector.class.name}</div>
+        if (this.connector) {
+            return html `
+        <div class="layout vertical mainContainer">
+          ${this.renderImage()}
+          <div class="name">${this.connector.class.name}</div>
+          ${this.connector.title
+                ? html `<div class="name instanceName">${this.connector.title}</div>`
+                : nothing}
 
-        <md-icon class="typeIconCore">checklist</md-icon>
+          <md-icon class="typeIconCore">checklist</md-icon>
 
-        <md-icon-button class="editButton" @click="${this.editNode}"
-          ><md-icon>settings</md-icon></md-icon-button
-        >
-      </div>
-    `;
+          <md-icon-button class="editButton" @click="${this.editNode}"
+            ><md-icon>settings</md-icon></md-icon-button
+          >
+        </div>
+      `;
+        }
+        else {
+            return nothing;
+        }
     }
 };
 __decorate([

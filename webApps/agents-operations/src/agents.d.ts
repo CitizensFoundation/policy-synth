@@ -37,6 +37,7 @@ interface PsBaseNodeInstance {
   classId: number;
   userId: number;
   groupId: number;
+  title?: string;
   user: YpUserData;
   group: YpGroupData;
   costs: PsInstanceCost[];
@@ -74,6 +75,6 @@ interface PsAgentConnectorClass {
   iconName: string;
 }
 
-type PsAgentConnectorPermissionTypes = "read" | "write" | "admin";
+type PsAgentConnectorPermissionTypes = "read" | "write" | "readWrite" | "admin";
 
 

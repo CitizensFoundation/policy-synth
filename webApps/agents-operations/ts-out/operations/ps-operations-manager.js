@@ -52,6 +52,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.setupTestData();
     }
     setupTestData() {
+        // Hard-coded data
     }
     async connectedCallback() {
         super.connectedCallback();

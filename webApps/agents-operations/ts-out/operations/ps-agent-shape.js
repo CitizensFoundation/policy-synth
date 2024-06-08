@@ -9,7 +9,7 @@ export class AgentsShapeView extends dia.ElementView {
         let foreignObjectHeight = 224;
         if (nodeType === 'connector') {
             foreignObjectWidth = 140;
-            foreignObjectHeight = 160;
+            foreignObjectHeight = 180;
         }
         // Create a foreignObject with a set size and style
         const foreignObject = V('foreignObject', {

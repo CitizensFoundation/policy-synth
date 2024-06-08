@@ -40,29 +40,9 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
           align-items: center;
         }
 
-        .causeText {
-          font-size: 14px;
-          padding: 8px;
-          height: 100%;
-          width: 100%;
-          max-height: 70px;
-          overflow-y: auto;
-        }
-
         .mainContainer {
           height: 100%;
           border-radius: 16px;
-        }
-
-        .causeText[is-ude] {
-          max-height: 75px;
-        }
-
-        .causeTextContainer {
-          height: 100%;
-        }
-
-        .causeText[root-cause] {
         }
 
         .createOptionsButtons {
@@ -162,10 +142,9 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
           ${this.renderImage()}
           <div class="agentName">${this.agent.class.name}</div>
 
-          <md-icon-button  class="checklistButton">
-            <md-icon
-              >checklist</md-icon
-            ></md-icon-button>
+          <md-icon-button class="checklistButton">
+            <md-icon>checklist</md-icon></md-icon-button
+          >
 
           <md-icon-button class="editButton" @click="${this.editNode}"
             ><md-icon>settings</md-icon></md-icon-button
