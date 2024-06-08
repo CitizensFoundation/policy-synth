@@ -4,13 +4,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-import { css, html } from "lit";
-import { property, customElement } from "lit/decorators.js";
-import "@material/web/iconbutton/icon-button.js";
-import "@material/web/progress/circular-progress.js";
-import "@material/web/menu/menu.js";
-import "@material/web/menu/menu-item.js";
-import { PsOperationsBaseNode } from "./ps-operations-base-node.js";
+import { css, html } from 'lit';
+import { property, customElement } from 'lit/decorators.js';
+import '@material/web/iconbutton/icon-button.js';
+import '@material/web/progress/circular-progress.js';
+import '@material/web/menu/menu.js';
+import '@material/web/menu/menu-item.js';
+import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
     connectedCallback() {
         super.connectedCallback();
@@ -20,6 +20,18 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
         return [
             super.styles,
             css `
+        .image {
+          width: 140px;
+          height: 79px;
+        }
+
+        .name {
+          height: 80px;
+          font-size: 14px;
+          text-align: center;
+          align-items: center;
+        }
+
         .connectorType {
           font-size: 15px;
           text-transform: uppercase;
@@ -45,24 +57,32 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
         ];
     }
     editNode() {
-        this.fire("edit-node", {
+        this.fire('edit-node', {
             nodeId: this.nodeId,
             element: this,
         });
     }
     toggleMenu() {
-        const menu = this.shadowRoot?.getElementById("menu");
+        const menu = this.shadowRoot?.getElementById('menu');
         menu.open = !menu.open;
+    }
+    renderImage() {
+        return html `
+      <div class="layout horizontal center-center">
+        <img class="image" src="${this.connector.class.imageUrl}" />
+      </div>
+    `;
     }
     render() {
         return html `
-      <div class="layout horizontal mainContainer">
-        <div class="layout horizontal center-center">
-          <div class="causeType">${this.connector.class.name}</div>
-        </div>
+      <div class="layout vertical mainContainer">
+        ${this.renderImage()}
+        <div class="name">${this.connector.class.name}</div>
+
+        <md-icon class="typeIconCore">checklist</md-icon>
 
         <md-icon-button class="editButton" @click="${this.editNode}"
-          ><md-icon>edit</md-icon></md-icon-button
+          ><md-icon>settings</md-icon></md-icon-button
         >
       </div>
     `;
@@ -75,7 +95,7 @@ __decorate([
     property({ type: Number })
 ], PsAgentConnector.prototype, "connectorId", void 0);
 PsAgentConnector = __decorate([
-    customElement("ps-connector-node")
+    customElement('ps-connector-node')
 ], PsAgentConnector);
 export { PsAgentConnector };
 //# sourceMappingURL=ps-connector-node.js.map

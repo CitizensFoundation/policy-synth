@@ -45,6 +45,8 @@ interface PsBaseNodeInstance {
   graphPosY: number;
 }
 
+type PsAgentsNodeType = "agent" | "connector";
+
 interface PsAgentInstance extends PsBaseNodeInstance {
   class: PsAgentClass;
   parentAgentId: number | undefined;
@@ -68,6 +70,8 @@ interface PsAgentConnectorClass {
   name: string;
   description: string;
   version: number;
+  imageUrl: string;
+  iconName: string;
 }
 
 type PsAgentConnectorPermissionTypes = "read" | "write" | "admin";

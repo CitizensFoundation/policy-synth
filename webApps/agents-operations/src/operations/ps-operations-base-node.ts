@@ -33,39 +33,7 @@ export abstract class PsOperationsBaseNode extends YpBaseElement {
     return [
       super.styles,
       css`
-        .causeText {
-          font-size: 14px;
-          padding: 8px;
-          height: 100%;
-          width: 100%;
-          max-height: 70px;
-          overflow-y: auto;
-        }
 
-        .causeText[is-ude] {
-          max-height: 75px;
-        }
-
-        .causeTextContainer {
-          height: 100%;
-        }
-
-        .causeText[root-cause] {
-        }
-
-        .createOptionsButtons {
-          display: flex;
-          justify-content: center;
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          padding-left: 8px;
-          padding-right: 8px;
-        }
-
-        .createOptionsButtons[root-cause] {
-        }
 
         .editButton {
           position: absolute;

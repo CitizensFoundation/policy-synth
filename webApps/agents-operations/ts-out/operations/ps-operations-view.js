@@ -15,8 +15,8 @@ import './ps-agent-node.js';
 import './ps-connector-node.js';
 import { OpsServerApi } from './OpsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
-import { AgentShape, AgentShapeView } from './ps-agent-shape.js';
-import { ConnectorShape, ConnectorShapeView } from './ps-connector-shape.js';
+import { AgentShape, AgentsShapeView } from './ps-agent-shape.js';
+import { ConnectorShape } from './ps-connector-shape.js';
 let PsOperationsView = class PsOperationsView extends YpBaseElement {
     constructor() {
         super();
@@ -131,7 +131,7 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         this.graph = new dia.Graph({}, { cellNamespace: this.jointNamespace });
         this.paper = new dia.Paper({
             //@ts-ignore
-            elementView: () => AgentShapeView,
+            elementView: () => AgentsShapeView,
             el: paperContainer,
             model: this.graph,
             cellViewNamespace: this.jointNamespace,
@@ -211,10 +211,9 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
       `));
         Object.assign(this.jointNamespace, {
             myShapeGroup: {
+                AgentsShapeView,
                 AgentShape,
-                AgentShapeView,
-                ConnectorShape,
-                ConnectorShapeView,
+                ConnectorShape
             },
             standard: {
                 Rectangle: shapes.standard.Rectangle,
@@ -340,7 +339,7 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
             label: agent.class.description,
             text: agent.class.description,
             agentId: agent.id,
-            agent: agent,
+            nodeType: 'agent',
             attrs: {
             //cause: node.description,
             },
@@ -359,6 +358,7 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
             label: connector.class.description,
             text: connector.class.description,
             connectorId: connector.id,
+            nodeType: 'connector',
             attrs: {
             //cause: node.description,
             },
@@ -516,19 +516,30 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         return [
             super.styles,
             css `
-        .causeContainer {
+
+        .agentHeaderImage {
+          max-width: 72px;
+          border-radius: 16px;
+        }
+
+        .agentHeaderText {
+          font-size: 18px;
+          padding: 8px;
+          margin-left: 16px;
+          margin-right: 16px;
+        }
+
+        .mainAgentPlayButton {
+          margin-right: 10px;
+        }
+
+        .agentContainer {
           color: var(--md-sys-color-on-primary-container);
           background-color: var(--md-sys-color-primary-container);
           border-radius: 16px;
           padding: 0;
         }
 
-        .rootCauseContainer {
-          color: var(--md-sys-color-on-primary);
-          background-color: var(--md-sys-color-primary);
-          border-radius: 0;
-          padding: 0;
-        }
 
         .connectorContainer {
           color: var(--md-sys-color-on-secondary-container);
@@ -646,8 +657,21 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         }
         this.paper.translate(currentTranslate.tx + dx, currentTranslate.ty + dy);
     }
+    renderHeader() {
+        return html `
+      <div class="layout horizontal center-center agentHeader">
+        <img
+          src="${this.currentAgent?.class.imageUrl}"
+          class="agentHeaderImage"
+        />
+        <div class="layout vertical agentHeaderText">
+          ${this.currentAgent?.class.name}
+        </div>
+      </div>
+    `;
+    }
     render() {
-        return html `<h1>Agent Operations</h1>
+        return html `
       <div class="controlPanelContainer"></div>
       <div class="controlPanel">
         <md-filled-tonal-icon-button @click="${this.zoomIn}" class="firstButton"
@@ -661,6 +685,18 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         >
         <md-filled-tonal-icon-button @click="${this.updatePaperSize}"
           ><md-icon>zoom_out_map</md-icon></md-filled-tonal-icon-button
+        >
+
+        <div class="flex"></div>
+
+        ${this.renderHeader()}
+
+        <md-outlined-icon-button class="mainAgentPlayButton" @click="${() => this.pan('left')}"
+          ><md-icon>play_arrow</md-icon></md-outlined-icon-button
+        >
+
+        <md-icon-button @click="${() => this.pan('left')}"
+          ><md-icon>settings</md-icon></md-icon-button
         >
 
         <div class="flex"></div>

@@ -52,191 +52,6 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.setupTestData();
     }
     setupTestData() {
-        // Hard-coded data
-        const googleDocsConnectorClass = {
-            id: 1,
-            name: 'Google Docs',
-            description: 'Connector for Google Docs',
-            version: 1,
-        };
-        const discordMarketResearchBotConnectorClass = {
-            id: 2,
-            name: 'Discord Market Research Bot',
-            description: 'Connector for Discord Market Research Bot',
-            version: 1,
-        };
-        const marketResearchAgentClass = {
-            id: 1,
-            version: 1,
-            name: 'Market Research Agent',
-            description: 'An agent for conducting market research',
-            imageUrl: 'http://example.com/market-research-agent.png',
-            iconName: 'market_research',
-            assistantSystemInstructions: 'Conduct market research',
-            capabilities: ['research', 'analysis'],
-            inputJsonInterface: '{}',
-            outputJsonInterface: '{}',
-            configurationQuestions: [],
-            supportedConnectors: [
-                googleDocsConnectorClass,
-                discordMarketResearchBotConnectorClass,
-            ],
-        };
-        const competitorResearchSubAgentClass = {
-            id: 2,
-            version: 1,
-            name: 'Competitor Research',
-            description: 'Sub-agent for competitor research',
-            imageUrl: 'http://example.com/competitor-research.png',
-            iconName: 'competitor_research',
-            assistantSystemInstructions: 'Conduct competitor research',
-            capabilities: ['research', 'analysis'],
-            inputJsonInterface: '{}',
-            outputJsonInterface: '{}',
-            configurationQuestions: [],
-            supportedConnectors: [
-                googleDocsConnectorClass,
-                discordMarketResearchBotConnectorClass,
-            ],
-        };
-        const useCaseResearchSubAgentClass = {
-            id: 3,
-            version: 1,
-            name: 'Use Case Research',
-            description: 'Sub-agent for use case research',
-            imageUrl: 'http://example.com/use-case-research.png',
-            iconName: 'use_case_research',
-            assistantSystemInstructions: 'Conduct use case research',
-            capabilities: ['research', 'analysis'],
-            inputJsonInterface: '{}',
-            outputJsonInterface: '{}',
-            configurationQuestions: [],
-            supportedConnectors: [
-                googleDocsConnectorClass,
-                discordMarketResearchBotConnectorClass,
-            ],
-        };
-        const connector1 = {
-            id: 1,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
-            costs: [],
-            configurationAnswers: [],
-            graphPosX: 0,
-            graphPosY: 0,
-            class: googleDocsConnectorClass,
-            permissionNeeded: 'read',
-        };
-        const connector2 = {
-            id: 2,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
-            costs: [],
-            configurationAnswers: [],
-            graphPosX: 0,
-            graphPosY: 0,
-            class: discordMarketResearchBotConnectorClass,
-            permissionNeeded: 'write',
-        };
-        const subAgent1 = {
-            id: 2,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
-            costs: [],
-            configurationAnswers: [],
-            graphPosX: 0,
-            graphPosY: 0,
-            class: competitorResearchSubAgentClass,
-            parentAgentId: 1,
-            parentAgent: undefined,
-            subAgents: undefined,
-            connectors: [
-                connector1,
-                connector2,
-            ],
-        };
-        const connector3 = {
-            id: 3,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
-            costs: [],
-            configurationAnswers: [],
-            graphPosX: 0,
-            graphPosY: 0,
-            class: googleDocsConnectorClass,
-            permissionNeeded: 'read',
-        };
-        const connector4 = {
-            id: 4,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
-            costs: [],
-            configurationAnswers: [],
-            graphPosX: 0,
-            graphPosY: 0,
-            class: discordMarketResearchBotConnectorClass,
-            permissionNeeded: 'write',
-        };
-        const subAgent2 = {
-            id: 3,
-            classId: 3,
-            userId: 1,
-            groupId: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
-            costs: [],
-            configurationAnswers: [],
-            graphPosX: 0,
-            graphPosY: 0,
-            class: useCaseResearchSubAgentClass,
-            parentAgentId: 1,
-            parentAgent: undefined,
-            subAgents: undefined,
-            connectors: [
-                connector3,
-                connector4
-            ],
-        };
-        const marketResearchAgent = {
-            id: 1,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
-            costs: [],
-            configurationAnswers: [],
-            graphPosX: 0,
-            graphPosY: 0,
-            class: marketResearchAgentClass,
-            parentAgentId: undefined,
-            parentAgent: undefined,
-            subAgents: [subAgent1, subAgent2],
-            connectors: undefined,
-        };
-        this.currentAgent = marketResearchAgent;
-        window.psAppGlobals.addToAgentsRegistry(marketResearchAgent);
-        window.psAppGlobals.addToAgentsRegistry(subAgent1);
-        window.psAppGlobals.addToAgentsRegistry(subAgent2);
-        window.psAppGlobals.addToConnectorsRegistry(connector1);
-        window.psAppGlobals.addToConnectorsRegistry(connector2);
-        window.psAppGlobals.addToConnectorsRegistry(connector3);
-        window.psAppGlobals.addToConnectorsRegistry(connector4);
     }
     async connectedCallback() {
         super.connectedCallback();
@@ -516,12 +331,10 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         return [
             super.styles,
             css `
-        .causeText {
-          font-size: 12px;
-          color: var(--md-sys-color-on-primary-container);
-          background-color: var(--md-sys-color-primary-container);
-          padding: 8px;
-        }
+
+      md-tabs {
+        margin-bottom: 64px;
+      }
 
         .childEditing {
           color: var(--md-sys-color-on-surface-variant);
@@ -919,6 +732,16 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
             return cache(html `
         ${this.renderAddCauseDialog()} ${this.renderEditNodeDialog()}
         ${this.renderDeleteConfirmationDialog()}
+        <md-tabs id="tabBar" @change="${this.tabChanged}">
+          <md-primary-tab id="configure-tab" aria-controls="configure-panel">
+            <md-icon slot="icon">psychology</md-icon>
+            ${this.t('Agents Operations')}
+          </md-primary-tab>
+          <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
+            <md-icon slot="icon">checklist</md-icon>
+            ${this.t('Audit Log')}
+          </md-primary-tab>
+        </md-tabs>
         <ps-operations-view
           .currentAgent="${this.currentAgent}"
         ></ps-operations-view>

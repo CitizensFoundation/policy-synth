@@ -113,10 +113,10 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
   tempPassword: string | undefined;
 
   @property({ type: String })
-  localStorageThemeColorKey = 'md3-ps-theme-color-v2';
+  localStorageThemeColorKey = 'md3-agents-ops-theme-color-v5';
 
   @property({ type: String })
-  themeColor = '#df2302';
+  themeColor = '#27b1cb';
 
   @property({ type: String })
   themePrimaryColor = '#000000';

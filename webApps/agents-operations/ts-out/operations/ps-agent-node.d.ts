@@ -16,6 +16,7 @@ export declare abstract class PsAgentNode extends PsOperationsBaseNode {
     createDirectCauses(): Promise<void>;
     editNode(): void;
     toggleMenu(): void;
+    renderImage(): import("lit").TemplateResult<1>;
     render(): import("lit").TemplateResult<1> | typeof nothing;
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

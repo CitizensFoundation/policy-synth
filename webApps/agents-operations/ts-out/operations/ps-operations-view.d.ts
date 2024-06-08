@@ -45,6 +45,7 @@ export declare class PsOperationsView extends YpBaseElement {
     addNodes(parentNodeId: string, nodes: LtpCurrentRealityTreeDataNode[]): void;
     static get styles(): any[];
     pan(direction: string): void;
+    renderHeader(): import("lit").TemplateResult<1>;
     render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-operations-view.d.ts.map

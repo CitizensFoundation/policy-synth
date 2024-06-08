@@ -39,6 +39,20 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
     return [
       super.styles,
       css`
+        .image {
+          width: 200px;
+          height: 113px;
+          border-radius: 16px 16px 0 0;
+        }
+
+        .agentName {
+          height: 102px;
+          font-size: 18px;
+          padding: 8px;
+          text-align: center;
+          align-items: center;
+        }
+
         .causeText {
           font-size: 14px;
           padding: 8px;
@@ -46,6 +60,11 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
           width: 100%;
           max-height: 70px;
           overflow-y: auto;
+        }
+
+        .mainContainer {
+          height: 100%;
+          border-radius: 16px;
         }
 
         .causeText[is-ude] {
@@ -75,8 +94,15 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
 
         .editButton {
           position: absolute;
-          bottom: 0;
+          bottom: -6px;
           right: 0;
+          z-index: 1500;
+        }
+
+        .checklistButton {
+          position: absolute;
+          bottom: -6px;
+          left: 0;
           z-index: 1500;
         }
 
@@ -140,20 +166,28 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
     menu.open = !menu.open;
   }
 
+  renderImage() {
+    return html`
+      <div class="layout horizontal center-center">
+        <img class="image" src="${this.agent.class.imageUrl}" />
+      </div>
+    `;
+  }
+
   override render() {
     if (this.agent) {
       return html`
         <div class="layout vertical mainContainer">
-          <div class="layout horizontal causeTextContainer">
-            <div class="causeText">${this.agent.class.description}</div>
-          </div>
+          ${this.renderImage()}
+          <div class="agentName">${this.agent.class.name}</div>
 
-          <md-icon class="typeIconCore ${this.agent.class.iconName}"
-            >${this.agent.class.iconName}</md-icon
-          >
+          <md-icon-button  class="checklistButton">
+            <md-icon
+              >checklist</md-icon
+            ></md-icon-button>
 
           <md-icon-button class="editButton" @click="${this.editNode}"
-            ><md-icon>edit</md-icon></md-icon-button
+            ><md-icon>settings</md-icon></md-icon-button
           >
 
           <div class="layout horizontal center-justify createOptionsButtons">
@@ -162,13 +196,13 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
                   <md-circular-progress indeterminate></md-circular-progress>
                 `
               : html`
-                  <md-icon-button
+                  <md-outlined-icon-button
                     class="createOptionsButton"
                     @click="${() =>
                       this.fire('open-add-cause-dialog', {
                         parentNodeId: this.nodeId,
                       })}"
-                    ><md-icon>add</md-icon></md-icon-button
+                    ><md-icon>play_arrow</md-icon></md-outlined-icon-button
                   >
                 `}
           </div>
