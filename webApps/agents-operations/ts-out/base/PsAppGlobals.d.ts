@@ -9,7 +9,13 @@ export declare class PsAppGlobals extends YpAppGlobals {
     earlName: string;
     disableParentConstruction: boolean;
     exernalGoalParamsWhiteList: string | undefined;
+    agentsInstanceRegistry: Map<number, PsAgentInstance>;
+    connectorsInstanceRegistry: Map<number, PsAgentConnectorInstance>;
     constructor(serverApi: PsServerApi);
+    addToAgentsRegistry: (agent: PsAgentInstance) => void;
+    addToConnectorsRegistry: (connector: PsAgentConnectorInstance) => void;
+    getAgentInstance(agentId: number): PsAgentInstance | undefined;
+    getConnectorInstance(connectorId: number): PsAgentConnectorInstance | undefined;
     getEarlName: () => string | null;
     setIds: (e: CustomEvent) => void;
     parseQueryString: () => void;

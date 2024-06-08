@@ -12,6 +12,10 @@ import "@material/web/menu/menu.js";
 import "@material/web/menu/menu-item.js";
 import { PsOperationsBaseNode } from "./ps-operations-base-node.js";
 let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
+    connectedCallback() {
+        super.connectedCallback();
+        this.connector = window.psAppGlobals.getConnectorInstance(this.connectorId);
+    }
     static get styles() {
         return [
             super.styles,
@@ -67,6 +71,9 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
 __decorate([
     property({ type: Object })
 ], PsAgentConnector.prototype, "connector", void 0);
+__decorate([
+    property({ type: Number })
+], PsAgentConnector.prototype, "connectorId", void 0);
 PsAgentConnector = __decorate([
     customElement("ps-connector-node")
 ], PsAgentConnector);

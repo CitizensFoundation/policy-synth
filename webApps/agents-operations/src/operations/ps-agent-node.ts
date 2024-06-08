@@ -17,6 +17,9 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
   @property({ type: Object })
   agent!: PsAgentInstance;
 
+  @property({ type: Number })
+  agentId!: number;
+
   @property({ type: Boolean })
   isWorking = false;
 
@@ -27,6 +30,10 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
     this.api = new OpsServerApi();
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.agent = window.psAppGlobals.getAgentInstance(this.agentId);
+  }
 
   static override get styles() {
     return [
@@ -113,15 +120,12 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
   }
 
   async createDirectCauses() {
-
     const nodes = await this.api.createDirectCauses(this.agent.id, this.nodeId);
 
     this.fireGlobal('add-nodes', {
       parentNodeId: this.nodeId,
       nodes,
     });
-
-
   }
 
   editNode() {
@@ -131,61 +135,47 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
     });
   }
 
-
   toggleMenu() {
     const menu = this.shadowRoot?.getElementById('menu') as MdMenu;
     menu.open = !menu.open;
   }
 
-
   override render() {
-    return html`
-      <div
-        class="layout vertical mainContainer"
+    if (this.agent) {
+      return html`
+        <div class="layout vertical mainContainer">
+          <div class="layout horizontal causeTextContainer">
+            <div class="causeText">${this.agent.class.description}</div>
+          </div>
 
-      >
-        <div class="layout horizontal causeTextContainer">
-          <div
-            class="causeText"
-
+          <md-icon class="typeIconCore ${this.agent.class.iconName}"
+            >${this.agent.class.iconName}</md-icon
           >
-            ${this.agent.class.description}
+
+          <md-icon-button class="editButton" @click="${this.editNode}"
+            ><md-icon>edit</md-icon></md-icon-button
+          >
+
+          <div class="layout horizontal center-justify createOptionsButtons">
+            ${this.isWorking
+              ? html`
+                  <md-circular-progress indeterminate></md-circular-progress>
+                `
+              : html`
+                  <md-icon-button
+                    class="createOptionsButton"
+                    @click="${() =>
+                      this.fire('open-add-cause-dialog', {
+                        parentNodeId: this.nodeId,
+                      })}"
+                    ><md-icon>add</md-icon></md-icon-button
+                  >
+                `}
           </div>
         </div>
-
-        <md-icon class="typeIconCore ${this.agent.class.iconName}"
-          >${this.agent.class.iconName}</md-icon
-        >
-
-        <md-icon-button
-
-          class="editButton"
-          @click="${this.editNode}"
-          ><md-icon>edit</md-icon></md-icon-button
-        >
-
-        <div
-          class="layout horizontal center-justify createOptionsButtons"
-
-        >
-          ${this.isWorking
-            ? html`
-                <md-circular-progress indeterminate></md-circular-progress>
-              `
-            : html`
-                <md-icon-button
-
-                  class="createOptionsButton"
-
-                  @click="${() =>
-                    this.fire('open-add-cause-dialog', {
-                      parentNodeId: this.nodeId,
-                    })}"
-                  ><md-icon>add</md-icon></md-icon-button
-                >
-              `}
-        </div>
-      </div>
-    `;
+      `;
+    } else {
+      return nothing;
+    }
   }
 }

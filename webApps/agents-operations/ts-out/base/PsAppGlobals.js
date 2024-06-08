@@ -3,6 +3,14 @@ export class PsAppGlobals extends YpAppGlobals {
     constructor(serverApi) {
         super(serverApi, true);
         this.disableParentConstruction = true;
+        this.agentsInstanceRegistry = new Map();
+        this.connectorsInstanceRegistry = new Map();
+        this.addToAgentsRegistry = (agent) => {
+            this.agentsInstanceRegistry.set(agent.id, agent);
+        };
+        this.addToConnectorsRegistry = (connector) => {
+            this.connectorsInstanceRegistry.set(connector.id, connector);
+        };
         this.getEarlName = () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('name')) {
@@ -113,6 +121,12 @@ export class PsAppGlobals extends YpAppGlobals {
         //this.earlName = this.getEarlName();
         this.originalReferrer = document.referrer;
         document.addEventListener('set-ids', this.setIds.bind(this));
+    }
+    getAgentInstance(agentId) {
+        return this.agentsInstanceRegistry.get(agentId);
+    }
+    getConnectorInstance(connectorId) {
+        return this.connectorsInstanceRegistry.get(connectorId);
     }
     getOriginalQueryString() {
         if (this.originalQueryParameters) {

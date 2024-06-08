@@ -131,7 +131,7 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         this.graph = new dia.Graph({}, { cellNamespace: this.jointNamespace });
         this.paper = new dia.Paper({
             //@ts-ignore
-            elementView: () => MyShapeView,
+            elementView: () => AgentShapeView,
             el: paperContainer,
             model: this.graph,
             cellViewNamespace: this.jointNamespace,
@@ -340,6 +340,7 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
             label: agent.class.description,
             text: agent.class.description,
             agentId: agent.id,
+            agent: agent,
             attrs: {
             //cause: node.description,
             },
@@ -376,6 +377,14 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
                 const el = this.createAgentElement(subAgent);
                 this.elements[subAgent.id] = el;
                 renderedNodes.add(subAgent.id);
+                if (subAgent.connectors &&
+                    subAgent.connectors.length > 0) {
+                    subAgent.connectors.forEach(connector => {
+                        const el = this.createConnectorElement(connector);
+                        this.elements[connector.id] = el;
+                        renderedNodes.add(connector.id);
+                    });
+                }
             });
         }
         if (this.currentAgent.connectors &&

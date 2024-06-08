@@ -25,10 +25,12 @@ export class ConnectorShapeView extends dia.ElementView {
       div.setAttribute('class', 'html-element');
       div.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
-      div.innerHTML = `<ps-connector-node
-        agentId="${this.model.attributes.agentId}"
-        >
-      </ps-connector-node>`;
+      // Create the ps-connector-node element
+      const psConnectorNode = document.createElement('ps-connector-node');
+      psConnectorNode.setAttribute('agent', this.model.attributes.agent);
+
+      // Append the ps-connector-node element to the div
+      div.appendChild(psConnectorNode);
 
       // Append the div to the foreignObject
       foreignObject.appendChild(div);

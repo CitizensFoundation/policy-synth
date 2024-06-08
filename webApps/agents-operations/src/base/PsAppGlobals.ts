@@ -12,12 +12,31 @@ export class PsAppGlobals extends YpAppGlobals {
   disableParentConstruction = true;
   exernalGoalParamsWhiteList: string | undefined;
 
+  agentsInstanceRegistry: Map<number, PsAgentInstance> = new Map();
+  connectorsInstanceRegistry: Map<number, PsAgentConnectorInstance> = new Map();
+
   constructor(serverApi: PsServerApi) {
     super(serverApi, true);
     this.parseQueryString();
     //this.earlName = this.getEarlName();
     this.originalReferrer = document.referrer;
     document.addEventListener('set-ids' as any, this.setIds.bind(this));
+  }
+
+  addToAgentsRegistry = (agent: PsAgentInstance): void => {
+    this.agentsInstanceRegistry.set(agent.id, agent);
+  }
+
+  addToConnectorsRegistry = (connector: PsAgentConnectorInstance): void => {
+    this.connectorsInstanceRegistry.set(connector.id, connector);
+  }
+
+  getAgentInstance(agentId: number): PsAgentInstance | undefined {
+    return this.agentsInstanceRegistry.get(agentId);
+  }
+
+  getConnectorInstance(connectorId: number): PsAgentConnectorInstance | undefined {
+    return this.connectorsInstanceRegistry.get(connectorId);
   }
 
   getEarlName = (): string | null => {

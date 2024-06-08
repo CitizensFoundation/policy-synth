@@ -4,7 +4,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-import { css, html } from 'lit';
+import { css, html, nothing } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
@@ -17,6 +17,10 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         super();
         this.isWorking = false;
         this.api = new OpsServerApi();
+    }
+    connectedCallback() {
+        super.connectedCallback();
+        this.agent = window.psAppGlobals.getAgentInstance(this.agentId);
     }
     static get styles() {
         return [
@@ -119,58 +123,50 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         menu.open = !menu.open;
     }
     render() {
-        return html `
-      <div
-        class="layout vertical mainContainer"
+        if (this.agent) {
+            return html `
+        <div class="layout vertical mainContainer">
+          <div class="layout horizontal causeTextContainer">
+            <div class="causeText">${this.agent.class.description}</div>
+          </div>
 
-      >
-        <div class="layout horizontal causeTextContainer">
-          <div
-            class="causeText"
-
+          <md-icon class="typeIconCore ${this.agent.class.iconName}"
+            >${this.agent.class.iconName}</md-icon
           >
-            ${this.agent.class.description}
+
+          <md-icon-button class="editButton" @click="${this.editNode}"
+            ><md-icon>edit</md-icon></md-icon-button
+          >
+
+          <div class="layout horizontal center-justify createOptionsButtons">
+            ${this.isWorking
+                ? html `
+                  <md-circular-progress indeterminate></md-circular-progress>
+                `
+                : html `
+                  <md-icon-button
+                    class="createOptionsButton"
+                    @click="${() => this.fire('open-add-cause-dialog', {
+                    parentNodeId: this.nodeId,
+                })}"
+                    ><md-icon>add</md-icon></md-icon-button
+                  >
+                `}
           </div>
         </div>
-
-        <md-icon class="typeIconCore ${this.agent.class.iconName}"
-          >${this.agent.class.iconName}</md-icon
-        >
-
-        <md-icon-button
-
-          class="editButton"
-          @click="${this.editNode}"
-          ><md-icon>edit</md-icon></md-icon-button
-        >
-
-        <div
-          class="layout horizontal center-justify createOptionsButtons"
-
-        >
-          ${this.isWorking
-            ? html `
-                <md-circular-progress indeterminate></md-circular-progress>
-              `
-            : html `
-                <md-icon-button
-
-                  class="createOptionsButton"
-
-                  @click="${() => this.fire('open-add-cause-dialog', {
-                parentNodeId: this.nodeId,
-            })}"
-                  ><md-icon>add</md-icon></md-icon-button
-                >
-              `}
-        </div>
-      </div>
-    `;
+      `;
+        }
+        else {
+            return nothing;
+        }
     }
 };
 __decorate([
     property({ type: Object })
 ], PsAgentNode.prototype, "agent", void 0);
+__decorate([
+    property({ type: Number })
+], PsAgentNode.prototype, "agentId", void 0);
 __decorate([
     property({ type: Boolean })
 ], PsAgentNode.prototype, "isWorking", void 0);

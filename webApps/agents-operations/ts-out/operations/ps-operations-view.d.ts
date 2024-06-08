@@ -9,7 +9,7 @@ import './ps-connector-node.js';
 import { OpsServerApi } from './OpsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsOperationsView extends YpBaseElement {
-    currentAgent?: PsAgentInstance;
+    currentAgent: PsAgentInstance;
     private graph;
     private paper;
     private elements;

@@ -4,39 +4,39 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-import { css, html, nothing } from "lit";
-import { property, customElement, query } from "lit/decorators.js";
-import { cache } from "lit/directives/cache.js";
-import { resolveMarkdown } from "../chatBot/litMarkdown.js";
-import "@material/web/iconbutton/icon-button.js";
-import "@material/web/progress/linear-progress.js";
-import "@material/web/tabs/tabs.js";
-import "@material/web/tabs/primary-tab.js";
-import "@material/web/textfield/outlined-text-field.js";
-import "@material/web/iconbutton/outlined-icon-button.js";
-import "@material/web/button/filled-tonal-button.js";
-import "@material/web/dialog/dialog.js";
-import "@material/web/button/text-button.js";
-import "@material/web/checkbox/checkbox.js";
-import "@material/web/menu/menu.js";
-import "@material/web/menu/menu-item.js";
-import "@material/web/button/filled-button.js";
-import "./ps-operations-view.js";
-import "./OpsServerApi.js";
-import { OpsServerApi } from "./OpsServerApi.js";
-import "./chat/agent-chat-assistant.js";
-import { OpsStreamingAIResponse } from "./OpsStreamingAIResponse.js";
-import { YpBaseElement } from "@yrpri/webapp/common/yp-base-element.js";
+import { css, html, nothing } from 'lit';
+import { property, customElement, query } from 'lit/decorators.js';
+import { cache } from 'lit/directives/cache.js';
+import { resolveMarkdown } from '../chatBot/litMarkdown.js';
+import '@material/web/iconbutton/icon-button.js';
+import '@material/web/progress/linear-progress.js';
+import '@material/web/tabs/tabs.js';
+import '@material/web/tabs/primary-tab.js';
+import '@material/web/textfield/outlined-text-field.js';
+import '@material/web/iconbutton/outlined-icon-button.js';
+import '@material/web/button/filled-tonal-button.js';
+import '@material/web/dialog/dialog.js';
+import '@material/web/button/text-button.js';
+import '@material/web/checkbox/checkbox.js';
+import '@material/web/menu/menu.js';
+import '@material/web/menu/menu-item.js';
+import '@material/web/button/filled-button.js';
+import './ps-operations-view.js';
+import './OpsServerApi.js';
+import { OpsServerApi } from './OpsServerApi.js';
+import './chat/agent-chat-assistant.js';
+import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
+import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 const TESTING = false;
 const nodeTypes = [
-    "ude",
-    "directCause",
-    "assumption",
-    "intermediateCause",
-    "rootCause",
-    "and",
-    "xor",
-    "mag",
+    'ude',
+    'directCause',
+    'assumption',
+    'intermediateCause',
+    'rootCause',
+    'and',
+    'xor',
+    'mag',
 ];
 let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
     constructor() {
@@ -49,15 +49,203 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.isCreatingAgent = false;
         this.wsMessageListener = undefined;
         this.api = new OpsServerApi();
+        this.setupTestData();
+    }
+    setupTestData() {
+        // Hard-coded data
+        const googleDocsConnectorClass = {
+            id: 1,
+            name: 'Google Docs',
+            description: 'Connector for Google Docs',
+            version: 1,
+        };
+        const discordMarketResearchBotConnectorClass = {
+            id: 2,
+            name: 'Discord Market Research Bot',
+            description: 'Connector for Discord Market Research Bot',
+            version: 1,
+        };
+        const marketResearchAgentClass = {
+            id: 1,
+            version: 1,
+            name: 'Market Research Agent',
+            description: 'An agent for conducting market research',
+            imageUrl: 'http://example.com/market-research-agent.png',
+            iconName: 'market_research',
+            assistantSystemInstructions: 'Conduct market research',
+            capabilities: ['research', 'analysis'],
+            inputJsonInterface: '{}',
+            outputJsonInterface: '{}',
+            configurationQuestions: [],
+            supportedConnectors: [
+                googleDocsConnectorClass,
+                discordMarketResearchBotConnectorClass,
+            ],
+        };
+        const competitorResearchSubAgentClass = {
+            id: 2,
+            version: 1,
+            name: 'Competitor Research',
+            description: 'Sub-agent for competitor research',
+            imageUrl: 'http://example.com/competitor-research.png',
+            iconName: 'competitor_research',
+            assistantSystemInstructions: 'Conduct competitor research',
+            capabilities: ['research', 'analysis'],
+            inputJsonInterface: '{}',
+            outputJsonInterface: '{}',
+            configurationQuestions: [],
+            supportedConnectors: [
+                googleDocsConnectorClass,
+                discordMarketResearchBotConnectorClass,
+            ],
+        };
+        const useCaseResearchSubAgentClass = {
+            id: 3,
+            version: 1,
+            name: 'Use Case Research',
+            description: 'Sub-agent for use case research',
+            imageUrl: 'http://example.com/use-case-research.png',
+            iconName: 'use_case_research',
+            assistantSystemInstructions: 'Conduct use case research',
+            capabilities: ['research', 'analysis'],
+            inputJsonInterface: '{}',
+            outputJsonInterface: '{}',
+            configurationQuestions: [],
+            supportedConnectors: [
+                googleDocsConnectorClass,
+                discordMarketResearchBotConnectorClass,
+            ],
+        };
+        const connector1 = {
+            id: 1,
+            classId: 1,
+            userId: 1,
+            groupId: 1,
+            user: {}, // populate with relevant YpUserData
+            group: {}, // populate with relevant YpGroupData
+            costs: [],
+            configurationAnswers: [],
+            graphPosX: 0,
+            graphPosY: 0,
+            class: googleDocsConnectorClass,
+            permissionNeeded: 'read',
+        };
+        const connector2 = {
+            id: 2,
+            classId: 2,
+            userId: 1,
+            groupId: 1,
+            user: {}, // populate with relevant YpUserData
+            group: {}, // populate with relevant YpGroupData
+            costs: [],
+            configurationAnswers: [],
+            graphPosX: 0,
+            graphPosY: 0,
+            class: discordMarketResearchBotConnectorClass,
+            permissionNeeded: 'write',
+        };
+        const subAgent1 = {
+            id: 2,
+            classId: 2,
+            userId: 1,
+            groupId: 1,
+            user: {}, // populate with relevant YpUserData
+            group: {}, // populate with relevant YpGroupData
+            costs: [],
+            configurationAnswers: [],
+            graphPosX: 0,
+            graphPosY: 0,
+            class: competitorResearchSubAgentClass,
+            parentAgentId: 1,
+            parentAgent: undefined,
+            subAgents: undefined,
+            connectors: [
+                connector1,
+                connector2,
+            ],
+        };
+        const connector3 = {
+            id: 3,
+            classId: 1,
+            userId: 1,
+            groupId: 1,
+            user: {}, // populate with relevant YpUserData
+            group: {}, // populate with relevant YpGroupData
+            costs: [],
+            configurationAnswers: [],
+            graphPosX: 0,
+            graphPosY: 0,
+            class: googleDocsConnectorClass,
+            permissionNeeded: 'read',
+        };
+        const connector4 = {
+            id: 4,
+            classId: 2,
+            userId: 1,
+            groupId: 1,
+            user: {}, // populate with relevant YpUserData
+            group: {}, // populate with relevant YpGroupData
+            costs: [],
+            configurationAnswers: [],
+            graphPosX: 0,
+            graphPosY: 0,
+            class: discordMarketResearchBotConnectorClass,
+            permissionNeeded: 'write',
+        };
+        const subAgent2 = {
+            id: 3,
+            classId: 3,
+            userId: 1,
+            groupId: 1,
+            user: {}, // populate with relevant YpUserData
+            group: {}, // populate with relevant YpGroupData
+            costs: [],
+            configurationAnswers: [],
+            graphPosX: 0,
+            graphPosY: 0,
+            class: useCaseResearchSubAgentClass,
+            parentAgentId: 1,
+            parentAgent: undefined,
+            subAgents: undefined,
+            connectors: [
+                connector3,
+                connector4
+            ],
+        };
+        const marketResearchAgent = {
+            id: 1,
+            classId: 1,
+            userId: 1,
+            groupId: 1,
+            user: {}, // populate with relevant YpUserData
+            group: {}, // populate with relevant YpGroupData
+            costs: [],
+            configurationAnswers: [],
+            graphPosX: 0,
+            graphPosY: 0,
+            class: marketResearchAgentClass,
+            parentAgentId: undefined,
+            parentAgent: undefined,
+            subAgents: [subAgent1, subAgent2],
+            connectors: undefined,
+        };
+        this.currentAgent = marketResearchAgent;
+        window.psAppGlobals.addToAgentsRegistry(marketResearchAgent);
+        window.psAppGlobals.addToAgentsRegistry(subAgent1);
+        window.psAppGlobals.addToAgentsRegistry(subAgent2);
+        window.psAppGlobals.addToConnectorsRegistry(connector1);
+        window.psAppGlobals.addToConnectorsRegistry(connector2);
+        window.psAppGlobals.addToConnectorsRegistry(connector3);
+        window.psAppGlobals.addToConnectorsRegistry(connector4);
     }
     async connectedCallback() {
         super.connectedCallback();
-        this.addEventListener("open-add-cause-dialog", this.openAddCauseDialog);
-        this.addEventListener("close-add-cause-dialog", this.closeAddCauseDialog);
+        this.addEventListener('open-add-cause-dialog', this.openAddCauseDialog);
+        this.addEventListener('close-add-cause-dialog', this.closeAddCauseDialog);
         if (this.currentAgentId) {
             this.fetchCurrentAgent();
         }
-        this.addEventListener("edit-node", this.openEditNodeDialog);
+        this.addEventListener('edit-node', this.openEditNodeDialog);
     }
     openEditNodeDialog(event) {
         this.nodeToEditInfo = event.detail;
@@ -79,21 +267,21 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
     
         this.allCausesExceptCurrentToEdit =
           this.agentElement!.getAllCausesExcept(childrenIds);*/
-        this.$$("#editNodeDialog").show();
+        this.$$('#editNodeDialog').show();
     }
     closeEditNodeDialog() {
-        this.$$("#editNodeDialog").close();
+        this.$$('#editNodeDialog').close();
         this.nodeToEdit = undefined;
         this.nodeToEditInfo = undefined;
     }
     addChildChanged() {
-        const effectIdSelect = this.$$("#addEffectToNodeId");
+        const effectIdSelect = this.$$('#addEffectToNodeId');
         this.currentlySelectedCauseIdToAddAsChild = effectIdSelect.value;
     }
     async handleSaveEditNode() {
-        const updatedDescription = this.$$("#nodeDescription").value;
+        const updatedDescription = this.$$('#nodeDescription').value;
         // Retrieve the selected node type from md-select
-        const nodeTypeSelect = this.$$("#nodeTypeSelect");
+        const nodeTypeSelect = this.$$('#nodeTypeSelect');
         const selectedNodeType = nodeTypeSelect.value;
         if (this.nodeToEdit) {
             //this.nodeToEdit.description = updatedDescription;
@@ -120,7 +308,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
                     this.currentAgent = { ...this.currentAgent };
                 }
                 catch (error) {
-                    console.error("Error updating node:", error);
+                    console.error('Error updating node:', error);
                 }
             }
         }
@@ -129,12 +317,12 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.showDeleteConfirmation = true;
     }
     removeNodeRecursively(nodes, nodeId) {
-        const index = nodes.findIndex((node) => node.id === nodeId);
+        const index = nodes.findIndex(node => node.id === nodeId);
         if (index !== -1) {
             nodes.splice(index, 1);
             return;
         }
-        nodes.forEach((node) => {
+        nodes.forEach(node => {
             if (node.children) {
                 //this.removeNodeRecursively(node.subAgents, nodeId);
             }
@@ -150,7 +338,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
                 this.currentAgent = { ...this.currentAgent };
             }
             catch (error) {
-                console.error("Error deleting node:", error);
+                console.error('Error deleting node:', error);
             }
             finally {
                 this.closeDeleteConfirmationDialog();
@@ -204,7 +392,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
             ? html `
                 <md-outlined-text-field
                   label="Description"
-                  .value="${ /*this.nodeToEdit?.description*/""}"
+                  .value="${ /*this.nodeToEdit?.description*/''}"
                   id="nodeDescription"
                 ></md-outlined-text-field>
                 <md-outlined-select
@@ -213,11 +401,12 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
                   id="nodeTypeSelect"
                 >
                   ${nodeTypes
-                .filter((type) => type !== undefined)
-                .map((type) => html `
+                .filter(type => type !== undefined)
+                .map(type => html `
                         <md-select-option
                           value="${type}"
-                          ?selected="${ /*this.nodeToEditInfo!.element.agentNodeType == type*/0}"
+                          ?selected="${
+            /*this.nodeToEditInfo!.element.agentNodeType == type*/ 0}"
                         >
                           <div slot="headline">
                             ${this.camelCaseToHumanReadable(type)}
@@ -228,41 +417,40 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
                 <div class="flex"></div>
 
                 <div class="childEditing">
-                <div class="layout horizontal">
-                  <md-outlined-select
-                    menuPositioning="fixed"
-                    label="Add as Effect to"
-                    id="addEffectToNodeId"
-                    @change="${this.addChildChanged}"
-                  >
-                    ${this.allCausesExceptCurrentToEdit.map((node) => html `
-                        <md-select-option value="${node.id}">
-                          <div slot="headline">${ /*node.description*/""}</div>
-                        </md-select-option>
-                      `)}
-                  </md-outlined-select>
-                  ${this.currentlySelectedCauseIdToAddAsChild
+                  <div class="layout horizontal">
+                    <md-outlined-select
+                      menuPositioning="fixed"
+                      label="Add as Effect to"
+                      id="addEffectToNodeId"
+                      @change="${this.addChildChanged}"
+                    >
+                      ${this.allCausesExceptCurrentToEdit.map(node => html `
+                          <md-select-option value="${node.id}">
+                            <div slot="headline">
+                              ${ /*node.description*/''}
+                            </div>
+                          </md-select-option>
+                        `)}
+                    </md-outlined-select>
+                    ${this.currentlySelectedCauseIdToAddAsChild
                 ? html `
-                        <md-text-button
-                          class="addButton"
-
-                        >
-                          Add as an Effect
-                        </md-text-button>
-                      `
+                          <md-text-button class="addButton">
+                            Add as an Effect
+                          </md-text-button>
+                        `
                 : nothing}
-                </div>
+                  </div>
 
-                <div class="flex"></div>
+                  <div class="flex"></div>
 
-                <div class="layout horizontal center-center">
-                  <md-text-button
-                    class="automaticCreateButton"
-
-                    @click="${this.createDirectCauses}"
-                  >
-                    Automatically create nodes (for testing)
-                  </md-text-button>
+                  <div class="layout horizontal center-center">
+                    <md-text-button
+                      class="automaticCreateButton"
+                      @click="${this.createDirectCauses}"
+                    >
+                      Automatically create nodes (for testing)
+                    </md-text-button>
+                  </div>
                 </div>
               `
             : nothing}
@@ -289,24 +477,25 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         const dontDoIt = false;
         if (!dontDoIt) {
             if (this.currentAgent && this.currentAgent.id) {
-                window.history.pushState({}, "", `/agent/${this.currentAgent.id}`);
+                window.history.pushState({}, '', `/agent/${this.currentAgent.id}`);
             }
             else {
-                console.error("Could not fetch current tree: " + this.currentAgentId);
+                console.error('Could not fetch current tree: ' + this.currentAgentId);
             }
         }
     }
     async fetchCurrentAgent() {
         this.isFetchingAgent = true;
-        this.currentAgent = undefined; //  await this.api.getAgent(this.currentAgentId as number);
+        //this.currentAgent = undefined; //  await this.api.getAgent(this.currentAgentId as number);
         this.isFetchingAgent = false;
-        if (this.currentAgent) {
+        if (false && this.currentAgent) {
             this.updatePath();
             await this.updateComplete;
-            this.$$("#context").value = this.currentAgent.class.description;
-            this.$$("#undesirableEffects").value = "";
+            this.$$('#context').value =
+                this.currentAgent.class.description;
+            this.$$('#undesirableEffects').value = '';
             this.activeTabIndex = 1;
-            this.$$("#tabBar").activeTabIndex = 1;
+            this.$$('#tabBar').activeTabIndex = 1;
         }
     }
     updated(changedProperties) {
@@ -314,12 +503,12 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
     }
     disconnectedCallback() {
         super.disconnectedCallback();
-        this.removeEventListener("open-add-cause-dialog", this.openAddCauseDialog);
-        this.removeEventListener("close-add-cause-dialog", this.closeAddCauseDialog);
+        this.removeEventListener('open-add-cause-dialog', this.openAddCauseDialog);
+        this.removeEventListener('close-add-cause-dialog', this.closeAddCauseDialog);
     }
     camelCaseToHumanReadable(str) {
         // Split the string at each uppercase letter and join with space
-        const words = str.replace(/([A-Z])/g, " $1").trim();
+        const words = str.replace(/([A-Z])/g, ' $1').trim();
         // Capitalize the first letter of the resulting string
         return words.charAt(0).toUpperCase() + words.slice(1);
     }
@@ -375,11 +564,11 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
           margin-bottom: 16px;
         }
 
-        [type="textarea"] {
+        [type='textarea'] {
           min-height: 150px;
         }
 
-        [type="textarea"][supporting-text] {
+        [type='textarea'][supporting-text] {
           min-height: 76px;
         }
 
@@ -466,21 +655,21 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         ];
     }
     tabChanged() {
-        this.activeTabIndex = this.$$("#tabBar").activeTabIndex;
+        this.activeTabIndex = this.$$('#tabBar').activeTabIndex;
     }
     clearForNew() {
         this.currentAgent = undefined;
         this.currentAgentId = undefined;
         this.AIConfigReview = undefined;
-        this.$$("#context").value = "";
-        this.$$("#undesirableEffects").value = "";
+        this.$$('#context').value = '';
+        this.$$('#undesirableEffects').value = '';
         //window.history.pushState({}, '', `/agent`);
     }
     get agentInputData() {
         return {
-            description: this.$$("#description")?.value ?? "",
-            context: this.$$("#context").value ?? "",
-            undesirableEffects: this.$$("#undesirableEffects").value.split("\n") ?? [],
+            description: this.$$('#description')?.value ?? '',
+            context: this.$$('#context').value ?? '',
+            undesirableEffects: this.$$('#undesirableEffects').value.split('\n') ?? [],
             nodes: [],
         }; //LtpCurrentRealityAgentData;
     }
@@ -490,42 +679,42 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
             this.currentStreaminReponse.close();
         }
         if (this.wsMessageListener) {
-            this.removeEventListener("wsMessage", this.wsMessageListener);
+            this.removeEventListener('wsMessage', this.wsMessageListener);
         }
         this.AIConfigReview = undefined;
         this.currentStreaminReponse = new OpsStreamingAIResponse(this);
         try {
             const wsClientId = await this.currentStreaminReponse.connect();
-            this.AIConfigReview = "";
-            console.log("Connected with clientId:", wsClientId);
+            this.AIConfigReview = '';
+            console.log('Connected with clientId:', wsClientId);
             this.wsMessageListener = (event) => {
                 const { data } = event.detail;
-                if (data.type === "part" && data.text) {
+                if (data.type === 'part' && data.text) {
                     this.AIConfigReview += data.text;
                 }
-                else if (data.type === "end") {
-                    this.removeListener("wsMessage", this.wsMessageListener);
+                else if (data.type === 'end') {
+                    this.removeListener('wsMessage', this.wsMessageListener);
                     this.wsMessageListener = undefined;
                     this.currentStreaminReponse = undefined;
                     this.isReviewingAgent = false;
                 }
             };
-            this.addEventListener("wsMessage", this.wsMessageListener);
+            this.addEventListener('wsMessage', this.wsMessageListener);
             await this.api.reviewConfiguration(wsClientId, this.agentInputData);
             // Proceed with your logic
         }
         catch (error) {
-            console.error("WebSocket connection failed:", error);
-            this.removeListener("wsMessage", this.wsMessageListener);
+            console.error('WebSocket connection failed:', error);
+            this.removeListener('wsMessage', this.wsMessageListener);
         }
     }
     async createAgent() {
         this.isCreatingAgent = true;
         const agentSeed = this.agentInputData;
-        if (TESTING && this.$$("#context").value == "") {
+        if (TESTING && this.$$('#context').value == '') {
             agentSeed.context =
-                "We are a software company with a product we have as as service";
-            agentSeed.undesirableEffects = ["End users are unhappy with the service"];
+                'We are a software company with a product we have as as service';
+            agentSeed.undesirableEffects = ['End users are unhappy with the service'];
         }
         //this.currentAgent = await this.api.createAgent(agentSeed);
         this.updatePath();
@@ -570,13 +759,14 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
       <md-outlined-button
         @click="${this.reviewAgentConfiguration}"
         ?hidden="${!this.AIConfigReview || this.currentAgent != undefined}"
-        >${this.t("Review CRT again")}<md-icon slot="icon"
+        >${this.t('Review CRT again')}<md-icon slot="icon"
           >rate_review</md-icon
         ></md-outlined-button
       >
       <md-filled-button
         @click="${this.reviewAgentConfiguration}"
-        ?hidden="${this.AIConfigReview != undefined || this.currentAgent != undefined}"
+        ?hidden="${this.AIConfigReview != undefined ||
+            this.currentAgent != undefined}"
         ?disabled="${this.isReviewingAgent}"
         >${this.t('Review CRT')}<md-icon slot="icon"
           >rate_review</md-icon
@@ -635,7 +825,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
             <md-outlined-button
               @click="${this.clearForNew}"
               ?hidden="${!this.currentAgent}"
-              >${this.t("Create New Agent")}<md-icon slot="icon"
+              >${this.t('Create New Agent')}<md-icon slot="icon"
                 >rate_review</md-icon
               ></md-outlined-button
             >
@@ -644,9 +834,10 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
 
             <md-filled-button
               @click="${this.createAgent}"
-              ?hidden="${!this.AIConfigReview || this.currentAgent != undefined}"
+              ?hidden="${!this.AIConfigReview ||
+            this.currentAgent != undefined}"
               ?disabled="${this.isReviewingAgent}"
-              >${this.t("Create CRT")}<md-icon slot="icon"
+              >${this.t('Create CRT')}<md-icon slot="icon"
                 >send</md-icon
               ></md-filled-button
             >
@@ -683,16 +874,16 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         // Get the node from the tree recursively
         // Find the node recursively
         /* const node = this.findNodeRecursively(this.currentAgent?.nodes || [], parentNodeId);
-         if (!node) {
-           console.error(`Could not find node ${parentNodeId}`);
-           console.error(JSON.stringify(this.currentAgent, null, 2));
-           return;
-         }
-         this.nodeToAddCauseTo = node;
-         (this.$$("#addCauseDialog") as MdDialog).show();*/
+        if (!node) {
+          console.error(`Could not find node ${parentNodeId}`);
+          console.error(JSON.stringify(this.currentAgent, null, 2));
+          return;
+        }
+        this.nodeToAddCauseTo = node;
+        (this.$$("#addCauseDialog") as MdDialog).show();*/
     }
     closeAddCauseDialog() {
-        this.$$("#addCauseDialog").close();
+        this.$$('#addCauseDialog').close();
         this.nodeToAddCauseTo = undefined;
     }
     renderAddCauseDialog() {
@@ -702,14 +893,14 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         style="max-width: 800px;max-height: 90vh;"
         @closed="${this.closeAddCauseDialog}"
       >
-        <div slot="headline">${ /*this.nodeToAddCauseTo?.description*/""}</div>
+        <div slot="headline">${ /*this.nodeToAddCauseTo?.description*/''}</div>
         <div slot="content" class="chatContainer">
           ${this.nodeToAddCauseTo
             ? html `
                 <ltp-chat-assistant
                   .nodeToAddCauseTo="${this.nodeToAddCauseTo}"
                   method="dialog"
-                  .textInputLabel="${this.t("Enter sufficent direct causes to the effect")}"
+                  .textInputLabel="${this.t('Enter sufficent direct causes to the effect')}"
                   .agentData="${this.currentAgent}"
                   @close="${this.closeAddCauseDialog}"
                 >
@@ -729,8 +920,8 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         ${this.renderAddCauseDialog()} ${this.renderEditNodeDialog()}
         ${this.renderDeleteConfirmationDialog()}
         <ps-operations-view
-            .currentAgent="${this.currentAgent}"
-          ></ps-operations-view>
+          .currentAgent="${this.currentAgent}"
+        ></ps-operations-view>
       `);
         }
     }
@@ -772,13 +963,13 @@ __decorate([
     property({ type: Boolean })
 ], PsOperationsManager.prototype, "isCreatingAgent", void 0);
 __decorate([
-    query("ps-operations-view")
+    query('ps-operations-view')
 ], PsOperationsManager.prototype, "agentElement", void 0);
 __decorate([
     property({ type: Object })
 ], PsOperationsManager.prototype, "nodeToAddCauseTo", void 0);
 PsOperationsManager = __decorate([
-    customElement("ps-operations-manager")
+    customElement('ps-operations-manager')
 ], PsOperationsManager);
 export { PsOperationsManager };
 //# sourceMappingURL=ps-operations-manager.js.map
