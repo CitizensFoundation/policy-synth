@@ -181,7 +181,7 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
                       this.fire('open-add-cause-dialog', {
                         parentNodeId: this.nodeId,
                       })}"
-                    ><md-icon>play_arrow</md-icon></md-outlined-icon-button
+                    ><md-icon>${this.agent.id==2 ? `pause` : `play_arrow`}</md-icon></md-outlined-icon-button
                   >
                 `}
           </div>

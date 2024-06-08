@@ -735,12 +735,16 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         ${this.renderDeleteConfirmationDialog()}
         <md-tabs id="tabBar" @change="${this.tabChanged}">
           <md-primary-tab id="configure-tab" aria-controls="configure-panel">
-            <md-icon slot="icon">psychology</md-icon>
+            <md-icon slot="icon">support_agent</md-icon>
             ${this.t('Agents Operations')}
           </md-primary-tab>
           <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
             <md-icon slot="icon">checklist</md-icon>
             ${this.t('Audit Log')}
+          </md-primary-tab>
+          <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
+            <md-icon slot="icon">account_balance</md-icon>
+            ${this.t('API Costs')}
           </md-primary-tab>
         </md-tabs>
         <ps-operations-view

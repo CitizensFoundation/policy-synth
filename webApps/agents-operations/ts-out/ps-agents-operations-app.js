@@ -45,8 +45,8 @@ let PsAgentOperationsWebApp = class PsAgentOperationsWebApp extends YpBaseElemen
         this.totalNumberOfVotes = 0;
         this.showAllCosts = false;
         this.collectionType = 'domain';
-        this.localStorageThemeColorKey = 'md3-agents-ops-theme-color-v5';
-        this.themeColor = '#27b1cb';
+        this.localStorageThemeColorKey = 'md3-agents-ops-theme-color-v15';
+        this.themeColor = '#97a1ff';
         this.themePrimaryColor = '#000000';
         this.themeSecondaryColor = '#000000';
         this.themeTertiaryColor = '#000000';
@@ -174,6 +174,9 @@ let PsAgentOperationsWebApp = class PsAgentOperationsWebApp extends YpBaseElemen
             this.fireGlobal('yp-theme-color', savedColor);
         }
         this.setupTheme();
+        setTimeout(() => {
+            //this.themeDarkMode = true;
+        }, 1000);
     }
     async boot() {
         window.psAppGlobals.activity('Boot - fetch start');

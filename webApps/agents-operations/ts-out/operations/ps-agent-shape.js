@@ -30,6 +30,9 @@ export class AgentsShapeView extends dia.ElementView {
         >
      </ps-agent-node>`;
                 div.className = 'agentContainer';
+                if (this.model.attributes.agentId == "2") {
+                    div.className += ' agentContainerRunning';
+                }
             }
             else {
                 div.innerHTML = `<ps-connector-node

@@ -276,7 +276,7 @@ export class PsOperationsView extends YpBaseElement {
       myShapeGroup: {
         AgentsShapeView,
         AgentShape,
-        ConnectorShape
+        ConnectorShape,
       },
       standard: {
         Rectangle: shapes.standard.Rectangle,
@@ -442,7 +442,9 @@ export class PsOperationsView extends YpBaseElement {
     return el;
   }
 
-  createConnectorElement(connector: PsAgentConnectorInstance): dia.Element | null {
+  createConnectorElement(
+    connector: PsAgentConnectorInstance
+  ): dia.Element | null {
     if (this.elements[this.getUniqueConnectorId(connector)]) {
       return null; // Skip if the connector already exists
     }
@@ -484,17 +486,13 @@ export class PsOperationsView extends YpBaseElement {
         const el = this.createAgentElement(subAgent);
         this.elements[this.getUniqueAgentId(subAgent)] = el;
         renderedNodes.add(this.getUniqueAgentId(subAgent));
-        if (
-          subAgent.connectors &&
-          subAgent.connectors.length > 0
-        ) {
+        if (subAgent.connectors && subAgent.connectors.length > 0) {
           subAgent.connectors.forEach(connector => {
             const el = this.createConnectorElement(connector);
             this.elements[this.getUniqueConnectorId(connector)] = el;
             renderedNodes.add(this.getUniqueConnectorId(connector));
           });
         }
-
       });
     }
 
@@ -622,7 +620,7 @@ export class PsOperationsView extends YpBaseElement {
   }
 
   addNodes(parentNodeId: string, nodes: LtpCurrentRealityTreeDataNode[]): void {
- /*
+    /*
       const newNode = this.createElement(nodeData);
       this.elements[nodeData.id] = newNode;
       this.createLink(parentNode, newNode);
@@ -643,7 +641,6 @@ export class PsOperationsView extends YpBaseElement {
     return [
       super.styles,
       css`
-
         .agentHeaderImage {
           max-width: 72px;
           border-radius: 16px;
@@ -656,8 +653,20 @@ export class PsOperationsView extends YpBaseElement {
           margin-right: 16px;
         }
 
+        .agentHeader {
+          margin-left: 16px;
+        }
+
         .mainAgentPlayButton {
           margin-right: 10px;
+        }
+
+        .navControls {
+          margin-right: 16px;
+        }
+
+        .masterPlayConfigButtons {
+          margin-left: 16px;
         }
 
         .agentContainer {
@@ -667,6 +676,12 @@ export class PsOperationsView extends YpBaseElement {
           padding: 0;
         }
 
+        .agentContainerRunning {
+          color: var(--md-sys-color-on-tertiary-container);
+          background-color: var(--md-sys-color-tertiary-container);
+          border-radius: 16px;
+          padding: 0;
+        }
 
         .connectorContainer {
           color: var(--md-sys-color-on-secondary-container);
@@ -674,7 +689,6 @@ export class PsOperationsView extends YpBaseElement {
           border-radius: 16px;
           padding: 0;
         }
-
 
         /* Define your component styles here */
         .jointJSCanvas {
@@ -793,49 +807,56 @@ export class PsOperationsView extends YpBaseElement {
     return html`
       <div class="controlPanelContainer"></div>
       <div class="controlPanel">
-        <md-filled-tonal-icon-button @click="${this.zoomIn}" class="firstButton"
-          ><md-icon>zoom_in</md-icon></md-filled-tonal-icon-button
-        >
-        <md-filled-tonal-icon-button @click="${this.zoomOut}"
-          ><md-icon>zoom_out</md-icon></md-filled-tonal-icon-button
-        >
-        <md-filled-tonal-icon-button @click="${this.resetZoom}"
-          ><md-icon>center_focus_strong</md-icon></md-filled-tonal-icon-button
-        >
-        <md-filled-tonal-icon-button @click="${this.updatePaperSize}"
-          ><md-icon>zoom_out_map</md-icon></md-filled-tonal-icon-button
-        >
+        <div class="masterPlayConfigButtons">
+          <md-outlined-icon-button
+            class="mainAgentPlayButton"
+            @click="${() => this.pan('left')}"
+            ><md-icon>play_arrow</md-icon></md-outlined-icon-button
+          >
+
+          <md-icon-button @click="${() => this.pan('left')}"
+            ><md-icon>settings</md-icon></md-icon-button
+          >
+        </div>
 
         <div class="flex"></div>
 
         ${this.renderHeader()}
 
-        <md-outlined-icon-button class="mainAgentPlayButton" @click="${() => this.pan('left')}"
-          ><md-icon>play_arrow</md-icon></md-outlined-icon-button
-        >
-
-        <md-icon-button @click="${() => this.pan('left')}"
-          ><md-icon>settings</md-icon></md-icon-button
-        >
-
         <div class="flex"></div>
 
-        <md-icon-button @click="${() => this.pan('left')}"
-          ><md-icon>arrow_back</md-icon></md-icon-button
-        >
+        <div class="navControls">
+          <md-icon-button @click="${this.zoomIn}" class="firstButton"
+            ><md-icon>zoom_in</md-icon></md-icon-button
+          >
+          <md-icon-button @click="${this.zoomOut}"
+            ><md-icon>zoom_out</md-icon></md-icon-button
+          >
+          <md-icon-button @click="${this.resetZoom}"
+            ><md-icon>center_focus_strong</md-icon></md-icon-button
+          >
+          <md-icon-button @click="${this.updatePaperSize}"
+            ><md-icon>zoom_out_map</md-icon></md-icon-button
+          >
+        </div>
 
-        <md-icon-button @click="${() => this.pan('up')}"
-          ><md-icon>arrow_upward</md-icon></md-icon-button
-        >
+        <div hidden>
+          <md-icon-button @click="${() => this.pan('left')}"
+            ><md-icon>arrow_back</md-icon></md-icon-button
+          >
 
-        <md-icon-button @click="${() => this.pan('down')}"
-          ><md-icon>arrow_downward</md-icon></md-icon-button
-        >
+          <md-icon-button @click="${() => this.pan('up')}"
+            ><md-icon>arrow_upward</md-icon></md-icon-button
+          >
 
-        <md-icon-button @click="${() => this.pan('right')}" class="lastButton"
-          ><md-icon>arrow_forward</md-icon></md-icon-button
-        >
-        <div class="flex"></div>
+          <md-icon-button @click="${() => this.pan('down')}"
+            ><md-icon>arrow_downward</md-icon></md-icon-button
+          >
+
+          <md-icon-button @click="${() => this.pan('right')}" class="lastButton"
+            ><md-icon>arrow_forward</md-icon></md-icon-button
+          >
+        </div>
       </div>
       <div class="jointJSCanvas" id="paper-container"></div>
     `;
