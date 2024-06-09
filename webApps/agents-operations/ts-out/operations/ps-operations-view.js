@@ -122,6 +122,38 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
             this.zoom(2, centerX, centerY);
         }
     }
+    createLink(source, target) {
+        if (!source || !target) {
+            console.error(`source or target is null ${source} ${target}`);
+            return null;
+        }
+        const link = new shapes.standard.Link({
+            source: { id: source.id },
+            target: { id: target.id },
+            attrs: {
+                '.connection': {
+                    stroke: 'var(--md-sys-color-on-surface)',
+                    'stroke-width': 2,
+                },
+                '.marker-target': {
+                    fill: 'var(--md-sys-color-on-surface)',
+                    d: 'M 10 -5 L 0 0 L 10 5 z',
+                    'ref-x': 0.5,
+                    'ref-y': 0,
+                },
+            },
+            z: 1,
+            router: {
+                name: 'orthogonal',
+                args: {
+                    startDirections: ['top'],
+                    endDirections: ['bottom'],
+                },
+            },
+            connector: { name: 'rounded' },
+        });
+        return link;
+    }
     async initializeJointJS() {
         const paperContainer = this.shadowRoot?.getElementById('paper-container');
         if (!paperContainer) {
@@ -351,26 +383,39 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         el.addTo(this.graph);
         return el;
     }
-    createConnectorElement(connector) {
+    createConnectorElement(connector, sourceAgent) {
+        let sourceElement = this.elements[this.getUniqueAgentId(sourceAgent)];
+        let targetElement;
+        let el;
         if (this.elements[this.getUniqueConnectorId(connector)]) {
-            return null; // Skip if the connector already exists
+            targetElement = this.elements[this.getUniqueConnectorId(connector)];
         }
-        //@ts-ignore
-        const el = new ConnectorShape({
-            position: {
-                x: connector.graphPosX || Math.random() * 600,
-                y: connector.graphPosY || Math.random() * 400,
-            },
-            label: connector.class.description,
-            text: connector.class.description,
-            connectorId: connector.id,
-            nodeType: 'connector',
-            attrs: {
-            //cause: node.description,
-            },
-            type: 'html.Element',
-        });
-        el.addTo(this.graph);
+        else {
+            // Create a new ConnectorShape element
+            el = new ConnectorShape({
+                position: {
+                    x: connector.graphPosX || Math.random() * 600,
+                    y: connector.graphPosY || Math.random() * 400,
+                },
+                label: connector.class.description,
+                text: connector.class.description,
+                connectorId: connector.id,
+                nodeType: 'connector',
+                attrs: {
+                //cause: node.description,
+                },
+                type: 'html.Element',
+            });
+            el.addTo(this.graph);
+            targetElement = el;
+        }
+        if (sourceElement && targetElement) {
+            const link = this.createLink(sourceElement, targetElement);
+            link.addTo(this.graph);
+        }
+        else {
+            console.warn('Source or target element not found');
+        }
         return el;
     }
     getUniqueConnectorId(connector) {
@@ -391,7 +436,7 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
                 renderedNodes.add(this.getUniqueAgentId(subAgent));
                 if (subAgent.connectors && subAgent.connectors.length > 0) {
                     subAgent.connectors.forEach(connector => {
-                        const el = this.createConnectorElement(connector);
+                        const el = this.createConnectorElement(connector, subAgent);
                         this.elements[this.getUniqueConnectorId(connector)] = el;
                         renderedNodes.add(this.getUniqueConnectorId(connector));
                     });
@@ -401,83 +446,17 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         if (this.currentAgent.connectors &&
             this.currentAgent.connectors.length > 0) {
             this.currentAgent.connectors.forEach(connector => {
-                const el = this.createConnectorElement(connector);
+                const el = this.createConnectorElement(connector, this.currentAgent);
                 this.elements[this.getUniqueConnectorId(connector)] = el;
                 renderedNodes.add(this.getUniqueConnectorId(connector));
             });
         }
-        // Create links between nodes and their children
-        /*const createLinks = (sourceId: string, children: LtpCurrentRealityTreeDataNode[]) => {
-          children.forEach((childNode) => {
-            const targetElement = this.elements[childNode.id];
-            if (!targetElement) {
-              console.error(`Target element not found for node ID: ${childNode.id}`);
-              return;
-            }
-    
-            // Create a link only if it doesn't already exist to avoid duplicates
-            if (!this.graph.getCell(childNode.id)) {
-              this.createLink(this.elements[sourceId], targetElement);
-            }
-    
-            if (childNode.children) {
-              createLinks(childNode.id, childNode.children); // Recursive call
-            }
-          });
-        };
-    
-        // Process each node in the CRT data
-        crtData.nodes.forEach((node) => {
-          createNodes(node); // Create node elements
-        });
-    
-        crtData.nodes.forEach((node) => {
-          if (node.children) {
-            createLinks(node.id, node.children); // Create links
-          }
-        });*/
-        // Apply layout and update paper size after processing nodes and links
         setTimeout(() => {
             this.applyDirectedGraphLayout();
             this.updatePaperSize();
         });
     }
     // Function to create a link/edge
-    createLink(source, target) {
-        if (!source || !target) {
-            console.error(`source or target is null ${source} ${target}`);
-            //@ts-ignore
-            return;
-        }
-        const l = new shapes.standard.Link({
-            source: { id: target.id },
-            target: { id: source.id },
-            attrs: {
-                '.connection': {
-                    stroke: 'var(--md-sys-color-on-surface)',
-                    'stroke-width': 2,
-                },
-                '.marker-target': {
-                    fill: 'var(--md-sys-color-on-surface)',
-                    d: 'M 10 -5 L 0 0 L 10 5 z',
-                    // Make sure the marker is at the start of the path (bottom of the source)
-                    'ref-x': 0.5,
-                    'ref-y': 0,
-                },
-            },
-            z: 1,
-            router: {
-                name: 'orthogonal',
-                args: {
-                    startDirections: ['top'],
-                    endDirections: ['bottom'],
-                },
-            },
-            connector: { name: 'rounded' },
-        });
-        this.graph.addCell(l);
-        return l;
-    }
     selectElement(el) {
         debugger;
         // Deselect the current selection if any
@@ -548,7 +527,9 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         }
 
         .mainAgentStopButton {
-          --md-filled-icon-button-selected-container-color: var(--md-sys-color-error);
+          --md-filled-icon-button-selected-container-color: var(
+            --md-sys-color-error
+          );
         }
 
         .navControls {
@@ -693,16 +674,17 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
       <div class="controlPanelContainer"></div>
       <div class="controlPanel">
         <div class="masterPlayConfigButtons">
-          ${true ? html `<md-filled-icon-button
-            class="mainAgentStopButton"
-            @click="${() => this.pan('left')}"
-            ><md-icon>stop</md-icon></md-filled-icon-button
-          >` : html `<md-outlined-icon-button
-            class="mainAgentPlayButton"
-            @click="${() => this.pan('left')}"
-            ><md-icon>play_arrow</md-icon></md-outlined-icon-button
-          >`}
-
+          ${true
+            ? html `<md-filled-icon-button
+                class="mainAgentStopButton"
+                @click="${() => this.pan('left')}"
+                ><md-icon>stop</md-icon></md-filled-icon-button
+              >`
+            : html `<md-outlined-icon-button
+                class="mainAgentPlayButton"
+                @click="${() => this.pan('left')}"
+                ><md-icon>play_arrow</md-icon></md-outlined-icon-button
+              >`}
 
           <md-icon-button @click="${() => this.pan('left')}"
             ><md-icon>settings</md-icon></md-icon-button

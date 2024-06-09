@@ -31,16 +31,16 @@ export declare class PsOperationsView extends YpBaseElement {
     disconnectedCallback(): void;
     private handleNodeDoubleClick;
     jointNamespace: {};
+    private createLink;
     private initializeJointJS;
     private applyDirectedGraphLayout;
     private centerParentNodeOnScreen;
     private updatePaperSize;
     createAgentElement(agent: PsAgentInstance): dia.Element;
-    createConnectorElement(connector: PsAgentConnectorInstance): dia.Element | null;
+    createConnectorElement(connector: PsAgentConnectorInstance, sourceAgent: PsAgentInstance): dia.Element | null;
     getUniqueConnectorId(connector: PsAgentConnectorInstance): string;
     getUniqueAgentId(agent: PsAgentInstance): string;
     updateGraphWithAgentData(): void;
-    private createLink;
     private selectElement;
     private highlightCell;
     private unhighlightCell;
