@@ -27,6 +27,7 @@ import { OpsServerApi } from './OpsServerApi.js';
 import './chat/agent-chat-assistant.js';
 import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
+import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
 const TESTING = false;
 const nodeTypes = [
     'ude',
@@ -52,6 +53,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.setupTestData();
     }
     setupTestData() {
+        // Hard-coded data
     }
     async connectedCallback() {
         super.connectedCallback();
@@ -63,7 +65,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.addEventListener('edit-node', this.openEditNodeDialog);
     }
     openEditNodeDialog(event) {
-        this.nodeToEditInfo = event.detail;
+        this.nodeToEditInfo = event.detail.element;
         this.currentlySelectedCauseIdToAddAsChild = undefined;
         /*this.nodeToEdit = this.findNodeRecursively(
           this.currentAgent?.subAgents || [],
@@ -84,6 +86,18 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
           this.agentElement!.getAllCausesExcept(childrenIds);*/
         this.$$('#editNodeDialog').show();
     }
+    saveAnswers() {
+        const answers = [];
+        this.liveQuestionIds.forEach(liveIndex => {
+            const questionElement = this.$$('#structuredQuestionContainer_' + liveIndex);
+            if (questionElement) {
+                const answer = questionElement.getAnswer();
+                if (answer)
+                    answers.push(answer);
+            }
+        });
+        this.nodeToEditInfo.configuration = answers;
+    }
     closeEditNodeDialog() {
         this.$$('#editNodeDialog').close();
         this.nodeToEdit = undefined;
@@ -94,37 +108,28 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.currentlySelectedCauseIdToAddAsChild = effectIdSelect.value;
     }
     async handleSaveEditNode() {
-        const updatedDescription = this.$$('#nodeDescription').value;
-        // Retrieve the selected node type from md-select
-        const nodeTypeSelect = this.$$('#nodeTypeSelect');
-        const selectedNodeType = nodeTypeSelect.value;
-        if (this.nodeToEdit) {
-            //this.nodeToEdit.description = updatedDescription;
-            // Update the node type if one is selected
-            if (selectedNodeType) {
-                //this.nodeToEdit.type = selectedNodeType as AgentNodeType;
+        this.saveAnswers();
+        this.closeEditNodeDialog();
+        if (this.currentAgentId) {
+            try {
+                await this.api.updateNode(this.currentAgentId, this.nodeToEdit);
+                // Update the node in the agent object
+                /*const nodeToUpdate = this.findNodeRecursively(
+                    this.currentAgent?.subAgents || [],
+                    this.nodeToEdit.id
+                  );
+                  if (nodeToUpdate) {
+                    nodeToUpdate.description = updatedDescription;
+                    if (selectedNodeType) {
+                      nodeToUpdate.type = selectedNodeType as AgentNodeType;
+                    }
+                  }*/
+                this.closeEditNodeDialog();
+                //TODO: Do this with less brute force, actually update the element
+                this.currentAgent = { ...this.currentAgent };
             }
-            if (this.currentAgentId) {
-                try {
-                    await this.api.updateNode(this.currentAgentId, this.nodeToEdit);
-                    // Update the node in the agent object
-                    /*const nodeToUpdate = this.findNodeRecursively(
-                      this.currentAgent?.subAgents || [],
-                      this.nodeToEdit.id
-                    );
-                    if (nodeToUpdate) {
-                      nodeToUpdate.description = updatedDescription;
-                      if (selectedNodeType) {
-                        nodeToUpdate.type = selectedNodeType as AgentNodeType;
-                      }
-                    }*/
-                    this.closeEditNodeDialog();
-                    //TODO: Do this with less brute force, actually update the element
-                    this.currentAgent = { ...this.currentAgent };
-                }
-                catch (error) {
-                    console.error('Error updating node:', error);
-                }
+            catch (error) {
+                console.error('Error updating node:', error);
             }
         }
     }
@@ -189,14 +194,18 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
       </md-dialog>
     `;
     }
+    _saveNodeEditState(event) { }
     renderEditNodeDialog() {
+        const initiallyLoadedAnswers = [];
         return html `
       <md-dialog
         id="editNodeDialog"
-        style="max-width: 800px; max-height: 90vh;"
+        style="width: 800px; max-height: 90vh;"
         @closed="${this.closeEditNodeDialog}"
       >
-        <div slot="headline">Edit Node</div>
+        <div slot="headline">
+          ${this.nodeToEditInfo ? this.nodeToEditInfo.class.name : ''}
+        </div>
         <div
           slot="content"
           id="editNodeForm"
@@ -205,73 +214,24 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         >
           ${this.nodeToEditInfo
             ? html `
-                <md-outlined-text-field
-                  label="Description"
-                  .value="${ /*this.nodeToEdit?.description*/''}"
-                  id="nodeDescription"
-                ></md-outlined-text-field>
-                <md-outlined-select
-                  menuPositioning="fixed"
-                  label="Node Type"
-                  id="nodeTypeSelect"
-                >
-                  ${nodeTypes
-                .filter(type => type !== undefined)
-                .map(type => html `
-                        <md-select-option
-                          value="${type}"
-                          ?selected="${
-            /*this.nodeToEditInfo!.element.agentNodeType == type*/ 0}"
-                        >
-                          <div slot="headline">
-                            ${this.camelCaseToHumanReadable(type)}
-                          </div>
-                        </md-select-option>
-                      `)}
-                </md-outlined-select>
-                <div class="flex"></div>
-
-                <div class="childEditing">
-                  <div class="layout horizontal">
-                    <md-outlined-select
-                      menuPositioning="fixed"
-                      label="Add as Effect to"
-                      id="addEffectToNodeId"
-                      @change="${this.addChildChanged}"
-                    >
-                      ${this.allCausesExceptCurrentToEdit.map(node => html `
-                          <md-select-option value="${node.id}">
-                            <div slot="headline">
-                              ${ /*node.description*/''}
-                            </div>
-                          </md-select-option>
-                        `)}
-                    </md-outlined-select>
-                    ${this.currentlySelectedCauseIdToAddAsChild
-                ? html `
-                          <md-text-button class="addButton">
-                            Add as an Effect
-                          </md-text-button>
-                        `
-                : nothing}
-                  </div>
-
-                  <div class="flex"></div>
-
-                  <div class="layout horizontal center-center">
-                    <md-text-button
-                      class="automaticCreateButton"
-                      @click="${this.createDirectCauses}"
-                    >
-                      Automatically create nodes (for testing)
-                    </md-text-button>
-                  </div>
+                <div id="surveyContainer">
+                  ${this.nodeToEditInfo.class.configurationQuestions.map((question, index) => html `
+                      <yp-structured-question-edit
+                        index="${index}"
+                        id="structuredQuestionContainer_${index}"
+                        .structuredAnswers="${initiallyLoadedAnswers}"
+                        @changed="${this._saveNodeEditState}"
+                        .question="${question}"
+                      >
+                      </yp-structured-question-edit>
+                    `)}
                 </div>
               `
             : nothing}
         </div>
         <div slot="actions">
           <md-text-button
+            hidden
             @click="${this.handleDeleteNode}"
             class="deleteButton"
           >
@@ -331,10 +291,9 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         return [
             super.styles,
             css `
-
-      md-tabs {
-        margin-bottom: 64px;
-      }
+        md-tabs {
+          margin-bottom: 64px;
+        }
 
         .childEditing {
           color: var(--md-sys-color-on-surface-variant);

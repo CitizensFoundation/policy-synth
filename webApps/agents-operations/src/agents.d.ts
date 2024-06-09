@@ -41,7 +41,7 @@ interface PsBaseNodeInstance {
   user: YpUserData;
   group: YpGroupData;
   costs: PsInstanceCost[];
-  configurationAnswers: YpStructuredAnswer[];
+  configuration: YpStructuredAnswer[];
   graphPosX: number;
   graphPosY: number;
 }
@@ -59,7 +59,6 @@ interface PsAgentInstance extends PsBaseNodeInstance {
 interface PsAgentConnectorInstance extends PsBaseNodeInstance {
   class: PsAgentConnectorClass;
   permissionNeeded: PsAgentConnectorPermissionTypes;
-  configurationAnswers: YpStructuredAnswer[];
 }
 
 interface PsAgentRegistry {

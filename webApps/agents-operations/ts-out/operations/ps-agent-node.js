@@ -121,7 +121,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
     editNode() {
         this.fire('edit-node', {
             nodeId: this.nodeId,
-            element: this,
+            element: this.agent,
         });
     }
     toggleMenu() {

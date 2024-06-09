@@ -18,6 +18,7 @@ import './chat/agent-chat-assistant.js';
 import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
 import { PsOperationsView } from './ps-operations-view.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
+import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 export declare class PsOperationsManager extends YpBaseElement {
     currentAgentId: number | undefined;
@@ -41,6 +42,7 @@ export declare class PsOperationsManager extends YpBaseElement {
     setupTestData(): void;
     connectedCallback(): Promise<void>;
     openEditNodeDialog(event: CustomEvent): void;
+    saveAnswers(): void;
     closeEditNodeDialog(): void;
     addChildChanged(): void;
     handleSaveEditNode(): Promise<void>;
@@ -50,6 +52,7 @@ export declare class PsOperationsManager extends YpBaseElement {
     createDirectCauses(): void;
     closeDeleteConfirmationDialog(): void;
     renderDeleteConfirmationDialog(): import("lit").TemplateResult<1>;
+    _saveNodeEditState(event: CustomEvent): void;
     renderEditNodeDialog(): import("lit").TemplateResult<1>;
     updatePath(): void;
     fetchCurrentAgent(): Promise<void>;

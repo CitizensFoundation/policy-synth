@@ -79,7 +79,7 @@ export class PsAgentConnector extends PsOperationsBaseNode {
   editNode() {
     this.fire('edit-node', {
       nodeId: this.nodeId,
-      element: this,
+      element: this.connector,
     });
   }
 
