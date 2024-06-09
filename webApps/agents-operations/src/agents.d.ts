@@ -41,7 +41,7 @@ interface PsBaseNodeInstance {
   user: YpUserData;
   group: YpGroupData;
   costs: PsInstanceCost[];
-  configuration: YpStructuredAnswer[];
+  configuration: Record<string, YpStructuredAnswer>;
   graphPosX: number;
   graphPosY: number;
 }

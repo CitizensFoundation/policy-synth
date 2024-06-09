@@ -40,14 +40,8 @@ import { YpStructuredQuestionEdit } from '@yrpri/webapp/yp-survey/yp-structured-
 const TESTING = false;
 
 const nodeTypes = [
-  'ude',
-  'directCause',
-  'assumption',
-  'intermediateCause',
-  'rootCause',
-  'and',
-  'xor',
-  'mag',
+  'agent',
+  'connector'
 ];
 
 @customElement('ps-operations-manager')
@@ -160,16 +154,22 @@ export class PsOperationsManager extends YpBaseElement {
   }
 
   saveAnswers() {
-    const answers: Array<YpStructuredAnswer> = [];
-    this.liveQuestionIds.forEach(liveIndex => {
+    const answers: Record<string, YpStructuredAnswer> = {};
+    for (
+      let a = 0;
+      a < this.nodeToEditInfo.class.configurationQuestions.length;
+      a++
+    ) {
       const questionElement = this.$$(
-        '#structuredQuestionContainer_' + liveIndex
+        '#structuredQuestion_' + a
       ) as YpStructuredQuestionEdit;
       if (questionElement) {
         const answer = questionElement.getAnswer();
-        if (answer) answers.push(answer);
+        if (answer && questionElement.question.uniqueId) {
+          answers[questionElement.question.uniqueId] = answer;
+        }
       }
-    });
+    }
     this.nodeToEditInfo.configuration = answers;
   }
 
@@ -281,8 +281,32 @@ export class PsOperationsManager extends YpBaseElement {
 
   _saveNodeEditState(event: CustomEvent) {}
 
+  renderNodeEditHeadline() {
+    return html`
+      <div class="layout horizontal">
+        <div>
+          <img
+            src="${this.nodeToEditInfo.class.imageUrl}"
+            class="nodeEditHeadlineImage"
+          />
+        </div>
+        <div class="nodeEditHeadlineTitle">
+          ${this.nodeToEditInfo.class.name}
+        </div>
+      </div>
+    `;
+  }
+
   renderEditNodeDialog() {
-    const initiallyLoadedAnswers = [] as any;
+    let initiallyLoadedAnswers = [] as any;
+
+    if (this.nodeToEditInfo) {
+      // convert this.nodeToEditInfo.configuration object to array only with the values
+      initiallyLoadedAnswers = Object.values(
+        this.nodeToEditInfo.configuration
+      );
+    }
+
     return html`
       <md-dialog
         id="editNodeDialog"
@@ -290,7 +314,7 @@ export class PsOperationsManager extends YpBaseElement {
         @closed="${this.closeEditNodeDialog}"
       >
         <div slot="headline">
-          ${this.nodeToEditInfo ? this.nodeToEditInfo.class.name : ''}
+          ${this.nodeToEditInfo ? this.renderNodeEditHeadline() : ''}
         </div>
         <div
           slot="content"
@@ -305,7 +329,7 @@ export class PsOperationsManager extends YpBaseElement {
                     (question, index) => html`
                       <yp-structured-question-edit
                         index="${index}"
-                        id="structuredQuestionContainer_${index}"
+                        id="structuredQuestion_${question.uniqueId ? index : `noId_${index}`}"
                         .structuredAnswers="${initiallyLoadedAnswers}"
                         @changed="${this._saveNodeEditState}"
                         .question="${question}"
@@ -400,6 +424,18 @@ export class PsOperationsManager extends YpBaseElement {
       css`
         md-tabs {
           margin-bottom: 64px;
+        }
+
+        .nodeEditHeadlineImage {
+          max-width: 100px;
+          margin-right: 16px;
+        }
+
+        .nodeEditHeadlineTitle {
+          display: flex;
+          align-items: center;
+          justify-content: center; /* This will also center the content horizontally */
+          height: 55px; /* Make sure this element has a defined height */
         }
 
         .childEditing {

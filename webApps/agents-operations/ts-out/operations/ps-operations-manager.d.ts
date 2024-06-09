@@ -53,6 +53,7 @@ export declare class PsOperationsManager extends YpBaseElement {
     closeDeleteConfirmationDialog(): void;
     renderDeleteConfirmationDialog(): import("lit").TemplateResult<1>;
     _saveNodeEditState(event: CustomEvent): void;
+    renderNodeEditHeadline(): import("lit").TemplateResult<1>;
     renderEditNodeDialog(): import("lit").TemplateResult<1>;
     updatePath(): void;
     fetchCurrentAgent(): Promise<void>;
