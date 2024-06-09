@@ -131,23 +131,21 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
             source: { id: source.id },
             target: { id: target.id },
             attrs: {
-                '.connection': {
+                line: {
                     stroke: 'var(--md-sys-color-on-surface)',
-                    'stroke-width': 2,
-                },
-                '.marker-target': {
-                    fill: 'var(--md-sys-color-on-surface)',
-                    d: 'M 10 -5 L 0 0 L 10 5 z',
-                    'ref-x': 0.5,
-                    'ref-y': 0,
+                    strokeWidth: 2,
+                    targetMarker: {
+                        type: 'path',
+                        d: 'M 10 -5 L 0 0 L 10 5 z',
+                        fill: 'var(--md-sys-color-on-surface)',
+                    },
                 },
             },
             z: 1,
             router: {
-                name: 'orthogonal',
+                name: 'manhattan',
                 args: {
-                    startDirections: ['top'],
-                    endDirections: ['bottom'],
+                    step: 20,
                 },
             },
             connector: { name: 'rounded' },
@@ -188,15 +186,12 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
             background: { color: 'var(--md-sys-color-surface)' },
             clickThreshold: 10,
             defaultConnector: {
-                name: 'normal',
-                // Add attributes for the arrowheads to point upwards
+                name: 'rounded',
             },
             defaultRouter: {
-                name: 'orthogonal',
+                name: 'manhattan',
                 args: {
-                    // Make sure the links go from bottom to top
-                    startDirections: ['bottom'],
-                    endDirections: ['top'],
+                    step: 15,
                 },
             },
         });
@@ -226,21 +221,21 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         V(paperContainer).prepend(V('style', {
             type: 'text/css',
         }).text(`
-        .joint-element .selection {
-            stroke: var(--md-sys-color-surface);
-        }
-        .joint-link .selection {
-            stroke: var(--md-sys-color-surface);
-            stroke-dasharray: 5;
-            stroke-dashoffset: 10;
-            animation: dash 0.5s infinite linear;
-        }
-        @keyframes dash {
-            to {
-                stroke-dashoffset: 0;
-            }
-        }
-      `));
+      .joint-element .selection {
+          stroke: var(--md-sys-color-surface);
+      }
+      .joint-link .selection {
+          stroke: var(--md-sys-color-surface);
+          stroke-dasharray: 5;
+          stroke-dashoffset: 10;
+          animation: dash 0.5s infinite linear;
+      }
+      @keyframes dash {
+          to {
+              stroke-dashoffset: 0;
+          }
+      }
+    `));
         Object.assign(this.jointNamespace, {
             myShapeGroup: {
                 AgentsShapeView,
@@ -533,11 +528,11 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         }
 
         .navControls {
-          margin-right: 16px;
+          margin-left: 16px;
         }
 
         .masterPlayConfigButtons {
-          margin-left: 16px;
+          margin-right: 16px;
         }
 
         .agentContainer {
@@ -673,6 +668,27 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         return html `
       <div class="controlPanelContainer"></div>
       <div class="controlPanel">
+        <div class="navControls">
+          <md-icon-button @click="${this.zoomIn}" class="firstButton"
+            ><md-icon>zoom_in</md-icon></md-icon-button
+          >
+          <md-icon-button @click="${this.zoomOut}"
+            ><md-icon>zoom_out</md-icon></md-icon-button
+          >
+          <md-icon-button @click="${this.resetZoom}"
+            ><md-icon>center_focus_strong</md-icon></md-icon-button
+          >
+          <md-icon-button @click="${this.updatePaperSize}"
+            ><md-icon>zoom_out_map</md-icon></md-icon-button
+          >
+        </div>
+
+        <div class="flex"></div>
+
+        ${this.renderHeader()}
+
+        <div class="flex"></div>
+
         <div class="masterPlayConfigButtons">
           ${true
             ? html `<md-filled-icon-button
@@ -691,26 +707,6 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
           >
         </div>
 
-        <div class="flex"></div>
-
-        ${this.renderHeader()}
-
-        <div class="flex"></div>
-
-        <div class="navControls">
-          <md-icon-button @click="${this.zoomIn}" class="firstButton"
-            ><md-icon>zoom_in</md-icon></md-icon-button
-          >
-          <md-icon-button @click="${this.zoomOut}"
-            ><md-icon>zoom_out</md-icon></md-icon-button
-          >
-          <md-icon-button @click="${this.resetZoom}"
-            ><md-icon>center_focus_strong</md-icon></md-icon-button
-          >
-          <md-icon-button @click="${this.updatePaperSize}"
-            ><md-icon>zoom_out_map</md-icon></md-icon-button
-          >
-        </div>
 
         <div hidden>
           <md-icon-button @click="${() => this.pan('left')}"
