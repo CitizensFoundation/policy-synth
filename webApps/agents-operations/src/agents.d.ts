@@ -37,11 +37,9 @@ interface PsBaseNodeInstance {
   classId: number;
   userId: number;
   groupId: number;
-  title?: string;
   user: YpUserData;
   group: YpGroupData;
   costs: PsInstanceCost[];
-  configuration: Record<string, YpStructuredAnswer>;
   graphPosX: number;
   graphPosY: number;
 }
@@ -54,11 +52,13 @@ interface PsAgentInstance extends PsBaseNodeInstance {
   parentAgent: PsAgentInstance | undefined;
   subAgents: PsAgentInstance[] | undefined;
   connectors: PsAgentConnectorInstance[] | undefined;
+  configuration: Record<string, YpStructuredAnswer>;
 }
 
 interface PsAgentConnectorInstance extends PsBaseNodeInstance {
   class: PsAgentConnectorClass;
   permissionNeeded: PsAgentConnectorPermissionTypes;
+  configuration: Record<string, YpStructuredAnswer>;
 }
 
 interface PsAgentRegistry {

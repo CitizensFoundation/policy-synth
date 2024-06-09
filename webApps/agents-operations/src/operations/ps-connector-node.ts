@@ -46,7 +46,6 @@ export class PsAgentConnector extends PsOperationsBaseNode {
         }
 
         .instanceName {
-          font-weight: bold;
           font-size: 12px;
           height: 72px;
         }
@@ -97,13 +96,14 @@ export class PsAgentConnector extends PsOperationsBaseNode {
   }
 
   override render() {
+    //TODO: Add typedefs for the different configurations
     if (this.connector) {
       return html`
         <div class="layout vertical mainContainer">
           ${this.renderImage()}
           <div class="name">${this.connector.class.name}</div>
-          ${this.connector.title
-            ? html`<div class="name instanceName">${this.connector.title}</div>`
+          ${this.connector.configuration["name"]
+            ? html`<div class="name instanceName">${this.connector.configuration["name"].value}</div>`
             : nothing}
 
           <md-icon class="typeIconCore">checklist</md-icon>

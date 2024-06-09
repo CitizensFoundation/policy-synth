@@ -45,10 +45,19 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
           border-radius: 16px 16px 0 0;
         }
 
-        .agentName {
-          height: 102px;
-          font-size: 18px;
+        .agentClassName {
+          height: 100%;
+          font-size: 16px;
           padding: 8px;
+          text-align: center;
+          align-items: center;
+        }
+
+        .agentName {
+          height: 80px;
+          font-size: 14px;
+          padding: 8px;
+          padding-top: 0;
           text-align: center;
           align-items: center;
         }
@@ -159,7 +168,8 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
       return html`
         <div class="layout vertical mainContainer">
           ${this.renderImage()}
-          <div class="agentName">${this.agent.class.name}</div>
+          <div class="agentClassName">${this.agent.class.name}</div>
+          <div class="agentName">${this.agent.configuration["name"].value}</div>
 
           <md-icon-button class="checklistButton">
             <md-icon>checklist</md-icon></md-icon-button

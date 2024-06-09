@@ -100,8 +100,6 @@ export class PsOperationsManager extends YpBaseElement {
   }
 
   setupTestData() {
-    // Hard-coded data
-
 
   }
 
