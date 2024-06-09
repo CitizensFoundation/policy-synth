@@ -363,8 +363,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         googleDocsId: '1sdfjkl3j4klj3',
         googleServiceAccount: '...',
       } as PsGoogleDocsConfiguration,
-      graphPosX: 250,
-      graphPosY: 50,
+      graphPosX: -5,
+      graphPosY: 370,
       class: googleDocsConnectorClass,
       permissionNeeded: 'read',
     };
@@ -382,8 +382,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         googleDocsId: '1sdfjkl3j4klj3',
         googleServiceAccount: '...',
       } as PsGoogleDocsConfiguration,
-      graphPosX: 250,
-      graphPosY: 150,
+      graphPosX: 230,
+      graphPosY: 540,
       class: googleSheetsConnectorClass,
       permissionNeeded: 'read',
     };
@@ -401,8 +401,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         googleDocsId: '1sdfjkl3j4klj3',
         googleServiceAccount: '...',
       } as PsGoogleDocsConfiguration,
-      graphPosX: 250,
-      graphPosY: 150,
+      graphPosX: 230,
+      graphPosY: 540+800,
       class: googleSheetsConnectorClass,
       permissionNeeded: 'read',
     };
@@ -420,8 +420,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         googleDocsId: '1sdfjkl3j4klj3',
         googleServiceAccount: '...',
       } as PsGoogleDocsConfiguration,
-      graphPosX: 250,
-      graphPosY: 150,
+      graphPosX: 230,
+      graphPosY: 1050+1050,
       class: googleSheetsConnectorClass,
       permissionNeeded: 'read',
     };
@@ -441,12 +441,12 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
       group: {} as any, // populate with relevant YpGroupData
       costs: [],
       configuration: {
-        name: 'Notifications & Remote Control',
+        name: 'Causes Notifications',
         discordBotToken: 'dasdsadsdsa',
-        discordChannelName: 'use-cases-agent',
+        discordChannelName: 'root-causes-agent',
       } as PsDiscordConfiguration,
-      graphPosX: 350,
-      graphPosY: 530,
+      graphPosX: 480,
+      graphPosY: 300,
       class: discordMarketResearchBotConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -460,12 +460,12 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
       group: {} as any, // populate with relevant YpGroupData
       costs: [],
       configuration: {
-        name: 'Notifications & Remote Control',
+        name: 'Solutions Notifications',
         discordBotToken: 'dasdsadsdsa',
         discordChannelName: 'solutions-agent',
       } as PsDiscordConfiguration,
-      graphPosX: 1,
-      graphPosY: 530,
+      graphPosX: 480,
+      graphPosY: 300+800,
       class: discordMarketResearchBotConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -483,8 +483,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         discordBotToken: 'dasdsadsdsa',
         discordChannelName: 'policies-agent',
       } as PsDiscordConfiguration,
-      graphPosX: 1,
-      graphPosY: 530,
+      graphPosX: 480,
+      graphPosY: 800+1050,
       class: discordMarketResearchBotConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -510,8 +510,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         userKey: '12345',
         groupId: '31298',
       } as PsYourPrioritiesConfiguration,
-      graphPosX: 520,
-      graphPosY: 530,
+      graphPosX: -5,
+      graphPosY: 230+800,
       class: yourPrioritiesConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -530,8 +530,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         userKey: '12345',
         groupId: '31299',
       } as PsYourPrioritiesConfiguration,
-      graphPosX: 170,
-      graphPosY: 530,
+      graphPosX: -10,
+      graphPosY: 750+1050,
       class: yourPrioritiesConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -550,8 +550,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         userKey: '12345',
         groupId: '31299',
       } as PsYourPrioritiesConfiguration,
-      graphPosX: 170,
-      graphPosY: 530,
+      graphPosX: 230,
+      graphPosY: 780,
       class: allOurIdeasConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -570,8 +570,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         userKey: '12345',
         groupId: '31299',
       } as PsYourPrioritiesConfiguration,
-      graphPosX: 170,
-      graphPosY: 530,
+      graphPosX: 230,
+      graphPosY: 780+800,
       class: allOurIdeasConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -590,8 +590,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         userKey: '12345',
         groupId: '31299',
       } as PsYourPrioritiesConfiguration,
-      graphPosX: 170,
-      graphPosY: 530,
+      graphPosX: 230,
+      graphPosY: 1280+1050,
       class: allOurIdeasConnectorClass,
       permissionNeeded: 'readWrite',
     };
@@ -617,7 +617,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         percentToUseSearchQueries: 50,
         percentToUseSearchResults: 50,
       } as PsCompetitorsResearchConfiguration,
-      graphPosX: 50,
+      graphPosX: 200,
       graphPosY: 250,
       class: rootCausesSubAgentClass,
       parentAgentId: 1,
@@ -652,8 +652,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         percentToUseSearchQueries: 50,
         percentToUseSearchResults: 50,
       } as PsUseCaseResearchConfiguration,
-      graphPosX: 400,
-      graphPosY: 250,
+      graphPosX: 200,
+      graphPosY: 250+800,
       class: solutionsSubAgentClass,
       parentAgentId: 1,
       parentAgent: undefined,
@@ -663,7 +663,6 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         connectorDiscordSolutions,
         connectorYourPrioritiesSolutions,
         connectorAllOurIdeasSolutions,
-        connectorGoogleSheetsForSolutions
       ],
     };
 
@@ -678,8 +677,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
       configuration: {
         name: 'Plan X',
       },
-      graphPosX: 140,
-      graphPosY: 760,
+      graphPosX: 200,
+      graphPosY: 760+1050,
       class: policyGenerationSubAgentClass,
       parentAgentId: 1,
       parentAgent: undefined,

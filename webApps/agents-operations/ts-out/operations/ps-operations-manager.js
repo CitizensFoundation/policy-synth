@@ -279,8 +279,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
             },
-            graphPosX: 250,
-            graphPosY: 50,
+            graphPosX: -5,
+            graphPosY: 370,
             class: googleDocsConnectorClass,
             permissionNeeded: 'read',
         };
@@ -297,8 +297,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
             },
-            graphPosX: 250,
-            graphPosY: 150,
+            graphPosX: 230,
+            graphPosY: 540,
             class: googleSheetsConnectorClass,
             permissionNeeded: 'read',
         };
@@ -315,8 +315,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
             },
-            graphPosX: 250,
-            graphPosY: 150,
+            graphPosX: 230,
+            graphPosY: 540 + 800,
             class: googleSheetsConnectorClass,
             permissionNeeded: 'read',
         };
@@ -333,8 +333,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
             },
-            graphPosX: 250,
-            graphPosY: 150,
+            graphPosX: 230,
+            graphPosY: 1050 + 1050,
             class: googleSheetsConnectorClass,
             permissionNeeded: 'read',
         };
@@ -347,12 +347,12 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             group: {}, // populate with relevant YpGroupData
             costs: [],
             configuration: {
-                name: 'Notifications & Remote Control',
+                name: 'Causes Notifications',
                 discordBotToken: 'dasdsadsdsa',
-                discordChannelName: 'use-cases-agent',
+                discordChannelName: 'root-causes-agent',
             },
-            graphPosX: 350,
-            graphPosY: 530,
+            graphPosX: 480,
+            graphPosY: 300,
             class: discordMarketResearchBotConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -365,12 +365,12 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             group: {}, // populate with relevant YpGroupData
             costs: [],
             configuration: {
-                name: 'Notifications & Remote Control',
+                name: 'Solutions Notifications',
                 discordBotToken: 'dasdsadsdsa',
                 discordChannelName: 'solutions-agent',
             },
-            graphPosX: 1,
-            graphPosY: 530,
+            graphPosX: 480,
+            graphPosY: 300 + 800,
             class: discordMarketResearchBotConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -387,8 +387,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 discordBotToken: 'dasdsadsdsa',
                 discordChannelName: 'policies-agent',
             },
-            graphPosX: 1,
-            graphPosY: 530,
+            graphPosX: 480,
+            graphPosY: 800 + 1050,
             class: discordMarketResearchBotConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -406,8 +406,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 userKey: '12345',
                 groupId: '31298',
             },
-            graphPosX: 520,
-            graphPosY: 530,
+            graphPosX: -5,
+            graphPosY: 230 + 800,
             class: yourPrioritiesConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -425,8 +425,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 userKey: '12345',
                 groupId: '31299',
             },
-            graphPosX: 170,
-            graphPosY: 530,
+            graphPosX: -10,
+            graphPosY: 750 + 1050,
             class: yourPrioritiesConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -444,8 +444,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 userKey: '12345',
                 groupId: '31299',
             },
-            graphPosX: 170,
-            graphPosY: 530,
+            graphPosX: 230,
+            graphPosY: 780,
             class: allOurIdeasConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -463,8 +463,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 userKey: '12345',
                 groupId: '31299',
             },
-            graphPosX: 170,
-            graphPosY: 530,
+            graphPosX: 230,
+            graphPosY: 780 + 800,
             class: allOurIdeasConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -482,8 +482,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 userKey: '12345',
                 groupId: '31299',
             },
-            graphPosX: 170,
-            graphPosY: 530,
+            graphPosX: 230,
+            graphPosY: 1280 + 1050,
             class: allOurIdeasConnectorClass,
             permissionNeeded: 'readWrite',
         };
@@ -501,7 +501,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 percentToUseSearchQueries: 50,
                 percentToUseSearchResults: 50,
             },
-            graphPosX: 50,
+            graphPosX: 200,
             graphPosY: 250,
             class: rootCausesSubAgentClass,
             parentAgentId: 1,
@@ -528,8 +528,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 percentToUseSearchQueries: 50,
                 percentToUseSearchResults: 50,
             },
-            graphPosX: 400,
-            graphPosY: 250,
+            graphPosX: 200,
+            graphPosY: 250 + 800,
             class: solutionsSubAgentClass,
             parentAgentId: 1,
             parentAgent: undefined,
@@ -539,7 +539,6 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 connectorDiscordSolutions,
                 connectorYourPrioritiesSolutions,
                 connectorAllOurIdeasSolutions,
-                connectorGoogleSheetsForSolutions
             ],
         };
         const subAgent3 = {
@@ -553,8 +552,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             configuration: {
                 name: 'Plan X',
             },
-            graphPosX: 140,
-            graphPosY: 760,
+            graphPosX: 200,
+            graphPosY: 760 + 1050,
             class: policyGenerationSubAgentClass,
             parentAgentId: 1,
             parentAgent: undefined,
