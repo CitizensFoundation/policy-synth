@@ -560,7 +560,7 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         /* Define your component styles here */
         .jointJSCanvas {
           width: 100vw !important;
-          height: calc(100vh - 90px) !important;
+          height: calc(500vh - 90px) !important;
           overflow-x: auto !important;
           overflow-y: auto !important;
           /* styles for the JointJS canvas */
