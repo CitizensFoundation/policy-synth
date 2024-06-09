@@ -36,13 +36,14 @@ import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
 
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 import { YpStructuredQuestionEdit } from '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 
 const TESTING = false;
 
 const nodeTypes = ['agent', 'connector'];
 
 @customElement('ps-operations-manager')
-export class PsOperationsManager extends YpBaseElement {
+export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
   @property({ type: Number })
   currentAgentId: number | undefined;
 
@@ -186,18 +187,6 @@ export class PsOperationsManager extends YpBaseElement {
     if (this.currentAgentId) {
       try {
         await this.api.updateNode(this.currentAgentId, this.nodeToEdit);
-
-        // Update the node in the agent object
-        /*const nodeToUpdate = this.findNodeRecursively(
-            this.currentAgent?.subAgents || [],
-            this.nodeToEdit.id
-          );
-          if (nodeToUpdate) {
-            nodeToUpdate.description = updatedDescription;
-            if (selectedNodeType) {
-              nodeToUpdate.type = selectedNodeType as AgentNodeType;
-            }
-          }*/
 
         this.closeEditNodeDialog();
         //TODO: Do this with less brute force, actually update the element

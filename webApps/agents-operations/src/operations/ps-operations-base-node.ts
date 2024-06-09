@@ -9,9 +9,10 @@ import '@material/web/menu/menu-item.js';
 
 import { OpsServerApi } from './OpsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 
 @customElement('ps-operations-base-node')
-export abstract class PsOperationsBaseNode extends YpBaseElement {
+export abstract class PsOperationsBaseNode extends PsBaseWithRunningAgentObserver {
   @property({ type: String })
   nodeId!: string;
 

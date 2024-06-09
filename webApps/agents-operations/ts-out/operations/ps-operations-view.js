@@ -14,10 +14,10 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import './ps-agent-node.js';
 import './ps-connector-node.js';
 import { OpsServerApi } from './OpsServerApi.js';
-import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import { AgentShape, AgentsShapeView } from './ps-agent-shape.js';
 import { ConnectorShape } from './ps-connector-shape.js';
-let PsOperationsView = class PsOperationsView extends YpBaseElement {
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
+let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObserver {
     constructor() {
         super();
         this.elements = {};
@@ -525,6 +525,7 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
           --md-filled-icon-button-selected-container-color: var(
             --md-sys-color-error
           );
+          margin-right: 10px;
         }
 
         .navControls {
@@ -664,6 +665,18 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
       </div>
     `;
     }
+    stop() {
+        this.fireGlobal('pause-agent', {
+            agentId: this.currentAgent.id,
+        });
+        window.psAppGlobals.setCurrentRunningAgentId(undefined);
+    }
+    start() {
+        this.fireGlobal('run-agent', {
+            agentId: this.currentAgent.id,
+        });
+        window.psAppGlobals.setCurrentRunningAgentId(this.currentAgent.id);
+    }
     render() {
         return html `
       <div class="controlPanelContainer"></div>
@@ -690,15 +703,15 @@ let PsOperationsView = class PsOperationsView extends YpBaseElement {
         <div class="flex"></div>
 
         <div class="masterPlayConfigButtons">
-          ${true
+          ${this.currentRunningAgentId
             ? html `<md-filled-icon-button
                 class="mainAgentStopButton"
-                @click="${() => this.pan('left')}"
+                @click="${this.stop}"
                 ><md-icon>stop</md-icon></md-filled-icon-button
               >`
             : html `<md-outlined-icon-button
                 class="mainAgentPlayButton"
-                @click="${() => this.pan('left')}"
+                @click="${this.start}"
                 ><md-icon>play_arrow</md-icon></md-outlined-icon-button
               >`}
 

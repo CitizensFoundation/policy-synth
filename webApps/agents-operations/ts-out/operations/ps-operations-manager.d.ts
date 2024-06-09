@@ -17,10 +17,10 @@ import { OpsServerApi } from './OpsServerApi.js';
 import './chat/agent-chat-assistant.js';
 import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
 import { PsOperationsView } from './ps-operations-view.js';
-import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
-export declare class PsOperationsManager extends YpBaseElement {
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
+export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     currentAgentId: number | undefined;
     currentAgent: PsAgentInstance | undefined;
     isFetchingAgent: boolean;

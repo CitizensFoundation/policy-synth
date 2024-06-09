@@ -5,6 +5,7 @@ export class PsAppGlobals extends YpAppGlobals {
         this.disableParentConstruction = true;
         this.agentsInstanceRegistry = new Map();
         this.connectorsInstanceRegistry = new Map();
+        this.currentAgentListeners = [];
         this.addToAgentsRegistry = (agent) => {
             this.agentsInstanceRegistry.set(agent.id, agent);
         };
@@ -117,10 +118,24 @@ export class PsAppGlobals extends YpAppGlobals {
                 console.error(error);
             }
         };
+        this.currentRunningAgentId = undefined;
         this.parseQueryString();
         //this.earlName = this.getEarlName();
         this.originalReferrer = document.referrer;
         document.addEventListener('set-ids', this.setIds.bind(this));
+    }
+    setCurrentRunningAgentId(id) {
+        this.currentRunningAgentId = id;
+        this.notifyCurrentAgentListeners();
+    }
+    addCurrentAgentListener(callback) {
+        this.currentAgentListeners.push(callback);
+    }
+    removeCurrentAgentListener(callback) {
+        this.currentAgentListeners = this.currentAgentListeners.filter(listener => listener !== callback);
+    }
+    notifyCurrentAgentListeners() {
+        this.currentAgentListeners.forEach(listener => listener(this.currentRunningAgentId));
     }
     getAgentInstance(agentId) {
         return this.agentsInstanceRegistry.get(agentId);

@@ -15,12 +15,33 @@ export class PsAppGlobals extends YpAppGlobals {
   agentsInstanceRegistry: Map<number, PsAgentInstance> = new Map();
   connectorsInstanceRegistry: Map<number, PsAgentConnectorInstance> = new Map();
 
+  currentRunningAgentId: number | undefined;
+  currentAgentListeners: any[] = [];
+
   constructor(serverApi: PsServerApi) {
     super(serverApi, true);
+    this.currentRunningAgentId = undefined;
     this.parseQueryString();
     //this.earlName = this.getEarlName();
     this.originalReferrer = document.referrer;
     document.addEventListener('set-ids' as any, this.setIds.bind(this));
+  }
+
+  setCurrentRunningAgentId(id: number | undefined) {
+    this.currentRunningAgentId = id;
+    this.notifyCurrentAgentListeners();
+  }
+
+  addCurrentAgentListener(callback: Function) {
+    this.currentAgentListeners.push(callback);
+  }
+
+  removeCurrentAgentListener(callback: Function) {
+    this.currentAgentListeners = this.currentAgentListeners.filter(listener => listener !== callback);
+  }
+
+  notifyCurrentAgentListeners() {
+    this.currentAgentListeners.forEach(listener => listener(this.currentRunningAgentId));
   }
 
   addToAgentsRegistry = (agent: PsAgentInstance): void => {

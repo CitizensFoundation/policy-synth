@@ -26,11 +26,11 @@ import './OpsServerApi.js';
 import { OpsServerApi } from './OpsServerApi.js';
 import './chat/agent-chat-assistant.js';
 import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
-import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 const TESTING = false;
 const nodeTypes = ['agent', 'connector'];
-let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
+let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     constructor() {
         super();
         this.isFetchingAgent = false;
@@ -104,17 +104,6 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         if (this.currentAgentId) {
             try {
                 await this.api.updateNode(this.currentAgentId, this.nodeToEdit);
-                // Update the node in the agent object
-                /*const nodeToUpdate = this.findNodeRecursively(
-                    this.currentAgent?.subAgents || [],
-                    this.nodeToEdit.id
-                  );
-                  if (nodeToUpdate) {
-                    nodeToUpdate.description = updatedDescription;
-                    if (selectedNodeType) {
-                      nodeToUpdate.type = selectedNodeType as AgentNodeType;
-                    }
-                  }*/
                 this.closeEditNodeDialog();
                 //TODO: Do this with less brute force, actually update the element
                 this.currentAgent = { ...this.currentAgent };

@@ -7,8 +7,8 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import './ps-agent-node.js';
 import './ps-connector-node.js';
 import { OpsServerApi } from './OpsServerApi.js';
-import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
-export declare class PsOperationsView extends YpBaseElement {
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
+export declare class PsOperationsView extends PsBaseWithRunningAgentObserver {
     currentAgent: PsAgentInstance;
     private graph;
     private paper;
@@ -48,6 +48,8 @@ export declare class PsOperationsView extends YpBaseElement {
     static get styles(): any[];
     pan(direction: string): void;
     renderHeader(): import("lit").TemplateResult<1>;
+    stop(): void;
+    start(): void;
     render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-operations-view.d.ts.map

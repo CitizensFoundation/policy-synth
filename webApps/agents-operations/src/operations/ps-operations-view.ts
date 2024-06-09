@@ -14,11 +14,12 @@ import { OpsServerApi } from './OpsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import { AgentShape, AgentsShapeView } from './ps-agent-shape.js';
 import { ConnectorShape } from './ps-connector-shape.js';
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 
 type Cell = dia.Element | dia.Link;
 
 @customElement('ps-operations-view')
-export class PsOperationsView extends YpBaseElement {
+export class PsOperationsView extends PsBaseWithRunningAgentObserver {
   @property({ type: Object })
   currentAgent: PsAgentInstance;
 
@@ -641,6 +642,7 @@ export class PsOperationsView extends YpBaseElement {
           --md-filled-icon-button-selected-container-color: var(
             --md-sys-color-error
           );
+          margin-right: 10px;
         }
 
         .navControls {
@@ -785,6 +787,20 @@ export class PsOperationsView extends YpBaseElement {
     `;
   }
 
+  stop() {
+    this.fireGlobal('pause-agent', {
+      agentId: this.currentAgent.id,
+    });
+    window.psAppGlobals.setCurrentRunningAgentId(undefined);
+  }
+
+  start() {
+    this.fireGlobal('run-agent', {
+      agentId: this.currentAgent.id,
+    });
+    window.psAppGlobals.setCurrentRunningAgentId(this.currentAgent.id);
+  }
+
   override render() {
     return html`
       <div class="controlPanelContainer"></div>
@@ -811,15 +827,15 @@ export class PsOperationsView extends YpBaseElement {
         <div class="flex"></div>
 
         <div class="masterPlayConfigButtons">
-          ${true
+          ${this.currentRunningAgentId
             ? html`<md-filled-icon-button
                 class="mainAgentStopButton"
-                @click="${() => this.pan('left')}"
+                @click="${this.stop}"
                 ><md-icon>stop</md-icon></md-filled-icon-button
               >`
             : html`<md-outlined-icon-button
                 class="mainAgentPlayButton"
-                @click="${() => this.pan('left')}"
+                @click="${this.start}"
                 ><md-icon>play_arrow</md-icon></md-outlined-icon-button
               >`}
 

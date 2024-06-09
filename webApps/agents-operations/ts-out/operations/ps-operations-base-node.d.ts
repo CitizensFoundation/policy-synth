@@ -3,8 +3,8 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { OpsServerApi } from './OpsServerApi.js';
-import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
-export declare abstract class PsOperationsBaseNode extends YpBaseElement {
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
+export declare abstract class PsOperationsBaseNode extends PsBaseWithRunningAgentObserver {
     nodeId: string;
     posX: number;
     posY: number;

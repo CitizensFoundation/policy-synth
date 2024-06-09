@@ -163,13 +163,33 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
     `;
   }
 
+  clickPlayPause() {
+    if (this.agent.id == this.currentRunningAgentId) {
+      this.fireGlobal('pause-agent', {
+        agentId: this.agent.id,
+      });
+      window.psAppGlobals.setCurrentRunningAgentId(undefined);
+    } else {
+      this.fireGlobal('run-agent', {
+        agentId: this.agent.id,
+      });
+      window.psAppGlobals.setCurrentRunningAgentId(this.agent.id);
+    }
+    this.requestUpdate();
+  }
+
   override render() {
     if (this.agent) {
+      if (this.agent.id == this.currentRunningAgentId) {
+        this.parentElement.className = "agentContainer agentContainerRunning";
+      } else {
+        this.parentElement.className = "agentContainer";
+      }
       return html`
         <div class="layout vertical mainContainer">
           ${this.renderImage()}
           <div class="agentClassName">${this.agent.class.name}</div>
-          <div class="agentName">${this.agent.configuration["name"]}</div>
+          <div class="agentName">${this.agent.configuration['name']}</div>
 
           <md-icon-button class="checklistButton">
             <md-icon>checklist</md-icon></md-icon-button
@@ -187,11 +207,15 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
               : html`
                   <md-outlined-icon-button
                     class="createOptionsButton"
-                    @click="${() =>
-                      this.fire('open-add-cause-dialog', {
-                        parentNodeId: this.nodeId,
-                      })}"
-                    ><md-icon>${this.agent.id==2 ? `pause` : `play_arrow`}</md-icon></md-outlined-icon-button
+                    ?disabled="${window.psAppGlobals.currentRunningAgentId &&
+                    this.agent.id != window.psAppGlobals.currentRunningAgentId}"
+                    @click="${this.clickPlayPause}"
+                    ><md-icon
+                      >${this.agent.id ==
+                      window.psAppGlobals.currentRunningAgentId
+                        ? `pause`
+                        : `play_arrow`}</md-icon
+                    ></md-outlined-icon-button
                   >
                 `}
           </div>

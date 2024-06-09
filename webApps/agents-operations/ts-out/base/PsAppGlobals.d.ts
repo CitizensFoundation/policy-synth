@@ -11,7 +11,13 @@ export declare class PsAppGlobals extends YpAppGlobals {
     exernalGoalParamsWhiteList: string | undefined;
     agentsInstanceRegistry: Map<number, PsAgentInstance>;
     connectorsInstanceRegistry: Map<number, PsAgentConnectorInstance>;
+    currentRunningAgentId: number | undefined;
+    currentAgentListeners: any[];
     constructor(serverApi: PsServerApi);
+    setCurrentRunningAgentId(id: number | undefined): void;
+    addCurrentAgentListener(callback: Function): void;
+    removeCurrentAgentListener(callback: Function): void;
+    notifyCurrentAgentListeners(): void;
     addToAgentsRegistry: (agent: PsAgentInstance) => void;
     addToConnectorsRegistry: (connector: PsAgentConnectorInstance) => void;
     getAgentInstance(agentId: number): PsAgentInstance | undefined;

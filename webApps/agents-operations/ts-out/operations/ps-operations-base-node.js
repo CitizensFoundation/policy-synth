@@ -11,8 +11,8 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { OpsServerApi } from './OpsServerApi.js';
-import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
-let PsOperationsBaseNode = class PsOperationsBaseNode extends YpBaseElement {
+import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
+let PsOperationsBaseNode = class PsOperationsBaseNode extends PsBaseWithRunningAgentObserver {
     constructor() {
         super();
         this.api = new OpsServerApi();
