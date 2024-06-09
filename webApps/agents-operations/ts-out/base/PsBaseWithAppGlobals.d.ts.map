@@ -1,0 +1,1 @@
+{"version":3,"file":"PsBaseWithAppGlobals.d.ts","sourceRoot":"","sources":["../../src/base/PsBaseWithAppGlobals.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,aAAa,EAAE,MAAM,sCAAsC,CAAC;AAErE,qBAAa,4BAA6B,SAAQ,aAAa;IAC7D,kBAAkB,EAAE,gBAAgB,CAAC;;IAOrC,iBAAiB,IAAI,IAAI;IAKzB,kBAAkB;IAKlB,cAAc;CAIf"}
