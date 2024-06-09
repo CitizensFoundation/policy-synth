@@ -39,10 +39,7 @@ import { YpStructuredQuestionEdit } from '@yrpri/webapp/yp-survey/yp-structured-
 
 const TESTING = false;
 
-const nodeTypes = [
-  'agent',
-  'connector'
-];
+const nodeTypes = ['agent', 'connector'];
 
 @customElement('ps-operations-manager')
 export class PsOperationsManager extends YpBaseElement {
@@ -100,6 +97,7 @@ export class PsOperationsManager extends YpBaseElement {
   }
 
   setupTestData() {
+    // Hard-coded data
 
   }
 
@@ -152,7 +150,6 @@ export class PsOperationsManager extends YpBaseElement {
   }
 
   saveAnswers() {
-    const answers: Record<string, YpStructuredAnswer> = {};
     for (
       let a = 0;
       a < this.nodeToEditInfo.class.configurationQuestions.length;
@@ -163,12 +160,12 @@ export class PsOperationsManager extends YpBaseElement {
       ) as YpStructuredQuestionEdit;
       if (questionElement) {
         const answer = questionElement.getAnswer();
+        //TODO: See if we can solve the below without any without adding much complexity
         if (answer && questionElement.question.uniqueId) {
-          answers[questionElement.question.uniqueId] = answer;
+          (this.nodeToEditInfo.configuration as any)[questionElement.question.uniqueId] = answer.value;
         }
       }
     }
-    this.nodeToEditInfo.configuration = answers;
   }
 
   closeEditNodeDialog() {
@@ -299,12 +296,12 @@ export class PsOperationsManager extends YpBaseElement {
     let initiallyLoadedAnswers = [] as any;
 
     if (this.nodeToEditInfo) {
-      // convert this.nodeToEditInfo.configuration object to array only with the values
-      initiallyLoadedAnswers = Object.values(
-        this.nodeToEditInfo.configuration
-      );
+      // Convert this.nodeToEditInfo.configuration object to array with { "uniqueId": key, "value": value }
+      initiallyLoadedAnswers = Object.entries(this.nodeToEditInfo.configuration).map(([key, value]) => ({
+        uniqueId: key,
+        value: value,
+      }));
     }
-
     return html`
       <md-dialog
         id="editNodeDialog"
@@ -327,7 +324,9 @@ export class PsOperationsManager extends YpBaseElement {
                     (question, index) => html`
                       <yp-structured-question-edit
                         index="${index}"
-                        id="structuredQuestion_${question.uniqueId ? index : `noId_${index}`}"
+                        id="structuredQuestion_${question.uniqueId
+                          ? index
+                          : `noId_${index}`}"
                         .structuredAnswers="${initiallyLoadedAnswers}"
                         @changed="${this._saveNodeEditState}"
                         .question="${question}"

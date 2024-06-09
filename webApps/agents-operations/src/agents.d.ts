@@ -46,19 +46,23 @@ interface PsBaseNodeInstance {
 
 type PsAgentsNodeType = "agent" | "connector";
 
+interface PsAgentConnectorsBaseConfiguration {
+  name: string;
+}
+
 interface PsAgentInstance extends PsBaseNodeInstance {
   class: PsAgentClass;
   parentAgentId: number | undefined;
   parentAgent: PsAgentInstance | undefined;
   subAgents: PsAgentInstance[] | undefined;
   connectors: PsAgentConnectorInstance[] | undefined;
-  configuration: Record<string, YpStructuredAnswer>;
+  configuration: PsAgentConnectorsBaseConfiguration;
 }
 
 interface PsAgentConnectorInstance extends PsBaseNodeInstance {
   class: PsAgentConnectorClass;
   permissionNeeded: PsAgentConnectorPermissionTypes;
-  configuration: Record<string, YpStructuredAnswer>;
+  configuration: PsAgentConnectorsBaseConfiguration;
 }
 
 interface PsAgentRegistry {

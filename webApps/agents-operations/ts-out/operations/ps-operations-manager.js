@@ -29,10 +29,7 @@ import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
 const TESTING = false;
-const nodeTypes = [
-    'agent',
-    'connector'
-];
+const nodeTypes = ['agent', 'connector'];
 let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
     constructor() {
         super();
@@ -47,6 +44,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.setupTestData();
     }
     setupTestData() {
+        // Hard-coded data
     }
     async connectedCallback() {
         super.connectedCallback();
@@ -80,17 +78,16 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.$$('#editNodeDialog').show();
     }
     saveAnswers() {
-        const answers = {};
         for (let a = 0; a < this.nodeToEditInfo.class.configurationQuestions.length; a++) {
             const questionElement = this.$$('#structuredQuestion_' + a);
             if (questionElement) {
                 const answer = questionElement.getAnswer();
+                //TODO: See if we can solve the below without any without adding much complexity
                 if (answer && questionElement.question.uniqueId) {
-                    answers[questionElement.question.uniqueId] = answer;
+                    this.nodeToEditInfo.configuration[questionElement.question.uniqueId] = answer.value;
                 }
             }
         }
-        this.nodeToEditInfo.configuration = answers;
     }
     closeEditNodeDialog() {
         this.$$('#editNodeDialog').close();
@@ -207,8 +204,11 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
     renderEditNodeDialog() {
         let initiallyLoadedAnswers = [];
         if (this.nodeToEditInfo) {
-            // convert this.nodeToEditInfo.configuration object to array only with the values
-            initiallyLoadedAnswers = Object.values(this.nodeToEditInfo.configuration);
+            // Convert this.nodeToEditInfo.configuration object to array with { "uniqueId": key, "value": value }
+            initiallyLoadedAnswers = Object.entries(this.nodeToEditInfo.configuration).map(([key, value]) => ({
+                uniqueId: key,
+                value: value,
+            }));
         }
         return html `
       <md-dialog
@@ -231,7 +231,9 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
                   ${this.nodeToEditInfo.class.configurationQuestions.map((question, index) => html `
                       <yp-structured-question-edit
                         index="${index}"
-                        id="structuredQuestion_${question.uniqueId ? index : `noId_${index}`}"
+                        id="structuredQuestion_${question.uniqueId
+                ? index
+                : `noId_${index}`}"
                         .structuredAnswers="${initiallyLoadedAnswers}"
                         @changed="${this._saveNodeEditState}"
                         .question="${question}"

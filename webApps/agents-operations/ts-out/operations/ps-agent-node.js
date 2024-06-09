@@ -150,7 +150,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         <div class="layout vertical mainContainer">
           ${this.renderImage()}
           <div class="agentClassName">${this.agent.class.name}</div>
-          <div class="agentName">${this.agent.configuration["name"].value}</div>
+          <div class="agentName">${this.agent.configuration["name"]}</div>
 
           <md-icon-button class="checklistButton">
             <md-icon>checklist</md-icon></md-icon-button

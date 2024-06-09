@@ -93,7 +93,7 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
           ${this.renderImage()}
           <div class="name">${this.connector.class.name}</div>
           ${this.connector.configuration["name"]
-                ? html `<div class="name instanceName">${this.connector.configuration["name"].value}</div>`
+                ? html `<div class="name instanceName">${this.connector.configuration["name"]}</div>`
                 : nothing}
 
           <md-icon class="typeIconCore">checklist</md-icon>
