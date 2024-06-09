@@ -661,6 +661,10 @@ export class PsOperationsView extends YpBaseElement {
           margin-right: 10px;
         }
 
+        .mainAgentStopButton {
+          --md-filled-icon-button-selected-container-color: var(--md-sys-color-error);
+        }
+
         .navControls {
           margin-right: 16px;
         }
@@ -808,11 +812,16 @@ export class PsOperationsView extends YpBaseElement {
       <div class="controlPanelContainer"></div>
       <div class="controlPanel">
         <div class="masterPlayConfigButtons">
-          <md-outlined-icon-button
+          ${ true ? html`<md-filled-icon-button
+            class="mainAgentStopButton"
+            @click="${() => this.pan('left')}"
+            ><md-icon>stop</md-icon></md-filled-icon-button
+          >` : html`<md-outlined-icon-button
             class="mainAgentPlayButton"
             @click="${() => this.pan('left')}"
             ><md-icon>play_arrow</md-icon></md-outlined-icon-button
-          >
+          >`}
+
 
           <md-icon-button @click="${() => this.pan('left')}"
             ><md-icon>settings</md-icon></md-icon-button

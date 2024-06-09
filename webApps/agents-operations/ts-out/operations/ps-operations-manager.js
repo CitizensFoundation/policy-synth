@@ -52,7 +52,6 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
         this.setupTestData();
     }
     setupTestData() {
-        // Hard-coded data
     }
     async connectedCallback() {
         super.connectedCallback();
@@ -744,7 +743,7 @@ let PsOperationsManager = class PsOperationsManager extends YpBaseElement {
           </md-primary-tab>
           <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
             <md-icon slot="icon">account_balance</md-icon>
-            ${this.t('API Costs')}
+            ${this.t('Costs')}
           </md-primary-tab>
         </md-tabs>
         <ps-operations-view

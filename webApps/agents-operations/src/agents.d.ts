@@ -73,6 +73,7 @@ interface PsAgentConnectorClass {
   version: number;
   imageUrl: string;
   iconName: string;
+  configurationQuestions: YpStructuredQuestionData[];
 }
 
 type PsAgentConnectorPermissionTypes = "read" | "write" | "readWrite" | "admin";
