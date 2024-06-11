@@ -19,42 +19,6 @@ import { RemoveDuplicateWebSolutions } from "./create/dedupWebSolutions.js";
 export class AgentSolutions extends BaseAgentProcessor {
   declare memory: PsBaseMemoryData;
 
-  override async initializeMemory(job: Job) {
-    const jobData = job.data as IEngineWorkerData;
-
-    this.memory = {
-      redisKey: this.getRedisKey(jobData.groupId),
-      groupId: jobData.groupId,
-      communityId: jobData.communityId,
-      domainId: jobData.domainId,
-      currentStage: "create-sub-problems",
-      stages: PolicySynthAgentBase.emptyDefaultStages,
-      timeStart: Date.now(),
-      totalCost: 0,
-      customInstructions: {},
-      problemStatement: {
-        description: jobData.initialProblemStatement,
-        searchQueries: {
-          general: [],
-          scientific: [],
-          news: [],
-          openData: [],
-        },
-        searchResults: {
-          pages: {
-            general: [],
-            scientific: [],
-            news: [],
-            openData: [],
-          },
-        },
-      },
-      subProblems: [],
-      currentStageData: undefined,
-    } as PsBaseMemoryData;
-    await this.saveMemory();
-  }
-
   async setStage(stage: PsMemoryStageTypes) {
     this.memory.currentStage = stage;
     this.memory.stages[stage].timeStart = Date.now();

@@ -16,7 +16,7 @@ import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@yrpri/webapp/common/yp-image.js';
-import { BaseChatBotServerApi } from './BaseChatBotApi';
+import { BaseChatBotServerApi } from './BaseChatBotApi.js';
 import './ps-ai-chat-element.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 const PROMPT_DEBUG = true;

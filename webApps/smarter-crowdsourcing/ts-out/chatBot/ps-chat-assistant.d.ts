@@ -12,7 +12,7 @@ import '@yrpri/webapp/common/yp-image.js';
 import { PsAiChatElement } from './ps-ai-chat-element.js';
 import { MdFilledTonalButton } from '@material/web/button/filled-tonal-button.js';
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
-import { BaseChatBotServerApi } from './BaseChatBotApi';
+import { BaseChatBotServerApi } from './BaseChatBotApi.js';
 import './ps-ai-chat-element.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsChatAssistant extends YpBaseElement {

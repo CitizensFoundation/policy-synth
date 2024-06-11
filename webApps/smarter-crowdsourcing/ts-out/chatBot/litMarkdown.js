@@ -1,6 +1,6 @@
-import { directive } from 'lit/directive.js';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { AsyncDirective } from 'lit/async-directive.js';
+import { directive } from 'lit/directive';
+import { unsafeHTML } from 'lit/directives/unsafe-html';
+import { AsyncDirective } from 'lit/async-directive';
 import { marked } from 'marked';
 marked.setOptions({
     // Enable table support

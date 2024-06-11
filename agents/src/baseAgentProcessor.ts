@@ -11,7 +11,42 @@ export abstract class BaseAgentProcessor extends PolicySynthAgentBase {
     return `st_mem:${groupId}:id`;
   }
 
-  abstract initializeMemory(job: Job): Promise<void>;
+  async initializeMemory(job: Job) {
+    const jobData = job.data as IEngineWorkerData;
+
+    this.memory = {
+      redisKey: this.getRedisKey(jobData.groupId),
+      groupId: jobData.groupId,
+      communityId: jobData.communityId,
+      domainId: jobData.domainId,
+      currentStage: "create-sub-problems",
+      stages: PolicySynthAgentBase.emptyDefaultStages,
+      timeStart: Date.now(),
+      totalCost: 0,
+      customInstructions: {},
+      problemStatement: {
+        description: jobData.initialProblemStatement,
+        searchQueries: {
+          general: [],
+          scientific: [],
+          news: [],
+          openData: [],
+        },
+        searchResults: {
+          pages: {
+            general: [],
+            scientific: [],
+            news: [],
+            openData: [],
+          },
+        },
+      },
+      subProblems: [],
+      currentStageData: undefined,
+    } as PsBaseMemoryData;
+    await this.saveMemory();
+  }
+
   abstract process(): Promise<void>;
 
   async setup(job: Job) {

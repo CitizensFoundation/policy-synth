@@ -1,4 +1,4 @@
-import { AsyncDirective } from 'lit/async-directive.js';
+import { AsyncDirective } from 'lit/async-directive';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element';
 type Options = typeof MarkdownDirective.defaultOptions;
 /**
@@ -20,7 +20,7 @@ export declare class MarkdownDirective extends AsyncDirective {
     private sanitizeHTMLWithOptions;
     private closeCodeBlockIfNeeded;
     private removeCitations;
-    render(rawMarkdown: string, options?: Partial<Options>): import("lit/directive.js").DirectiveResult<typeof import("lit/directives/unsafe-html.js").UnsafeHTMLDirective>;
+    render(rawMarkdown: string, options?: Partial<Options>): any;
 }
 /**
  * An asyn directive used to render markedown in a LitElement's render function.
@@ -49,13 +49,6 @@ export declare class MarkdownDirective extends AsyncDirective {
  * @param {RenderParameters[0]} rawMarkdown Markdown to be rendered.
  * @param {RenderParameters[1]} options
  */
-export declare const resolveMarkdown: (rawMarkdown: string, options?: Partial<{
-    includeImages: boolean;
-    includeCodeBlockClassNames: boolean;
-    loadingHTML: string;
-    skipSanitization: boolean;
-    handleJsonBlocks: boolean;
-    targetElement: YpBaseElement;
-}>) => import("lit/directive.js").DirectiveResult<typeof MarkdownDirective>;
+export declare const resolveMarkdown: (...values: unknown[]) => import("lit/directive").DirectiveResult<import("lit/directive").DirectiveClass>;
 export {};
 //# sourceMappingURL=litMarkdown.d.ts.map

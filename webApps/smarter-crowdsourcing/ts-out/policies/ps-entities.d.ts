@@ -6,7 +6,7 @@ export declare class PsEntities extends PsStageBase {
     connectedCallback(): Promise<void>;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
-    static get styles(): (any[] | import("lit").CSSResult)[];
+    static get styles(): any[];
     render(): import("lit").TemplateResult<1>;
     renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
     renderEntityScreen(entity: IEngineAffectedEntity): import("lit").TemplateResult<1>;

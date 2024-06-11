@@ -17,42 +17,7 @@ import { GetRefinedRootCausesProcessor } from "./web/old/getRefinedRootCauses.js
 import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
 import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
 import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
-import { PolicySynthAgentBase } from "../baseAgent.js";
 export class AgentProblems extends BaseAgentProcessor {
-    async initializeMemory(job) {
-        const jobData = job.data;
-        this.memory = {
-            redisKey: this.getRedisKey(jobData.groupId),
-            groupId: jobData.groupId,
-            communityId: jobData.communityId,
-            domainId: jobData.domainId,
-            currentStage: "create-sub-problems",
-            stages: PolicySynthAgentBase.emptyDefaultStages,
-            timeStart: Date.now(),
-            totalCost: 0,
-            customInstructions: {},
-            problemStatement: {
-                description: jobData.initialProblemStatement,
-                searchQueries: {
-                    general: [],
-                    scientific: [],
-                    news: [],
-                    openData: [],
-                },
-                searchResults: {
-                    pages: {
-                        general: [],
-                        scientific: [],
-                        news: [],
-                        openData: [],
-                    },
-                },
-            },
-            subProblems: [],
-            currentStageData: undefined,
-        };
-        await this.saveMemory();
-    }
     async setStage(stage) {
         this.memory.currentStage = stage;
         this.memory.stages[stage].timeStart = Date.now();

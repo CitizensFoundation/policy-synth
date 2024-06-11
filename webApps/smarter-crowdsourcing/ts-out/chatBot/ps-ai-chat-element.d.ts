@@ -7,7 +7,7 @@ import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/filled-text-field.js';
 import '@material/web/progress/circular-progress.js';
 import '@yrpri/webapp/common/yp-image.js';
-import { BaseChatBotServerApi } from './BaseChatBotApi';
+import { BaseChatBotServerApi } from './BaseChatBotApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsAiChatElement extends YpBaseElement {
     message: string;

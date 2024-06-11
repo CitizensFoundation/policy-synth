@@ -17,8 +17,8 @@ import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@yrpri/webapp/common/yp-image.js';
 import './ltp-ai-chat-element.js';
-import { LtpServerApi } from '../LtpServerApi';
-import { PsChatAssistant } from '../../chatBot/ps-chat-assistant';
+import { LtpServerApi } from '../LtpServerApi.js';
+import { PsChatAssistant } from '../../chatBot/ps-chat-assistant.js';
 const PROMPT_DEBUG = true;
 let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
     constructor() {

@@ -1,11 +1,11 @@
 import { TemplateResult } from 'lit';
-import '@material/web/icon/icon.js';
-import '@material/web/checkbox/checkbox.js';
-import '@material/web/button/outlined-button.js';
-import '@material/web/button/filled-button.js';
-import '@material/web/textfield/filled-text-field.js';
-import '@material/web/progress/circular-progress.js';
-import '@yrpri/webapp/common/yp-image.js';
+import '@material/web/icon/icon';
+import '@material/web/checkbox/checkbox';
+import '@material/web/button/outlined-button';
+import '@material/web/button/filled-button';
+import '@material/web/textfield/filled-text-field';
+import '@material/web/progress/circular-progress';
+import '@yrpri/webapp/common/yp-image';
 import { LtpServerApi } from '../LtpServerApi';
 import { PsAiChatElement } from '../../chatBot/ps-ai-chat-element';
 export declare class LtpAiChatElement extends PsAiChatElement {
@@ -18,7 +18,7 @@ export declare class LtpAiChatElement extends PsAiChatElement {
     api: LtpServerApi;
     constructor();
     handleJsonLoadingEnd: (event: any) => void;
-    static get styles(): (any[] | import("lit").CSSResult)[];
+    static get styles(): any[];
     addSelected(): Promise<void>;
     get isError(): boolean;
     renderJson(): TemplateResult<1>;

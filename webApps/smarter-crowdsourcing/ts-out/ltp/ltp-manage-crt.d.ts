@@ -57,7 +57,7 @@ export declare class LtpManageCrt extends PsStageBase {
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
     camelCaseToHumanReadable(str: string): string;
-    static get styles(): (any[] | import("lit").CSSResult)[];
+    static get styles(): any[];
     tabChanged(): void;
     clearForNew(): void;
     get crtInputData(): LtpCurrentRealityTreeData;

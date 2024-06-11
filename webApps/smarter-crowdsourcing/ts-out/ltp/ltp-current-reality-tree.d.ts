@@ -49,7 +49,7 @@ export declare class LtpCurrentRealityTree extends PsStageBase {
     getNode(id: string): LtpCurrentRealityTreeDataNode | null;
     getAllCausesExcept(idsToExclude: string[]): LtpCurrentRealityTreeDataNode[];
     addNodes(parentNodeId: string, nodes: LtpCurrentRealityTreeDataNode[]): void;
-    static get styles(): (any[] | import("lit").CSSResult)[];
+    static get styles(): any[];
     pan(direction: string): void;
     render(): import("lit").TemplateResult<1>;
 }

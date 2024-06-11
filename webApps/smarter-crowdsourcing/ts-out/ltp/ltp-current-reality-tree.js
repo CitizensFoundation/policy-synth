@@ -6,7 +6,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 import { css, html } from 'lit';
 import { property, customElement } from 'lit/decorators.js';
-import { dia, shapes, util, highlighters, V, layout } from 'jointjs';
+import { dia, shapes, util, highlighters, V } from '@joint/core';
+import { DirectedGraph } from '@joint/layout-directed-graph';
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/iconbutton/filled-tonal-icon-button.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -451,7 +452,7 @@ let LtpCurrentRealityTree = class LtpCurrentRealityTree extends PsStageBase {
         });
     }
     applyDirectedGraphLayout() {
-        layout.DirectedGraph.layout(this.graph, {
+        DirectedGraph.layout(this.graph, {
             setLinkVertices: true,
             align: "UR",
             ranker: "longest-path",

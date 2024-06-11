@@ -175,7 +175,7 @@ let PsAgentOperationsWebApp = class PsAgentOperationsWebApp extends YpBaseElemen
         }
         this.setupTheme();
         setTimeout(() => {
-            this.themeDarkMode = true;
+            //this.themeDarkMode = true;
         }, 1000);
     }
     async boot() {

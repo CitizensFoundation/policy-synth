@@ -36,7 +36,7 @@ export declare class PsSolutions extends PsStageBase {
     handleTouchStart(e: TouchEvent): void;
     handleTouchEnd(e: TouchEvent): void;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
-    static get styles(): (any[] | import("lit").CSSResult)[];
+    static get styles(): any[];
     get filteredSolutions(): IEngineSolution[];
     render(): import("lit").TemplateResult<1> | typeof nothing;
     renderSolutionItem(solution: IEngineSolution, index: number): import("lit").TemplateResult<1>;

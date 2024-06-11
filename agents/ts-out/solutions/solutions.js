@@ -13,43 +13,8 @@ import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
 import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
 import { RankSearchResultsProcessor } from "./ranking/rankSearchResults.js";
-import { PolicySynthAgentBase } from "../baseAgent.js";
 import { RemoveDuplicateWebSolutions } from "./create/dedupWebSolutions.js";
 export class AgentSolutions extends BaseAgentProcessor {
-    async initializeMemory(job) {
-        const jobData = job.data;
-        this.memory = {
-            redisKey: this.getRedisKey(jobData.groupId),
-            groupId: jobData.groupId,
-            communityId: jobData.communityId,
-            domainId: jobData.domainId,
-            currentStage: "create-sub-problems",
-            stages: PolicySynthAgentBase.emptyDefaultStages,
-            timeStart: Date.now(),
-            totalCost: 0,
-            customInstructions: {},
-            problemStatement: {
-                description: jobData.initialProblemStatement,
-                searchQueries: {
-                    general: [],
-                    scientific: [],
-                    news: [],
-                    openData: [],
-                },
-                searchResults: {
-                    pages: {
-                        general: [],
-                        scientific: [],
-                        news: [],
-                        openData: [],
-                    },
-                },
-            },
-            subProblems: [],
-            currentStageData: undefined,
-        };
-        await this.saveMemory();
-    }
     async setStage(stage) {
         this.memory.currentStage = stage;
         this.memory.stages[stage].timeStart = Date.now();

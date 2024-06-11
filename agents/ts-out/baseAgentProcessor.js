@@ -6,6 +6,40 @@ export class BaseAgentProcessor extends PolicySynthAgentBase {
     getRedisKey(groupId) {
         return `st_mem:${groupId}:id`;
     }
+    async initializeMemory(job) {
+        const jobData = job.data;
+        this.memory = {
+            redisKey: this.getRedisKey(jobData.groupId),
+            groupId: jobData.groupId,
+            communityId: jobData.communityId,
+            domainId: jobData.domainId,
+            currentStage: "create-sub-problems",
+            stages: PolicySynthAgentBase.emptyDefaultStages,
+            timeStart: Date.now(),
+            totalCost: 0,
+            customInstructions: {},
+            problemStatement: {
+                description: jobData.initialProblemStatement,
+                searchQueries: {
+                    general: [],
+                    scientific: [],
+                    news: [],
+                    openData: [],
+                },
+                searchResults: {
+                    pages: {
+                        general: [],
+                        scientific: [],
+                        news: [],
+                        openData: [],
+                    },
+                },
+            },
+            subProblems: [],
+            currentStageData: undefined,
+        };
+        await this.saveMemory();
+    }
     async setup(job) {
         this.job = job;
         const jobData = job.data;

@@ -100,7 +100,7 @@ export declare class PolicySynthWebApp extends YpBaseElement {
     _appError(event: CustomEvent): void;
     get adminConfirmed(): boolean;
     _settingsColorChanged(event: CustomEvent): void;
-    static get styles(): import("lit").CSSResult[];
+    static get styles(): any[];
     changeTabTo(tabId: number): void;
     updateThemeColor(event: CustomEvent): void;
     sendVoteAnalytics(): void;

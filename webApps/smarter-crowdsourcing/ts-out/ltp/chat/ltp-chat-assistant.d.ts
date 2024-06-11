@@ -10,8 +10,8 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@yrpri/webapp/common/yp-image.js';
 import { LtpAiChatElement } from './ltp-ai-chat-element.js';
 import './ltp-ai-chat-element.js';
-import { LtpServerApi } from '../LtpServerApi';
-import { PsChatAssistant } from '../../chatBot/ps-chat-assistant';
+import { LtpServerApi } from '../LtpServerApi.js';
+import { PsChatAssistant } from '../../chatBot/ps-chat-assistant.js';
 export declare class LtpChatAssistant extends PsChatAssistant {
     crtData: LtpCurrentRealityTreeData;
     nodeToAddCauseTo: LtpCurrentRealityTreeDataNode;

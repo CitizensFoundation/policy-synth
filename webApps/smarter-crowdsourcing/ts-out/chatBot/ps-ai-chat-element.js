@@ -16,7 +16,7 @@ import '@material/web/textfield/filled-text-field.js';
 import '@material/web/progress/circular-progress.js';
 import { jsonrepair } from 'jsonrepair';
 import '@yrpri/webapp/common/yp-image.js';
-import { BaseChatBotServerApi } from './BaseChatBotApi';
+import { BaseChatBotServerApi } from './BaseChatBotApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 let PsAiChatElement = class PsAiChatElement extends YpBaseElement {
     constructor() {

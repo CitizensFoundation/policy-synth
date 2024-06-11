@@ -7,7 +7,7 @@ export declare class PsProblemStatement extends PsStageBase {
     connectedCallback(): Promise<void>;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
-    static get styles(): (any[] | import("lit").CSSResult)[];
+    static get styles(): any[];
     render(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-problem-statement.d.ts.map

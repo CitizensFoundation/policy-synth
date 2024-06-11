@@ -5,15 +5,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { css, html } from 'lit';
-import { property, customElement } from 'lit/decorators.js';
-import '@material/web/icon/icon.js';
-import '@material/web/checkbox/checkbox.js';
-import '@material/web/button/outlined-button.js';
-import '@material/web/button/filled-button.js';
-import '@material/web/textfield/filled-text-field.js';
-import '@material/web/progress/circular-progress.js';
+import { property, customElement } from 'lit/decorators';
+import '@material/web/icon/icon';
+import '@material/web/checkbox/checkbox';
+import '@material/web/button/outlined-button';
+import '@material/web/button/filled-button';
+import '@material/web/textfield/filled-text-field';
+import '@material/web/progress/circular-progress';
 import { jsonrepair } from 'jsonrepair';
-import '@yrpri/webapp/common/yp-image.js';
+import '@yrpri/webapp/common/yp-image';
 import { LtpServerApi } from '../LtpServerApi';
 import { PsAiChatElement } from '../../chatBot/ps-ai-chat-element';
 let LtpAiChatElement = class LtpAiChatElement extends PsAiChatElement {

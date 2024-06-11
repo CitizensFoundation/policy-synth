@@ -1,6 +1,6 @@
-export declare const Layouts: import("lit").CSSResult;
-export declare const Factors: import("lit").CSSResult;
-export declare const ReverseLayouts: import("lit").CSSResult;
-export declare const Positioning: import("lit").CSSResult;
-export declare const Alignment: import("lit").CSSResult;
+export declare const Layouts: any;
+export declare const Factors: any;
+export declare const ReverseLayouts: any;
+export declare const Positioning: any;
+export declare const Alignment: any;
 //# sourceMappingURL=classes.d.ts.map
