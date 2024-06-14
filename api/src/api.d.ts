@@ -13,3 +13,17 @@ interface PsChatBotMemoryData extends PsBaseMemoryData {
   subProblems?: IEngineSubProblem[],
   currentStageData?: undefined;
 }
+
+interface YpUserData {
+  id: number;
+  email: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface YpGroupData {
+  id: number;
+  name: string;
+  created_at: Date;
+  updated_at: Date;
+}

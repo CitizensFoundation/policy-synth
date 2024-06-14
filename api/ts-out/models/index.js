@@ -25,7 +25,5 @@ process.env.DB_PASS, // password
     },
     logging: process.env.NODE_ENV !== 'production' ? logQuery : false,
 });
-export const models = {
-    sequelize
-};
+export { sequelize };
 //# sourceMappingURL=index.js.map

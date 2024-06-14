@@ -2,13 +2,19 @@ interface PsBaseModelClass {
   id: number; // Internal id and main key and index
   uuid: string; // DataTypes.UUIDV4 used for APIs to access objects
   user_id: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
-// tablename "ps_ai_model_classes"
-interface PsAiModelClassAttributes extends PsBaseModelClass {
-  name: string;
+interface PsAiModelConfiguration {
   type: string;
   provider: string;
+}
+
+// tablename "ps_ai_models"
+interface PsAiModelAttributes extends PsBaseModelClass {
+  name: string;
+  configuration: PsAiModelConfiguration;
 }
 
 interface PsAgentClassAttributesConfiguration {
@@ -39,10 +45,10 @@ interface PsBaseNodeConfiguration {
 interface PsBaseNodeInstance extends PsBaseModelClass {
   class_id: number;
   group_id: number;
-  user: YpUserData;
-  group: YpGroupData;
-  apiCosts: PsApiCostAttributes[];
-  modelCosts: PsModelCostAttributes[];
+  user?: YpUserData;
+  group?: YpGroupData;
+  apiCosts?: PsApiCostAttributes[];
+  modelCosts?: PsModelCostAttributes[];
   configuration: PsBaseNodeConfiguration;
 }
 
@@ -58,7 +64,7 @@ interface PsAgentConnectorsBaseConfiguration extends PsBaseNodeConfiguration {
 
 // tablename "ps_agents"
 interface PsAgentAttributes extends PsBaseNodeInstance {
-  class: PsAgentClassAttributes;
+  class?: PsAgentClassAttributes;
   parent_agent_id?: number;
   parentAgent?: PsAgentAttributes;
   subAgents?: PsAgentAttributes[]; // through a join table
@@ -68,9 +74,9 @@ interface PsAgentAttributes extends PsBaseNodeInstance {
 
 // tablename "ps_agent_connectors"
 interface PsAgentConnectorAttributes extends PsBaseNodeInstance {
-  user: YpUserData;
-  group: YpGroupData;
-  class: PsAgentConnectorClassAttributes;
+  user?: YpUserData;
+  group?: YpGroupData;
+  class?: PsAgentConnectorClassAttributes;
   configuration: PsAgentConnectorsBaseConfiguration;
 }
 

@@ -32,6 +32,6 @@ const sequelize = new Sequelize(
     }
 );
 
-export const models = {
+export {
   sequelize
 }

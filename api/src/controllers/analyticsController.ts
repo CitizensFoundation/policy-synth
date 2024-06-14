@@ -1,5 +1,4 @@
 import express from "express";
-import { models } from "../models/index.js";
 import { createClient } from "redis";
 import WebSocket from "ws";
 

@@ -1,6 +1,5 @@
 import express from "express";
 import axios from "axios";
-import { models } from "../models/index.js";
 import {
   RedisFunctions,
   RedisModules,
