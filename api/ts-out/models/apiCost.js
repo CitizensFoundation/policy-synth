@@ -1,17 +1,22 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./index.js";
-export class PsAgentClass extends Model {
+import { PsAgent } from "./agent.js";
+import { PsAgentConnector } from "./agentConnector.js";
+export class PsApiCost extends Model {
     id;
     uuid;
     user_id;
     created_at;
     updated_at;
-    name;
-    version;
-    configuration;
-    available;
+    cost_class_id;
+    cost;
+    agent_id;
+    connector_id;
+    // Associations
+    Agent;
+    Connector;
 }
-PsAgentClass.init({
+PsApiCost.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -36,25 +41,25 @@ PsAgentClass.init({
         allowNull: false,
         defaultValue: DataTypes.NOW,
     },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    version: {
+    cost_class_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    configuration: {
-        type: DataTypes.JSONB,
+    cost: {
+        type: DataTypes.FLOAT,
         allowNull: false,
     },
-    available: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
+    agent_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    connector_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
     },
 }, {
     sequelize,
-    tableName: "ps_agent_classes",
+    tableName: "ps_api_costs",
     indexes: [
         {
             fields: ["uuid"],
@@ -62,8 +67,26 @@ PsAgentClass.init({
         {
             fields: ["user_id"],
         },
+        {
+            fields: ["cost_class_id"],
+        },
+        {
+            fields: ["agent_id"],
+        },
+        {
+            fields: ["connector_id"],
+        },
     ],
     timestamps: true,
     underscored: true,
 });
-//# sourceMappingURL=agentClass.js.map
+// Define associations
+PsApiCost.belongsTo(PsAgent, {
+    foreignKey: "agent_id",
+    as: "Agent",
+});
+PsApiCost.belongsTo(PsAgentConnector, {
+    foreignKey: "connector_id",
+    as: "Connector",
+});
+//# sourceMappingURL=apiCost.js.map

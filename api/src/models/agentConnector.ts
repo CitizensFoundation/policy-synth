@@ -1,16 +1,16 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./index.js";
-import { PsAgentClass } from "./agentClass.js";
+import { PsAgentConnectorClass } from "./agentConnectorClass.js";
 
-interface PsAgentCreationAttributes
+interface PsAgentConnectorCreationAttributes
   extends Optional<
-    PsAgentAttributes,
-    "id" | "uuid" | "created_at" | "updated_at" | "parent_agent_id"
+    PsAgentConnectorAttributes,
+    "id" | "uuid" | "created_at" | "updated_at"
   > {}
 
-export class PsAgent
-  extends Model<PsAgentAttributes, PsAgentCreationAttributes>
-  implements PsAgentAttributes
+export class PsAgentConnector
+  extends Model<PsAgentConnectorAttributes, PsAgentConnectorCreationAttributes>
+  implements PsAgentConnectorAttributes
 {
   public id!: number;
   public uuid!: string;
@@ -19,21 +19,15 @@ export class PsAgent
   public updated_at!: Date;
   public class_id!: number;
   public group_id!: number;
-  public configuration!: PsBaseNodeConfiguration;
-  public parent_agent_id?: number;
+  public configuration!: PsAgentConnectorsBaseConfiguration;
 
   // Associations
-  public Class?: PsAgentClassAttributes;
   public User?: YpUserData;
   public Group?: YpGroupData;
-  public ApiCosts?: PsApiCostAttributes[];
-  public ModelCosts?: PsModelCostAttributes[];
-  public ParentAgent?: PsAgent;
-  public SubAgents?: PsAgent[];
-  public Connectors?: PsAgentConnectorAttributes[];
+  public Class?: PsAgentConnectorClassAttributes;
 }
 
-PsAgent.init(
+PsAgentConnector.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -71,14 +65,10 @@ PsAgent.init(
       type: DataTypes.JSONB,
       allowNull: false,
     },
-    parent_agent_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
   },
   {
     sequelize,
-    tableName: "ps_agents",
+    tableName: "ps_agent_connectors",
     indexes: [
       {
         fields: ["uuid"],
@@ -99,29 +89,15 @@ PsAgent.init(
 );
 
 // Define associations
-PsAgent.belongsTo(PsAgentClass, { foreignKey: "class_id", as: "class" });
-PsAgent.belongsTo(/*YpUserData*/ {} as any, {
+PsAgentConnector.belongsTo(PsAgentConnectorClass, {
+  foreignKey: "class_id",
+  as: "Class",
+});
+PsAgentConnector.belongsTo(/*YpUserData*/ {} as any, {
   foreignKey: "user_id",
   as: "User",
 });
-PsAgent.belongsTo(/*YpGroupData*/ {} as any, {
+PsAgentConnector.belongsTo(/*YpGroupData*/ {} as any, {
   foreignKey: "group_id",
   as: "Group",
-});
-PsAgent.hasMany(/*PsApiCostAttributes*/ {} as any, {
-  foreignKey: "agent_id",
-  as: "ApiCosts",
-});
-PsAgent.hasMany(/*PsModelCostAttributes*/ {} as any, {
-  foreignKey: "agent_id",
-  as: "ModelCosts",
-});
-PsAgent.belongsTo(PsAgent, {
-  foreignKey: "parent_agent_id",
-  as: "ParentAgent",
-});
-PsAgent.hasMany(PsAgent, { foreignKey: "parent_agent_id", as: "subAgents" });
-PsAgent.belongsToMany(/*PsAgentConnectorAttributes*/ {} as any, {
-  through: "AgentConnectors",
-  as: "Connectors",
 });

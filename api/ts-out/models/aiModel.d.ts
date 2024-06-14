@@ -9,8 +9,6 @@ export declare class PsAiModelClass extends Model<PsAiModelAttributes, PsAiModel
     updated_at: Date;
     name: string;
     configuration: PsAiModelConfiguration;
-    readonly createdAt: Date;
-    readonly updatedAt: Date;
 }
 export {};
 //# sourceMappingURL=aiModel.d.ts.map

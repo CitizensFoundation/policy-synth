@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./index.js";
-import { PsAgentClass } from "./agentClass.js";
-export class PsAgent extends Model {
+import { PsAgentConnectorClass } from "./agentConnectorClass.js";
+export class PsAgentConnector extends Model {
     id;
     uuid;
     user_id;
@@ -10,18 +10,12 @@ export class PsAgent extends Model {
     class_id;
     group_id;
     configuration;
-    parent_agent_id;
     // Associations
-    Class;
     User;
     Group;
-    ApiCosts;
-    ModelCosts;
-    ParentAgent;
-    SubAgents;
-    Connectors;
+    Class;
 }
-PsAgent.init({
+PsAgentConnector.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -58,13 +52,9 @@ PsAgent.init({
         type: DataTypes.JSONB,
         allowNull: false,
     },
-    parent_agent_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-    },
 }, {
     sequelize,
-    tableName: "ps_agents",
+    tableName: "ps_agent_connectors",
     indexes: [
         {
             fields: ["uuid"],
@@ -83,30 +73,16 @@ PsAgent.init({
     underscored: true,
 });
 // Define associations
-PsAgent.belongsTo(PsAgentClass, { foreignKey: "class_id", as: "class" });
-PsAgent.belongsTo(/*YpUserData*/ {}, {
+PsAgentConnector.belongsTo(PsAgentConnectorClass, {
+    foreignKey: "class_id",
+    as: "Class",
+});
+PsAgentConnector.belongsTo(/*YpUserData*/ {}, {
     foreignKey: "user_id",
     as: "User",
 });
-PsAgent.belongsTo(/*YpGroupData*/ {}, {
+PsAgentConnector.belongsTo(/*YpGroupData*/ {}, {
     foreignKey: "group_id",
     as: "Group",
 });
-PsAgent.hasMany(/*PsApiCostAttributes*/ {}, {
-    foreignKey: "agent_id",
-    as: "ApiCosts",
-});
-PsAgent.hasMany(/*PsModelCostAttributes*/ {}, {
-    foreignKey: "agent_id",
-    as: "ModelCosts",
-});
-PsAgent.belongsTo(PsAgent, {
-    foreignKey: "parent_agent_id",
-    as: "ParentAgent",
-});
-PsAgent.hasMany(PsAgent, { foreignKey: "parent_agent_id", as: "subAgents" });
-PsAgent.belongsToMany(/*PsAgentConnectorAttributes*/ {}, {
-    through: "AgentConnectors",
-    as: "Connectors",
-});
-//# sourceMappingURL=agent.js.map
+//# sourceMappingURL=agentConnector.js.map

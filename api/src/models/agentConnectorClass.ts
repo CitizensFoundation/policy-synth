@@ -1,15 +1,15 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./index.js";
 
-interface PsAgentClassAttributesCreation
+interface PsAgentConnectorClassCreationAttributes
   extends Optional<
-    PsAgentClassAttributes,
+    PsAgentConnectorClassAttributes,
     "id" | "uuid" | "created_at" | "updated_at"
   > {}
 
-export class PsAgentClass
-  extends Model<PsAgentClassAttributes, PsAgentClassAttributesCreation>
-  implements PsAgentClassAttributes
+export class PsAgentConnectorClass
+  extends Model<PsAgentConnectorClassAttributes, PsAgentConnectorClassCreationAttributes>
+  implements PsAgentConnectorClassAttributes
 {
   public id!: number;
   public uuid!: string;
@@ -18,11 +18,11 @@ export class PsAgentClass
   public updated_at!: Date;
   public name!: string;
   public version!: number;
-  public configuration!: PsAgentClassAttributesConfiguration;
   public available!: boolean;
+  public configuration!: PsAgentConnectorConfiguration;
 }
 
-PsAgentClass.init(
+PsAgentConnectorClass.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -56,24 +56,30 @@ PsAgentClass.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    configuration: {
-      type: DataTypes.JSONB,
-      allowNull: false,
-    },
     available: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
+    configuration: {
+      type: DataTypes.JSONB,
       allowNull: false,
     },
   },
   {
     sequelize,
-    tableName: "ps_agent_classes",
+    tableName: "ps_agent_connector_classes",
     indexes: [
       {
         fields: ["uuid"],
       },
       {
         fields: ["user_id"],
+      },
+      {
+        fields: ["name"],
+      },
+      {
+        fields: ["version"],
       },
     ],
     timestamps: true,

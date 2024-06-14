@@ -45,10 +45,10 @@ interface PsBaseNodeConfiguration {
 interface PsBaseNodeInstance extends PsBaseModelClass {
   class_id: number;
   group_id: number;
-  user?: YpUserData;
-  group?: YpGroupData;
-  apiCosts?: PsApiCostAttributes[];
-  modelCosts?: PsModelCostAttributes[];
+  User?: YpUserData;
+  Group?: YpGroupData;
+  ApiCosts?: PsApiCostAttributes[];
+  ModelCosts?: PsModelCostAttributes[];
   configuration: PsBaseNodeConfiguration;
 }
 
@@ -64,19 +64,19 @@ interface PsAgentConnectorsBaseConfiguration extends PsBaseNodeConfiguration {
 
 // tablename "ps_agents"
 interface PsAgentAttributes extends PsBaseNodeInstance {
-  class?: PsAgentClassAttributes;
+  Class?: PsAgentClassAttributes;
   parent_agent_id?: number;
   parentAgent?: PsAgentAttributes;
-  subAgents?: PsAgentAttributes[]; // through a join table
-  connectors?: PsAgentConnectorAttributes[];  // through a join table
+  SubAgents?: PsAgentAttributes[]; // through a join table
+  Connectors?: PsAgentConnectorAttributes[];  // through a join table
   configuration: PsAgentBaseConfiguration;
 }
 
 // tablename "ps_agent_connectors"
 interface PsAgentConnectorAttributes extends PsBaseNodeInstance {
-  user?: YpUserData;
-  group?: YpGroupData;
-  class?: PsAgentConnectorClassAttributes;
+  User?: YpUserData;
+  Group?: YpGroupData;
+  Class?: PsAgentConnectorClassAttributes;
   configuration: PsAgentConnectorsBaseConfiguration;
 }
 
@@ -86,9 +86,9 @@ interface PsAgentRegistryConfiguration {
 
 // tablename "ps_agent_registries"
 interface PsAgentRegistryAttributes extends PsBaseModelClass {
-  agents: PsAgentClassAttributes[];
-  connectors: PsAgentConnectorClassAttributes[];
-  configuration: PsAgentRegistryConfiguration;
+  Agents?: PsAgentClassAttributes[];
+  Connectors?: PsAgentConnectorClassAttributes[];
+  configuration?: PsAgentRegistryConfiguration;
 }
 
 interface PsAgentConnectorConfiguration {
@@ -164,4 +164,18 @@ interface PsAgentAuditLogAttributes extends PsBaseModelClass {
   action: string;
   details?: PsAgentAuditLogDetails;
   timestamp: Date;
+}
+
+// tablename "groups"
+interface YpGroupData {
+  id: number;
+  name: string;
+  user_id: number;
+}
+
+// tablename "users"
+interface YpUserData {
+  id: number;
+  name: string;
+  email: string;
 }

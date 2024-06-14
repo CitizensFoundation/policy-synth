@@ -4,7 +4,7 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from './index.js';
 
 export async function up(queryInterface, Sequelize) {
-  await queryInterface.createTable('ps_agent_classes', {
+  await queryInterface.createTable('ps_agent_audit_logs', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -29,27 +29,34 @@ export async function up(queryInterface, Sequelize) {
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    name: {
+    agent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    connector_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    action: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    version: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    configuration: {
+    details: {
       type: DataTypes.JSONB,
-      allowNull: false,
+      allowNull: true,
     },
-    available: {
-      type: DataTypes.BOOLEAN,
+    timestamp: {
+      type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   });
 
-  await queryInterface.addIndex('ps_agent_classes', ['uuid']);
-  await queryInterface.addIndex('ps_agent_classes', ['user_id']);
+  await queryInterface.addIndex('ps_agent_audit_logs', ['uuid']);
+  await queryInterface.addIndex('ps_agent_audit_logs', ['user_id']);
+  await queryInterface.addIndex('ps_agent_audit_logs', ['agent_id']);
+  await queryInterface.addIndex('ps_agent_audit_logs', ['connector_id']);
 }
 export async function down(queryInterface, Sequelize) {
-  await queryInterface.dropTable('ps_agent_classes');
+  await queryInterface.dropTable('ps_agent_audit_logs');
 }

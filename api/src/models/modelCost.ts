@@ -1,28 +1,28 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./index.js";
 
-interface PsAgentClassAttributesCreation
+interface PsModelCostCreationAttributes
   extends Optional<
-    PsAgentClassAttributes,
+    PsModelCostAttributes,
     "id" | "uuid" | "created_at" | "updated_at"
   > {}
 
-export class PsAgentClass
-  extends Model<PsAgentClassAttributes, PsAgentClassAttributesCreation>
-  implements PsAgentClassAttributes
+export class PsModelCost
+  extends Model<PsModelCostAttributes, PsModelCostCreationAttributes>
+  implements PsModelCostAttributes
 {
   public id!: number;
   public uuid!: string;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
-  public name!: string;
-  public version!: number;
-  public configuration!: PsAgentClassAttributesConfiguration;
-  public available!: boolean;
+  public cost_class_id!: number;
+  public cost!: number;
+  public agent_id!: number;
+  public connector_id!: number;
 }
 
-PsAgentClass.init(
+PsModelCost.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -48,32 +48,41 @@ PsAgentClass.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    version: {
+    cost_class_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    configuration: {
-      type: DataTypes.JSONB,
+    cost: {
+      type: DataTypes.FLOAT,
       allowNull: false,
     },
-    available: {
-      type: DataTypes.BOOLEAN,
+    agent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    connector_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
   },
   {
     sequelize,
-    tableName: "ps_agent_classes",
+    tableName: "ps_model_costs",
     indexes: [
       {
         fields: ["uuid"],
       },
       {
         fields: ["user_id"],
+      },
+      {
+        fields: ["cost_class_id"],
+      },
+      {
+        fields: ["agent_id"],
+      },
+      {
+        fields: ["connector_id"],
       },
     ],
     timestamps: true,

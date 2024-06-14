@@ -11,16 +11,14 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     group_id: number;
     configuration: PsBaseNodeConfiguration;
     parent_agent_id?: number;
-    readonly createdAt: Date;
-    readonly updatedAt: Date;
-    class?: PsAgentClassAttributes;
-    user?: YpUserData;
-    group?: YpGroupData;
-    apiCosts?: PsApiCostAttributes[];
-    modelCosts?: PsModelCostAttributes[];
-    parentAgent?: PsAgent;
-    subAgents?: PsAgent[];
-    connectors?: PsAgentConnectorAttributes[];
+    Class?: PsAgentClassAttributes;
+    User?: YpUserData;
+    Group?: YpGroupData;
+    ApiCosts?: PsApiCostAttributes[];
+    ModelCosts?: PsModelCostAttributes[];
+    ParentAgent?: PsAgent;
+    SubAgents?: PsAgent[];
+    Connectors?: PsAgentConnectorAttributes[];
 }
 export {};
 //# sourceMappingURL=agent.d.ts.map

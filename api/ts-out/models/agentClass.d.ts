@@ -11,8 +11,6 @@ export declare class PsAgentClass extends Model<PsAgentClassAttributes, PsAgentC
     version: number;
     configuration: PsAgentClassAttributesConfiguration;
     available: boolean;
-    readonly createdAt: Date;
-    readonly updatedAt: Date;
 }
 export {};
 //# sourceMappingURL=agentClass.d.ts.map

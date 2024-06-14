@@ -4,7 +4,7 @@ import { DataTypes } from 'sequelize';
 import { sequelize } from './index.js';
 
 export async function up(queryInterface, Sequelize) {
-  await queryInterface.createTable('ps_agent_classes', {
+  await queryInterface.createTable('ps_agent_registries', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -29,27 +29,16 @@ export async function up(queryInterface, Sequelize) {
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    version: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     configuration: {
       type: DataTypes.JSONB,
       allowNull: false,
     },
-    available: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-    },
   });
 
-  await queryInterface.addIndex('ps_agent_classes', ['uuid']);
-  await queryInterface.addIndex('ps_agent_classes', ['user_id']);
+  await queryInterface.addIndex('ps_agent_registries', ['uuid']);
+  await queryInterface.addIndex('ps_agent_registries', ['user_id']);
 }
+
 export async function down(queryInterface, Sequelize) {
-  await queryInterface.dropTable('ps_agent_classes');
+  await queryInterface.dropTable('ps_agent_registries');
 }

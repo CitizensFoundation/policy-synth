@@ -1,28 +1,29 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./index.js";
 
-interface PsAgentClassAttributesCreation
+interface PsAgentAuditLogCreationAttributes
   extends Optional<
-    PsAgentClassAttributes,
-    "id" | "uuid" | "created_at" | "updated_at"
+    PsAgentAuditLogAttributes,
+    "id" | "uuid" | "created_at" | "updated_at" | "details"
   > {}
 
-export class PsAgentClass
-  extends Model<PsAgentClassAttributes, PsAgentClassAttributesCreation>
-  implements PsAgentClassAttributes
+export class PsAgentAuditLog
+  extends Model<PsAgentAuditLogAttributes, PsAgentAuditLogCreationAttributes>
+  implements PsAgentAuditLogAttributes
 {
   public id!: number;
   public uuid!: string;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
-  public name!: string;
-  public version!: number;
-  public configuration!: PsAgentClassAttributesConfiguration;
-  public available!: boolean;
+  public agent_id!: number;
+  public connector_id!: number;
+  public action!: string;
+  public details?: PsAgentAuditLogDetails;
+  public timestamp!: Date;
 }
 
-PsAgentClass.init(
+PsAgentAuditLog.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -48,32 +49,43 @@ PsAgentClass.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    name: {
+    agent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    connector_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    action: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    version: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    configuration: {
+    details: {
       type: DataTypes.JSONB,
-      allowNull: false,
+      allowNull: true,
     },
-    available: {
-      type: DataTypes.BOOLEAN,
+    timestamp: {
+      type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
   },
   {
     sequelize,
-    tableName: "ps_agent_classes",
+    tableName: "ps_agent_audit_logs",
     indexes: [
       {
         fields: ["uuid"],
       },
       {
         fields: ["user_id"],
+      },
+      {
+        fields: ["agent_id"],
+      },
+      {
+        fields: ["connector_id"],
       },
     ],
     timestamps: true,

@@ -1,17 +1,15 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./index.js";
-export class PsAiModelClass extends Model {
+export class PsModelCostClass extends Model {
     id;
     uuid;
     user_id;
     created_at;
     updated_at;
-    name;
+    model_id;
     configuration;
-    createdAt;
-    updatedAt;
 }
-PsAiModelClass.init({
+PsModelCostClass.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -36,7 +34,7 @@ PsAiModelClass.init({
         allowNull: false,
         defaultValue: DataTypes.NOW,
     },
-    name: {
+    model_id: {
         type: DataTypes.STRING,
         allowNull: false,
     },
@@ -46,7 +44,7 @@ PsAiModelClass.init({
     },
 }, {
     sequelize,
-    tableName: "ps_ai_model_classes",
+    tableName: "ps_model_cost_classes",
     indexes: [
         {
             fields: ["uuid"],
@@ -54,8 +52,11 @@ PsAiModelClass.init({
         {
             fields: ["user_id"],
         },
+        {
+            fields: ["model_id"],
+        },
     ],
     timestamps: true,
     underscored: true,
 });
-//# sourceMappingURL=model.js.map
+//# sourceMappingURL=modelCostClass.js.map

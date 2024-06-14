@@ -1,28 +1,30 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./index.js";
+import { PsAgentClass } from "./agentClass.js";
+import { PsAgentConnectorClass } from "./agentConnectorClass.js";
 
-interface PsAgentClassAttributesCreation
+interface PsAgentRegistryCreationAttributes
   extends Optional<
-    PsAgentClassAttributes,
+    PsAgentRegistryAttributes,
     "id" | "uuid" | "created_at" | "updated_at"
   > {}
 
-export class PsAgentClass
-  extends Model<PsAgentClassAttributes, PsAgentClassAttributesCreation>
-  implements PsAgentClassAttributes
+export class PsAgentRegistry
+  extends Model<PsAgentRegistryAttributes, PsAgentRegistryCreationAttributes>
+  implements PsAgentRegistryAttributes
 {
   public id!: number;
   public uuid!: string;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
-  public name!: string;
-  public version!: number;
-  public configuration!: PsAgentClassAttributesConfiguration;
-  public available!: boolean;
+  public configuration!: PsAgentRegistryConfiguration;
+
+  public Agents?: PsAgentClassAttributes[];
+  public Connectors?: PsAgentConnectorClassAttributes[];
 }
 
-PsAgentClass.init(
+PsAgentRegistry.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -48,26 +50,14 @@ PsAgentClass.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    version: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     configuration: {
       type: DataTypes.JSONB,
-      allowNull: false,
-    },
-    available: {
-      type: DataTypes.BOOLEAN,
       allowNull: false,
     },
   },
   {
     sequelize,
-    tableName: "ps_agent_classes",
+    tableName: "ps_agent_registries",
     indexes: [
       {
         fields: ["uuid"],
@@ -80,3 +70,14 @@ PsAgentClass.init(
     underscored: true,
   }
 );
+
+// Define associations
+PsAgentRegistry.belongsToMany(PsAgentClass, {
+  through: "AgentRegistryAgents",
+  as: "Agents",
+});
+
+PsAgentRegistry.belongsToMany(PsAgentConnectorClass, {
+  through: "AgentRegistryConnectors",
+  as: "Connectors",
+});

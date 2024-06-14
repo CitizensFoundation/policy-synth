@@ -18,9 +18,6 @@ export class PsAiModelClass
   public updated_at!: Date;
   public name!: string;
   public configuration!: PsAiModelConfiguration;
-
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
 }
 
 PsAiModelClass.init(

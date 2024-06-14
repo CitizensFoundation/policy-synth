@@ -1,15 +1,18 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./index.js";
-export class PsAiModelClass extends Model {
+import { PsAgentClass } from "./agentClass.js";
+import { PsAgentConnectorClass } from "./agentConnectorClass.js";
+export class PsAgentRegistry extends Model {
     id;
     uuid;
     user_id;
     created_at;
     updated_at;
-    name;
     configuration;
+    Agents;
+    Connectors;
 }
-PsAiModelClass.init({
+PsAgentRegistry.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -34,17 +37,13 @@ PsAiModelClass.init({
         allowNull: false,
         defaultValue: DataTypes.NOW,
     },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
     configuration: {
         type: DataTypes.JSONB,
         allowNull: false,
     },
 }, {
     sequelize,
-    tableName: "ps_ai_model_classes",
+    tableName: "ps_agent_registries",
     indexes: [
         {
             fields: ["uuid"],
@@ -56,4 +55,13 @@ PsAiModelClass.init({
     timestamps: true,
     underscored: true,
 });
-//# sourceMappingURL=aiModel.js.map
+// Define associations
+PsAgentRegistry.belongsToMany(PsAgentClass, {
+    through: "AgentRegistryAgents",
+    as: "Agents",
+});
+PsAgentRegistry.belongsToMany(PsAgentConnectorClass, {
+    through: "AgentRegistryConnectors",
+    as: "Connectors",
+});
+//# sourceMappingURL=agentRegistry.js.map

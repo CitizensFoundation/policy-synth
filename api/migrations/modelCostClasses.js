@@ -3,8 +3,8 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from './index.js';
 
-export async function up(queryInterface, Sequelize) {
-  await queryInterface.createTable('ps_agent_classes', {
+export async function up(queryInterface) {
+  await queryInterface.createTable('ps_model_cost_classes', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -29,27 +29,20 @@ export async function up(queryInterface, Sequelize) {
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    name: {
+    model_id: {
       type: DataTypes.STRING,
-      allowNull: false,
-    },
-    version: {
-      type: DataTypes.INTEGER,
       allowNull: false,
     },
     configuration: {
       type: DataTypes.JSONB,
       allowNull: false,
     },
-    available: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-    },
   });
 
-  await queryInterface.addIndex('ps_agent_classes', ['uuid']);
-  await queryInterface.addIndex('ps_agent_classes', ['user_id']);
+  await queryInterface.addIndex('ps_model_cost_classes', ['uuid']);
+  await queryInterface.addIndex('ps_model_cost_classes', ['user_id']);
+  await queryInterface.addIndex('ps_model_cost_classes', ['model_id']);
 }
-export async function down(queryInterface, Sequelize) {
-  await queryInterface.dropTable('ps_agent_classes');
+export async function down(queryInterface) {
+  await queryInterface.dropTable('ps_model_cost_classes');
 }

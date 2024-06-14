@@ -1,15 +1,17 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./index.js";
-export class PsAiModelClass extends Model {
+export class PsAgentConnectorClass extends Model {
     id;
     uuid;
     user_id;
     created_at;
     updated_at;
     name;
+    version;
+    available;
     configuration;
 }
-PsAiModelClass.init({
+PsAgentConnectorClass.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -38,13 +40,21 @@ PsAiModelClass.init({
         type: DataTypes.STRING,
         allowNull: false,
     },
+    version: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    available: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+    },
     configuration: {
         type: DataTypes.JSONB,
         allowNull: false,
     },
 }, {
     sequelize,
-    tableName: "ps_ai_model_classes",
+    tableName: "ps_agent_connector_classes",
     indexes: [
         {
             fields: ["uuid"],
@@ -52,8 +62,14 @@ PsAiModelClass.init({
         {
             fields: ["user_id"],
         },
+        {
+            fields: ["name"],
+        },
+        {
+            fields: ["version"],
+        },
     ],
     timestamps: true,
     underscored: true,
 });
-//# sourceMappingURL=aiModel.js.map
+//# sourceMappingURL=agentConnectorClass.js.map

@@ -4,6 +4,7 @@
     "target": "es2022",
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
+    "rootDir": "src/",
     "outDir": "ts-out/",
     "declaration": true,
     "declarationMap": true,
@@ -12,5 +13,5 @@
   "include": [
     "**/*.ts",
     "./node_modules/@policysynth/agents/**/*.d.ts"
-  ]
+, "migrations/agentRegistries.js"  ]
 }
