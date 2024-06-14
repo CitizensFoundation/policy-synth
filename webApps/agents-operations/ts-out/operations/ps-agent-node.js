@@ -140,7 +140,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
     renderImage() {
         return html `
       <div class="layout horizontal center-center">
-        <img class="image" src="${this.agent.class.configuration.imageUrl}" />
+        <img class="image" src="${this.agent.Class.configuration.imageUrl}" />
       </div>
     `;
     }
@@ -170,7 +170,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             return html `
         <div class="layout vertical mainContainer">
           ${this.renderImage()}
-          <div class="agentClassName">${this.agent.class.name}</div>
+          <div class="agentClassName">${this.agent.Class.name}</div>
           <div class="agentName">${this.agent.configuration['name']}</div>
 
           <md-icon-button class="checklistButton">

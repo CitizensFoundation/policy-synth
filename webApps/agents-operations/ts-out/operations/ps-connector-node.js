@@ -83,7 +83,7 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
       <div class="layout horizontal center-center">
         <img
           class="image"
-          src="${this.connector.class.configuration.imageUrl}"
+          src="${this.connector.Class.configuration.imageUrl}"
         />
       </div>
     `;
@@ -94,7 +94,7 @@ let PsAgentConnector = class PsAgentConnector extends PsOperationsBaseNode {
             return html `
         <div class="layout vertical mainContainer">
           ${this.renderImage()}
-          <div class="name">${this.connector.class.name}</div>
+          <div class="name">${this.connector.Class.name}</div>
           ${this.connector.configuration['name']
                 ? html `<div class="name instanceName">
                 ${this.connector.configuration['name']}

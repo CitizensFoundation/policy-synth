@@ -7,7 +7,7 @@ export class ConnectorShape extends shapes.standard.Rectangle {
     }
     defaults() {
         return util.deepSupplement({
-            type: 'html.ConnectorShape',
+            type: 'html.Connectorshape',
             attrs: {},
             markup: '<div></div>',
         }, shapes.standard.Rectangle.prototype.defaults);

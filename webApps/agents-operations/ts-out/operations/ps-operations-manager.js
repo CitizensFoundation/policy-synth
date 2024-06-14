@@ -158,6 +158,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             name: 'Google Docs',
             uuid: '1',
             version: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             user_id: 1,
             available: true,
             configuration: {
@@ -173,6 +175,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             uuid: '1',
             version: 1,
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             available: true,
             configuration: {
                 description: 'Connector for Discord Market Research Bot',
@@ -187,6 +191,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             uuid: '1',
             version: 1,
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             available: true,
             configuration: {
                 description: 'Connector for Your Priorities',
@@ -201,6 +207,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             uuid: '1',
             version: 1,
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             available: true,
             configuration: {
                 description: 'Connector for All Our Ideas',
@@ -216,6 +224,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             version: 1,
             user_id: 1,
             available: true,
+            created_at: new Date(),
+            updated_at: new Date(),
             configuration: {
                 description: 'Connector for All ',
                 imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/1187aee2-39e8-48b2-afa2-0aba91c0ced0.png',
@@ -229,6 +239,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             name: 'Smarter Crowdsourcing Agent',
             uuid: '1',
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             available: true,
             configuration: {
                 description: 'An agent for running the Smarter Crowdsourcing process',
@@ -251,6 +263,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             uuid: '1',
             user_id: 1,
             available: true,
+            created_at: new Date(),
+            updated_at: new Date(),
             name: 'Root Causes Research',
             configuration: {
                 description: 'Root causes research sub-agent',
@@ -273,6 +287,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             uuid: '1',
             user_id: 1,
             available: true,
+            created_at: new Date(),
+            updated_at: new Date(),
             name: 'Solutions Search',
             configuration: {
                 description: 'Sub-agent for solutions search',
@@ -295,6 +311,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             user_id: 1,
             available: true,
             version: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             name: 'Generate Policies',
             configuration: {
                 description: 'Sub-agent for generating policies',
@@ -316,11 +334,13 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             class_id: 1,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            created_at: new Date(),
+            updated_at: new Date(),
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 name: 'Root Causes Summary',
                 googleDocsId: '1sdfjkl3j4klj3',
@@ -329,18 +349,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosY: 370,
                 permissionNeeded: 'read',
             },
-            class: googleDocsConnectorClass,
+            Class: googleDocsConnectorClass,
         };
         const connectorGoogleSheetsForRootCauses = {
             id: 2,
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             class_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             //costs: [],
             configuration: {
                 name: 'Root Causes Rows',
@@ -350,18 +372,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosY: 540,
                 permissionNeeded: 'read',
             },
-            class: googleSheetsConnectorClass,
+            Class: googleSheetsConnectorClass,
         };
         const connectorGoogleSheetsForSolutions = {
             id: 3,
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             class_id: 1,
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             //costs: [],
             configuration: {
                 name: 'Solutions Rows',
@@ -371,18 +395,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosY: 540 + 800,
                 permissionNeeded: 'read',
             },
-            class: googleSheetsConnectorClass,
+            Class: googleSheetsConnectorClass,
         };
         const connectorGoogleSheetsForPolicies = {
             id: 4,
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             class_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             configuration: {
                 name: 'Policies Rows',
                 googleDocsId: '1sdfjkl3j4klj3',
@@ -391,18 +417,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosY: 1050 + 1050,
                 permissionNeeded: 'read',
             },
-            class: googleSheetsConnectorClass,
+            Class: googleSheetsConnectorClass,
         };
         const connectorDiscordRootCauses = {
             id: 5,
             class_id: 2,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            created_at: new Date(),
+            updated_at: new Date(),
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 name: 'Causes Notifications',
                 discordBotToken: 'dasdsadsdsa',
@@ -411,18 +439,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosY: 300,
                 permissionNeeded: 'readWrite',
             },
-            class: discordMarketResearchBotConnectorClass,
+            Class: discordMarketResearchBotConnectorClass,
         };
         const connectorDiscordSolutions = {
             id: 6,
             class_id: 2,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            created_at: new Date(),
+            updated_at: new Date(),
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 permissionNeeded: 'readWrite',
                 name: 'Solutions Notifications',
@@ -431,18 +461,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: 480,
                 graphPosY: 300 + 800,
             },
-            class: discordMarketResearchBotConnectorClass,
+            Class: discordMarketResearchBotConnectorClass,
         };
         const connectorDiscordPolicies = {
             id: 7,
             class_id: 2,
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 permissionNeeded: 'readWrite',
                 name: 'Notifications & Remote Control',
@@ -451,18 +483,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: 480,
                 graphPosY: 800 + 1050,
             },
-            class: discordMarketResearchBotConnectorClass,
+            Class: discordMarketResearchBotConnectorClass,
         };
         const connectorYourPrioritiesSolutions = {
             id: 8,
             class_id: 2,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            created_at: new Date(),
+            updated_at: new Date(),
+            ModelCosts: [],
             configuration: {
                 permissionNeeded: 'readWrite',
                 name: 'Human Solutions',
@@ -472,18 +506,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: -5,
                 graphPosY: 230 + 800,
             },
-            class: yourPrioritiesConnectorClass,
+            Class: yourPrioritiesConnectorClass,
         };
         const connectorYourPrioritiesPolicies = {
             id: 9,
             class_id: 2,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            created_at: new Date(),
+            updated_at: new Date(),
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 name: 'Policy Ideas Deliberation',
                 user_id: 'planxbot@hugsmidi.is',
@@ -493,18 +529,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosY: 750 + 1050,
                 permissionNeeded: 'readWrite',
             },
-            class: yourPrioritiesConnectorClass,
+            Class: yourPrioritiesConnectorClass,
         };
         const connectorAllOurIdeasRootCauses = {
             id: 10,
             class_id: 2,
+            created_at: new Date(),
+            updated_at: new Date(),
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 permissionNeeded: 'readWrite',
                 name: 'Rank Root Causes',
@@ -514,18 +552,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: 230,
                 graphPosY: 780,
             },
-            class: allOurIdeasConnectorClass,
+            Class: allOurIdeasConnectorClass,
         };
         const connectorAllOurIdeasSolutions = {
             id: 11,
             class_id: 2,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            created_at: new Date(),
+            updated_at: new Date(),
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 permissionNeeded: 'readWrite',
                 name: 'Rank Solutions',
@@ -535,18 +575,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: 230,
                 graphPosY: 780 + 800,
             },
-            class: allOurIdeasConnectorClass,
+            Class: allOurIdeasConnectorClass,
         };
         const connectorAllOurIdeasPolicies = {
             id: 12,
             class_id: 2,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            created_at: new Date(),
+            updated_at: new Date(),
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 permissionNeeded: 'readWrite',
                 name: 'Rank Policies',
@@ -556,18 +598,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: 230,
                 graphPosY: 1280 + 1050,
             },
-            class: allOurIdeasConnectorClass,
+            Class: allOurIdeasConnectorClass,
         };
         const subAgent1 = {
             id: 2,
             class_id: 2,
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            created_at: new Date(),
+            updated_at: new Date(),
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 name: 'Unlocking Literacy',
                 howManySearchQueries: 10,
@@ -576,11 +620,11 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: 200,
                 graphPosY: 250,
             },
-            class: rootCausesSubAgentClass,
+            Class: rootCausesSubAgentClass,
             parent_agent_id: 1,
             parentAgent: undefined,
-            subAgents: undefined,
-            connectors: [
+            SubAgents: undefined,
+            Connectors: [
                 connectorGoogleDocsForRootCauses,
                 connectorDiscordRootCauses,
                 connectorAllOurIdeasRootCauses,
@@ -591,12 +635,14 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             id: 3,
             class_id: 3,
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 name: 'Unlocking Literacy',
                 howManySearchQueries: 10,
@@ -605,11 +651,11 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 graphPosX: 200,
                 graphPosY: 250 + 800,
             },
-            class: solutionsSubAgentClass,
+            Class: solutionsSubAgentClass,
             parent_agent_id: 1,
             parentAgent: undefined,
-            subAgents: undefined,
-            connectors: [
+            SubAgents: undefined,
+            Connectors: [
                 connectorGoogleSheetsForSolutions,
                 connectorDiscordSolutions,
                 connectorYourPrioritiesSolutions,
@@ -620,22 +666,24 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             id: 4,
             class_id: 4,
             user_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 name: 'Smarter Crowdsourcing',
                 graphPosX: 200,
                 graphPosY: 760 + 1050,
             },
-            class: policyGenerationSubAgentClass,
+            Class: policyGenerationSubAgentClass,
             parent_agent_id: 1,
             parentAgent: undefined,
-            subAgents: undefined,
-            connectors: [
+            SubAgents: undefined,
+            Connectors: [
                 connectorYourPrioritiesPolicies,
                 connectorDiscordPolicies,
                 connectorGoogleSheetsForPolicies,
@@ -645,23 +693,25 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         const smarterCrowdsourcingAgent = {
             id: 1,
             class_id: 1,
+            created_at: new Date(),
+            updated_at: new Date(),
             user_id: 1,
             group_id: 1,
-            user: {}, // populate with relevant YpUserData
-            group: {}, // populate with relevant YpGroupData
+            User: {}, // populate with relevant YpUserData
+            Group: {}, // populate with relevant YpGroupData
             uuid: '1',
-            apiCosts: [],
-            modelCosts: [],
+            ApiCosts: [],
+            ModelCosts: [],
             configuration: {
                 graphPosX: 0,
                 graphPosY: 0,
                 name: 'Smarter Crowdsourcing',
             },
-            class: smarterCrowdsourcingAgentClass,
+            Class: smarterCrowdsourcingAgentClass,
             parent_agent_id: undefined,
             parentAgent: undefined,
-            subAgents: [subAgent1, subAgent2, subAgent3],
-            connectors: undefined,
+            SubAgents: [subAgent1, subAgent2, subAgent3],
+            Connectors: undefined,
         };
         this.currentAgent = smarterCrowdsourcingAgent;
         window.psAppGlobals.addToAgentsRegistry(smarterCrowdsourcingAgent);
@@ -700,7 +750,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.nodeToEditInfo = event.detail.element;
         this.currentlySelectedCauseIdToAddAsChild = undefined;
         /*this.nodeToEdit = this.findNodeRecursively(
-          this.currentAgent?.subAgents || [],
+          this.currentAgent?.SubAgents || [],
           this.nodeToEditInfo!.nodeId
         );
         if (!this.nodeToEdit) {
@@ -719,7 +769,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.$$('#editNodeDialog').show();
     }
     saveAnswers() {
-        for (let a = 0; a < this.nodeToEditInfo.class.configuration.questions.length; a++) {
+        for (let a = 0; a < this.nodeToEditInfo.Class.configuration.questions.length; a++) {
             const questionElement = this.$$('#structuredQuestion_' + a);
             if (questionElement) {
                 const answer = questionElement.getAnswer();
@@ -765,7 +815,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         }
         nodes.forEach(node => {
             if (node.children) {
-                //this.removeNodeRecursively(node.subAgents, nodeId);
+                //this.removeNodeRecursively(node.SubAgents, nodeId);
             }
         });
     }
@@ -774,7 +824,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             try {
                 await this.api.deleteNode(this.currentAgentId, this.nodeToEdit.id);
                 // Remove the node from the agent object
-                // this.removeNodeRecursively(this.currentAgent?.subAgents || [], this.nodeToEdit.id);
+                // this.removeNodeRecursively(this.currentAgent?.SubAgents || [], this.nodeToEdit.id);
                 this.closeEditNodeDialog();
                 this.currentAgent = { ...this.currentAgent };
             }
@@ -821,12 +871,12 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
       <div class="layout horizontal">
         <div>
           <img
-            src="${this.nodeToEditInfo.class.configuration.imageUrl}"
+            src="${this.nodeToEditInfo.Class.configuration.imageUrl}"
             class="nodeEditHeadlineImage"
           />
         </div>
         <div class="nodeEditHeadlineTitle">
-          ${this.nodeToEditInfo.class.name}
+          ${this.nodeToEditInfo.Class.name}
         </div>
       </div>
     `;
@@ -858,7 +908,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
           ${this.nodeToEditInfo
             ? html `
                 <div id="surveyContainer">
-                  ${this.nodeToEditInfo.class.configuration.questions.map((question, index) => html `
+                  ${this.nodeToEditInfo.Class.configuration.questions.map((question, index) => html `
                       <yp-structured-question-edit
                         index="${index}"
                         id="structuredQuestion_${question.uniqueId
@@ -912,7 +962,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             this.updatePath();
             await this.updateComplete;
             this.$$('#context').value =
-                this.currentAgent.class.configuration.description;
+                this.currentAgent.Class.configuration.description;
             this.$$('#undesirableEffects').value = '';
             this.activeTabIndex = 1;
             this.$$('#tabBar').activeTabIndex = 1;

@@ -366,8 +366,8 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
                 x: agent.configuration.graphPosX || Math.random() * 600,
                 y: agent.configuration.graphPosY || Math.random() * 400,
             },
-            label: agent.class.configuration.description,
-            text: agent.class.configuration.description,
+            label: agent.Class.configuration.description,
+            text: agent.Class.configuration.description,
             agentId: agent.id,
             nodeType: 'agent',
             attrs: {
@@ -392,8 +392,8 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
                     x: connector.configuration.graphPosX || Math.random() * 600,
                     y: connector.configuration.graphPosY || Math.random() * 400,
                 },
-                label: connector.class.configuration.description,
-                text: connector.class.configuration.description,
+                label: connector.Class.configuration.description,
+                text: connector.Class.configuration.description,
                 connectorId: connector.id,
                 nodeType: 'connector',
                 attrs: {
@@ -424,13 +424,13 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         this.graph.clear();
         this.elements = {};
         const renderedNodes = new Set();
-        if (this.currentAgent.subAgents && this.currentAgent.subAgents.length > 0) {
-            this.currentAgent.subAgents.forEach(subAgent => {
+        if (this.currentAgent.SubAgents && this.currentAgent.SubAgents.length > 0) {
+            this.currentAgent.SubAgents.forEach(subAgent => {
                 const el = this.createAgentElement(subAgent);
                 this.elements[this.getUniqueAgentId(subAgent)] = el;
                 renderedNodes.add(this.getUniqueAgentId(subAgent));
-                if (subAgent.connectors && subAgent.connectors.length > 0) {
-                    subAgent.connectors.forEach(connector => {
+                if (subAgent.Connectors && subAgent.Connectors.length > 0) {
+                    subAgent.Connectors.forEach(connector => {
                         const el = this.createConnectorElement(connector, subAgent);
                         this.elements[this.getUniqueConnectorId(connector)] = el;
                         renderedNodes.add(this.getUniqueConnectorId(connector));
@@ -438,9 +438,9 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
                 }
             });
         }
-        if (this.currentAgent.connectors &&
-            this.currentAgent.connectors.length > 0) {
-            this.currentAgent.connectors.forEach(connector => {
+        if (this.currentAgent.Connectors &&
+            this.currentAgent.Connectors.length > 0) {
+            this.currentAgent.Connectors.forEach(connector => {
                 const el = this.createConnectorElement(connector, this.currentAgent);
                 this.elements[this.getUniqueConnectorId(connector)] = el;
                 renderedNodes.add(this.getUniqueConnectorId(connector));
@@ -656,11 +656,11 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         return html `
       <div class="layout horizontal center-center agentHeader">
         <img
-          src="${this.currentAgent?.class.configuration.imageUrl}"
+          src="${this.currentAgent?.Class.configuration.imageUrl}"
           class="agentHeaderImage"
         />
         <div class="layout vertical agentHeaderText">
-          ${this.currentAgent?.class.name}
+          ${this.currentAgent?.Class.name}
         </div>
       </div>
     `;
