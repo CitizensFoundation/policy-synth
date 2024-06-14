@@ -1,6 +1,6 @@
 import winston from 'winston';
 
-import './problems/problems.js'
+import './problems/problemsProcessor.js'
 import './solutions/solutions.js'
 import './policies/policies.js'
 

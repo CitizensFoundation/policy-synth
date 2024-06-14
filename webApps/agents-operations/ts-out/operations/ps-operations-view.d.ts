@@ -9,7 +9,7 @@ import './ps-connector-node.js';
 import { OpsServerApi } from './OpsServerApi.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 export declare class PsOperationsView extends PsBaseWithRunningAgentObserver {
-    currentAgent: PsAgentInstance;
+    currentAgent: PsAgentAttributes;
     private graph;
     private paper;
     private elements;
@@ -36,10 +36,10 @@ export declare class PsOperationsView extends PsBaseWithRunningAgentObserver {
     private applyDirectedGraphLayout;
     private centerParentNodeOnScreen;
     private updatePaperSize;
-    createAgentElement(agent: PsAgentInstance): dia.Element;
-    createConnectorElement(connector: PsAgentConnectorInstance, sourceAgent: PsAgentInstance): dia.Element | null;
-    getUniqueConnectorId(connector: PsAgentConnectorInstance): string;
-    getUniqueAgentId(agent: PsAgentInstance): string;
+    createAgentElement(agent: PsAgentAttributes): dia.Element;
+    createConnectorElement(connector: PsAgentConnectorAttributes, sourceAgent: PsAgentAttributes): dia.Element | null;
+    getUniqueConnectorId(connector: PsAgentConnectorAttributes): string;
+    getUniqueAgentId(agent: PsAgentAttributes): string;
     updateGraphWithAgentData(): void;
     private selectElement;
     private highlightCell;

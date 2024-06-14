@@ -21,7 +21,7 @@ import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSe
 import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
 import { PolicySynthAgentBase } from "../baseAgent.js";
 
-export class AgentProblems extends BaseAgentProcessor {
+export class AgentProblemsProcessor extends BaseAgentProcessor {
   declare memory: PsBaseMemoryData;
 
   async setStage(stage: PsMemoryStageTypes) {
@@ -162,7 +162,7 @@ const agent = new Worker(
   "agent-problems",
   async (job: Job) => {
     console.log(`Agent Problems Processing job ${job.id}`);
-    const agent = new AgentProblems();
+    const agent = new AgentProblemsProcessor();
     await agent.setup(job);
     await agent.process();
     return job.data;

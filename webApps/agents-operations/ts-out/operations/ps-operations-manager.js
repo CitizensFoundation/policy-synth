@@ -89,7 +89,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         const yourPrioritiesQuestions = [
             titleQuestion,
             {
-                uniqueId: 'userId',
+                uniqueId: 'user_id',
                 text: 'User ID',
                 type: 'textField',
                 maxLength: 200,
@@ -103,7 +103,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 required: false,
             },
             {
-                uniqueId: 'groupId',
+                uniqueId: 'group_id',
                 text: 'Group ID',
                 type: 'textField',
                 maxLength: 200,
@@ -156,382 +156,457 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         const googleDocsConnectorClass = {
             id: 1,
             name: 'Google Docs',
-            description: 'Connector for Google Docs',
+            uuid: '1',
             version: 1,
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png',
-            iconName: 'docs',
-            configurationQuestions: googleDocsQuestions,
+            user_id: 1,
+            available: true,
+            configuration: {
+                description: 'Connector for Google Docs',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png',
+                iconName: 'docs',
+                questions: googleDocsQuestions,
+            },
         };
         const discordMarketResearchBotConnectorClass = {
             id: 2,
             name: 'Discord Bot',
-            description: 'Connector for Discord Market Research Bot',
+            uuid: '1',
             version: 1,
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/7336a9fb-7512-4c31-ae77-0bb7c5a99b97.png',
-            iconName: 'discord',
-            configurationQuestions: discordQuestions,
+            user_id: 1,
+            available: true,
+            configuration: {
+                description: 'Connector for Discord Market Research Bot',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/7336a9fb-7512-4c31-ae77-0bb7c5a99b97.png',
+                iconName: 'discord',
+                questions: discordQuestions,
+            },
         };
         const yourPrioritiesConnectorClass = {
             id: 3,
             name: 'Your Priorities',
-            description: 'Connector for Your Priorities',
+            uuid: '1',
             version: 1,
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png',
-            iconName: 'yourPriorities',
-            configurationQuestions: yourPrioritiesQuestions,
+            user_id: 1,
+            available: true,
+            configuration: {
+                description: 'Connector for Your Priorities',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png',
+                iconName: 'yourPriorities',
+                questions: yourPrioritiesQuestions,
+            },
         };
         const allOurIdeasConnectorClass = {
             id: 4,
             name: 'All Our Ideas',
-            description: 'Connector for All Our Ideas',
+            uuid: '1',
             version: 1,
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/30582554-20a7-4de5-87a4-4540dc2030b4.png',
-            iconName: 'allOurIdeas',
-            configurationQuestions: [],
+            user_id: 1,
+            available: true,
+            configuration: {
+                description: 'Connector for All Our Ideas',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/30582554-20a7-4de5-87a4-4540dc2030b4.png',
+                iconName: 'allOurIdeas',
+                questions: [],
+            },
         };
         const googleSheetsConnectorClass = {
             id: 5,
             name: 'Google Sheets',
-            description: 'Connector for All ',
+            uuid: '1',
             version: 1,
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/1187aee2-39e8-48b2-afa2-0aba91c0ced0.png',
-            iconName: 'googleSheets',
-            configurationQuestions: [],
+            user_id: 1,
+            available: true,
+            configuration: {
+                description: 'Connector for All ',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/1187aee2-39e8-48b2-afa2-0aba91c0ced0.png',
+                iconName: 'googleSheets',
+                questions: [],
+            },
         };
         const smarterCrowdsourcingAgentClass = {
             id: 1,
             version: 1,
             name: 'Smarter Crowdsourcing Agent',
-            description: 'An agent for running the Smarter Crowdsourcing process',
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
-            iconName: 'smarter_crowdsourcing',
-            assistantSystemInstructions: 'Explain the process',
-            capabilities: ['research', 'analysis'],
-            inputJsonInterface: '{}',
-            outputJsonInterface: '{}',
-            configurationQuestions: rootCausesQuestions,
-            supportedConnectors: [
-                googleDocsConnectorClass,
-                discordMarketResearchBotConnectorClass,
-            ],
+            uuid: '1',
+            user_id: 1,
+            available: true,
+            configuration: {
+                description: 'An agent for running the Smarter Crowdsourcing process',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
+                iconName: 'smarter_crowdsourcing',
+                assistantSystemInstructions: 'Explain the process',
+                capabilities: ['research', 'analysis'],
+                inputJsonInterface: '{}',
+                outputJsonInterface: '{}',
+                questions: rootCausesQuestions,
+                supportedConnectors: [
+                    googleDocsConnectorClass,
+                    discordMarketResearchBotConnectorClass,
+                ],
+            },
         };
         const rootCausesSubAgentClass = {
             id: 2,
             version: 1,
+            uuid: '1',
+            user_id: 1,
+            available: true,
             name: 'Root Causes Research',
-            description: 'Root causes research sub-agent',
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png',
-            iconName: 'root_causes_research',
-            assistantSystemInstructions: 'Conduct root causes research',
-            capabilities: ['research', 'analysis'],
-            inputJsonInterface: '{}',
-            outputJsonInterface: '{}',
-            configurationQuestions: rootCausesQuestions,
-            supportedConnectors: [
-                googleDocsConnectorClass,
-                discordMarketResearchBotConnectorClass,
-            ],
+            configuration: {
+                description: 'Root causes research sub-agent',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png',
+                iconName: 'root_causes_research',
+                assistantSystemInstructions: 'Conduct root causes research',
+                capabilities: ['research', 'analysis'],
+                inputJsonInterface: '{}',
+                outputJsonInterface: '{}',
+                questions: rootCausesQuestions,
+                supportedConnectors: [
+                    googleDocsConnectorClass,
+                    discordMarketResearchBotConnectorClass,
+                ],
+            },
         };
         const solutionsSubAgentClass = {
             id: 3,
             version: 1,
+            uuid: '1',
+            user_id: 1,
+            available: true,
             name: 'Solutions Search',
-            description: 'Sub-agent for solutions search',
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
-            iconName: 'solutions_search',
-            assistantSystemInstructions: 'Conduct solutions search',
-            capabilities: ['research', 'analysis'],
-            inputJsonInterface: '{}',
-            outputJsonInterface: '{}',
-            configurationQuestions: rootCausesQuestions,
-            supportedConnectors: [
-                googleDocsConnectorClass,
-                discordMarketResearchBotConnectorClass,
-            ],
+            configuration: {
+                description: 'Sub-agent for solutions search',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
+                iconName: 'solutions_search',
+                assistantSystemInstructions: 'Conduct solutions search',
+                capabilities: ['research', 'analysis'],
+                inputJsonInterface: '{}',
+                outputJsonInterface: '{}',
+                questions: rootCausesQuestions,
+                supportedConnectors: [
+                    googleDocsConnectorClass,
+                    discordMarketResearchBotConnectorClass,
+                ],
+            },
         };
         const policyGenerationSubAgentClass = {
             id: 4,
+            uuid: '1',
+            user_id: 1,
+            available: true,
             version: 1,
             name: 'Generate Policies',
-            description: 'Sub-agent for generating policies',
-            imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png',
-            iconName: 'generate_policies',
-            assistantSystemInstructions: 'Generate policies',
-            capabilities: ['research', 'analysis', 'policyGeneration'],
-            inputJsonInterface: '{}',
-            outputJsonInterface: '{}',
-            configurationQuestions: rootCausesQuestions,
-            supportedConnectors: [
-                googleDocsConnectorClass,
-                discordMarketResearchBotConnectorClass,
-            ],
+            configuration: {
+                description: 'Sub-agent for generating policies',
+                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png',
+                iconName: 'generate_policies',
+                assistantSystemInstructions: 'Generate policies',
+                capabilities: ['research', 'analysis', 'policyGeneration'],
+                inputJsonInterface: '{}',
+                outputJsonInterface: '{}',
+                questions: rootCausesQuestions,
+                supportedConnectors: [
+                    googleDocsConnectorClass,
+                    discordMarketResearchBotConnectorClass,
+                ],
+            },
         };
         const connectorGoogleDocsForRootCauses = {
             id: 1,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
+            class_id: 1,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
                 name: 'Root Causes Summary',
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
+                graphPosX: -5,
+                graphPosY: 370,
+                permissionNeeded: 'read',
             },
-            graphPosX: -5,
-            graphPosY: 370,
             class: googleDocsConnectorClass,
-            permissionNeeded: 'read',
         };
         const connectorGoogleSheetsForRootCauses = {
             id: 2,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
+            class_id: 1,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            //costs: [],
             configuration: {
                 name: 'Root Causes Rows',
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
+                graphPosX: 230,
+                graphPosY: 540,
+                permissionNeeded: 'read',
             },
-            graphPosX: 230,
-            graphPosY: 540,
             class: googleSheetsConnectorClass,
-            permissionNeeded: 'read',
         };
         const connectorGoogleSheetsForSolutions = {
             id: 3,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
+            class_id: 1,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            //costs: [],
             configuration: {
                 name: 'Solutions Rows',
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
+                graphPosX: 230,
+                graphPosY: 540 + 800,
+                permissionNeeded: 'read',
             },
-            graphPosX: 230,
-            graphPosY: 540 + 800,
             class: googleSheetsConnectorClass,
-            permissionNeeded: 'read',
         };
         const connectorGoogleSheetsForPolicies = {
             id: 4,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
+            class_id: 1,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
             configuration: {
                 name: 'Policies Rows',
                 googleDocsId: '1sdfjkl3j4klj3',
                 googleServiceAccount: '...',
+                graphPosX: 230,
+                graphPosY: 1050 + 1050,
+                permissionNeeded: 'read',
             },
-            graphPosX: 230,
-            graphPosY: 1050 + 1050,
             class: googleSheetsConnectorClass,
-            permissionNeeded: 'read',
         };
         const connectorDiscordRootCauses = {
             id: 5,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
                 name: 'Causes Notifications',
                 discordBotToken: 'dasdsadsdsa',
                 discordChannelName: 'root-causes-agent',
+                graphPosX: 480,
+                graphPosY: 300,
+                permissionNeeded: 'readWrite',
             },
-            graphPosX: 480,
-            graphPosY: 300,
             class: discordMarketResearchBotConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const connectorDiscordSolutions = {
             id: 6,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
+                permissionNeeded: 'readWrite',
                 name: 'Solutions Notifications',
                 discordBotToken: 'dasdsadsdsa',
                 discordChannelName: 'solutions-agent',
+                graphPosX: 480,
+                graphPosY: 300 + 800,
             },
-            graphPosX: 480,
-            graphPosY: 300 + 800,
             class: discordMarketResearchBotConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const connectorDiscordPolicies = {
             id: 7,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
+                permissionNeeded: 'readWrite',
                 name: 'Notifications & Remote Control',
                 discordBotToken: 'dasdsadsdsa',
                 discordChannelName: 'policies-agent',
+                graphPosX: 480,
+                graphPosY: 800 + 1050,
             },
-            graphPosX: 480,
-            graphPosY: 800 + 1050,
             class: discordMarketResearchBotConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const connectorYourPrioritiesSolutions = {
             id: 8,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
+                permissionNeeded: 'readWrite',
                 name: 'Human Solutions',
-                userId: 'planxbot@hugsmidi.is',
+                user_id: 'planxbot@hugsmidi.is',
                 userKey: '12345',
-                groupId: '31298',
+                group_id: '31298',
+                graphPosX: -5,
+                graphPosY: 230 + 800,
             },
-            graphPosX: -5,
-            graphPosY: 230 + 800,
             class: yourPrioritiesConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const connectorYourPrioritiesPolicies = {
             id: 9,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
                 name: 'Policy Ideas Deliberation',
-                userId: 'planxbot@hugsmidi.is',
+                user_id: 'planxbot@hugsmidi.is',
                 userKey: '12345',
-                groupId: '31299',
+                group_id: '31299',
+                graphPosX: -10,
+                graphPosY: 750 + 1050,
+                permissionNeeded: 'readWrite',
             },
-            graphPosX: -10,
-            graphPosY: 750 + 1050,
             class: yourPrioritiesConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const connectorAllOurIdeasRootCauses = {
             id: 10,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
+                permissionNeeded: 'readWrite',
                 name: 'Rank Root Causes',
-                userId: 'planxbot@hugsmidi.is',
+                user_id: 'planxbot@hugsmidi.is',
                 userKey: '12345',
-                groupId: '31299',
+                group_id: '31299',
+                graphPosX: 230,
+                graphPosY: 780,
             },
-            graphPosX: 230,
-            graphPosY: 780,
             class: allOurIdeasConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const connectorAllOurIdeasSolutions = {
             id: 11,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
+                permissionNeeded: 'readWrite',
                 name: 'Rank Solutions',
-                userId: 'planxbot@hugsmidi.is',
+                user_id: 'planxbot@hugsmidi.is',
                 userKey: '12345',
-                groupId: '31299',
+                group_id: '31299',
+                graphPosX: 230,
+                graphPosY: 780 + 800,
             },
-            graphPosX: 230,
-            graphPosY: 780 + 800,
             class: allOurIdeasConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const connectorAllOurIdeasPolicies = {
             id: 12,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
+                permissionNeeded: 'readWrite',
                 name: 'Rank Policies',
-                userId: 'planxbot@hugsmidi.is',
+                user_id: 'planxbot@hugsmidi.is',
                 userKey: '12345',
-                groupId: '31299',
+                group_id: '31299',
+                graphPosX: 230,
+                graphPosY: 1280 + 1050,
             },
-            graphPosX: 230,
-            graphPosY: 1280 + 1050,
             class: allOurIdeasConnectorClass,
-            permissionNeeded: 'readWrite',
         };
         const subAgent1 = {
             id: 2,
-            classId: 2,
-            userId: 1,
-            groupId: 1,
+            class_id: 2,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
                 name: 'Unlocking Literacy',
                 howManySearchQueries: 10,
                 percentToUseSearchQueries: 50,
                 percentToUseSearchResults: 50,
+                graphPosX: 200,
+                graphPosY: 250,
             },
-            graphPosX: 200,
-            graphPosY: 250,
             class: rootCausesSubAgentClass,
-            parentAgentId: 1,
+            parent_agent_id: 1,
             parentAgent: undefined,
             subAgents: undefined,
             connectors: [
                 connectorGoogleDocsForRootCauses,
                 connectorDiscordRootCauses,
                 connectorAllOurIdeasRootCauses,
-                connectorGoogleSheetsForRootCauses
+                connectorGoogleSheetsForRootCauses,
             ],
         };
         const subAgent2 = {
             id: 3,
-            classId: 3,
-            userId: 1,
-            groupId: 1,
+            class_id: 3,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
                 name: 'Unlocking Literacy',
                 howManySearchQueries: 10,
                 percentToUseSearchQueries: 50,
                 percentToUseSearchResults: 50,
+                graphPosX: 200,
+                graphPosY: 250 + 800,
             },
-            graphPosX: 200,
-            graphPosY: 250 + 800,
             class: solutionsSubAgentClass,
-            parentAgentId: 1,
+            parent_agent_id: 1,
             parentAgent: undefined,
             subAgents: undefined,
             connectors: [
@@ -543,43 +618,47 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         };
         const subAgent3 = {
             id: 4,
-            classId: 4,
-            userId: 1,
-            groupId: 1,
+            class_id: 4,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
-                name: 'Plan X',
+                name: 'Smarter Crowdsourcing',
+                graphPosX: 200,
+                graphPosY: 760 + 1050,
             },
-            graphPosX: 200,
-            graphPosY: 760 + 1050,
             class: policyGenerationSubAgentClass,
-            parentAgentId: 1,
+            parent_agent_id: 1,
             parentAgent: undefined,
             subAgents: undefined,
             connectors: [
                 connectorYourPrioritiesPolicies,
                 connectorDiscordPolicies,
                 connectorGoogleSheetsForPolicies,
-                connectorAllOurIdeasPolicies
+                connectorAllOurIdeasPolicies,
             ],
         };
         const smarterCrowdsourcingAgent = {
             id: 1,
-            classId: 1,
-            userId: 1,
-            groupId: 1,
+            class_id: 1,
+            user_id: 1,
+            group_id: 1,
             user: {}, // populate with relevant YpUserData
             group: {}, // populate with relevant YpGroupData
-            costs: [],
+            uuid: '1',
+            apiCosts: [],
+            modelCosts: [],
             configuration: {
-                name: 'Plan X - Market Research',
+                graphPosX: 0,
+                graphPosY: 0,
+                name: 'Smarter Crowdsourcing',
             },
-            graphPosX: 0,
-            graphPosY: 0,
             class: smarterCrowdsourcingAgentClass,
-            parentAgentId: undefined,
+            parent_agent_id: undefined,
             parentAgent: undefined,
             subAgents: [subAgent1, subAgent2, subAgent3],
             connectors: undefined,
@@ -640,7 +719,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.$$('#editNodeDialog').show();
     }
     saveAnswers() {
-        for (let a = 0; a < this.nodeToEditInfo.class.configurationQuestions.length; a++) {
+        for (let a = 0; a < this.nodeToEditInfo.class.configuration.questions.length; a++) {
             const questionElement = this.$$('#structuredQuestion_' + a);
             if (questionElement) {
                 const answer = questionElement.getAnswer();
@@ -742,7 +821,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
       <div class="layout horizontal">
         <div>
           <img
-            src="${this.nodeToEditInfo.class.imageUrl}"
+            src="${this.nodeToEditInfo.class.configuration.imageUrl}"
             class="nodeEditHeadlineImage"
           />
         </div>
@@ -779,7 +858,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
           ${this.nodeToEditInfo
             ? html `
                 <div id="surveyContainer">
-                  ${this.nodeToEditInfo.class.configurationQuestions.map((question, index) => html `
+                  ${this.nodeToEditInfo.class.configuration.questions.map((question, index) => html `
                       <yp-structured-question-edit
                         index="${index}"
                         id="structuredQuestion_${question.uniqueId
@@ -833,7 +912,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             this.updatePath();
             await this.updateComplete;
             this.$$('#context').value =
-                this.currentAgent.class.description;
+                this.currentAgent.class.configuration.description;
             this.$$('#undesirableEffects').value = '';
             this.activeTabIndex = 1;
             this.$$('#tabBar').activeTabIndex = 1;

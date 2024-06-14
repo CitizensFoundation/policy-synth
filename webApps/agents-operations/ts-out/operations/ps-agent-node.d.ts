@@ -6,7 +6,7 @@ import '@material/web/menu/menu-item.js';
 import { OpsServerApi } from './OpsServerApi.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 export declare abstract class PsAgentNode extends PsOperationsBaseNode {
-    agent: PsAgentInstance;
+    agent: PsAgentAttributes;
     agentId: number;
     isWorking: boolean;
     api: OpsServerApi;

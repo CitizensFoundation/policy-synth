@@ -21,7 +21,7 @@ type Cell = dia.Element | dia.Link;
 @customElement('ps-operations-view')
 export class PsOperationsView extends PsBaseWithRunningAgentObserver {
   @property({ type: Object })
-  currentAgent: PsAgentInstance;
+  currentAgent: PsAgentAttributes;
 
   private graph!: dia.Graph;
   private paper!: dia.Paper;
@@ -449,18 +449,18 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
     });
   }
 
-  createAgentElement(agent: PsAgentInstance): dia.Element {
+  createAgentElement(agent: PsAgentAttributes): dia.Element {
     if (this.elements[this.getUniqueAgentId(agent)]) {
       return this.elements[this.getUniqueAgentId(agent)];
     }
     //@ts-ignore
     const el = new AgentShape({
       position: {
-        x: agent.graphPosX || Math.random() * 600,
-        y: agent.graphPosY || Math.random() * 400,
+        x: agent.configuration.graphPosX || Math.random() * 600,
+        y: agent.configuration.graphPosY || Math.random() * 400,
       },
-      label: agent.class.description,
-      text: agent.class.description,
+      label: agent.class.configuration.description,
+      text: agent.class.configuration.description,
       agentId: agent.id,
       nodeType: 'agent' as PsAgentsNodeType,
       attrs: {
@@ -473,8 +473,8 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
   }
 
   createConnectorElement(
-    connector: PsAgentConnectorInstance,
-    sourceAgent: PsAgentInstance
+    connector: PsAgentConnectorAttributes,
+    sourceAgent: PsAgentAttributes
   ): dia.Element | null {
     let sourceElement = this.elements[this.getUniqueAgentId(sourceAgent)];
     let targetElement;
@@ -486,11 +486,11 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
       // Create a new ConnectorShape element
       el = new ConnectorShape({
         position: {
-          x: connector.graphPosX || Math.random() * 600,
-          y: connector.graphPosY || Math.random() * 400,
+          x: connector.configuration.graphPosX || Math.random() * 600,
+          y: connector.configuration.graphPosY || Math.random() * 400,
         },
-        label: connector.class.description,
-        text: connector.class.description,
+        label: connector.class.configuration.description,
+        text: connector.class.configuration.description,
         connectorId: connector.id,
         nodeType: 'connector' as PsAgentsNodeType,
         attrs: {
@@ -512,11 +512,11 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
     return el;
   }
 
-  getUniqueConnectorId(connector: PsAgentConnectorInstance): string {
+  getUniqueConnectorId(connector: PsAgentConnectorAttributes): string {
     return `connector-${connector.id}`;
   }
 
-  getUniqueAgentId(agent: PsAgentInstance): string {
+  getUniqueAgentId(agent: PsAgentAttributes): string {
     return `agent-${agent.id}`;
   }
 
@@ -777,7 +777,7 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
     return html`
       <div class="layout horizontal center-center agentHeader">
         <img
-          src="${this.currentAgent?.class.imageUrl}"
+          src="${this.currentAgent?.class.configuration.imageUrl}"
           class="agentHeaderImage"
         />
         <div class="layout vertical agentHeaderText">

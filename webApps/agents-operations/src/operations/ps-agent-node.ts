@@ -15,7 +15,7 @@ import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 @customElement('ps-agent-node')
 export abstract class PsAgentNode extends PsOperationsBaseNode {
   @property({ type: Object })
-  agent!: PsAgentInstance;
+  agent!: PsAgentAttributes;
 
   @property({ type: Number })
   agentId!: number;
@@ -158,7 +158,7 @@ export abstract class PsAgentNode extends PsOperationsBaseNode {
   renderImage() {
     return html`
       <div class="layout horizontal center-center">
-        <img class="image" src="${this.agent.class.imageUrl}" />
+        <img class="image" src="${this.agent.class.configuration.imageUrl}" />
       </div>
     `;
   }

@@ -12,8 +12,8 @@ export class PsAppGlobals extends YpAppGlobals {
   disableParentConstruction = true;
   exernalGoalParamsWhiteList: string | undefined;
 
-  agentsInstanceRegistry: Map<number, PsAgentInstance> = new Map();
-  connectorsInstanceRegistry: Map<number, PsAgentConnectorInstance> = new Map();
+  agentsInstanceRegistry: Map<number, PsAgentAttributes> = new Map();
+  connectorsInstanceRegistry: Map<number, PsAgentConnectorAttributes> = new Map();
 
   currentRunningAgentId: number | undefined;
   currentAgentListeners: any[] = [];
@@ -44,19 +44,19 @@ export class PsAppGlobals extends YpAppGlobals {
     this.currentAgentListeners.forEach(listener => listener(this.currentRunningAgentId));
   }
 
-  addToAgentsRegistry = (agent: PsAgentInstance): void => {
+  addToAgentsRegistry = (agent: PsAgentAttributes): void => {
     this.agentsInstanceRegistry.set(agent.id, agent);
   }
 
-  addToConnectorsRegistry = (connector: PsAgentConnectorInstance): void => {
+  addToConnectorsRegistry = (connector: PsAgentConnectorAttributes): void => {
     this.connectorsInstanceRegistry.set(connector.id, connector);
   }
 
-  getAgentInstance(agentId: number): PsAgentInstance | undefined {
+  getAgentInstance(agentId: number): PsAgentAttributes | undefined {
     return this.agentsInstanceRegistry.get(agentId);
   }
 
-  getConnectorInstance(connectorId: number): PsAgentConnectorInstance | undefined {
+  getConnectorInstance(connectorId: number): PsAgentConnectorAttributes | undefined {
     return this.connectorsInstanceRegistry.get(connectorId);
   }
 

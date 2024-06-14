@@ -22,9 +22,9 @@ import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     currentAgentId: number | undefined;
-    currentAgent: PsAgentInstance | undefined;
+    currentAgent: PsAgentAttributes | undefined;
     isFetchingAgent: boolean;
-    nodeToEditInfo: PsAgentInstance | PsAgentConnectorInstance | undefined;
+    nodeToEditInfo: PsAgentAttributes | PsAgentConnectorAttributes | undefined;
     nodeToEdit: PsOperationsBaseNode | undefined;
     allCausesExceptCurrentToEdit: PsOperationsBaseNode[];
     showDeleteConfirmation: boolean;

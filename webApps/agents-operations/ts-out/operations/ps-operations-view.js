@@ -363,11 +363,11 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         //@ts-ignore
         const el = new AgentShape({
             position: {
-                x: agent.graphPosX || Math.random() * 600,
-                y: agent.graphPosY || Math.random() * 400,
+                x: agent.configuration.graphPosX || Math.random() * 600,
+                y: agent.configuration.graphPosY || Math.random() * 400,
             },
-            label: agent.class.description,
-            text: agent.class.description,
+            label: agent.class.configuration.description,
+            text: agent.class.configuration.description,
             agentId: agent.id,
             nodeType: 'agent',
             attrs: {
@@ -389,11 +389,11 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
             // Create a new ConnectorShape element
             el = new ConnectorShape({
                 position: {
-                    x: connector.graphPosX || Math.random() * 600,
-                    y: connector.graphPosY || Math.random() * 400,
+                    x: connector.configuration.graphPosX || Math.random() * 600,
+                    y: connector.configuration.graphPosY || Math.random() * 400,
                 },
-                label: connector.class.description,
-                text: connector.class.description,
+                label: connector.class.configuration.description,
+                text: connector.class.configuration.description,
                 connectorId: connector.id,
                 nodeType: 'connector',
                 attrs: {
@@ -656,7 +656,7 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         return html `
       <div class="layout horizontal center-center agentHeader">
         <img
-          src="${this.currentAgent?.class.imageUrl}"
+          src="${this.currentAgent?.class.configuration.imageUrl}"
           class="agentHeaderImage"
         />
         <div class="layout vertical agentHeaderText">

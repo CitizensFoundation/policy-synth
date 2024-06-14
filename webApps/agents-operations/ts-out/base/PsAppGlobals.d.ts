@@ -9,8 +9,8 @@ export declare class PsAppGlobals extends YpAppGlobals {
     earlName: string;
     disableParentConstruction: boolean;
     exernalGoalParamsWhiteList: string | undefined;
-    agentsInstanceRegistry: Map<number, PsAgentInstance>;
-    connectorsInstanceRegistry: Map<number, PsAgentConnectorInstance>;
+    agentsInstanceRegistry: Map<number, PsAgentAttributes>;
+    connectorsInstanceRegistry: Map<number, PsAgentConnectorAttributes>;
     currentRunningAgentId: number | undefined;
     currentAgentListeners: any[];
     constructor(serverApi: PsServerApi);
@@ -18,10 +18,10 @@ export declare class PsAppGlobals extends YpAppGlobals {
     addCurrentAgentListener(callback: Function): void;
     removeCurrentAgentListener(callback: Function): void;
     notifyCurrentAgentListeners(): void;
-    addToAgentsRegistry: (agent: PsAgentInstance) => void;
-    addToConnectorsRegistry: (connector: PsAgentConnectorInstance) => void;
-    getAgentInstance(agentId: number): PsAgentInstance | undefined;
-    getConnectorInstance(connectorId: number): PsAgentConnectorInstance | undefined;
+    addToAgentsRegistry: (agent: PsAgentAttributes) => void;
+    addToConnectorsRegistry: (connector: PsAgentConnectorAttributes) => void;
+    getAgentInstance(agentId: number): PsAgentAttributes | undefined;
+    getConnectorInstance(connectorId: number): PsAgentConnectorAttributes | undefined;
     getEarlName: () => string | null;
     setIds: (e: CustomEvent) => void;
     parseQueryString: () => void;
