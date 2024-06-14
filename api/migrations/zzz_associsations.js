@@ -81,6 +81,41 @@ export async function up(queryInterface, Sequelize) {
 
   await queryInterface.addIndex('AgentRegistryConnectors', ['ps_agent_registry_id']);
   await queryInterface.addIndex('AgentRegistryConnectors', ['ps_agent_connector_class_id']);
+
+  // Creating the AgentConnectors join table
+  await queryInterface.createTable('AgentConnectors', {
+    agent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'PsAgents',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    connector_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'PsAgentConnectors',
+        key: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+  });
+
+  await queryInterface.addIndex('AgentConnectors', ['agent_id']);
+  await queryInterface.addIndex('AgentConnectors', ['connector_id']);
 }
 
 export async function down(queryInterface, Sequelize) {

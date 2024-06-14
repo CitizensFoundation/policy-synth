@@ -1,6 +1,9 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./index.js";
 import { PsAgentConnectorClass } from "./agentConnectorClass.js";
+import { User } from "./ypUser.js";
+import { Group } from "./ypGroup.js";
+import { PsAgent } from "./agent.js";
 export class PsAgentConnector extends Model {
     id;
     uuid;
@@ -77,12 +80,18 @@ PsAgentConnector.belongsTo(PsAgentConnectorClass, {
     foreignKey: "class_id",
     as: "Class",
 });
-PsAgentConnector.belongsTo(/*YpUserData*/ {}, {
+PsAgentConnector.belongsTo(User, {
     foreignKey: "user_id",
     as: "User",
 });
-PsAgentConnector.belongsTo(/*YpGroupData*/ {}, {
+PsAgentConnector.belongsTo(Group, {
     foreignKey: "group_id",
     as: "Group",
+});
+// Through a join table
+PsAgentConnector.belongsToMany(PsAgent, {
+    through: "AgentConnectors",
+    foreignKey: "connector_id",
+    as: "Agents",
 });
 //# sourceMappingURL=agentConnector.js.map

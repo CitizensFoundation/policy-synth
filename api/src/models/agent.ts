@@ -1,6 +1,11 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./index.js";
 import { PsAgentClass } from "./agentClass.js";
+import { User } from "./ypUser.js";
+import { Group } from "./ypGroup.js";
+import { PsApiCost } from "./apiCost.js";
+import { PsModelCost } from "./modelCost.js";
+import { PsAgentConnector } from "./agentConnector.js";
 
 interface PsAgentCreationAttributes
   extends Optional<
@@ -92,6 +97,9 @@ PsAgent.init(
       {
         fields: ["group_id"],
       },
+      {
+        fields: ["parent_agent_id"],
+      },
     ],
     timestamps: true,
     underscored: true,
@@ -100,19 +108,20 @@ PsAgent.init(
 
 // Define associations
 PsAgent.belongsTo(PsAgentClass, { foreignKey: "class_id", as: "class" });
-PsAgent.belongsTo(/*YpUserData*/ {} as any, {
+
+PsAgent.belongsTo(User, {
   foreignKey: "user_id",
   as: "User",
 });
-PsAgent.belongsTo(/*YpGroupData*/ {} as any, {
+PsAgent.belongsTo(Group, {
   foreignKey: "group_id",
   as: "Group",
 });
-PsAgent.hasMany(/*PsApiCostAttributes*/ {} as any, {
+PsAgent.hasMany(PsApiCost, {
   foreignKey: "agent_id",
   as: "ApiCosts",
 });
-PsAgent.hasMany(/*PsModelCostAttributes*/ {} as any, {
+PsAgent.hasMany(PsModelCost, {
   foreignKey: "agent_id",
   as: "ModelCosts",
 });
@@ -120,8 +129,12 @@ PsAgent.belongsTo(PsAgent, {
   foreignKey: "parent_agent_id",
   as: "ParentAgent",
 });
-PsAgent.hasMany(PsAgent, { foreignKey: "parent_agent_id", as: "subAgents" });
-PsAgent.belongsToMany(/*PsAgentConnectorAttributes*/ {} as any, {
+
+PsAgent.hasMany(PsAgent, { foreignKey: "parent_agent_id", as: "SubAgents" });
+
+// Through a join table
+PsAgent.belongsToMany(PsAgentConnector, {
   through: "AgentConnectors",
+  foreignKey: "agent_id",
   as: "Connectors",
 });

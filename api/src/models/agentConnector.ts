@@ -1,6 +1,9 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./index.js";
 import { PsAgentConnectorClass } from "./agentConnectorClass.js";
+import { User } from "./ypUser.js";
+import { Group } from "./ypGroup.js";
+import { PsAgent } from "./agent.js";
 
 interface PsAgentConnectorCreationAttributes
   extends Optional<
@@ -93,11 +96,18 @@ PsAgentConnector.belongsTo(PsAgentConnectorClass, {
   foreignKey: "class_id",
   as: "Class",
 });
-PsAgentConnector.belongsTo(/*YpUserData*/ {} as any, {
+PsAgentConnector.belongsTo(User, {
   foreignKey: "user_id",
   as: "User",
 });
-PsAgentConnector.belongsTo(/*YpGroupData*/ {} as any, {
+PsAgentConnector.belongsTo(Group, {
   foreignKey: "group_id",
   as: "Group",
+});
+
+// Through a join table
+PsAgentConnector.belongsToMany(PsAgent, {
+  through: "AgentConnectors",
+  foreignKey: "connector_id",
+  as: "Agents",
 });

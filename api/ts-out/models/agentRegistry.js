@@ -59,9 +59,11 @@ PsAgentRegistry.init({
 PsAgentRegistry.belongsToMany(PsAgentClass, {
     through: "AgentRegistryAgents",
     as: "Agents",
+    foreignKey: "agent_id",
 });
 PsAgentRegistry.belongsToMany(PsAgentConnectorClass, {
     through: "AgentRegistryConnectors",
+    foreignKey: "connector_id",
     as: "Connectors",
 });
 //# sourceMappingURL=agentRegistry.js.map
