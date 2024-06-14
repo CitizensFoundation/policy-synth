@@ -31,9 +31,8 @@
   "dependencies": {
     "@joint/core": "^4.0.4",
     "@joint/layout-directed-graph": "^4.0.3",
-    "@policysynth/agents": "^1.2.10",
-    "marked": "^12.0.2",
-    "rollup-plugin-commonjs": "^10.1.0"
+    "@policysynth/agents": "^1.2.11",
+    "marked": "^12.0.2"
   },
   "peerDependencies": {
     "@yrpri/webapp": "^9.0.46"
@@ -43,6 +42,7 @@
     "src/*.d.ts"
   ],
   "devDependencies": {
+    "rollup-plugin-commonjs": "^10.1.0",
     "@babel/plugin-transform-runtime": "^7.18.10",
     "@babel/preset-env": "^7.16.6",
     "@babel/runtime": "^7.18.9",
