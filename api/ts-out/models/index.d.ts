@@ -1,4 +1,7 @@
-import { sequelize } from "../models/sequelize.js";
-declare const models: any;
-export { sequelize, models };
+interface Models {
+    [key: string]: any;
+}
+declare const models: Models;
+declare const initializeModels: () => Promise<void>;
+export { models, initializeModels };
 //# sourceMappingURL=index.d.ts.map

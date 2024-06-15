@@ -37,8 +37,8 @@ export class PsAgent
   public SubAgents?: PsAgent[];
   public Connectors?: PsAgentConnectorAttributes[];
 
-  public addSubAgents!: (subAgents: PsAgent[]) => Promise<void>;
-  public addConnectors!: (connectors: PsAgentConnector[]) => Promise<void>;
+  public addSubAgent!: (subAgent: PsAgent) => Promise<void>;
+  public addConnector!: (connector: PsAgentConnector) => Promise<void>;
 }
 
 PsAgent.init(

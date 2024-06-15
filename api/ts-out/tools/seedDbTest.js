@@ -1,3 +1,4 @@
+import { initializeModels } from "../models/index.js";
 import { PsAgentConnectorClass } from "../models/agentConnectorClass.js"; // Adjust the path as needed
 import { User } from "../models/ypUser.js";
 import { Group } from "../models/ypGroup.js";
@@ -6,6 +7,7 @@ import { PsAgentConnector } from "../models/agentConnector.js";
 import { PsAgent } from "../models/agent.js";
 import { connectToDatabase } from "../models/sequelize.js";
 await connectToDatabase();
+await initializeModels();
 let googleDocsQuestions = [
     {
         uniqueId: "name",
@@ -534,23 +536,27 @@ const subAgent3Instance = await PsAgent.create(subAgent3);
 const methods = getAllMethods(smarterCrowdsourcingAgentInstance);
 console.log(methods);
 // Adding through associations for connectors
+//@ts-ignore
 await smarterCrowdsourcingAgentInstance.addSubAgents([
     subAgent1Instance,
     subAgent2Instance,
     subAgent3Instance,
 ]);
+//@ts-ignore
 await subAgent1Instance.addConnectors([
     connectorGoogleDocsForRootCausesInst,
     connectorDiscordRootCausesInst,
     connectorAllOurIdeasRootCausesInst,
     connectorGoogleSheetsForRootCausesInst,
 ]);
+//@ts-ignore
 await subAgent2Instance.addConnectors([
     connectorGoogleSheetsForSolutionsInst,
     connectorDiscordSolutionsInst,
     connectorYourPrioritiesSolutionsInst,
     connectorAllOurIdeasSolutionsInst,
 ]);
+//@ts-ignore
 await subAgent3Instance.addConnectors([
     connectorYourPrioritiesPoliciesInst,
     connectorDiscordPoliciesInst,
