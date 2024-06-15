@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional, Sequelize } from "sequelize";
-import { sequelize } from "./index.js";
+import { sequelize } from "./sequelize.js";
 
 interface PsAiModelCreationAttributes
   extends Optional<

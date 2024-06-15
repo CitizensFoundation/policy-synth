@@ -1,2 +1,2 @@
-import './models/index.js';
+import './models/sequelize.js';
 //# sourceMappingURL=server.d.ts.map

@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "./index.js";
+import { sequelize } from "./sequelize.js";
 import { PsAgentClass } from "./agentClass.js";
 import { PsAgentConnectorClass } from "./agentConnectorClass.js";
 

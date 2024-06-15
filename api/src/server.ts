@@ -1,4 +1,4 @@
-import './models/index.js';
+import './models/sequelize.js';
 import { PolicySynthApiApp } from './app.js';
 import { AnalyticsController } from './controllers/analyticsController.js';
 import { ProjectsController } from './controllers/projectsController.js';

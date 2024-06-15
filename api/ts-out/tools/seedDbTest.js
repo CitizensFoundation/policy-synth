@@ -4,6 +4,8 @@ import { Group } from "../models/ypGroup.js";
 import { PsAgentClass } from "../models/agentClass.js";
 import { PsAgentConnector } from "../models/agentConnector.js";
 import { PsAgent } from "../models/agent.js";
+import { connectToDatabase } from "../models/sequelize.js";
+await connectToDatabase();
 let googleDocsQuestions = [
     {
         uniqueId: "name",
@@ -104,7 +106,6 @@ let discordMarketResearchBotConnectorClass = {
         questions: discordQuestions,
     },
 };
-;
 let yourPrioritiesConnectorClass = {
     name: "Your Priorities",
     version: 1,
@@ -117,7 +118,6 @@ let yourPrioritiesConnectorClass = {
         questions: yourPrioritiesQuestions,
     },
 };
-;
 let allOurIdeasConnectorClass = {
     name: "All Our Ideas",
     version: 1,
@@ -130,7 +130,6 @@ let allOurIdeasConnectorClass = {
         questions: [],
     },
 };
-;
 let googleSheetsConnectorClass = {
     name: "Google Sheets",
     version: 1,
@@ -143,77 +142,76 @@ let googleSheetsConnectorClass = {
         questions: [],
     },
 };
-;
 await User.create({ email: "robert@citizens.is", name: "Robert" });
 await Group.create({ name: "Citizens", user_id: 1 });
-googleDocsConnectorClass = await PsAgentConnectorClass.create(googleDocsConnectorClass);
-discordMarketResearchBotConnectorClass = await PsAgentConnectorClass.create(discordMarketResearchBotConnectorClass);
-yourPrioritiesConnectorClass = await PsAgentConnectorClass.create(yourPrioritiesConnectorClass);
-allOurIdeasConnectorClass = await PsAgentConnectorClass.create(allOurIdeasConnectorClass);
-googleSheetsConnectorClass = await PsAgentConnectorClass.create(googleSheetsConnectorClass);
+const googleDocsConnectorClassInst = await PsAgentConnectorClass.create(googleDocsConnectorClass);
+const discordMarketResearchBotConnectorInst = await PsAgentConnectorClass.create(discordMarketResearchBotConnectorClass);
+const yourPrioritiesConnectorClassInst = await PsAgentConnectorClass.create(yourPrioritiesConnectorClass);
+const allOurIdeasConnectorClassInst = await PsAgentConnectorClass.create(allOurIdeasConnectorClass);
+const googleSheetsConnectorClassInst = await PsAgentConnectorClass.create(googleSheetsConnectorClass);
 /////////////////////
 let rootCausesQuestions = [
     {
-        uniqueId: 'name',
-        text: 'Name',
-        type: 'textField',
+        uniqueId: "name",
+        text: "Name",
+        type: "textField",
         maxLength: 200,
         required: false,
     },
     {
-        uniqueId: 'problemStatement',
-        text: 'Problem Statement',
-        type: 'textArea',
+        uniqueId: "problemStatement",
+        text: "Problem Statement",
+        type: "textArea",
         rows: 5,
         maxLength: 2500,
         required: false,
     },
     {
-        uniqueId: 'rankingInstructions',
-        text: 'Ranking Instructions',
-        type: 'textArea',
+        uniqueId: "rankingInstructions",
+        text: "Ranking Instructions",
+        type: "textArea",
         rows: 3,
         maxLength: 1000,
         required: false,
     },
     {
-        uniqueId: 'howManySearchQueries',
-        text: 'How many search queries',
-        type: 'textField',
+        uniqueId: "howManySearchQueries",
+        text: "How many search queries",
+        type: "textField",
         maxLength: 200,
-        subType: 'number',
+        subType: "number",
         required: false,
     },
     {
-        uniqueId: 'percentToUseSearchQueries',
-        text: '% of top search queries to use',
-        type: 'textField',
+        uniqueId: "percentToUseSearchQueries",
+        text: "% of top search queries to use",
+        type: "textField",
         maxLength: 200,
-        subType: 'number',
+        subType: "number",
         required: false,
     },
     {
-        uniqueId: 'percentToUseSearchResults',
-        text: '% of top search results to use',
-        type: 'textField',
+        uniqueId: "percentToUseSearchResults",
+        text: "% of top search results to use",
+        type: "textField",
         maxLength: 200,
-        subType: 'number',
+        subType: "number",
         required: false,
     },
 ];
 let smarterCrowdsourcingAgentClass = {
     version: 1,
-    name: 'Smarter Crowdsourcing Agent',
+    name: "Smarter Crowdsourcing Agent",
     user_id: 1,
     available: true,
     configuration: {
-        description: 'An agent for running the Smarter Crowdsourcing process',
-        imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
-        iconName: 'smarter_crowdsourcing',
-        assistantSystemInstructions: 'Explain the process',
-        capabilities: ['research', 'analysis'],
-        inputJsonInterface: '{}',
-        outputJsonInterface: '{}',
+        description: "An agent for running the Smarter Crowdsourcing process",
+        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
+        iconName: "smarter_crowdsourcing",
+        assistantSystemInstructions: "Explain the process",
+        capabilities: ["research", "analysis"],
+        inputJsonInterface: "{}",
+        outputJsonInterface: "{}",
         questions: rootCausesQuestions,
         supportedConnectors: [
             googleDocsConnectorClass,
@@ -225,15 +223,15 @@ let rootCausesSubAgentClass = {
     version: 1,
     user_id: 1,
     available: true,
-    name: 'Root Causes Research',
+    name: "Root Causes Research",
     configuration: {
-        description: 'Root causes research sub-agent',
-        imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png',
-        iconName: 'root_causes_research',
-        assistantSystemInstructions: 'Conduct root causes research',
-        capabilities: ['research', 'analysis'],
-        inputJsonInterface: '{}',
-        outputJsonInterface: '{}',
+        description: "Root causes research sub-agent",
+        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png",
+        iconName: "root_causes_research",
+        assistantSystemInstructions: "Conduct root causes research",
+        capabilities: ["research", "analysis"],
+        inputJsonInterface: "{}",
+        outputJsonInterface: "{}",
         questions: rootCausesQuestions,
         supportedConnectors: [
             googleDocsConnectorClass,
@@ -241,20 +239,19 @@ let rootCausesSubAgentClass = {
         ],
     },
 };
-;
 let solutionsSubAgentClass = {
     version: 1,
     user_id: 1,
     available: true,
-    name: 'Solutions Search',
+    name: "Solutions Search",
     configuration: {
-        description: 'Sub-agent for solutions search',
-        imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
-        iconName: 'solutions_search',
-        assistantSystemInstructions: 'Conduct solutions search',
-        capabilities: ['research', 'analysis'],
-        inputJsonInterface: '{}',
-        outputJsonInterface: '{}',
+        description: "Sub-agent for solutions search",
+        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
+        iconName: "solutions_search",
+        assistantSystemInstructions: "Conduct solutions search",
+        capabilities: ["research", "analysis"],
+        inputJsonInterface: "{}",
+        outputJsonInterface: "{}",
         questions: rootCausesQuestions,
         supportedConnectors: [
             googleDocsConnectorClass,
@@ -262,20 +259,19 @@ let solutionsSubAgentClass = {
         ],
     },
 };
-;
 let policyGenerationSubAgentClass = {
     user_id: 1,
     available: true,
     version: 1,
-    name: 'Generate Policies',
+    name: "Generate Policies",
     configuration: {
-        description: 'Sub-agent for generating policies',
-        imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png',
-        iconName: 'generate_policies',
-        assistantSystemInstructions: 'Generate policies',
-        capabilities: ['research', 'analysis', 'policyGeneration'],
-        inputJsonInterface: '{}',
-        outputJsonInterface: '{}',
+        description: "Sub-agent for generating policies",
+        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png",
+        iconName: "generate_policies",
+        assistantSystemInstructions: "Generate policies",
+        capabilities: ["research", "analysis", "policyGeneration"],
+        inputJsonInterface: "{}",
+        outputJsonInterface: "{}",
         questions: rootCausesQuestions,
         supportedConnectors: [
             googleDocsConnectorClass,
@@ -283,174 +279,175 @@ let policyGenerationSubAgentClass = {
         ],
     },
 };
-;
-smarterCrowdsourcingAgentClass = await PsAgentClass.create(smarterCrowdsourcingAgentClass);
-rootCausesSubAgentClass = await PsAgentClass.create(rootCausesSubAgentClass);
-solutionsSubAgentClass = await PsAgentClass.create(solutionsSubAgentClass);
-policyGenerationSubAgentClass = await PsAgentClass.create(policyGenerationSubAgentClass);
+const smarterCrowdsourcingAgentClassInst = (await PsAgentClass.create(smarterCrowdsourcingAgentClass));
+const rootCausesSubAgentClassInst = (await PsAgentClass.create(rootCausesSubAgentClass));
+const solutionsSubAgentClassInst = (await PsAgentClass.create(solutionsSubAgentClass));
+const policyGenerationSubAgentClassInst = (await PsAgentClass.create(policyGenerationSubAgentClass));
 /////////////////////
 let connectorGoogleDocsForRootCauses = {
-    class_id: googleDocsConnectorClass.id,
+    class_id: googleDocsConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Root Causes Summary',
-        googleDocsId: '1sdfjkl3j4klj3',
-        googleServiceAccount: '...',
+        name: "Root Causes Summary",
+        googleDocsId: "1sdfjkl3j4klj3",
+        googleServiceAccount: "...",
         graphPosX: -5,
         graphPosY: 370,
-        permissionNeeded: 'read',
+        permissionNeeded: "read",
     },
 };
 let connectorGoogleSheetsForRootCauses = {
-    class_id: googleSheetsConnectorClass.id,
+    class_id: googleSheetsConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Root Causes Rows',
-        googleDocsId: '1sdfjkl3j4klj3',
-        googleServiceAccount: '...',
+        name: "Root Causes Rows",
+        googleDocsId: "1sdfjkl3j4klj3",
+        googleServiceAccount: "...",
         graphPosX: 230,
         graphPosY: 540,
-        permissionNeeded: 'read',
+        permissionNeeded: "read",
     },
 };
 let connectorGoogleSheetsForSolutions = {
-    class_id: googleSheetsConnectorClass.id,
+    class_id: googleSheetsConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Solutions Rows',
-        googleDocsId: '1sdfjkl3j4klj3',
-        googleServiceAccount: '...',
+        name: "Solutions Rows",
+        googleDocsId: "1sdfjkl3j4klj3",
+        googleServiceAccount: "...",
         graphPosX: 230,
         graphPosY: 1340,
-        permissionNeeded: 'read',
+        permissionNeeded: "read",
     },
 };
 let connectorGoogleSheetsForPolicies = {
-    class_id: googleSheetsConnectorClass.id,
+    class_id: googleSheetsConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Policies Rows',
-        googleDocsId: '1sdfjkl3j4klj3',
-        googleServiceAccount: '...',
+        name: "Policies Rows",
+        googleDocsId: "1sdfjkl3j4klj3",
+        googleServiceAccount: "...",
         graphPosX: 230,
         graphPosY: 2100,
-        permissionNeeded: 'read',
+        permissionNeeded: "read",
     },
 };
 let connectorDiscordRootCauses = {
-    class_id: discordMarketResearchBotConnectorClass.id,
+    class_id: discordMarketResearchBotConnectorInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Causes Notifications',
-        discordBotToken: 'dasdsadsdsa',
-        discordChannelName: 'root-causes-agent',
+        name: "Causes Notifications",
+        discordBotToken: "dasdsadsdsa",
+        discordChannelName: "root-causes-agent",
         graphPosX: 480,
         graphPosY: 300,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
 let connectorDiscordSolutions = {
-    class_id: discordMarketResearchBotConnectorClass.id,
+    class_id: discordMarketResearchBotConnectorInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Solutions Notifications',
-        discordBotToken: 'dasdsadsdsa',
-        discordChannelName: 'solutions-agent',
+        name: "Solutions Notifications",
+        discordBotToken: "dasdsadsdsa",
+        discordChannelName: "solutions-agent",
         graphPosX: 480,
         graphPosY: 1100,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
 let connectorDiscordPolicies = {
-    class_id: discordMarketResearchBotConnectorClass.id,
+    class_id: discordMarketResearchBotConnectorInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Notifications & Remote Control',
-        discordBotToken: 'dasdsadsdsa',
-        discordChannelName: 'policies-agent',
+        name: "Notifications & Remote Control",
+        discordBotToken: "dasdsadsdsa",
+        discordChannelName: "policies-agent",
         graphPosX: 480,
         graphPosY: 1850,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
 let connectorYourPrioritiesSolutions = {
-    class_id: yourPrioritiesConnectorClass.id,
+    class_id: yourPrioritiesConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Human Solutions',
-        user_id: 'planxbot@hugsmidi.is',
-        userKey: '12345',
-        group_id: '31298',
+        name: "Human Solutions",
+        user_id: "planxbot@hugsmidi.is",
+        userKey: "12345",
+        group_id: "31298",
         graphPosX: -5,
         graphPosY: 1030,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
 let connectorYourPrioritiesPolicies = {
-    class_id: yourPrioritiesConnectorClass.id,
+    class_id: yourPrioritiesConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Policy Ideas Deliberation',
-        user_id: 'planxbot@hugsmidi.is',
-        userKey: '12345',
-        group_id: '31299',
+        name: "Policy Ideas Deliberation",
+        user_id: "planxbot@hugsmidi.is",
+        userKey: "12345",
+        group_id: "31299",
         graphPosX: -10,
         graphPosY: 1800,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
 let connectorAllOurIdeasRootCauses = {
-    class_id: allOurIdeasConnectorClass.id,
+    class_id: allOurIdeasConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Rank Root Causes',
-        user_id: 'planxbot@hugsmidi.is',
-        userKey: '12345',
-        group_id: '31299',
+        name: "Rank Root Causes",
+        user_id: "planxbot@hugsmidi.is",
+        userKey: "12345",
+        group_id: "31299",
         graphPosX: 230,
         graphPosY: 780,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
 let connectorAllOurIdeasSolutions = {
-    class_id: allOurIdeasConnectorClass.id,
+    class_id: allOurIdeasConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Rank Solutions',
-        user_id: 'planxbot@hugsmidi.is',
-        userKey: '12345',
-        group_id: '31299',
+        name: "Rank Solutions",
+        user_id: "planxbot@hugsmidi.is",
+        userKey: "12345",
+        group_id: "31299",
         graphPosX: 230,
         graphPosY: 1580,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
 let connectorAllOurIdeasPolicies = {
-    class_id: allOurIdeasConnectorClass.id,
+    class_id: allOurIdeasConnectorClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Rank Policies',
-        user_id: 'planxbot@hugsmidi.is',
-        userKey: '12345',
-        group_id: '31299',
+        name: "Rank Policies",
+        user_id: "planxbot@hugsmidi.is",
+        userKey: "12345",
+        group_id: "31299",
         graphPosX: 230,
         graphPosY: 2330,
-        permissionNeeded: 'readWrite',
+        permissionNeeded: "readWrite",
     },
 };
+console.log(`hello: ${JSON.stringify(connectorGoogleDocsForRootCauses, null, 2)} ----------------------------------------`);
 const connectorGoogleDocsForRootCausesInst = await PsAgentConnector.create(connectorGoogleDocsForRootCauses);
+console.log(`hello2: ${JSON.stringify(connectorGoogleDocsForRootCausesInst, null, 2)} XXXXXXXXXXXXXXXXxx`);
 const connectorGoogleSheetsForRootCausesInst = await PsAgentConnector.create(connectorGoogleSheetsForRootCauses);
 const connectorGoogleSheetsForSolutionsInst = await PsAgentConnector.create(connectorGoogleSheetsForSolutions);
 const connectorGoogleSheetsForPoliciesInst = await PsAgentConnector.create(connectorGoogleSheetsForPolicies);
@@ -464,11 +461,11 @@ const connectorAllOurIdeasSolutionsInst = await PsAgentConnector.create(connecto
 const connectorAllOurIdeasPoliciesInst = await PsAgentConnector.create(connectorAllOurIdeasPolicies);
 /////////////////////
 let subAgent1 = {
-    class_id: rootCausesSubAgentClass.id,
+    class_id: rootCausesSubAgentClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Unlocking Literacy',
+        name: "Unlocking Literacy",
         howManySearchQueries: 10,
         percentToUseSearchQueries: 50,
         percentToUseSearchResults: 50,
@@ -477,13 +474,12 @@ let subAgent1 = {
     },
     parent_agent_id: 1,
 };
-;
 let subAgent2 = {
-    class_id: solutionsSubAgentClass.id,
+    class_id: solutionsSubAgentClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Unlocking Literacy',
+        name: "Unlocking Literacy",
         howManySearchQueries: 10,
         percentToUseSearchQueries: 50,
         percentToUseSearchResults: 50,
@@ -493,34 +489,56 @@ let subAgent2 = {
     parent_agent_id: 1,
 };
 let subAgent3 = {
-    class_id: policyGenerationSubAgentClass.id,
+    class_id: policyGenerationSubAgentClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
-        name: 'Smarter Crowdsourcing',
+        name: "Smarter Crowdsourcing",
         graphPosX: 200,
         graphPosY: 1810,
     },
     parent_agent_id: 1,
 };
 let smarterCrowdsourcingAgent = {
-    class_id: smarterCrowdsourcingAgentClass.id,
+    class_id: smarterCrowdsourcingAgentClassInst.dataValues.id,
     user_id: 1,
     group_id: 1,
     configuration: {
         graphPosX: 0,
         graphPosY: 0,
-        name: 'Smarter Crowdsourcing',
+        name: "Smarter Crowdsourcing",
     },
 };
+function getAllMethods(obj) {
+    let props = new Set();
+    let currentObj = obj;
+    while (currentObj) {
+        Object.getOwnPropertyNames(currentObj).forEach((name) => {
+            try {
+                if (typeof currentObj[name] === 'function') {
+                    props.add(name);
+                }
+            }
+            catch (e) {
+                // Handle or log the error if necessary
+            }
+        });
+        currentObj = Object.getPrototypeOf(currentObj);
+    }
+    return [...props];
+}
 const smarterCrowdsourcingAgentInstance = await PsAgent.create(smarterCrowdsourcingAgent);
 const subAgent1Instance = await PsAgent.create(subAgent1);
 const subAgent2Instance = await PsAgent.create(subAgent2);
-;
 const subAgent3Instance = await PsAgent.create(subAgent3);
-;
+const methods = getAllMethods(smarterCrowdsourcingAgentInstance);
+console.log(methods);
 // Adding through associations for connectors
-await smarterCrowdsourcingAgentInstance.addSubAgents([subAgent1Instance, subAgent2Instance, subAgent3Instance]);
+await smarterCrowdsourcingAgentInstance.addSubAgents([
+    subAgent1Instance,
+    subAgent2Instance,
+    subAgent3Instance,
+]);
 await subAgent1Instance.addConnectors([
     connectorGoogleDocsForRootCausesInst,
     connectorDiscordRootCausesInst,

@@ -1,7 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelize } from "./index.js";
-import { PsAgent } from "./agent.js";
-import { PsAgentConnector } from "./agentConnector.js";
+import { sequelize } from "./sequelize.js";
 export class PsApiCost extends Model {
     id;
     uuid;
@@ -80,13 +78,14 @@ PsApiCost.init({
     timestamps: true,
     underscored: true,
 });
-// Define associations
-PsApiCost.belongsTo(PsAgent, {
-    foreignKey: "agent_id",
-    as: "Agent",
-});
-PsApiCost.belongsTo(PsAgentConnector, {
-    foreignKey: "connector_id",
-    as: "Connector",
-});
+PsApiCost.associate = (models) => {
+    PsApiCost.belongsTo(models.PsAgent, {
+        foreignKey: 'agent_id',
+        as: 'Agent',
+    });
+    PsApiCost.belongsTo(models.PsAgentConnector, {
+        foreignKey: 'connector_id',
+        as: 'Connector',
+    });
+};
 //# sourceMappingURL=apiCost.js.map

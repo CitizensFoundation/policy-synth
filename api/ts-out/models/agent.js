@@ -1,11 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelize } from "./index.js";
-import { PsAgentClass } from "./agentClass.js";
-import { User } from "./ypUser.js";
-import { Group } from "./ypGroup.js";
-import { PsApiCost } from "./apiCost.js";
-import { PsModelCost } from "./modelCost.js";
-import { PsAgentConnector } from "./agentConnector.js";
+import { sequelize } from "./sequelize.js";
 export class PsAgent extends Model {
     id;
     uuid;
@@ -92,33 +86,35 @@ PsAgent.init({
     timestamps: true,
     underscored: true,
 });
-// Define associations
-PsAgent.belongsTo(PsAgentClass, { foreignKey: "class_id", as: "class" });
-PsAgent.belongsTo(User, {
-    foreignKey: "user_id",
-    as: "User",
-});
-PsAgent.belongsTo(Group, {
-    foreignKey: "group_id",
-    as: "Group",
-});
-PsAgent.hasMany(PsApiCost, {
-    foreignKey: "agent_id",
-    as: "ApiCosts",
-});
-PsAgent.hasMany(PsModelCost, {
-    foreignKey: "agent_id",
-    as: "ModelCosts",
-});
-PsAgent.belongsTo(PsAgent, {
-    foreignKey: "parent_agent_id",
-    as: "ParentAgent",
-});
-PsAgent.hasMany(PsAgent, { foreignKey: "parent_agent_id", as: "SubAgents" });
-// Through a join table
-PsAgent.belongsToMany(PsAgentConnector, {
-    through: "AgentConnectors",
-    foreignKey: "agent_id",
-    as: "Connectors",
-});
+PsAgent.associate = (models) => {
+    // Define associations
+    PsAgent.belongsTo(models.PsAgentClass, { foreignKey: "class_id", as: "class" });
+    PsAgent.belongsTo(models.User, {
+        foreignKey: "user_id",
+        as: "User",
+    });
+    PsAgent.belongsTo(models.Group, {
+        foreignKey: "group_id",
+        as: "Group",
+    });
+    PsAgent.hasMany(models.PsApiCost, {
+        foreignKey: "agent_id",
+        as: "ApiCosts",
+    });
+    PsAgent.hasMany(models.PsModelCost, {
+        foreignKey: "agent_id",
+        as: "ModelCosts",
+    });
+    PsAgent.belongsTo(models.PsAgent, {
+        foreignKey: "parent_agent_id",
+        as: "ParentAgent",
+    });
+    PsAgent.hasMany(models.PsAgent, { foreignKey: "parent_agent_id", as: "SubAgents" });
+    // Through a join table
+    PsAgent.belongsToMany(models.PsAgentConnector, {
+        through: "AgentConnectors",
+        foreignKey: "agent_id",
+        as: "Connectors",
+    });
+};
 //# sourceMappingURL=agent.js.map

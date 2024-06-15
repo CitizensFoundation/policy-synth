@@ -1,5 +1,5 @@
 import { DataTypes, Model } from "sequelize";
-import { sequelize } from "./index.js";
+import { sequelize } from "./sequelize.js";
 export class PsAgentClass extends Model {
     id;
     uuid;

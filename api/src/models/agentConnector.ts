@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "./index.js";
+import { sequelize } from "./sequelize.js";
 import { PsAgentConnectorClass } from "./agentConnectorClass.js";
 import { User } from "./ypUser.js";
 import { Group } from "./ypGroup.js";
@@ -91,23 +91,26 @@ PsAgentConnector.init(
   }
 );
 
-// Define associations
-PsAgentConnector.belongsTo(PsAgentConnectorClass, {
-  foreignKey: "class_id",
-  as: "Class",
-});
-PsAgentConnector.belongsTo(User, {
-  foreignKey: "user_id",
-  as: "User",
-});
-PsAgentConnector.belongsTo(Group, {
-  foreignKey: "group_id",
-  as: "Group",
-});
+(PsAgentConnector as any).associate = (models: any) => {
+  console.log(`PsAgentConnector.associate ${JSON.stringify(models.PsAgentConnectorClass)}`)
+  // Define associations
+  PsAgentConnector.belongsTo(models.PsAgentConnectorClass, {
+    foreignKey: "class_id",
+    as: "Class",
+  });
+  PsAgentConnector.belongsTo(models.User, {
+    foreignKey: "user_id",
+    as: "User",
+  });
+  PsAgentConnector.belongsTo(models.Group, {
+    foreignKey: "group_id",
+    as: "Group",
+  });
 
-// Through a join table
-PsAgentConnector.belongsToMany(PsAgent, {
-  through: "AgentConnectors",
-  foreignKey: "connector_id",
-  as: "Agents",
-});
+  // Through a join table
+  PsAgentConnector.belongsToMany(models.PsAgent, {
+    through: "AgentConnectors",
+    foreignKey: "connector_id",
+    as: "Agents",
+  });
+};
