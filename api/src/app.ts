@@ -10,6 +10,8 @@ import { dirname } from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import WebSocket, { WebSocketServer } from "ws";
+import { connectToDatabase } from "./models/sequelize.js";
+import { initializeModels } from "./models/index.js";
 
 export class PolicySynthApiApp {
   public app: express.Application;
@@ -64,6 +66,7 @@ export class PolicySynthApiApp {
     this.initializeMiddlewares();
     this.setupStaticPaths();
     this.initializeControllers(controllers);
+    this.setupDb();
   }
 
   setupStaticPaths() {
@@ -99,6 +102,11 @@ export class PolicySynthApiApp {
       "/solutions*",
       express.static(path.join(__dirname, "../../webApps/policy-synth/dist"))
     );
+  }
+
+  async setupDb() {
+    await connectToDatabase();
+    await initializeModels();
   }
 
   initializeMiddlewares() {
@@ -141,9 +149,10 @@ export class PolicySynthApiApp {
     });
   }
 
-  public listen() {
+  public async listen() {
     this.httpServer.listen(this.port, () => {
       console.log(`App listening on the port ${this.port}`);
     });
+
   }
 }

@@ -33,7 +33,7 @@ export default /** @type {import('@web/dev-server').DevServerConfig} */ ({
       target: 'http://localhost:4242/',
     }),*/
     proxy('/api/', {
-      target: 'http://localhost:8600/',
+      target: 'http://localhost:8000/',
       //changeOrigin: true
     })
   ],

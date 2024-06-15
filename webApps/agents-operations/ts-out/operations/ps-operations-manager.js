@@ -33,6 +33,7 @@ const nodeTypes = ['agent', 'connector'];
 let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     constructor() {
         super();
+        this.currentAgentId = 1;
         this.isFetchingAgent = false;
         this.allCausesExceptCurrentToEdit = [];
         this.showDeleteConfirmation = false;
@@ -41,7 +42,21 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.isCreatingAgent = false;
         this.wsMessageListener = undefined;
         this.api = new OpsServerApi();
-        this.setupTestData();
+        //this.setupTestData();
+        this.getAgent();
+    }
+    async getAgent() {
+        this.isFetchingAgent = true;
+        try {
+            const agent = await this.api.getAgent(this.currentAgentId);
+            this.currentAgent = agent;
+        }
+        catch (error) {
+            console.error('Error fetching agent:', error);
+        }
+        finally {
+            this.isFetchingAgent = false;
+        }
     }
     setupTestData() {
         // Hard-coded data

@@ -552,6 +552,8 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
       });
     }
 
+    debugger;
+
     setTimeout(() => {
       this.applyDirectedGraphLayout();
       this.updatePaperSize();

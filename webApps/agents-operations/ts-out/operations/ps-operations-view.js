@@ -446,6 +446,7 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
                 renderedNodes.add(this.getUniqueConnectorId(connector));
             });
         }
+        debugger;
         setTimeout(() => {
             this.applyDirectedGraphLayout();
             this.updatePaperSize();

@@ -4,6 +4,7 @@ import WebSocket from "ws";
 
 let redisClient: any;
 
+//TODO: Share this do not start on each controller
 if (process.env.REDIS_URL) {
   redisClient = createClient({
     url: process.env.REDIS_URL,

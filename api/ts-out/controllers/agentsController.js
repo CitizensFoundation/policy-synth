@@ -1,0 +1,98 @@
+import express from "express";
+import { createClient } from "redis";
+import { PsAgent, PsAgentConnector, PsAgentClass, User, Group, PsApiCost, PsModelCost, PsAiModel, } from "../models/index.js";
+let redisClient;
+// TODO: Share this do not start on each controller
+if (process.env.REDIS_URL) {
+    redisClient = createClient({
+        url: process.env.REDIS_URL,
+        socket: {
+            tls: true,
+        },
+    });
+}
+else {
+    redisClient = createClient({
+        url: "redis://localhost:6379",
+    });
+}
+export class AgentsController {
+    path = "/api/agents";
+    router = express.Router();
+    wsClients = new Map();
+    constructor(wsClients) {
+        this.wsClients = wsClients;
+        this.initializeRoutes();
+    }
+    initializeRoutes() {
+        this.router.get(this.path + "/:id", this.getAgent);
+    }
+    getAgent = async (req, res) => {
+        const agentId = req.params.id;
+        try {
+            const agent = await this.fetchAgentWithSubAgents(agentId);
+            res.json(agent);
+        }
+        catch (error) {
+            console.error("Error fetching agent:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    };
+    async fetchAgentWithSubAgents(agentId) {
+        const agent = await PsAgent.findByPk(agentId, {
+            include: [
+                {
+                    model: PsAgent,
+                    as: "SubAgents",
+                    include: [{ model: PsAgentConnector, as: "Connectors" }],
+                },
+                { model: PsAgentConnector, as: "Connectors" },
+                { model: PsAgentClass, as: "Class" },
+                { model: User, as: "User" },
+                { model: Group, as: "Group" },
+                { model: PsApiCost, as: "ApiCosts" },
+                { model: PsModelCost, as: "ModelCosts" },
+                { model: PsAiModel, as: "AiModels" },
+            ],
+        });
+        if (!agent) {
+            throw new Error("Agent not found");
+        }
+        const subAgents = agent.SubAgents
+            ? await this.fetchNestedSubAgents(agent.SubAgents)
+            : [];
+        return {
+            ...agent.toJSON(),
+            SubAgents: subAgents,
+        };
+    }
+    async fetchNestedSubAgents(subAgents) {
+        return Promise.all(subAgents.map(async (subAgent) => {
+            const nestedSubAgent = await PsAgent.findByPk(subAgent.id, {
+                include: [
+                    {
+                        model: PsAgent,
+                        as: "SubAgents",
+                        include: [{ model: PsAgentConnector, as: "Connectors" }],
+                    },
+                    { model: PsAgentConnector, as: "Connectors" },
+                    { model: PsAgentClass, as: "Class" },
+                    { model: User, as: "User" },
+                    { model: Group, as: "Group" },
+                    { model: PsApiCost, as: "ApiCosts" },
+                    { model: PsModelCost, as: "ModelCosts" },
+                    { model: PsAiModel, as: "AiModels" },
+                ],
+            });
+            if (!nestedSubAgent) {
+                return null;
+            }
+            const subSubAgents = await this.fetchNestedSubAgents(nestedSubAgent.SubAgents || []);
+            return {
+                ...nestedSubAgent.toJSON(),
+                SubAgents: subSubAgents,
+            };
+        }));
+    }
+}
+//# sourceMappingURL=agentsController.js.map

@@ -9,6 +9,8 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { v4 as uuidv4 } from "uuid";
 import { WebSocketServer } from "ws";
+import { connectToDatabase } from "./models/sequelize.js";
+import { initializeModels } from "./models/index.js";
 export class PolicySynthApiApp {
     app;
     port;
@@ -55,6 +57,7 @@ export class PolicySynthApiApp {
         this.initializeMiddlewares();
         this.setupStaticPaths();
         this.initializeControllers(controllers);
+        this.setupDb();
     }
     setupStaticPaths() {
         console.log("Setting up static paths api original");
@@ -66,6 +69,10 @@ export class PolicySynthApiApp {
         this.app.use("/webResearch*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         this.app.use("/policies*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
         this.app.use("/solutions*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
+    }
+    async setupDb() {
+        await connectToDatabase();
+        await initializeModels();
     }
     initializeMiddlewares() {
         this.app.use(bodyParser.json());
@@ -100,7 +107,7 @@ export class PolicySynthApiApp {
             this.app.use("/", controller.router);
         });
     }
-    listen() {
+    async listen() {
         this.httpServer.listen(this.port, () => {
             console.log(`App listening on the port ${this.port}`);
         });

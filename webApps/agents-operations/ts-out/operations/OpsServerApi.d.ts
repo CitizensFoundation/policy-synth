@@ -3,6 +3,7 @@ import { PsOperationsBaseNode } from "./ps-operations-base-node";
 export declare class OpsServerApi extends YpServerApi {
     baseLtpPath: string;
     constructor(urlPath?: string);
+    getAgent(agentId: number): Promise<PsAgentAttributes>;
     getCrt(groupId: number): Promise<LtpCurrentRealityTreeData>;
     createTree(crt: LtpCurrentRealityTreeData): Promise<LtpCurrentRealityTreeData>;
     updateNodeChildren(treeId: string | number, nodeId: string, childrenIds: string[]): Promise<void>;

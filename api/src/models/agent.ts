@@ -130,7 +130,7 @@ PsAgent.init(
   // Define associations
   PsAgent.belongsTo(models.PsAgentClass, {
     foreignKey: "class_id",
-    as: "class",
+    as: "Class",
   });
 
   PsAgent.belongsTo(models.User, {
@@ -160,6 +160,11 @@ PsAgent.init(
     as: "SubAgents",
   });
 
+  PsAgent.belongsTo(models.PsAgent, {
+    foreignKey: 'parent_agent_id',
+    as: 'ParentAgent',
+  });
+
   // Through a join table
   PsAgent.belongsToMany(models.PsAgentConnector, {
     through: "AgentConnectors",
@@ -172,6 +177,7 @@ PsAgent.init(
   PsAgent.belongsToMany(models.PsAiModel, {
     through: "AgentModels",
     foreignKey: "agent_id",
+    otherKey: 'ai_model_id',
     as: "AiModels",
     timestamps: false,
   });

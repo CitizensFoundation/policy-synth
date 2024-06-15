@@ -39,6 +39,7 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     wsMessageListener: ((event: any) => void) | undefined;
     currentStreaminReponse: OpsStreamingAIResponse | undefined;
     constructor();
+    getAgent(): Promise<void>;
     setupTestData(): void;
     connectedCallback(): Promise<void>;
     openEditNodeDialog(event: CustomEvent): void;

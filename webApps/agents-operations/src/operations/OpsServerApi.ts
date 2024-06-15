@@ -2,10 +2,14 @@ import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
 import { PsOperationsBaseNode } from "./ps-operations-base-node";
 
 export class OpsServerApi extends YpServerApi {
-  baseLtpPath = '/crt/';
+  baseLtpPath = '/agents/';
   constructor(urlPath: string = '/api') {
     super();
     this.baseUrlPath = urlPath;
+  }
+
+  public async getAgent(agentId: number): Promise<PsAgentAttributes> {
+    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${agentId}`,{}, false)) as unknown as PsAgentAttributes;
   }
 
   public async getCrt(groupId: number): Promise<LtpCurrentRealityTreeData> {

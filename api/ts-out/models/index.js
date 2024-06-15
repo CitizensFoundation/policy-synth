@@ -11,6 +11,7 @@ import { PsAgentRegistry } from "./agentRegistry.js";
 import { PsAiModel } from "./aiModel.js";
 import { PsApiCostClass } from "./apiCostClass.js";
 import { PsModelCostClass } from "./modelCostClass.js";
+import { sequelize } from "./sequelize.js";
 const models = {
     PsAgentClass,
     User,
@@ -42,5 +43,5 @@ const initializeModels = async () => {
         process.exit(1); // Exit the process with failure
     }
 };
-export { models, initializeModels };
+export { models, initializeModels, sequelize, PsAgentConnectorClass, User, Group, PsAgentClass, PsAgentConnector, PsAgent, PsApiCost, PsModelCost, PsAgentAuditLog, PsAgentRegistry, PsAiModel, PsApiCostClass, PsModelCostClass, };
 //# sourceMappingURL=index.js.map

@@ -45,7 +45,7 @@ const nodeTypes = ['agent', 'connector'];
 @customElement('ps-operations-manager')
 export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
   @property({ type: Number })
-  currentAgentId: number | undefined;
+  currentAgentId: number | undefined = 1;
 
   @property({ type: Object })
   currentAgent: PsAgentAttributes | undefined;
@@ -94,7 +94,20 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
   constructor() {
     super();
     this.api = new OpsServerApi();
-    this.setupTestData();
+    //this.setupTestData();
+    this.getAgent();
+  }
+
+  async getAgent() {
+    this.isFetchingAgent = true;
+    try {
+      const agent = await this.api.getAgent(this.currentAgentId);
+      this.currentAgent = agent;
+    } catch (error) {
+      console.error('Error fetching agent:', error);
+    } finally {
+      this.isFetchingAgent = false;
+    }
   }
 
   setupTestData() {

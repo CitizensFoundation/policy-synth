@@ -53,4 +53,21 @@ const initializeModels = async () => {
   }
 };
 
-export {  models, initializeModels };
+export {
+  models,
+  initializeModels,
+  sequelize,
+  PsAgentConnectorClass,
+  User,
+  Group,
+  PsAgentClass,
+  PsAgentConnector,
+  PsAgent,
+  PsApiCost,
+  PsModelCost,
+  PsAgentAuditLog,
+  PsAgentRegistry,
+  PsAiModel,
+  PsApiCostClass,
+  PsModelCostClass,
+ };

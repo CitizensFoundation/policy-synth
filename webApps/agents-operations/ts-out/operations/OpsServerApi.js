@@ -2,8 +2,11 @@ import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
 export class OpsServerApi extends YpServerApi {
     constructor(urlPath = '/api') {
         super();
-        this.baseLtpPath = '/crt/';
+        this.baseLtpPath = '/agents/';
         this.baseUrlPath = urlPath;
+    }
+    async getAgent(agentId) {
+        return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${agentId}`, {}, false));
     }
     async getCrt(groupId) {
         return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${groupId}`, {}, false));

@@ -9,8 +9,9 @@ export declare class PolicySynthApiApp {
     wsClients: Map<string, WebSocket>;
     constructor(controllers: Array<any>, port?: number | undefined);
     setupStaticPaths(): void;
+    setupDb(): Promise<void>;
     initializeMiddlewares(): void;
     initializeControllers(controllers: Array<any>): void;
-    listen(): void;
+    listen(): Promise<void>;
 }
 //# sourceMappingURL=app.d.ts.map
