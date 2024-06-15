@@ -20,8 +20,16 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     ParentAgent?: PsAgent;
     SubAgents?: PsAgent[];
     Connectors?: PsAgentConnectorAttributes[];
-    addSubAgent: (subAgent: PsAgent) => Promise<void>;
     addConnector: (connector: PsAgentConnector) => Promise<void>;
+    addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+    getConnectors: () => Promise<PsAgentConnector[]>;
+    setConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+    removeConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+    addSubAgent: (agent: PsAgent) => Promise<void>;
+    addSubAgents: (agents: PsAgent[]) => Promise<void>;
+    getSubAgents: () => Promise<PsAgent[]>;
+    setSubAgents: (agents: PsAgent[]) => Promise<void>;
+    removeSubAgents: (agents: PsAgent[]) => Promise<void>;
 }
 export {};
 //# sourceMappingURL=agent.d.ts.map

@@ -112,5 +112,6 @@ PsAgentConnector.init(
     through: "AgentConnectors",
     foreignKey: "connector_id",
     as: "Agents",
+    timestamps: false
   });
 };

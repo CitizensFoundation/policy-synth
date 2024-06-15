@@ -1,121 +1,96 @@
-'use strict';
+"use strict";
 
-const { DataTypes } = require('sequelize');
-
+const { DataTypes } = require("sequelize");
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-  await queryInterface.createTable('AgentRegistryAgents', {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    ps_agent_registry_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'ps_agent_registries',
-        key: 'id',
+    await queryInterface.createTable("AgentRegistryAgents", {
+      id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
       },
-      onDelete: 'CASCADE',
-    },
-    ps_agent_class_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'ps_agent_classes',
-        key: 'id',
+      ps_agent_registry_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_agent_registries",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
-      onDelete: 'CASCADE',
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  });
+      ps_agent_class_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_agent_classes",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+    });
 
-  await queryInterface.addIndex('AgentRegistryAgents', ['ps_agent_registry_id']);
-  await queryInterface.addIndex('AgentRegistryAgents', ['ps_agent_class_id']);
+    await queryInterface.addIndex("AgentRegistryAgents", [
+      "ps_agent_registry_id",
+    ]);
+    await queryInterface.addIndex("AgentRegistryAgents", ["ps_agent_class_id"]);
 
-  await queryInterface.createTable('AgentRegistryConnectors', {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    ps_agent_registry_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'ps_agent_registries',
-        key: 'id',
+    await queryInterface.createTable("AgentRegistryConnectors", {
+      id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
       },
-      onDelete: 'CASCADE',
-    },
-    ps_agent_connector_class_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'ps_agent_connector_classes',
-        key: 'id',
+      ps_agent_registry_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_agent_registries",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
-      onDelete: 'CASCADE',
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  });
+      ps_agent_connector_class_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_agent_connector_classes",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+    });
 
-  await queryInterface.addIndex('AgentRegistryConnectors', ['ps_agent_registry_id']);
-  await queryInterface.addIndex('AgentRegistryConnectors', ['ps_agent_connector_class_id']);
+    await queryInterface.addIndex("AgentRegistryConnectors", [
+      "ps_agent_registry_id",
+    ]);
+    await queryInterface.addIndex("AgentRegistryConnectors", [
+      "ps_agent_connector_class_id",
+    ]);
 
-  // Creating the AgentConnectors join table
-  await queryInterface.createTable('AgentConnectors', {
-    agent_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'ps_agents',
-        key: 'id',
+    // Creating the AgentConnectors join table
+    await queryInterface.createTable("AgentConnectors", {
+      agent_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_agents",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
-      onDelete: 'CASCADE',
-    },
-    connector_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'ps_agent_connectors',
-        key: 'id',
+      connector_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_agent_connectors",
+          key: "id",
+        },
+        onDelete: "CASCADE",
       },
-      onDelete: 'CASCADE',
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-  });
+    });
 
-  await queryInterface.addIndex('AgentConnectors', ['agent_id']);
-  await queryInterface.addIndex('AgentConnectors', ['connector_id']);
-}
+    await queryInterface.addIndex("AgentConnectors", ["agent_id"]);
+    await queryInterface.addIndex("AgentConnectors", ["connector_id"]);
+  },
 };

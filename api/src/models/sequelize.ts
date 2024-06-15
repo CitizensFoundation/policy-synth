@@ -20,6 +20,9 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT!, 10) || 5432,
     dialect: "postgres",
+    define: {
+      underscored: true,
+    },
     dialectModule: pg,
     dialectOptions: {
       ssl: {
@@ -35,7 +38,7 @@ const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log("Connection to the database has been established successfully.");
-    await sequelize.sync(); // Sync all models
+    //await sequelize.sync(); // Sync all models
     console.log("All models were synchronized successfully.");
   } catch (error) {
     console.error("Unable to connect to the database:", error);

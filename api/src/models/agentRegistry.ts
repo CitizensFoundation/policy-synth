@@ -76,10 +76,12 @@ PsAgentRegistry.belongsToMany(PsAgentClass, {
   through: "AgentRegistryAgents",
   as: "Agents",
   foreignKey: "agent_id",
+  timestamps: false
 });
 
 PsAgentRegistry.belongsToMany(PsAgentConnectorClass, {
   through: "AgentRegistryConnectors",
   foreignKey: "connector_id",
   as: "Connectors",
+  timestamps: false
 });

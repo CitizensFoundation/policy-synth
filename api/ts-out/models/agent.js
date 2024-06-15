@@ -19,8 +19,6 @@ export class PsAgent extends Model {
     ParentAgent;
     SubAgents;
     Connectors;
-    addSubAgent;
-    addConnector;
 }
 PsAgent.init({
     id: {
@@ -115,6 +113,7 @@ PsAgent.associate = (models) => {
         through: "AgentConnectors",
         foreignKey: "agent_id",
         as: "Connectors",
+        timestamps: false
     });
 };
 //# sourceMappingURL=agent.js.map

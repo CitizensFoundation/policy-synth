@@ -37,8 +37,17 @@ export class PsAgent
   public SubAgents?: PsAgent[];
   public Connectors?: PsAgentConnectorAttributes[];
 
-  public addSubAgent!: (subAgent: PsAgent) => Promise<void>;
-  public addConnector!: (connector: PsAgentConnector) => Promise<void>;
+  declare addConnector: (connector: PsAgentConnector) => Promise<void>;
+  declare addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+  declare getConnectors: () => Promise<PsAgentConnector[]>;
+  declare setConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+  declare removeConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+
+  declare addSubAgent: (agent: PsAgent) => Promise<void>;
+  declare addSubAgents: (agents: PsAgent[]) => Promise<void>;
+  declare getSubAgents: () => Promise<PsAgent[]>;
+  declare setSubAgents: (agents: PsAgent[]) => Promise<void>;
+  declare removeSubAgents: (agents: PsAgent[]) => Promise<void>;
 }
 
 PsAgent.init(
@@ -141,5 +150,6 @@ PsAgent.init(
     through: "AgentConnectors",
     foreignKey: "agent_id",
     as: "Connectors",
+    timestamps: false
   });
 };

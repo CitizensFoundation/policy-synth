@@ -91,6 +91,7 @@ PsAgentConnector.associate = (models) => {
         through: "AgentConnectors",
         foreignKey: "connector_id",
         as: "Agents",
+        timestamps: false
     });
 };
 //# sourceMappingURL=agentConnector.js.map

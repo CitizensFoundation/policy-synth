@@ -536,27 +536,23 @@ const subAgent3Instance = await PsAgent.create(subAgent3);
 const methods = getAllMethods(smarterCrowdsourcingAgentInstance);
 console.log(methods);
 // Adding through associations for connectors
-//@ts-ignore
 await smarterCrowdsourcingAgentInstance.addSubAgents([
     subAgent1Instance,
     subAgent2Instance,
     subAgent3Instance,
 ]);
-//@ts-ignore
 await subAgent1Instance.addConnectors([
     connectorGoogleDocsForRootCausesInst,
     connectorDiscordRootCausesInst,
     connectorAllOurIdeasRootCausesInst,
     connectorGoogleSheetsForRootCausesInst,
 ]);
-//@ts-ignore
 await subAgent2Instance.addConnectors([
     connectorGoogleSheetsForSolutionsInst,
     connectorDiscordSolutionsInst,
     connectorYourPrioritiesSolutionsInst,
     connectorAllOurIdeasSolutionsInst,
 ]);
-//@ts-ignore
 await subAgent3Instance.addConnectors([
     connectorYourPrioritiesPoliciesInst,
     connectorDiscordPoliciesInst,
