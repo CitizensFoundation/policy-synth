@@ -1,4 +1,5 @@
 import { Model, Optional } from "sequelize";
+import { PsAgentConnector } from "./agentConnector.js";
 interface PsAgentCreationAttributes extends Optional<PsAgentAttributes, "id" | "uuid" | "created_at" | "updated_at" | "parent_agent_id"> {
 }
 export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAttributes> implements PsAgentAttributes {
@@ -19,6 +20,8 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     ParentAgent?: PsAgent;
     SubAgents?: PsAgent[];
     Connectors?: PsAgentConnectorAttributes[];
+    addSubAgents: (subAgents: PsAgent[]) => Promise<void>;
+    addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
 }
 export {};
 //# sourceMappingURL=agent.d.ts.map

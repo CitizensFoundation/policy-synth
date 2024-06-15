@@ -1,8 +1,8 @@
 'use strict';
 
-import { sequelize } from './index.js';
 
-export async function up(queryInterface, Sequelize) {
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
   await queryInterface.createTable('ps_api_cost_classes', {
     id: {
       type: Sequelize.INTEGER,
@@ -42,6 +42,4 @@ export async function up(queryInterface, Sequelize) {
   await queryInterface.addIndex('ps_api_cost_classes', ['user_id']);
   await queryInterface.addIndex('ps_api_cost_classes', ['model_id']);
 }
-export async function down(queryInterface, Sequelize) {
-  await queryInterface.dropTable('ps_api_cost_classes');
-}
+};

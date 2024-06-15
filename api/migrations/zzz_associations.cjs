@@ -1,9 +1,10 @@
 'use strict';
 
-import { DataTypes } from 'sequelize';
-import { sequelize } from './index.js';
+const { DataTypes } = require('sequelize');
 
-export async function up(queryInterface, Sequelize) {
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
   await queryInterface.createTable('AgentRegistryAgents', {
     id: {
       type: DataTypes.INTEGER,
@@ -88,7 +89,7 @@ export async function up(queryInterface, Sequelize) {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'PsAgents',
+        model: 'ps_agents',
         key: 'id',
       },
       onDelete: 'CASCADE',
@@ -97,7 +98,7 @@ export async function up(queryInterface, Sequelize) {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'PsAgentConnectors',
+        model: 'ps_agent_connectors',
         key: 'id',
       },
       onDelete: 'CASCADE',
@@ -117,7 +118,4 @@ export async function up(queryInterface, Sequelize) {
   await queryInterface.addIndex('AgentConnectors', ['agent_id']);
   await queryInterface.addIndex('AgentConnectors', ['connector_id']);
 }
-
-export async function down(queryInterface, Sequelize) {
-  await queryInterface.dropTable('ps_agent_registries');
-}
+};

@@ -1,9 +1,10 @@
 'use strict';
 
-import { sequelize } from './index.js';
+const { DataTypes } = require('sequelize');
 
-export async function up(queryInterface, Sequelize) {
-  await queryInterface.createTable('ps_agents', {
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
+  await queryInterface.createTable('ps_api_costs', {
     id: {
       type: Sequelize.INTEGER,
       autoIncrement: true,
@@ -28,29 +29,28 @@ export async function up(queryInterface, Sequelize) {
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
-    class_id: {
+    cost_class_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
     },
-    group_id: {
+    cost: {
+      type: Sequelize.FLOAT,
+      allowNull: false,
+    },
+    agent_id: {
       type: Sequelize.INTEGER,
-      allowNull: false,
+      allowNull: true,
     },
-    configuration: {
-      type: Sequelize.JSONB,
-      allowNull: false,
-    },
-    parent_agent_id: {
+    connector_id: {
       type: Sequelize.INTEGER,
       allowNull: true,
     },
   });
 
-  await queryInterface.addIndex('ps_agents', ['uuid']);
-  await queryInterface.addIndex('ps_agents', ['user_id']);
-  await queryInterface.addIndex('ps_agents', ['class_id']);
-  await queryInterface.addIndex('ps_agents', ['group_id']);
+  await queryInterface.addIndex('ps_api_costs', ['uuid']);
+  await queryInterface.addIndex('ps_api_costs', ['user_id']);
+  await queryInterface.addIndex('ps_api_costs', ['cost_class_id']);
+  await queryInterface.addIndex('ps_api_costs', ['agent_id']);
+  await queryInterface.addIndex('ps_api_costs', ['connector_id']);
 }
-export async function down(queryInterface, Sequelize) {
-  await queryInterface.dropTable('ps_agents');
-}
+};

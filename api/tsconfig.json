@@ -13,5 +13,5 @@
   "include": [
     "**/*.ts",
     "./node_modules/@policysynth/agents/**/*.d.ts"
-, "migrations/agentRegistries.js"  ]
+, "migrations/agentRegistries.cjs"  ]
 }

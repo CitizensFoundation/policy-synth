@@ -1,7 +1,5 @@
 'use strict';
 
-const { sequelize } = require('./index.js');
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('ps_model_costs', {

@@ -8,7 +8,7 @@ interface YpUserDataAttributes {
 }
 
 interface YpUserDataCreationAttributes
-  extends Optional<YpUserData, "id"> {}
+  extends Optional<YpUserData, "id" | "created_at" | "updated_at"> {}
 
 export class User
   extends Model<YpUserData, YpUserDataCreationAttributes>

@@ -25,6 +25,8 @@ export class PsAgent extends Model {
     ParentAgent;
     SubAgents;
     Connectors;
+    addSubAgents;
+    addConnectors;
 }
 PsAgent.init({
     id: {

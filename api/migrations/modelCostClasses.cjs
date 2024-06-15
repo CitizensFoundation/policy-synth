@@ -1,9 +1,10 @@
 'use strict';
 
-import { DataTypes } from 'sequelize';
-import { sequelize } from './index.js';
+const { DataTypes } = require('sequelize');
 
-export async function up(queryInterface) {
+
+module.exports = {
+  up: async (queryInterface, Sequelize) => {
   await queryInterface.createTable('ps_model_cost_classes', {
     id: {
       type: DataTypes.INTEGER,
@@ -43,6 +44,4 @@ export async function up(queryInterface) {
   await queryInterface.addIndex('ps_model_cost_classes', ['user_id']);
   await queryInterface.addIndex('ps_model_cost_classes', ['model_id']);
 }
-export async function down(queryInterface) {
-  await queryInterface.dropTable('ps_model_cost_classes');
-}
+};
