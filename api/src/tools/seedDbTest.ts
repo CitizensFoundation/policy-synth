@@ -10,7 +10,7 @@ import { PsApiCost } from "../models/apiCost.js";
 import { PsModelCost } from "../models/modelCost.js";
 import { PsAgentAuditLog } from "../models/agentAuditLog.js";
 import { PsAgentRegistry } from "../models/agentRegistry.js";
-import { PsAiModelClass } from "../models/aiModel.js";
+import { PsAiModel } from "../models/aiModel.js";
 import { PsApiCostClass } from "../models/apiCostClass.js";
 import { PsModelCostClass } from "../models/modelCostClass.js";
 import { connectToDatabase } from "../models/sequelize.js";

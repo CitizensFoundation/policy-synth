@@ -1,6 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
-export class PsAiModelClass extends Model {
+export class PsAiModel extends Model {
     id;
     uuid;
     user_id;
@@ -9,7 +9,7 @@ export class PsAiModelClass extends Model {
     name;
     configuration;
 }
-PsAiModelClass.init({
+PsAiModel.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -44,7 +44,7 @@ PsAiModelClass.init({
     },
 }, {
     sequelize,
-    tableName: "ps_ai_model_classes",
+    tableName: "ps_ai_models",
     indexes: [
         {
             fields: ["uuid"],

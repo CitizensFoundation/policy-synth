@@ -9,6 +9,10 @@ interface PsBaseModelClass {
 interface PsAiModelConfiguration {
   type: string;
   provider: string;
+  access?: {
+    key?: string;
+    projectId?: string;
+  };
 }
 
 // tablename "ps_ai_models"
@@ -69,6 +73,7 @@ interface PsAgentAttributes extends PsBaseNodeInstance {
   parentAgent?: PsAgentAttributes;
   SubAgents?: PsAgentAttributes[]; // through a join table
   Connectors?: PsAgentConnectorAttributes[];  // through a join table
+  AiModels?: PsAiModelAttributes[];
   configuration: PsAgentBaseConfiguration;
 }
 

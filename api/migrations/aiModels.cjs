@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-  await queryInterface.createTable('ps_ai_model_classes', {
+  await queryInterface.createTable('ps_ai_models', {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -37,9 +37,9 @@ module.exports = {
     },
   });
 
-  await queryInterface.addIndex('ps_ai_model_classes', ['uuid'], {
+  await queryInterface.addIndex('ps_ai_models', ['uuid'], {
     unique: true,
   });
 
-  await queryInterface.addIndex('ps_ai_model_classes', ['user_id']);
+  await queryInterface.addIndex('ps_ai_models', ['user_id']);
 }};

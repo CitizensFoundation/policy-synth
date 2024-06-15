@@ -8,7 +8,7 @@ import { PsApiCost } from "./apiCost.js";
 import { PsModelCost } from "./modelCost.js";
 import { PsAgentAuditLog } from "./agentAuditLog.js";
 import { PsAgentRegistry } from "./agentRegistry.js";
-import { PsAiModelClass } from "./aiModel.js";
+import { PsAiModel } from "./aiModel.js";
 import { PsApiCostClass } from "./apiCostClass.js";
 import { PsModelCostClass } from "./modelCostClass.js";
 
@@ -29,7 +29,7 @@ const models: Models = {
   PsAgentAuditLog,
   PsAgentConnectorClass,
   PsAgentRegistry,
-  PsAiModel: PsAiModelClass,
+  PsAiModel,
   PsApiCostClass,
   PsModelCostClass,
 };

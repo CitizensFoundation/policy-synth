@@ -19,6 +19,7 @@ export class PsAgent extends Model {
     ParentAgent;
     SubAgents;
     Connectors;
+    AiModels;
 }
 PsAgent.init({
     id: {
@@ -86,7 +87,10 @@ PsAgent.init({
 });
 PsAgent.associate = (models) => {
     // Define associations
-    PsAgent.belongsTo(models.PsAgentClass, { foreignKey: "class_id", as: "class" });
+    PsAgent.belongsTo(models.PsAgentClass, {
+        foreignKey: "class_id",
+        as: "class",
+    });
     PsAgent.belongsTo(models.User, {
         foreignKey: "user_id",
         as: "User",
@@ -103,17 +107,27 @@ PsAgent.associate = (models) => {
         foreignKey: "agent_id",
         as: "ModelCosts",
     });
-    PsAgent.belongsTo(models.PsAgent, {
+    PsAgent.belongsTo(models.PsAiModel, {
         foreignKey: "parent_agent_id",
-        as: "ParentAgent",
+        as: "AiModel",
     });
-    PsAgent.hasMany(models.PsAgent, { foreignKey: "parent_agent_id", as: "SubAgents" });
+    PsAgent.hasMany(models.PsAgent, {
+        foreignKey: "parent_agent_id",
+        as: "SubAgents",
+    });
     // Through a join table
     PsAgent.belongsToMany(models.PsAgentConnector, {
         through: "AgentConnectors",
         foreignKey: "agent_id",
         as: "Connectors",
-        timestamps: false
+        timestamps: false,
+    });
+    // Through a join table
+    PsAgent.belongsToMany(models.PsAiModel, {
+        through: "AgentModels",
+        foreignKey: "agent_id",
+        as: "AiModels",
+        timestamps: false,
     });
 };
 //# sourceMappingURL=agent.js.map

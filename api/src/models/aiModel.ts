@@ -7,7 +7,7 @@ interface PsAiModelCreationAttributes
     "id" | "uuid" | "created_at" | "updated_at"
   > {}
 
-export class PsAiModelClass
+export class PsAiModel
   extends Model<PsAiModelAttributes, PsAiModelCreationAttributes>
   implements PsAiModelAttributes
 {
@@ -20,7 +20,7 @@ export class PsAiModelClass
   public configuration!: PsAiModelConfiguration;
 }
 
-PsAiModelClass.init(
+PsAiModel.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -57,7 +57,7 @@ PsAiModelClass.init(
   },
   {
     sequelize,
-    tableName: "ps_ai_model_classes",
+    tableName: "ps_ai_models",
     indexes: [
       {
         fields: ["uuid"],

@@ -1,5 +1,7 @@
 import { Model, Optional } from "sequelize";
+import { PsAgentClass } from "./agentClass.js";
 import { PsAgentConnector } from "./agentConnector.js";
+import { PsAiModel } from "./aiModel.js";
 interface PsAgentCreationAttributes extends Optional<PsAgentAttributes, "id" | "uuid" | "created_at" | "updated_at" | "parent_agent_id"> {
 }
 export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAttributes> implements PsAgentAttributes {
@@ -12,7 +14,7 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     group_id: number;
     configuration: PsBaseNodeConfiguration;
     parent_agent_id?: number;
-    Class?: PsAgentClassAttributes;
+    Class?: PsAgentClass;
     User?: YpUserData;
     Group?: YpGroupData;
     ApiCosts?: PsApiCostAttributes[];
@@ -20,6 +22,7 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     ParentAgent?: PsAgent;
     SubAgents?: PsAgent[];
     Connectors?: PsAgentConnectorAttributes[];
+    AiModels?: PsAiModelAttributes[];
     addConnector: (connector: PsAgentConnector) => Promise<void>;
     addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
     getConnectors: () => Promise<PsAgentConnector[]>;
@@ -30,6 +33,11 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     getSubAgents: () => Promise<PsAgent[]>;
     setSubAgents: (agents: PsAgent[]) => Promise<void>;
     removeSubAgents: (agents: PsAgent[]) => Promise<void>;
+    addAiModel: (model: PsAiModel) => Promise<void>;
+    addAiModels: (models: PsAiModel[]) => Promise<void>;
+    getAiModels: () => Promise<PsAiModel[]>;
+    setAiModels: (models: PsAiModel[]) => Promise<void>;
+    removeAiModels: (models: PsAiModel[]) => Promise<void>;
 }
 export {};
 //# sourceMappingURL=agent.d.ts.map

@@ -92,5 +92,30 @@ module.exports = {
 
     await queryInterface.addIndex("AgentConnectors", ["agent_id"]);
     await queryInterface.addIndex("AgentConnectors", ["connector_id"]);
+
+    // Creating the AgentConnectors join table
+    await queryInterface.createTable("AgentModels", {
+      agent_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_agents",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+      ai_model_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "ps_ai_models",
+          key: "id",
+        },
+        onDelete: "CASCADE",
+      },
+    });
+
+    await queryInterface.addIndex("AgentModels", ["agent_id"]);
+    await queryInterface.addIndex("AgentModels", ["ai_model_id"]);
   },
 };

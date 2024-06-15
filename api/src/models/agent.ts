@@ -6,6 +6,7 @@ import { Group } from "./ypGroup.js";
 import { PsApiCost } from "./apiCost.js";
 import { PsModelCost } from "./modelCost.js";
 import { PsAgentConnector } from "./agentConnector.js";
+import { PsAiModel } from "./aiModel.js";
 
 interface PsAgentCreationAttributes
   extends Optional<
@@ -28,7 +29,7 @@ export class PsAgent
   public parent_agent_id?: number;
 
   // Associations
-  public Class?: PsAgentClassAttributes;
+  public Class?: PsAgentClass;
   public User?: YpUserData;
   public Group?: YpGroupData;
   public ApiCosts?: PsApiCostAttributes[];
@@ -36,6 +37,7 @@ export class PsAgent
   public ParentAgent?: PsAgent;
   public SubAgents?: PsAgent[];
   public Connectors?: PsAgentConnectorAttributes[];
+  public AiModels?: PsAiModelAttributes[];
 
   declare addConnector: (connector: PsAgentConnector) => Promise<void>;
   declare addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
@@ -48,6 +50,12 @@ export class PsAgent
   declare getSubAgents: () => Promise<PsAgent[]>;
   declare setSubAgents: (agents: PsAgent[]) => Promise<void>;
   declare removeSubAgents: (agents: PsAgent[]) => Promise<void>;
+
+  declare addAiModel: (model: PsAiModel) => Promise<void>;
+  declare addAiModels: (models: PsAiModel[]) => Promise<void>;
+  declare getAiModels: () => Promise<PsAiModel[]>;
+  declare setAiModels: (models: PsAiModel[]) => Promise<void>;
+  declare removeAiModels: (models: PsAiModel[]) => Promise<void>;
 }
 
 PsAgent.init(
@@ -120,7 +128,10 @@ PsAgent.init(
 
 (PsAgent as any).associate = (models: any) => {
   // Define associations
-  PsAgent.belongsTo(models.PsAgentClass, { foreignKey: "class_id", as: "class" });
+  PsAgent.belongsTo(models.PsAgentClass, {
+    foreignKey: "class_id",
+    as: "class",
+  });
 
   PsAgent.belongsTo(models.User, {
     foreignKey: "user_id",
@@ -138,18 +149,30 @@ PsAgent.init(
     foreignKey: "agent_id",
     as: "ModelCosts",
   });
-  PsAgent.belongsTo(models.PsAgent, {
+
+  PsAgent.belongsTo(models.PsAiModel, {
     foreignKey: "parent_agent_id",
-    as: "ParentAgent",
+    as: "AiModel",
   });
 
-  PsAgent.hasMany(models.PsAgent, { foreignKey: "parent_agent_id", as: "SubAgents" });
+  PsAgent.hasMany(models.PsAgent, {
+    foreignKey: "parent_agent_id",
+    as: "SubAgents",
+  });
 
   // Through a join table
   PsAgent.belongsToMany(models.PsAgentConnector, {
     through: "AgentConnectors",
     foreignKey: "agent_id",
     as: "Connectors",
-    timestamps: false
+    timestamps: false,
+  });
+
+  // Through a join table
+  PsAgent.belongsToMany(models.PsAiModel, {
+    through: "AgentModels",
+    foreignKey: "agent_id",
+    as: "AiModels",
+    timestamps: false,
   });
 };
