@@ -168,7 +168,13 @@ let googleSheetsConnectorClass = {
 } as PsAgentConnectorClassAttributes;
 
 await User.create({ email: "robert@citizens.is", name: "Robert" });
-await Group.create({ name: "Citizens", user_id: 1, configuration: {} });
+await Group.create({
+  name: "Citizens",
+  user_id: 1,
+  configuration: {
+    aiModelAccess: [],
+  },
+});
 
 const googleDocsConnectorClassInst = await PsAgentConnectorClass.create(
   googleDocsConnectorClass
@@ -636,7 +642,7 @@ function getAllMethods(obj: any): string[] {
   while (currentObj) {
     Object.getOwnPropertyNames(currentObj).forEach((name) => {
       try {
-        if (typeof currentObj[name] === 'function') {
+        if (typeof currentObj[name] === "function") {
           props.add(name);
         }
       } catch (e) {

@@ -14,7 +14,7 @@ export class Group
   public created_at!: Date;
   public updated_at!: Date;
 
-  public configuration!: YpGroupConfigurationData;
+  public configuration!: YpPsGroupConfigurationData;
 }
 
 Group.init(

@@ -13,7 +13,7 @@
     "src/api.d.ts"
   ],
   "dependencies": {
-    "@policysynth/agents": "^1.2.11",
+    "@policysynth/agents": "^1.2.12",
     "axios": "^1.7.2",
     "colors": "^1.4.0",
     "connect-redis": "^7.1.1",
