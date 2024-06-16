@@ -56,45 +56,11 @@ export class AgentsController {
 
   async fetchAgentWithSubAgents(agentId: string) {
     const agent = await PsAgent.findByPk(agentId, {
-      include: [
-        {
-          model: PsAgent,
-          as: "SubAgents",
-          include: [{ model: PsAgentConnector, as: "Connectors" }],
-        },
-        { model: PsAgentConnector, as: "Connectors" },
-        { model: PsAgentClass, as: "Class" },
-        { model: User, as: "User" },
-        { model: Group, as: "Group" },
-        { model: PsApiCost, as: "ApiCosts" },
-        { model: PsModelCost, as: "ModelCosts" },
-        { model: PsAiModel, as: "AiModels" },
-      ],
-    });
-
-    if (!agent) {
-      throw new Error("Agent not found");
-    }
-
-    const subAgents = agent.SubAgents
-      ? await this.fetchNestedSubAgents(agent.SubAgents)
-      : [];
-
-    return {
-      ...agent.toJSON(),
-      SubAgents: subAgents,
-    };
-  }
-
-  async fetchNestedSubAgents(subAgents: PsAgent[]): Promise<any[]> {
-    return Promise.all(
-      subAgents.map(async (subAgent) => {
-        const nestedSubAgent = await PsAgent.findByPk(subAgent.id, {
-          include: [
+        include: [
             {
-              model: PsAgent,
-              as: "SubAgents",
-              include: [{ model: PsAgentConnector, as: "Connectors" }],
+                model: PsAgent,
+                as: "SubAgents",
+                include: [{ model: PsAgentConnector, as: "Connectors" }],
             },
             { model: PsAgentConnector, as: "Connectors" },
             { model: PsAgentClass, as: "Class" },
@@ -103,22 +69,49 @@ export class AgentsController {
             { model: PsApiCost, as: "ApiCosts" },
             { model: PsModelCost, as: "ModelCosts" },
             { model: PsAiModel, as: "AiModels" },
-          ],
-        });
+        ],
+    });
 
-        if (!nestedSubAgent) {
-          return null;
-        }
+    if (!agent) {
+        throw new Error("Agent not found");
+    }
 
-        const subSubAgents = await this.fetchNestedSubAgents(
-          nestedSubAgent.SubAgents || []
-        );
+    const subAgents = await this.fetchNestedSubAgents(agent.id);
 
-        return {
-          ...nestedSubAgent.toJSON(),
-          SubAgents: subSubAgents,
-        };
-      })
+    return {
+        ...agent.toJSON(),
+        SubAgents: subAgents,
+    };
+}
+
+async fetchNestedSubAgents(parentAgentId: number): Promise<any[]> {
+    const subAgents = await PsAgent.findAll({
+        where: { parent_agent_id: parentAgentId },
+        include: [
+            {
+                model: PsAgent,
+                as: "SubAgents",
+                include: [{ model: PsAgentConnector, as: "Connectors" }],
+            },
+            { model: PsAgentConnector, as: "Connectors" },
+            { model: PsAgentClass, as: "Class" },
+            { model: User, as: "User" },
+            { model: Group, as: "Group" },
+            { model: PsApiCost, as: "ApiCosts" },
+            { model: PsModelCost, as: "ModelCosts" },
+            { model: PsAiModel, as: "AiModels" },
+        ],
+    });
+
+    return Promise.all(
+        subAgents.map(async (subAgent) => {
+            const nestedSubAgents = await this.fetchNestedSubAgents(subAgent.id);
+            return {
+                ...subAgent.toJSON(),
+                SubAgents: nestedSubAgents,
+            };
+        })
     );
-  }
+}
+
 }

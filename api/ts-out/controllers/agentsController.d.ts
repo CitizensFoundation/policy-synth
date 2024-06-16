@@ -1,6 +1,5 @@
 import express from "express";
 import WebSocket from "ws";
-import { PsAgent } from "../models/index.js";
 export declare class AgentsController {
     path: string;
     router: import("express-serve-static-core").Router;
@@ -28,6 +27,6 @@ export declare class AgentsController {
         created_at: Date;
         updated_at: Date;
     }>;
-    fetchNestedSubAgents(subAgents: PsAgent[]): Promise<any[]>;
+    fetchNestedSubAgents(parentAgentId: number): Promise<any[]>;
 }
 //# sourceMappingURL=agentsController.d.ts.map

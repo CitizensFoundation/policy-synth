@@ -58,39 +58,35 @@ export class AgentsController {
         if (!agent) {
             throw new Error("Agent not found");
         }
-        const subAgents = agent.SubAgents
-            ? await this.fetchNestedSubAgents(agent.SubAgents)
-            : [];
+        const subAgents = await this.fetchNestedSubAgents(agent.id);
         return {
             ...agent.toJSON(),
             SubAgents: subAgents,
         };
     }
-    async fetchNestedSubAgents(subAgents) {
+    async fetchNestedSubAgents(parentAgentId) {
+        const subAgents = await PsAgent.findAll({
+            where: { parent_agent_id: parentAgentId },
+            include: [
+                {
+                    model: PsAgent,
+                    as: "SubAgents",
+                    include: [{ model: PsAgentConnector, as: "Connectors" }],
+                },
+                { model: PsAgentConnector, as: "Connectors" },
+                { model: PsAgentClass, as: "Class" },
+                { model: User, as: "User" },
+                { model: Group, as: "Group" },
+                { model: PsApiCost, as: "ApiCosts" },
+                { model: PsModelCost, as: "ModelCosts" },
+                { model: PsAiModel, as: "AiModels" },
+            ],
+        });
         return Promise.all(subAgents.map(async (subAgent) => {
-            const nestedSubAgent = await PsAgent.findByPk(subAgent.id, {
-                include: [
-                    {
-                        model: PsAgent,
-                        as: "SubAgents",
-                        include: [{ model: PsAgentConnector, as: "Connectors" }],
-                    },
-                    { model: PsAgentConnector, as: "Connectors" },
-                    { model: PsAgentClass, as: "Class" },
-                    { model: User, as: "User" },
-                    { model: Group, as: "Group" },
-                    { model: PsApiCost, as: "ApiCosts" },
-                    { model: PsModelCost, as: "ModelCosts" },
-                    { model: PsAiModel, as: "AiModels" },
-                ],
-            });
-            if (!nestedSubAgent) {
-                return null;
-            }
-            const subSubAgents = await this.fetchNestedSubAgents(nestedSubAgent.SubAgents || []);
+            const nestedSubAgents = await this.fetchNestedSubAgents(subAgent.id);
             return {
-                ...nestedSubAgent.toJSON(),
-                SubAgents: subSubAgents,
+                ...subAgent.toJSON(),
+                SubAgents: nestedSubAgents,
             };
         }));
     }
