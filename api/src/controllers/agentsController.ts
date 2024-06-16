@@ -10,6 +10,7 @@ import {
   PsApiCost,
   PsModelCost,
   PsAiModel,
+  PsAgentConnectorClass,
 } from "../models/index.js";
 
 let redisClient;
@@ -61,9 +62,30 @@ export class AgentsController {
         {
           model: PsAgent,
           as: "SubAgents",
-          include: [{ model: PsAgentConnector, as: "Connectors" }],
+          include: [
+            {
+              model: PsAgentConnector,
+              as: "Connectors",
+              include: [
+                {
+                  model: PsAgentConnectorClass,
+                  as: "Class",
+                },
+              ],
+            },
+            { model: PsAgentClass, as: "Class" },
+          ],
         },
-        { model: PsAgentConnector, as: "Connectors" },
+        {
+          model: PsAgentConnector,
+          as: "Connectors",
+          include: [
+            {
+              model: PsAgentConnectorClass,
+              as: "Class",
+            },
+          ],
+        },
         { model: PsAgentClass, as: "Class" },
         { model: User, as: "User" },
         { model: Group, as: "Group" },
@@ -79,13 +101,13 @@ export class AgentsController {
 
     console.log("Agent found:", agent.toJSON()); // Debug logging
 
-    const subAgents = await this.fetchNestedSubAgents(agent.id);
+    //const subAgents = await this.fetchNestedSubAgents(agent.id);
 
-    console.log("Sub-agents fetched:", subAgents); // Debug logging
+    //console.log("Sub-agents fetched:", subAgents); // Debug logging
 
     return {
       ...agent.toJSON(),
-      SubAgents: subAgents,
+      //  SubAgents: subAgents,
     };
   }
 
@@ -126,5 +148,4 @@ export class AgentsController {
       })
     );
   }
-
 }

@@ -8,10 +8,10 @@ export declare class AgentsController {
     initializeRoutes(): void;
     getAgent: (req: express.Request, res: express.Response) => Promise<void>;
     fetchAgentWithSubAgents(agentId: string): Promise<{
-        SubAgents: any[];
         Class?: PsAgentClassAttributes | undefined;
         parent_agent_id?: number | undefined;
         parentAgent?: PsAgentAttributes | undefined;
+        SubAgents?: PsAgentAttributes[] | undefined;
         Connectors?: PsAgentConnectorAttributes[] | undefined;
         AiModels?: PsAiModelAttributes[] | undefined;
         configuration: PsAgentBaseConfiguration;

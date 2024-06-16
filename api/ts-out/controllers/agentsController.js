@@ -1,6 +1,6 @@
 import express from "express";
 import { createClient } from "redis";
-import { PsAgent, PsAgentConnector, PsAgentClass, User, Group, PsApiCost, PsModelCost, PsAiModel, } from "../models/index.js";
+import { PsAgent, PsAgentConnector, PsAgentClass, User, Group, PsApiCost, PsModelCost, PsAiModel, PsAgentConnectorClass, } from "../models/index.js";
 let redisClient;
 // TODO: Share this do not start on each controller
 if (process.env.REDIS_URL) {
@@ -45,9 +45,30 @@ export class AgentsController {
                 {
                     model: PsAgent,
                     as: "SubAgents",
-                    include: [{ model: PsAgentConnector, as: "Connectors" }],
+                    include: [
+                        {
+                            model: PsAgentConnector,
+                            as: "Connectors",
+                            include: [
+                                {
+                                    model: PsAgentConnectorClass,
+                                    as: "Class",
+                                },
+                            ],
+                        },
+                        { model: PsAgentClass, as: "Class" },
+                    ],
                 },
-                { model: PsAgentConnector, as: "Connectors" },
+                {
+                    model: PsAgentConnector,
+                    as: "Connectors",
+                    include: [
+                        {
+                            model: PsAgentConnectorClass,
+                            as: "Class",
+                        },
+                    ],
+                },
                 { model: PsAgentClass, as: "Class" },
                 { model: User, as: "User" },
                 { model: Group, as: "Group" },
@@ -60,11 +81,11 @@ export class AgentsController {
             throw new Error("Agent not found");
         }
         console.log("Agent found:", agent.toJSON()); // Debug logging
-        const subAgents = await this.fetchNestedSubAgents(agent.id);
-        console.log("Sub-agents fetched:", subAgents); // Debug logging
+        //const subAgents = await this.fetchNestedSubAgents(agent.id);
+        //console.log("Sub-agents fetched:", subAgents); // Debug logging
         return {
             ...agent.toJSON(),
-            SubAgents: subAgents,
+            //  SubAgents: subAgents,
         };
     }
     async fetchNestedSubAgents(parentAgentId) {
