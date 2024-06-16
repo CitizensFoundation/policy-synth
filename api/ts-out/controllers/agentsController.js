@@ -39,6 +39,7 @@ export class AgentsController {
         }
     };
     async fetchAgentWithSubAgents(agentId) {
+        console.log("Fetching agent with ID:", agentId); // Debug logging
         const agent = await PsAgent.findByPk(agentId, {
             include: [
                 {
@@ -58,13 +59,19 @@ export class AgentsController {
         if (!agent) {
             throw new Error("Agent not found");
         }
+        console.log("Agent found:", agent.toJSON()); // Debug logging
         const subAgents = await this.fetchNestedSubAgents(agent.id);
+        console.log("Sub-agents fetched:", subAgents); // Debug logging
         return {
             ...agent.toJSON(),
             SubAgents: subAgents,
         };
     }
     async fetchNestedSubAgents(parentAgentId) {
+        if (!parentAgentId) {
+            return [];
+        }
+        console.log("Fetching sub-agents for parent ID:", parentAgentId); // Debug logging
         const subAgents = await PsAgent.findAll({
             where: { parent_agent_id: parentAgentId },
             include: [
@@ -82,6 +89,7 @@ export class AgentsController {
                 { model: PsAiModel, as: "AiModels" },
             ],
         });
+        console.log("Sub-agents found:", subAgents); // Debug logging
         return Promise.all(subAgents.map(async (subAgent) => {
             const nestedSubAgents = await this.fetchNestedSubAgents(subAgent.id);
             return {
