@@ -37,7 +37,7 @@ export declare class PsPolicies extends PsStageBase {
     handleTouchStart(e: TouchEvent): void;
     handleTouchEnd(e: TouchEvent): void;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
-    static get styles(): any[];
+    static get styles(): (any[] | import("lit").CSSResult)[];
     get filteredPolicies(): PSPolicy[];
     render(): import("lit").TemplateResult<1> | typeof nothing;
     renderPolicyItem(policy: PSPolicy, index: number): import("lit").TemplateResult<1>;

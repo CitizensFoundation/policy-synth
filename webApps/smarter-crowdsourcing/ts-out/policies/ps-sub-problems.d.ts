@@ -4,7 +4,7 @@ export declare class PsSubProblems extends PsStageBase {
     connectedCallback(): Promise<void>;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     disconnectedCallback(): void;
-    static get styles(): any[];
+    static get styles(): (any[] | import("lit").CSSResult)[];
     render(): import("lit").TemplateResult<1>;
     renderSubProblemScreen(subProblem: PsSubProblem): import("lit").TemplateResult<1>;
 }

@@ -18,7 +18,7 @@ export declare class LtpAiChatElement extends PsAiChatElement {
     api: LtpServerApi;
     constructor();
     handleJsonLoadingEnd: (event: any) => void;
-    static get styles(): any[];
+    static get styles(): (any[] | import("lit").CSSResult)[];
     addSelected(): Promise<void>;
     get isError(): boolean;
     renderJson(): TemplateResult<1>;

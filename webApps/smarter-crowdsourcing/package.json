@@ -31,7 +31,7 @@
   "dependencies": {
     "@joint/core": "^4.0.4",
     "@joint/layout-directed-graph": "^4.0.3",
-    "@policysynth/agents": "^1.2.9"
+    "@policysynth/agents": "^1.2.12"
   },
   "peerDependencies": {
     "@yrpri/webapp": "^9.0.44"

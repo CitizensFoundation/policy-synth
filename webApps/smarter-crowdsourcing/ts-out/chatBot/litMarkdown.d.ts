@@ -20,7 +20,7 @@ export declare class MarkdownDirective extends AsyncDirective {
     private sanitizeHTMLWithOptions;
     private closeCodeBlockIfNeeded;
     private removeCitations;
-    render(rawMarkdown: string, options?: Partial<Options>): any;
+    render(rawMarkdown: string, options?: Partial<Options>): import("lit/directive").DirectiveResult<typeof import("lit/directives/unsafe-html").UnsafeHTMLDirective>;
 }
 /**
  * An asyn directive used to render markedown in a LitElement's render function.
@@ -49,6 +49,13 @@ export declare class MarkdownDirective extends AsyncDirective {
  * @param {RenderParameters[0]} rawMarkdown Markdown to be rendered.
  * @param {RenderParameters[1]} options
  */
-export declare const resolveMarkdown: (...values: unknown[]) => import("lit/directive").DirectiveResult<import("lit/directive").DirectiveClass>;
+export declare const resolveMarkdown: (rawMarkdown: string, options?: Partial<{
+    includeImages: boolean;
+    includeCodeBlockClassNames: boolean;
+    loadingHTML: string;
+    skipSanitization: boolean;
+    handleJsonBlocks: boolean;
+    targetElement: YpBaseElement;
+}>) => import("lit/directive").DirectiveResult<typeof MarkdownDirective>;
 export {};
 //# sourceMappingURL=litMarkdown.d.ts.map

@@ -9,9 +9,9 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.2.4",
-    "@langchain/openai": "^0.0.12",
+    "@policysynth/api": "^1.2.7",
     "@types/html-to-text": "^9.0.4",
+    "@langchain/openai": "^0.0.12",
     "html-to-text": "^9.0.5"
   },
   "scripts": {

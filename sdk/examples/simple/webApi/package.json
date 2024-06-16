@@ -10,7 +10,7 @@
   "main": "ts-out/server.js",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.1.0"
+    "@policysynth/api": "^1.2.7"
   },
   "scripts": {
     "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
