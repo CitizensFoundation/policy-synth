@@ -360,6 +360,7 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         if (this.elements[this.getUniqueAgentId(agent)]) {
             return this.elements[this.getUniqueAgentId(agent)];
         }
+        window.psAppGlobals.addToAgentsRegistry(agent);
         //@ts-ignore
         const el = new AgentShape({
             position: {
@@ -386,6 +387,7 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
             targetElement = this.elements[this.getUniqueConnectorId(connector)];
         }
         else {
+            window.psAppGlobals.addToConnectorsRegistry(connector);
             // Create a new ConnectorShape element
             el = new ConnectorShape({
                 position: {

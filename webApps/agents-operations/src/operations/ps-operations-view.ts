@@ -453,6 +453,7 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
     if (this.elements[this.getUniqueAgentId(agent)]) {
       return this.elements[this.getUniqueAgentId(agent)];
     }
+    window.psAppGlobals.addToAgentsRegistry(agent);
     //@ts-ignore
     const el = new AgentShape({
       position: {
@@ -483,6 +484,7 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
     if (this.elements[this.getUniqueConnectorId(connector)]) {
       targetElement = this.elements[this.getUniqueConnectorId(connector)];
     } else {
+      window.psAppGlobals.addToConnectorsRegistry(connector);
       // Create a new ConnectorShape element
       el = new ConnectorShape({
         position: {
