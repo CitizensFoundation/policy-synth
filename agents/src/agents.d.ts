@@ -171,11 +171,22 @@ interface PsAgentAuditLogAttributes extends PsBaseModelClass {
   timestamp: Date;
 }
 
+interface YpGroupConfigurationData {
+  aiModels?: { keys?: { [key: string]: string } | undefined } | undefined;
+}
+
 // tablename "groups"
 interface YpGroupData {
   id: number;
   name: string;
   user_id: number;
+  configuration: {
+    aiModels?: {
+      keys?: {
+        [key: string]: string;
+      }
+    }
+  }
 }
 
 // tablename "users"

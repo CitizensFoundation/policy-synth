@@ -6,6 +6,7 @@ export class Group extends Model {
     user_id;
     created_at;
     updated_at;
+    configuration;
 }
 Group.init({
     id: {
@@ -30,6 +31,10 @@ Group.init({
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
+    },
+    configuration: {
+        type: DataTypes.JSONB,
+        allowNull: false,
     },
 }, {
     sequelize,

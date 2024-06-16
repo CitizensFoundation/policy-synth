@@ -13,6 +13,8 @@ export class Group
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
+
+  public configuration!: YpGroupConfigurationData;
 }
 
 Group.init(
@@ -39,6 +41,10 @@ Group.init(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
+    },
+    configuration: {
+      type: DataTypes.JSONB,
+      allowNull: false,
     },
   },
   {

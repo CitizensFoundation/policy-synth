@@ -145,7 +145,7 @@ let googleSheetsConnectorClass = {
     },
 };
 await User.create({ email: "robert@citizens.is", name: "Robert" });
-await Group.create({ name: "Citizens", user_id: 1 });
+await Group.create({ name: "Citizens", user_id: 1, configuration: {} });
 const googleDocsConnectorClassInst = await PsAgentConnectorClass.create(googleDocsConnectorClass);
 const discordMarketResearchBotConnectorInst = await PsAgentConnectorClass.create(discordMarketResearchBotConnectorClass);
 const yourPrioritiesConnectorClassInst = await PsAgentConnectorClass.create(yourPrioritiesConnectorClass);

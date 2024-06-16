@@ -28,6 +28,10 @@ module.exports = {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      configuration: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
     });
 
     await queryInterface.addIndex("groups", ["user_id"]);
