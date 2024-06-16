@@ -9,10 +9,6 @@ interface PsBaseModelClass {
 interface PsAiModelConfiguration {
   type: string;
   provider: string;
-  access?: {
-    key?: string;
-    projectId?: string;
-  };
 }
 
 // tablename "ps_ai_models"
@@ -58,7 +54,7 @@ interface PsBaseNodeInstance extends PsBaseModelClass {
 
 enum PsAgentsNodeType {
   Agent = "agent",
-  Connector = "connector"
+  Connector = "connector",
 }
 
 interface PsAgentConnectorsBaseConfiguration extends PsBaseNodeConfiguration {
@@ -72,7 +68,7 @@ interface PsAgentAttributes extends PsBaseNodeInstance {
   parent_agent_id?: number;
   parentAgent?: PsAgentAttributes;
   SubAgents?: PsAgentAttributes[]; // through a join table
-  Connectors?: PsAgentConnectorAttributes[];  // through a join table
+  Connectors?: PsAgentConnectorAttributes[]; // through a join table
   AiModels?: PsAiModelAttributes[];
   configuration: PsAgentBaseConfiguration;
 }
@@ -115,7 +111,7 @@ enum PsAgentConnectorPermissionTypes {
   Read = "read",
   Write = "write",
   ReadWrite = "readWrite",
-  Admin = "admin"
+  Admin = "admin",
 }
 
 interface PsBaseModelCostConfiguration {
@@ -171,8 +167,14 @@ interface PsAgentAuditLogAttributes extends PsBaseModelClass {
   timestamp: Date;
 }
 
-interface YpGroupConfigurationData {
-  aiModels?: { keys?: { [key: string]: string } | undefined } | undefined;
+interface PsAiModelAccessConfiguration {
+  aiModelId: string;
+  projectId?: string;
+  apiKey: string;
+}
+
+interface YpPsGroupConfigurationData {
+  aiModelAccess: PsAiModelAccessConfiguration[];
 }
 
 // tablename "groups"
@@ -180,13 +182,7 @@ interface YpGroupData {
   id: number;
   name: string;
   user_id: number;
-  configuration: {
-    aiModels?: {
-      keys?: {
-        [key: string]: string;
-      }
-    }
-  }
+  configuration: YpPsGroupConfigurationData;
 }
 
 // tablename "users"
@@ -195,3 +191,4 @@ interface YpUserData {
   name: string;
   email: string;
 }
+
