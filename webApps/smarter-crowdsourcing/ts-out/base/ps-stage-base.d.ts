@@ -32,20 +32,20 @@ export declare abstract class PsStageBase extends YpBaseElement {
     toggleScores(): void;
     fixImageUrlIfNeeded(url: string): string;
     static get styles(): any[];
-    isUsedSearch(result: IEngineSearchResultItem, index: number): "" | "selectedSearchItem";
+    isUsedSearch(result: PsSearchResultItem, index: number): "" | "selectedSearchItem";
     closeSubProblem(event: CustomEvent): void;
     setSubProblemColor(index: number): void;
     setSubProblem(index: number): void;
     toggleDarkMode(): void;
     renderThemeToggle(): import("lit").TemplateResult<1>;
     renderProblemStatement(title?: string | undefined): import("lit").TemplateResult<1>;
-    renderSubProblemList(subProblems: IEngineSubProblem[], title?: string): import("lit").TemplateResult<1>;
+    renderSubProblemList(subProblems: PsSubProblem[], title?: string): import("lit").TemplateResult<1>;
     getImgHeight(renderCloseButton: boolean): 170 | 275 | 177 | 193;
     getImgWidth(renderCloseButton: boolean): 298 | 481 | 310 | 350;
-    renderSubProblemImageUrl(renderCloseButton: boolean, subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
-    renderSubProblem(subProblem: IEngineSubProblem, isLessProminent: boolean, index: number, renderCloseButton?: boolean, renderMoreInfo?: boolean, hideAllButtons?: boolean): import("lit").TemplateResult<1>;
-    renderSearchQueries(title: string, searchQueries: IEngineSearchQueries): import("lit").TemplateResult<1> | typeof nothing;
+    renderSubProblemImageUrl(renderCloseButton: boolean, subProblem: PsSubProblem): import("lit").TemplateResult<1>;
+    renderSubProblem(subProblem: PsSubProblem, isLessProminent: boolean, index: number, renderCloseButton?: boolean, renderMoreInfo?: boolean, hideAllButtons?: boolean): import("lit").TemplateResult<1>;
+    renderSearchQueries(title: string, searchQueries: PsSearchQueries): import("lit").TemplateResult<1> | typeof nothing;
     getUrlInRightSize(url: string): string;
-    renderSearchResults(title: string, searchResults: IEngineSearchResults): import("lit").TemplateResult<1> | typeof nothing;
+    renderSearchResults(title: string, searchResults: PsSearchResults): import("lit").TemplateResult<1> | typeof nothing;
 }
 //# sourceMappingURL=ps-stage-base.d.ts.map

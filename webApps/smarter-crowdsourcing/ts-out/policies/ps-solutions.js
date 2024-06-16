@@ -17,7 +17,7 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/chips/input-chip.js';
 import '@material/web/textfield/outlined-text-field.js'; // import at the beginning of your file
-import { IEngineConstants } from '../constants.js';
+import { PsConstants } from '../constants.js';
 import './ps-family-tree.js';
 import { YpFormattingHelpers } from '@yrpri/webapp/common/YpFormattingHelpers.js';
 let PsSolutions = class PsSolutions extends PsStageBase {
@@ -92,7 +92,7 @@ let PsSolutions = class PsSolutions extends PsStageBase {
             }
             else if (this.activeSolutionIndex == null &&
                 this.activeSubProblemIndex !== null &&
-                this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1) {
+                this.activeSubProblemIndex < PsConstants.maxSubProblems - 1) {
                 this.activeSubProblemIndex += 1;
                 window.psAppGlobals.activity('Sub problem - swipe right');
             }
@@ -115,7 +115,7 @@ let PsSolutions = class PsSolutions extends PsStageBase {
     async loadMiddleData() {
         console.log(`loadMiddleData`);
         try {
-            for (let i = 0; i < IEngineConstants.maxSubProblems; i++) {
+            for (let i = 0; i < PsConstants.maxSubProblems; i++) {
                 const middleData = await window.psServerApi.getMiddleSolutions(this.memory.groupId, i);
                 if (middleData && Array.isArray(middleData)) {
                     // Check if your populations are already initialized and have more than 6 elements

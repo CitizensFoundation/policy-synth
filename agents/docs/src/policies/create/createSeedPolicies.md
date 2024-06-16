@@ -12,11 +12,11 @@ This class is responsible for creating seed policies based on solutions to subpr
 
 | Name                          | Parameters                                             | Return Type         | Description                                                                 |
 |-------------------------------|--------------------------------------------------------|---------------------|-----------------------------------------------------------------------------|
-| renderCurrentSolution         | solution: IEngineSolution                              | string              | Renders the current solution details into a formatted string.               |
-| renderCreatePrompt            | subProblemIndex: number, solution: IEngineSolution     | Promise<SystemMessage[]> | Generates messages for creating policy proposals based on a solution.       |
-| renderRefinePrompt            | subProblemIndex: number, solution: IEngineSolution, policyProposalsToRefine: PSPolicy[] | Promise<SystemMessage[]> | Generates messages for refining existing policy proposals.                 |
-| renderChoosePrompt            | subProblemIndex: number, solution: IEngineSolution, policyProposalsToChooseFrom: PSPolicy[] | Promise<SystemMessage[]> | Generates messages for choosing the best policy proposal.                   |
-| createSeedPolicyForSolution   | populationIndex: number, subProblemIndex: number, solution: IEngineSolution, solutionIndex: number | Promise<PSPolicy>  | Creates a seed policy for a given solution.                                |
+| renderCurrentSolution         | solution: PsSolution                              | string              | Renders the current solution details into a formatted string.               |
+| renderCreatePrompt            | subProblemIndex: number, solution: PsSolution     | Promise<SystemMessage[]> | Generates messages for creating policy proposals based on a solution.       |
+| renderRefinePrompt            | subProblemIndex: number, solution: PsSolution, policyProposalsToRefine: PSPolicy[] | Promise<SystemMessage[]> | Generates messages for refining existing policy proposals.                 |
+| renderChoosePrompt            | subProblemIndex: number, solution: PsSolution, policyProposalsToChooseFrom: PSPolicy[] | Promise<SystemMessage[]> | Generates messages for choosing the best policy proposal.                   |
+| createSeedPolicyForSolution   | populationIndex: number, subProblemIndex: number, solution: PsSolution, solutionIndex: number | Promise<PSPolicy>  | Creates a seed policy for a given solution.                                |
 | createSeedPolicies            | None                                                   | Promise<void>       | Orchestrates the creation of seed policies for all subproblems.            |
 | process                       | None                                                   | Promise<void>       | Main method to start the policy creation process.                          |
 
@@ -25,12 +25,12 @@ This class is responsible for creating seed policies based on solutions to subpr
 ```typescript
 // Example usage of CreateSeedPoliciesProcessor
 import { CreateSeedPoliciesProcessor } from '@policysynth/agents/policies/create/createSeedPolicies.js';
-import { IEngineSolution, PSPolicy } from 'path_to_solution_and_policy_types';
+import { PsSolution, PSPolicy } from 'path_to_solution_and_policy_types';
 
 const processor = new CreateSeedPoliciesProcessor();
 
 // Example solution object
-const exampleSolution: IEngineSolution = {
+const exampleSolution: PsSolution = {
   title: "Solution Example",
   description: "Detailed description of the solution.",
   mainBenefitOfSolutionComponent: "Main benefit of the solution.",

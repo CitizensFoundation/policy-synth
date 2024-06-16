@@ -36,7 +36,7 @@ export class PsSubProblems extends PsStageBase {
     }
   }
 
-  renderSubProblemScreen(subProblem: IEngineSubProblem) {
+  renderSubProblemScreen(subProblem: PsSubProblem) {
     return html`
       <div class="topContainer layout vertical center-center">
         ${this.renderSubProblem(subProblem, false, 0, true, true)}

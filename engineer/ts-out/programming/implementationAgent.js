@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 import path from "path";
 import fs from "fs";
@@ -116,13 +116,13 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         }
         while (!hasPassedReview && retryCount < this.maxRetries) {
             console.log(`Calling LLM... Attempt ${retryCount + 1}`);
-            newCode = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+            newCode = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
                 new SystemMessage(this.codingSystemPrompt(currentErrors)),
                 new HumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog)),
             ], false);
             if (newCode) {
                 console.log(`Coding received: ${newCode}`);
-                const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+                const review = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
                     new SystemMessage(this.reviewSystemPrompt()),
                     new HumanMessage(this.getUserReviewPrompt(newCode, fileName, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog)),
                 ], false);

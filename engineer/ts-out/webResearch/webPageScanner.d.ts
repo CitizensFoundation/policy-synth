@@ -8,7 +8,7 @@ export declare class WebPageScanner extends GetWebPagesProcessor {
     collectedWebPages: any[];
     constructor(memory: PsEngineerMemoryData, instructions: string);
     sanitizeInput(text: string): string;
-    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
+    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {
@@ -18,8 +18,8 @@ export declare class WebPageScanner extends GetWebPagesProcessor {
     }>;
     getAIAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<any>;
     getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined): string;
-    processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
-    getAndProcessPage(subProblemIndex: number | undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined): Promise<boolean>;
+    processPageText(text: string, subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
+    getAndProcessPage(subProblemIndex: number | undefined, url: string, browserPage: Page, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined): Promise<boolean>;
     scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes): Promise<any[]>;
 }
 //# sourceMappingURL=webPageScanner.d.ts.map

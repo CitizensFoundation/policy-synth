@@ -1,5 +1,5 @@
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
 import { Project, ReturnTypedNode } from "ts-morph";

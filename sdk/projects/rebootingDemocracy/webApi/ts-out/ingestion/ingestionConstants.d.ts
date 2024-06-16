@@ -1,5 +1,5 @@
 export declare class PsIngestionConstants {
-    static ingestionMainModel: IEngineBaseAIModelConstants;
-    static ingestionRankingModel: IEngineBaseAIModelConstants;
+    static ingestionMainModel: PsBaseAIModelConstants;
+    static ingestionRankingModel: PsBaseAIModelConstants;
 }
 //# sourceMappingURL=ingestionConstants.d.ts.map

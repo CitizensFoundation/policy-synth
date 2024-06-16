@@ -33,7 +33,7 @@ import './policies/ps-entities.js';
 import './policies/ps-solutions.js';
 import './policies/ps-policies.js';
 import './ltp/ltp-manage-crt.js';
-import { IEngineConstants } from './constants.js';
+import { PsConstants } from './constants.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/elevated-button.js';
 import '@material/web/textfield/outlined-text-field.js';
@@ -222,48 +222,48 @@ let PolicySynthWebApp = class PolicySynthWebApp extends YpBaseElement {
             },
         });
         this.stageModelMap = {
-            createSubProblems: IEngineConstants.createSubProblemsModel,
-            createEntities: IEngineConstants.createEntitiesModel,
-            rankWebSolutions: IEngineConstants.rankWebSolutionsModel,
-            analyseExternalSolutions: IEngineConstants.analyseExternalSolutionsModel,
-            createSearchQueries: IEngineConstants.createSearchQueriesModel,
-            createSolutionImages: IEngineConstants.createSolutionImagesModel,
-            createProblemStatementImage: IEngineConstants.createSolutionImagesModel,
-            createSubProblemImages: IEngineConstants.createSolutionImagesModel,
-            rankSearchResults: IEngineConstants.searchResultsRankingsModel,
-            policiesSeed: IEngineConstants.policiesSeedModel,
-            policiesCreateImages: IEngineConstants.createSolutionImagesModel,
-            rankSearchQueries: IEngineConstants.searchQueryRankingsModel,
-            rankSubProblems: IEngineConstants.subProblemsRankingsModel,
-            rankEntities: IEngineConstants.entitiesRankingsModel,
-            rankSolutions: IEngineConstants.solutionsRankingsModel,
-            rankProsCons: IEngineConstants.prosConsRankingsModel,
-            evolveReapPopulation: IEngineConstants.reapSolutionsModel,
-            rateSolutions: IEngineConstants.rateSolutionsModel,
-            alidationAgent: IEngineConstants.validationModel,
-            groupSolutions: IEngineConstants.groupSolutionsModel,
-            evolveCreatePopulation: IEngineConstants.evolveSolutionsModel,
-            evolveMutatePopulation: IEngineConstants.evolutionMutateModel,
-            evolveRecombinePopulation: IEngineConstants.evolutionRecombineModel,
-            evolveRankPopulation: IEngineConstants.solutionsRankingsModel,
-            webSearch: IEngineConstants.createSearchQueriesModel, // Not sure about this mapping
-            webGetPages: IEngineConstants.getPageAnalysisModel,
-            webGetEvidencePages: IEngineConstants.getPageAnalysisModel,
-            webGetRefinedEvidence: IEngineConstants.getRefinedEvidenceModel,
-            webGetRefinedRootCauses: IEngineConstants.getRefinedRootCausesModel,
-            rankWebRootCauses: IEngineConstants.rankWebRootCausesModel,
-            rateWebRootCauses: IEngineConstants.rateWebRootCausesModel,
-            rankWebEvidence: IEngineConstants.rankWebEvidenceModel,
-            reduceSubProblems: IEngineConstants.reduceSubProblemsModel,
-            createRootCausesSearchQueries: IEngineConstants.createSearchQueriesModel,
-            rateWebEvidence: IEngineConstants.rateWebEvidenceModel,
-            webGetRootCausesPages: IEngineConstants.getPageAnalysisModel,
-            createSeedSolutions: IEngineConstants.createSolutionsModel,
-            createEvidenceSearchQueries: IEngineConstants.createSearchQueriesModel,
-            createProsCons: IEngineConstants.createProsConsModel,
-            parse: IEngineConstants.createSubProblemsModel, // Not sure about this mapping
-            save: IEngineConstants.createSubProblemsModel, // Not sure about this mapping
-            done: IEngineConstants.createSubProblemsModel, // Not sure about this mapping
+            createSubProblems: PsConstants.createSubProblemsModel,
+            createEntities: PsConstants.createEntitiesModel,
+            rankWebSolutions: PsConstants.rankWebSolutionsModel,
+            analyseExternalSolutions: PsConstants.analyseExternalSolutionsModel,
+            createSearchQueries: PsConstants.createSearchQueriesModel,
+            createSolutionImages: PsConstants.createSolutionImagesModel,
+            createProblemStatementImage: PsConstants.createSolutionImagesModel,
+            createSubProblemImages: PsConstants.createSolutionImagesModel,
+            rankSearchResults: PsConstants.searchResultsRankingsModel,
+            policiesSeed: PsConstants.policiesSeedModel,
+            policiesCreateImages: PsConstants.createSolutionImagesModel,
+            rankSearchQueries: PsConstants.searchQueryRankingsModel,
+            rankSubProblems: PsConstants.subProblemsRankingsModel,
+            rankEntities: PsConstants.entitiesRankingsModel,
+            rankSolutions: PsConstants.solutionsRankingsModel,
+            rankProsCons: PsConstants.prosConsRankingsModel,
+            evolveReapPopulation: PsConstants.reapSolutionsModel,
+            rateSolutions: PsConstants.rateSolutionsModel,
+            alidationAgent: PsConstants.validationModel,
+            groupSolutions: PsConstants.groupSolutionsModel,
+            evolveCreatePopulation: PsConstants.evolveSolutionsModel,
+            evolveMutatePopulation: PsConstants.evolutionMutateModel,
+            evolveRecombinePopulation: PsConstants.evolutionRecombineModel,
+            evolveRankPopulation: PsConstants.solutionsRankingsModel,
+            webSearch: PsConstants.createSearchQueriesModel, // Not sure about this mapping
+            webGetPages: PsConstants.getPageAnalysisModel,
+            webGetEvidencePages: PsConstants.getPageAnalysisModel,
+            webGetRefinedEvidence: PsConstants.getRefinedEvidenceModel,
+            webGetRefinedRootCauses: PsConstants.getRefinedRootCausesModel,
+            rankWebRootCauses: PsConstants.rankWebRootCausesModel,
+            rateWebRootCauses: PsConstants.rateWebRootCausesModel,
+            rankWebEvidence: PsConstants.rankWebEvidenceModel,
+            reduceSubProblems: PsConstants.reduceSubProblemsModel,
+            createRootCausesSearchQueries: PsConstants.createSearchQueriesModel,
+            rateWebEvidence: PsConstants.rateWebEvidenceModel,
+            webGetRootCausesPages: PsConstants.getPageAnalysisModel,
+            createSeedSolutions: PsConstants.createSolutionsModel,
+            createEvidenceSearchQueries: PsConstants.createSearchQueriesModel,
+            createProsCons: PsConstants.createProsConsModel,
+            parse: PsConstants.createSubProblemsModel, // Not sure about this mapping
+            save: PsConstants.createSubProblemsModel, // Not sure about this mapping
+            done: PsConstants.createSubProblemsModel, // Not sure about this mapping
         };
         window.psServerApi = new PsServerApi();
         window.psAppGlobals = new PsAppGlobals(window.psServerApi);

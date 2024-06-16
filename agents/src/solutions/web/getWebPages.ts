@@ -1,7 +1,7 @@
 import { HTTPResponse, Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 import crypto from "crypto";
@@ -44,7 +44,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   totalPagesSave = 0;
 
   renderScanningPrompt(
-    problemStatement: IEngineProblemStatement,
+    problemStatement: PsProblemStatement,
     text: string,
     subProblemIndex?: number,
     entityIndex?: number
@@ -128,7 +128,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     const totalTokenCount =
       promptTokenCount.totalCount +
       textTokenCount.totalCount +
-      IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+      PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -147,19 +147,19 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
   mergeAnalysisData(
     data1:
-      | IEngineWebPageAnalysisData
+      | PsWebPageAnalysisData
       | PSEvidenceRawWebPageData
       | PSRootCauseRawWebPageData,
     data2:
-      | IEngineWebPageAnalysisData
+      | PsWebPageAnalysisData
       | PSEvidenceRawWebPageData
       | PSRootCauseRawWebPageData
   ):
-    | IEngineWebPageAnalysisData
+    | PsWebPageAnalysisData
     | PSEvidenceRawWebPageData
     | PSRootCauseRawWebPageData {
-    data1 = data1 as IEngineWebPageAnalysisData;
-    data2 = data2 as IEngineWebPageAnalysisData;
+    data1 = data1 as PsWebPageAnalysisData;
+    data2 = data2 as PsWebPageAnalysisData;
     return {
       mostRelevantParagraphs: [
         ...(data1.mostRelevantParagraphs || []),
@@ -276,11 +276,11 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
     const analysis = (await this.callLLM(
       "web-get-pages",
-      IEngineConstants.getSolutionsPagesAnalysisModel,
+      PsConstants.getSolutionsPagesAnalysisModel,
       messages,
       true,
       true
-    )) as IEngineWebPageAnalysisData;
+    )) as PsWebPageAnalysisData;
 
     return analysis;
   }
@@ -302,14 +302,14 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         )}`
       );
 
-      let textAnalysis: IEngineSolution[];
+      let textAnalysis: PsSolution[];
 
       if (
-        IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit <
+        PsConstants.getSolutionsPagesAnalysisModel.tokenLimit <
         totalTokenCount
       ) {
         const maxTokenLengthForChunk =
-          IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit -
+          PsConstants.getSolutionsPagesAnalysisModel.tokenLimit -
           promptTokenCount.totalCount -
           128;
 
@@ -332,7 +332,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             currentText,
             subProblemIndex,
             entityIndex
-          )) as unknown as IEngineSolution[];
+          )) as unknown as PsSolution[];
 
           if (nextAnalysis) {
             if (t == 0) {
@@ -358,13 +358,13 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         textAnalysis = (await this.getAIAnalysis(
           text,
           subProblemIndex
-        )) as unknown as IEngineSolution[];
+        )) as unknown as PsSolution[];
         this.logger.debug(
           `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
         );
       }
 
-      return textAnalysis! as IEngineWebPageAnalysisData | IEngineSolution[];
+      return textAnalysis! as PsWebPageAnalysisData | PsSolution[];
     } catch (error) {
       this.logger.error(`Error in getTextAnalysis: ${error}`);
       throw error;
@@ -376,7 +376,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     subProblemIndex: number | undefined,
     url: string,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
@@ -401,12 +401,12 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         text,
         subProblemIndex,
         entityIndex
-      )) as IEngineSolution[];
+      )) as PsSolution[];
 
       if (textAnalysisItems && textAnalysisItems.length > 0) {
-        const textAnalysis = textAnalysisItems[0] as IEngineSolution;
+        const textAnalysis = textAnalysisItems[0] as PsSolution;
         textAnalysis.fromUrl = url;
-        textAnalysis.fromSearchType = type as IEngineWebPageTypes;
+        textAnalysis.fromSearchType = type as PsWebPageTypes;
 
         if (
           Array.isArray(textAnalysis.contacts) &&
@@ -487,7 +487,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     subProblemIndex: number | undefined,
     url: string,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
@@ -547,9 +547,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
           pdfBuffer = gunzipSync(cachedPdf);
         } else {
           const sleepingForMs =
-            IEngineConstants.minSleepBeforeBrowserRequest +
+            PsConstants.minSleepBeforeBrowserRequest +
             Math.random() *
-              IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+              PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
 
           this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
 
@@ -622,7 +622,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     url: string,
     browserPage: Page,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
@@ -665,9 +665,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         htmlText = gunzipSync(cachedData).toString();
       } else {
         const sleepingForMs =
-          IEngineConstants.minSleepBeforeBrowserRequest +
+          PsConstants.minSleepBeforeBrowserRequest +
           Math.random() *
-            IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
 
         this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
 
@@ -737,7 +737,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     url: string,
     browserPage: Page,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined
@@ -746,7 +746,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       const hasPage = await this.webPageVectorStore.webPageExist(
         this.memory.groupId,
         url,
-        type as IEngineWebPageTypes,
+        type as PsWebPageTypes,
         subProblemIndex,
         entityIndex
       );
@@ -788,19 +788,19 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     for (
       let s = 0;
       s <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       s++
     ) {
 
       promises.push(
         (async () => {
           const newPage = await browser.newPage();
-          newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+          newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
           newPage.setDefaultNavigationTimeout(
-            IEngineConstants.webPageNavTimeout
+            PsConstants.webPageNavTimeout
           );
 
-          await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+          await newPage.setUserAgent(PsConstants.currentUserAgent);
 
           for (const searchQueryType of searchQueryTypes) {
             await this.processEntities(s, searchQueryType, newPage);
@@ -852,7 +852,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
   async processEntities(
     subProblemIndex: number,
-    searchQueryType: IEngineWebPageTypes,
+    searchQueryType: PsWebPageTypes,
     browserPage: Page
   ) {
     for (
@@ -860,7 +860,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        IEngineConstants.maxTopEntitiesToSearch
+        PsConstants.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -900,13 +900,13 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
   }
 
-  getUrlsToFetch(allPages: IEngineSearchResultItem[]): string[] {
-    let outArray: IEngineSearchResultItem[] = [];
+  getUrlsToFetch(allPages: PsSearchResultItem[]): string[] {
+    let outArray: PsSearchResultItem[] = [];
 
     outArray = allPages.slice(
       0,
       Math.floor(
-        allPages.length * IEngineConstants.maxPercentOfSolutionsWebPagesToGet
+        allPages.length * PsConstants.maxPercentOfSolutionsWebPagesToGet
       )
     );
 
@@ -929,7 +929,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   }
 
   async processProblemStatement(
-    searchQueryType: IEngineWebPageTypes,
+    searchQueryType: PsWebPageTypes,
     browserPage: Page
   ) {
     this.logger.info(
@@ -963,7 +963,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       subProblemIndex++
     ) {
       const customUrls =
@@ -990,10 +990,10 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     await this.processSubProblems(browser);
 
@@ -1012,13 +1012,13 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
     const processPromises = searchQueryTypes.map(async (searchQueryType) => {
       const newPage = await browser.newPage();
-      newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-      newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+      newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+      newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-      await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+      await newPage.setUserAgent(PsConstants.currentUserAgent);
 
       await this.processProblemStatement(
-        searchQueryType as IEngineWebPageTypes,
+        searchQueryType as PsWebPageTypes,
         newPage
       );
 
@@ -1042,11 +1042,11 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     this.totalPagesSave = 0;
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
+      temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
       maxTokens:
-        IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-      modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
-      verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
+        PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+      modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
+      verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
     });
 
     await this.getAllPages();

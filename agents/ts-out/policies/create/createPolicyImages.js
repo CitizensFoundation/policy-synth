@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 import fs from "fs";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
@@ -40,7 +40,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
         return messages;
     }
     async createPolicyImages() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const policies = this.memory.subProblems[subProblemIndex].policies?.populations[this.memory.subProblems[subProblemIndex].policies.populations.length - 1];
             if (policies) {
@@ -55,7 +55,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
                             this.logger.debug(`Using existing image prompt: ${imagePrompt}`);
                         }
                         else {
-                            imagePrompt = (await this.callLLM("policies-create-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePolicyImagePrompt(subProblemIndex, policy), false));
+                            imagePrompt = (await this.callLLM("policies-create-images", PsConstants.createSolutionImagesModel, await this.renderCreatePolicyImagePrompt(subProblemIndex, policy), false));
                         }
                         policy.imagePrompt = imagePrompt;
                         this.logger.debug(`subProblemIndex ${subProblemIndex} policyIndex ${policyIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}}`);
@@ -96,10 +96,10 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
         this.logger.info("Create Policy Images Processor");
         //super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.createSolutionImagesModel.temperature,
-            maxTokens: IEngineConstants.createSolutionImagesModel.maxOutputTokens,
-            modelName: IEngineConstants.createSolutionImagesModel.name,
-            verbose: IEngineConstants.createSolutionImagesModel.verbose,
+            temperature: PsConstants.createSolutionImagesModel.temperature,
+            maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
+            modelName: PsConstants.createSolutionImagesModel.name,
+            verbose: PsConstants.createSolutionImagesModel.verbose,
         });
         try {
             await this.createPolicyImages();

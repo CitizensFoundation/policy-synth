@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 import crypto from "crypto";
@@ -85,7 +85,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         ]);
         const totalTokenCount = promptTokenCount.totalCount +
             textTokenCount.totalCount +
-            IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+            PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
     getAllTextForTokenCheck(text, subProblemIndex) {
@@ -179,7 +179,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt(this.memory.problemStatement, text, subProblemIndex, entityIndex);
-        const analysis = (await this.callLLM("web-get-pages", IEngineConstants.getSolutionsPagesAnalysisModel, messages, true, true));
+        const analysis = (await this.callLLM("web-get-pages", PsConstants.getSolutionsPagesAnalysisModel, messages, true, true));
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex, entityIndex) {
@@ -187,9 +187,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             const { totalTokenCount, promptTokenCount } = await this.getTokenCount(text, subProblemIndex);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
-            if (IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit <
+            if (PsConstants.getSolutionsPagesAnalysisModel.tokenLimit <
                 totalTokenCount) {
-                const maxTokenLengthForChunk = IEngineConstants.getSolutionsPagesAnalysisModel.tokenLimit -
+                const maxTokenLengthForChunk = PsConstants.getSolutionsPagesAnalysisModel.tokenLimit -
                     promptTokenCount.totalCount -
                     128;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
@@ -344,9 +344,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
                     pdfBuffer = gunzipSync(cachedPdf);
                 }
                 else {
-                    const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
+                    const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
                         Math.random() *
-                            IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
                     this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
                     await new Promise((r) => setTimeout(r, sleepingForMs));
                     const axiosResponse = await axios.get(url, {
@@ -431,9 +431,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
                 htmlText = gunzipSync(cachedData).toString();
             }
             else {
-                const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
+                const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
                     Math.random() *
-                        IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                        PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
                 this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
                 await new Promise((r) => setTimeout(r, sleepingForMs));
                 const response = await browserPage.goto(url, {
@@ -515,12 +515,12 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         ];
         const promises = [];
         for (let s = 0; s <
-            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
+            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); s++) {
             promises.push((async () => {
                 const newPage = await browser.newPage();
-                newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-                newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-                await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+                newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+                newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+                await newPage.setUserAgent(PsConstants.currentUserAgent);
                 for (const searchQueryType of searchQueryTypes) {
                     await this.processEntities(s, searchQueryType, newPage);
                     if (this.memory.subProblems[s].solutionsFromSearch &&
@@ -544,7 +544,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
     async processEntities(subProblemIndex, searchQueryType, browserPage) {
         for (let e = 0; e <
-            Math.min(this.memory.subProblems[subProblemIndex].entities.length, IEngineConstants.maxTopEntitiesToSearch); e++) {
+            Math.min(this.memory.subProblems[subProblemIndex].entities.length, PsConstants.maxTopEntitiesToSearch); e++) {
             if (this.memory.subProblems[subProblemIndex].entities[e]
                 .solutionsFromSearch &&
                 this.memory.subProblems[subProblemIndex].entities[e]
@@ -565,7 +565,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
     getUrlsToFetch(allPages) {
         let outArray = [];
-        outArray = allPages.slice(0, Math.floor(allPages.length * IEngineConstants.maxPercentOfSolutionsWebPagesToGet));
+        outArray = allPages.slice(0, Math.floor(allPages.length * PsConstants.maxPercentOfSolutionsWebPagesToGet));
         // Map to URLs and remove duplicates
         const urlsToGet = Array.from(outArray
             .map((p) => p.url)
@@ -585,7 +585,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
     async getAllCustomSearchUrls(browserPage) {
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); subProblemIndex++) {
             const customUrls = this.memory.subProblems[subProblemIndex].customSearchUrls;
             if (customUrls && customUrls.length > 0) {
                 for (let i = 0; i < customUrls.length; i++) {
@@ -602,9 +602,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         await this.processSubProblems(browser);
         await this.saveMemory();
         await this.getAllCustomSearchUrls(browserPage);
@@ -617,9 +617,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         ];
         const processPromises = searchQueryTypes.map(async (searchQueryType) => {
             const newPage = await browser.newPage();
-            newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-            newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-            await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+            newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+            newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+            await newPage.setUserAgent(PsConstants.currentUserAgent);
             await this.processProblemStatement(searchQueryType, newPage);
             await newPage.close();
             this.logger.info(`Closed page for ${searchQueryType} search results`);
@@ -634,10 +634,10 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         super.process();
         this.totalPagesSave = 0;
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
-            maxTokens: IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-            modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
-            verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
+            temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
+            maxTokens: PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+            modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
+            verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
         });
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);

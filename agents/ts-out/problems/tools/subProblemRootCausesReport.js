@@ -4,7 +4,7 @@ import csv from 'csv-parser';
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
     summaryCount;
     constructor(memoryData) {
@@ -198,7 +198,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
     async summarizeItems(items, previousSummary) {
         try {
             this.logger.info(`Summarizing ${items.length} items`);
-            const summary = await this.callLLM("web-search-root-causes", IEngineConstants.getRefinedRootCausesModel, await this.renderSummaryPrompt(items, previousSummary), false);
+            const summary = await this.callLLM("web-search-root-causes", PsConstants.getRefinedRootCausesModel, await this.renderSummaryPrompt(items, previousSummary), false);
             this.logger.debug(`Summary coming out of LLM ${summary}`);
             this.summaryCount++;
             const fileName = `/tmp/subProblemSummary${this.memory.redisKey}Response${this.summaryCount}.md`;

@@ -11,7 +11,7 @@ const gpt35_TPM = 750000;
 const gpt35_RPM = 10000;
 const gpt4_TPM = 150000;
 const gpt4_RPM = 10000;
-export class IEngineConstants {
+export class PsConstants {
     static simplifyEvidenceType(evidenceType) {
         let type = evidenceType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
         type = type.charAt(0).toLowerCase() + type.slice(1);
@@ -26,7 +26,7 @@ export class IEngineConstants {
         return type;
     }
 }
-IEngineConstants.createSubProblemsModel = {
+PsConstants.createSubProblemsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 4096,
@@ -37,7 +37,7 @@ IEngineConstants.createSubProblemsModel = {
     limitRPM: gpt4_RPM,
     verbose: true,
 };
-IEngineConstants.policiesSeedModel = {
+PsConstants.policiesSeedModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 4096,
@@ -48,7 +48,7 @@ IEngineConstants.policiesSeedModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.analyseExternalSolutionsModel = {
+PsConstants.analyseExternalSolutionsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 256,
@@ -59,7 +59,7 @@ IEngineConstants.analyseExternalSolutionsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.createEntitiesModel = {
+PsConstants.createEntitiesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 2048,
@@ -70,10 +70,10 @@ IEngineConstants.createEntitiesModel = {
     limitRPM: gpt4_RPM,
     verbose: true,
 };
-IEngineConstants.topicMapSolutionsModel = {
+PsConstants.topicMapSolutionsModel = {
     inTokenCostsUSD: adaInTokenPrice,
 };
-IEngineConstants.createSolutionImagesModel = {
+PsConstants.createSolutionImagesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 256,
@@ -84,7 +84,7 @@ IEngineConstants.createSolutionImagesModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.createSearchQueriesModel = {
+PsConstants.createSearchQueriesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
@@ -95,7 +95,7 @@ IEngineConstants.createSearchQueriesModel = {
     limitRPM: gpt4_RPM,
     verbose: true,
 };
-IEngineConstants.createEvidenceSearchQueriesModel = {
+PsConstants.createEvidenceSearchQueriesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1024,
@@ -106,7 +106,7 @@ IEngineConstants.createEvidenceSearchQueriesModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.createRootCauseSearchQueriesModel = {
+PsConstants.createRootCauseSearchQueriesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
@@ -117,7 +117,7 @@ IEngineConstants.createRootCauseSearchQueriesModel = {
     limitRPM: gpt4_RPM,
     verbose: true
 };
-IEngineConstants.searchQueryRankingsModel = {
+PsConstants.searchQueryRankingsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -128,7 +128,7 @@ IEngineConstants.searchQueryRankingsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.searchResultsRankingsModel = {
+PsConstants.searchResultsRankingsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -139,7 +139,7 @@ IEngineConstants.searchResultsRankingsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.subProblemsRankingsModel = {
+PsConstants.subProblemsRankingsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -150,7 +150,7 @@ IEngineConstants.subProblemsRankingsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.entitiesRankingsModel = {
+PsConstants.entitiesRankingsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -161,7 +161,7 @@ IEngineConstants.entitiesRankingsModel = {
     limitRPM: gpt4_RPM,
     verbose: true,
 };
-IEngineConstants.solutionsRankingsModel = {
+PsConstants.solutionsRankingsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -172,7 +172,7 @@ IEngineConstants.solutionsRankingsModel = {
     limitRPM: gpt4_RPM,
     verbose: false
 };
-IEngineConstants.prosConsRankingsModel = {
+PsConstants.prosConsRankingsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -183,7 +183,7 @@ IEngineConstants.prosConsRankingsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.getPageAnalysisModel = {
+PsConstants.getPageAnalysisModel = {
     name: "gpt-3.5-turbo-1106",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -194,7 +194,7 @@ IEngineConstants.getPageAnalysisModel = {
     limitRPM: gpt35_16k_RPM,
     verbose: false,
 };
-IEngineConstants.getSolutionsPagesAnalysisModel = {
+PsConstants.getSolutionsPagesAnalysisModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 4000,
@@ -205,7 +205,7 @@ IEngineConstants.getSolutionsPagesAnalysisModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.rankWebSolutionsModel = {
+PsConstants.rankWebSolutionsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -216,7 +216,7 @@ IEngineConstants.rankWebSolutionsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.reduceSubProblemsModel = {
+PsConstants.reduceSubProblemsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.1,
     maxOutputTokens: 4096,
@@ -227,7 +227,7 @@ IEngineConstants.reduceSubProblemsModel = {
     limitRPM: gpt4_RPM,
     verbose: false
 };
-IEngineConstants.rateWebEvidenceModel = {
+PsConstants.rateWebEvidenceModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -238,7 +238,7 @@ IEngineConstants.rateWebEvidenceModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.rateWebRootCausesModel = {
+PsConstants.rateWebRootCausesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -249,7 +249,7 @@ IEngineConstants.rateWebRootCausesModel = {
     limitRPM: gpt4_RPM,
     verbose: false
 };
-IEngineConstants.rankWebEvidenceModel = {
+PsConstants.rankWebEvidenceModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -260,7 +260,7 @@ IEngineConstants.rankWebEvidenceModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.rankWebRootCausesModel = {
+PsConstants.rankWebRootCausesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -271,7 +271,7 @@ IEngineConstants.rankWebRootCausesModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.getRefinedEvidenceModel = {
+PsConstants.getRefinedEvidenceModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -282,7 +282,7 @@ IEngineConstants.getRefinedEvidenceModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.getRefinedRootCausesModel = {
+PsConstants.getRefinedRootCausesModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 3048,
@@ -293,7 +293,7 @@ IEngineConstants.getRefinedRootCausesModel = {
     limitRPM: gpt4_RPM,
     verbose: false
 };
-IEngineConstants.reapSolutionsModel = {
+PsConstants.reapSolutionsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 128,
@@ -304,7 +304,7 @@ IEngineConstants.reapSolutionsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.groupSolutionsModel = {
+PsConstants.groupSolutionsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 4095,
@@ -315,7 +315,7 @@ IEngineConstants.groupSolutionsModel = {
     limitRPM: gpt4_RPM,
     verbose: false
 };
-IEngineConstants.rateSolutionsModel = {
+PsConstants.rateSolutionsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 1024,
@@ -326,7 +326,7 @@ IEngineConstants.rateSolutionsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.createSolutionsModel = {
+PsConstants.createSolutionsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1200,
@@ -337,7 +337,7 @@ IEngineConstants.createSolutionsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.evolveSolutionsModel = {
+PsConstants.evolveSolutionsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.5,
     maxOutputTokens: 1200,
@@ -348,7 +348,7 @@ IEngineConstants.evolveSolutionsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.createProsConsModel = {
+PsConstants.createProsConsModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 2048,
@@ -359,7 +359,7 @@ IEngineConstants.createProsConsModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.evolutionMutateModel = {
+PsConstants.evolutionMutateModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
@@ -370,7 +370,7 @@ IEngineConstants.evolutionMutateModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.evolutionRecombineModel = {
+PsConstants.evolutionRecombineModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.7,
     maxOutputTokens: 1024,
@@ -381,7 +381,7 @@ IEngineConstants.evolutionRecombineModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.validationModel = {
+PsConstants.validationModel = {
     name: "gpt-4-1106-preview",
     temperature: 0.0,
     maxOutputTokens: 1024,
@@ -392,36 +392,36 @@ IEngineConstants.validationModel = {
     limitRPM: gpt4_RPM,
     verbose: false,
 };
-IEngineConstants.getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
-IEngineConstants.maxSubProblems = 7;
-IEngineConstants.maxNumberGeneratedOfEntities = 7;
-IEngineConstants.maxStabilityRetryCount = 14;
-IEngineConstants.mainLLMmaxRetryCount = 40;
-IEngineConstants.limitedLLMmaxRetryCount = 10;
-IEngineConstants.rankingLLMmaxRetryCount = 40;
+PsConstants.getPageCacheExpiration = 60 * 60 * 24 * 7 * 4 * 6; // 6 months
+PsConstants.maxSubProblems = 7;
+PsConstants.maxNumberGeneratedOfEntities = 7;
+PsConstants.maxStabilityRetryCount = 14;
+PsConstants.mainLLMmaxRetryCount = 40;
+PsConstants.limitedLLMmaxRetryCount = 10;
+PsConstants.rankingLLMmaxRetryCount = 40;
 // See also hardcoded 3 for project 1 in createSolutions
-IEngineConstants.maxTopEntitiesToSearch = 4;
-IEngineConstants.maxTopEntitiesToRender = 3;
-IEngineConstants.maxTopQueriesToSearchPerType = 5;
-IEngineConstants.maxTopEvidenceQueriesToSearchPerType = 4;
-IEngineConstants.maxTopRootCauseQueriesToSearchPerType = 5;
-IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet = 0.65;
-IEngineConstants.maxRootCausesToUseForRatingRootCauses = 5;
-IEngineConstants.topWebPagesToGetForRefineRootCausesScan = 10;
-IEngineConstants.mainSearchRetryCount = 40;
-IEngineConstants.maxDalleRetryCount = 7;
-IEngineConstants.maxTopWebPagesToGet = 5;
-IEngineConstants.maxBingSearchResults = 10;
-IEngineConstants.maxTopProsConsUsedForRating = 2;
-IEngineConstants.maxNumberGeneratedProsConsForSolution = 3;
-IEngineConstants.minSleepBeforeBrowserRequest = 50;
-IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest = 100;
-IEngineConstants.numberOfSearchTypes = 4;
-IEngineConstants.webPageNavTimeout = 30 * 1000;
-IEngineConstants.subProblemsRankingMinNumberOfMatches = 10;
-IEngineConstants.currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
-IEngineConstants.topItemsToKeepForTopicClusterPruning = 3;
-IEngineConstants.chances = {
+PsConstants.maxTopEntitiesToSearch = 4;
+PsConstants.maxTopEntitiesToRender = 3;
+PsConstants.maxTopQueriesToSearchPerType = 5;
+PsConstants.maxTopEvidenceQueriesToSearchPerType = 4;
+PsConstants.maxTopRootCauseQueriesToSearchPerType = 5;
+PsConstants.maxRootCausePercentOfSearchResultWebPagesToGet = 0.65;
+PsConstants.maxRootCausesToUseForRatingRootCauses = 5;
+PsConstants.topWebPagesToGetForRefineRootCausesScan = 10;
+PsConstants.mainSearchRetryCount = 40;
+PsConstants.maxDalleRetryCount = 7;
+PsConstants.maxTopWebPagesToGet = 5;
+PsConstants.maxBingSearchResults = 10;
+PsConstants.maxTopProsConsUsedForRating = 2;
+PsConstants.maxNumberGeneratedProsConsForSolution = 3;
+PsConstants.minSleepBeforeBrowserRequest = 50;
+PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest = 100;
+PsConstants.numberOfSearchTypes = 4;
+PsConstants.webPageNavTimeout = 30 * 1000;
+PsConstants.subProblemsRankingMinNumberOfMatches = 10;
+PsConstants.currentUserAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
+PsConstants.topItemsToKeepForTopicClusterPruning = 3;
+PsConstants.chances = {
     createSolutions: {
         searchQueries: {
             useMainProblemSearchQueries: 0.01,
@@ -439,13 +439,13 @@ IEngineConstants.chances = {
         vectorSearchAcrossAllProblems: 0.001,
     },
 };
-IEngineConstants.maxTopSearchQueriesForSolutionCreation = 8;
-IEngineConstants.maxPercentOfSolutionsWebPagesToGet = 0.25;
-IEngineConstants.limits = {
+PsConstants.maxTopSearchQueriesForSolutionCreation = 8;
+PsConstants.maxPercentOfSolutionsWebPagesToGet = 0.25;
+PsConstants.limits = {
     webPageVectorResultsForNewSolutions: 14,
     useRandomTopFromVectorSearchResults: 14,
 };
-IEngineConstants.enable = {
+PsConstants.enable = {
     refine: {
         createSubProblems: true,
         createEntities: true,
@@ -454,7 +454,7 @@ IEngineConstants.enable = {
         policiesSeed: true,
     },
 };
-IEngineConstants.evolution = {
+PsConstants.evolution = {
     populationSize: 80,
     limitTopTopicClusterElitesToEloRating: 850,
     // Population split
@@ -469,13 +469,13 @@ IEngineConstants.evolution = {
     selectParentTournamentSize: 7,
     crossoverMutationPercent: 0.05,
 };
-IEngineConstants.maxPercentOfEloMatched = 0.75;
-IEngineConstants.minimumNumberOfPairwiseVotesForPopulation = 10;
-IEngineConstants.maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize * IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
-IEngineConstants.maxTopSolutionsToCreatePolicies = 3;
-IEngineConstants.maxTopPoliciesToProcess = 1;
-IEngineConstants.maxEvidenceToUseForRatingEvidence = 5;
-IEngineConstants.policyEvidenceFieldTypes = [
+PsConstants.maxPercentOfEloMatched = 0.75;
+PsConstants.minimumNumberOfPairwiseVotesForPopulation = 10;
+PsConstants.maxNumberOfPairwiseRankingPrompts = PsConstants.evolution.populationSize * PsConstants.minimumNumberOfPairwiseVotesForPopulation;
+PsConstants.maxTopSolutionsToCreatePolicies = 3;
+PsConstants.maxTopPoliciesToProcess = 1;
+PsConstants.maxEvidenceToUseForRatingEvidence = 5;
+PsConstants.policyEvidenceFieldTypes = [
     "allPossiblePositiveEvidenceIdentifiedInTextContext",
     "allPossibleNegativeEvidenceIdentifiedInTextContext",
     "allPossibleNeutralEvidenceIdentifiedInTextContext",
@@ -499,7 +499,7 @@ IEngineConstants.policyEvidenceFieldTypes = [
     "allPossibleCostAnalysisIdentifiedInTextContext",
     "allPossibleImplementationFeasibilityIdentifiedInTextContext",
 ];
-IEngineConstants.rootCauseFieldTypes = [
+PsConstants.rootCauseFieldTypes = [
     "allPossibleHistoricalRootCausesIdentifiedInTextContext",
     "allPossibleEconomicRootCausesIdentifiedInTextContext",
     "allPossibleScientificRootCausesIdentifiedInTextContext",

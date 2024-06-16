@@ -3,7 +3,7 @@ export declare class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     instructions: string | undefined;
     memory: PsEngineerMemoryData;
     constructor(memory: PsEngineerMemoryData, progressFunction?: Function | undefined);
-    voteOnPromptPair(index: number, promptPair: number[]): Promise<IEnginePairWiseVoteResults>;
-    rankSearchResults(queriesToRank: IEngineSearchResultItem[], instructions: string, maxPrompts?: number): Promise<IEngineSearchResultItem[]>;
+    voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
+    rankSearchResults(queriesToRank: PsSearchResultItem[], instructions: string, maxPrompts?: number): Promise<PsSearchResultItem[]>;
 }
 //# sourceMappingURL=searchResultsRanker.d.ts.map

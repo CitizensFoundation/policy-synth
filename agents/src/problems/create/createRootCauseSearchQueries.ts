@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
   generateInLanguage: string | undefined = "Icelandic";
@@ -130,7 +130,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
         // create search queries for each type
         let searchResults = await this.callLLM(
           "create-root-causes-search-queries",
-          IEngineConstants.createRootCauseSearchQueriesModel,
+          PsConstants.createRootCauseSearchQueriesModel,
           await this.renderCreatePrompt(searchResultType)
         );
         if (refineSearchQueriesHere) {
@@ -139,7 +139,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
           );
           searchResults = await this.callLLM(
             "create-root-causes-search-queries",
-            IEngineConstants.createRootCauseSearchQueriesModel,
+            PsConstants.createRootCauseSearchQueriesModel,
             await this.renderRefinePrompt(searchResultType, searchResults)
           );
         }
@@ -149,7 +149,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
           );
           searchResults = await this.callLLM(
             "create-root-causes-search-queries",
-            IEngineConstants.createRootCauseSearchQueriesModel,
+            PsConstants.createRootCauseSearchQueriesModel,
             await this.renderRankPrompt(searchResultType, searchResults)
           );
         }
@@ -176,11 +176,11 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     super.process();
     this.chat = new ChatOpenAI({
       temperature:
-        IEngineConstants.createRootCauseSearchQueriesModel.temperature,
+        PsConstants.createRootCauseSearchQueriesModel.temperature,
       maxTokens:
-        IEngineConstants.createRootCauseSearchQueriesModel.maxOutputTokens,
-      modelName: IEngineConstants.createRootCauseSearchQueriesModel.name,
-      verbose: IEngineConstants.createRootCauseSearchQueriesModel.verbose,
+        PsConstants.createRootCauseSearchQueriesModel.maxOutputTokens,
+      modelName: PsConstants.createRootCauseSearchQueriesModel.name,
+      verbose: PsConstants.createRootCauseSearchQueriesModel.verbose,
     });
     this.logger.info("Creating root cause search queries");
     await this.createRootCauseSearchQueries();

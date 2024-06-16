@@ -12,7 +12,7 @@ This class extends `BasePairwiseRankingsProcessor` to specifically handle the ra
 
 | Name             | Parameters                                             | Return Type                     | Description |
 |------------------|--------------------------------------------------------|---------------------------------|-------------|
-| voteOnPromptPair | subProblemIndex: number, promptPair: number[]          | Promise<IEnginePairWiseVoteResults> | Processes a pair of sub-problems and uses an AI model to determine which one is more relevant to the main problem. |
+| voteOnPromptPair | subProblemIndex: number, promptPair: number[]          | Promise<PsPairWiseVoteResults> | Processes a pair of sub-problems and uses an AI model to determine which one is more relevant to the main problem. |
 | process          | -                                                      | Promise<void>                   | Orchestrates the entire process of ranking sub-problems by setting up prompts, performing pairwise ranking, and updating the memory with the ranked list. |
 
 ## Example

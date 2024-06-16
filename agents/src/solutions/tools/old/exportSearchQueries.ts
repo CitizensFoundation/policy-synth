@@ -1,10 +1,10 @@
 import ioredis from "ioredis";
-import { IEngineConstants } from "../../../constants.js";
+import { PsConstants } from "../../../constants.js";
 import fs from "fs";
 import process from "process";
 import path from "path";
 
-interface IEngineSearchQueries {
+interface PsSearchQueries {
   general: string[];
   scientific: string[];
   news: string[];
@@ -25,7 +25,7 @@ const memory = JSON.parse(memoryData) as PsBaseMemoryData;
 const formatElo = (elo: number | undefined) => Math.floor(elo || -1);
 
 const formatSearchQueries = (
-  searchQueries: IEngineSearchQueries | undefined
+  searchQueries: PsSearchQueries | undefined
 ) => {
   if (!searchQueries) {
     return "";
@@ -65,7 +65,7 @@ let html = `
 
 for (
   let s = 0;
-  s < Math.min(memory.subProblems.length, IEngineConstants.maxSubProblems);
+  s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems);
   s++
 ) {
   const subProblem = memory.subProblems[s];
@@ -80,7 +80,7 @@ for (
       <h3>Entities:</h3>
       <ul>
         ${subProblem.entities
-          .slice(0, IEngineConstants.maxTopEntitiesToSearch)
+          .slice(0, PsConstants.maxTopEntitiesToSearch)
           .map(
             (entity) =>
               `<li><b>${entity.name}</b> <br> ELO: ${formatElo(

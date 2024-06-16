@@ -1,6 +1,6 @@
 import weaviate from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "../../baseAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -168,7 +168,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .get()
                 .withClassName("RagDocument")
                 .withNearText({ concepts: [query] })
-                .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
+                .withLimit(PsConstants.limits.webPageVectorResultsForNewSolutions)
                 /*.withWhere({
                   operator: "And",
                   operands: where,

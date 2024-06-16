@@ -1,4 +1,4 @@
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
@@ -56,7 +56,7 @@ class ShowCounts extends BaseProblemSolvingAgent {
         this.logger.debug("+++++++++++++++++++++++++++++++++++++");
         this.logger.debug(`Problem Statement Web Page Count: ${counts.webPageCount}`);
         this.logger.debug(`Problem Statement Solutions Count: ${counts.solutionsCount}`);
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             this.logger.info(`Count sub problem ${subProblemIndex + 1}`);
             const subProblemTitle = this.memory.subProblems[subProblemIndex].title;

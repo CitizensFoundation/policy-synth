@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
     async voteOnPromptPair(subProblemIndex, promptPair) {
@@ -66,12 +66,12 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         The more important and practial solution component is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", IEngineConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", PsConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblem(subProblemIndex) {
         const lastPopulationIndex = this.lastPopulationIndex(subProblemIndex);
         this.logger.info(`Ranking solution components for sub problem ${subProblemIndex} population ${lastPopulationIndex}`);
-        this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex), IEngineConstants.minimumNumberOfPairwiseVotesForPopulation *
+        this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex), PsConstants.minimumNumberOfPairwiseVotesForPopulation *
             this.getActiveSolutionsLastPopulation(subProblemIndex).length);
         await this.performPairwiseRanking(subProblemIndex);
         this.memory.subProblems[subProblemIndex].solutions.populations[lastPopulationIndex] = this.getOrderedListOfItems(subProblemIndex, true);
@@ -82,13 +82,13 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         super.process();
         try {
             this.chat = new ChatOpenAI({
-                temperature: IEngineConstants.solutionsRankingsModel.temperature,
-                maxTokens: IEngineConstants.solutionsRankingsModel.maxOutputTokens,
-                modelName: IEngineConstants.solutionsRankingsModel.name,
-                verbose: IEngineConstants.solutionsRankingsModel.verbose,
+                temperature: PsConstants.solutionsRankingsModel.temperature,
+                maxTokens: PsConstants.solutionsRankingsModel.maxOutputTokens,
+                modelName: PsConstants.solutionsRankingsModel.name,
+                verbose: PsConstants.solutionsRankingsModel.verbose,
             });
             const subProblemsPromises = Array.from({
-                length: Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems),
+                length: Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems),
             }, async (_, subProblemIndex) => this.processSubProblem(subProblemIndex));
             await Promise.all(subProblemsPromises);
             this.logger.info("Rank Solution Components Processor Completed");

@@ -15,10 +15,10 @@ This class is responsible for deduplicating search results based on specific pro
 
 | Name                          | Parameters                                             | Return Type                     | Description                                                                 |
 |-------------------------------|--------------------------------------------------------|---------------------------------|-----------------------------------------------------------------------------|
-| deduplicateArrayByProperty    | arr: Array<IEngineSearchResultItem>, prop: string, id: string | Array<IEngineSearchResultItem> | Deduplicates an array of search result items based on a specified property. |
-| deduplicateSubProblems        | searchQueryType: IEngineWebPageTypes                   | void                            | Deduplicates all sub-problems for a given search query type.                |
-| deduplicateEntities           | subProblemIndex: number, searchQueryType: IEngineWebPageTypes | void                            | Deduplicates entities within a sub-problem for a given search query type.   |
-| deduplicateProblemStatement   | searchQueryType: IEngineWebPageTypes                   | void                            | Deduplicates the problem statement for a given search query type.           |
+| deduplicateArrayByProperty    | arr: Array<PsSearchResultItem>, prop: string, id: string | Array<PsSearchResultItem> | Deduplicates an array of search result items based on a specified property. |
+| deduplicateSubProblems        | searchQueryType: PsWebPageTypes                   | void                            | Deduplicates all sub-problems for a given search query type.                |
+| deduplicateEntities           | subProblemIndex: number, searchQueryType: PsWebPageTypes | void                            | Deduplicates entities within a sub-problem for a given search query type.   |
+| deduplicateProblemStatement   | searchQueryType: PsWebPageTypes                   | void                            | Deduplicates the problem statement for a given search query type.           |
 | process                       | None                                                   | void                            | Processes deduplication for all components of the problem.                  |
 
 ## Example

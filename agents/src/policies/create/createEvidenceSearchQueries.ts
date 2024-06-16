@@ -1,7 +1,7 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
 export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
@@ -185,7 +185,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
         // create search queries for each type
         let searchResults = (await this.callLLM(
           "create-evidence-search-queries",
-          IEngineConstants.createEvidenceSearchQueriesModel,
+          PsConstants.createEvidenceSearchQueriesModel,
           await this.renderCreatePrompt(
             subProblemIndex,
             policy,
@@ -199,7 +199,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
 
         searchResults = (await this.callLLM(
           "create-evidence-search-queries",
-          IEngineConstants.createEvidenceSearchQueriesModel,
+          PsConstants.createEvidenceSearchQueriesModel,
           await this.renderRefinePrompt(
             subProblemIndex,
             policy,
@@ -214,7 +214,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
 
         searchResults = (await this.callLLM(
           "create-evidence-search-queries",
-          IEngineConstants.createEvidenceSearchQueriesModel,
+          PsConstants.createEvidenceSearchQueriesModel,
           await this.renderRankPrompt(
             subProblemIndex,
             policy,
@@ -246,16 +246,16 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
 
     this.chat = new ChatOpenAI({
       temperature:
-        IEngineConstants.createEvidenceSearchQueriesModel.temperature,
+        PsConstants.createEvidenceSearchQueriesModel.temperature,
       maxTokens:
-        IEngineConstants.createEvidenceSearchQueriesModel.maxOutputTokens,
-      modelName: IEngineConstants.createEvidenceSearchQueriesModel.name,
-      verbose: IEngineConstants.createEvidenceSearchQueriesModel.verbose,
+        PsConstants.createEvidenceSearchQueriesModel.maxOutputTokens,
+      modelName: PsConstants.createEvidenceSearchQueriesModel.name,
+      verbose: PsConstants.createEvidenceSearchQueriesModel.verbose,
     });
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(

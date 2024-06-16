@@ -1,1 +1,1 @@
-{"version":3,"file":"googleSearchApi.d.ts","sourceRoot":"","sources":["../../../src/solutions/web/googleSearchApi.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,oBAAoB,EAAE,MAAM,oBAAoB,CAAC;AAO1D,qBAAa,eAAgB,SAAQ,oBAAoB;IAC1C,MAAM,CAAC,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,uBAAuB,EAAE,CAAC;CAqCvE"}
+{"version":3,"file":"googleSearchApi.d.ts","sourceRoot":"","sources":["../../../src/solutions/web/googleSearchApi.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,oBAAoB,EAAE,MAAM,oBAAoB,CAAC;AAO1D,qBAAa,eAAgB,SAAQ,oBAAoB;IAC1C,MAAM,CAAC,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,kBAAkB,EAAE,CAAC;CAqClE"}

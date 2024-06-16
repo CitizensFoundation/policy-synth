@@ -1,10 +1,10 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
-  async renderRatePrompt(subProblemIndex: number, solution: IEngineSolution) {
+  async renderRatePrompt(subProblemIndex: number, solution: PsSolution) {
     const messages = [
       new SystemMessage(
         `
@@ -35,15 +35,15 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
         Main obstacle: ${solution.mainObstacleToSolutionComponentAdoption}
 
         Best pros:
-        ${this.getProCons(solution.pros as IEngineProCon[]).slice(
+        ${this.getProCons(solution.pros as PsProCon[]).slice(
           0,
-          IEngineConstants.maxTopProsConsUsedForRating
+          PsConstants.maxTopProsConsUsedForRating
         )}
 
         Best cons:
-        ${this.getProCons(solution.cons as IEngineProCon[]).slice(
+        ${this.getProCons(solution.cons as PsProCon[]).slice(
           0,
-          IEngineConstants.maxTopProsConsUsedForRating
+          PsConstants.maxTopProsConsUsedForRating
         )}
 
         Your ratings in JSON format:
@@ -56,7 +56,7 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
   async rateSolutions() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -85,7 +85,7 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
           if (!solution.ratings) {
             const rating = (await this.callLLM(
               "rate-solutions",
-              IEngineConstants.rateSolutionsModel,
+              PsConstants.rateSolutionsModel,
               await this.renderRatePrompt(subProblemIndex, solution)
             )) as object;
 
@@ -111,10 +111,10 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.rateSolutionsModel.temperature,
-      maxTokens: IEngineConstants.rateSolutionsModel.maxOutputTokens,
-      modelName: IEngineConstants.rateSolutionsModel.name,
-      verbose: IEngineConstants.rateSolutionsModel.verbose,
+      temperature: PsConstants.rateSolutionsModel.temperature,
+      maxTokens: PsConstants.rateSolutionsModel.maxOutputTokens,
+      modelName: PsConstants.rateSolutionsModel.name,
+      verbose: PsConstants.rateSolutionsModel.verbose,
     });
 
     try {

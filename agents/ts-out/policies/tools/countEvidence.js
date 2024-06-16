@@ -1,6 +1,6 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
@@ -11,14 +11,14 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
         const logDetail = false;
         this.logger.info(`Counting all web evidence for policy ${policy.title}`);
         try {
-            for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+            for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
                 //this.logger.info(`Counting all web evidence for type ${evidenceType}`);
                 let offset = 0;
                 let refinedCount = 0;
                 let totalCount = 0;
                 let revidenceCount = 0;
                 let reommendationCount = 0;
-                const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+                const searchType = PsConstants.simplifyEvidenceType(evidenceType);
                 while (true) {
                     const results = await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(this.memory.groupId, subProblemIndex, searchType, policy.title, limit, offset);
                     /*this.logger.debug(
@@ -62,7 +62,7 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Count evidence Processor");
         super.process();
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         for (let subProblemIndex = 0; subProblemIndex < subProblemsLimit; subProblemIndex++) {
@@ -72,7 +72,7 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
                 if (subProblem.policies) {
                     const policies = subProblem.policies.populations[currentGeneration];
                     for (let p = 0; p <
-                        Math.min(policies.length, IEngineConstants.maxTopPoliciesToProcess); p++) {
+                        Math.min(policies.length, PsConstants.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
                             await this.countAll(policy, subProblemIndex);

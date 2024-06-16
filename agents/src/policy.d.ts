@@ -1,6 +1,6 @@
-interface PSImplentingEntity extends IEngineAffectedEntity {}
+interface PSImplentingEntity extends PsAffectedEntity {}
 
-interface PSDependentEntity extends IEngineAffectedEntity {}
+interface PSDependentEntity extends PsAffectedEntity {}
 
 interface PSMemoryData extends PsBaseMemoryData {}
 
@@ -61,7 +61,7 @@ type PSEvidenceWebPageTypes =
   | "costAnalysis"
   | "implementationFeasibility";
 
-type SearchResultItem = IEngineSearchResultItem[];
+type SearchResultItem = PsSearchResultItem[];
 
 type PSEvidenceSearchResults = {
   [K in PSEvidenceWebPageTypes]: SearchResultItem;
@@ -82,7 +82,7 @@ interface PSPolicyAction {
   eloRating?: number;
   implementingEntities: PSImplentingEntity[];
   dependentOnEntities: PSDependentEntity[];
-  evidenceSearchQueries?: IEngineSearchQueries;
+  evidenceSearchQueries?: PsSearchQueries;
   evidenceSearchResults?: PSEvidenceSearchResults;
 }
 
@@ -253,7 +253,7 @@ interface PSPolicy {
   imageUrl?: string;
   eloRating?: number;
   reaped?: boolean;
-  similarityGroup?: IEngineSimilarityGroup;
+  similarityGroup?: PsSimilarityGroup;
   isFirstInGroup?: boolean;
   implementingEntities: PSImplentingEntity[];
   dependentOnEntities: PSDependentEntity[];
@@ -269,7 +269,7 @@ interface PSPolicy {
   family?: {
     parentA?: string; // "<generationIndex>:<solutionId>"
     parentB?: string;
-    mutationRate?: IEngineMutationRates;
+    mutationRate?: PsMutationRates;
     gen?: number;
   };
   vectorStoreId?: string;

@@ -51,23 +51,23 @@ type AboutThisResult = {
   regions: string[];
 };
 
-interface IEnginePairWiseVoteResults {
+interface PsPairWiseVoteResults {
   wonItemIndex: number | undefined;
   lostItemIndex: number | undefined;
 }
 
-interface IEngineWorkerData {
+interface PsWorkerData {
   groupId: number;
   communityId: number;
   domainId: number;
   initialProblemStatement: string;
 }
 
-interface IEngineProblemStatement extends PsEloRateable{
+interface PsProblemStatement extends PsEloRateable{
   description: string;
-  searchQueries: IEngineSearchQueries;
-  searchResults: IEngineSearchResults;
-  solutionsFromSearch?: IEngineSolution[];
+  searchQueries: PsSearchQueries;
+  searchResults: PsSearchResults;
+  solutionsFromSearch?: PsSolution[];
   rootCauseSearchQueries?: PSRootCauseSearchQueries;
   rootCauseSearchResults?: PSRootCauseSearchResults;
   haveScannedWeb?: boolean;
@@ -75,7 +75,7 @@ interface IEngineProblemStatement extends PsEloRateable{
   imageUrl?: string;
 }
 
-interface IEngineSubProblem extends PsEloRateable {
+interface PsSubProblem extends PsEloRateable {
   title: string;
   description: string;
   displayDescription?: string;
@@ -90,14 +90,14 @@ interface IEngineSubProblem extends PsEloRateable {
   confidenceScore?: number;
   fromSearchType?: PSRootCauseWebPageTypes;
   fromUrl?: string;
-  entities: IEngineAffectedEntity[];
-  searchQueries: IEngineSearchQueries;
-  searchResults: IEngineSearchResults;
-  solutionsFromSearch?: IEngineSolution[];
+  entities: PsAffectedEntity[];
+  searchQueries: PsSearchQueries;
+  searchResults: PsSearchResults;
+  solutionsFromSearch?: PsSolution[];
   customSearchUrls?: string[];
   haveScannedWeb?: boolean;
   solutions: {
-    populations: IEngineSolution[][];
+    populations: PsSolution[][];
   };
   policies?: {
     populations: PSPolicy[][];
@@ -105,32 +105,32 @@ interface IEngineSubProblem extends PsEloRateable {
   processingActive?: boolean;
 }
 
-interface IEngineAffectedEntityBase {
+interface PsAffectedEntityBase {
   name: string;
 }
 
-interface IEngineAffectedEntityAffect {
+interface PsAffectedEntityAffect {
   reason: string;
 }
 
-interface IEngineAffectedEntity extends PsEloRateable {
+interface PsAffectedEntity extends PsEloRateable {
   name: string;
-  positiveEffects?: IEngineAffectedEntityAffect[];
-  negativeEffects?: IEngineAffectedEntityAffect[];
-  searchQueries?: IEngineSearchQueries;
-  searchResults?: IEngineSearchResults;
-  solutionsFromSearch?: IEngineSolution[];
+  positiveEffects?: PsAffectedEntityAffect[];
+  negativeEffects?: PsAffectedEntityAffect[];
+  searchQueries?: PsSearchQueries;
+  searchResults?: PsSearchResults;
+  solutionsFromSearch?: PsSolution[];
   haveScannedWeb?: boolean;
 }
 
-interface IEngineSolutionAffectedEntity extends IEngineAffectedEntityBase {
+interface PsSolutionAffectedEntity extends PsAffectedEntityBase {
   positiveEffects?: string[];
   negativeEffects?: string[];
   positiveScore: number;
   negativeScore: number;
 }
 
-interface IEngineSimilarityGroup {
+interface PsSimilarityGroup {
   index: number;
   isFirst?: boolean;
   totalCount?: number;
@@ -140,23 +140,23 @@ interface PsEloRateable {
   eloRating?: number;
 }
 
-interface IEngineSolution extends PsEloRateable {
+interface PsSolution extends PsEloRateable {
   id: string;
   title: string;
   description: string;
-  similarityGroup?: IEngineSimilarityGroup;
+  similarityGroup?: PsSimilarityGroup;
   isFirstInGroup?: boolean;
   mainBenefitOfSolutionComponent: string;
   mainObstacleToSolutionComponentAdoption: string;
   mainBenefitOfSolution?: string;
   mainObstacleToSolutionAdoption?: string;
   relevanceToProblem?: string;
-  fromSearchType?: IEngineWebPageTypes;
+  fromSearchType?: PsWebPageTypes;
   fromUrl?: string;
   contacts?: string[];
-  affectedEntities?: IEngineSolutionAffectedEntity[];
-  pros?: string[] | IEngineProCon[];
-  cons?: string[] | IEngineProCon[];
+  affectedEntities?: PsSolutionAffectedEntity[];
+  pros?: string[] | PsProCon[];
+  cons?: string[] | PsProCon[];
   imageUrl?: string;
   imagePrompt?: string;
   reaped?: boolean;
@@ -164,13 +164,13 @@ interface IEngineSolution extends PsEloRateable {
   family?: {
     parentA?: string; // "<generationIndex>:<solutionId>"
     parentB?: string;
-    mutationRate?: IEngineMutationRates;
+    mutationRate?: PsMutationRates;
     seedUrls?: string[];
     gen?: number;
   };
 }
 
-interface IEngineProCon extends PsEloRateable {
+interface PsProCon extends PsEloRateable {
   id?: number;
   description: string;
 }
@@ -239,14 +239,14 @@ type PsMemoryStageTypes =
   | "engineering-agent"
   ;
 
-interface IEngineUserFeedback {
+interface PsUserFeedback {
   feedbackType: string;
   subjectText: string;
   userFeedback?: string;
   userFeedbackRatings?: number[];
 }
 
-interface IEngineBaseAIModelConstants {
+interface PsBaseAIModelConstants {
   name: string;
   temperature: number;
   maxOutputTokens: number;
@@ -258,7 +258,7 @@ interface IEngineBaseAIModelConstants {
   verbose: boolean;
 }
 
-interface IEngineMemoryData {
+interface PsMemoryData {
   redisKey: string;
   timeStart: number;
   totalCost: number;
@@ -269,30 +269,30 @@ interface IEngineMemoryData {
   currentStageError?: string | undefined;
 }
 
-interface IEngineInnovationStagesData {
+interface PsInnovationStagesData {
   timeStart?: number;
-  userFeedback?: IEngineUserFeedback[];
+  userFeedback?: PsUserFeedback[];
   tokensIn?: number;
   tokensOut?: number;
   tokensInCost?: number;
   tokensOutCost?: number;
 }
 
-interface IEngineSearchQueries {
+interface PsSearchQueries {
   general: string[];
   scientific: string[];
   news: string[];
   openData: string[];
 }
 
-interface IEngineSearchQuery {
+interface PsSearchQuery {
   general: string;
   scientific: string;
   news: string;
   openData: string;
 }
 
-interface IEngineSearchResultItem extends PsEloRateable {
+interface PsSearchResultItem extends PsEloRateable {
   title: string;
   originalPosition: number;
   description: string;
@@ -304,19 +304,19 @@ interface IEngineSearchResultItem extends PsEloRateable {
   position?: number;
 }
 
-interface IEngineSearchResults {
+interface PsSearchResults {
   pages: {
-    general: IEngineSearchResultItem[];
-    scientific: IEngineSearchResultItem[];
-    news: IEngineSearchResultItem[];
-    openData: IEngineSearchResultItem[];
+    general: PsSearchResultItem[];
+    scientific: PsSearchResultItem[];
+    news: PsSearchResultItem[];
+    openData: PsSearchResultItem[];
   };
 }
 
-interface PsBaseMemoryData extends IEngineMemoryData {
+interface PsBaseMemoryData extends PsMemoryData {
   currentStage: PsMemoryStageTypes;
-  stages: Record<PsMemoryStageTypes, IEngineInnovationStagesData>;
-  problemStatement: IEngineProblemStatement;
+  stages: Record<PsMemoryStageTypes, PsInnovationStagesData>;
+  problemStatement: PsProblemStatement;
   customInstructions: {
     createRootCause?: string;
     createSubProblems?: string;
@@ -329,8 +329,8 @@ interface PsBaseMemoryData extends IEngineMemoryData {
     secondaryColors?: string[];
     rootCauseUrlsToScan?: string[];
   };
-  subProblems: IEngineSubProblem[];
-  allSubProblems?: IEngineSubProblem[];
+  subProblems: PsSubProblem[];
+  allSubProblems?: PsSubProblem[];
   subProblemClientColors?: string[];
   currentStageData?:
     | IEEngineSearchResultData
@@ -338,10 +338,10 @@ interface PsBaseMemoryData extends IEngineMemoryData {
     | undefined;
 }
 
-type IEngineWebPageTypes = "general" | "scientific" | "openData" | "news";
-type IEngineWebPageTargets = "problemStatement" | "subProblem" | "entity";
+type PsWebPageTypes = "general" | "scientific" | "openData" | "news";
+type PsWebPageTargets = "problemStatement" | "subProblem" | "entity";
 
-interface IEngineWebPageAnalysisData {
+interface PsWebPageAnalysisData {
   mostRelevantParagraphs: string[];
   solutionsIdentifiedInTextContext: string[];
   relevanceToProblem: string;
@@ -350,7 +350,7 @@ interface IEngineWebPageAnalysisData {
   contacts?: string[];
   summary: string;
   url: string;
-  searchType: IEngineWebPageTypes;
+  searchType: PsWebPageTypes;
   subProblemIndex?: number;
   entityIndex?: number;
   groupId: number;
@@ -362,28 +362,28 @@ interface IEngineWebPageAnalysisData {
   };
 }
 
-interface IEngineWebPageGraphQlResults {
+interface PsWebPageGraphQlResults {
   data: {
     Get: {
-      WebPage: IEngineWebPageAnalysisData[];
+      WebPage: PsWebPageAnalysisData[];
     };
   };
 }
 
-interface IEngineSolutionForReapInputData {
+interface PsSolutionForReapInputData {
   title: string;
   description: string;
 }
 
-interface IEngineSolutionForReapReturnData {
+interface PsSolutionForReapReturnData {
   title: string;
 }
 
-interface IEngineSolutionForGroupCheck extends IEngineSolutionForReapCheck {
+interface PsSolutionForGroupCheck extends PsSolutionForReapCheck {
   index: number;
 }
 
-interface IEngineWebPageGraphQlSingleResult {
+interface PsWebPageGraphQlSingleResult {
   class?: string | undefined;
   vectorWeights?: {
       [key: string]: unknown;
@@ -398,14 +398,14 @@ interface IEngineWebPageGraphQlSingleResult {
   };
 }
 
-interface IEngineRateLimits {
+interface PsRateLimits {
   [modelName: string]: {
     requests: Array<{ timestamp: number }>;
     tokens: Array<{ count: number; timestamp: number }>;
   };
 }
 
-interface IEngineExternalSolutionAnalysis {
+interface PsExternalSolutionAnalysis {
   externalSolutionIndex: number;
   externalSolution: string;
   subProblemIndex: number;
@@ -418,15 +418,15 @@ interface IEngineExternalSolutionAnalysis {
   }[];
 }
 
-interface IEngineExternalSolutionAnalysisResults {
+interface PsExternalSolutionAnalysisResults {
   solutionCoversPercentOfKeyRequirements: number;
 }
 
-interface IEngineReapingResults {
+interface PsReapingResults {
   solutionFitsRequirements: boolean;
 }
 
-type IEngineMutationRates = "low" | "medium" | "high";
+type PsMutationRates = "low" | "medium" | "high";
 
 interface PSModelConfig {
   apiKey: string;

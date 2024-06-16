@@ -37,25 +37,25 @@ export declare class PsSolutions extends PsStageBase {
     handleTouchEnd(e: TouchEvent): void;
     updated(changedProperties: Map<string | number | symbol, unknown>): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
-    get filteredSolutions(): IEngineSolution[];
+    get filteredSolutions(): PsSolution[];
     render(): import("lit").TemplateResult<1> | typeof nothing;
-    renderSolutionItem(solution: IEngineSolution, index: number): import("lit").TemplateResult<1>;
-    renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
-    renderChipSet(subProblem: IEngineSubProblem): import("lit").TemplateResult<1> | typeof nothing;
+    renderSolutionItem(solution: PsSolution, index: number): import("lit").TemplateResult<1>;
+    renderSubProblemScreen(subProblem: PsSubProblem): import("lit").TemplateResult<1>;
+    renderChipSet(subProblem: PsSubProblem): import("lit").TemplateResult<1> | typeof nothing;
     toggleSearchVisibility(): void;
     renderSearchField(): import("lit").TemplateResult<1>;
     handleSearchBlur(): void;
-    renderFilterChips(items: IEngineSolution[][], startIndex: number): import("lit").TemplateResult<1>[];
+    renderFilterChips(items: PsSolution[][], startIndex: number): import("lit").TemplateResult<1>[];
     handleDropdownChange(e: Event): void;
     toggleDropdownVisibility(): Promise<void>;
     resetDropdown(): void;
-    renderDropdown(middleItems: IEngineSolution[][], startIndex: number): import("lit").TemplateResult<1> | typeof nothing;
+    renderDropdown(middleItems: PsSolution[][], startIndex: number): import("lit").TemplateResult<1> | typeof nothing;
     camelCaseToRegular(text: string): string;
-    renderRatings(solution: IEngineSolution): import("lit").TemplateResult<1>;
-    renderSolutionNavigationButtons(solutionIndex: number, solutions: IEngineSolution[]): import("lit").TemplateResult<1>;
+    renderRatings(solution: PsSolution): import("lit").TemplateResult<1>;
+    renderSolutionNavigationButtons(solutionIndex: number, solutions: PsSolution[]): import("lit").TemplateResult<1>;
     getSolutionImgHeight(): 314 | 150;
     getSolutionImgWidth(): 550 | 263;
-    renderSolutionImage(solution: IEngineSolution): import("lit").TemplateResult<1>;
+    renderSolutionImage(solution: PsSolution): import("lit").TemplateResult<1>;
     renderSolutionScreen(solutionIndex: number): import("lit").TemplateResult<1> | typeof nothing;
 }
 //# sourceMappingURL=ps-solutions.d.ts.map

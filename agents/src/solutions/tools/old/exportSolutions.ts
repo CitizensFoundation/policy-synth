@@ -1,5 +1,5 @@
 import ioredis from "ioredis";
-import { IEngineConstants } from "../../../constants.js";
+import { PsConstants } from "../../../constants.js";
 import fs from "fs";
 import process from "process";
 import path from "path";
@@ -66,7 +66,7 @@ let html = `
 
 for (
   let s = 0;
-  s < Math.min(memory.subProblems.length, IEngineConstants.maxSubProblems);
+  s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems);
   s++
 ) {
   const subProblem = memory.subProblems[s];
@@ -111,8 +111,8 @@ for (
             Array.isArray(pros) && pros.length > 0
               ? `<h4>Pros:</h4>
                 <ul>
-                ${(pros as IEngineProCon[])
-                  .slice(0, IEngineConstants.maxTopProsConsUsedForRating)
+                ${(pros as PsProCon[])
+                  .slice(0, PsConstants.maxTopProsConsUsedForRating)
                   .map(
                     (pro) =>
                       `<li>${pro.description} (${formatElo(pro.eloRating)})</li>`
@@ -126,8 +126,8 @@ for (
             Array.isArray(cons) && cons.length > 0
               ? `<h4>Cons:</h4>
                 <ul>
-                ${(cons as IEngineProCon[])
-                  .slice(0, IEngineConstants.maxTopProsConsUsedForRating)
+                ${(cons as PsProCon[])
+                  .slice(0, PsConstants.maxTopProsConsUsedForRating)
                   .map(
                     (con) =>
                       `<li>${con.description} (${formatElo(con.eloRating)})</li>`

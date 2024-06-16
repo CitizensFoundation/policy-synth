@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
@@ -37,7 +37,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     async createProblemStatementImage() {
         let imagePrompt;
         if (process.env.STABILITY_API_KEY) {
-            imagePrompt = (await this.callLLM("create-problem-statement-image", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(), false));
+            imagePrompt = (await this.callLLM("create-problem-statement-image", PsConstants.createSolutionImagesModel, await this.renderCreatePrompt(), false));
         }
         else {
             imagePrompt = this.getDalleImagePrompt();
@@ -68,10 +68,10 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     async process() {
         this.logger.info("Create Problem Statement Image Processor");
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.createSolutionImagesModel.temperature,
-            maxTokens: IEngineConstants.createSolutionImagesModel.maxOutputTokens,
-            modelName: IEngineConstants.createSolutionImagesModel.name,
-            verbose: IEngineConstants.createSolutionImagesModel.verbose,
+            temperature: PsConstants.createSolutionImagesModel.temperature,
+            maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
+            modelName: PsConstants.createSolutionImagesModel.name,
+            verbose: PsConstants.createSolutionImagesModel.verbose,
         });
         try {
             await this.createProblemStatementImage();

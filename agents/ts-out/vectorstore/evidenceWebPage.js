@@ -1,6 +1,6 @@
 import weaviate from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "../baseAgent.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 import fs from "fs/promises";
 export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
     //@ts-ignore
@@ -626,7 +626,7 @@ export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
                 .get()
                 .withClassName("EvidenceWebPage")
                 .withNearText({ concepts: [query] })
-                .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
+                .withLimit(PsConstants.limits.webPageVectorResultsForNewSolutions)
                 .withWhere({
                 operator: "And",
                 operands: where,

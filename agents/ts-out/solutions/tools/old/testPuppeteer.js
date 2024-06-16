@@ -25,7 +25,7 @@ async function getAndProcessPdf(subProblemIndex, url, browserPage, type) {
                     //this.logger.debug(`Caching response`);
                     const base64Pdf = Buffer.from(pdfBuffer).toString('base64');
                     await redis.set(redisKey, base64Pdf, "EX", 1000000
-                    //IEngineConstants.getPageCacheExpiration
+                    //PsConstants.getPageCacheExpiration
                     );
                 }
             }
@@ -84,7 +84,7 @@ async function getAndProcessHtml(subProblemIndex, url, browserPage, type) {
                 htmlText = await response.text();
                 if (htmlText) {
                     await redis.set(redisKey, htmlText.toString(), "EX", 1000000
-                    //IEngineConstants.getPageCacheExpiration
+                    //PsConstants.getPageCacheExpiration
                     );
                 }
             }

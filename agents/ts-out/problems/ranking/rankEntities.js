@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
     async voteOnPromptPair(subProblemIndex, promptPair) {
@@ -42,18 +42,18 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
          The More Affected Entity Is:
        `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-entities", IEngineConstants.entitiesRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, "rank-entities", PsConstants.entitiesRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
         this.logger.info("Rank Entities Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.entitiesRankingsModel.temperature,
-            maxTokens: IEngineConstants.entitiesRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.entitiesRankingsModel.name,
-            verbose: IEngineConstants.entitiesRankingsModel.verbose,
+            temperature: PsConstants.entitiesRankingsModel.temperature,
+            maxTokens: PsConstants.entitiesRankingsModel.maxOutputTokens,
+            modelName: PsConstants.entitiesRankingsModel.name,
+            verbose: PsConstants.entitiesRankingsModel.verbose,
         });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const filteredEntities = this.memory.subProblems[subProblemIndex].entities.filter((entity) => {
                 return ((entity.positiveEffects && entity.positiveEffects.length > 0) ||

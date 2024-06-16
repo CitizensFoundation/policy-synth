@@ -1,7 +1,7 @@
 import { Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../../constants.js";
+import { PsConstants } from "../../../constants.js";
 
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
@@ -91,10 +91,10 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
       let textAnalysis: PSRefinedRootCause[];
 
       if (
-        IEngineConstants.getRefinedRootCausesModel.tokenLimit < totalTokenCount
+        PsConstants.getRefinedRootCausesModel.tokenLimit < totalTokenCount
       ) {
         const maxTokenLengthForChunk =
-          IEngineConstants.getRefinedRootCausesModel.tokenLimit -
+          PsConstants.getRefinedRootCausesModel.tokenLimit -
           promptTokenCount.totalCount -
           64;
 
@@ -233,7 +233,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
     const analysis = (await this.callLLM(
       "web-get-refined-root-causes",
-      IEngineConstants.getRefinedEvidenceModel,
+      PsConstants.getRefinedEvidenceModel,
       messages,
       true,
       true
@@ -269,7 +269,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     subProblemIndex: number | undefined,
     url: string,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
@@ -315,7 +315,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
   }
 
   async refineWebRootCauses(page: Page) {
-    const limit = IEngineConstants.topWebPagesToGetForRefineRootCausesScan;
+    const limit = PsConstants.topWebPagesToGetForRefineRootCausesScan;
 
     let typeCount = 0;
 
@@ -336,10 +336,10 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
     if (runMainEvent) {
       try {
-        for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
+        for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
           typeCount++;
           const searchType =
-            IEngineConstants.simplifyRootCauseType(rootCauseType);
+            PsConstants.simplifyRootCauseType(rootCauseType);
           const results =
             await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
               this.memory.groupId,
@@ -397,10 +397,10 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     try {
       await this.refineWebRootCauses(browserPage);
@@ -422,10 +422,10 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     //super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.getRefinedRootCausesModel.temperature,
-      maxTokens: IEngineConstants.getRefinedRootCausesModel.maxOutputTokens,
-      modelName: IEngineConstants.getRefinedRootCausesModel.name,
-      verbose: IEngineConstants.getRefinedRootCausesModel.verbose,
+      temperature: PsConstants.getRefinedRootCausesModel.temperature,
+      maxTokens: PsConstants.getRefinedRootCausesModel.maxOutputTokens,
+      modelName: PsConstants.getRefinedRootCausesModel.name,
+      verbose: PsConstants.getRefinedRootCausesModel.verbose,
     });
 
     await this.getAllPages();

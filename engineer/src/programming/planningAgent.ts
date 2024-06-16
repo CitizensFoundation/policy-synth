@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 
 import { Project, StringLiteralLike } from "ts-morph";
 
@@ -177,7 +177,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       }
       codingPlan = await this.callLLM(
         "engineering-agent",
-        IEngineConstants.engineerModel,
+        PsConstants.engineerModel,
         [
           new SystemMessage(this.planSystemPrompt()),
           new HumanMessage(this.getUserPlanPrompt(reviewLog)),
@@ -190,7 +190,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         if (reviewRetries < maxReviewsRetries) {
           const review = await this.callLLM(
             "engineering-agent",
-            IEngineConstants.engineerModel,
+            PsConstants.engineerModel,
             [
               new SystemMessage(this.reviewSystemPrompt()),
               new HumanMessage(this.getUserReviewPrompt(codingPlan)),
@@ -238,7 +238,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         console.log(`Getting action plan attempt ${planRetries + 1}`);
         actionPlan = await this.callLLM(
           "engineering-agent",
-          IEngineConstants.engineerModel,
+          PsConstants.engineerModel,
           [
             new SystemMessage(this.getActionPlanSystemPrompt()),
             new HumanMessage(
@@ -254,7 +254,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
           );
           const review = await this.callLLM(
             "engineering-agent",
-            IEngineConstants.engineerModel,
+            PsConstants.engineerModel,
             [
               new SystemMessage(this.actionPlanReviewSystemPrompt()),
               new HumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),

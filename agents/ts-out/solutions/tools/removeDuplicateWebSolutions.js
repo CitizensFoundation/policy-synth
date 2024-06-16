@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -47,7 +47,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Dedup web solutions Processor");
         super.process();
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             this.logger.info(`Ranking sub problem ${subProblemIndex}`);

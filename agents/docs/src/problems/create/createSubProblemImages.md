@@ -25,7 +25,7 @@ This class extends `CreateSolutionImagesProcessor` to handle the creation of ima
 
 ```typescript
 import { CreateSubProblemImagesProcessor } from '@policysynth/agents/problems/create/createSubProblemImages.js';
-import { IEngineConstants } from '@policysynth/agents/constants.js';
+import { PsConstants } from '@policysynth/agents/constants.js';
 import AWS from 'aws-sdk';
 import axios from 'axios';
 import fs from 'fs';

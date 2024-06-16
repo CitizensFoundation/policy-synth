@@ -1,4 +1,4 @@
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
@@ -149,9 +149,9 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
   ) {
     const result = (await this.callLLM(
       "analyse-external-solutions",
-      IEngineConstants.analyseExternalSolutionsModel,
+      PsConstants.analyseExternalSolutionsModel,
       await this.renderAnalysisPrompt(solutionDescription, requirement)
-    )) as IEngineExternalSolutionAnalysisResults;
+    )) as PsExternalSolutionAnalysisResults;
 
     return result;
   }
@@ -161,7 +161,7 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     const minimumPercent = 0; // 70
     const subProblemIndex = 5;
     const startPopulationIndex = 15;
-    const analysisResults: IEngineExternalSolutionAnalysis[] = [];
+    const analysisResults: PsExternalSolutionAnalysis[] = [];
 
     const numberOfPopulations = 16; //this.numberOfPopulations(subProblemIndex);
 
@@ -187,7 +187,7 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
             subProblemIndex,
             populationIndex,
             topSolutionMatches: [],
-          } as IEngineExternalSolutionAnalysis;
+          } as PsExternalSolutionAnalysis;
 
           for (
             let solutionIndex = 0;
@@ -237,7 +237,7 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     this.logger.info("Finished analysing all");
   }
 
-  toCSV(analysisResult: IEngineExternalSolutionAnalysis): string {
+  toCSV(analysisResult: PsExternalSolutionAnalysis): string {
     let csvText = `"Sub Problem",Population,"Recommendation ${analysisResult.externalSolutionIndex+1}"\n`;
     csvText += `${analysisResult.subProblemIndex},${analysisResult.populationIndex},"${analysisResult.externalSolution}"\n`;
     csvText += "Match,Rank,Description,Title,URL\n";
@@ -257,10 +257,10 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.analyseExternalSolutionsModel.temperature,
-      maxTokens: IEngineConstants.analyseExternalSolutionsModel.maxOutputTokens,
-      modelName: IEngineConstants.analyseExternalSolutionsModel.name,
-      verbose: IEngineConstants.analyseExternalSolutionsModel.verbose,
+      temperature: PsConstants.analyseExternalSolutionsModel.temperature,
+      maxTokens: PsConstants.analyseExternalSolutionsModel.maxOutputTokens,
+      modelName: PsConstants.analyseExternalSolutionsModel.name,
+      verbose: PsConstants.analyseExternalSolutionsModel.verbose,
     });
 
     try {
@@ -272,7 +272,7 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     }
   }
 
-  async saveCSV(analysisResults: IEngineExternalSolutionAnalysis[]) {
+  async saveCSV(analysisResults: PsExternalSolutionAnalysis[]) {
     try {
       // Check if folder exists, create it if not
       await fs.stat(this.folderPath);

@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
@@ -37,7 +37,7 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
         ${rawWebData.url}
 
         Root Causes found on the website:
-        ${JSON.stringify(rootCausesToRank.slice(0, IEngineConstants.maxRootCausesToUseForRatingRootCauses), null, 2)}
+        ${JSON.stringify(rootCausesToRank.slice(0, PsConstants.maxRootCausesToUseForRatingRootCauses), null, 2)}
 
         Your ratings in JSON format:
        `),
@@ -46,10 +46,10 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
     async rateWebRootCauses() {
         this.logger.info("Rating all web root causes");
         try {
-            for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
+            for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
                 let offset = 0;
                 const limit = 100;
-                const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
+                const searchType = PsConstants.simplifyRootCauseType(rootCauseType);
                 while (true) {
                     const results = await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, searchType, limit, offset);
                     this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
@@ -65,7 +65,7 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
                         if (webPage[fieldKey] && Array.isArray(webPage[fieldKey]) && webPage[fieldKey].length > 0) {
                             const rootCausesToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Root causes to rate (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-                            let ratedRootCauses = await this.callLLM("rate-web-root-causes", IEngineConstants.rateWebRootCausesModel, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
+                            let ratedRootCauses = await this.callLLM("rate-web-root-causes", PsConstants.rateWebRootCausesModel, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
                             await this.rootCauseWebPageVectorStore.updateScores(id, ratedRootCauses, true);
                             this.logger.debug(`${id} - Root Causes ratings (${rootCauseType}):\n${JSON.stringify(ratedRootCauses, null, 2)}`);
                         }
@@ -84,10 +84,10 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Rate web root causes Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.rateWebRootCausesModel.temperature,
-            maxTokens: IEngineConstants.rateWebRootCausesModel.maxOutputTokens,
-            modelName: IEngineConstants.rateWebRootCausesModel.name,
-            verbose: IEngineConstants.rateWebRootCausesModel.verbose,
+            temperature: PsConstants.rateWebRootCausesModel.temperature,
+            maxTokens: PsConstants.rateWebRootCausesModel.maxOutputTokens,
+            modelName: PsConstants.rateWebRootCausesModel.name,
+            verbose: PsConstants.rateWebRootCausesModel.verbose,
         });
         try {
             await this.rateWebRootCauses();

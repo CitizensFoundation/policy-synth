@@ -1,10 +1,10 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
-  async renderReapPrompt(solution: IEngineSolution) {
+  async renderReapPrompt(solution: PsSolution) {
     const messages = [
       new SystemMessage(
         `You are an expert in assessing if a solution component fits given requirements.
@@ -33,7 +33,7 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
 
   async reapSolutionsForSubProblem(
     subProblemIndex: number,
-    solutions: Array<IEngineSolution>
+    solutions: Array<PsSolution>
   ): Promise<void> {
     this.logger.info(`Reaping solution components for subproblem ${subProblemIndex}`);
 
@@ -44,9 +44,9 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
 
       const solution = solutions[solutionIndex];
 
-      const reapedResults: IEngineReapingResults = await this.callLLM(
+      const reapedResults: PsReapingResults = await this.callLLM(
         "evolve-reap-population",
-        IEngineConstants.reapSolutionsModel,
+        PsConstants.reapSolutionsModel,
         await this.renderReapPrompt(solution)
       );
 
@@ -64,7 +64,7 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
   async reapSolutions() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -99,10 +99,10 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.reapSolutionsModel.temperature,
-      maxTokens: IEngineConstants.reapSolutionsModel.maxOutputTokens,
-      modelName: IEngineConstants.reapSolutionsModel.name,
-      verbose: IEngineConstants.reapSolutionsModel.verbose,
+      temperature: PsConstants.reapSolutionsModel.temperature,
+      maxTokens: PsConstants.reapSolutionsModel.maxOutputTokens,
+      modelName: PsConstants.reapSolutionsModel.name,
+      verbose: PsConstants.reapSolutionsModel.verbose,
     });
 
     try {

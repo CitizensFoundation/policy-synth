@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { PsEngineerBaseProgrammingAgent } from "../programming/baseAgent.js";
 export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
@@ -46,7 +46,7 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
         const filteredContent = [];
         for (const content of webContentToFilter) {
             if (content && content.trim().length > 70) {
-                const analyzisResults = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+                const analyzisResults = (await this.callLLM("engineering-agent", PsConstants.engineerModel, [
                     new SystemMessage(this.filterSystemPrompt),
                     new HumanMessage(this.filterUserPrompt(content)),
                 ], false));

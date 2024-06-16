@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PolicySynthAgentBase } from "../baseAgent.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
 export class PsBaseValidationAgent extends PolicySynthAgentBase {
@@ -13,10 +13,10 @@ export class PsBaseValidationAgent extends PolicySynthAgentBase {
     this.options = options;
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.validationModel.temperature,
-      maxTokens: IEngineConstants.validationModel.maxOutputTokens,
-      modelName: IEngineConstants.validationModel.name,
-      verbose: IEngineConstants.validationModel.verbose,
+      temperature: PsConstants.validationModel.temperature,
+      maxTokens: PsConstants.validationModel.maxOutputTokens,
+      modelName: PsConstants.validationModel.name,
+      verbose: PsConstants.validationModel.verbose,
       streaming: true
    });
 
@@ -61,7 +61,7 @@ export class PsBaseValidationAgent extends PolicySynthAgentBase {
   async runValidationLLM(): Promise<PsValidationAgentResult> {
     const llmResponse = await this.callLLM(
       "validation-agent",
-      IEngineConstants.validationModel,
+      PsConstants.validationModel,
       await this.renderPrompt(),
       true,
       false,

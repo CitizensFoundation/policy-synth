@@ -17,8 +17,8 @@
 | updated              | changedProperties: Map<string \| number \| symbol, unknown> | void        | Invoked after the element’s properties have changed. Calls the `super.updated` method.        |
 | disconnectedCallback |                                               | void        | Invoked when the element is removed from the document's DOM. Logs activity closure.           |
 | render               |                                               | TemplateResult | Renders the element based on the current state, displaying either the entity screen, sub-problem screen, or sub-problem list. |
-| renderSubProblemScreen | subProblem: IEngineSubProblem               | TemplateResult | Renders the screen for a specific sub-problem, including its entities and their effects.       |
-| renderEntityScreen   | entity: IEngineAffectedEntity                | TemplateResult | Renders the screen for a specific entity, displaying the problem statement and sub-problems.   |
+| renderSubProblemScreen | subProblem: PsSubProblem               | TemplateResult | Renders the screen for a specific sub-problem, including its entities and their effects.       |
+| renderEntityScreen   | entity: PsAffectedEntity                | TemplateResult | Renders the screen for a specific entity, displaying the problem statement and sub-problems.   |
 
 ## Events
 

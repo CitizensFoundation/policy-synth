@@ -14,7 +14,7 @@ No methods are directly defined in this script.
 
 ```javascript
 // Example usage of ExportProsCons
-import { IEngineConstants } from '@policysynth/agents/constants.js';
+import { PsConstants } from '@policysynth/agents/constants.js';
 
 // Assuming the process is started with an argument for the JSON file path
 // node @policysynth/agents/solutions/tools/old/exportProsCons.js currentMemory.json

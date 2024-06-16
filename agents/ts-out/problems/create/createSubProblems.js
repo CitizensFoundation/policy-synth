@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage, } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 const USE_SHORT_DESCRIPTIONS = false;
 export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
     async renderRefinePrompt(results) {
@@ -71,9 +71,9 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
         return messages;
     }
     async createSubProblems() {
-        let results = (await this.callLLM("create-sub-problems", IEngineConstants.createSubProblemsModel, await this.renderCreatePrompt()));
-        if (IEngineConstants.enable.refine.createSubProblems) {
-            results = await this.callLLM("create-sub-problems", IEngineConstants.createSubProblemsModel, await this.renderRefinePrompt(results));
+        let results = (await this.callLLM("create-sub-problems", PsConstants.createSubProblemsModel, await this.renderCreatePrompt()));
+        if (PsConstants.enable.refine.createSubProblems) {
+            results = await this.callLLM("create-sub-problems", PsConstants.createSubProblemsModel, await this.renderRefinePrompt(results));
         }
         if (this.memory.subProblems && this.memory.subProblems.length > 0) {
             this.memory.subProblems = [...this.memory.subProblems, ...results];
@@ -88,10 +88,10 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Sub Problems Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.createSubProblemsModel.temperature,
-            maxTokens: IEngineConstants.createSubProblemsModel.maxOutputTokens,
-            modelName: IEngineConstants.createSubProblemsModel.name,
-            verbose: IEngineConstants.createSubProblemsModel.verbose,
+            temperature: PsConstants.createSubProblemsModel.temperature,
+            maxTokens: PsConstants.createSubProblemsModel.maxOutputTokens,
+            modelName: PsConstants.createSubProblemsModel.name,
+            verbose: PsConstants.createSubProblemsModel.verbose,
         });
         await this.createSubProblems();
     }

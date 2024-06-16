@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
@@ -36,14 +36,14 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
       if (!policy.evidenceSearchResults![searchResultType]) {
 
         let queriesToSearch =  policy.evidenceSearchQueries![searchResultType]
-         .slice(0, IEngineConstants.maxTopEvidenceQueriesToSearchPerType);
+         .slice(0, PsConstants.maxTopEvidenceQueriesToSearchPerType);
 
         const results = await this.getQueryResults(
           queriesToSearch,
           `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`
         );
 
-        this.searchCounter+=IEngineConstants.maxTopEvidenceQueriesToSearchPerType;
+        this.searchCounter+=PsConstants.maxTopEvidenceQueriesToSearchPerType;
 
         policy.evidenceSearchResults![searchResultType] = results.searchResults;
 
@@ -66,7 +66,7 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     for (

@@ -1,5 +1,5 @@
 import winston from "winston";
-import { IEngineConstants } from "./constants.js";
+import { PsConstants } from "./constants.js";
 import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
 //@ts-ignore
@@ -140,8 +140,8 @@ export class PolicySynthAgentBase {
         try {
             let retryCount = 0;
             const maxRetries = limitedRetries
-                ? IEngineConstants.limitedLLMmaxRetryCount
-                : IEngineConstants.mainLLMmaxRetryCount;
+                ? PsConstants.limitedLLMmaxRetryCount
+                : PsConstants.mainLLMmaxRetryCount;
             let retry = true;
             while (retry && retryCount < maxRetries && this.chat) {
                 let response;

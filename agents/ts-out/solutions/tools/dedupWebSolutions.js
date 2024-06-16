@@ -1,6 +1,6 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -15,7 +15,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     async processSubProblems() {
         const promises = [];
         for (let s = 0; s <
-            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
+            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); s++) {
             promises.push((async () => {
                 this.copyEntitySolutionsToSubProblem(s);
                 await this.saveMemory();
@@ -27,7 +27,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     }
     async copyEntitySolutionsToSubProblem(subProblemIndex) {
         for (let e = 0; e <
-            Math.min(this.memory.subProblems[subProblemIndex].entities.length, IEngineConstants.maxTopEntitiesToSearch); e++) {
+            Math.min(this.memory.subProblems[subProblemIndex].entities.length, PsConstants.maxTopEntitiesToSearch); e++) {
             this.memory.subProblems[subProblemIndex].solutionsFromSearch = [
                 ...this.memory.subProblems[subProblemIndex].solutionsFromSearch,
                 ...this.memory.subProblems[subProblemIndex].entities[e]

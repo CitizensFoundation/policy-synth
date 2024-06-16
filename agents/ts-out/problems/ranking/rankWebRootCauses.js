@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
@@ -32,10 +32,10 @@ export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
     async rankWebRootCauses() {
         this.logger.info("Ranking all web root causes");
         try {
-            for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
+            for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
                 let offset = 0;
                 const limit = 100;
-                const searchType = IEngineConstants.simplifyRootCauseType(rootCauseType);
+                const searchType = PsConstants.simplifyRootCauseType(rootCauseType);
                 while (true) {
                     const results = await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, searchType, limit, offset);
                     this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
@@ -51,7 +51,7 @@ export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
                         if (webPage[fieldKey] && Array.isArray(webPage[fieldKey]) && webPage[fieldKey].length > 0) {
                             const rootCausesToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Root Causes before ranking (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-                            let rankedRootCauses = await this.callLLM("rank-web-root-causes", IEngineConstants.rankWebRootCausesModel, await this.renderProblemPrompt(rootCausesToRank, fieldKey));
+                            let rankedRootCauses = await this.callLLM("rank-web-root-causes", PsConstants.rankWebRootCausesModel, await this.renderProblemPrompt(rootCausesToRank, fieldKey));
                             await this.rootCauseWebPageVectorStore.updateWebRootCause(id, fieldKey, rankedRootCauses, true);
                             this.logger.debug(`${id} - Root Causes after ranking (${rootCauseType}):\n${JSON.stringify(rankedRootCauses, null, 2)}`);
                         }
@@ -72,10 +72,10 @@ export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Rank web root cause Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.rankWebRootCausesModel.temperature,
-            maxTokens: IEngineConstants.rankWebRootCausesModel.maxOutputTokens,
-            modelName: IEngineConstants.rankWebRootCausesModel.name,
-            verbose: IEngineConstants.rankWebRootCausesModel.verbose,
+            temperature: PsConstants.rankWebRootCausesModel.temperature,
+            maxTokens: PsConstants.rankWebRootCausesModel.maxOutputTokens,
+            modelName: PsConstants.rankWebRootCausesModel.name,
+            verbose: PsConstants.rankWebRootCausesModel.verbose,
         });
         try {
             await this.rankWebRootCauses();

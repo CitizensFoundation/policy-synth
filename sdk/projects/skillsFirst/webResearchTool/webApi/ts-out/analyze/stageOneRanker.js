@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 export class StageOneRanker extends BasePairwiseRankingsProcessor {
     constructor(memory = undefined, progressFunction = undefined) {
         super(undefined, undefined);
@@ -38,7 +38,7 @@ export class StageOneRanker extends BasePairwiseRankingsProcessor {
         The Most Relevant Item Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", IEngineConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async rankItems(itemsToRank, rankInstructions = undefined) {
         if (rankInstructions) {

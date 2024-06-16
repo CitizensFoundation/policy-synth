@@ -6,8 +6,8 @@ This class contains constants used for configuring ingestion models with specifi
 
 | Name                    | Type                             | Description                                       |
 |-------------------------|----------------------------------|---------------------------------------------------|
-| ingestionMainModel      | IEngineBaseAIModelConstants      | Constants for the main model used in ingestion.   |
-| ingestionRankingModel   | IEngineBaseAIModelConstants      | Constants for the ranking model used in ingestion.|
+| ingestionMainModel      | PsBaseAIModelConstants      | Constants for the main model used in ingestion.   |
+| ingestionRankingModel   | PsBaseAIModelConstants      | Constants for the ranking model used in ingestion.|
 
 ## Example
 

@@ -1,10 +1,10 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
-  async renderGroupPrompt(solutionsToGroup: IEngineSolutionForGroupCheck[]) {
+  async renderGroupPrompt(solutionsToGroup: PsSolutionForGroupCheck[]) {
     const messages = [
       new SystemMessage(
         `You are an expert in in grouping solution components containing exactly the same core ideas.
@@ -31,10 +31,10 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
 
   async groupSolutionsForSubProblem(
     subProblemIndex: number,
-    solutions: Array<IEngineSolution>
+    solutions: Array<PsSolution>
   ): Promise<void> {
     this.logger.info(`Grouping solutions for subproblem ${subProblemIndex}`);
-    const solutionsToGroup: Array<IEngineSolutionForGroupCheck> = solutions.map(
+    const solutionsToGroup: Array<PsSolutionForGroupCheck> = solutions.map(
       (solution, index) => ({
         index: index,
         title: solution.title,
@@ -44,9 +44,9 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
 
     this.logger.debug(`Solution Components going into LLM ${solutionsToGroup.length}`);
 
-    const groupedIndexes: Array<Array<IEngineSolutionForGroupCheck>> = await this.callLLM(
+    const groupedIndexes: Array<Array<PsSolutionForGroupCheck>> = await this.callLLM(
       "group-solutions",
-      IEngineConstants.groupSolutionsModel,
+      PsConstants.groupSolutionsModel,
       await this.renderGroupPrompt(solutionsToGroup)
     );
 
@@ -75,7 +75,7 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
     }
   }
 
-  async calculateGroupStats(solutions: Array<IEngineSolution>): Promise<void> {
+  async calculateGroupStats(solutions: Array<PsSolution>): Promise<void> {
     let groupCount = 0;
     let ungroupedSolutionsCount = 0;
     const groupSizes: { [key: number]: number } = {};
@@ -109,7 +109,7 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
   async groupSolutions() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -140,10 +140,10 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.groupSolutionsModel.temperature,
-      maxTokens: IEngineConstants.groupSolutionsModel.maxOutputTokens,
-      modelName: IEngineConstants.groupSolutionsModel.name,
-      verbose: IEngineConstants.groupSolutionsModel.verbose,
+      temperature: PsConstants.groupSolutionsModel.temperature,
+      maxTokens: PsConstants.groupSolutionsModel.maxOutputTokens,
+      modelName: PsConstants.groupSolutionsModel.name,
+      verbose: PsConstants.groupSolutionsModel.verbose,
     });
 
     try {

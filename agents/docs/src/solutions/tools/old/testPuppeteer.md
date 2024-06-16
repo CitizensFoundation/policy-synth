@@ -10,8 +10,8 @@ No properties are directly exposed by this module.
 
 | Name              | Parameters                                              | Return Type | Description                                                                 |
 |-------------------|---------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| getAndProcessPdf  | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | Promise<void> | Processes a PDF from a URL, caches it, and extracts text.                   |
-| getAndProcessHtml | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | Promise<void> | Fetches an HTML page, caches it, and converts it to plain text.             |
+| getAndProcessPdf  | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: PsWebPageTypes | Promise<void> | Processes a PDF from a URL, caches it, and extracts text.                   |
+| getAndProcessHtml | subProblemIndex: number \| undefined, url: string, browserPage: Page, type: PsWebPageTypes | Promise<void> | Fetches an HTML page, caches it, and converts it to plain text.             |
 
 ## Example
 

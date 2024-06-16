@@ -41,8 +41,8 @@ export declare class PsPolicies extends PsStageBase {
     get filteredPolicies(): PSPolicy[];
     render(): import("lit").TemplateResult<1> | typeof nothing;
     renderPolicyItem(policy: PSPolicy, index: number): import("lit").TemplateResult<1>;
-    renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
-    renderChipSet(subProblem: IEngineSubProblem): import("lit").TemplateResult<1> | typeof nothing;
+    renderSubProblemScreen(subProblem: PsSubProblem): import("lit").TemplateResult<1>;
+    renderChipSet(subProblem: PsSubProblem): import("lit").TemplateResult<1> | typeof nothing;
     toggleSearchVisibility(): void;
     renderSearchField(): import("lit").TemplateResult<1>;
     handleSearchBlur(): void;

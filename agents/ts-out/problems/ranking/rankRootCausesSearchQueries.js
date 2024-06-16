@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     rootCauseTypes = [
@@ -47,16 +47,16 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
         The Most Relevant Search Query Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", IEngineConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
         this.logger.info("Rank Root Causes Search Queries Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-            maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.searchQueryRankingsModel.name,
-            verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+            temperature: PsConstants.searchQueryRankingsModel.temperature,
+            maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
+            modelName: PsConstants.searchQueryRankingsModel.name,
+            verbose: PsConstants.searchQueryRankingsModel.verbose,
         });
         for (const searchQueryType of this.rootCauseTypes) {
             this.logger.info(`Ranking search queries for ${searchQueryType}`);

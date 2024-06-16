@@ -1,7 +1,7 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 
 export class SearchQueriesGenerator extends PolicySynthAgentBase {
   systemPrompt: string;
@@ -45,10 +45,10 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
     console.log(`User prompt is: ${this.userPrompt}`);
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createSearchQueriesModel.temperature,
-      maxTokens: IEngineConstants.createSearchQueriesModel.maxOutputTokens,
+      temperature: PsConstants.createSearchQueriesModel.temperature,
+      maxTokens: PsConstants.createSearchQueriesModel.maxOutputTokens,
       modelName: "gpt-4o",
-      verbose: IEngineConstants.createSearchQueriesModel.verbose,
+      verbose: PsConstants.createSearchQueriesModel.verbose,
     });
   }
 
@@ -62,7 +62,7 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
   async generateSearchQueries(): Promise<string[]> {
     return await this.callLLM(
       "create-search-queries",
-      IEngineConstants.createSearchQueriesModel,
+      PsConstants.createSearchQueriesModel,
       await this.renderMessages()
     );
   }

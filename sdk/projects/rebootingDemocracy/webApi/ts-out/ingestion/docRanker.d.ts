@@ -3,7 +3,7 @@ export declare class IngestionDocumentRanker extends BasePairwiseRankingsProcess
     rankingRules: string | undefined;
     overallTopic: string | undefined;
     constructor(memory?: PsBaseMemoryData | undefined, progressFunction?: Function | undefined);
-    voteOnPromptPair(index: number, promptPair: number[]): Promise<IEnginePairWiseVoteResults>;
+    voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
     rankDocuments(docsToRank: PsRagDocumentSource[], rankingRules: string, overallTopic: string, eloRatingKey: string): Promise<PsRagDocumentSource[]>;
 }
 //# sourceMappingURL=docRanker.d.ts.map

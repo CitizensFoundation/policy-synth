@@ -4,19 +4,19 @@ import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
     useLanguage: string | undefined;
-    renderRefinePrompt(results: IEngineSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
+    renderRefinePrompt(results: PsSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
     renderCreateSystemMessage(): SystemMessage;
     renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (HumanMessage | SystemMessage)[];
     renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
-    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsMemoryStageTypes): Promise<IEngineSolution[]>;
-    randomSearchQueryIndex(searchQueries: IEngineSearchQueries, type: IEngineWebPageTypes): number;
-    getAllTypeQueries(searchQueries: IEngineSearchQueries, subProblemIndex: number | undefined): {
+    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsMemoryStageTypes): Promise<PsSolution[]>;
+    randomSearchQueryIndex(searchQueries: PsSearchQueries, type: PsWebPageTypes): number;
+    getAllTypeQueries(searchQueries: PsSearchQueries, subProblemIndex: number | undefined): {
         general: string;
         scientific: string;
         openData: string;
         news: string;
     };
-    getRandomSearchQueryForType(type: IEngineWebPageTypes, problemStatementQueries: IEngineSearchQuery, subProblemQueries: IEngineSearchQuery, otherSubProblemQueries: IEngineSearchQuery, randomEntitySearchQueries: IEngineSearchQuery): string;
+    getRandomSearchQueryForType(type: PsWebPageTypes, problemStatementQueries: PsSearchQuery, subProblemQueries: PsSearchQuery, otherSubProblemQueries: PsSearchQuery, randomEntitySearchQueries: PsSearchQuery): string;
     getSearchQueries(subProblemIndex: number): {
         scientific: string;
         general: string;
@@ -44,15 +44,15 @@ export declare class CreateSolutionsVectorStoreProcessor extends BaseProblemSolv
     getWeightedRandomSolution<T>(array: T[]): "" | T;
     countTokensForString(text: string): Promise<number>;
     getRandomItemFromArray<T>(array: T[], useTopN?: number | undefined): "" | T;
-    renderRawSearchResults(rawSearchResults: IEngineWebPageGraphQlResults): {
+    renderRawSearchResults(rawSearchResults: PsWebPageGraphQlResults): {
         searchResults: string;
         selectedUrl: string;
     };
-    searchForType(subProblemIndex: number, type: IEngineWebPageTypes, searchQuery: string, tokensLeftForType: number): Promise<{
+    searchForType(subProblemIndex: number, type: PsWebPageTypes, searchQuery: string, tokensLeftForType: number): Promise<{
         searchResults: string;
         selectedUrl: string;
     }>;
-    getSearchQueryTextContext(subProblemIndex: number, searchQuery: string, type: IEngineWebPageTypes, alreadyCreatedSolutions?: string | undefined): Promise<{
+    getSearchQueryTextContext(subProblemIndex: number, searchQuery: string, type: PsWebPageTypes, alreadyCreatedSolutions?: string | undefined): Promise<{
         searchResults: string;
         selectedUrl: string;
     }>;

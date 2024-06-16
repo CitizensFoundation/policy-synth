@@ -1,6 +1,6 @@
 
 import winston from "winston";
-import { IEngineConstants } from "./constants.js";
+import { PsConstants } from "./constants.js";
 import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
 import { ChatOpenAI } from "@langchain/openai";
@@ -31,7 +31,7 @@ export class PolicySynthAgentBase {
   timeStart: number = Date.now();
   chat: ChatOpenAI | undefined;
 
-  private rateLimits: IEngineRateLimits = {};
+  private rateLimits: PsRateLimits = {};
 
   constructor(memory: PsBaseMemoryData | undefined = undefined) {
     if (memory) {
@@ -156,7 +156,7 @@ export class PolicySynthAgentBase {
 
   async callLLM(
     stage: PsMemoryStageTypes,
-    modelConstants: IEngineBaseAIModelConstants,
+    modelConstants: PsBaseAIModelConstants,
     messages: BaseMessage[],
     parseJson = true,
     limitedRetries = false,
@@ -166,8 +166,8 @@ export class PolicySynthAgentBase {
     try {
       let retryCount = 0;
       const maxRetries = limitedRetries
-        ? IEngineConstants.limitedLLMmaxRetryCount
-        : IEngineConstants.mainLLMmaxRetryCount;
+        ? PsConstants.limitedLLMmaxRetryCount
+        : PsConstants.mainLLMmaxRetryCount;
       let retry = true;
 
       while (retry && retryCount < maxRetries && this.chat) {
@@ -270,7 +270,7 @@ export class PolicySynthAgentBase {
   }
 
   private async updateRateLimits(
-    model: IEngineBaseAIModelConstants,
+    model: PsBaseAIModelConstants,
     tokensToAdd: number
   ) {
     const now = Date.now();
@@ -287,7 +287,7 @@ export class PolicySynthAgentBase {
   }
 
   private async checkRateLimits(
-    model: IEngineBaseAIModelConstants,
+    model: PsBaseAIModelConstants,
     tokensToAdd: number
   ) {
     let now = Date.now();
@@ -342,12 +342,12 @@ export class PolicySynthAgentBase {
     }
   }
 
-  private addRequestTimestamp(model: IEngineBaseAIModelConstants) {
+  private addRequestTimestamp(model: PsBaseAIModelConstants) {
     const now = Date.now();
     this.rateLimits[model.name].requests.push({ timestamp: now });
   }
 
-  private addTokenEntry(model: IEngineBaseAIModelConstants, tokensToAdd: number) {
+  private addTokenEntry(model: PsBaseAIModelConstants, tokensToAdd: number) {
     const now = Date.now();
     this.rateLimits[model.name].tokens.push({
       count: tokensToAdd,
@@ -355,7 +355,7 @@ export class PolicySynthAgentBase {
     });
   }
 
-  private slideWindowForRequests(model: IEngineBaseAIModelConstants) {
+  private slideWindowForRequests(model: PsBaseAIModelConstants) {
     const now = Date.now();
     const windowSize = 60000; // 60 seconds
     this.rateLimits[model.name].requests = this.rateLimits[model.name].requests.filter(
@@ -363,7 +363,7 @@ export class PolicySynthAgentBase {
     );
   }
 
-  private slideWindowForTokens(model: IEngineBaseAIModelConstants) {
+  private slideWindowForTokens(model: PsBaseAIModelConstants) {
     const now = Date.now();
     const windowSize = 60000; // 60 seconds
     this.rateLimits[model.name].tokens = this.rateLimits[model.name].tokens.filter(
@@ -380,7 +380,7 @@ export class PolicySynthAgentBase {
     stage: PsMemoryStageTypes,
     tokensIn: number,
     tokensOut: number,
-    modelConstants: IEngineBaseAIModelConstants
+    modelConstants: PsBaseAIModelConstants
   ) {
     if (!this.memory!.stages[stage]) {
       this.memory!.stages[stage] = {

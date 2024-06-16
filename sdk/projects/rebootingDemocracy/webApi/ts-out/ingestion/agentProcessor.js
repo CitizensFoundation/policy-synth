@@ -3,7 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { IngestionAgentProcessor } from "@policysynth/agents/rag/ingestion/processor.js";
 import { DocumentCleanupAgent } from "@policysynth/agents/rag/ingestion/docCleanup.js";
 import { DocumentTreeSplitAgent } from "@policysynth/agents/rag/ingestion/docTreeSplitter.js";
@@ -57,9 +57,9 @@ export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcesso
             try {
                 this.logger.debug("Launching browser");
                 const browserPage = await browser.newPage();
-                browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-                browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-                await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+                browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+                browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+                await browserPage.setUserAgent(PsConstants.currentUserAgent);
                 await this.downloadAndCache(this.dataLayout.documentUrls, false, browserPage);
                 await this.saveFileMetadata();
                 const disableJsonUrls = true;
@@ -351,12 +351,12 @@ export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcesso
               const response = await fetch(metadataEntry.url);
               const jsonData = await response.json();
               const sourceUrls = this.getExternalUrlsFromJson(jsonData);
-      
+
               const updatedReferences = await this.updateReferencesWithUrls(
                 metadataEntry.allReferencesWithUrls,
                 sourceUrls
               );
-      
+
               console.log(updatedReferences);
             }*/
         }
@@ -364,28 +364,28 @@ export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcesso
     }
     /*async updateReferencesWithUrls(allReferencesWithUrls, newUrls) {
       let missingLinkIndex = 1; // Start counting missing links from 1
-  
+
       const browser = await puppeteer.launch({
         headless: true,
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       });
       for (const newUrl of newUrls) {
         const urlExists = allReferencesWithUrls.some((ref) => ref.url === newUrl);
-  
+
         if (!urlExists) {
           try {
             const page = await browser.newPage();
-            await page.setUserAgent(IEngineConstants.currentUserAgent);
+            await page.setUserAgent(PsConstants.currentUserAgent);
             await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
-  
+
             // Evaluate the title within the page context
             const title = await page.evaluate(() => {
               const metaTitle = document.querySelector('meta[name="title"]');
               return metaTitle ? metaTitle.content : document.title;
             });
-  
+
             console.log(title); // Log the title to the console
-  
+
             const newReference = {
               reference: title || `Link${missingLinkIndex}`,
               url: newUrl,

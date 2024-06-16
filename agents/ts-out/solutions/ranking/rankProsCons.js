@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     async voteOnPromptPair(subProblemIndex, promptPair, additionalData) {
@@ -39,7 +39,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
         The more important ${proConSingle} is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-pros-cons", IEngineConstants.prosConsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, "rank-pros-cons", PsConstants.prosConsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     convertProsConsToObjects(prosCons) {
         return prosCons.map((prosCon) => {
@@ -52,15 +52,15 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
         this.logger.info("Rank Pros Cons Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.prosConsRankingsModel.temperature,
-            maxTokens: IEngineConstants.prosConsRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.prosConsRankingsModel.name,
-            verbose: IEngineConstants.prosConsRankingsModel.verbose,
+            temperature: PsConstants.prosConsRankingsModel.temperature,
+            maxTokens: PsConstants.prosConsRankingsModel.maxOutputTokens,
+            modelName: PsConstants.prosConsRankingsModel.name,
+            verbose: PsConstants.prosConsRankingsModel.verbose,
         });
         try {
             // Parallel execution of the subproblems
             const subProblemPromises = this.memory.subProblems
-                .slice(0, IEngineConstants.maxSubProblems)
+                .slice(0, PsConstants.maxSubProblems)
                 .map((subProblem, subProblemIndex) => {
                 return this.processSubProblem(subProblem, subProblemIndex);
             });

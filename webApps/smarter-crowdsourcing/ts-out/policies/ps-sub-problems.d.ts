@@ -6,6 +6,6 @@ export declare class PsSubProblems extends PsStageBase {
     disconnectedCallback(): void;
     static get styles(): any[];
     render(): import("lit").TemplateResult<1>;
-    renderSubProblemScreen(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
+    renderSubProblemScreen(subProblem: PsSubProblem): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-sub-problems.d.ts.map

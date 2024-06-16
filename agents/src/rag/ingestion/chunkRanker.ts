@@ -20,7 +20,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(
     index: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 

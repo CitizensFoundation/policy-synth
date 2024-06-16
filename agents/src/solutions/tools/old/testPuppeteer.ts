@@ -17,7 +17,7 @@ async function getAndProcessPdf(
   subProblemIndex: number | undefined,
   url: string,
   browserPage: Page,
-  type: IEngineWebPageTypes
+  type: PsWebPageTypes
 ) {
   return new Promise<void>(async (resolve, reject) => {
     console.log("getAndProcessPdf");
@@ -47,7 +47,7 @@ async function getAndProcessPdf(
             base64Pdf,
             "EX",
             1000000
-            //IEngineConstants.getPageCacheExpiration
+            //PsConstants.getPageCacheExpiration
           );
         }
       }
@@ -96,7 +96,7 @@ async function getAndProcessHtml(
   subProblemIndex: number | undefined,
   url: string,
   browserPage: Page,
-  type: IEngineWebPageTypes
+  type: PsWebPageTypes
 ) {
   try {
     let finalText, htmlText;
@@ -118,7 +118,7 @@ async function getAndProcessHtml(
             htmlText.toString(),
             "EX",
             1000000
-            //IEngineConstants.getPageCacheExpiration
+            //PsConstants.getPageCacheExpiration
           );
         }
       }

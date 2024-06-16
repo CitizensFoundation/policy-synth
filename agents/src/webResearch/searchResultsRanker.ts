@@ -2,7 +2,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "../basePairwiseRanking.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 
 export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
   searchQuestion: string | undefined;
@@ -18,16 +18,16 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(
     index: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
     const itemOne = this.allItems![index]![
       itemOneIndex
-    ] as IEngineSearchResultItem;
+    ] as PsSearchResultItem;
     const itemTwo = this.allItems![index]![
       itemTwoIndex
-    ] as IEngineSearchResultItem;
+    ] as PsSearchResultItem;
 
     console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
     console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
@@ -69,7 +69,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       index,
       "rank-search-results",
-      IEngineConstants.searchResultsRankingsModel,
+      PsConstants.searchResultsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -77,21 +77,21 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
   }
 
   async rankSearchResults(
-    queriesToRank: IEngineSearchResultItem[],
+    queriesToRank: PsSearchResultItem[],
     searchQuestion: string,
     maxPrompts = 150
   ) {
     this.searchQuestion = searchQuestion;
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-      maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.searchQueryRankingsModel.name,
-      verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+      temperature: PsConstants.searchQueryRankingsModel.temperature,
+      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
+      modelName: PsConstants.searchQueryRankingsModel.name,
+      verbose: PsConstants.searchQueryRankingsModel.verbose,
     });
 
     this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
     await this.performPairwiseRanking(-1);
-    return this.getOrderedListOfItems(-1) as IEngineSearchResultItem[];
+    return this.getOrderedListOfItems(-1) as PsSearchResultItem[];
   }
 }

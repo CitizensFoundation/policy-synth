@@ -10,11 +10,11 @@ No public properties are documented for this class.
 
 | Name                    | Parameters                                                                                      | Return Type                        | Description                                                                 |
 |-------------------------|-------------------------------------------------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| voteOnPromptPair        | subProblemIndex: number, promptPair: number[], additionalData: { solution: string; prosOrCons: "pros" \| "cons"; subProblemIndex: number; } | Promise<IEnginePairWiseVoteResults> | Processes a pair of prompts (pros or cons) and determines which is more relevant or important. |
-| convertProsConsToObjects| prosCons: string[]                                                                              | IEngineProCon[]                    | Converts an array of pros or cons strings into an array of IEngineProCon objects. |
+| voteOnPromptPair        | subProblemIndex: number, promptPair: number[], additionalData: { solution: string; prosOrCons: "pros" \| "cons"; subProblemIndex: number; } | Promise<PsPairWiseVoteResults> | Processes a pair of prompts (pros or cons) and determines which is more relevant or important. |
+| convertProsConsToObjects| prosCons: string[]                                                                              | PsProCon[]                    | Converts an array of pros or cons strings into an array of PsProCon objects. |
 | process                 | -                                                                                               | Promise<void>                      | Orchestrates the overall process of ranking pros and cons for all subproblems. |
-| processSubProblem       | subProblem: IEngineSubProblem, subProblemIndex: number                                          | Promise<void>                      | Handles the ranking of pros and cons for a specific subproblem. |
-| renderSolution          | solution: IEngineSolution                                                                       | string                             | Generates a formatted string representation of a solution component. |
+| processSubProblem       | subProblem: PsSubProblem, subProblemIndex: number                                          | Promise<void>                      | Handles the ranking of pros and cons for a specific subproblem. |
+| renderSolution          | solution: PsSolution                                                                       | string                             | Generates a formatted string representation of a solution component. |
 
 ## Example
 

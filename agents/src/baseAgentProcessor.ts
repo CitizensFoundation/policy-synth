@@ -12,7 +12,7 @@ export abstract class BaseAgentProcessor extends PolicySynthAgentBase {
   }
 
   async initializeMemory(job: Job) {
-    const jobData = job.data as IEngineWorkerData;
+    const jobData = job.data as PsWorkerData;
 
     this.memory = {
       redisKey: this.getRedisKey(jobData.groupId),
@@ -51,7 +51,7 @@ export abstract class BaseAgentProcessor extends PolicySynthAgentBase {
 
   async setup(job: Job) {
     this.job = job;
-    const jobData = job.data as IEngineWorkerData;
+    const jobData = job.data as PsWorkerData;
     try {
       const memoryData =
         (await redis.get(this.getRedisKey(jobData.groupId)));

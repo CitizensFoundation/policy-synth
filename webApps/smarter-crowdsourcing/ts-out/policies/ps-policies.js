@@ -17,7 +17,7 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/iconbutton/filled-icon-button.js';
 import '@material/web/chips/input-chip.js';
 import '@material/web/textfield/outlined-text-field.js'; // import at the beginning of your file
-import { IEngineConstants } from '../constants.js';
+import { PsConstants } from '../constants.js';
 import './ps-family-tree.js';
 import './ps-raw-evidence.js';
 import { cache } from 'lit/directives/cache.js';
@@ -118,7 +118,7 @@ let PsPolicies = class PsPolicies extends PsStageBase {
             }
             else if (this.activePolicyIndex == null &&
                 this.activeSubProblemIndex !== null &&
-                this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1) {
+                this.activeSubProblemIndex < PsConstants.maxSubProblems - 1) {
                 this.activeSubProblemIndex += 1;
                 window.psAppGlobals.activity('Sub problem - swipe right');
             }

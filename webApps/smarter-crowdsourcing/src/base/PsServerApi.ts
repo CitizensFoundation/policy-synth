@@ -19,10 +19,10 @@ export class PsServerApi extends YpServerApi {
     )) as unknown as CpsBootResponse;
   }
 
-  public async getMiddleSolutions(id: number, subProblemIndex: number): Promise<IEngineSolution[][]> {
+  public async getMiddleSolutions(id: number, subProblemIndex: number): Promise<PsSolution[][]> {
     return (await this.fetchWrapper(
       this.baseUrlPath + `/projects/${id}/${subProblemIndex}/middle/solutions`
-    )) as unknown as IEngineSolution[][];
+    )) as unknown as PsSolution[][];
   }
 
   public async getRawEvidence(

@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
     renderCurrentSolution(solution) {
         return `
@@ -16,10 +16,10 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
       Main obstacle: ${solution.mainObstacleToSolutionComponentAdoption}
 
       Best pros:
-      ${this.getProCons(solution.pros).slice(0, IEngineConstants.maxTopProsConsUsedForRating)}
+      ${this.getProCons(solution.pros).slice(0, PsConstants.maxTopProsConsUsedForRating)}
 
       Best cons:
-      ${this.getProCons(solution.cons).slice(0, IEngineConstants.maxTopProsConsUsedForRating)}
+      ${this.getProCons(solution.cons).slice(0, PsConstants.maxTopProsConsUsedForRating)}
     `;
     }
     async renderCreatePrompt(subProblemIndex, solution) {
@@ -113,11 +113,11 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
     }
     async createSeedPolicyForSolution(populationIndex, subProblemIndex, solution, solutionIndex) {
         try {
-            let policyOptions = (await this.callLLM("policies-seed", IEngineConstants.policiesSeedModel, await this.renderCreatePrompt(subProblemIndex, solution), true, false, 1500));
-            if (IEngineConstants.enable.refine.policiesSeed) {
-                policyOptions = (await this.callLLM("policies-seed", IEngineConstants.policiesSeedModel, await this.renderRefinePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
+            let policyOptions = (await this.callLLM("policies-seed", PsConstants.policiesSeedModel, await this.renderCreatePrompt(subProblemIndex, solution), true, false, 1500));
+            if (PsConstants.enable.refine.policiesSeed) {
+                policyOptions = (await this.callLLM("policies-seed", PsConstants.policiesSeedModel, await this.renderRefinePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
             }
-            const choosenPolicy = (await this.callLLM("policies-seed", IEngineConstants.policiesSeedModel, await this.renderChoosePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
+            const choosenPolicy = (await this.callLLM("policies-seed", PsConstants.policiesSeedModel, await this.renderChoosePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
             choosenPolicy.solutionIndex = `${populationIndex}:${solutionIndex}`;
             return choosenPolicy;
         }
@@ -128,7 +128,7 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
         }
     }
     async createSeedPolicies() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const subProblem = this.memory.subProblems[subProblemIndex];
             const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
@@ -142,7 +142,7 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
                 subProblem.policies.populations.length === 0) {
                 subProblem.policies.populations = [];
                 let newPopulation = [];
-                for (let solutionIndex = 0; solutionIndex < IEngineConstants.maxTopSolutionsToCreatePolicies; solutionIndex++) {
+                for (let solutionIndex = 0; solutionIndex < PsConstants.maxTopSolutionsToCreatePolicies; solutionIndex++) {
                     this.logger.info(`Creating policy for solution ${solutionIndex}/${solutions.length} of sub problem ${subProblemIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}`);
                     const solution = solutions[solutionIndex];
                     const seedPolicy = await this.createSeedPolicyForSolution(this.lastPopulationIndex(subProblemIndex), subProblemIndex, solution, solutionIndex);
@@ -165,10 +165,10 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Create Seed Policies Processor");
         //super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.policiesSeedModel.temperature,
-            maxTokens: IEngineConstants.policiesSeedModel.maxOutputTokens,
-            modelName: IEngineConstants.policiesSeedModel.name,
-            verbose: IEngineConstants.policiesSeedModel.verbose,
+            temperature: PsConstants.policiesSeedModel.temperature,
+            maxTokens: PsConstants.policiesSeedModel.maxOutputTokens,
+            modelName: PsConstants.policiesSeedModel.name,
+            verbose: PsConstants.policiesSeedModel.verbose,
         });
         try {
             await this.createSeedPolicies();

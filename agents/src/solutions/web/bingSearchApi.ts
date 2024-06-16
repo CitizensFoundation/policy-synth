@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { PolicySynthAgentBase } from "../../baseAgent.js";
 import ioredis from "ioredis";
 
@@ -19,18 +19,18 @@ export class BingSearchApi extends PolicySynthAgentBase {
     }
   }
 
-  public async search(query: string): Promise<IEngineSearchResultItem[]> {
+  public async search(query: string): Promise<PsSearchResultItem[]> {
     const requestParams: AxiosRequestConfig = {
       method: "GET",
       url:
-        `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${IEngineConstants.maxBingSearchResults}&q=` +
+        `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${PsConstants.maxBingSearchResults}&q=` +
         encodeURIComponent(query),
       headers: {
         "Ocp-Apim-Subscription-Key": this.SUBSCRIPTION_KEY!,
       },
     };
 
-    const outResults: IEngineSearchResultItem[] = [];
+    const outResults: PsSearchResultItem[] = [];
     const redisKey = `bs_web_v2:${query}`;
 
     const searchData: string | null = await redis.get(redisKey);
@@ -40,7 +40,7 @@ export class BingSearchApi extends PolicySynthAgentBase {
       return JSON.parse(searchData);
     } else {
       let retry = true;
-      const maxRetries = IEngineConstants.mainSearchRetryCount;
+      const maxRetries = PsConstants.mainSearchRetryCount;
       let retryCount = 0;
 
       while (retry && retryCount < maxRetries) {

@@ -3,7 +3,7 @@ export declare class PsEngineerWebContentRanker extends BasePairwiseRankingsProc
     instructions: string | undefined;
     memory: PsEngineerMemoryData;
     constructor(memory: PsEngineerMemoryData, progressFunction?: Function | undefined);
-    voteOnPromptPair(index: number, promptPair: number[]): Promise<IEnginePairWiseVoteResults>;
+    voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
     rankWebContent(queriesToRank: string[], instructions: string, maxPrompts?: number): Promise<string[]>;
 }
 //# sourceMappingURL=webPageContentRanker.d.ts.map

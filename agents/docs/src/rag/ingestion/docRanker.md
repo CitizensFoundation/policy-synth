@@ -13,7 +13,7 @@ This class is responsible for ranking documents based on user-defined rules and 
 
 | Name             | Parameters                                                                 | Return Type                             | Description |
 |------------------|----------------------------------------------------------------------------|-----------------------------------------|-------------|
-| voteOnPromptPair | index: number, promptPair: number[]                                        | Promise<IEnginePairWiseVoteResults>     | Processes a pair of prompts and votes on their relevance based on the ranking rules and overall topic. |
+| voteOnPromptPair | index: number, promptPair: number[]                                        | Promise<PsPairWiseVoteResults>     | Processes a pair of prompts and votes on their relevance based on the ranking rules and overall topic. |
 | rankDocuments    | docsToRank: PsRagDocumentSource[], rankingRules: string, overallTopic: string, eloRatingKey: string | Promise<PsRagDocumentSource[]> | Ranks a list of documents based on the specified rules and topic, and returns them ordered by relevance. |
 
 ## Example

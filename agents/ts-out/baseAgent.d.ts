@@ -64,7 +64,7 @@ export declare class PolicySynthAgentBase {
     get fullLLMCostsForMemory(): number | undefined;
     private repairJson;
     private parseJsonResponse;
-    callLLM(stage: PsMemoryStageTypes, modelConstants: IEngineBaseAIModelConstants, messages: BaseMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Callbacks): Promise<any>;
+    callLLM(stage: PsMemoryStageTypes, modelConstants: PsBaseAIModelConstants, messages: BaseMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Callbacks): Promise<any>;
     private updateRateLimits;
     private checkRateLimits;
     private addRequestTimestamp;

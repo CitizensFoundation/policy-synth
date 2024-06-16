@@ -17,7 +17,7 @@ const importSubProblems = async (projectId: string, filePath: string) => {
 
   // Read the new sub problems from the file
   const fileContent = await fs.readFile(filePath, "utf8");
-  const newSubProblems: IEngineSubProblem[] = JSON.parse(fileContent);
+  const newSubProblems: PsSubProblem[] = JSON.parse(fileContent);
 
   if (newSubProblems && newSubProblems.length > 0) {
     // Update the subProblems with the new data and the boilerplate structure

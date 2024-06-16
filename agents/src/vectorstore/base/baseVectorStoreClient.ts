@@ -2,7 +2,7 @@ import weaviate, { WeaviateClient } from 'weaviate-ts-client';
 
 import { PolicySynthAgentBase } from "../../baseAgent.js";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import fs from "fs/promises";
 
 export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
@@ -81,7 +81,7 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
     return res;
   }
 
-  async postWebPage(webPageAnalysis: IEngineWebPageAnalysisData) {
+  async postWebPage(webPageAnalysis: PsWebPageAnalysisData) {
     this.logger.info(
       `Weaviate: Saving web page ${JSON.stringify(webPageAnalysis, null, 2)}`
     );
@@ -103,7 +103,7 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
     });
   }
 
-  async updateWebPage(id: string, webPageAnalysis: IEngineWebPageAnalysisData) {
+  async updateWebPage(id: string, webPageAnalysis: PsWebPageAnalysisData) {
     return new Promise((resolve, reject) => {
       BaseVectorStoreClient.client.data
         .updater()
@@ -145,7 +145,7 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
     });
   }
 
-  async getWebPage(id: string): Promise<IEngineWebPageAnalysisData> {
+  async getWebPage(id: string): Promise<PsWebPageAnalysisData> {
     return new Promise((resolve, reject) => {
       BaseVectorStoreClient.client.data
         .getterById()
@@ -154,8 +154,8 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
         .do()
         .then((res) => {
           this.logger.info(`Weaviate: Have got web page ${id}`);
-          const webData = (res as IEngineWebPageGraphQlSingleResult)
-            .properties as IEngineWebPageAnalysisData;
+          const webData = (res as PsWebPageGraphQlSingleResult)
+            .properties as PsWebPageAnalysisData;
           resolve(webData);
         })
         .catch((err) => {
@@ -168,11 +168,11 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
     groupId: number,
     subProblemIndex: number | undefined | null = undefined,
     entityIndex: number | undefined | null = undefined,
-    searchType: IEngineSearchQueries | undefined,
+    searchType: PsSearchQueries | undefined,
     limit = 10,
     offset = 0,
     solutionCountLimit: number | undefined = 0
-  ): Promise<IEngineWebPageGraphQlResults> {
+  ): Promise<PsWebPageGraphQlResults> {
     let where: any[] | undefined = undefined;
     where = [
       {
@@ -253,7 +253,7 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
   async webPageExist(
     groupId: number,
     url: string,
-    searchType: IEngineWebPageTypes,
+    searchType: PsWebPageTypes,
     subProblemIndex: number | undefined,
     entityIndex: number | undefined
   ): Promise<Boolean> {
@@ -326,7 +326,7 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
 
       const resultPages = results.data.Get[
         "WebPage"
-      ] as IEngineWebPageAnalysisData[];
+      ] as PsWebPageAnalysisData[];
 
       if (resultPages.length > 0) {
         let allSubProblems = true;
@@ -368,9 +368,9 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
     query: string,
     groupId: number | undefined,
     subProblemIndex: number | undefined,
-    searchType: IEngineWebPageTypes | undefined,
+    searchType: PsWebPageTypes | undefined,
     filterOutEmptySolutions = true
-  ): Promise<IEngineWebPageGraphQlResults> {
+  ): Promise<PsWebPageGraphQlResults> {
     const where: any[] = [];
 
     if (groupId) {
@@ -408,14 +408,14 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
     const retryDelays = [5000, 10000, 30000]; // Delays for retry attempts (5s, 10s, 30s)
     let attempt = 0;
 
-    const doSearch = async (): Promise<IEngineWebPageGraphQlResults> => {
+    const doSearch = async (): Promise<PsWebPageGraphQlResults> => {
       try {
         const results = await BaseVectorStoreClient.client.graphql
           .get()
           .withClassName("WebPage")
           .withNearText({ concepts: [query] })
           .withLimit(
-            IEngineConstants.limits.webPageVectorResultsForNewSolutions
+            PsConstants.limits.webPageVectorResultsForNewSolutions
           )
           .withWhere({
             operator: "And",
@@ -427,7 +427,7 @@ export abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
             _additional { distance }"
           )
           .do();
-        return results as IEngineWebPageGraphQlResults;
+        return results as PsWebPageGraphQlResults;
       } catch (err) {
         console.error(err);
         if (attempt < retryDelays.length) {

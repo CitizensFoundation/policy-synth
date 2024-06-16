@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
     async renderSelectPrompt(problemStatement, subProblemsToConsider) {
         const messages = [
@@ -38,7 +38,7 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
             delete sp.eloRating;
             delete sp.fromUrl;
         });
-        const reducedSubProblems = (await this.callLLM("reduce-sub-problems", IEngineConstants.reduceSubProblemsModel, await this.renderSelectPrompt(this.memory.problemStatement.description, subProblemsToConsider)));
+        const reducedSubProblems = (await this.callLLM("reduce-sub-problems", PsConstants.reduceSubProblemsModel, await this.renderSelectPrompt(this.memory.problemStatement.description, subProblemsToConsider)));
         // Go through all the reducedSubProblems and add the eloRating at 0
         reducedSubProblems.forEach((sp) => {
             sp.solutions = {
@@ -68,10 +68,10 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Reduce Sub Problems Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.reduceSubProblemsModel.temperature,
-            maxTokens: IEngineConstants.reduceSubProblemsModel.maxOutputTokens,
-            modelName: IEngineConstants.reduceSubProblemsModel.name,
-            verbose: IEngineConstants.reduceSubProblemsModel.verbose,
+            temperature: PsConstants.reduceSubProblemsModel.temperature,
+            maxTokens: PsConstants.reduceSubProblemsModel.maxOutputTokens,
+            modelName: PsConstants.reduceSubProblemsModel.name,
+            verbose: PsConstants.reduceSubProblemsModel.verbose,
         });
         const subProblemsToConsider = this.memory.subProblems.filter((sp) => sp.eloRating && sp.eloRating > 1100);
         await this.reduceSubProblems(subProblemsToConsider);

@@ -6,9 +6,9 @@ This class processes and groups solutions based on their core ideas using a lang
 
 | Name                               | Parameters                                             | Return Type      | Description                                                                 |
 |------------------------------------|--------------------------------------------------------|------------------|-----------------------------------------------------------------------------|
-| renderGroupPrompt                  | solutionsToGroup: IEngineSolutionForGroupCheck[]       | Promise<SystemMessage[]> | Prepares the prompt for the language model to group solutions.              |
-| groupSolutionsForSubProblem        | subProblemIndex: number, solutions: IEngineSolution[]  | Promise<void>    | Groups solutions for a specific subproblem.                                 |
-| calculateGroupStats                | solutions: IEngineSolution[]                           | Promise<void>    | Calculates statistics for the grouped solutions.                            |
+| renderGroupPrompt                  | solutionsToGroup: PsSolutionForGroupCheck[]       | Promise<SystemMessage[]> | Prepares the prompt for the language model to group solutions.              |
+| groupSolutionsForSubProblem        | subProblemIndex: number, solutions: PsSolution[]  | Promise<void>    | Groups solutions for a specific subproblem.                                 |
+| calculateGroupStats                | solutions: PsSolution[]                           | Promise<void>    | Calculates statistics for the grouped solutions.                            |
 | groupSolutions                     | -                                                      | Promise<void>    | Groups solutions for all subproblems up to a specified limit.               |
 | process                            | -                                                      | Promise<void>    | Processes the grouping of solution components using a language model.       |
 

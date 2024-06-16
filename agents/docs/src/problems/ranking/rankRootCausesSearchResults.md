@@ -10,7 +10,7 @@ No public properties are documented.
 
 | Name             | Parameters                        | Return Type                     | Description |
 |------------------|-----------------------------------|---------------------------------|-------------|
-| voteOnPromptPair | index: number, promptPair: number[] | Promise<IEnginePairWiseVoteResults> | Asynchronously votes on a pair of prompts by comparing their relevance to the problem statement. |
+| voteOnPromptPair | index: number, promptPair: number[] | Promise<PsPairWiseVoteResults> | Asynchronously votes on a pair of prompts by comparing their relevance to the problem statement. |
 | process          |                                   | Promise<void>                   | Processes the ranking of search results for each root cause type and updates the memory with ordered results. |
 
 ## Example

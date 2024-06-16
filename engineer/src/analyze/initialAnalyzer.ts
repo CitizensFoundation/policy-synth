@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
 import fs from "fs";
@@ -106,7 +106,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
 
     const analyzisResults = (await this.callLLM(
       "engineering-agent",
-      IEngineConstants.engineerModel,
+      PsConstants.engineerModel,
       [
         new SystemMessage(this.analyzeSystemPrompt),
         new HumanMessage(

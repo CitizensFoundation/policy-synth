@@ -2,7 +2,7 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 
 export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
@@ -57,7 +57,7 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
 
         Policy Evidence to Rate:
         ${JSON.stringify(
-          evidenceToRank.slice(0, IEngineConstants.maxEvidenceToUseForRatingEvidence),
+          evidenceToRank.slice(0, PsConstants.maxEvidenceToUseForRatingEvidence),
           null, 2)}
 
         Your ratings in JSON format:
@@ -70,10 +70,10 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
     this.logger.info(`Rating all web evidence for policy ${policy.title}`);
 
     try {
-      for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+      for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
         let offset = 0;
         const limit = 100;
-        const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+        const searchType = PsConstants.simplifyEvidenceType(evidenceType);
 
         while (true) {
           const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(
@@ -108,7 +108,7 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
 
               let ratedEvidence: PSPolicyRating = await this.callLLM(
                 "rate-web-evidence",
-                IEngineConstants.rateWebEvidenceModel,
+                PsConstants.rateWebEvidenceModel,
                 await this.renderProblemPrompt(
                   subProblemIndex,
                   policy,
@@ -149,15 +149,15 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.rateWebEvidenceModel.temperature,
-      maxTokens: IEngineConstants.rateWebEvidenceModel.maxOutputTokens,
-      modelName: IEngineConstants.rateWebEvidenceModel.name,
-      verbose: IEngineConstants.rateWebEvidenceModel.verbose,
+      temperature: PsConstants.rateWebEvidenceModel.temperature,
+      maxTokens: PsConstants.rateWebEvidenceModel.maxOutputTokens,
+      modelName: PsConstants.rateWebEvidenceModel.name,
+      verbose: PsConstants.rateWebEvidenceModel.verbose,
     });
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];
@@ -177,7 +177,7 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
               p <
               Math.min(
                 policies.length,
-                IEngineConstants.maxTopPoliciesToProcess
+                PsConstants.maxTopPoliciesToProcess
               );
               p++
             ) {

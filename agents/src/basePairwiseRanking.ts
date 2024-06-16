@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsConstants } from "./constants.js";
 
 export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
   prompts: Record<number, number[][]> = {};
@@ -10,7 +10,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
   K_FACTOR_MIN: number = 10; // Minimum K-factor
   NUM_COMPARISONS_FOR_MIN_K: number = 20; // Number of comparisons for K to reach its minimum
   maxNumberOfPrompts: number =
-    IEngineConstants.maxNumberOfPairwiseRankingPrompts;
+    PsConstants.maxNumberOfPairwiseRankingPrompts;
 
   numComparisons: Record<number, Record<number, number>> = {};
   KFactors: Record<number, Record<number, number>> = {};
@@ -52,7 +52,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
         250,
         Math.floor(
           ((allItems.length * (allItems.length - 1)) / 2) *
-            IEngineConstants.maxPercentOfEloMatched
+            PsConstants.maxPercentOfEloMatched
         )
       );
 
@@ -100,12 +100,12 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
     subProblemIndex: number,
     promptPair: number[],
     additionalData?: any
-  ): Promise<IEnginePairWiseVoteResults>;
+  ): Promise<PsPairWiseVoteResults>;
 
   async getResultsFromLLM(
     subProblemIndex: number,
     stageName: PsMemoryStageTypes,
-    modelConstant: IEngineBaseAIModelConstants,
+    modelConstant: PsBaseAIModelConstants,
     messages: (HumanMessage | SystemMessage)[],
     itemOneIndex: number,
     itemTwoIndex: number
@@ -114,7 +114,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
     let wonItemIndex;
     let lostItemIndex;
 
-    const maxRetryCount = IEngineConstants.rankingLLMmaxRetryCount;
+    const maxRetryCount = PsConstants.rankingLLMmaxRetryCount;
     let retry = true;
     let retryCount = 0;
 

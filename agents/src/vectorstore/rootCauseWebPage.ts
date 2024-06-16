@@ -2,7 +2,7 @@ import weaviate from "weaviate-ts-client";
 import { WeaviateClient } from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "../baseAgent.js";
 
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 import fs from "fs/promises";
 
 export class RootCauseWebPageVectorStore extends PolicySynthAgentBase {
@@ -222,7 +222,7 @@ export class RootCauseWebPageVectorStore extends PolicySynthAgentBase {
         .do()
         .then((res) => {
           this.logger.info(`Weaviate: Have got web page ${id}`);
-          const webData = (res as IEngineWebPageGraphQlSingleResult).properties as PSRootCauseRawWebPageData;
+          const webData = (res as PsWebPageGraphQlSingleResult).properties as PSRootCauseRawWebPageData;
           resolve(webData);
         })
         .catch((err) => {
@@ -413,7 +413,7 @@ export class RootCauseWebPageVectorStore extends PolicySynthAgentBase {
         )
         .do();
 
-      const resultPages = results.data.Get["RootCauseWebPage"] as IEngineWebPageAnalysisData[];
+      const resultPages = results.data.Get["RootCauseWebPage"] as PsWebPageAnalysisData[];
 
       return resultPages.length > 0;
     } catch (err: any) {
@@ -452,7 +452,7 @@ export class RootCauseWebPageVectorStore extends PolicySynthAgentBase {
         .get()
         .withClassName("RootCauseWebPage")
         .withNearText({ concepts: [query] })
-        .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
+        .withLimit(PsConstants.limits.webPageVectorResultsForNewSolutions)
         .withWhere({
           operator: "And",
           operands: where,

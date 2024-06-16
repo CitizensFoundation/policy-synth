@@ -8,7 +8,7 @@
 |------------------|---------------------|-----------------------------------------------------------------------------|
 | memory           | PsBaseMemoryData    | The memory data containing information about subproblems and their solutions. |
 | subProblemIndex  | number              | The index of the current subproblem within the memory's subproblems list.   |
-| solution         | IEngineSolution     | The solution data for which the family tree is being visualized.            |
+| solution         | PsSolution     | The solution data for which the family tree is being visualized.            |
 
 ## Methods
 
@@ -16,8 +16,8 @@
 |--------------------|-----------------------------|-------------------|-----------------------------------------------------------------------------------------------|
 | connectedCallback  | -                           | void              | Lifecycle method that runs when the component is added to the document's DOM.                 |
 | disconnectedCallback | -                         | void              | Lifecycle method that runs when the component is removed from the document's DOM.             |
-| getParentSolution  | parent: string              | IEngineSolution   | Retrieves the parent solution based on the provided parent string identifier.                 |
-| renderFamilyTree   | currentSolution: IEngineSolution, first: boolean = false, isMutatedFrom: boolean = false | TemplateResult | Renders the family tree structure for the given solution, marking the first and mutation origins. |
+| getParentSolution  | parent: string              | PsSolution   | Retrieves the parent solution based on the provided parent string identifier.                 |
+| renderFamilyTree   | currentSolution: PsSolution, first: boolean = false, isMutatedFrom: boolean = false | TemplateResult | Renders the family tree structure for the given solution, marking the first and mutation origins. |
 | render             | -                           | TemplateResult    | Renders the component's HTML structure, including the family tree visualization.              |
 
 ## Events

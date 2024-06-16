@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { OpenAI } from "openai";
 import { AxiosResponse } from "axios";
 import axios from "axios";
@@ -80,7 +80,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     subProblemIndex: number,
     imagePrompt: string,
     imageFilePath: string,
-    solutionOrPolicy: IEngineSolution | PSPolicy | undefined = undefined,
+    solutionOrPolicy: PsSolution | PSPolicy | undefined = undefined,
     stylePreset:
       | "digital-art"
       | "low-poly"
@@ -92,7 +92,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     let retryCount = 0;
     let retrying = true;
 
-    while (retrying && retryCount < IEngineConstants.maxStabilityRetryCount) {
+    while (retrying && retryCount < PsConstants.maxStabilityRetryCount) {
       try {
         response = await axios.post(
           `${apiHost}/v1/generation/${engineId}/text-to-image`,
@@ -140,7 +140,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
           if (retryCount > 3) {
             imagePrompt = (await this.callLLM(
               "create-solution-images",
-              IEngineConstants.createSolutionImagesModel,
+              PsConstants.createSolutionImagesModel,
               await this.renderCreatePrompt(
                 subProblemIndex,
                 solutionOrPolicy!,
@@ -153,7 +153,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
           } else {
             imagePrompt = (await this.callLLM(
               "create-solution-images",
-              IEngineConstants.createSolutionImagesModel,
+              PsConstants.createSolutionImagesModel,
               await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy!),
               false
             )) as string;
@@ -228,7 +228,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
 
   async renderCreatePrompt(
     subProblemIndex: number,
-    solution: IEngineSolution | PSPolicy,
+    solution: PsSolution | PSPolicy,
     injectText?: string
   ) {
     const messages = [
@@ -274,7 +274,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     let retrying = true; // Initialize as true
     let result: any;
 
-    while (retrying && retryCount < IEngineConstants.maxDalleRetryCount) {
+    while (retrying && retryCount < PsConstants.maxDalleRetryCount) {
       try {
         result = await client.images.generate({
           model: "dall-e-3",
@@ -312,7 +312,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
 
   getDalleImagePrompt(
     subProblemIndex: number | undefined = undefined,
-    solution: IEngineSolution | undefined = undefined
+    solution: PsSolution | undefined = undefined
   ) {
     return `Topic (do not reference directly in the prompt you create):
 ${solution!.title}
@@ -326,7 +326,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
   async createImages() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -365,7 +365,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
               if (process.env.STABILITY_API_KEY) {
                 imagePrompt = (await this.callLLM(
                   "create-solution-images",
-                  IEngineConstants.createSolutionImagesModel,
+                  PsConstants.createSolutionImagesModel,
                   await this.renderCreatePrompt(subProblemIndex, solution),
                   false
                 )) as string;
@@ -461,10 +461,10 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createSolutionImagesModel.temperature,
-      maxTokens: IEngineConstants.createSolutionImagesModel.maxOutputTokens,
-      modelName: IEngineConstants.createSolutionImagesModel.name,
-      verbose: IEngineConstants.createSolutionImagesModel.verbose,
+      temperature: PsConstants.createSolutionImagesModel.temperature,
+      maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
+      modelName: PsConstants.createSolutionImagesModel.name,
+      verbose: PsConstants.createSolutionImagesModel.verbose,
     });
 
     try {

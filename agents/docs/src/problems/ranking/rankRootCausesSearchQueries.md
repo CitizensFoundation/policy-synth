@@ -12,7 +12,7 @@ The `RankRootCausesSearchQueriesProcessor` class is responsible for ranking sear
 
 | Name            | Parameters                                                                 | Return Type                    | Description                                                                                       |
 |-----------------|----------------------------------------------------------------------------|--------------------------------|---------------------------------------------------------------------------------------------------|
-| voteOnPromptPair | index: number, promptPair: number[]                                       | Promise<IEnginePairWiseVoteResults> | Asynchronously votes on a pair of prompts to determine which is more relevant.                    |
+| voteOnPromptPair | index: number, promptPair: number[]                                       | Promise<PsPairWiseVoteResults> | Asynchronously votes on a pair of prompts to determine which is more relevant.                    |
 | process         | None                                                                       | Promise<void>                  | Asynchronously processes the ranking of root cause search queries for each type in `rootCauseTypes`. |
 
 ## Example

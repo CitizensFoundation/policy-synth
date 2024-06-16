@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 const DISABLE_LLM_FOR_DEBUG = false;
 export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     useLanguage = "English";
@@ -67,7 +67,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
         }
         else {
             this.logger.info(`Calling LLM for sub problem ${subProblemIndex}`);
-            let results = await this.callLLM(stageName, IEngineConstants.createSolutionsModel, await this.renderCreatePrompt(subProblemIndex, solutionsForInspiration, alreadyCreatedSolutions), true, false, 860);
+            let results = await this.callLLM(stageName, PsConstants.createSolutionsModel, await this.renderCreatePrompt(subProblemIndex, solutionsForInspiration, alreadyCreatedSolutions), true, false, 860);
             return results;
         }
     }
@@ -123,7 +123,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     }
     async createAllSeedSolutions() {
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); subProblemIndex++) {
             this.currentSubProblemIndex = subProblemIndex;
             this.logger.info(`Creating solutions for sub problem ${subProblemIndex}`);
             let solutions = [];
@@ -170,9 +170,9 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
         super.process();
         this.chat = new ChatOpenAI({
             temperature: 0.25,
-            maxTokens: IEngineConstants.createSolutionsModel.maxOutputTokens,
-            modelName: IEngineConstants.createSolutionsModel.name,
-            verbose: IEngineConstants.createSolutionsModel.verbose,
+            maxTokens: PsConstants.createSolutionsModel.maxOutputTokens,
+            modelName: PsConstants.createSolutionsModel.name,
+            verbose: PsConstants.createSolutionsModel.verbose,
         });
         try {
             await this.createAllSeedSolutions();

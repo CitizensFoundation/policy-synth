@@ -4,10 +4,10 @@ export declare class RankProsConsProcessor extends BasePairwiseRankingsProcessor
         solution: string;
         prosOrCons: "pros" | "cons";
         subProblemIndex: number;
-    }): Promise<IEnginePairWiseVoteResults>;
-    convertProsConsToObjects(prosCons: string[]): IEngineProCon[];
+    }): Promise<PsPairWiseVoteResults>;
+    convertProsConsToObjects(prosCons: string[]): PsProCon[];
     process(): Promise<void>;
-    processSubProblem(subProblem: IEngineSubProblem, subProblemIndex: number): Promise<void>;
-    renderSolution(solution: IEngineSolution): string;
+    processSubProblem(subProblem: PsSubProblem, subProblemIndex: number): Promise<void>;
+    renderSolution(solution: PsSolution): string;
 }
 //# sourceMappingURL=rankProsCons.d.ts.map

@@ -14,7 +14,7 @@ No public properties are explicitly defined in this class beyond those inherited
 | updated               | changedProperties: Map<string \| number \| symbol, unknown> | void        | Extends the base class method to perform actions on element updates.        |
 | disconnectedCallback  |                                                 | void        | Extends the base class method to perform cleanup when the element is removed from the document's DOM. |
 | render                |                                                 | unknown     | Renders the sub-problems or a specific sub-problem screen based on the current state. |
-| renderSubProblemScreen| subProblem: IEngineSubProblem                   | unknown     | Renders the detailed view for a specific sub-problem.                       |
+| renderSubProblemScreen| subProblem: PsSubProblem                   | unknown     | Renders the detailed view for a specific sub-problem.                       |
 | renderSubProblemList  | (Inherited from PsStageBase)                    | unknown     | Renders a list of sub-problems. This method is assumed to be inherited and not explicitly defined in this class. |
 | renderSubProblem      | (Inherited from PsStageBase)                    | unknown     | Renders a single sub-problem. This method is assumed to be inherited and not explicitly defined in this class. |
 | renderSearchQueries   | (Inherited from PsStageBase)                    | unknown     | Renders search queries related to a sub-problem. This method is assumed to be inherited and not explicitly defined in this class. |

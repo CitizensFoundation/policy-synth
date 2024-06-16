@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import metascraperFactory from "metascraper";
 import metascraperAuthor from "metascraper-author";
 import metascraperDate from "metascraper-date";
@@ -72,9 +72,9 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
                     pdfBuffer = gunzipSync(cachedPdf);
                 }
                 else {
-                    const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
+                    const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
                         Math.random() *
-                            IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
                     this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
                     await new Promise((r) => setTimeout(r, sleepingForMs));
                     const axiosResponse = await axios.get(url, {
@@ -116,9 +116,9 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
                 htmlText = gunzipSync(cachedData).toString();
             }
             else {
-                const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
+                const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
                     Math.random() *
-                        IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                        PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
                 this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
                 await new Promise((r) => setTimeout(r, sleepingForMs));
                 const response = await browserPage.goto(url, {
@@ -159,8 +159,8 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
     async refineWebEvidence(policy, subProblemIndex, page) {
         const limit = 10;
         try {
-            for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
-                const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+            for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+                const searchType = PsConstants.simplifyEvidenceType(evidenceType);
                 const results = await this.evidenceWebPageVectorStore.getTopPagesForProcessing(this.memory.groupId, subProblemIndex, policy.title, searchType, limit);
                 this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
                 if (results.data.Get["EvidenceWebPage"].length === 0) {
@@ -185,21 +185,21 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
         }
     }
     async processSubProblems(browser) {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             this.logger.info(`Refining evidence for sub problem ${subProblemIndex}`);
             const newPage = await browser.newPage();
-            newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-            newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-            await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+            newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+            newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+            await newPage.setUserAgent(PsConstants.currentUserAgent);
             const subProblem = this.memory.subProblems[subProblemIndex];
             if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
                 if (subProblem.policies) {
                     const policies = subProblem.policies.populations[currentGeneration];
                     for (let p = 0; p <
-                        Math.min(policies.length, IEngineConstants.maxTopPoliciesToProcess); p++) {
+                        Math.min(policies.length, PsConstants.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
                             await this.refineWebEvidence(policy, subProblemIndex, newPage);
@@ -223,9 +223,9 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         await this.processSubProblems(browser);
         await this.saveMemory();
         await browser.close();

@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
     async voteOnPromptPair(subProblemIndex, promptPair) {
@@ -41,7 +41,7 @@ export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
         The more important and practial solution component is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", IEngineConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", PsConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblem(subProblemIndex) {
         this.logger.info(`Ranking web solution for sub problem ${subProblemIndex} population`);
@@ -60,10 +60,10 @@ export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
         super.process();
         try {
             this.chat = new ChatOpenAI({
-                temperature: IEngineConstants.solutionsRankingsModel.temperature,
-                maxTokens: IEngineConstants.solutionsRankingsModel.maxOutputTokens,
-                modelName: IEngineConstants.solutionsRankingsModel.name,
-                verbose: IEngineConstants.solutionsRankingsModel.verbose,
+                temperature: PsConstants.solutionsRankingsModel.temperature,
+                maxTokens: PsConstants.solutionsRankingsModel.maxOutputTokens,
+                modelName: PsConstants.solutionsRankingsModel.name,
+                verbose: PsConstants.solutionsRankingsModel.verbose,
             });
             if (!this.memory.problemStatement.solutionsFromSearch[0].eloRating) {
                 this.setupRankingPrompts(-1, this.memory.problemStatement.solutionsFromSearch, this.memory.problemStatement.solutionsFromSearch.length * 10);
@@ -72,7 +72,7 @@ export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
                     this.getOrderedListOfItems(-1, true);
             }
             const subProblemsPromises = Array.from({
-                length: Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems),
+                length: Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems),
             }, async (_, subProblemIndex) => this.processSubProblem(subProblemIndex));
             await Promise.all(subProblemsPromises);
             await this.saveMemory();

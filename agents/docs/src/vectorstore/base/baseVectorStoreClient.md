@@ -16,13 +16,13 @@ This class provides an abstract base for interacting with a vector store using t
 | showScheme               |                                                        | Promise<void>                       | Retrieves and logs the current schema from Weaviate. |
 | deleteScheme             |                                                        | Promise<void>                       | Deletes the 'WebPage' class from the Weaviate schema. |
 | testQuery                |                                                        | Promise<any>                        | Performs a test query to retrieve web pages with specific criteria. |
-| postWebPage              | webPageAnalysis: IEngineWebPageAnalysisData            | Promise<any>                        | Posts a web page analysis to Weaviate. |
-| updateWebPage            | id: string, webPageAnalysis: IEngineWebPageAnalysisData| Promise<any>                        | Updates a web page analysis in Weaviate based on the provided ID. |
+| postWebPage              | webPageAnalysis: PsWebPageAnalysisData            | Promise<any>                        | Posts a web page analysis to Weaviate. |
+| updateWebPage            | id: string, webPageAnalysis: PsWebPageAnalysisData| Promise<any>                        | Updates a web page analysis in Weaviate based on the provided ID. |
 | updateWebSolutions       | id: string, webSolutions: string[], quiet: boolean     | Promise<any>                        | Updates the solutions for a web page in Weaviate. |
-| getWebPage               | id: string                                             | Promise<IEngineWebPageAnalysisData> | Retrieves a web page from Weaviate by ID. |
-| getWebPagesForProcessing | groupId: number, subProblemIndex: number \| undefined \| null, entityIndex: number \| undefined \| null, searchType: IEngineSearchQueries \| undefined, limit: number, offset: number, solutionCountLimit: number \| undefined | Promise<IEngineWebPageGraphQlResults> | Retrieves web pages for processing based on various criteria. |
-| webPageExist             | groupId: number, url: string, searchType: IEngineWebPageTypes, subProblemIndex: number \| undefined, entityIndex: number \| undefined | Promise<Boolean>                    | Checks if a web page exists in Weaviate with the specified criteria. |
-| searchWebPages           | query: string, groupId: number \| undefined, subProblemIndex: number \| undefined, searchType: IEngineWebPageTypes \| undefined, filterOutEmptySolutions: boolean | Promise<IEngineWebPageGraphQlResults> | Searches for web pages in Weaviate based on the query and other criteria. |
+| getWebPage               | id: string                                             | Promise<PsWebPageAnalysisData> | Retrieves a web page from Weaviate by ID. |
+| getWebPagesForProcessing | groupId: number, subProblemIndex: number \| undefined \| null, entityIndex: number \| undefined \| null, searchType: PsSearchQueries \| undefined, limit: number, offset: number, solutionCountLimit: number \| undefined | Promise<PsWebPageGraphQlResults> | Retrieves web pages for processing based on various criteria. |
+| webPageExist             | groupId: number, url: string, searchType: PsWebPageTypes, subProblemIndex: number \| undefined, entityIndex: number \| undefined | Promise<Boolean>                    | Checks if a web page exists in Weaviate with the specified criteria. |
+| searchWebPages           | query: string, groupId: number \| undefined, subProblemIndex: number \| undefined, searchType: PsWebPageTypes \| undefined, filterOutEmptySolutions: boolean | Promise<PsWebPageGraphQlResults> | Searches for web pages in Weaviate based on the query and other criteria. |
 
 ## Example
 

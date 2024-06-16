@@ -2,7 +2,7 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 const DISABLE_LLM_FOR_DEBUG = false;
@@ -13,7 +13,7 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
   useLanguage: string | undefined = "English";
 
   async renderRefinePrompt(
-    results: IEngineSolution[],
+    results: PsSolution[],
     generalTextContext: string,
     scientificTextContext: string,
     openDataTextContext: string,
@@ -194,7 +194,7 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
     newsTextContext: string,
     alreadyCreatedSolutions: string | undefined = undefined,
     stageName: PsMemoryStageTypes = "create-seed-solutions"
-  ): Promise<IEngineSolution[]> {
+  ): Promise<PsSolution[]> {
     if (DISABLE_LLM_FOR_DEBUG) {
       this.logger.info("DISABLE_LLM_FOR_DEBUG is true, skipping LLM call");
       await this.renderCreatePrompt(
@@ -210,7 +210,7 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
       this.logger.info(`Calling LLM for sub problem ${subProblemIndex}`);
       let results = await this.callLLM(
         stageName,
-        IEngineConstants.createSolutionsModel,
+        PsConstants.createSolutionsModel,
         await this.renderCreatePrompt(
           generalTextContext,
           scientificTextContext,
@@ -224,13 +224,13 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
         860
       );
 
-      if (IEngineConstants.enable.refine.createSolutions) {
+      if (PsConstants.enable.refine.createSolutions) {
         this.logger.info(
           `Calling LLM refine for sub problem ${subProblemIndex}`
         );
         results = await this.callLLM(
           stageName,
-          IEngineConstants.createSolutionsModel,
+          PsConstants.createSolutionsModel,
           await this.renderRefinePrompt(
             results,
             generalTextContext,
@@ -251,26 +251,26 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
   }
 
   randomSearchQueryIndex(
-    searchQueries: IEngineSearchQueries,
-    type: IEngineWebPageTypes
+    searchQueries: PsSearchQueries,
+    type: PsWebPageTypes
   ) {
     const randomIndex = Math.min(
       Math.floor(
         Math.random() *
-          (IEngineConstants.maxTopSearchQueriesForSolutionCreation + 1)
+          (PsConstants.maxTopSearchQueriesForSolutionCreation + 1)
       ),
       searchQueries[type].length - 1
     );
     if (
       Math.random() <
-      IEngineConstants.chances.createSolutions.notUsingTopSearchQueries
+      PsConstants.chances.createSolutions.notUsingTopSearchQueries
     ) {
       this.logger.debug(`Using random search query index ${randomIndex}`);
       return randomIndex;
     } else {
       const randomTop = Math.min(
         Math.floor(
-          Math.random() * (IEngineConstants.maxTopQueriesToSearchPerType + 1)
+          Math.random() * (PsConstants.maxTopQueriesToSearchPerType + 1)
         ),
         searchQueries[type].length - 1
       );
@@ -282,7 +282,7 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
   }
 
   getAllTypeQueries(
-    searchQueries: IEngineSearchQueries,
+    searchQueries: PsSearchQueries,
     subProblemIndex: number | undefined
   ) {
     this.logger.info(
@@ -322,26 +322,26 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
   }
 
   getRandomSearchQueryForType(
-    type: IEngineWebPageTypes,
-    problemStatementQueries: IEngineSearchQuery,
-    subProblemQueries: IEngineSearchQuery,
-    otherSubProblemQueries: IEngineSearchQuery,
-    randomEntitySearchQueries: IEngineSearchQuery
+    type: PsWebPageTypes,
+    problemStatementQueries: PsSearchQuery,
+    subProblemQueries: PsSearchQuery,
+    otherSubProblemQueries: PsSearchQuery,
+    randomEntitySearchQueries: PsSearchQuery
   ) {
     let random = Math.random();
 
     let selectedQuery: string;
 
     const mainProblemChance =
-      IEngineConstants.chances.createSolutions.searchQueries
+      PsConstants.chances.createSolutions.searchQueries
         .useMainProblemSearchQueries;
     const otherSubProblemChance =
       mainProblemChance +
-      IEngineConstants.chances.createSolutions.searchQueries
+      PsConstants.chances.createSolutions.searchQueries
         .useOtherSubProblemSearchQueries;
     const subProblemChance =
       otherSubProblemChance +
-      IEngineConstants.chances.createSolutions.searchQueries
+      PsConstants.chances.createSolutions.searchQueries
         .useSubProblemSearchQueries;
     // The remaining probability is assigned to randomEntitySearchQueries
 
@@ -373,7 +373,7 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
     for (
       let i = 0;
       i <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       i++
     ) {
       if (i != subProblemIndex) {
@@ -403,7 +403,7 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
 
     const chosenEntities = entities.slice(
       0,
-      this.memory.groupId === 1 ? 3 : IEngineConstants.maxTopEntitiesToSearch
+      this.memory.groupId === 1 ? 3 : PsConstants.maxTopEntitiesToSearch
     );
 
     const randomEntity =
@@ -507,20 +507,20 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
     const randomValue = Math.random(); // Value between 0 and 1
 
     if (
-      randomValue < IEngineConstants.chances.createSolutions.webSolutions.top
+      randomValue < PsConstants.chances.createSolutions.webSolutions.top
     ) {
       return array[0];
     } else if (
       randomValue <
-      IEngineConstants.chances.createSolutions.webSolutions.top +
-        IEngineConstants.chances.createSolutions.webSolutions.topThree
+      PsConstants.chances.createSolutions.webSolutions.top +
+        PsConstants.chances.createSolutions.webSolutions.topThree
     ) {
       return this.getRandomItemFromArray(array.slice(0, 3));
     } else if (
       randomValue <
-      IEngineConstants.chances.createSolutions.webSolutions.top +
-        IEngineConstants.chances.createSolutions.webSolutions.topThree +
-        IEngineConstants.chances.createSolutions.webSolutions.topSeven
+      PsConstants.chances.createSolutions.webSolutions.top +
+        PsConstants.chances.createSolutions.webSolutions.topThree +
+        PsConstants.chances.createSolutions.webSolutions.topSeven
     ) {
       return this.getRandomItemFromArray(array.slice(0, 7));
     } else {
@@ -551,11 +551,11 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
   }
 
   //TODO: Figure out the closest mostRelevantParagraphs from Weaviate
-  renderRawSearchResults(rawSearchResults: IEngineWebPageGraphQlResults) {
+  renderRawSearchResults(rawSearchResults: PsWebPageGraphQlResults) {
     const results = this.getRandomItemFromArray(
       rawSearchResults.data.Get.WebPage,
-      IEngineConstants.limits.useRandomTopFromVectorSearchResults
-    ) as IEngineWebPageAnalysisData;
+      PsConstants.limits.useRandomTopFromVectorSearchResults
+    ) as PsWebPageAnalysisData;
 
     const solutionIdentifiedInTextContext = this.getWeightedRandomSolution(
       results.solutionsIdentifiedInTextContext
@@ -588,18 +588,18 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
 
   async searchForType(
     subProblemIndex: number,
-    type: IEngineWebPageTypes,
+    type: PsWebPageTypes,
     searchQuery: string,
     tokensLeftForType: number
   ) {
     this.logger.info(`Searching for type ${type} with query ${searchQuery}`);
-    let rawSearchResults: IEngineWebPageGraphQlResults;
+    let rawSearchResults: PsWebPageGraphQlResults;
 
     const random = Math.random();
 
     if (
       random <
-      IEngineConstants.chances.createSolutions.vectorSearchAcrossAllProblems
+      PsConstants.chances.createSolutions.vectorSearchAcrossAllProblems
     ) {
       this.logger.debug("Using vector search across all problems");
       rawSearchResults = await this.webPageVectorStore.searchWebPages(
@@ -640,7 +640,7 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
   async getSearchQueryTextContext(
     subProblemIndex: number,
     searchQuery: string,
-    type: IEngineWebPageTypes,
+    type: PsWebPageTypes,
     alreadyCreatedSolutions: string | undefined = undefined
   ) {
     //TODO: What about the system prompt?
@@ -649,10 +649,10 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
     );
     const currentTokens = tokenCountData.totalCount;
     const tokensLeft =
-      IEngineConstants.createSolutionsModel.tokenLimit -
-      (currentTokens + IEngineConstants.createSolutionsModel.maxOutputTokens);
+      PsConstants.createSolutionsModel.tokenLimit -
+      (currentTokens + PsConstants.createSolutionsModel.maxOutputTokens);
     const tokensLeftForType = Math.floor(
-      tokensLeft / IEngineConstants.numberOfSearchTypes
+      tokensLeft / PsConstants.numberOfSearchTypes
     );
     this.logger.debug(`Tokens left ${tokensLeftForType} for type ${type}`);
 
@@ -668,12 +668,12 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       subProblemIndex++
     ) {
       this.currentSubProblemIndex = subProblemIndex;
       this.logger.info(`Creating solutions for sub problem ${subProblemIndex}`);
-      let solutions: IEngineSolution[] = [];
+      let solutions: PsSolution[] = [];
 
       // Create 60 solutions 4*15
       const solutionBatchCount = 15;
@@ -746,10 +746,10 @@ export class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createSolutionsModel.temperature,
-      maxTokens: IEngineConstants.createSolutionsModel.maxOutputTokens,
-      modelName: IEngineConstants.createSolutionsModel.name,
-      verbose: IEngineConstants.createSolutionsModel.verbose,
+      temperature: PsConstants.createSolutionsModel.temperature,
+      maxTokens: PsConstants.createSolutionsModel.maxOutputTokens,
+      modelName: PsConstants.createSolutionsModel.name,
+      verbose: PsConstants.createSolutionsModel.verbose,
     });
 
     try {

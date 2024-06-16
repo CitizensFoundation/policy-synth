@@ -76,7 +76,7 @@ export class PsEntities extends PsStageBase {
     }
   }
 
-  renderSubProblemScreen(subProblem: IEngineSubProblem) {
+  renderSubProblemScreen(subProblem: PsSubProblem) {
     return html`
       <div class="topContainer layout vertical center-center">
         ${this.renderSubProblem(subProblem, false, 0, true, true)}
@@ -128,7 +128,7 @@ export class PsEntities extends PsStageBase {
     `;
   }
 
-  renderEntityScreen(entity: IEngineAffectedEntity) {
+  renderEntityScreen(entity: PsAffectedEntity) {
     return html`
       <div class="topContainer layout vertical">
         <div class="title">${this.t('Problem Statement')}</div>

@@ -2,18 +2,18 @@ import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export declare class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     renderProblemDetail(additionalData: {
         subProblemIndex: number;
-        currentEntity?: IEngineAffectedEntity;
-        searchQueryType?: IEngineWebPageTypes;
+        currentEntity?: PsAffectedEntity;
+        searchQueryType?: PsWebPageTypes;
         searchQueryTarget: "problemStatement" | "subProblem" | "entity";
     }): string;
     voteOnPromptPair(index: number, promptPair: number[], additionalData: {
-        currentEntity?: IEngineAffectedEntity;
-        searchQueryType?: IEngineWebPageTypes;
+        currentEntity?: PsAffectedEntity;
+        searchQueryType?: PsWebPageTypes;
         subProblemIndex: number;
         searchQueryTarget: "problemStatement" | "subProblem" | "entity";
-    }): Promise<IEnginePairWiseVoteResults>;
+    }): Promise<PsPairWiseVoteResults>;
     processSubProblems(): Promise<void>;
-    getQueryIndex(searchQueryType: IEngineWebPageTypes): 3 | 2 | 4 | 6 | 5;
+    getQueryIndex(searchQueryType: PsWebPageTypes): 3 | 2 | 4 | 6 | 5;
     processEntities(subProblemIndex: number): Promise<void>;
     process(): Promise<void>;
 }

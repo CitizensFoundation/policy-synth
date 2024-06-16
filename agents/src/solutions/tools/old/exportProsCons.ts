@@ -1,7 +1,7 @@
 import fs from "fs";
 import process from "process";
 import path from "path";
-import { IEngineConstants } from "../../../constants.js";
+import { PsConstants } from "../../../constants.js";
 
 let filePath = process.argv[2] || "currentMemory.json";
 
@@ -40,7 +40,7 @@ let html = `
 
 for (
   let s = 0;
-  s < Math.min(memory.subProblems.length, IEngineConstants.maxSubProblems);
+  s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems);
   s++
 ) {
   const subProblem = memory.subProblems[s];

@@ -2,19 +2,19 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 
 export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(
     subProblemIndex: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![subProblemIndex]![itemOneIndex] as IEngineAffectedEntity;
-    const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as IEngineAffectedEntity;
+    const itemOne = this.allItems![subProblemIndex]![itemOneIndex] as PsAffectedEntity;
+    const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as PsAffectedEntity;
 
     let itemOneTitle = itemOne.name;
     let itemOneEffects = this.renderEntityPosNegReasons(itemOne);
@@ -61,7 +61,7 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       subProblemIndex,
       "rank-entities",
-      IEngineConstants.entitiesRankingsModel,
+      PsConstants.entitiesRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -73,13 +73,13 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.entitiesRankingsModel.temperature,
-      maxTokens: IEngineConstants.entitiesRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.entitiesRankingsModel.name,
-      verbose: IEngineConstants.entitiesRankingsModel.verbose,
+      temperature: PsConstants.entitiesRankingsModel.temperature,
+      maxTokens: PsConstants.entitiesRankingsModel.maxOutputTokens,
+      modelName: PsConstants.entitiesRankingsModel.name,
+      verbose: PsConstants.entitiesRankingsModel.verbose,
     });
 
-    const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+    const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
 
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
@@ -98,7 +98,7 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
         await this.performPairwiseRanking(subProblemIndex);
 
         this.memory.subProblems[subProblemIndex].entities =
-          this.getOrderedListOfItems(subProblemIndex, true) as IEngineAffectedEntity[];
+          this.getOrderedListOfItems(subProblemIndex, true) as PsAffectedEntity[];
 
         await this.saveMemory();
       }

@@ -5,7 +5,7 @@ import { createGzip } from "zlib";
 import { promisify } from "util";
 import { writeFile, readFile } from "fs";
 import { GetWebPagesProcessor } from "@policysynth/agents/solutions/web/getWebPages.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
@@ -91,14 +91,14 @@ export class WebPageScanner extends GetWebPagesProcessor {
         const promptTokenCount = { totalCount: 500, countPerMessage: [] };
         const totalTokenCount = tokenCount +
             500 +
-            IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+            PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt("", text, subProblemIndex, entityIndex);
         console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
-        const analysis = (await this.callLLM("web-get-pages", IEngineConstants.getSolutionsPagesAnalysisModel, messages, false, true));
+        const analysis = (await this.callLLM("web-get-pages", PsConstants.getSolutionsPagesAnalysisModel, messages, false, true));
         console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
         return analysis;
     }
@@ -146,9 +146,9 @@ export class WebPageScanner extends GetWebPagesProcessor {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         if (this.memory.docsSiteToScan) {
             listOfUrls = [...listOfUrls, ...this.memory.docsSiteToScan];
             console.log(`Adding docsSiteToScan ${this.memory.docsSiteToScan}`);

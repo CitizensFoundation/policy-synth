@@ -2,7 +2,7 @@ import express from "express";
 import axios from "axios";
 import { createClient, } from "redis";
 import { EvidenceWebPageVectorStore } from "@policysynth/agents/vectorstore/evidenceWebPage.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 let redisClient;
 if (process.env.REDIS_URL) {
     redisClient = createClient({
@@ -70,8 +70,8 @@ export class ProjectsController {
     getRawEvidence = async (req, res) => {
         const allResults = [];
         console.log(`Getting raw evidence for ${req.params.id} - ${req.params.subProblemIndex} - ${req.params.policyIndex}`);
-        for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
-            const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+        for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+            const searchType = PsConstants.simplifyEvidenceType(evidenceType);
             const results = await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(parseInt(req.params.id), parseInt(req.params.subProblemIndex), searchType, req.params.policyTitle, 10, 0, 0, true);
             allResults.push(...results.data.Get["EvidenceWebPage"]);
         }

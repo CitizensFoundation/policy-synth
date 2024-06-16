@@ -6,7 +6,7 @@ export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
     urlsScanned: Set<string>;
     totalPagesSave: number;
-    renderScanningPrompt(problemStatement: IEngineProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
+    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {
@@ -15,20 +15,20 @@ export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         };
     }>;
     getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined): string;
-    mergeAnalysisData(data1: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData, data2: IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData): IEngineWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData;
+    mergeAnalysisData(data1: PsWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData, data2: PsWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData): PsWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData;
     isWithinTokenLimit(allText: string, maxChunkTokenCount: number): boolean;
     splitText(fullText: string, maxChunkTokenCount: number, subProblemIndex: number | undefined): string[];
-    getAIAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<IEngineWebPageAnalysisData>;
-    getTextAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<IEngineSolution[] | IEngineWebPageAnalysisData>;
-    processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
+    getAIAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<PsWebPageAnalysisData>;
+    getTextAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<PsSolution[] | PsWebPageAnalysisData>;
+    processPageText(text: string, subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
     generateFileName(url: string): string;
-    getAndProcessPdf(subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
-    getAndProcessHtml(subProblemIndex: number | undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
-    getAndProcessPage(subProblemIndex: number | undefined, url: string, browserPage: Page, type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined): Promise<boolean>;
+    getAndProcessPdf(subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
+    getAndProcessHtml(subProblemIndex: number | undefined, url: string, browserPage: Page, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
+    getAndProcessPage(subProblemIndex: number | undefined, url: string, browserPage: Page, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined): Promise<boolean>;
     processSubProblems(browser: Browser): Promise<void>;
-    processEntities(subProblemIndex: number, searchQueryType: IEngineWebPageTypes, browserPage: Page): Promise<void>;
-    getUrlsToFetch(allPages: IEngineSearchResultItem[]): string[];
-    processProblemStatement(searchQueryType: IEngineWebPageTypes, browserPage: Page): Promise<void>;
+    processEntities(subProblemIndex: number, searchQueryType: PsWebPageTypes, browserPage: Page): Promise<void>;
+    getUrlsToFetch(allPages: PsSearchResultItem[]): string[];
+    processProblemStatement(searchQueryType: PsWebPageTypes, browserPage: Page): Promise<void>;
     getAllCustomSearchUrls(browserPage: Page): Promise<void>;
     getAllPages(): Promise<void>;
     process(): Promise<void>;

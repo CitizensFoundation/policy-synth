@@ -10,7 +10,7 @@ import { promisify } from "util";
 import { writeFile, readFile, existsSync } from "fs";
 
 import { GetWebPagesProcessor } from "@policysynth/agents/solutions/web/getWebPages.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
@@ -41,7 +41,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
   }
 
   renderScanningPrompt(
-    problemStatement: IEngineProblemStatement,
+    problemStatement: PsProblemStatement,
     text: string,
     subProblemIndex?: number,
     entityIndex?: number
@@ -121,7 +121,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     const totalTokenCount =
       tokenCount +
       500 +
-      IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+      PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -143,7 +143,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     const analysis = (await this.callLLM(
       "web-get-pages",
-      IEngineConstants.getSolutionsPagesAnalysisModel,
+      PsConstants.getSolutionsPagesAnalysisModel,
       messages,
       false,
       true
@@ -166,7 +166,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     subProblemIndex: number | undefined,
     url: string,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
@@ -200,7 +200,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     url: string,
     browserPage: Page,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined
@@ -237,10 +237,10 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     if (this.memory.docsSiteToScan) {
       listOfUrls = [...listOfUrls, ...this.memory.docsSiteToScan];

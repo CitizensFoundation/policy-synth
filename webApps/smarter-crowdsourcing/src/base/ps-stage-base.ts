@@ -599,7 +599,7 @@ export abstract class PsStageBase extends YpBaseElement {
     ];
   }
 
-  isUsedSearch(result: IEngineSearchResultItem, index: number) {
+  isUsedSearch(result: PsSearchResultItem, index: number) {
     if (
       index < this.maxUsedSearchResults ||
       (result.position && result.position <= this.maxUsedSearchResults) ||
@@ -709,7 +709,7 @@ export abstract class PsStageBase extends YpBaseElement {
   }
 
   renderSubProblemList(
-    subProblems: IEngineSubProblem[],
+    subProblems: PsSubProblem[],
     title = this.t('Sub Problems')
   ) {
     return html`
@@ -747,7 +747,7 @@ export abstract class PsStageBase extends YpBaseElement {
 
   renderSubProblemImageUrl(
     renderCloseButton: boolean,
-    subProblem: IEngineSubProblem
+    subProblem: PsSubProblem
   ) {
     return html`
       <div
@@ -771,7 +771,7 @@ export abstract class PsStageBase extends YpBaseElement {
   }
 
   renderSubProblem(
-    subProblem: IEngineSubProblem,
+    subProblem: PsSubProblem,
     isLessProminent: boolean,
     index: number,
     renderCloseButton: boolean = false,
@@ -905,7 +905,7 @@ export abstract class PsStageBase extends YpBaseElement {
     `;
   }
 
-  renderSearchQueries(title: string, searchQueries: IEngineSearchQueries) {
+  renderSearchQueries(title: string, searchQueries: PsSearchQueries) {
     if (!searchQueries) {
       return nothing;
     }
@@ -962,7 +962,7 @@ export abstract class PsStageBase extends YpBaseElement {
     }
   }
 
-  renderSearchResults(title: string, searchResults: IEngineSearchResults) {
+  renderSearchResults(title: string, searchResults: PsSearchResults) {
     if (!searchResults || !searchResults.pages) {
       return nothing;
     }
@@ -993,7 +993,7 @@ export abstract class PsStageBase extends YpBaseElement {
                 <div class="queryType">${type}</div>
                 <div class="card">
                   ${results.map(
-                    (result: IEngineSearchResultItem, index: number) => {
+                    (result: PsSearchResultItem, index: number) => {
                       return html`
                         <div
                           class="searchItem ${this.isUsedSearch(result, index)}"

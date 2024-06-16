@@ -10,7 +10,7 @@ import { promisify } from "util";
 import { writeFile, readFile, existsSync } from "fs";
 import { htmlToText } from "html-to-text";
 import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
@@ -28,7 +28,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
   }
 
   renderScanningPrompt(
-    problemStatement: IEngineProblemStatement,
+    problemStatement: PsProblemStatement,
     text: string,
     subProblemIndex?: number,
     entityIndex?: number
@@ -62,7 +62,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     const promptTokenCount = { totalCount: 500, countPerMessage: [] };
     const totalTokenCount =
       tokenCount + 500 +
-      IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+      PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -84,11 +84,11 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     const analysis = await this.callLLM(
       "web-get-pages",
-      IEngineConstants.getSolutionsPagesAnalysisModel,
+      PsConstants.getSolutionsPagesAnalysisModel,
       messages,
       true,
       true
-    ) as IEngineWebPageAnalysisData;
+    ) as PsWebPageAnalysisData;
 
     console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
     return analysis;
@@ -107,7 +107,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     subProblemIndex: number | undefined,
     url: string,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
@@ -121,7 +121,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     );
 
     try {
-      const textAnalysis = await this.getTextAnalysis(text) as IEngineWebPageAnalysisData;
+      const textAnalysis = await this.getTextAnalysis(text) as PsWebPageAnalysisData;
 
       if (textAnalysis) {
         textAnalysis.url = url;
@@ -144,7 +144,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     url: string,
     browserPage: Page,
     type:
-      | IEngineWebPageTypes
+      | PsWebPageTypes
       | PSEvidenceWebPageTypes
       | PSRootCauseWebPageTypes,
     entityIndex: number | undefined
@@ -174,10 +174,10 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.progressFunction = progressFunction;
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
-      maxTokens: IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-      modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
-      verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
+      temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
+      maxTokens: PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+      modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
+      verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
     });
 
 
@@ -189,10 +189,10 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     for (let i = 0; i < listOfUrls.length; i++) {
       if (this.progressFunction) {

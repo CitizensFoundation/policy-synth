@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
@@ -148,14 +148,14 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 console.log(`PLANNING PROMPT: ${this.getUserPlanPrompt(reviewLog)}`);
                 this.havePrintedDebugPrompt = true;
             }
-            codingPlan = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+            codingPlan = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
                 new SystemMessage(this.planSystemPrompt()),
                 new HumanMessage(this.getUserPlanPrompt(reviewLog)),
             ], false);
             if (codingPlan) {
                 console.log(`Coding plan received: ${codingPlan}`);
                 if (reviewRetries < maxReviewsRetries) {
-                    const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+                    const review = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
                         new SystemMessage(this.reviewSystemPrompt()),
                         new HumanMessage(this.getUserReviewPrompt(codingPlan)),
                     ], false);
@@ -193,13 +193,13 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         if (codingPlan) {
             while (!planReady && planRetries < this.maxRetries) {
                 console.log(`Getting action plan attempt ${planRetries + 1}`);
-                actionPlan = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+                actionPlan = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
                     new SystemMessage(this.getActionPlanSystemPrompt()),
                     new HumanMessage(this.getUserActionPlanPrompt(codingPlan, reviewLog)),
                 ], true);
                 if (actionPlan) {
                     console.log(`Action plan received: ${JSON.stringify(actionPlan, null, 2)}`);
-                    const review = await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+                    const review = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
                         new SystemMessage(this.actionPlanReviewSystemPrompt()),
                         new HumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),
                     ], false);

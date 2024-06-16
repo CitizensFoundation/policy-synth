@@ -1,15 +1,15 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 
 export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
   subProblemIndex = 0;
   entitiesIndex = 0;
-  currentEntity!: IEngineAffectedEntity;
-  searchResultType!: IEngineWebPageTypes;
-  searchResultTarget!: IEngineWebPageTargets;
+  currentEntity!: PsAffectedEntity;
+  searchResultType!: PsWebPageTypes;
+  searchResultTarget!: PsWebPageTargets;
 
   renderProblemDetail() {
     let detail = ``;
@@ -37,12 +37,12 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(
     subProblemIndex: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![subProblemIndex]![itemOneIndex] as IEngineSearchResultItem;
-    const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as IEngineSearchResultItem;
+    const itemOne = this.allItems![subProblemIndex]![itemOneIndex] as PsSearchResultItem;
+    const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as PsSearchResultItem;
 
     let itemOneTitle = itemOne.title;
     let itemOneDescription = itemOne.description;
@@ -83,18 +83,18 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       subProblemIndex,
       "rank-search-results",
-      IEngineConstants.searchResultsRankingsModel,
+      PsConstants.searchResultsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
     );
   }
 
-  async processSubProblems(searchResultType: IEngineWebPageTypes) {
+  async processSubProblems(searchResultType: PsWebPageTypes) {
     for (
       let s = 0;
       s <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       s++
     ) {
       this.logger.info(`Ranking Sub Problem ${s} for ${searchResultType} search results`)
@@ -106,7 +106,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
       await this.performPairwiseRanking(s);
 
       this.memory.subProblems[s].searchResults.pages[searchResultType] =
-          this.getOrderedListOfItems(s,true) as IEngineSearchResultItem[]
+          this.getOrderedListOfItems(s,true) as PsSearchResultItem[]
 
       await this.saveMemory();
 
@@ -117,14 +117,14 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
 
   async processEntities(
     subProblemIndex: number,
-    searchResultType: IEngineWebPageTypes
+    searchResultType: PsWebPageTypes
   ) {
     for (
       let e = 0;
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        IEngineConstants.maxTopEntitiesToSearch
+        PsConstants.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -138,7 +138,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
       this.memory.subProblems[subProblemIndex].entities[
         e
       ].searchResults!.pages[searchResultType] =
-        this.getOrderedListOfItems(subProblemIndex*e, true) as IEngineSearchResultItem[];
+        this.getOrderedListOfItems(subProblemIndex*e, true) as PsSearchResultItem[];
     }
   }
 
@@ -147,10 +147,10 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.searchResultsRankingsModel.temperature,
-      maxTokens: IEngineConstants.searchResultsRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.searchResultsRankingsModel.name,
-      verbose: IEngineConstants.searchResultsRankingsModel.verbose,
+      temperature: PsConstants.searchResultsRankingsModel.temperature,
+      maxTokens: PsConstants.searchResultsRankingsModel.maxOutputTokens,
+      modelName: PsConstants.searchResultsRankingsModel.name,
+      verbose: PsConstants.searchResultsRankingsModel.verbose,
     });
 
     for (const searchResultType of [
@@ -169,7 +169,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
       this.setupRankingPrompts(-1,resultsToRank, resultsToRank.length*10);
       await this.performPairwiseRanking(-1);
 
-      this.memory.problemStatement.searchResults.pages[searchResultType] = this.getOrderedListOfItems(-1,true) as IEngineSearchResultItem[];
+      this.memory.problemStatement.searchResults.pages[searchResultType] = this.getOrderedListOfItems(-1,true) as PsSearchResultItem[];
 
       await this.processSubProblems(searchResultType);
     }

@@ -8,12 +8,12 @@ export declare abstract class BaseVectorStoreClient extends PolicySynthAgentBase
     testQuery(): Promise<{
         data: any;
     }>;
-    postWebPage(webPageAnalysis: IEngineWebPageAnalysisData): Promise<unknown>;
-    updateWebPage(id: string, webPageAnalysis: IEngineWebPageAnalysisData): Promise<unknown>;
+    postWebPage(webPageAnalysis: PsWebPageAnalysisData): Promise<unknown>;
+    updateWebPage(id: string, webPageAnalysis: PsWebPageAnalysisData): Promise<unknown>;
     updateWebSolutions(id: string, webSolutions: string[], quiet?: boolean): Promise<unknown>;
-    getWebPage(id: string): Promise<IEngineWebPageAnalysisData>;
-    getWebPagesForProcessing(groupId: number, subProblemIndex: number | null | undefined, entityIndex: number | null | undefined, searchType: IEngineSearchQueries | undefined, limit?: number, offset?: number, solutionCountLimit?: number | undefined): Promise<IEngineWebPageGraphQlResults>;
-    webPageExist(groupId: number, url: string, searchType: IEngineWebPageTypes, subProblemIndex: number | undefined, entityIndex: number | undefined): Promise<Boolean>;
-    searchWebPages(query: string, groupId: number | undefined, subProblemIndex: number | undefined, searchType: IEngineWebPageTypes | undefined, filterOutEmptySolutions?: boolean): Promise<IEngineWebPageGraphQlResults>;
+    getWebPage(id: string): Promise<PsWebPageAnalysisData>;
+    getWebPagesForProcessing(groupId: number, subProblemIndex: number | null | undefined, entityIndex: number | null | undefined, searchType: PsSearchQueries | undefined, limit?: number, offset?: number, solutionCountLimit?: number | undefined): Promise<PsWebPageGraphQlResults>;
+    webPageExist(groupId: number, url: string, searchType: PsWebPageTypes, subProblemIndex: number | undefined, entityIndex: number | undefined): Promise<Boolean>;
+    searchWebPages(query: string, groupId: number | undefined, subProblemIndex: number | undefined, searchType: PsWebPageTypes | undefined, filterOutEmptySolutions?: boolean): Promise<PsWebPageGraphQlResults>;
 }
 //# sourceMappingURL=baseVectorStoreClient.d.ts.map

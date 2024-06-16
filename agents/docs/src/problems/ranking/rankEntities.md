@@ -12,7 +12,7 @@ This class extends `BasePairwiseRankingsProcessor` to implement a specific ranki
 
 | Name              | Parameters                                    | Return Type                     | Description |
 |-------------------|-----------------------------------------------|---------------------------------|-------------|
-| voteOnPromptPair  | subProblemIndex: number, promptPair: number[] | Promise<IEnginePairWiseVoteResults> | Processes a pair of prompts and uses a language model to determine which entity is more affected. |
+| voteOnPromptPair  | subProblemIndex: number, promptPair: number[] | Promise<PsPairWiseVoteResults> | Processes a pair of prompts and uses a language model to determine which entity is more affected. |
 | process           | -                                             | Promise<void>                   | Processes all sub-problems and ranks entities based on their impact using pairwise comparison. |
 
 ## Example

@@ -2,7 +2,7 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 
 export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
@@ -48,10 +48,10 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     this.logger.info(`Ranking all web evidence for policy ${policy.title}`);
 
     try {
-      for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+      for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
         let offset = 0;
         const limit = 100;
-        const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+        const searchType = PsConstants.simplifyEvidenceType(evidenceType);
 
         while (true) {
           const results =
@@ -93,7 +93,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
 
               let rankedEvidence = await this.callLLM(
                 "rank-web-evidence",
-                IEngineConstants.rankWebEvidenceModel,
+                PsConstants.rankWebEvidenceModel,
                 await this.renderProblemPrompt(
                   subProblemIndex,
                   policy,
@@ -136,15 +136,15 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.rankWebEvidenceModel.temperature,
-      maxTokens: IEngineConstants.rankWebEvidenceModel.maxOutputTokens,
-      modelName: IEngineConstants.rankWebEvidenceModel.name,
-      verbose: IEngineConstants.rankWebEvidenceModel.verbose,
+      temperature: PsConstants.rankWebEvidenceModel.temperature,
+      maxTokens: PsConstants.rankWebEvidenceModel.maxOutputTokens,
+      modelName: PsConstants.rankWebEvidenceModel.name,
+      verbose: PsConstants.rankWebEvidenceModel.verbose,
     });
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];
@@ -164,7 +164,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
               p <
               Math.min(
                 policies.length,
-                IEngineConstants.maxTopPoliciesToProcess
+                PsConstants.maxTopPoliciesToProcess
               );
               p++
             ) {

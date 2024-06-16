@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PolicySynthAgentBase } from "../baseAgent.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 export class PsBaseValidationAgent extends PolicySynthAgentBase {
     name;
@@ -10,10 +10,10 @@ export class PsBaseValidationAgent extends PolicySynthAgentBase {
         this.name = name;
         this.options = options;
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.validationModel.temperature,
-            maxTokens: IEngineConstants.validationModel.maxOutputTokens,
-            modelName: IEngineConstants.validationModel.name,
-            verbose: IEngineConstants.validationModel.verbose,
+            temperature: PsConstants.validationModel.temperature,
+            maxTokens: PsConstants.validationModel.maxOutputTokens,
+            modelName: PsConstants.validationModel.name,
+            verbose: PsConstants.validationModel.verbose,
             streaming: true
         });
         const webSocket = this.options.webSocket;
@@ -50,7 +50,7 @@ export class PsBaseValidationAgent extends PolicySynthAgentBase {
         }
     }
     async runValidationLLM() {
-        const llmResponse = await this.callLLM("validation-agent", IEngineConstants.validationModel, await this.renderPrompt(), true, false, 120, this.options.streamingCallbacks);
+        const llmResponse = await this.callLLM("validation-agent", PsConstants.validationModel, await this.renderPrompt(), true, false, 120, this.options.streamingCallbacks);
         if (!llmResponse) {
             throw new Error("LLM response is undefined");
         }

@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
@@ -86,7 +86,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         ]);
         const totalTokenCount = promptTokenCount.totalCount +
             textTokenCount.totalCount +
-            IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+            PsConstants.getPageAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
     async getRootCauseTextAnalysis(type, text, url) {
@@ -95,8 +95,8 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             this.logger.debug(`Searching ${url}...`);
             let textAnalysis;
-            if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit -
+            if (PsConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+                const maxTokenLengthForChunk = PsConstants.getPageAnalysisModel.tokenLimit -
                     promptTokenCount.totalCount -
                     512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
@@ -208,7 +208,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             console.log(JSON.stringify(messages, null, 2));
             this.hasPrintedPrompt = true;
         }
-        const analysis = (await this.callLLM("web-get-root-causes-pages", IEngineConstants.getPageAnalysisModel, messages, true, true));
+        const analysis = (await this.callLLM("web-get-root-causes-pages", PsConstants.getPageAnalysisModel, messages, true, true));
         return analysis;
     }
     isUrlInSubProblemMemory(url) {
@@ -259,9 +259,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     async processRootCauses(browser) {
         const problemStatement = this.memory.problemStatement;
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         const clearSubProblems = false;
         if (clearSubProblems) {
             this.memory.subProblems = [];
@@ -282,7 +282,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             let urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
             if (urlsToGet) {
                 urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length *
-                    IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
+                    PsConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
                 for (let i = 0; i < urlsToGet.length; i++) {
                     await this.getAndProcessRootCausePage(urlsToGet[i].url, browserPage, searchResultType);
                 }
@@ -299,9 +299,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         await this.processRootCauses(browser);
         await this.saveMemory();
         await browser.close();
@@ -311,10 +311,10 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         this.logger.info("Get Root Cause Web Pages Processor");
         //super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.getPageAnalysisModel.temperature,
-            maxTokens: IEngineConstants.getPageAnalysisModel.maxOutputTokens,
-            modelName: IEngineConstants.getPageAnalysisModel.name,
-            verbose: IEngineConstants.getPageAnalysisModel.verbose,
+            temperature: PsConstants.getPageAnalysisModel.temperature,
+            maxTokens: PsConstants.getPageAnalysisModel.maxOutputTokens,
+            modelName: PsConstants.getPageAnalysisModel.name,
+            verbose: PsConstants.getPageAnalysisModel.verbose,
         });
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);

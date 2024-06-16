@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 
 export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
@@ -10,12 +10,12 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(
     subProblemIndex: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![subProblemIndex]![itemOneIndex] as IEngineSubProblem;
-    const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as IEngineSubProblem;
+    const itemOne = this.allItems![subProblemIndex]![itemOneIndex] as PsSubProblem;
+    const itemTwo = this.allItems![subProblemIndex]![itemTwoIndex] as PsSubProblem;
 
     const messages = [
       new SystemMessage(
@@ -62,7 +62,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       subProblemIndex,
       "rank-sub-problems",
-      IEngineConstants.subProblemsRankingsModel,
+      PsConstants.subProblemsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -75,23 +75,23 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.subProblemsRankingsModel.temperature,
-      maxTokens: IEngineConstants.subProblemsRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.subProblemsRankingsModel.name,
-      verbose: IEngineConstants.subProblemsRankingsModel.verbose,
+      temperature: PsConstants.subProblemsRankingsModel.temperature,
+      maxTokens: PsConstants.subProblemsRankingsModel.maxOutputTokens,
+      modelName: PsConstants.subProblemsRankingsModel.name,
+      verbose: PsConstants.subProblemsRankingsModel.verbose,
     });
 
     let maxPrompts;
 
     if (this.memory.subProblems.length > 100) {
-      maxPrompts = this.memory.subProblems.length*IEngineConstants.subProblemsRankingMinNumberOfMatches;
+      maxPrompts = this.memory.subProblems.length*PsConstants.subProblemsRankingMinNumberOfMatches;
     }
     this.setupRankingPrompts(-1, this.memory.subProblems, maxPrompts);
 
     await this.performPairwiseRanking(-1);
 
     this.logger.debug(`Sub problems before ranking: ${JSON.stringify(this.memory.subProblems)}`);
-    this.memory.subProblems = this.getOrderedListOfItems(-1,true) as IEngineSubProblem[];
+    this.memory.subProblems = this.getOrderedListOfItems(-1,true) as PsSubProblem[];
     this.logger.debug(`Sub problems after ranking: ${JSON.stringify(this.memory.subProblems)}`);
 
     await this.saveMemory();

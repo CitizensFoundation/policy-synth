@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     instructions;
     memory;
@@ -52,15 +52,15 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         The Most Relevant Search Query Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", IEngineConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async rankSearchQueries(queriesToRank, instructions, maxPrompts = 120) {
         this.instructions = instructions;
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-            maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
+            temperature: PsConstants.searchQueryRankingsModel.temperature,
+            maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
             modelName: "gpt-4o",
-            verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+            verbose: PsConstants.searchQueryRankingsModel.verbose,
         });
         this.setupRankingPrompts(-1, queriesToRank, queriesToRank.length * 7, this.progressFunction);
         await this.performPairwiseRanking(-1);

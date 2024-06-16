@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
     static evidenceWebPageTypesArray = [
@@ -132,11 +132,11 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
             if (!policy.evidenceSearchQueries[searchResultType]) {
                 this.logger.info(`Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
                 // create search queries for each type
-                let searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
+                let searchResults = (await this.callLLM("create-evidence-search-queries", PsConstants.createEvidenceSearchQueriesModel, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
                 this.logger.info(`Refine evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-                searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                searchResults = (await this.callLLM("create-evidence-search-queries", PsConstants.createEvidenceSearchQueriesModel, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
                 this.logger.info(`Ranking evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-                searchResults = (await this.callLLM("create-evidence-search-queries", IEngineConstants.createEvidenceSearchQueriesModel, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                searchResults = (await this.callLLM("create-evidence-search-queries", PsConstants.createEvidenceSearchQueriesModel, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
                 this.logger.debug(`Search query type: ${searchResultType} ${JSON.stringify(searchResults, null, 2)}`);
                 policy.evidenceSearchQueries[searchResultType] = searchResults;
             }
@@ -149,12 +149,12 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
         this.logger.info("Create Evidence Search Queries Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.createEvidenceSearchQueriesModel.temperature,
-            maxTokens: IEngineConstants.createEvidenceSearchQueriesModel.maxOutputTokens,
-            modelName: IEngineConstants.createEvidenceSearchQueriesModel.name,
-            verbose: IEngineConstants.createEvidenceSearchQueriesModel.verbose,
+            temperature: PsConstants.createEvidenceSearchQueriesModel.temperature,
+            maxTokens: PsConstants.createEvidenceSearchQueriesModel.maxOutputTokens,
+            modelName: PsConstants.createEvidenceSearchQueriesModel.name,
+            verbose: PsConstants.createEvidenceSearchQueriesModel.verbose,
         });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const subProblem = this.memory.subProblems[subProblemIndex];
             const policies = subProblem.policies?.populations[subProblem.policies.populations.length - 1];

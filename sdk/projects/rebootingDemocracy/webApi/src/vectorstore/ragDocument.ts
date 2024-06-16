@@ -2,7 +2,7 @@ import weaviate from "weaviate-ts-client";
 import { WeaviateClient } from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
 
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -172,7 +172,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .do()
         .then((res) => {
           this.logger.info(`Weaviate: Have got web page ${id}`);
-          const webData = (res as IEngineWebPageGraphQlSingleResult)
+          const webData = (res as PsWebPageGraphQlSingleResult)
             .properties as PsRagDocumentSource;
           resolve(webData);
         })
@@ -194,7 +194,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
         .get()
         .withClassName("RagDocument")
         .withNearText({ concepts: [query] })
-        .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
+        .withLimit(PsConstants.limits.webPageVectorResultsForNewSolutions)
         /*.withWhere({
           operator: "And",
           operands: where,

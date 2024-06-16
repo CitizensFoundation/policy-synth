@@ -16,7 +16,7 @@ This class extends `PsStageBase` to implement the functionality for web research
 | updated               | changedProperties: Map<string \| number \| symbol, unknown> | void        | Extends the base class method to handle updates to the component's properties.               |
 | disconnectedCallback  |                                                 | void        | Extends the base class method to perform cleanup when the component is removed from the DOM.  |
 | render                |                                                 | TemplateResult | Renders the web research stage, including problem statements, search queries, and results.    |
-| renderEntities        | subProblem: IEngineSubProblem                   | TemplateResult | Renders entities related to a given sub-problem.                                              |
+| renderEntities        | subProblem: PsSubProblem                   | TemplateResult | Renders entities related to a given sub-problem.                                              |
 | renderSubProblemsWithAll |                                                 | TemplateResult | Renders all sub-problems along with their related entities, search queries, and results.      |
 
 ## Events

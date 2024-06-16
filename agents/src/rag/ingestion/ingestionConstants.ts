@@ -19,7 +19,7 @@ const gpt4_TPM = 150000 * 3;
 const gpt4_RPM = 10000 * 3;
 
 export class PsIngestionConstants {
-  static ingestionMainModel: IEngineBaseAIModelConstants = {
+  static ingestionMainModel: PsBaseAIModelConstants = {
     name: "gpt-4-turbo",
     temperature: 0.0,
     maxOutputTokens: 4095,
@@ -31,7 +31,7 @@ export class PsIngestionConstants {
     verbose: true
   };
 
-  static ingestionRankingModel: IEngineBaseAIModelConstants = {
+  static ingestionRankingModel: PsBaseAIModelConstants = {
     name: "gpt-4-turbo",
     temperature: 0.0,
     maxOutputTokens: 3,

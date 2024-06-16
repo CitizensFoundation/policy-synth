@@ -1,7 +1,7 @@
 import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
@@ -124,7 +124,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     const totalTokenCount =
       promptTokenCount.totalCount +
       textTokenCount.totalCount +
-      IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+      PsConstants.getPageAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -148,9 +148,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
       let textAnalysis: PSRefinedRootCause[];
 
-      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+      if (PsConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          IEngineConstants.getPageAnalysisModel.tokenLimit -
+          PsConstants.getPageAnalysisModel.tokenLimit -
           promptTokenCount.totalCount -
           512;
 
@@ -298,7 +298,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
 
     const analysis = (await this.callLLM(
       "web-get-root-causes-pages",
-      IEngineConstants.getPageAnalysisModel,
+      PsConstants.getPageAnalysisModel,
       messages,
       true,
       true
@@ -321,7 +321,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     text: string,
     subProblemIndex: undefined = undefined,
     url: string,
-    type: IEngineWebPageTypes | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: undefined = undefined
   ) {
@@ -391,9 +391,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
   async processRootCauses(browser: Browser) {
     const problemStatement = this.memory.problemStatement;
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     const clearSubProblems = false;
 
@@ -426,7 +426,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
           0,
           Math.floor(
             urlsToGet.length *
-              IEngineConstants.maxRootCausePercentOfSearchResultWebPagesToGet
+              PsConstants.maxRootCausePercentOfSearchResultWebPagesToGet
           )
         );
         for (let i = 0; i < urlsToGet.length; i++) {
@@ -455,10 +455,10 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     await this.processRootCauses(browser);
 
@@ -474,10 +474,10 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     //super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.getPageAnalysisModel.temperature,
-      maxTokens: IEngineConstants.getPageAnalysisModel.maxOutputTokens,
-      modelName: IEngineConstants.getPageAnalysisModel.name,
-      verbose: IEngineConstants.getPageAnalysisModel.verbose,
+      temperature: PsConstants.getPageAnalysisModel.temperature,
+      maxTokens: PsConstants.getPageAnalysisModel.maxOutputTokens,
+      modelName: PsConstants.getPageAnalysisModel.name,
+      verbose: PsConstants.getPageAnalysisModel.verbose,
     });
 
     await this.getAllPages();

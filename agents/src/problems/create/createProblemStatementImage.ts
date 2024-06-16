@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { AxiosResponse } from "axios";
 import axios from "axios";
 import AWS from "aws-sdk";
@@ -52,7 +52,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     if (process.env.STABILITY_API_KEY) {
       imagePrompt = (await this.callLLM(
         "create-problem-statement-image",
-        IEngineConstants.createSolutionImagesModel,
+        PsConstants.createSolutionImagesModel,
         await this.renderCreatePrompt(),
         false
       )) as string;
@@ -108,10 +108,10 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     this.logger.info("Create Problem Statement Image Processor");
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createSolutionImagesModel.temperature,
-      maxTokens: IEngineConstants.createSolutionImagesModel.maxOutputTokens,
-      modelName: IEngineConstants.createSolutionImagesModel.name,
-      verbose: IEngineConstants.createSolutionImagesModel.verbose,
+      temperature: PsConstants.createSolutionImagesModel.temperature,
+      maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
+      modelName: PsConstants.createSolutionImagesModel.name,
+      verbose: PsConstants.createSolutionImagesModel.verbose,
     });
 
     try {

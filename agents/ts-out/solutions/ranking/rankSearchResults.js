@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
     subProblemIndex = 0;
@@ -65,11 +65,11 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
 
          The most relevant search result is: `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-search-results", IEngineConstants.searchResultsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, "rank-search-results", PsConstants.searchResultsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblems(searchResultType) {
         for (let s = 0; s <
-            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); s++) {
+            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); s++) {
             this.logger.info(`Ranking Sub Problem ${s} for ${searchResultType} search results`);
             let resultsToRank = this.memory.subProblems[s].searchResults.pages[searchResultType];
             this.subProblemIndex = s;
@@ -85,7 +85,7 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
     }
     async processEntities(subProblemIndex, searchResultType) {
         for (let e = 0; e <
-            Math.min(this.memory.subProblems[subProblemIndex].entities.length, IEngineConstants.maxTopEntitiesToSearch); e++) {
+            Math.min(this.memory.subProblems[subProblemIndex].entities.length, PsConstants.maxTopEntitiesToSearch); e++) {
             this.logger.info(`Ranking Entity ${subProblemIndex}-${e} for ${searchResultType} search results`);
             this.currentEntity = this.memory.subProblems[subProblemIndex].entities[e];
             let resultsToRank = this.memory.subProblems[subProblemIndex].entities[e].searchResults.pages[searchResultType];
@@ -99,10 +99,10 @@ export class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
         this.logger.info("Rank Search Results Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.searchResultsRankingsModel.temperature,
-            maxTokens: IEngineConstants.searchResultsRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.searchResultsRankingsModel.name,
-            verbose: IEngineConstants.searchResultsRankingsModel.verbose,
+            temperature: PsConstants.searchResultsRankingsModel.temperature,
+            maxTokens: PsConstants.searchResultsRankingsModel.maxOutputTokens,
+            modelName: PsConstants.searchResultsRankingsModel.name,
+            verbose: PsConstants.searchResultsRankingsModel.verbose,
         });
         for (const searchResultType of [
             "general",

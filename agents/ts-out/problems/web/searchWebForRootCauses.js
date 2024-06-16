@@ -1,4 +1,4 @@
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
@@ -24,10 +24,10 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
                 this.searchCounter = 300;
             }
             if (FORCE_RESEARCH || !problemStatement.rootCauseSearchResults[searchResultType]) {
-                let queriesToSearch = problemStatement.rootCauseSearchQueries[searchResultType].slice(0, IEngineConstants.maxTopRootCauseQueriesToSearchPerType);
+                let queriesToSearch = problemStatement.rootCauseSearchQueries[searchResultType].slice(0, PsConstants.maxTopRootCauseQueriesToSearchPerType);
                 this.logger.debug(`Searching for root cause type ${searchResultType} with queries ${JSON.stringify(queriesToSearch, null, 2)}`);
                 const results = await this.getQueryResults(queriesToSearch, `rootCause_${searchResultType}`);
-                this.searchCounter += IEngineConstants.maxTopEvidenceQueriesToSearchPerType;
+                this.searchCounter += PsConstants.maxTopEvidenceQueriesToSearchPerType;
                 problemStatement.rootCauseSearchResults[searchResultType] = results.searchResults;
                 this.logger.info(`Have saved search results root cause type ${searchResultType}`);
                 await this.saveMemory();

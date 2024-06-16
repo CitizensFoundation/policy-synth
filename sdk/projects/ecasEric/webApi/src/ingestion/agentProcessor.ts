@@ -6,7 +6,7 @@ import { HTTPResponse, Page, Browser } from "puppeteer";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { EcasYayChunkAnalyserAgent } from "./chunkAnalyzer.js";
 

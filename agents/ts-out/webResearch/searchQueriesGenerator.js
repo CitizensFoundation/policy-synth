@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PolicySynthAgentBase } from "../baseAgent.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 export class SearchQueriesGenerator extends PolicySynthAgentBase {
     systemPrompt;
     userPrompt;
@@ -17,10 +17,10 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
     `;
         this.userPrompt = overRideUserPrompt || `Research Question: ${question}`;
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.createSearchQueriesModel.temperature,
-            maxTokens: IEngineConstants.createSearchQueriesModel.maxOutputTokens,
-            modelName: IEngineConstants.createSearchQueriesModel.name,
-            verbose: IEngineConstants.createSearchQueriesModel.verbose,
+            temperature: PsConstants.createSearchQueriesModel.temperature,
+            maxTokens: PsConstants.createSearchQueriesModel.maxOutputTokens,
+            modelName: PsConstants.createSearchQueriesModel.name,
+            verbose: PsConstants.createSearchQueriesModel.verbose,
         });
     }
     async renderMessages() {
@@ -30,7 +30,7 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
         ];
     }
     async generateSearchQueries() {
-        return await this.callLLM("create-search-queries", IEngineConstants.createSearchQueriesModel, await this.renderMessages());
+        return await this.callLLM("create-search-queries", PsConstants.createSearchQueriesModel, await this.renderMessages());
     }
 }
 //# sourceMappingURL=searchQueriesGenerator.js.map

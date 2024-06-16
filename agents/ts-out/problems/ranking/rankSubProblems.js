@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
     subProblemIndex = 0;
@@ -44,20 +44,20 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
         The Most Relevant Sub-Problem Is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-sub-problems", IEngineConstants.subProblemsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, "rank-sub-problems", PsConstants.subProblemsRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
         this.logger.info("Rank Sub Problems Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.subProblemsRankingsModel.temperature,
-            maxTokens: IEngineConstants.subProblemsRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.subProblemsRankingsModel.name,
-            verbose: IEngineConstants.subProblemsRankingsModel.verbose,
+            temperature: PsConstants.subProblemsRankingsModel.temperature,
+            maxTokens: PsConstants.subProblemsRankingsModel.maxOutputTokens,
+            modelName: PsConstants.subProblemsRankingsModel.name,
+            verbose: PsConstants.subProblemsRankingsModel.verbose,
         });
         let maxPrompts;
         if (this.memory.subProblems.length > 100) {
-            maxPrompts = this.memory.subProblems.length * IEngineConstants.subProblemsRankingMinNumberOfMatches;
+            maxPrompts = this.memory.subProblems.length * PsConstants.subProblemsRankingMinNumberOfMatches;
         }
         this.setupRankingPrompts(-1, this.memory.subProblems, maxPrompts);
         await this.performPairwiseRanking(-1);

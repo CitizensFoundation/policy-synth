@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
 import { PsEngineerBaseProgrammingAgent } from "../programming/baseAgent.js";
@@ -59,7 +59,7 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
       if (content && content.trim().length>70) {
         const analyzisResults = (await this.callLLM(
           "engineering-agent",
-          IEngineConstants.engineerModel,
+          PsConstants.engineerModel,
           [
             new SystemMessage(this.filterSystemPrompt),
             new HumanMessage(this.filterUserPrompt(content)),

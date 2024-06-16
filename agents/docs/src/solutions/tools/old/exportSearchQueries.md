@@ -11,7 +11,7 @@ No properties are directly defined in this module.
 | Name                 | Parameters                                      | Return Type | Description                                                                 |
 |----------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
 | formatElo            | elo: number \| undefined                        | number      | Formats the ELO rating by flooring it. If undefined, returns -1.            |
-| formatSearchQueries  | searchQueries: IEngineSearchQueries \| undefined | string      | Formats the search queries into an HTML string. If undefined, returns an empty string. |
+| formatSearchQueries  | searchQueries: PsSearchQueries \| undefined | string      | Formats the search queries into an HTML string. If undefined, returns an empty string. |
 
 ## Example
 

@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 import { RankRootCausesSearchQueriesProcessor } from "./rankRootCausesSearchQueries.js";
 
@@ -9,12 +9,12 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
   async voteOnPromptPair(
     index: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![itemOneIndex] as IEngineSearchResultItem;
-    const itemTwo = this.allItems![index]![itemTwoIndex] as IEngineSearchResultItem;
+    const itemOne = this.allItems![index]![itemOneIndex] as PsSearchResultItem;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as PsSearchResultItem;
 
     const messages = [
       new SystemMessage(
@@ -54,7 +54,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
     return await this.getResultsFromLLM(
       index,
       "rank-search-results",
-      IEngineConstants.searchResultsRankingsModel,
+      PsConstants.searchResultsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -66,10 +66,10 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
     //super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.searchResultsRankingsModel.temperature,
-      maxTokens: IEngineConstants.searchResultsRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.searchResultsRankingsModel.name,
-      verbose: IEngineConstants.searchResultsRankingsModel.verbose,
+      temperature: PsConstants.searchResultsRankingsModel.temperature,
+      maxTokens: PsConstants.searchResultsRankingsModel.maxOutputTokens,
+      modelName: PsConstants.searchResultsRankingsModel.name,
+      verbose: PsConstants.searchResultsRankingsModel.verbose,
     });
 
     for (const searchQueryType of this.rootCauseTypes) {
@@ -99,7 +99,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
 
       this.memory.problemStatement.rootCauseSearchResults![
         searchQueryType as PSRootCauseWebPageTypes
-      ] = this.getOrderedListOfItems(index) as IEngineSearchResultItem[];
+      ] = this.getOrderedListOfItems(index) as PsSearchResultItem[];
 
       this.logger.info(
         `Ranking results after: ${JSON.stringify(

@@ -4,7 +4,7 @@ import csv from 'csv-parser';
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 interface Item {
   title: string;
@@ -260,7 +260,7 @@ export class PsSubProblemsReportGenerator extends BaseProblemSolvingAgent {
       this.logger.info(`Summarizing ${items.length} items`);
       const summary = await this.callLLM(
         "web-search-root-causes",
-        IEngineConstants.getRefinedRootCausesModel,
+        PsConstants.getRefinedRootCausesModel,
         await this.renderSummaryPrompt(items, previousSummary),
         false
       );

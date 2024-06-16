@@ -2,7 +2,7 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 const DISABLE_LLM_FOR_DEBUG = false;
@@ -46,7 +46,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
   }
   async renderCreatePrompt(
     subProblemIndex: number,
-    solutionsForInspiration: IEngineSolution[],
+    solutionsForInspiration: PsSolution[],
     alreadyCreatedSolutions: string | undefined = undefined
   ) {
     const messages = [
@@ -83,10 +83,10 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
 
   async createSolutions(
     subProblemIndex: number,
-    solutionsForInspiration: IEngineSolution[],
+    solutionsForInspiration: PsSolution[],
     alreadyCreatedSolutions: string | undefined = undefined,
     stageName: PsMemoryStageTypes = "create-seed-solutions"
-  ): Promise<IEngineSolution[]> {
+  ): Promise<PsSolution[]> {
     if (DISABLE_LLM_FOR_DEBUG) {
       this.logger.info("DISABLE_LLM_FOR_DEBUG is true, skipping LLM call");
       await this.renderCreatePrompt(
@@ -99,7 +99,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
       this.logger.info(`Calling LLM for sub problem ${subProblemIndex}`);
       let results = await this.callLLM(
         stageName,
-        IEngineConstants.createSolutionsModel,
+        PsConstants.createSolutionsModel,
         await this.renderCreatePrompt(
           subProblemIndex,
           solutionsForInspiration,
@@ -124,7 +124,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
   getRandomSolutions(
     subProblemIndex: number,
     alreadyCreatedSolutions: string | undefined
-  ): IEngineSolution[] {
+  ): PsSolution[] {
     this.logger.info(
       `Getting random solutions for sub problem ${subProblemIndex}`
     );
@@ -140,13 +140,13 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     );
 
     const getFilteredSolutions = (
-      solutions: IEngineSolution[],
+      solutions: PsSolution[],
       minEloScore: number
-    ): IEngineSolution[] => {
+    ): PsSolution[] => {
       return solutions.filter((solution) => solution.eloRating! > minEloScore);
     };
 
-    let selectedSolutions: IEngineSolution[];
+    let selectedSolutions: PsSolution[];
 
     const randomValue = Math.random(); // Value between 0 and 1
 
@@ -232,12 +232,12 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       subProblemIndex++
     ) {
       this.currentSubProblemIndex = subProblemIndex;
       this.logger.info(`Creating solutions for sub problem ${subProblemIndex}`);
-      let solutions: IEngineSolution[] = [];
+      let solutions: PsSolution[] = [];
 
       // Create 60 solutions 4*15
       const solutionBatchCount = 15;
@@ -308,9 +308,9 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
 
     this.chat = new ChatOpenAI({
       temperature: 0.25,
-      maxTokens: IEngineConstants.createSolutionsModel.maxOutputTokens,
-      modelName: IEngineConstants.createSolutionsModel.name,
-      verbose: IEngineConstants.createSolutionsModel.verbose,
+      maxTokens: PsConstants.createSolutionsModel.maxOutputTokens,
+      modelName: PsConstants.createSolutionsModel.name,
+      verbose: PsConstants.createSolutionsModel.verbose,
     });
 
     try {

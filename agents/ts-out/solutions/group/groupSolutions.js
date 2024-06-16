@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
     async renderGroupPrompt(solutionsToGroup) {
         const messages = [
@@ -31,7 +31,7 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
             description: solution.description
         }));
         this.logger.debug(`Solution Components going into LLM ${solutionsToGroup.length}`);
-        const groupedIndexes = await this.callLLM("group-solutions", IEngineConstants.groupSolutionsModel, await this.renderGroupPrompt(solutionsToGroup));
+        const groupedIndexes = await this.callLLM("group-solutions", PsConstants.groupSolutionsModel, await this.renderGroupPrompt(solutionsToGroup));
         this.logger.debug(`Solution Components coming out of LLM ${JSON.stringify(groupedIndexes, null, 2)}`);
         let groupIndex = 0;
         for (const group of groupedIndexes) {
@@ -71,7 +71,7 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
         this.logger.info(`Number of solutions not in any group: ${ungroupedSolutionsCount}`);
     }
     async groupSolutions() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const solutions = this.memory.subProblems[subProblemIndex].solutions.populations[this.lastPopulationIndex(subProblemIndex)];
             solutions.forEach((solution) => {
@@ -88,10 +88,10 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Group Solution Components Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.groupSolutionsModel.temperature,
-            maxTokens: IEngineConstants.groupSolutionsModel.maxOutputTokens,
-            modelName: IEngineConstants.groupSolutionsModel.name,
-            verbose: IEngineConstants.groupSolutionsModel.verbose,
+            temperature: PsConstants.groupSolutionsModel.temperature,
+            maxTokens: PsConstants.groupSolutionsModel.maxOutputTokens,
+            modelName: PsConstants.groupSolutionsModel.name,
+            verbose: PsConstants.groupSolutionsModel.verbose,
         });
         try {
             await this.groupSolutions();

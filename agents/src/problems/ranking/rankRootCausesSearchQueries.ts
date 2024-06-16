@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 
 export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
@@ -22,7 +22,7 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
   async voteOnPromptPair(
     index: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
@@ -63,7 +63,7 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
     return await this.getResultsFromLLM(
       index,
       "rank-search-queries",
-      IEngineConstants.searchQueryRankingsModel,
+      PsConstants.searchQueryRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -75,10 +75,10 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-      maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.searchQueryRankingsModel.name,
-      verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+      temperature: PsConstants.searchQueryRankingsModel.temperature,
+      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
+      modelName: PsConstants.searchQueryRankingsModel.name,
+      verbose: PsConstants.searchQueryRankingsModel.verbose,
     });
 
     for (const searchQueryType of this.rootCauseTypes) {

@@ -13,7 +13,7 @@ This class extends `BasePairwiseRankingsProcessor` to rank document chunks based
 
 | Name               | Parameters                                                                 | Return Type                    | Description                                                                 |
 |--------------------|----------------------------------------------------------------------------|--------------------------------|-----------------------------------------------------------------------------|
-| voteOnPromptPair   | index: number, promptPair: number[]                                        | Promise<IEnginePairWiseVoteResults> | Processes a pair of prompts for ranking based on the set rules and summaries. |
+| voteOnPromptPair   | index: number, promptPair: number[]                                        | Promise<PsPairWiseVoteResults> | Processes a pair of prompts for ranking based on the set rules and summaries. |
 | rankDocumentChunks | chunksToRank: PsRagChunk[], rankingRules: string, documentSummary: string, eloRatingKey: string | Promise<PsRagChunk[]>         | Ranks a list of document chunks based on the provided rules and summaries. |
 
 ## Example

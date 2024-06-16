@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 import fs from "fs";
 import path from "path";
@@ -85,7 +85,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
             return files;
         };
         const allDocumentationFiles = getAllDocumentationFiles(this.memory.workspaceFolder);
-        const analyzisResults = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [
+        const analyzisResults = (await this.callLLM("engineering-agent", PsConstants.engineerModel, [
             new SystemMessage(this.analyzeSystemPrompt),
             new HumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
         ], true));

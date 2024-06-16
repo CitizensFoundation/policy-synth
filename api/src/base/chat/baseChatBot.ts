@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
@@ -283,8 +283,8 @@ export class PsBaseChatBot {
         tokensOutCost: 0,
         tokensIn: 0,
         tokensOut: 0,
-      } as IEngineInnovationStagesData,
-    } as Record<PSChatBotMemoryStageTypes, IEngineInnovationStagesData>;
+      } as PsInnovationStagesData,
+    } as Record<PSChatBotMemoryStageTypes, PsInnovationStagesData>;
   }
 
   getEmptyMemory() {
@@ -376,12 +376,12 @@ export class PsBaseChatBot {
   getTokenCosts(estimateTokens: number, type: "in" | "out") {
     if (type == "in") {
       return (
-        IEngineConstants.analyseExternalSolutionsModel.inTokenCostUSD *
+        PsConstants.analyseExternalSolutionsModel.inTokenCostUSD *
         estimateTokens
       );
     } else {
       return (
-        IEngineConstants.analyseExternalSolutionsModel.outTokenCostUSD *
+        PsConstants.analyseExternalSolutionsModel.outTokenCostUSD *
         estimateTokens
       );
     }

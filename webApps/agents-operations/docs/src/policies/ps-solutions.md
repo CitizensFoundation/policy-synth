@@ -41,11 +41,11 @@ This class extends `PsStageBase` and represents the solutions component in the a
 | toggleDropdownVisibility    |                             | Promise<void> | Toggles the visibility of the dropdown for selecting generations.                             |
 | resetDropdown               |                             | void        | Resets the dropdown to its initial state.                                                     |
 | camelCaseToRegular          | text: string                | string      | Converts a camelCase string to regular spacing and capitalizes the first letter.              |
-| renderRatings               | solution: IEngineSolution   | TemplateResult | Renders the ratings section for a solution.                                                   |
-| renderSolutionNavigationButtons | solutionIndex: number, solutions: IEngineSolution[] | TemplateResult | Renders navigation buttons for moving between solutions.                                      |
+| renderRatings               | solution: PsSolution   | TemplateResult | Renders the ratings section for a solution.                                                   |
+| renderSolutionNavigationButtons | solutionIndex: number, solutions: PsSolution[] | TemplateResult | Renders navigation buttons for moving between solutions.                                      |
 | getSolutionImgHeight        |                             | number      | Returns the height for solution images based on the screen width.                             |
 | getSolutionImgWidth         |                             | number      | Returns the width for solution images based on the screen width.                              |
-| renderSolutionImage         | solution: IEngineSolution   | TemplateResult | Renders the image for a solution.                                                             |
+| renderSolutionImage         | solution: PsSolution   | TemplateResult | Renders the image for a solution.                                                             |
 | renderSolutionScreen        | solutionIndex: number       | TemplateResult | Renders the detailed view for a specific solution.                                            |
 
 ## Events

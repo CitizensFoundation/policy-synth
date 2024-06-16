@@ -1,12 +1,12 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
   async renderSelectPrompt(
     problemStatement: string,
-    subProblemsToConsider: IEngineSubProblem[]
+    subProblemsToConsider: PsSubProblem[]
   ): Promise<HumanMessage[]> {
     const messages: HumanMessage[] = [
       new SystemMessage(
@@ -39,7 +39,7 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
     return messages;
   }
 
-  async reduceSubProblems(subProblemsToConsider: IEngineSubProblem[]) {
+  async reduceSubProblems(subProblemsToConsider: PsSubProblem[]) {
     subProblemsToConsider.forEach((sp) => {
       delete (sp as any).solutions;
       delete (sp as any).entities;
@@ -50,12 +50,12 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
     });
     const reducedSubProblems = (await this.callLLM(
       "reduce-sub-problems",
-      IEngineConstants.reduceSubProblemsModel,
+      PsConstants.reduceSubProblemsModel,
       await this.renderSelectPrompt(
         this.memory.problemStatement.description,
         subProblemsToConsider
       )
-    )) as IEngineSubProblem[];
+    )) as PsSubProblem[];
 
     // Go through all the reducedSubProblems and add the eloRating at 0
     reducedSubProblems.forEach((sp) => {
@@ -89,10 +89,10 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.reduceSubProblemsModel.temperature,
-      maxTokens: IEngineConstants.reduceSubProblemsModel.maxOutputTokens,
-      modelName: IEngineConstants.reduceSubProblemsModel.name,
-      verbose: IEngineConstants.reduceSubProblemsModel.verbose,
+      temperature: PsConstants.reduceSubProblemsModel.temperature,
+      maxTokens: PsConstants.reduceSubProblemsModel.maxOutputTokens,
+      modelName: PsConstants.reduceSubProblemsModel.name,
+      verbose: PsConstants.reduceSubProblemsModel.verbose,
     });
 
     const subProblemsToConsider = this.memory.subProblems.filter(

@@ -45,7 +45,7 @@ This class represents a base chatbot that integrates with OpenAI's GPT models an
 | startBroadcastingLiveCosts    |                                       | void                                            | Starts broadcasting live costs.                                             |
 | broadCastLiveCosts            |                                       | void                                            | Broadcasts live costs to the client.                                        |
 | stopBroadcastingLiveCosts     |                                       | void                                            | Stops broadcasting live costs.                                              |
-| emptyChatBotStagesData        |                                       | Record<PSChatBotMemoryStageTypes, IEngineInnovationStagesData> | Gets the empty chatbot stages data.                                         |
+| emptyChatBotStagesData        |                                       | Record<PSChatBotMemoryStageTypes, PsInnovationStagesData> | Gets the empty chatbot stages data.                                         |
 | getEmptyMemory                |                                       | PsChatBotMemoryData                             | Gets an empty chatbot memory object.                                        |
 | sendToClient                  | sender: string, message: string, type: string | void                | Sends a message to the client.                                              |
 | streamWebSocketResponses      | stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk> | Promise<void>         | Streams WebSocket responses from the OpenAI chat completions.               |

@@ -35,21 +35,21 @@ PsStageBase is an abstract class that extends YpBaseElement to provide functiona
 | toggleDisplayState          | title: string                        | Promise<void> | Toggles the display state of a UI component based on its title.             |
 | toggleScores                |                                      | void        | Toggles the visibility of ELO ratings.                                      |
 | fixImageUrlIfNeeded         | url: string                          | string      | Fixes the image URL if needed to ensure it uses HTTPS.                      |
-| isUsedSearch                | result: IEngineSearchResultItem, index: number | string | Determines if a search result is used based on its index.                   |
+| isUsedSearch                | result: PsSearchResultItem, index: number | string | Determines if a search result is used based on its index.                   |
 | closeSubProblem             | event: CustomEvent                   | void        | Closes the sub-problem screen and resets the activeSubProblemIndex.         |
 | setSubProblemColor          | index: number                        | void        | Sets the theme color based on the sub-problem index.                        |
 | setSubProblem               | index: number                        | void        | Sets the active sub-problem index and updates the routes.                   |
 | toggleDarkMode              |                                      | void        | Toggles the dark mode theme.                                                |
 | renderThemeToggle           |                                      | TemplateResult | Renders the theme toggle button.                                            |
 | renderProblemStatement      | title: string \| undefined = undefined | TemplateResult | Renders the problem statement section.                                      |
-| renderSubProblemList        | subProblems: IEngineSubProblem[], title = this.t('Sub Problems') | TemplateResult | Renders the list of sub-problems.                                           |
+| renderSubProblemList        | subProblems: PsSubProblem[], title = this.t('Sub Problems') | TemplateResult | Renders the list of sub-problems.                                           |
 | getImgHeight                | renderCloseButton: boolean           | number      | Gets the image height based on the renderCloseButton flag.                  |
 | getImgWidth                 | renderCloseButton: boolean           | number      | Gets the image width based on the renderCloseButton flag.                   |
-| renderSubProblemImageUrl    | renderCloseButton: boolean, subProblem: IEngineSubProblem | TemplateResult | Renders the image URL for a sub-problem.                                    |
-| renderSubProblem            | subProblem: IEngineSubProblem, isLessProminent: boolean, index: number, renderCloseButton: boolean = false, renderMoreInfo = false, hideAllButtons = false | TemplateResult | Renders a sub-problem.                                                      |
-| renderSearchQueries         | title: string, searchQueries: IEngineSearchQueries | TemplateResult | Renders the search queries section.                                         |
+| renderSubProblemImageUrl    | renderCloseButton: boolean, subProblem: PsSubProblem | TemplateResult | Renders the image URL for a sub-problem.                                    |
+| renderSubProblem            | subProblem: PsSubProblem, isLessProminent: boolean, index: number, renderCloseButton: boolean = false, renderMoreInfo = false, hideAllButtons = false | TemplateResult | Renders a sub-problem.                                                      |
+| renderSearchQueries         | title: string, searchQueries: PsSearchQueries | TemplateResult | Renders the search queries section.                                         |
 | getUrlInRightSize           | url: string                          | string      | Adjusts the URL to fit within the UI constraints.                           |
-| renderSearchResults         | title: string, searchResults: IEngineSearchResults | TemplateResult | Renders the search results section.                                         |
+| renderSearchResults         | title: string, searchResults: PsSearchResults | TemplateResult | Renders the search results section.                                         |
 
 ## Events
 

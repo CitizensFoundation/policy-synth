@@ -15,7 +15,7 @@ import '@material/web/textfield/outlined-text-field.js'; // import at the beginn
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js'; // get reference to the class
 
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
-import { IEngineConstants } from '../constants.js';
+import { PsConstants } from '../constants.js';
 
 import './ps-family-tree.js';
 import { YpFormattingHelpers } from '@yrpri/webapp/common/YpFormattingHelpers.js';
@@ -112,7 +112,7 @@ export class PsSolutions extends PsStageBase {
       } else if (
         this.activeSolutionIndex == null &&
         this.activeSubProblemIndex !== null &&
-        this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
+        this.activeSubProblemIndex < PsConstants.maxSubProblems - 1
       ) {
         this.activeSubProblemIndex += 1;
         window.psAppGlobals.activity('Sub problem - swipe right');
@@ -139,7 +139,7 @@ export class PsSolutions extends PsStageBase {
   async loadMiddleData() {
     console.log(`loadMiddleData`)
     try {
-      for (let i = 0; i < IEngineConstants.maxSubProblems; i++) {
+      for (let i = 0; i < PsConstants.maxSubProblems; i++) {
         const middleData = await window.psServerApi.getMiddleSolutions(this.memory.groupId, i);
 
         if (middleData && Array.isArray(middleData)) {
@@ -620,7 +620,7 @@ export class PsSolutions extends PsStageBase {
       let solutions =
         subProblem.solutions.populations[this.activePopulationIndex];
 
-      let firstInGroup: Record<number, IEngineSolution> = {};
+      let firstInGroup: Record<number, PsSolution> = {};
 
       if (solutions) {
         solutions.forEach(solution => {
@@ -701,7 +701,7 @@ export class PsSolutions extends PsStageBase {
     }
   }
 
-  renderSolutionItem(solution: IEngineSolution, index: number) {
+  renderSolutionItem(solution: PsSolution, index: number) {
     return html`
       <div
         class="solutionItem layout vertical center-center"
@@ -773,7 +773,7 @@ export class PsSolutions extends PsStageBase {
     `;
   }
 
-  renderSubProblemScreen(subProblem: IEngineSubProblem) {
+  renderSubProblemScreen(subProblem: PsSubProblem) {
     return html`
       <div class="topContainer layout vertical self-start">
         <div class="layout horizontal center-center">
@@ -794,15 +794,15 @@ export class PsSolutions extends PsStageBase {
     `;
   }
 
-  renderChipSet(subProblem: IEngineSubProblem) {
+  renderChipSet(subProblem: PsSubProblem) {
     if (!subProblem.solutions) {
       return nothing;
     }
 
     if (subProblem.solutions.populations) {
       let firstItems,
-        lastItems: IEngineSolution[][],
-        middleItems: IEngineSolution[][];
+        lastItems: PsSolution[][],
+        middleItems: PsSolution[][];
 
       if (!this.wide) {
         firstItems = subProblem.solutions.populations.slice(0, 1);
@@ -885,7 +885,7 @@ export class PsSolutions extends PsStageBase {
     }
   }
 
-  renderFilterChips(items: IEngineSolution[][], startIndex: number) {
+  renderFilterChips(items: PsSolution[][], startIndex: number) {
     return items.map(
       (population, index) =>
         html`<md-filter-chip
@@ -941,7 +941,7 @@ export class PsSolutions extends PsStageBase {
     }
   }
 
-  renderDropdown(middleItems: IEngineSolution[][], startIndex: number) {
+  renderDropdown(middleItems: PsSolution[][], startIndex: number) {
     if (this.isLoadingMiddle) {
       return html`<md-circular-progress indeterminate></md-circular-progress>`;
     } else if (middleItems.length > 0 && !this.isDropdownVisible) {
@@ -978,7 +978,7 @@ export class PsSolutions extends PsStageBase {
     return result.charAt(0).toUpperCase() + result.slice(1);
   }
 
-  renderRatings(solution: IEngineSolution) {
+  renderRatings(solution: PsSolution) {
     return html`
       <div class="ratings">
         <div class="ratingsHeader eloRatings layout horizontal center-center">
@@ -1012,7 +1012,7 @@ export class PsSolutions extends PsStageBase {
 
   renderSolutionNavigationButtons(
     solutionIndex: number,
-    solutions: IEngineSolution[]
+    solutions: PsSolution[]
   ) {
     return html`
       <div class="layout horizontal center-center">
@@ -1072,7 +1072,7 @@ export class PsSolutions extends PsStageBase {
     }
   }
 
-  renderSolutionImage(solution: IEngineSolution) {
+  renderSolutionImage(solution: PsSolution) {
     return html`
       <div class="solutionImageContainer">
         <img
@@ -1136,14 +1136,14 @@ export class PsSolutions extends PsStageBase {
                   <div class="solutionAttributes layout horizontal wrap">
                     <div class="pros flexFactor layout vertical center-center">
                       <div class="prosConsHeader">${this.t('Pros')}</div>
-                      ${(solution.pros as IEngineProCon[])?.map(
+                      ${(solution.pros as PsProCon[])?.map(
                         pro =>
                           html`<div class="proCon">${pro.description}</div>`
                       )}
                     </div>
                     <div class="cons flexFactor layout vertical center-center">
                       <div class="prosConsHeader">${this.t('Cons')}</div>
-                      ${(solution.cons as IEngineProCon[])?.map(
+                      ${(solution.cons as PsProCon[])?.map(
                         con =>
                           html`<div class="proCon">${con.description}</div>`
                       )}

@@ -10,7 +10,7 @@ No public properties are documented.
 
 | Name   | Parameters        | Return Type                        | Description |
 |--------|-------------------|------------------------------------|-------------|
-| search | query: string     | Promise<IEngineSearchResultItem[]> | Performs a search using the Google Custom Search API and processes the results into a structured format. |
+| search | query: string     | Promise<PsSearchResultItem[]> | Performs a search using the Google Custom Search API and processes the results into a structured format. |
 
 ## Example
 

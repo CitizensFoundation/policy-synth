@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import metascraperFactory from "metascraper";
 import metascraperAuthor from "metascraper-author";
 import metascraperDate from "metascraper-date";
@@ -73,8 +73,8 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
                     pdfBuffer = gunzipSync(cachedPdf);
                 }
                 else {
-                    const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
-                        Math.random() * IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                    const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
+                        Math.random() * PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
                     this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
                     await new Promise((r) => setTimeout(r, sleepingForMs));
                     const axiosResponse = await axios.get(url, {
@@ -116,8 +116,8 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
                 htmlText = gunzipSync(cachedData).toString();
             }
             else {
-                const sleepingForMs = IEngineConstants.minSleepBeforeBrowserRequest +
-                    Math.random() * IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
+                    Math.random() * PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
                 this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
                 await new Promise((r) => setTimeout(r, sleepingForMs));
                 const response = await browserPage.goto(url, {
@@ -158,8 +158,8 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
     async refineWebRootCauses(page) {
         const limit = 10;
         try {
-            for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
-                const searchType = IEngineConstants.simplifyEvidenceType(rootCauseType);
+            for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
+                const searchType = PsConstants.simplifyEvidenceType(rootCauseType);
                 const results = await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(this.memory.groupId, searchType, limit);
                 this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
                 if (results.data.Get["RootCauseWebPage"].length === 0) {
@@ -185,9 +185,9 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
     async processSubProblems(browser) {
         this.logger.info("Refining root causes");
         const newPage = await browser.newPage();
-        newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+        newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await newPage.setUserAgent(PsConstants.currentUserAgent);
         try {
             await this.refineWebRootCauses(newPage);
             this.logger.debug("Finished refining root causes");
@@ -201,9 +201,9 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         await this.processSubProblems(browser);
         await this.saveMemory();
         await browser.close();

@@ -12,7 +12,7 @@ This class provides functionality to perform search queries using the Bing Searc
 
 | Name   | Parameters        | Return Type                         | Description |
 |--------|-------------------|-------------------------------------|-------------|
-| search | query: string     | Promise<IEngineSearchResultItem[]> | Performs a search using the Bing Search API and caches the results in Redis. Handles retries and logs detailed information about the search process and results. |
+| search | query: string     | Promise<PsSearchResultItem[]> | Performs a search using the Bing Search API and caches the results in Redis. Handles retries and logs detailed information about the search process and results. |
 
 ## Example
 

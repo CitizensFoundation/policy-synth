@@ -1,7 +1,7 @@
 import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
@@ -144,7 +144,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     const totalTokenCount =
       promptTokenCount.totalCount +
       textTokenCount.totalCount +
-      IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+      PsConstants.getPageAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -171,9 +171,9 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
       let textAnalysis: PSEvidenceRawWebPageData;
 
-      if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+      if (PsConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          IEngineConstants.getPageAnalysisModel.tokenLimit -
+          PsConstants.getPageAnalysisModel.tokenLimit -
           promptTokenCount.totalCount -
           512;
 
@@ -257,7 +257,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
     const analysis = (await this.callLLM(
       "web-get-evidence-pages",
-      IEngineConstants.getPageAnalysisModel,
+      PsConstants.getPageAnalysisModel,
       messages,
       true,
       true
@@ -394,7 +394,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -459,7 +459,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
   }
 
   get maxTopWebPagesToGet() {
-    return IEngineConstants.maxTopWebPagesToGet;
+    return PsConstants.maxTopWebPagesToGet;
   }
 
   async getAndProcessEvidencePage(
@@ -514,18 +514,18 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       subProblemIndex++
     ) {
       promises.push(
         (async () => {
           const newPage = await browser.newPage();
-          newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+          newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
           newPage.setDefaultNavigationTimeout(
-            IEngineConstants.webPageNavTimeout
+            PsConstants.webPageNavTimeout
           );
 
-          await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+          await newPage.setUserAgent(PsConstants.currentUserAgent);
 
           const subProblem = this.memory.subProblems[subProblemIndex];
 
@@ -592,10 +592,10 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     await this.processSubProblems(browser);
 
@@ -611,10 +611,10 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     //super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.getPageAnalysisModel.temperature,
-      maxTokens: IEngineConstants.getPageAnalysisModel.maxOutputTokens,
-      modelName: IEngineConstants.getPageAnalysisModel.name,
-      verbose: IEngineConstants.getPageAnalysisModel.verbose,
+      temperature: PsConstants.getPageAnalysisModel.temperature,
+      maxTokens: PsConstants.getPageAnalysisModel.maxOutputTokens,
+      modelName: PsConstants.getPageAnalysisModel.name,
+      verbose: PsConstants.getPageAnalysisModel.verbose,
     });
 
     await this.getAllPages();

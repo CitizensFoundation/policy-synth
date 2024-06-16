@@ -2,7 +2,7 @@ import { OpenAI } from "openai";
 import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 //@ts-ignore
@@ -328,11 +328,11 @@ export class PsBaseChatBot {
     }
     getTokenCosts(estimateTokens, type) {
         if (type == "in") {
-            return (IEngineConstants.analyseExternalSolutionsModel.inTokenCostUSD *
+            return (PsConstants.analyseExternalSolutionsModel.inTokenCostUSD *
                 estimateTokens);
         }
         else {
-            return (IEngineConstants.analyseExternalSolutionsModel.outTokenCostUSD *
+            return (PsConstants.analyseExternalSolutionsModel.outTokenCostUSD *
                 estimateTokens);
         }
     }

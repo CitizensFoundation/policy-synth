@@ -5,8 +5,8 @@ export declare class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent
     webPageVectorStore: WebPageVectorStore;
     allUrls: Set<string>;
     duplicateUrls: string[];
-    renderMessages(solutions: IEngineSolution[]): (HumanMessage | SystemMessage)[];
-    dedup(solutions: IEngineSolution[]): Promise<IEngineSolution[]>;
+    renderMessages(solutions: PsSolution[]): (HumanMessage | SystemMessage)[];
+    dedup(solutions: PsSolution[]): Promise<PsSolution[]>;
     processSubProblems(): Promise<void>;
     copyEntitySolutionsToSubProblem(subProblemIndex: number): Promise<void>;
     processProblemStatement(): Promise<void>;

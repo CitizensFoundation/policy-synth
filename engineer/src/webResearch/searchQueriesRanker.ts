@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 
 export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
   instructions: string | undefined;
@@ -20,7 +20,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
   async voteOnPromptPair(
     index: number,
     promptPair: number[]
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
@@ -76,7 +76,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       index,
       "rank-search-queries",
-      IEngineConstants.searchQueryRankingsModel,
+      PsConstants.searchQueryRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -91,10 +91,10 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     this.instructions = instructions;
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-      maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
+      temperature: PsConstants.searchQueryRankingsModel.temperature,
+      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
       modelName: "gpt-4o",
-      verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+      verbose: PsConstants.searchQueryRankingsModel.verbose,
     });
 
     this.setupRankingPrompts(

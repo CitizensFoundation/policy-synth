@@ -6,10 +6,10 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 const USE_SHORT_DESCRIPTIONS = false;
 export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
-  async renderRefinePrompt(results: IEngineSubProblem[]) {
+  async renderRefinePrompt(results: PsSubProblem[]) {
     const messages: BaseMessage[] = [
       new SystemMessage(
         `
@@ -94,14 +94,14 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
   async createSubProblems() {
     let results = (await this.callLLM(
       "create-sub-problems",
-      IEngineConstants.createSubProblemsModel,
+      PsConstants.createSubProblemsModel,
       await this.renderCreatePrompt()
-    )) as IEngineSubProblem[];
+    )) as PsSubProblem[];
 
-    if (IEngineConstants.enable.refine.createSubProblems) {
+    if (PsConstants.enable.refine.createSubProblems) {
       results = await this.callLLM(
         "create-sub-problems",
-        IEngineConstants.createSubProblemsModel,
+        PsConstants.createSubProblemsModel,
         await this.renderRefinePrompt(results)
       );
     }
@@ -121,10 +121,10 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
     this.logger.info("Sub Problems Processor");
     super.process();
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createSubProblemsModel.temperature,
-      maxTokens: IEngineConstants.createSubProblemsModel.maxOutputTokens,
-      modelName: IEngineConstants.createSubProblemsModel.name,
-      verbose: IEngineConstants.createSubProblemsModel.verbose,
+      temperature: PsConstants.createSubProblemsModel.temperature,
+      maxTokens: PsConstants.createSubProblemsModel.maxOutputTokens,
+      modelName: PsConstants.createSubProblemsModel.name,
+      verbose: PsConstants.createSubProblemsModel.verbose,
     });
 
     await this.createSubProblems();

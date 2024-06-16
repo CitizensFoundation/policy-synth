@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     renderProblemDetail(additionalData) {
@@ -56,10 +56,10 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         The Most Relevant Search Query Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", IEngineConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblems() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             await this.processEntities(subProblemIndex);
             for (const searchQueryType of [
@@ -103,7 +103,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     }
     async processEntities(subProblemIndex) {
         for (let e = 0; e <
-            Math.min(this.memory.subProblems[subProblemIndex].entities.length, IEngineConstants.maxTopEntitiesToSearch); e++) {
+            Math.min(this.memory.subProblems[subProblemIndex].entities.length, PsConstants.maxTopEntitiesToSearch); e++) {
             for (const searchQueryType of [
                 "general",
                 "scientific",
@@ -130,10 +130,10 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         this.logger.info("Rank Search Queries Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-            maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.searchQueryRankingsModel.name,
-            verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+            temperature: PsConstants.searchQueryRankingsModel.temperature,
+            maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
+            modelName: PsConstants.searchQueryRankingsModel.name,
+            verbose: PsConstants.searchQueryRankingsModel.verbose,
         });
         this.logger.info("Rank Search Queries Processor: Sub Problems");
         await this.processSubProblems();

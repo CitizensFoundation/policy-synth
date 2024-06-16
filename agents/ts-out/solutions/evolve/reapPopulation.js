@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
     async renderReapPrompt(solution) {
         const messages = [
@@ -31,7 +31,7 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
         const leaveOutFirstTopOnes = 3;
         for (let solutionIndex = leaveOutFirstTopOnes; solutionIndex < solutions.length; solutionIndex++) {
             const solution = solutions[solutionIndex];
-            const reapedResults = await this.callLLM("evolve-reap-population", IEngineConstants.reapSolutionsModel, await this.renderReapPrompt(solution));
+            const reapedResults = await this.callLLM("evolve-reap-population", PsConstants.reapSolutionsModel, await this.renderReapPrompt(solution));
             if (reapedResults.solutionFitsRequirements === false) {
                 this.logger.info(`Reaped solution: ${solution.title}`);
                 solution.reaped = true;
@@ -41,7 +41,7 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
         this.logger.info(`Population size after reaping: ${afterSize}`);
     }
     async reapSolutions() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const solutions = this.memory.subProblems[subProblemIndex].solutions.populations[this.lastPopulationIndex(subProblemIndex)];
             await this.reapSolutionsForSubProblem(subProblemIndex, solutions);
@@ -58,10 +58,10 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Reap Solution Components Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.reapSolutionsModel.temperature,
-            maxTokens: IEngineConstants.reapSolutionsModel.maxOutputTokens,
-            modelName: IEngineConstants.reapSolutionsModel.name,
-            verbose: IEngineConstants.reapSolutionsModel.verbose,
+            temperature: PsConstants.reapSolutionsModel.temperature,
+            maxTokens: PsConstants.reapSolutionsModel.maxOutputTokens,
+            modelName: PsConstants.reapSolutionsModel.name,
+            verbose: PsConstants.reapSolutionsModel.verbose,
         });
         try {
             await this.reapSolutions();

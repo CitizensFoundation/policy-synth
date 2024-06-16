@@ -3,7 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { DocumentCleanupAgent } from "./docCleanup.js";
 import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -54,9 +54,9 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             try {
                 this.logger.debug("Launching browser");
                 const browserPage = await browser.newPage();
-                browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-                browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-                await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+                browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+                browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+                await browserPage.setUserAgent(PsConstants.currentUserAgent);
                 await this.downloadAndCache(this.dataLayout.documentUrls, false, browserPage);
                 await this.saveFileMetadata();
                 const disableJsonUrls = true;

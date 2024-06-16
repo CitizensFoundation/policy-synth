@@ -2,10 +2,10 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 
 export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
-  async renderRefinePrompt(subProblemIndex: number, results: IEngineAffectedEntity[]) {
+  async renderRefinePrompt(subProblemIndex: number, results: PsAffectedEntity[]) {
     const messages = [
       new SystemMessage(
         `
@@ -50,7 +50,7 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
 
         Instructions:
 
-        1. Generate and output up to ${IEngineConstants.maxNumberGeneratedOfEntities} affected entities.
+        1. Generate and output up to ${PsConstants.maxNumberGeneratedOfEntities} affected entities.
         2. Identify all entities impacted by the main problem and its subproblems.
         3. Highlight all direct negative effects, and any positive effects, without suggesting solution components. Multiple effects may be listed in the array.
         4. Use short, concise, and consistent names for entities.
@@ -118,23 +118,23 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
 
 
   async createEntities() {
-    const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+    const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
 
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
         let results = (await this.callLLM(
           "create-entities",
-          IEngineConstants.createEntitiesModel,
+          PsConstants.createEntitiesModel,
           await this.renderCreatePrompt(subProblemIndex)
-        )) as IEngineAffectedEntity[];
+        )) as PsAffectedEntity[];
 
-        if (IEngineConstants.enable.refine.createEntities) {
+        if (PsConstants.enable.refine.createEntities) {
           results = (await this.callLLM(
             "create-entities",
-            IEngineConstants.createEntitiesModel,
+            PsConstants.createEntitiesModel,
             await this.renderRefinePrompt(subProblemIndex, results)
-          )) as IEngineAffectedEntity[];
+          )) as PsAffectedEntity[];
         }
 
         this.memory.subProblems[subProblemIndex].entities = results;
@@ -152,10 +152,10 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.createEntitiesModel.temperature,
-      maxTokens: IEngineConstants.createEntitiesModel.maxOutputTokens,
-      modelName: IEngineConstants.createEntitiesModel.name,
-      verbose: IEngineConstants.createEntitiesModel.verbose,
+      temperature: PsConstants.createEntitiesModel.temperature,
+      maxTokens: PsConstants.createEntitiesModel.maxOutputTokens,
+      modelName: PsConstants.createEntitiesModel.name,
+      verbose: PsConstants.createEntitiesModel.verbose,
     });
 
     await this.createEntities();

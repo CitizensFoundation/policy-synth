@@ -24,8 +24,8 @@ This abstract class extends `BaseProblemSolvingAgent` to process pairwise rankin
 |-------------------------|----------------------------------------------------------------------------|-----------------------------------------|-----------------------------------------------------------------------------|
 | fisherYatesShuffle      | array: any[]                                                               | any[]                                   | Shuffles an array using the Fisher-Yates algorithm.                         |
 | setupRankingPrompts     | subProblemIndex: number, allItems: PsEloRateable[] \| string[], maxPrompts: number \| undefined, updateFunction: Function \| undefined | void                                    | Sets up the ranking prompts for a given sub-problem.                        |
-| voteOnPromptPair        | subProblemIndex: number, promptPair: number[], additionalData?: any        | Promise<IEnginePairWiseVoteResults>     | Abstract method to process a vote on a prompt pair.                         |
-| getResultsFromLLM       | subProblemIndex: number, stageName: PsMemoryStageTypes, modelConstant: IEngineBaseAIModelConstants, messages: (HumanMessage \| SystemMessage)[], itemOneIndex: number, itemTwoIndex: number | Promise<{ subProblemIndex: number, wonItemIndex: number, lostItemIndex: number }> | Gets results from a language model for a given prompt pair.                 |
+| voteOnPromptPair        | subProblemIndex: number, promptPair: number[], additionalData?: any        | Promise<PsPairWiseVoteResults>     | Abstract method to process a vote on a prompt pair.                         |
+| getResultsFromLLM       | subProblemIndex: number, stageName: PsMemoryStageTypes, modelConstant: PsBaseAIModelConstants, messages: (HumanMessage \| SystemMessage)[], itemOneIndex: number, itemTwoIndex: number | Promise<{ subProblemIndex: number, wonItemIndex: number, lostItemIndex: number }> | Gets results from a language model for a given prompt pair.                 |
 | getUpdatedKFactor       | numComparisons: number                                                      | number                                  | Calculates the updated K-factor based on the number of comparisons.         |
 | performPairwiseRanking  | subProblemIndex: number, additionalData?: any                               | Promise<void>                           | Performs the pairwise ranking process for a given sub-problem.              |
 | getOrderedListOfItems   | subProblemIndex: number, setEloRatings: boolean, customEloRatingKey: string \| undefined | any[]                                   | Returns the ordered list of items based on their ELO ratings.               |
@@ -36,7 +36,7 @@ This abstract class extends `BaseProblemSolvingAgent` to process pairwise rankin
 import { BasePairwiseRankingsProcessor } from '@policysynth/agents/basePairwiseRanking.js';
 
 class CustomRankingsProcessor extends BasePairwiseRankingsProcessor {
-  async voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<IEnginePairWiseVoteResults> {
+  async voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<PsPairWiseVoteResults> {
     // Implementation specific logic to vote on a prompt pair
     return { subProblemIndex, wonItemIndex: promptPair[0], lostItemIndex: promptPair[1] };
   }

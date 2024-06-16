@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
 
 export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
@@ -13,15 +13,15 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
       prosOrCons: "pros" | "cons";
       subProblemIndex: number;
     }
-  ): Promise<IEnginePairWiseVoteResults> {
+  ): Promise<PsPairWiseVoteResults> {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
     const prosOrConsOne = (
-      this.allItems![subProblemIndex]![itemOneIndex] as IEngineProCon
+      this.allItems![subProblemIndex]![itemOneIndex] as PsProCon
     ).description;
     const prosOrConsTwo = (
-      this.allItems![subProblemIndex]![itemTwoIndex] as IEngineProCon
+      this.allItems![subProblemIndex]![itemTwoIndex] as PsProCon
     ).description;
 
     let proConSingle;
@@ -72,14 +72,14 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       subProblemIndex,
       "rank-pros-cons",
-      IEngineConstants.prosConsRankingsModel,
+      PsConstants.prosConsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
     );
   }
 
-  convertProsConsToObjects(prosCons: string[]): IEngineProCon[] {
+  convertProsConsToObjects(prosCons: string[]): PsProCon[] {
     return prosCons.map((prosCon) => {
       return {
         description: prosCon,
@@ -92,16 +92,16 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: IEngineConstants.prosConsRankingsModel.temperature,
-      maxTokens: IEngineConstants.prosConsRankingsModel.maxOutputTokens,
-      modelName: IEngineConstants.prosConsRankingsModel.name,
-      verbose: IEngineConstants.prosConsRankingsModel.verbose,
+      temperature: PsConstants.prosConsRankingsModel.temperature,
+      maxTokens: PsConstants.prosConsRankingsModel.maxOutputTokens,
+      modelName: PsConstants.prosConsRankingsModel.name,
+      verbose: PsConstants.prosConsRankingsModel.verbose,
     });
 
     try {
       // Parallel execution of the subproblems
       const subProblemPromises = this.memory.subProblems
-        .slice(0, IEngineConstants.maxSubProblems)
+        .slice(0, PsConstants.maxSubProblems)
         .map((subProblem, subProblemIndex) => {
           return this.processSubProblem(subProblem, subProblemIndex);
         });
@@ -115,7 +115,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
   }
 
   async processSubProblem(
-    subProblem: IEngineSubProblem,
+    subProblem: PsSubProblem,
     subProblemIndex: number
   ) {
     this.logger.info(`Ranking pros/cons for sub problem ${subProblemIndex}`);
@@ -161,7 +161,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
             solution[prosOrCons] = this.getOrderedListOfItems(
               subProblemIndex,
               true
-            ) as IEngineProCon[];
+            ) as PsProCon[];
 
             this.logger.debug(
               `${prosOrCons} after ranking: ${JSON.stringify(
@@ -189,7 +189,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     }
   }
 
-  renderSolution(solution: IEngineSolution) {
+  renderSolution(solution: PsSolution) {
     return `
       Solution Component:
       ${solution.title}

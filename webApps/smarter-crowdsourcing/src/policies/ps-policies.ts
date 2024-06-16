@@ -15,7 +15,7 @@ import '@material/web/textfield/outlined-text-field.js'; // import at the beginn
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js'; // get reference to the class
 
 import { MdOutlinedSelect } from '@material/web/select/outlined-select.js';
-import { IEngineConstants } from '../constants.js';
+import { PsConstants } from '../constants.js';
 
 import './ps-family-tree.js';
 import './ps-raw-evidence.js';
@@ -143,7 +143,7 @@ export class PsPolicies extends PsStageBase {
       } else if (
         this.activePolicyIndex == null &&
         this.activeSubProblemIndex !== null &&
-        this.activeSubProblemIndex < IEngineConstants.maxSubProblems - 1
+        this.activeSubProblemIndex < PsConstants.maxSubProblems - 1
       ) {
         this.activeSubProblemIndex += 1;
         window.psAppGlobals.activity('Sub problem - swipe right');
@@ -790,7 +790,7 @@ export class PsPolicies extends PsStageBase {
     `;
   }
 
-  renderSubProblemScreen(subProblem: IEngineSubProblem) {
+  renderSubProblemScreen(subProblem: PsSubProblem) {
     return html`
       <div class="topContainer layout vertical self-start">
         <div class="layout horizontal center-center">
@@ -811,7 +811,7 @@ export class PsPolicies extends PsStageBase {
     `;
   }
 
-  renderChipSet(subProblem: IEngineSubProblem) {
+  renderChipSet(subProblem: PsSubProblem) {
     if (!subProblem.policies) {
       return nothing;
     }

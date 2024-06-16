@@ -18,8 +18,8 @@ const gpt35_RPM = 10000;
 const gpt4_TPM = 150000 * 3 * 2;
 const gpt4_RPM = 10000 * 3 * 2;
 
-export class IEngineConstants {
-  static createSubProblemsModel: IEngineBaseAIModelConstants = {
+export class PsConstants {
+  static createSubProblemsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 4096,
@@ -31,7 +31,7 @@ export class IEngineConstants {
     verbose: true,
   };
 
-  static policiesSeedModel: IEngineBaseAIModelConstants = {
+  static policiesSeedModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 4096,
@@ -43,7 +43,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static analyseExternalSolutionsModel: IEngineBaseAIModelConstants = {
+  static analyseExternalSolutionsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 256,
@@ -55,7 +55,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static createEntitiesModel: IEngineBaseAIModelConstants = {
+  static createEntitiesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 2048,
@@ -71,7 +71,7 @@ export class IEngineConstants {
     inTokenCostsUSD: adaInTokenPrice,
   };
 
-  static createSolutionImagesModel: IEngineBaseAIModelConstants = {
+  static createSolutionImagesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 256,
@@ -83,7 +83,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static createSearchQueriesModel: IEngineBaseAIModelConstants = {
+  static createSearchQueriesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 1024,
@@ -95,7 +95,7 @@ export class IEngineConstants {
     verbose: true,
   };
 
-  static createEvidenceSearchQueriesModel: IEngineBaseAIModelConstants = {
+  static createEvidenceSearchQueriesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.5,
     maxOutputTokens: 1024,
@@ -107,7 +107,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static createRootCauseSearchQueriesModel: IEngineBaseAIModelConstants = {
+  static createRootCauseSearchQueriesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 3024,
@@ -119,7 +119,7 @@ export class IEngineConstants {
     verbose: true
   };
 
-  static searchQueryRankingsModel: IEngineBaseAIModelConstants = {
+  static searchQueryRankingsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -131,7 +131,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static searchResultsRankingsModel: IEngineBaseAIModelConstants = {
+  static searchResultsRankingsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -143,7 +143,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static subProblemsRankingsModel: IEngineBaseAIModelConstants = {
+  static subProblemsRankingsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -155,7 +155,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static entitiesRankingsModel: IEngineBaseAIModelConstants = {
+  static entitiesRankingsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -167,7 +167,7 @@ export class IEngineConstants {
     verbose: true,
   };
 
-  static solutionsRankingsModel: IEngineBaseAIModelConstants = {
+  static solutionsRankingsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -179,7 +179,7 @@ export class IEngineConstants {
     verbose: false
   };
 
-  static prosConsRankingsModel: IEngineBaseAIModelConstants = {
+  static prosConsRankingsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2,
@@ -191,7 +191,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static getPageAnalysisModel: IEngineBaseAIModelConstants = {
+  static getPageAnalysisModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4000,
@@ -203,7 +203,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static getSolutionsPagesAnalysisModel: IEngineBaseAIModelConstants = {
+  static getSolutionsPagesAnalysisModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4000,
@@ -215,7 +215,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static rankWebSolutionsModel: IEngineBaseAIModelConstants = {
+  static rankWebSolutionsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -227,7 +227,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static reduceSubProblemsModel: IEngineBaseAIModelConstants = {
+  static reduceSubProblemsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.1,
     maxOutputTokens: 4096,
@@ -239,7 +239,7 @@ export class IEngineConstants {
     verbose: false
   };
 
-  static rateWebEvidenceModel: IEngineBaseAIModelConstants = {
+  static rateWebEvidenceModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -251,7 +251,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static rateWebRootCausesModel: IEngineBaseAIModelConstants = {
+  static rateWebRootCausesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -263,7 +263,7 @@ export class IEngineConstants {
     verbose: false
   };
 
-  static rankWebEvidenceModel: IEngineBaseAIModelConstants = {
+  static rankWebEvidenceModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -275,7 +275,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static rankWebRootCausesModel: IEngineBaseAIModelConstants = {
+  static rankWebRootCausesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -287,7 +287,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static getRefinedEvidenceModel: IEngineBaseAIModelConstants = {
+  static getRefinedEvidenceModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 2048,
@@ -299,7 +299,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static getRefinedRootCausesModel: IEngineBaseAIModelConstants = {
+  static getRefinedRootCausesModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 3048,
@@ -311,7 +311,7 @@ export class IEngineConstants {
     verbose: false
   };
 
-  static reapSolutionsModel: IEngineBaseAIModelConstants = {
+  static reapSolutionsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 128,
@@ -323,7 +323,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static groupSolutionsModel: IEngineBaseAIModelConstants = {
+  static groupSolutionsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4095,
@@ -335,7 +335,7 @@ export class IEngineConstants {
     verbose: false
   };
 
-  static rateSolutionsModel: IEngineBaseAIModelConstants = {
+  static rateSolutionsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 1024,
@@ -347,7 +347,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static createSolutionsModel: IEngineBaseAIModelConstants = {
+  static createSolutionsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.5,
     maxOutputTokens: 1200,
@@ -359,7 +359,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static evolveSolutionsModel: IEngineBaseAIModelConstants = {
+  static evolveSolutionsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.5,
     maxOutputTokens: 1200,
@@ -371,7 +371,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static createProsConsModel: IEngineBaseAIModelConstants = {
+  static createProsConsModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 2048,
@@ -383,7 +383,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static evolutionMutateModel: IEngineBaseAIModelConstants = {
+  static evolutionMutateModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 1024,
@@ -395,7 +395,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static evolutionRecombineModel: IEngineBaseAIModelConstants = {
+  static evolutionRecombineModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.7,
     maxOutputTokens: 1024,
@@ -407,7 +407,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static validationModel: IEngineBaseAIModelConstants = {
+  static validationModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 1024,
@@ -419,7 +419,7 @@ export class IEngineConstants {
     verbose: false,
   };
 
-  static ingestionModel: IEngineBaseAIModelConstants = {
+  static ingestionModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4095,
@@ -431,7 +431,7 @@ export class IEngineConstants {
     verbose: false
   };
 
-  static engineerModel: IEngineBaseAIModelConstants = {
+  static engineerModel: PsBaseAIModelConstants = {
     name: "gpt-4o",
     temperature: 0.0,
     maxOutputTokens: 4095,
@@ -564,7 +564,7 @@ export class IEngineConstants {
   static minimumNumberOfPairwiseVotesForPopulation = 10;
 
   static maxNumberOfPairwiseRankingPrompts =
-    IEngineConstants.evolution.populationSize * IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
+    PsConstants.evolution.populationSize * PsConstants.minimumNumberOfPairwiseVotesForPopulation;
 
   static maxTopSolutionsToCreatePolicies = 3;
 

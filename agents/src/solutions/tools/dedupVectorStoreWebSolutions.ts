@@ -2,7 +2,7 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 import { Queue } from "bullmq";
@@ -49,7 +49,7 @@ export class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAg
 
         let pageCounter = 0;
         for (const retrievedObject of results.data.Get["WebPage"]) {
-          const webPage = retrievedObject as IEngineWebPageAnalysisData;
+          const webPage = retrievedObject as PsWebPageAnalysisData;
           const id = webPage._additional!.id!;
 
           if (this.allUrls.has(webPage.url)) {
@@ -81,7 +81,7 @@ export class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAg
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];

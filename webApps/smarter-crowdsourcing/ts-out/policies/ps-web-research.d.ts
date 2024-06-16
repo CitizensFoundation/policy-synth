@@ -7,7 +7,7 @@ export declare class PsWebResearch extends PsStageBase {
     disconnectedCallback(): void;
     static get styles(): any[];
     render(): import("lit").TemplateResult<1>;
-    renderEntities(subProblem: IEngineSubProblem): import("lit").TemplateResult<1>;
+    renderEntities(subProblem: PsSubProblem): import("lit").TemplateResult<1>;
     renderSubProblemsWithAll(): import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-web-research.d.ts.map

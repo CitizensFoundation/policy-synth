@@ -16,7 +16,7 @@ No methods are directly defined in this script.
 import fs from "fs";
 import process from "process";
 import path from "path";
-import { PsBaseMemoryData, IEngineProCon } from "@policysynth/agents/solutions/tools/old/exportSolutions.js";
+import { PsBaseMemoryData, PsProCon } from "@policysynth/agents/solutions/tools/old/exportSolutions.js";
 
 let filePath = process.argv[2] || "currentMemory.json";
 

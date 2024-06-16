@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { PolicySynthAgentBase } from "../../baseAgent.js";
 import ioredis from "ioredis";
 
@@ -8,8 +8,8 @@ const redis = new ioredis(
 );
 
 export class GoogleSearchApi extends PolicySynthAgentBase {
-  public async search(query: string): Promise<IEngineSearchResultItem[]> {
-    const outResults: IEngineSearchResultItem[] = [];
+  public async search(query: string): Promise<PsSearchResultItem[]> {
+    const outResults: PsSearchResultItem[] = [];
     try {
       const url = `https://www.googleapis.com/customsearch/v1?q=${query}&key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${process.env.GOOGLE_SEARCH_API_CX_ID}`;
       const response = await axios.get(url);

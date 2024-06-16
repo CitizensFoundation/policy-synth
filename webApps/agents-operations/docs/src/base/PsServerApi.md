@@ -14,7 +14,7 @@
 |---------------------|----------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------------------------|
 | constructor         | urlPath: string = '/api'                                                   | void                         | Initializes the API with an optional base URL path.                                          |
 | getProject          | id: number, tempPassword?: string, forceGetBackupForProject?: string      | Promise<CpsBootResponse>    | Fetches project details. Optionally uses a temporary password and can force backup retrieval.|
-| getMiddleSolutions  | id: number, subProblemIndex: number                                       | Promise<IEngineSolution[][]> | Fetches middle solutions for a given sub-problem within a project.                           |
+| getMiddleSolutions  | id: number, subProblemIndex: number                                       | Promise<PsSolution[][]> | Fetches middle solutions for a given sub-problem within a project.                           |
 | getRawEvidence      | id: number, subProblemIndex: number, policyTitle: string                  | Promise<PSEvidenceRawWebPageData[]> | Fetches raw evidence for a given policy title within a sub-problem of a project.             |
 
 ## Example

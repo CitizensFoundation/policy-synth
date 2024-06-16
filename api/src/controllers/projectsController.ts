@@ -8,7 +8,7 @@ import {
 } from "redis";
 import { RedisClientType } from "@redis/client";
 import { EvidenceWebPageVectorStore } from "@policysynth/agents/vectorstore/evidenceWebPage.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import WebSocket from "ws";
 
 let redisClient: any;
@@ -96,8 +96,8 @@ export class ProjectsController {
     console.log(
       `Getting raw evidence for ${req.params.id} - ${req.params.subProblemIndex} - ${req.params.policyIndex}`
     );
-    for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
-      const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+    for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+      const searchType = PsConstants.simplifyEvidenceType(evidenceType);
       const results =
         await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(
           parseInt(req.params.id),
@@ -195,11 +195,11 @@ export class ProjectsController {
       return res.sendStatus(404);
     }
 
-    const filterSearchResults = (searchResults: IEngineSearchResults) => {
+    const filterSearchResults = (searchResults: PsSearchResults) => {
       if (searchResults && searchResults.pages) {
         for (const key in searchResults.pages) {
-          searchResults.pages[key as IEngineWebPageTypes] = searchResults.pages[
-            key as IEngineWebPageTypes
+          searchResults.pages[key as PsWebPageTypes] = searchResults.pages[
+            key as PsWebPageTypes
           ].map(
             (result) =>
               ({
@@ -221,7 +221,7 @@ export class ProjectsController {
     }
 
     if (projectData.subProblems) {
-      projectData.subProblems.forEach((subProblem: IEngineSubProblem) => {
+      projectData.subProblems.forEach((subProblem: PsSubProblem) => {
         subProblem.searchResults = filterSearchResults(
           subProblem.searchResults
         );

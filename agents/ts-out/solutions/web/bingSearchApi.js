@@ -1,5 +1,5 @@
 import axios from "axios";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { PolicySynthAgentBase } from "../../baseAgent.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -15,7 +15,7 @@ export class BingSearchApi extends PolicySynthAgentBase {
     async search(query) {
         const requestParams = {
             method: "GET",
-            url: `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${IEngineConstants.maxBingSearchResults}&q=` +
+            url: `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${PsConstants.maxBingSearchResults}&q=` +
                 encodeURIComponent(query),
             headers: {
                 "Ocp-Apim-Subscription-Key": this.SUBSCRIPTION_KEY,
@@ -30,7 +30,7 @@ export class BingSearchApi extends PolicySynthAgentBase {
         }
         else {
             let retry = true;
-            const maxRetries = IEngineConstants.mainSearchRetryCount;
+            const maxRetries = PsConstants.mainSearchRetryCount;
             let retryCount = 0;
             while (retry && retryCount < maxRetries) {
                 try {

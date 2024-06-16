@@ -4,7 +4,7 @@ import { property, customElement } from 'lit/decorators.js';
 import '@yrpri/webapp/common/yp-image.js';
 
 import { PsStageBase } from '../base/ps-stage-base.js';
-import { IEngineConstants } from '../constants.js';
+import { PsConstants } from '../constants.js';
 
 @customElement('ps-web-research')
 export class PsWebResearch extends PsStageBase {
@@ -93,7 +93,7 @@ export class PsWebResearch extends PsStageBase {
     `;
   }
 
-  renderEntities(subProblem: IEngineSubProblem) {
+  renderEntities(subProblem: PsSubProblem) {
     return html`
       ${subProblem.entities.map((entity, entityIndex) => {
         const isEntityLessProminent =
@@ -157,7 +157,7 @@ export class PsWebResearch extends PsStageBase {
   renderSubProblemsWithAll() {
     const topSubProblems = this.memory.subProblems.slice(
       0,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     return html`

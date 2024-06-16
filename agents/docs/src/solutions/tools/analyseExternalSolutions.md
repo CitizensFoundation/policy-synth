@@ -13,11 +13,11 @@ This class extends `BaseProblemSolvingAgent` to analyze external solutions again
 | Name                      | Parameters                                  | Return Type                                | Description                                                                 |
 |---------------------------|---------------------------------------------|--------------------------------------------|-----------------------------------------------------------------------------|
 | renderAnalysisPrompt      | solutionDescription: string, requirement: string | Promise<SystemMessage[] \| HumanMessage[]> | Prepares the analysis prompt for the language model.                        |
-| compareSolutionToExternal | solutionDescription: string, requirement: string | Promise<IEngineExternalSolutionAnalysisResults> | Compares a solution to an external standard and returns analysis results.   |
+| compareSolutionToExternal | solutionDescription: string, requirement: string | Promise<PsExternalSolutionAnalysisResults> | Compares a solution to an external standard and returns analysis results.   |
 | analyze                   | -                                           | Promise<void>                              | Analyzes all solutions against external standards and generates reports.    |
-| toCSV                     | analysisResult: IEngineExternalSolutionAnalysis | string                                    | Converts analysis results into a CSV format.                                |
+| toCSV                     | analysisResult: PsExternalSolutionAnalysis | string                                    | Converts analysis results into a CSV format.                                |
 | processAnalysis           | folderPath: string                          | Promise<void>                              | Processes the analysis for all solutions and saves the results.             |
-| saveCSV                   | analysisResults: IEngineExternalSolutionAnalysis[] | Promise<void>                              | Saves the analysis results in CSV format in the specified folder.           |
+| saveCSV                   | analysisResults: PsExternalSolutionAnalysis[] | Promise<void>                              | Saves the analysis results in CSV format in the specified folder.           |
 
 ## Example
 

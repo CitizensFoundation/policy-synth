@@ -12,7 +12,7 @@ const main = async () => {
     const currentProject =  JSON.parse(await redis.get(redisKey) || "") as PsBaseMemoryData;
 ​
     const foundDescriptions = new Set<string>();
-    const newSubProblems: IEngineSubProblem[] = [];
+    const newSubProblems: PsSubProblem[] = [];
     let duplicateCount = 0;
     currentProject.subProblems.forEach((subProblem) => {
       if (!foundDescriptions.has(subProblem.description)) {

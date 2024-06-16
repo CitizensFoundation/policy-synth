@@ -14,7 +14,7 @@ This class extends `PolicySynthAgentBase` and provides methods for processing an
 
 | Name                                  | Parameters                                      | Return Type | Description                                                                 |
 |---------------------------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| getProCons                            | prosCons: IEngineProCon[] \| undefined          | string[]    | Returns descriptions of provided pros and cons.                             |
+| getProCons                            | prosCons: PsProCon[] \| undefined          | string[]    | Returns descriptions of provided pros and cons.                             |
 | process                               |                                                 | Promise<void>| Processes the current job, throws if memory is not initialized.             |
 | lastPopulationIndex                   | subProblemIndex: number                         | number      | Returns the index of the last population for a given sub-problem.           |
 | renderSubProblem                      | subProblemIndex: number, useProblemAsHeader: boolean = false | string      | Renders a detailed view of a sub-problem.                                   |
@@ -26,7 +26,7 @@ This class extends `PolicySynthAgentBase` and provides methods for processing an
 | renderEntity                          | subProblemIndex: number, entityIndex: number    | string      | Renders details of a specific entity within a sub-problem.                  |
 | renderProblemStatement                |                                                 | string      | Renders the problem statement.                                              |
 | renderProblemStatementSubProblemsAndEntities | index: number                            | string      | Renders the problem statement along with sub-problems and top entities.     |
-| renderEntityPosNegReasons             | item: IEngineAffectedEntity                     | string      | Renders positive and negative effects associated with an entity.            |
+| renderEntityPosNegReasons             | item: PsAffectedEntity                     | string      | Renders positive and negative effects associated with an entity.            |
 
 ## Example
 

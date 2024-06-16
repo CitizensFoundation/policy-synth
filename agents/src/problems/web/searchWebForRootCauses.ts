@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
@@ -32,14 +32,14 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
       if (FORCE_RESEARCH || !problemStatement.rootCauseSearchResults![searchResultType]) {
         let queriesToSearch = problemStatement.rootCauseSearchQueries![searchResultType].slice(
           0,
-          IEngineConstants.maxTopRootCauseQueriesToSearchPerType,
+          PsConstants.maxTopRootCauseQueriesToSearchPerType,
         );
 
         this.logger.debug(`Searching for root cause type ${searchResultType} with queries ${JSON.stringify(queriesToSearch, null, 2)}`)
 
         const results = await this.getQueryResults(queriesToSearch, `rootCause_${searchResultType}`);
 
-        this.searchCounter += IEngineConstants.maxTopEvidenceQueriesToSearchPerType;
+        this.searchCounter += PsConstants.maxTopEvidenceQueriesToSearchPerType;
 
         problemStatement.rootCauseSearchResults![searchResultType] = results.searchResults;
 

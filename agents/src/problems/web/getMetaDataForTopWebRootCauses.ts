@@ -1,7 +1,7 @@
 import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import metascraperFactory from "metascraper";
 import metascraperAuthor from "metascraper-author";
 import metascraperDate from "metascraper-date";
@@ -57,7 +57,7 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined,
   ) {
@@ -89,7 +89,7 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
   async getAndProcessPdf(
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined,
   ) {
@@ -108,8 +108,8 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
           pdfBuffer = gunzipSync(cachedPdf);
         } else {
           const sleepingForMs =
-            IEngineConstants.minSleepBeforeBrowserRequest +
-            Math.random() * IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+            PsConstants.minSleepBeforeBrowserRequest +
+            Math.random() * PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
 
           this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
 
@@ -149,7 +149,7 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
     subProblemIndex: number | undefined = undefined,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined,
   ) {
@@ -166,8 +166,8 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
         htmlText = gunzipSync(cachedData).toString();
       } else {
         const sleepingForMs =
-          IEngineConstants.minSleepBeforeBrowserRequest +
-          Math.random() * IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+          PsConstants.minSleepBeforeBrowserRequest +
+          Math.random() * PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
 
         this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
 
@@ -214,8 +214,8 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
     const limit = 10;
 
     try {
-      for (const rootCauseType of IEngineConstants.rootCauseFieldTypes) {
-        const searchType = IEngineConstants.simplifyEvidenceType(rootCauseType);
+      for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
+        const searchType = PsConstants.simplifyEvidenceType(rootCauseType);
         const results = await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
           this.memory.groupId,
           searchType,
@@ -253,9 +253,9 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
   async processSubProblems(browser: Browser) {
     this.logger.info("Refining root causes");
     const newPage = await browser.newPage();
-    newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-    await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+    newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    await newPage.setUserAgent(PsConstants.currentUserAgent);
 
     try {
       await this.refineWebRootCauses(newPage);
@@ -271,10 +271,10 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     await this.processSubProblems(browser);
 

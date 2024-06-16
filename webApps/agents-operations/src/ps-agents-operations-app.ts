@@ -38,7 +38,7 @@ import './ps-home.js';
 
 import './operations/ps-operations-manager.js';
 
-import { IEngineConstants } from './constants.js';
+import { PsConstants } from './constants.js';
 
 import { TextField } from '@material/web/textfield/internal/text-field.js';
 import { Dialog } from '@material/web/dialog/internal/dialog.js';

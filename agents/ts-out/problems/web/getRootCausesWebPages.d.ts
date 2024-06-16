@@ -18,7 +18,7 @@ export declare class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor
     getRootCauseTextAnalysis(type: PSRootCauseWebPageTypes, text: string, url: string): Promise<PSRootCauseRawWebPageData | PSRefinedRootCause[]>;
     getRootCauseAIAnalysis(type: PSRootCauseWebPageTypes, text: string): Promise<PSRefinedRootCause[]>;
     isUrlInSubProblemMemory(url: string): boolean;
-    processPageText(text: string, subProblemIndex: undefined, url: string, type: IEngineWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: undefined): Promise<void>;
+    processPageText(text: string, subProblemIndex: undefined, url: string, type: PsWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: undefined): Promise<void>;
     getAndProcessRootCausePage(url: string, browserPage: Page, type: PSRootCauseWebPageTypes): Promise<boolean>;
     processRootCauses(browser: Browser): Promise<void>;
     getAllPages(): Promise<void>;

@@ -1,7 +1,7 @@
 import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import metascraperFactory from "metascraper";
 import metascraperAuthor from "metascraper-author";
 import metascraperDate from "metascraper-date";
@@ -59,7 +59,7 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -100,7 +100,7 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
   async getAndProcessPdf(
     subProblemIndex: number | undefined,
     url: string,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -121,9 +121,9 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
           pdfBuffer = gunzipSync(cachedPdf);
         } else {
           const sleepingForMs =
-            IEngineConstants.minSleepBeforeBrowserRequest +
+            PsConstants.minSleepBeforeBrowserRequest +
             Math.random() *
-              IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+              PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
 
           this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
 
@@ -170,7 +170,7 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type: IEngineWebPageTypes | PSEvidenceWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -189,9 +189,9 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
         htmlText = gunzipSync(cachedData).toString();
       } else {
         const sleepingForMs =
-          IEngineConstants.minSleepBeforeBrowserRequest +
+          PsConstants.minSleepBeforeBrowserRequest +
           Math.random() *
-            IEngineConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
 
         this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
 
@@ -268,8 +268,8 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
     const limit = 10;
 
     try {
-      for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
-        const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+      for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+        const searchType = PsConstants.simplifyEvidenceType(evidenceType);
         const results =
           await this.evidenceWebPageVectorStore.getTopPagesForProcessing(
             this.memory.groupId,
@@ -322,7 +322,7 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
   async processSubProblems(browser: Browser) {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];
@@ -336,10 +336,10 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
           `Refining evidence for sub problem ${subProblemIndex}`
         );
         const newPage = await browser.newPage();
-        newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+        newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-        await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+        await newPage.setUserAgent(PsConstants.currentUserAgent);
         const subProblem = this.memory.subProblems[subProblemIndex];
         if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
           if (subProblem.policies) {
@@ -349,7 +349,7 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
               p <
               Math.min(
                 policies.length,
-                IEngineConstants.maxTopPoliciesToProcess
+                PsConstants.maxTopPoliciesToProcess
               );
               p++
             ) {
@@ -380,10 +380,10 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
 
-    await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+    await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
     await this.processSubProblems(browser);
 

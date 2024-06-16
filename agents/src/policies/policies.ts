@@ -15,7 +15,7 @@ export class AgentPolicies extends BaseAgentProcessor {
   declare memory: PsBaseMemoryData;
 
   override async initializeMemory(job: Job) {
-    const jobData = job.data as IEngineWorkerData;
+    const jobData = job.data as PsWorkerData;
 
     this.memory = {
       redisKey: this.getRedisKey(jobData.groupId),

@@ -2,7 +2,7 @@ import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 
 import { Queue } from "bullmq";
@@ -22,7 +22,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
   allUrls = new Set<string>();
   duplicateUrls: string[] = [];
 
-  renderMessages(solutions: IEngineSolution[]) {
+  renderMessages(solutions: PsSolution[]) {
     const messages = [
       new SystemMessage(
         `Take a deep breath and analyze the array of solution oriented JSON objects provided to you by the user, if some of them are identical, choose the less important ones to drop and output as as JSON array: [
@@ -54,7 +54,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     return messages;
   }
 
-  async dedup(solutions: IEngineSolution[]) {
+  async dedup(solutions: PsSolution[]) {
     const NO_DUPLICATES_THRESHOLD = 20;
     const RANDOM_SAMPLE_SIZE = 20;
     let noDuplicatesCount = 0;
@@ -81,7 +81,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
       // Step 2: Call the LLM for a list of duplicates to remove
       const duplicateSolutionTitlesToRemove = (await this.callLLM(
         "web-get-pages",
-        IEngineConstants.createSolutionsModel,
+        PsConstants.createSolutionsModel,
         this.renderMessages(randomSolutions),
         true,
         true
@@ -146,7 +146,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     for (
       let s = 0;
       s <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       s++
     ) {
       promises.push(
@@ -174,7 +174,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        IEngineConstants.maxTopEntitiesToSearch
+        PsConstants.maxTopEntitiesToSearch
       );
       e++
     ) {

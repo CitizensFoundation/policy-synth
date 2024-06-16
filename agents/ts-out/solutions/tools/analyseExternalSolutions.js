@@ -1,4 +1,4 @@
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
@@ -115,7 +115,7 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
         return messages;
     }
     async compareSolutionToExternal(solutionDescription, requirement) {
-        const result = (await this.callLLM("analyse-external-solutions", IEngineConstants.analyseExternalSolutionsModel, await this.renderAnalysisPrompt(solutionDescription, requirement)));
+        const result = (await this.callLLM("analyse-external-solutions", PsConstants.analyseExternalSolutionsModel, await this.renderAnalysisPrompt(solutionDescription, requirement)));
         return result;
     }
     async analyze() {
@@ -177,10 +177,10 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
         this.logger.info("Create Analysis Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.analyseExternalSolutionsModel.temperature,
-            maxTokens: IEngineConstants.analyseExternalSolutionsModel.maxOutputTokens,
-            modelName: IEngineConstants.analyseExternalSolutionsModel.name,
-            verbose: IEngineConstants.analyseExternalSolutionsModel.verbose,
+            temperature: PsConstants.analyseExternalSolutionsModel.temperature,
+            maxTokens: PsConstants.analyseExternalSolutionsModel.maxOutputTokens,
+            modelName: PsConstants.analyseExternalSolutionsModel.name,
+            verbose: PsConstants.analyseExternalSolutionsModel.verbose,
         });
         try {
             await this.analyze();

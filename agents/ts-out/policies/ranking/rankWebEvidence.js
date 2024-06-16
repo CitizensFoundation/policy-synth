@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
@@ -34,10 +34,10 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     async rankWebEvidence(policy, subProblemIndex) {
         this.logger.info(`Ranking all web evidence for policy ${policy.title}`);
         try {
-            for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+            for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
                 let offset = 0;
                 const limit = 100;
-                const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+                const searchType = PsConstants.simplifyEvidenceType(evidenceType);
                 while (true) {
                     const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, searchType, policy.title, limit, offset);
                     this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
@@ -55,7 +55,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Evidence before ranking (${evidenceType}):\n${JSON.stringify(evidenceToRank, null, 2)}`);
-                            let rankedEvidence = await this.callLLM("rank-web-evidence", IEngineConstants.rankWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
+                            let rankedEvidence = await this.callLLM("rank-web-evidence", PsConstants.rankWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
                             await this.evidenceWebPageVectorStore.updateWebSolutions(id, fieldKey, rankedEvidence, true);
                             this.logger.debug(`${id} - Evidence after ranking (${evidenceType}):\n${JSON.stringify(rankedEvidence, null, 2)}`);
                         }
@@ -77,12 +77,12 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Rank web evidence Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.rankWebEvidenceModel.temperature,
-            maxTokens: IEngineConstants.rankWebEvidenceModel.maxOutputTokens,
-            modelName: IEngineConstants.rankWebEvidenceModel.name,
-            verbose: IEngineConstants.rankWebEvidenceModel.verbose,
+            temperature: PsConstants.rankWebEvidenceModel.temperature,
+            maxTokens: PsConstants.rankWebEvidenceModel.maxOutputTokens,
+            modelName: PsConstants.rankWebEvidenceModel.name,
+            verbose: PsConstants.rankWebEvidenceModel.verbose,
         });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
@@ -92,7 +92,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
                 if (subProblem.policies) {
                     const policies = subProblem.policies.populations[currentGeneration];
                     for (let p = 0; p <
-                        Math.min(policies.length, IEngineConstants.maxTopPoliciesToProcess); p++) {
+                        Math.min(policies.length, PsConstants.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
                             await this.rankWebEvidence(policy, subProblemIndex);

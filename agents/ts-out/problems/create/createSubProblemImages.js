@@ -1,6 +1,6 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
@@ -41,7 +41,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
             if (recreateImagesNeeded || !this.memory.subProblems[s].imageUrl) {
                 let imagePrompt;
                 if (process.env.STABILITY_API_KEY) {
-                    imagePrompt = (await this.callLLM("create-sub-problem-images", IEngineConstants.createSolutionImagesModel, await this.renderCreatePrompt(s), false));
+                    imagePrompt = (await this.callLLM("create-sub-problem-images", PsConstants.createSolutionImagesModel, await this.renderCreatePrompt(s), false));
                 }
                 else {
                     imagePrompt = this.getDalleImagePrompt(s);
@@ -75,10 +75,10 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     async process() {
         this.logger.info("Create Sub Problem Processor");
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.createSolutionImagesModel.temperature,
-            maxTokens: IEngineConstants.createSolutionImagesModel.maxOutputTokens,
-            modelName: IEngineConstants.createSolutionImagesModel.name,
-            verbose: IEngineConstants.createSolutionImagesModel.verbose,
+            temperature: PsConstants.createSolutionImagesModel.temperature,
+            maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
+            modelName: PsConstants.createSolutionImagesModel.name,
+            verbose: PsConstants.createSolutionImagesModel.verbose,
         });
         try {
             await this.createSubProblemImages();

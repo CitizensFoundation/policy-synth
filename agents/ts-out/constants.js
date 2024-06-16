@@ -11,7 +11,7 @@ const gpt35_TPM = 750000;
 const gpt35_RPM = 10000;
 const gpt4_TPM = 150000 * 3 * 2;
 const gpt4_RPM = 10000 * 3 * 2;
-export class IEngineConstants {
+export class PsConstants {
     static createSubProblemsModel = {
         name: "gpt-4o",
         temperature: 0.7,
@@ -479,7 +479,7 @@ export class IEngineConstants {
     };
     static maxPercentOfEloMatched = 0.75;
     static minimumNumberOfPairwiseVotesForPopulation = 10;
-    static maxNumberOfPairwiseRankingPrompts = IEngineConstants.evolution.populationSize * IEngineConstants.minimumNumberOfPairwiseVotesForPopulation;
+    static maxNumberOfPairwiseRankingPrompts = PsConstants.evolution.populationSize * PsConstants.minimumNumberOfPairwiseVotesForPopulation;
     static maxTopSolutionsToCreatePolicies = 3;
     static maxTopPoliciesToProcess = 1;
     static maxEvidenceToUseForRatingEvidence = 5;

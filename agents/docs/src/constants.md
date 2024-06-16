@@ -1,4 +1,4 @@
-# IEngineConstants
+# PsConstants
 
 This class provides a set of constants and configurations for various AI models used in the engine. These constants include model configurations, token prices, limits, and other settings.
 
@@ -6,42 +6,42 @@ This class provides a set of constants and configurations for various AI models 
 
 | Name                                      | Type                      | Description                                                                 |
 |-------------------------------------------|---------------------------|-----------------------------------------------------------------------------|
-| createSubProblemsModel                    | IEngineBaseAIModelConstants | Configuration for the "createSubProblems" model.                            |
-| policiesSeedModel                         | IEngineBaseAIModelConstants | Configuration for the "policiesSeed" model.                                 |
-| analyseExternalSolutionsModel             | IEngineBaseAIModelConstants | Configuration for the "analyseExternalSolutions" model.                     |
-| createEntitiesModel                       | IEngineBaseAIModelConstants | Configuration for the "createEntities" model.                               |
+| createSubProblemsModel                    | PsBaseAIModelConstants | Configuration for the "createSubProblems" model.                            |
+| policiesSeedModel                         | PsBaseAIModelConstants | Configuration for the "policiesSeed" model.                                 |
+| analyseExternalSolutionsModel             | PsBaseAIModelConstants | Configuration for the "analyseExternalSolutions" model.                     |
+| createEntitiesModel                       | PsBaseAIModelConstants | Configuration for the "createEntities" model.                               |
 | topicMapSolutionsModel                    | object                    | Configuration for the "topicMapSolutions" model.                            |
-| createSolutionImagesModel                 | IEngineBaseAIModelConstants | Configuration for the "createSolutionImages" model.                         |
-| createSearchQueriesModel                  | IEngineBaseAIModelConstants | Configuration for the "createSearchQueries" model.                          |
-| createEvidenceSearchQueriesModel          | IEngineBaseAIModelConstants | Configuration for the "createEvidenceSearchQueries" model.                  |
-| createRootCauseSearchQueriesModel         | IEngineBaseAIModelConstants | Configuration for the "createRootCauseSearchQueries" model.                 |
-| searchQueryRankingsModel                  | IEngineBaseAIModelConstants | Configuration for the "searchQueryRankings" model.                          |
-| searchResultsRankingsModel                | IEngineBaseAIModelConstants | Configuration for the "searchResultsRankings" model.                        |
-| subProblemsRankingsModel                  | IEngineBaseAIModelConstants | Configuration for the "subProblemsRankings" model.                          |
-| entitiesRankingsModel                     | IEngineBaseAIModelConstants | Configuration for the "entitiesRankings" model.                             |
-| solutionsRankingsModel                    | IEngineBaseAIModelConstants | Configuration for the "solutionsRankings" model.                            |
-| prosConsRankingsModel                     | IEngineBaseAIModelConstants | Configuration for the "prosConsRankings" model.                             |
-| getPageAnalysisModel                      | IEngineBaseAIModelConstants | Configuration for the "getPageAnalysis" model.                              |
-| getSolutionsPagesAnalysisModel            | IEngineBaseAIModelConstants | Configuration for the "getSolutionsPagesAnalysis" model.                    |
-| rankWebSolutionsModel                     | IEngineBaseAIModelConstants | Configuration for the "rankWebSolutions" model.                             |
-| reduceSubProblemsModel                    | IEngineBaseAIModelConstants | Configuration for the "reduceSubProblems" model.                            |
-| rateWebEvidenceModel                      | IEngineBaseAIModelConstants | Configuration for the "rateWebEvidence" model.                              |
-| rateWebRootCausesModel                    | IEngineBaseAIModelConstants | Configuration for the "rateWebRootCauses" model.                            |
-| rankWebEvidenceModel                      | IEngineBaseAIModelConstants | Configuration for the "rankWebEvidence" model.                              |
-| rankWebRootCausesModel                    | IEngineBaseAIModelConstants | Configuration for the "rankWebRootCauses" model.                            |
-| getRefinedEvidenceModel                   | IEngineBaseAIModelConstants | Configuration for the "getRefinedEvidence" model.                           |
-| getRefinedRootCausesModel                 | IEngineBaseAIModelConstants | Configuration for the "getRefinedRootCauses" model.                         |
-| reapSolutionsModel                        | IEngineBaseAIModelConstants | Configuration for the "reapSolutions" model.                                |
-| groupSolutionsModel                       | IEngineBaseAIModelConstants | Configuration for the "groupSolutions" model.                               |
-| rateSolutionsModel                        | IEngineBaseAIModelConstants | Configuration for the "rateSolutions" model.                                |
-| createSolutionsModel                      | IEngineBaseAIModelConstants | Configuration for the "createSolutions" model.                              |
-| evolveSolutionsModel                      | IEngineBaseAIModelConstants | Configuration for the "evolveSolutions" model.                              |
-| createProsConsModel                       | IEngineBaseAIModelConstants | Configuration for the "createProsCons" model.                               |
-| evolutionMutateModel                      | IEngineBaseAIModelConstants | Configuration for the "evolutionMutate" model.                              |
-| evolutionRecombineModel                   | IEngineBaseAIModelConstants | Configuration for the "evolutionRecombine" model.                           |
-| validationModel                           | IEngineBaseAIModelConstants | Configuration for the "validation" model.                                   |
-| ingestionModel                            | IEngineBaseAIModelConstants | Configuration for the "ingestion" model.                                    |
-| engineerModel                             | IEngineBaseAIModelConstants | Configuration for the "engineer" model.                                     |
+| createSolutionImagesModel                 | PsBaseAIModelConstants | Configuration for the "createSolutionImages" model.                         |
+| createSearchQueriesModel                  | PsBaseAIModelConstants | Configuration for the "createSearchQueries" model.                          |
+| createEvidenceSearchQueriesModel          | PsBaseAIModelConstants | Configuration for the "createEvidenceSearchQueries" model.                  |
+| createRootCauseSearchQueriesModel         | PsBaseAIModelConstants | Configuration for the "createRootCauseSearchQueries" model.                 |
+| searchQueryRankingsModel                  | PsBaseAIModelConstants | Configuration for the "searchQueryRankings" model.                          |
+| searchResultsRankingsModel                | PsBaseAIModelConstants | Configuration for the "searchResultsRankings" model.                        |
+| subProblemsRankingsModel                  | PsBaseAIModelConstants | Configuration for the "subProblemsRankings" model.                          |
+| entitiesRankingsModel                     | PsBaseAIModelConstants | Configuration for the "entitiesRankings" model.                             |
+| solutionsRankingsModel                    | PsBaseAIModelConstants | Configuration for the "solutionsRankings" model.                            |
+| prosConsRankingsModel                     | PsBaseAIModelConstants | Configuration for the "prosConsRankings" model.                             |
+| getPageAnalysisModel                      | PsBaseAIModelConstants | Configuration for the "getPageAnalysis" model.                              |
+| getSolutionsPagesAnalysisModel            | PsBaseAIModelConstants | Configuration for the "getSolutionsPagesAnalysis" model.                    |
+| rankWebSolutionsModel                     | PsBaseAIModelConstants | Configuration for the "rankWebSolutions" model.                             |
+| reduceSubProblemsModel                    | PsBaseAIModelConstants | Configuration for the "reduceSubProblems" model.                            |
+| rateWebEvidenceModel                      | PsBaseAIModelConstants | Configuration for the "rateWebEvidence" model.                              |
+| rateWebRootCausesModel                    | PsBaseAIModelConstants | Configuration for the "rateWebRootCauses" model.                            |
+| rankWebEvidenceModel                      | PsBaseAIModelConstants | Configuration for the "rankWebEvidence" model.                              |
+| rankWebRootCausesModel                    | PsBaseAIModelConstants | Configuration for the "rankWebRootCauses" model.                            |
+| getRefinedEvidenceModel                   | PsBaseAIModelConstants | Configuration for the "getRefinedEvidence" model.                           |
+| getRefinedRootCausesModel                 | PsBaseAIModelConstants | Configuration for the "getRefinedRootCauses" model.                         |
+| reapSolutionsModel                        | PsBaseAIModelConstants | Configuration for the "reapSolutions" model.                                |
+| groupSolutionsModel                       | PsBaseAIModelConstants | Configuration for the "groupSolutions" model.                               |
+| rateSolutionsModel                        | PsBaseAIModelConstants | Configuration for the "rateSolutions" model.                                |
+| createSolutionsModel                      | PsBaseAIModelConstants | Configuration for the "createSolutions" model.                              |
+| evolveSolutionsModel                      | PsBaseAIModelConstants | Configuration for the "evolveSolutions" model.                              |
+| createProsConsModel                       | PsBaseAIModelConstants | Configuration for the "createProsCons" model.                               |
+| evolutionMutateModel                      | PsBaseAIModelConstants | Configuration for the "evolutionMutate" model.                              |
+| evolutionRecombineModel                   | PsBaseAIModelConstants | Configuration for the "evolutionRecombine" model.                           |
+| validationModel                           | PsBaseAIModelConstants | Configuration for the "validation" model.                                   |
+| ingestionModel                            | PsBaseAIModelConstants | Configuration for the "ingestion" model.                                    |
+| engineerModel                             | PsBaseAIModelConstants | Configuration for the "engineer" model.                                     |
 | getPageCacheExpiration                    | number                    | Cache expiration time for pages (in seconds).                               |
 | maxSubProblems                            | number                    | Maximum number of sub-problems.                                             |
 | maxNumberGeneratedOfEntities              | number                    | Maximum number of generated entities.                                       |
@@ -95,9 +95,9 @@ This class provides a set of constants and configurations for various AI models 
 ## Example
 
 ```typescript
-import { IEngineConstants } from '@policysynth/agents/constants.js';
+import { PsConstants } from '@policysynth/agents/constants.js';
 
-// Example usage of IEngineConstants
-const modelConfig = IEngineConstants.createSubProblemsModel;
+// Example usage of PsConstants
+const modelConfig = PsConstants.createSubProblemsModel;
 console.log(modelConfig.name); // Output: gpt-4o
 ```

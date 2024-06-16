@@ -15,7 +15,7 @@ export declare class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     getEvidenceTextAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSEvidenceRawWebPageData | PSRefinedPolicyEvidence>;
     getEvidenceAIAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSEvidenceRawWebPageData>;
     mergeAnalysisData(data1: PSEvidenceRawWebPageData, data2: PSEvidenceRawWebPageData): PSEvidenceRawWebPageData;
-    processPageText(text: string, subProblemIndex: number | undefined, url: string, type: IEngineWebPageTypes | PSEvidenceWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
+    processPageText(text: string, subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
     get maxTopWebPagesToGet(): number;
     getAndProcessEvidencePage(subProblemIndex: number, url: string, browserPage: Page, type: PSEvidenceWebPageTypes, policy: PSPolicy): Promise<boolean>;
     processSubProblems(browser: Browser): Promise<void>;

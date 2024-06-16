@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
@@ -11,7 +11,7 @@ const redis = new ioredis(
 export class SearchWebProcessor extends BaseProblemSolvingAgent {
   seenUrls!: Map<string, Set<string>>;
 
-  async callSearchApi(query: string): Promise<IEngineSearchResultItem[]> {
+  async callSearchApi(query: string): Promise<PsSearchResultItem[]> {
     if (process.env.GOOGLE_SEARCH_API_KEY &&
         process.env.GOOGLE_SEARCH_API_CX_ID) {
         const googleSearchApi = new GoogleSearchApi();
@@ -26,7 +26,7 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
   }
 
   async getQueryResults(queriesToSearch: string[], id: string) {
-    let searchResults: IEngineSearchResultItem[] = [];
+    let searchResults: PsSearchResultItem[] = [];
 
     for (let q = 0; q < queriesToSearch.length; q++) {
       const generalSearchData = await this.callSearchApi(queriesToSearch[q]);
@@ -69,16 +69,16 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
     return { searchResults };
   }
 
-  async processSubProblems(searchQueryType: IEngineWebPageTypes) {
+  async processSubProblems(searchQueryType: PsWebPageTypes) {
     for (
       let s = 0;
       s <
-      Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
       s++
     ) {
       let queriesToSearch = this.memory.subProblems[s].searchQueries[
         searchQueryType
-      ].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
+      ].slice(0, PsConstants.maxTopQueriesToSearchPerType);
 
       const results = await this.getQueryResults(
         queriesToSearch,
@@ -107,14 +107,14 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
 
   async processEntities(
     subProblemIndex: number,
-    searchQueryType: IEngineWebPageTypes
+    searchQueryType: PsWebPageTypes
   ) {
     for (
       let e = 0;
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        IEngineConstants.maxTopEntitiesToSearch
+        PsConstants.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -122,7 +122,7 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
         e
       ].searchQueries![searchQueryType].slice(
         0,
-        IEngineConstants.maxTopQueriesToSearchPerType
+        PsConstants.maxTopQueriesToSearchPerType
       );
 
       const results = await this.getQueryResults(
@@ -149,10 +149,10 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
     }
   }
 
-  async processProblemStatement(searchQueryType: IEngineWebPageTypes) {
+  async processProblemStatement(searchQueryType: PsWebPageTypes) {
     let queriesToSearch = this.memory.problemStatement.searchQueries![
       searchQueryType
-    ].slice(0, IEngineConstants.maxTopQueriesToSearchPerType);
+    ].slice(0, PsConstants.maxTopQueriesToSearchPerType);
 
     this.logger.info("Getting search data for problem statement");
 
@@ -181,7 +181,7 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
         "news",
       ] as const) {
         await this.processProblemStatement(searchQueryType);
-        await this.processSubProblems(searchQueryType as IEngineWebPageTypes);
+        await this.processSubProblems(searchQueryType as PsWebPageTypes);
       }
     } catch (error: any) {
       this.logger.error("Error processing web search");

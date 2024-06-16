@@ -1,5 +1,5 @@
 import { PolicySynthAgentBase } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsConstants } from "./constants.js";
 export class BaseProblemSolvingAgent extends PolicySynthAgentBase {
     memory;
     job;
@@ -89,7 +89,7 @@ export class BaseProblemSolvingAgent extends PolicySynthAgentBase {
         const subProblem = this.memory.subProblems[index];
         const entitiesText = `
       ${subProblem.entities
-            .slice(0, IEngineConstants.maxTopEntitiesToRender)
+            .slice(0, PsConstants.maxTopEntitiesToRender)
             .map((entity) => {
             let entityEffects = this.renderEntityPosNegReasons(entity);
             if (entityEffects.length > 0) {

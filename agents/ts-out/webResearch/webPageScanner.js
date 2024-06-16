@@ -5,7 +5,7 @@ import { createGzip } from "zlib";
 import { promisify } from "util";
 import { writeFile, readFile } from "fs";
 import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
@@ -41,14 +41,14 @@ export class WebPageScanner extends GetWebPagesProcessor {
         const tokenCount = words.length * 1.25;
         const promptTokenCount = { totalCount: 500, countPerMessage: [] };
         const totalTokenCount = tokenCount + 500 +
-            IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+            PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt("", text, subProblemIndex, entityIndex);
         console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
-        const analysis = await this.callLLM("web-get-pages", IEngineConstants.getSolutionsPagesAnalysisModel, messages, true, true);
+        const analysis = await this.callLLM("web-get-pages", PsConstants.getSolutionsPagesAnalysisModel, messages, true, true);
         console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
         return analysis;
     }
@@ -89,19 +89,19 @@ export class WebPageScanner extends GetWebPagesProcessor {
         this.systemPromptOverride = scanSystemPrompt;
         this.progressFunction = progressFunction;
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.getSolutionsPagesAnalysisModel.temperature,
-            maxTokens: IEngineConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-            modelName: IEngineConstants.getSolutionsPagesAnalysisModel.name,
-            verbose: IEngineConstants.getSolutionsPagesAnalysisModel.verbose,
+            temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
+            maxTokens: PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
+            modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
+            verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
         });
         this.logger.info("Web Pages Scanner");
         this.totalPagesSave = 0;
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         for (let i = 0; i < listOfUrls.length; i++) {
             if (this.progressFunction) {
                 this.progressFunction(`${i + 1}/${listOfUrls.length}`);

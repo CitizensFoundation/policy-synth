@@ -1,7 +1,7 @@
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
 export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
@@ -43,7 +43,7 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
         ${rawWebData.url}
 
         Policy Evidence to Rate:
-        ${JSON.stringify(evidenceToRank.slice(0, IEngineConstants.maxEvidenceToUseForRatingEvidence), null, 2)}
+        ${JSON.stringify(evidenceToRank.slice(0, PsConstants.maxEvidenceToUseForRatingEvidence), null, 2)}
 
         Your ratings in JSON format:
        `),
@@ -52,10 +52,10 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
     async rateWebEvidence(policy, subProblemIndex) {
         this.logger.info(`Rating all web evidence for policy ${policy.title}`);
         try {
-            for (const evidenceType of IEngineConstants.policyEvidenceFieldTypes) {
+            for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
                 let offset = 0;
                 const limit = 100;
-                const searchType = IEngineConstants.simplifyEvidenceType(evidenceType);
+                const searchType = PsConstants.simplifyEvidenceType(evidenceType);
                 while (true) {
                     const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, searchType, policy.title, limit, offset);
                     this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
@@ -72,7 +72,7 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
                             Array.isArray(webPage[fieldKey]) &&
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
-                            let ratedEvidence = await this.callLLM("rate-web-evidence", IEngineConstants.rateWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, webPage, evidenceToRank, fieldKey));
+                            let ratedEvidence = await this.callLLM("rate-web-evidence", PsConstants.rateWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, webPage, evidenceToRank, fieldKey));
                             await this.evidenceWebPageVectorStore.updateScores(id, ratedEvidence, true);
                             this.logger.debug(`${id} - Evident ratings (${evidenceType}):\n${JSON.stringify(ratedEvidence, null, 2)}`);
                         }
@@ -91,12 +91,12 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Rate web evidence Processor");
         super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.rateWebEvidenceModel.temperature,
-            maxTokens: IEngineConstants.rateWebEvidenceModel.maxOutputTokens,
-            modelName: IEngineConstants.rateWebEvidenceModel.name,
-            verbose: IEngineConstants.rateWebEvidenceModel.verbose,
+            temperature: PsConstants.rateWebEvidenceModel.temperature,
+            maxTokens: PsConstants.rateWebEvidenceModel.maxOutputTokens,
+            modelName: PsConstants.rateWebEvidenceModel.name,
+            verbose: PsConstants.rateWebEvidenceModel.verbose,
         });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
@@ -106,7 +106,7 @@ export class RateWebEvidenceProcessor extends BaseProblemSolvingAgent {
                 if (subProblem.policies) {
                     const policies = subProblem.policies.populations[currentGeneration];
                     for (let p = 0; p <
-                        Math.min(policies.length, IEngineConstants.maxTopPoliciesToProcess); p++) {
+                        Math.min(policies.length, PsConstants.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
                             await this.rateWebEvidence(policy, subProblemIndex);

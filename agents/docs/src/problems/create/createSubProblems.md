@@ -14,7 +14,7 @@ The `CreateSubProblemsProcessor` class is a specialized agent for creating and r
 
 | Name                | Parameters        | Return Type | Description                 |
 |---------------------|-------------------|-------------|-----------------------------|
-| renderRefinePrompt  | results: IEngineSubProblem[] | Promise<BaseMessage[]> | Generates a prompt for refining sub-problems. |
+| renderRefinePrompt  | results: PsSubProblem[] | Promise<BaseMessage[]> | Generates a prompt for refining sub-problems. |
 | renderCreatePrompt  | None              | Promise<BaseMessage[]> | Generates a prompt for creating sub-problems. |
 | createSubProblems   | None              | Promise<void> | Creates and refines sub-problems using the language model. |
 | process             | None              | Promise<void> | Main processing method that initializes the chat instance and creates sub-problems. |

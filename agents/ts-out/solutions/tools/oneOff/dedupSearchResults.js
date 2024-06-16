@@ -1,5 +1,5 @@
 import ioredis from "ioredis";
-import { IEngineConstants } from "../../../constants.js";
+import { PsConstants } from "../../../constants.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 class DeduplicateSearchProcessor {
     memory;
@@ -31,7 +31,7 @@ class DeduplicateSearchProcessor {
         return deduplicatedArray;
     }
     deduplicateSubProblems(searchQueryType) {
-        const subProblemsCount = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsCount = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         for (let s = 0; s < subProblemsCount; s++) {
             if (this.memory.subProblems[s].searchResults) {
                 const previousCount = this.memory.subProblems[s].searchResults.pages[searchQueryType]
@@ -49,7 +49,7 @@ class DeduplicateSearchProcessor {
     }
     deduplicateEntities(subProblemIndex, searchQueryType) {
         const subProblem = this.memory.subProblems[subProblemIndex];
-        const entitiesCount = Math.min(subProblem.entities.length, IEngineConstants.maxTopEntitiesToSearch);
+        const entitiesCount = Math.min(subProblem.entities.length, PsConstants.maxTopEntitiesToSearch);
         for (let e = 0; e < entitiesCount; e++) {
             if (subProblem.entities[e].searchResults) {
                 const previousCount = subProblem.entities[e].searchResults.pages[searchQueryType].length;

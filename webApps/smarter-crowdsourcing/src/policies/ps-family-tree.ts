@@ -16,7 +16,7 @@ export class PsFamilyTree extends YpBaseElement {
   subProblemIndex!: number;
 
   @property({ type: Object })
-  solution!: IEngineSolution;
+  solution!: PsSolution;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -175,7 +175,7 @@ export class PsFamilyTree extends YpBaseElement {
     ];
   }
 
-  getParentSolution(parent: string): IEngineSolution {
+  getParentSolution(parent: string): PsSolution {
     const splitParentIndex = parent.split(':');
     const populationIndex = parseInt(splitParentIndex[0]);
     const solutionIndex = parseInt(splitParentIndex[1]);
@@ -186,7 +186,7 @@ export class PsFamilyTree extends YpBaseElement {
   }
 
   renderFamilyTree(
-    currentSolution: IEngineSolution,
+    currentSolution: PsSolution,
     first = false,
     isMutatedFrom = false
   ): any {

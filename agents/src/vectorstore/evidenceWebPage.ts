@@ -2,7 +2,7 @@ import weaviate from "weaviate-ts-client";
 import { WeaviateClient } from "weaviate-ts-client";
 import { PolicySynthAgentBase } from "../baseAgent.js";
 
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 import fs from "fs/promises";
 
 export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
@@ -264,7 +264,7 @@ export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
         .do()
         .then((res) => {
           this.logger.info(`Weaviate: Have got web page ${id}`);
-          const webData = (res as IEngineWebPageGraphQlSingleResult)
+          const webData = (res as PsWebPageGraphQlSingleResult)
             .properties as PSEvidenceRawWebPageData;
           resolve(webData);
         })
@@ -663,7 +663,7 @@ export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
 
       const resultPages = results.data.Get[
         "EvidenceWebPage"
-      ] as IEngineWebPageAnalysisData[];
+      ] as PsWebPageAnalysisData[];
 
       if (resultPages.length > 0) {
         let allSubProblems = true;
@@ -741,7 +741,7 @@ export class EvidenceWebPageVectorStore extends PolicySynthAgentBase {
         .get()
         .withClassName("EvidenceWebPage")
         .withNearText({ concepts: [query] })
-        .withLimit(IEngineConstants.limits.webPageVectorResultsForNewSolutions)
+        .withLimit(PsConstants.limits.webPageVectorResultsForNewSolutions)
         .withWhere({
           operator: "And",
           operands: where,

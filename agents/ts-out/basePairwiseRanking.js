@@ -1,5 +1,5 @@
 import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsConstants } from "./constants.js";
 export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
     prompts = {};
     allItems = {};
@@ -7,7 +7,7 @@ export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
     K_FACTOR_INITIAL = 60; // Initial K-factor
     K_FACTOR_MIN = 10; // Minimum K-factor
     NUM_COMPARISONS_FOR_MIN_K = 20; // Number of comparisons for K to reach its minimum
-    maxNumberOfPrompts = IEngineConstants.maxNumberOfPairwiseRankingPrompts;
+    maxNumberOfPrompts = PsConstants.maxNumberOfPairwiseRankingPrompts;
     numComparisons = {};
     KFactors = {};
     eloRatings = {};
@@ -33,7 +33,7 @@ export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
         this.maxNumberOfPrompts =
             maxPrompts ||
                 Math.max(250, Math.floor(((allItems.length * (allItems.length - 1)) / 2) *
-                    IEngineConstants.maxPercentOfEloMatched));
+                    PsConstants.maxPercentOfEloMatched));
         this.logger.debug(`Max number of prompts: ${this.maxNumberOfPrompts}`);
         this.prompts[subProblemIndex] = [];
         this.numComparisons[subProblemIndex] = {};
@@ -68,7 +68,7 @@ export class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
         //this.logger.info("Getting results from LLM");
         let wonItemIndex;
         let lostItemIndex;
-        const maxRetryCount = IEngineConstants.rankingLLMmaxRetryCount;
+        const maxRetryCount = PsConstants.rankingLLMmaxRetryCount;
         let retry = true;
         let retryCount = 0;
         while (retry && retryCount < maxRetryCount) {

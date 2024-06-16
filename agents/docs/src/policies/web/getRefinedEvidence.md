@@ -16,7 +16,7 @@ This class extends `GetEvidenceWebPagesProcessor` to refine web evidence for pol
 | getEvidenceTextAnalysis | subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string | Promise<PSRefinedPolicyEvidence> | Analyzes the text for evidence and returns refined evidence data. |
 | getRefinedEvidenceTextAIAnalysis | subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string | Promise<PSRefinedPolicyEvidence> | Gets refined evidence analysis using AI based on the provided text. |
 | mergeRefinedAnalysisData | data1: PSRefinedPolicyEvidence, data2: PSRefinedPolicyEvidence | PSRefinedPolicyEvidence | Merges two sets of refined analysis data into one. |
-| processPageText | text: string, subProblemIndex: number \| undefined, url: string, type: IEngineWebPageTypes \| PSEvidenceWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined | Promise<void> | Processes the text from a web page for evidence analysis. |
+| processPageText | text: string, subProblemIndex: number \| undefined, url: string, type: PsWebPageTypes \| PSEvidenceWebPageTypes, entityIndex: number \| undefined, policy: PSPolicy \| undefined | Promise<void> | Processes the text from a web page for evidence analysis. |
 | getAndProcessEvidencePage | subProblemIndex: number, url: string, browserPage: Page, type: PSEvidenceWebPageTypes, policy: PSPolicy | Promise<boolean> | Processes a web page for evidence, handling both HTML and PDF content. |
 | refineWebEvidence | policy: PSPolicy, subProblemIndex: number, page: Page | Promise<void> | Refines web evidence for a given policy and sub-problem index. |
 | processSubProblems | browser: Browser | Promise<void> | Processes sub-problems to refine evidence across multiple policies. |

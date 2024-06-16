@@ -1,6 +1,6 @@
 import ioredis from "ioredis";
 import fs from "fs/promises";
-import { IEngineConstants } from "../../../constants.js";
+import { PsConstants } from "../../../constants.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -20,10 +20,10 @@ class DeduplicateSearchProcessor {
   }
 
   deduplicateArrayByProperty(
-    arr: Array<IEngineSearchResultItem>,
+    arr: Array<PsSearchResultItem>,
     prop: string,
     id: string
-  ): Array<IEngineSearchResultItem> {
+  ): Array<PsSearchResultItem> {
     this.totalCount += arr.length;
     if (!this.seenUrls.has(id)) {
       this.seenUrls.set(id, new Set());
@@ -42,10 +42,10 @@ class DeduplicateSearchProcessor {
     return deduplicatedArray;
   }
 
-  deduplicateSubProblems(searchQueryType: IEngineWebPageTypes) {
+  deduplicateSubProblems(searchQueryType: PsWebPageTypes) {
     const subProblemsCount = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
     for (let s = 0; s < subProblemsCount; s++) {
       if (this.memory.subProblems[s].searchResults) {
@@ -73,13 +73,13 @@ class DeduplicateSearchProcessor {
 
   deduplicateEntities(
     subProblemIndex: number,
-    searchQueryType: IEngineWebPageTypes
+    searchQueryType: PsWebPageTypes
   ) {
-    const subProblem: IEngineSubProblem =
+    const subProblem: PsSubProblem =
       this.memory.subProblems[subProblemIndex];
     const entitiesCount = Math.min(
       subProblem.entities.length,
-      IEngineConstants.maxTopEntitiesToSearch
+      PsConstants.maxTopEntitiesToSearch
     );
     for (let e = 0; e < entitiesCount; e++) {
       if (subProblem.entities[e].searchResults) {
@@ -102,7 +102,7 @@ class DeduplicateSearchProcessor {
     }
   }
 
-  deduplicateProblemStatement(searchQueryType: IEngineWebPageTypes) {
+  deduplicateProblemStatement(searchQueryType: PsWebPageTypes) {
     const previousCount =
       this.memory.problemStatement.searchResults.pages[searchQueryType].length;
     this.memory.problemStatement.searchResults.pages[searchQueryType] =
@@ -122,7 +122,7 @@ class DeduplicateSearchProcessor {
 
   process() {
     try {
-      const searchQueryTypes: IEngineWebPageTypes[] = [
+      const searchQueryTypes: PsWebPageTypes[] = [
         "general",
         "scientific",
         "openData",

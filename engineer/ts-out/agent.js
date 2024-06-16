@@ -6,7 +6,7 @@ import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import fs from "fs";
 import path from "path";
 import strip from "strip-comments";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import axios from "axios";
@@ -221,7 +221,7 @@ Please return a JSON string array of the relevant files:`;
         while (retryCount < 5) {
             const systemPrompt = getSystemPrompt(addMinOneFileInstructions);
             try {
-                relevantFiles = (await this.callLLM("engineering-agent", IEngineConstants.engineerModel, [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)], true));
+                relevantFiles = (await this.callLLM("engineering-agent", PsConstants.engineerModel, [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)], true));
                 console.log(JSON.stringify(relevantFiles, null, 2));
                 relevantFiles = relevantFiles.map((filePath) => this.addWorkspacePathToFileIfNeeded(filePath));
                 console.log("Filtered relevant files", relevantFiles);

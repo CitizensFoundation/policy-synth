@@ -1,4 +1,4 @@
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
@@ -23,9 +23,9 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
             }
             if (!policy.evidenceSearchResults[searchResultType]) {
                 let queriesToSearch = policy.evidenceSearchQueries[searchResultType]
-                    .slice(0, IEngineConstants.maxTopEvidenceQueriesToSearchPerType);
+                    .slice(0, PsConstants.maxTopEvidenceQueriesToSearchPerType);
                 const results = await this.getQueryResults(queriesToSearch, `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`);
-                this.searchCounter += IEngineConstants.maxTopEvidenceQueriesToSearchPerType;
+                this.searchCounter += PsConstants.maxTopEvidenceQueriesToSearchPerType;
                 policy.evidenceSearchResults[searchResultType] = results.searchResults;
                 this.logger.info(`Have saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
                 await this.saveMemory();
@@ -39,7 +39,7 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
         this.logger.info("Search Web for Evidence Processor");
         this.seenUrls = new Map();
         //super.process();
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
         for (let subProblemIndex = 0; subProblemIndex < subProblemsLimit; subProblemIndex++) {
             const subProblem = this.memory.subProblems[subProblemIndex];
             const policies = subProblem.policies?.populations[subProblem.policies.populations.length - 1];

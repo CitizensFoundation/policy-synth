@@ -1,4 +1,4 @@
-# IEngineConstants
+# PsConstants
 
 This class encapsulates constants and configurations used across various AI models for engine operations. It includes settings for AI model parameters such as temperature, token limits, cost per token, and rate limits for transactions and requests per minute. Additionally, it contains utility methods for simplifying evidence and root cause types.
 
@@ -18,40 +18,40 @@ This class encapsulates constants and configurations used across various AI mode
 | gpt35_RPM                                      | number  | Requests per minute limit for GPT-3.5 models. |
 | gpt4_TPM                                       | number  | Transactions per minute limit for GPT-4 models. |
 | gpt4_RPM                                       | number  | Requests per minute limit for GPT-4 models. |
-| createSubProblemsModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in creating sub-problems. |
-| policiesSeedModel                              | IEngineBaseAIModelConstants | Configuration for the AI model used in seeding policies. |
-| analyseExternalSolutionsModel                  | IEngineBaseAIModelConstants | Configuration for the AI model used in analyzing external solutions. |
-| createEntitiesModel                            | IEngineBaseAIModelConstants | Configuration for the AI model used in creating entities. |
+| createSubProblemsModel                         | PsBaseAIModelConstants | Configuration for the AI model used in creating sub-problems. |
+| policiesSeedModel                              | PsBaseAIModelConstants | Configuration for the AI model used in seeding policies. |
+| analyseExternalSolutionsModel                  | PsBaseAIModelConstants | Configuration for the AI model used in analyzing external solutions. |
+| createEntitiesModel                            | PsBaseAIModelConstants | Configuration for the AI model used in creating entities. |
 | topicMapSolutionsModel                         | object  | Configuration related to topic mapping solutions. |
-| createSolutionImagesModel                      | IEngineBaseAIModelConstants | Configuration for the AI model used in creating solution images. |
-| createSearchQueriesModel                       | IEngineBaseAIModelConstants | Configuration for the AI model used in creating search queries. |
-| createEvidenceSearchQueriesModel               | IEngineBaseAIModelConstants | Configuration for the AI model used in creating evidence search queries. |
-| createRootCauseSearchQueriesModel              | IEngineBaseAIModelConstants | Configuration for the AI model used in creating root cause search queries. |
-| searchQueryRankingsModel                       | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking search queries. |
-| searchResultsRankingsModel                     | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking search results. |
-| subProblemsRankingsModel                       | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking sub-problems. |
-| entitiesRankingsModel                          | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking entities. |
-| solutionsRankingsModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking solutions. |
-| prosConsRankingsModel                          | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking pros and cons. |
-| getPageAnalysisModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in page analysis. |
-| getSolutionsPagesAnalysisModel                 | IEngineBaseAIModelConstants | Configuration for the AI model used in analyzing solutions pages. |
-| rankWebSolutionsModel                          | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking web solutions. |
-| reduceSubProblemsModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in reducing sub-problems. |
-| rateWebEvidenceModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in rating web evidence. |
-| rateWebRootCausesModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in rating web root causes. |
-| rankWebEvidenceModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking web evidence. |
-| rankWebRootCausesModel                         | IEngineBaseAIModelConstants | Configuration for the AI model used in ranking web root causes. |
-| getRefinedEvidenceModel                        | IEngineBaseAIModelConstants | Configuration for the AI model used in refining evidence. |
-| getRefinedRootCausesModel                      | IEngineBaseAIModelConstants | Configuration for the AI model used in refining root causes. |
-| reapSolutionsModel                             | IEngineBaseAIModelConstants | Configuration for the AI model used in reaping solutions. |
-| groupSolutionsModel                            | IEngineBaseAIModelConstants | Configuration for the AI model used in grouping solutions. |
-| rateSolutionsModel                             | IEngineBaseAIModelConstants | Configuration for the AI model used in rating solutions. |
-| createSolutionsModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in creating solutions. |
-| evolveSolutionsModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in evolving solutions. |
-| createProsConsModel                            | IEngineBaseAIModelConstants | Configuration for the AI model used in creating pros and cons. |
-| evolutionMutateModel                           | IEngineBaseAIModelConstants | Configuration for the AI model used in mutation during evolution. |
-| evolutionRecombineModel                        | IEngineBaseAIModelConstants | Configuration for the AI model used in recombination during evolution. |
-| validationModel                                | IEngineBaseAIModelConstants | Configuration for the AI model used in validation. |
+| createSolutionImagesModel                      | PsBaseAIModelConstants | Configuration for the AI model used in creating solution images. |
+| createSearchQueriesModel                       | PsBaseAIModelConstants | Configuration for the AI model used in creating search queries. |
+| createEvidenceSearchQueriesModel               | PsBaseAIModelConstants | Configuration for the AI model used in creating evidence search queries. |
+| createRootCauseSearchQueriesModel              | PsBaseAIModelConstants | Configuration for the AI model used in creating root cause search queries. |
+| searchQueryRankingsModel                       | PsBaseAIModelConstants | Configuration for the AI model used in ranking search queries. |
+| searchResultsRankingsModel                     | PsBaseAIModelConstants | Configuration for the AI model used in ranking search results. |
+| subProblemsRankingsModel                       | PsBaseAIModelConstants | Configuration for the AI model used in ranking sub-problems. |
+| entitiesRankingsModel                          | PsBaseAIModelConstants | Configuration for the AI model used in ranking entities. |
+| solutionsRankingsModel                         | PsBaseAIModelConstants | Configuration for the AI model used in ranking solutions. |
+| prosConsRankingsModel                          | PsBaseAIModelConstants | Configuration for the AI model used in ranking pros and cons. |
+| getPageAnalysisModel                           | PsBaseAIModelConstants | Configuration for the AI model used in page analysis. |
+| getSolutionsPagesAnalysisModel                 | PsBaseAIModelConstants | Configuration for the AI model used in analyzing solutions pages. |
+| rankWebSolutionsModel                          | PsBaseAIModelConstants | Configuration for the AI model used in ranking web solutions. |
+| reduceSubProblemsModel                         | PsBaseAIModelConstants | Configuration for the AI model used in reducing sub-problems. |
+| rateWebEvidenceModel                           | PsBaseAIModelConstants | Configuration for the AI model used in rating web evidence. |
+| rateWebRootCausesModel                         | PsBaseAIModelConstants | Configuration for the AI model used in rating web root causes. |
+| rankWebEvidenceModel                           | PsBaseAIModelConstants | Configuration for the AI model used in ranking web evidence. |
+| rankWebRootCausesModel                         | PsBaseAIModelConstants | Configuration for the AI model used in ranking web root causes. |
+| getRefinedEvidenceModel                        | PsBaseAIModelConstants | Configuration for the AI model used in refining evidence. |
+| getRefinedRootCausesModel                      | PsBaseAIModelConstants | Configuration for the AI model used in refining root causes. |
+| reapSolutionsModel                             | PsBaseAIModelConstants | Configuration for the AI model used in reaping solutions. |
+| groupSolutionsModel                            | PsBaseAIModelConstants | Configuration for the AI model used in grouping solutions. |
+| rateSolutionsModel                             | PsBaseAIModelConstants | Configuration for the AI model used in rating solutions. |
+| createSolutionsModel                           | PsBaseAIModelConstants | Configuration for the AI model used in creating solutions. |
+| evolveSolutionsModel                           | PsBaseAIModelConstants | Configuration for the AI model used in evolving solutions. |
+| createProsConsModel                            | PsBaseAIModelConstants | Configuration for the AI model used in creating pros and cons. |
+| evolutionMutateModel                           | PsBaseAIModelConstants | Configuration for the AI model used in mutation during evolution. |
+| evolutionRecombineModel                        | PsBaseAIModelConstants | Configuration for the AI model used in recombination during evolution. |
+| validationModel                                | PsBaseAIModelConstants | Configuration for the AI model used in validation. |
 | getPageCacheExpiration                         | number  | The expiration time for page cache in seconds. |
 | maxSubProblems                                 | number  | The maximum number of sub-problems. |
 | maxNumberGeneratedOfEntities                   | number  | The maximum number of entities generated. |
@@ -105,17 +105,17 @@ This class encapsulates constants and configurations used across various AI mode
 ## Example
 
 ```typescript
-import { IEngineConstants } from '@policysynth/webapp/constants.js';
+import { PsConstants } from '@policysynth/webapp/constants.js';
 
-// Example usage of IEngineConstants
-const modelConfig = IEngineConstants.createSubProblemsModel;
+// Example usage of PsConstants
+const modelConfig = PsConstants.createSubProblemsModel;
 console.log(modelConfig.name); // Output: gpt-4-1106-preview
 
 // Simplifying evidence type
-const simplifiedEvidenceType = IEngineConstants.simplifyEvidenceType("allPossibleScientificEvidenceIdentifiedInTextContext");
+const simplifiedEvidenceType = PsConstants.simplifyEvidenceType("allPossibleScientificEvidenceIdentifiedInTextContext");
 console.log(simplifiedEvidenceType); // Output: scientificEvidence
 
 // Simplifying root cause type
-const simplifiedRootCauseType = IEngineConstants.simplifyRootCauseType("allPossibleEconomicRootCausesIdentifiedInTextContext");
+const simplifiedRootCauseType = PsConstants.simplifyRootCauseType("allPossibleEconomicRootCausesIdentifiedInTextContext");
 console.log(simplifiedRootCauseType); // Output: economicRootCause
 ```

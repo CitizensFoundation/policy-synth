@@ -10,7 +10,7 @@ No public properties are documented.
 
 | Name                | Parameters                  | Return Type                        | Description                                                                 |
 |---------------------|-----------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| voteOnPromptPair    | subProblemIndex: number, promptPair: number[] | Promise<IEnginePairWiseVoteResults> | Processes a pair of prompts and returns the voting results.                 |
+| voteOnPromptPair    | subProblemIndex: number, promptPair: number[] | Promise<PsPairWiseVoteResults> | Processes a pair of prompts and returns the voting results.                 |
 | processSubProblem   | subProblemIndex: number     | Promise<void>                      | Processes a single sub-problem by setting up and performing pairwise ranking. |
 | process             | -                           | Promise<void>                      | Processes all sub-problems to rank solution components.                     |
 

@@ -7,7 +7,7 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-import { IEngineConstants } from "@policysynth/agents/constants.js";
+import { PsConstants } from "@policysynth/agents/constants.js";
 import { IngestionAgentProcessor } from "@policysynth/agents/rag/ingestion/processor.js";
 import { DocumentCleanupAgent } from "@policysynth/agents/rag/ingestion/docCleanup.js";
 import { DocumentTreeSplitAgent } from "@policysynth/agents/rag/ingestion/docTreeSplitter.js";
@@ -76,12 +76,12 @@ export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcesso
         this.logger.debug("Launching browser");
 
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
         browserPage.setDefaultNavigationTimeout(
-          IEngineConstants.webPageNavTimeout
+          PsConstants.webPageNavTimeout
         );
 
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
         await this.downloadAndCache(
           this.dataLayout.documentUrls,
@@ -617,7 +617,7 @@ export class RebootingDemocracyIngestionProcessor extends IngestionAgentProcesso
       if (!urlExists) {
         try {
           const page = await browser.newPage();
-          await page.setUserAgent(IEngineConstants.currentUserAgent);
+          await page.setUserAgent(PsConstants.currentUserAgent);
           await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
 
           // Evaluate the title within the page context

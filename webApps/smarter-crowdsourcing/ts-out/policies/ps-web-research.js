@@ -8,7 +8,7 @@ import { css, html, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import '@yrpri/webapp/common/yp-image.js';
 import { PsStageBase } from '../base/ps-stage-base.js';
-import { IEngineConstants } from '../constants.js';
+import { PsConstants } from '../constants.js';
 let PsWebResearch = class PsWebResearch extends PsStageBase {
     constructor() {
         super(...arguments);
@@ -134,7 +134,7 @@ let PsWebResearch = class PsWebResearch extends PsStageBase {
     `;
     }
     renderSubProblemsWithAll() {
-        const topSubProblems = this.memory.subProblems.slice(0, IEngineConstants.maxSubProblems);
+        const topSubProblems = this.memory.subProblems.slice(0, PsConstants.maxSubProblems);
         return html `
       ${topSubProblems.map(subProblem => html `
             <div class="subProblemContainer layout vertical center-center">

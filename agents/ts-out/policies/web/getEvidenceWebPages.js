@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
@@ -104,7 +104,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         ]);
         const totalTokenCount = promptTokenCount.totalCount +
             textTokenCount.totalCount +
-            IEngineConstants.getPageAnalysisModel.maxOutputTokens;
+            PsConstants.getPageAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
     async getEvidenceTextAnalysis(subProblemIndex, policy, type, text) {
@@ -112,8 +112,8 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             const { totalTokenCount, promptTokenCount } = await this.getEvidenceTokenCount(text, subProblemIndex, policy, type);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
-            if (IEngineConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = IEngineConstants.getPageAnalysisModel.tokenLimit -
+            if (PsConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+                const maxTokenLengthForChunk = PsConstants.getPageAnalysisModel.tokenLimit -
                     promptTokenCount.totalCount -
                     512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
@@ -150,7 +150,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     async getEvidenceAIAnalysis(subProblemIndex, policy, type, text) {
         this.logger.info("Get Evidence AI Analysis");
         const messages = this.renderEvidenceScanningPrompt(subProblemIndex, policy, type, text);
-        const analysis = (await this.callLLM("web-get-evidence-pages", IEngineConstants.getPageAnalysisModel, messages, true, true));
+        const analysis = (await this.callLLM("web-get-evidence-pages", PsConstants.getPageAnalysisModel, messages, true, true));
         return analysis;
     }
     mergeAnalysisData(data1, data2) {
@@ -314,7 +314,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         }
     }
     get maxTopWebPagesToGet() {
-        return IEngineConstants.maxTopWebPagesToGet;
+        return PsConstants.maxTopWebPagesToGet;
     }
     async getAndProcessEvidencePage(subProblemIndex, url, browserPage, type, policy) {
         if (onlyCheckWhatNeedsToBeScanned) {
@@ -339,12 +339,12 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     async processSubProblems(browser) {
         const promises = [];
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.min(this.memory.subProblems.length, IEngineConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); subProblemIndex++) {
             promises.push((async () => {
                 const newPage = await browser.newPage();
-                newPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-                newPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-                await newPage.setUserAgent(IEngineConstants.currentUserAgent);
+                newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+                newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+                await newPage.setUserAgent(PsConstants.currentUserAgent);
                 const subProblem = this.memory.subProblems[subProblemIndex];
                 const policies = subProblem.policies?.populations[subProblem.policies.populations.length - 1];
                 if (policies) {
@@ -375,9 +375,9 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(IEngineConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
         await this.processSubProblems(browser);
         await this.saveMemory();
         await browser.close();
@@ -387,10 +387,10 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         this.logger.info("Get Evidence Web Pages Processor");
         //super.process();
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.getPageAnalysisModel.temperature,
-            maxTokens: IEngineConstants.getPageAnalysisModel.maxOutputTokens,
-            modelName: IEngineConstants.getPageAnalysisModel.name,
-            verbose: IEngineConstants.getPageAnalysisModel.verbose,
+            temperature: PsConstants.getPageAnalysisModel.temperature,
+            maxTokens: PsConstants.getPageAnalysisModel.maxOutputTokens,
+            modelName: PsConstants.getPageAnalysisModel.name,
+            verbose: PsConstants.getPageAnalysisModel.verbose,
         });
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);

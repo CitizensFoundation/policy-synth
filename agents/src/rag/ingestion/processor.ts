@@ -7,7 +7,7 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 import { PolicySynthAgentBase } from "../../baseAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { DocumentCleanupAgent } from "./docCleanup.js";
 import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -77,12 +77,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         this.logger.debug("Launching browser");
 
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(IEngineConstants.webPageNavTimeout);
+        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
         browserPage.setDefaultNavigationTimeout(
-          IEngineConstants.webPageNavTimeout
+          PsConstants.webPageNavTimeout
         );
 
-        await browserPage.setUserAgent(IEngineConstants.currentUserAgent);
+        await browserPage.setUserAgent(PsConstants.currentUserAgent);
 
         await this.downloadAndCache(
           this.dataLayout.documentUrls,
@@ -625,7 +625,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       if (!urlExists) {
         try {
           const page = await browser.newPage();
-          await page.setUserAgent(IEngineConstants.currentUserAgent);
+          await page.setUserAgent(PsConstants.currentUserAgent);
           await page.goto(newUrl, { waitUntil: ["load", "networkidle0"] });
 
           // Evaluate the title within the page context

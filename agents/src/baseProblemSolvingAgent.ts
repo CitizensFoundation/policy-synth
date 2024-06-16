@@ -1,6 +1,6 @@
 import { Job } from "bullmq";
 import { PolicySynthAgentBase } from "./baseAgent.js";
-import { IEngineConstants } from "./constants.js";
+import { PsConstants } from "./constants.js";
 
 export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
   override memory: PsBaseMemoryData;
@@ -13,7 +13,7 @@ export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
     this.memory = memory;
   }
 
-  getProCons(prosCons: IEngineProCon[] | undefined) {
+  getProCons(prosCons: PsProCon[] | undefined) {
     if (prosCons && prosCons.length > 0) {
       return prosCons.map((proCon) => proCon.description);
     } else {
@@ -111,7 +111,7 @@ export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
     const subProblem = this.memory.subProblems[index];
     const entitiesText = `
       ${subProblem.entities
-        .slice(0, IEngineConstants.maxTopEntitiesToRender)
+        .slice(0, PsConstants.maxTopEntitiesToRender)
         .map((entity) => {
           let entityEffects = this.renderEntityPosNegReasons(entity);
 
@@ -131,7 +131,7 @@ export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
     `;
   }
 
-  renderEntityPosNegReasons(item: IEngineAffectedEntity) {
+  renderEntityPosNegReasons(item: PsAffectedEntity) {
     let itemEffects = "";
 
     if (item.positiveEffects && item.positiveEffects.length > 0) {

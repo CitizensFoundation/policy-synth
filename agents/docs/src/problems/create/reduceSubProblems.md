@@ -6,8 +6,8 @@ This class extends `BaseProblemSolvingAgent` to specifically handle the reductio
 
 | Name                  | Parameters                                      | Return Type         | Description |
 |-----------------------|-------------------------------------------------|---------------------|-------------|
-| renderSelectPrompt    | problemStatement: string, subProblemsToConsider: IEngineSubProblem[] | Promise<HumanMessage[]> | Generates a prompt for selecting sub-problems from a list, formatted for human understanding. |
-| reduceSubProblems     | subProblemsToConsider: IEngineSubProblem[]      | void                | Processes the list of sub-problems by removing unnecessary properties and preparing them for further processing. |
+| renderSelectPrompt    | problemStatement: string, subProblemsToConsider: PsSubProblem[] | Promise<HumanMessage[]> | Generates a prompt for selecting sub-problems from a list, formatted for human understanding. |
+| reduceSubProblems     | subProblemsToConsider: PsSubProblem[]      | void                | Processes the list of sub-problems by removing unnecessary properties and preparing them for further processing. |
 | process               | -                                               | Promise<void>       | Orchestrates the sub-problem reduction process by setting up the environment, filtering sub-problems based on criteria, and invoking the reduction method. |
 
 ## Example

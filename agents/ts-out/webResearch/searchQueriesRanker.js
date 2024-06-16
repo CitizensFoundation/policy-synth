@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "../basePairwiseRanking.js";
-import { IEngineConstants } from "../constants.js";
+import { PsConstants } from "../constants.js";
 export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     searchQuestion;
     constructor(memory, progressFunction = undefined) {
@@ -38,15 +38,15 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         The Most Relevant Search Query Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", IEngineConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
     }
     async rankSearchQueries(queriesToRank, searchQuestion, maxPrompts = 120) {
         this.searchQuestion = searchQuestion;
         this.chat = new ChatOpenAI({
-            temperature: IEngineConstants.searchQueryRankingsModel.temperature,
-            maxTokens: IEngineConstants.searchQueryRankingsModel.maxOutputTokens,
-            modelName: IEngineConstants.searchQueryRankingsModel.name,
-            verbose: IEngineConstants.searchQueryRankingsModel.verbose,
+            temperature: PsConstants.searchQueryRankingsModel.temperature,
+            maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
+            modelName: PsConstants.searchQueryRankingsModel.name,
+            verbose: PsConstants.searchQueryRankingsModel.verbose,
         });
         this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
         await this.performPairwiseRanking(-1);

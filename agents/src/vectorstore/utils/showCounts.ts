@@ -1,5 +1,5 @@
 import { PolicySynthAgentBase } from "../../baseAgent.js";
-import { IEngineConstants } from "../../constants.js";
+import { PsConstants } from "../../constants.js";
 import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
@@ -38,7 +38,7 @@ class ShowCounts extends BaseProblemSolvingAgent {
       if (results.data.Get["WebPage"].length === 0) break;
 
       for (const retrievedObject of results.data.Get["WebPage"]) {
-        const webPage = retrievedObject as IEngineWebPageAnalysisData;
+        const webPage = retrievedObject as PsWebPageAnalysisData;
         const id = webPage._additional!.id!;
 
         this.foundIds.add(id);
@@ -88,7 +88,7 @@ class ShowCounts extends BaseProblemSolvingAgent {
     );
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      IEngineConstants.maxSubProblems
+      PsConstants.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
