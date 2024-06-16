@@ -44,9 +44,9 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
         // Ensure the first two files and the last two files are always kept
         const filesCompleted = this.memory.currentTask.filesCompleted;
         if (filesCompleted.length > 5) {
-            // Keep the first two files and the last two files
+            // Keep the first two files and the last three files
             const firstTwoFiles = filesCompleted.slice(0, 2);
-            const lastTwoFiles = filesCompleted.slice(-2);
+            const lastTwoFiles = filesCompleted.slice(-3);
             this.memory.currentTask.filesCompleted = [
                 ...firstTwoFiles,
                 ...lastTwoFiles,
