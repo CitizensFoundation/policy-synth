@@ -2,7 +2,7 @@ interface PSImplentingEntity extends PsAffectedEntity {}
 
 interface PSDependentEntity extends PsAffectedEntity {}
 
-interface PSMemoryData extends PsBaseMemoryData {}
+interface PSMemoryData extends PsSmarterCrowdsourcingMemoryData {}
 
 interface PSPolicyFeedback {
   source: "AI" | "Policymaker" | "Citizen";

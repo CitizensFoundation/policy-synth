@@ -4,7 +4,7 @@ export declare class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent
     webPageVectorStore: WebPageVectorStore;
     allUrls: Set<string>;
     duplicateUrls: string[];
-    constructor(memory: PsBaseMemoryData);
+    constructor(memory: PsSmarterCrowdsourcingMemoryData);
     processSubProblems(): Promise<void>;
     copyEntitySolutionsToSubProblem(subProblemIndex: number): Promise<void>;
     processProblemStatement(): Promise<void>;

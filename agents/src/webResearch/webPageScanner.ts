@@ -23,7 +23,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
   progressFunction: Function | undefined;
 
-  constructor(memory: PsBaseMemoryData) {
+  constructor(memory: PsSmarterCrowdsourcingMemoryData) {
     super(undefined as any, memory);
   }
 

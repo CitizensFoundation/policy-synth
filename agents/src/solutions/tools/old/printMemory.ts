@@ -6,7 +6,7 @@ const redis = new ioredis(
 
 const output = await redis.get("st_mem:1:id");
 
-const memory = JSON.parse(output!) as PsBaseMemoryData
+const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData
 
 console.log("output", JSON.stringify(memory, null, 2));
 

@@ -26,14 +26,14 @@ const logger = winston.createLogger({
 });
 
 export class PolicySynthAgentBase {
-  memory?: PsBaseMemoryData;
+  memory?: PsSmarterCrowdsourcingMemoryData;
   logger: winston.Logger;
   timeStart: number = Date.now();
   chat: ChatOpenAI | undefined;
 
-  private rateLimits: PsRateLimits = {};
+  private rateLimits: PsModelRateLimitTracking = {};
 
-  constructor(memory: PsBaseMemoryData | undefined = undefined) {
+  constructor(memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined) {
     if (memory) {
       this.memory = memory;
     }
@@ -155,7 +155,7 @@ export class PolicySynthAgentBase {
   }
 
   async callLLM(
-    stage: PsMemoryStageTypes,
+    stage: PsScMemoryStageTypes,
     modelConstants: PsBaseAIModelConstants,
     messages: BaseMessage[],
     parseJson = true,
@@ -377,7 +377,7 @@ export class PolicySynthAgentBase {
   }
 
   private updateMemoryStages(
-    stage: PsMemoryStageTypes,
+    stage: PsScMemoryStageTypes,
     tokensIn: number,
     tokensOut: number,
     modelConstants: PsBaseAIModelConstants

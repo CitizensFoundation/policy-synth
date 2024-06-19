@@ -2,7 +2,6 @@ import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsAgentAuditLog extends Model {
     id;
-    uuid;
     user_id;
     created_at;
     updated_at;
@@ -10,18 +9,12 @@ export class PsAgentAuditLog extends Model {
     connector_id;
     action;
     details;
-    timestamp;
 }
 PsAgentAuditLog.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-    },
-    uuid: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
     },
     user_id: {
         type: DataTypes.INTEGER,
@@ -52,19 +45,11 @@ PsAgentAuditLog.init({
     details: {
         type: DataTypes.JSONB,
         allowNull: true,
-    },
-    timestamp: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
+    }
 }, {
     sequelize,
     tableName: "ps_agent_audit_logs",
     indexes: [
-        {
-            fields: ["uuid"],
-        },
         {
             fields: ["user_id"],
         },

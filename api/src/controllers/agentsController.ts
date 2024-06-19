@@ -7,8 +7,8 @@ import {
   PsAgentClass,
   User,
   Group,
-  PsApiCost,
-  PsModelCost,
+  PsExternalApiUsage,
+  PsModelUsage,
   PsAiModel,
   PsAgentConnectorClass,
 } from "../models/index.js";
@@ -89,8 +89,8 @@ export class AgentsController {
         { model: PsAgentClass, as: "Class" },
         { model: User, as: "User" },
         { model: Group, as: "Group" },
-        { model: PsApiCost, as: "ApiCosts" },
-        { model: PsModelCost, as: "ModelCosts" },
+        { model: PsExternalApiUsage, as: "ExternalApiUsage" },
+        { model: PsModelUsage, as: "ModelUsage" },
         { model: PsAiModel, as: "AiModels" },
       ],
     });
@@ -130,8 +130,8 @@ export class AgentsController {
         { model: PsAgentClass, as: "Class" },
         { model: User, as: "User" },
         { model: Group, as: "Group" },
-        { model: PsApiCost, as: "ApiCosts" },
-        { model: PsModelCost, as: "ModelCosts" },
+        { model: PsExternalApiUsage, as: "ExternalApiUsage" },
+        { model: PsModelUsage, as: "ModelUsage" },
         { model: PsAiModel, as: "AiModels" },
       ],
     });

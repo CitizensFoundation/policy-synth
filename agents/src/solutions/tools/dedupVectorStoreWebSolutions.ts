@@ -18,7 +18,7 @@ export class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAg
   allUrls = new Set<string>();
   duplicateUrls: string[] = [];
 
-  constructor(memory: PsBaseMemoryData) {
+  constructor(memory: PsSmarterCrowdsourcingMemoryData) {
     super(null as any, memory);
     this.memory = memory;
   }

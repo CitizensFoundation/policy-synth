@@ -1,20 +1,88 @@
 interface PsBaseModelClass {
-  id: number; // Internal id and main key and index
-  uuid: string; // DataTypes.UUIDV4 used for APIs to access objects
+  id: number;
+  uuid: string;
   user_id: number;
   created_at: Date;
   updated_at: Date;
 }
 
+interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, 'uuid'> {}
+
+interface PsBaseModelPriceConfiguration {
+  costInTokensPerMillion: number;
+  costOutTokensPerMillion: number;
+  costInCachedContextTokensPerMillion?: number;
+  currency: string;
+}
+
+enum PsAiModelType {
+  Embedding = "embedding",
+  Text = "text",
+  MultiModal = "multiModal",
+  Audio = "audio",
+  Video = "video",
+  Image = "image"
+}
+
 interface PsAiModelConfiguration {
-  type: string;
-  provider: string;
+  type: PsAiModelType;
+  prices: PsBaseModelPriceConfiguration;
 }
 
 // tablename "ps_ai_models"
 interface PsAiModelAttributes extends PsBaseModelClass {
   name: string;
+  organization_id: number;
   configuration: PsAiModelConfiguration;
+}
+
+interface PsBaseApiPriceAdapter {
+  unitType: string;
+  pricePerUnit: number;
+  currency: string;
+  formula?: string;
+}
+
+// tablename "ps_external_apis"
+interface PsExternalApiAttributes extends PsBaseModelClass {
+  type: string;
+  organization_id: number;
+  priceAdapter: PsBaseApiPriceAdapter;
+}
+
+// tablename "ps_model_usage"
+interface PsModelUsageAttributes extends PsBaseModelClassNoUuid {
+  model_id: number;
+  tokenInCount: number;
+  tokenOutCount: number;
+  tokenInCachedContextCount?: number;
+  agent_id: number;
+  connector_id: number;
+}
+
+// tablename "ps_external_api_usage"
+interface PsExternalApiUsageAttributes extends PsBaseModelClassNoUuid {
+  external_api_id: number;
+  callCount: number;
+  agent_id: number; // or
+  connector_id: number; // or
+}
+
+interface PsAgentMemoryData {
+  redisKey: string;
+  timeStart: number;
+  groupId: number;
+  communityId: number;
+  domainId: number;
+  lastSavedAt?: number;
+  modelsTokenUsage?: Record<number, PsModelTokenUsage>;
+}
+
+interface PsModelTokenUsage {
+  modelId: number;
+  tokensIn: number;
+  tokensOut: number;
+  contextTokensIn?: number;
 }
 
 interface PsAgentClassAttributesConfiguration {
@@ -47,8 +115,9 @@ interface PsBaseNodeInstance extends PsBaseModelClass {
   group_id: number;
   User?: YpUserData;
   Group?: YpGroupData;
-  ApiCosts?: PsApiCostAttributes[];
-  ModelCosts?: PsModelCostAttributes[];
+  ApiUsage?: PsExternalApiUsageAttributes[];
+  ModelUsage?: PsModelUsageAttributes[];
+  ExternalApis?: PsExternalApiAttributes[];
   configuration: PsBaseNodeConfiguration;
 }
 
@@ -114,57 +183,16 @@ enum PsAgentConnectorPermissionTypes {
   Admin = "admin",
 }
 
-interface PsBaseModelCostConfiguration {
-  costInTokens: number;
-  costOutTokens: number;
-  currency: string;
-}
-
-// tablename "ps_model_cost_classes"
-interface PsModelCostClassAttributes extends PsBaseModelClass {
-  model_id: string;
-  configuration: PsBaseModelCostConfiguration;
-}
-
-interface PsBaseApiCostConfiguration {
-  unitType: string;
-  pricePerUnit: number;
-  currency: string;
-}
-
-// tablename "ps_api_cost_classes"
-interface PsApiCostClassAttributes extends PsBaseModelClass {
-  model_id: string;
-  configuration: PsBaseApiCostConfiguration;
-}
-
-// tablename "ps_model_costs"
-interface PsModelCostAttributes extends PsBaseModelClass {
-  cost_class_id: number;
-  cost: number;
-  agent_id: number;
-  connector_id: number;
-}
-
-// tablename "ps_api_costs"
-interface PsApiCostAttributes extends PsBaseModelClass {
-  cost_class_id: number;
-  cost: number;
-  agent_id: number; // or
-  connector_id: number; // or
-}
-
 interface PsAgentAuditLogDetails {
   description: string;
 }
 
 // tablename "ps_agent_audit_logs"
-interface PsAgentAuditLogAttributes extends PsBaseModelClass {
+interface PsAgentAuditLogAttributes extends PsBaseModelClassNoUuid {
   agent_id: number; // or
   connector_id: number; // or
   action: string;
   details?: PsAgentAuditLogDetails;
-  timestamp: Date;
 }
 
 interface PsAiModelAccessConfiguration {
@@ -192,3 +220,20 @@ interface YpUserData {
   email: string;
 }
 
+// tablename "organizations"
+interface YpOrganizationsData  {
+  id: number;
+  user_id: number;
+  name: string;
+  type: string;
+  created_at: Date;
+  updated_at: Date;
+  configuration: any;
+}
+
+interface PsModelRateLimitTracking {
+  [modelName: string]: {
+    requests: Array<{ timestamp: number }>;
+    tokens: Array<{ count: number; timestamp: number }>;
+  };
+}

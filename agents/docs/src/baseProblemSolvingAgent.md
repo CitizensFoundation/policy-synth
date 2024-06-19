@@ -6,7 +6,7 @@ This class extends `PolicySynthAgentBase` and provides methods for processing an
 
 | Name                  | Type                        | Description                                   |
 |-----------------------|-----------------------------|-----------------------------------------------|
-| memory                | PsBaseMemoryData            | Memory storage for problem-solving data.      |
+| memory                | PsSmarterCrowdsourcingMemoryData            | Memory storage for problem-solving data.      |
 | job                   | Job                         | Job instance from bullmq.                     |
 | currentSubProblemIndex| number \| undefined         | Index of the current sub-problem being solved.|
 

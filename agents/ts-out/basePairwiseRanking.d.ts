@@ -15,7 +15,7 @@ export declare abstract class BasePairwiseRankingsProcessor extends BaseProblemS
     fisherYatesShuffle(array: any[]): any[];
     setupRankingPrompts(subProblemIndex: number, allItems: PsEloRateable[] | string[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
     abstract voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<PsPairWiseVoteResults>;
-    getResultsFromLLM(subProblemIndex: number, stageName: PsMemoryStageTypes, modelConstant: PsBaseAIModelConstants, messages: (HumanMessage | SystemMessage)[], itemOneIndex: number, itemTwoIndex: number): Promise<{
+    getResultsFromLLM(subProblemIndex: number, stageName: PsScMemoryStageTypes, modelConstant: PsBaseAIModelConstants, messages: (HumanMessage | SystemMessage)[], itemOneIndex: number, itemTwoIndex: number): Promise<{
         subProblemIndex: number;
         wonItemIndex: number | undefined;
         lostItemIndex: number | undefined;

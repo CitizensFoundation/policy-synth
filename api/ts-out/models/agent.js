@@ -14,8 +14,8 @@ export class PsAgent extends Model {
     Class;
     User;
     Group;
-    ApiCosts;
-    ModelCosts;
+    ExternalApiUsage;
+    ModelUsage;
     ParentAgent;
     SubAgents;
     Connectors;
@@ -68,6 +68,7 @@ PsAgent.init({
     indexes: [
         {
             fields: ["uuid"],
+            unique: true
         },
         {
             fields: ["user_id"],
@@ -99,13 +100,13 @@ PsAgent.associate = (models) => {
         foreignKey: "group_id",
         as: "Group",
     });
-    PsAgent.hasMany(models.PsApiCost, {
+    PsAgent.hasMany(models.PsExternalApiUsage, {
         foreignKey: "agent_id",
-        as: "ApiCosts",
+        as: "ExternalApiUsage",
     });
-    PsAgent.hasMany(models.PsModelCost, {
+    PsAgent.hasMany(models.PsModelUsage, {
         foreignKey: "agent_id",
-        as: "ModelCosts",
+        as: "ModelUsage",
     });
     PsAgent.belongsTo(models.PsAiModel, {
         foreignKey: "parent_agent_id",

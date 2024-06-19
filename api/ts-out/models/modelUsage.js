@@ -1,0 +1,79 @@
+import { DataTypes, Model } from "sequelize";
+import { sequelize } from "./sequelize.js";
+export class PsModelUsage extends Model {
+    id;
+    user_id;
+    created_at;
+    updated_at;
+    model_id;
+    tokenInCount;
+    tokenOutCount;
+    tokenInCachedContextCount;
+    agent_id;
+    connector_id;
+}
+PsModelUsage.init({
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
+    },
+    user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+    },
+    model_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    tokenInCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    tokenOutCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    tokenInCachedContextCount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    agent_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    connector_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+}, {
+    sequelize,
+    tableName: "ps_model_usage",
+    indexes: [
+        {
+            fields: ["user_id"],
+        },
+        {
+            fields: ["model_id"],
+        },
+        {
+            fields: ["agent_id"],
+        },
+        {
+            fields: ["connector_id"],
+        },
+    ],
+    timestamps: true,
+    underscored: true,
+});
+//# sourceMappingURL=modelUsage.js.map

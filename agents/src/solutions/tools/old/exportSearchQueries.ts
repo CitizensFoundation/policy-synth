@@ -20,7 +20,7 @@ if (!path.isAbsolute(filePath)) {
 console.log(`Reading memory from ${filePath}`);
 
 const memoryData = fs.readFileSync(filePath, "utf-8");
-const memory = JSON.parse(memoryData) as PsBaseMemoryData;
+const memory = JSON.parse(memoryData) as PsSmarterCrowdsourcingMemoryData;
 
 const formatElo = (elo: number | undefined) => Math.floor(elo || -1);
 

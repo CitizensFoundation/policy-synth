@@ -20,7 +20,7 @@ This class is responsible for ranking documents based on user-defined rules and 
 
 ```typescript
 import { IngestionDocumentRanker } from '@policysynth/agents/rag/ingestion/docRanker.js';
-import { PsRagDocumentSource, PsBaseMemoryData } from '@policysynth/agents/rag/ingestion/types';
+import { PsRagDocumentSource, PsSmarterCrowdsourcingMemoryData } from '@policysynth/agents/rag/ingestion/types';
 
 const ranker = new IngestionDocumentRanker();
 

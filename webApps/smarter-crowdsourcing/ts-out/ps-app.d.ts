@@ -41,7 +41,7 @@ export declare class PolicySynthWebApp extends YpBaseElement {
     activeSolutionIndex: number | undefined;
     activePolicyIndex: number | undefined;
     pageIndex: number;
-    currentMemory: PsBaseMemoryData | undefined;
+    currentMemory: PsSmarterCrowdsourcingMemoryData | undefined;
     totalNumberOfVotes: number;
     showAllCosts: boolean;
     lastSnackbarText: string | undefined;

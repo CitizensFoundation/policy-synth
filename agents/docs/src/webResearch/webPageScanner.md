@@ -15,7 +15,7 @@ This class is responsible for scanning web pages and processing their content fo
 
 | Name                    | Parameters                                                                 | Return Type                        | Description                                                                 |
 |-------------------------|----------------------------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| constructor             | memory: PsBaseMemoryData                                                   |                                    | Initializes the scanner with memory data.                                   |
+| constructor             | memory: PsSmarterCrowdsourcingMemoryData                                                   |                                    | Initializes the scanner with memory data.                                   |
 | renderScanningPrompt    | problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number | SystemMessage[] \| HumanMessage[] | Generates the scanning prompt messages based on the provided text and context. |
 | getTokenCount           | text: string, subProblemIndex: number \| undefined                         | Promise<{ totalTokenCount: number, promptTokenCount: any }> | Calculates the token count for the given text.                              |
 | getAIAnalysis           | text: string, subProblemIndex?: number, entityIndex?: number               | Promise<PsWebPageAnalysisData> | Performs AI analysis on the provided text and returns the analysis data.    |

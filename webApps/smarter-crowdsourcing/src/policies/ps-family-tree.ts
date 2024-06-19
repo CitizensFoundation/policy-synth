@@ -10,7 +10,7 @@ import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 @customElement('ps-family-tree')
 export class PsFamilyTree extends YpBaseElement {
   @property({ type: Object })
-  memory!: PsBaseMemoryData;
+  memory!: PsSmarterCrowdsourcingMemoryData;
 
   @property({ type: Number })
   subProblemIndex!: number;

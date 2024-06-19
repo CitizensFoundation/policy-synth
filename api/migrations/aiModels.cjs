@@ -17,6 +17,10 @@ module.exports = {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    organization_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -42,4 +46,5 @@ module.exports = {
   });
 
   await queryInterface.addIndex('ps_ai_models', ['user_id']);
+  await queryInterface.addIndex('ps_ai_models', ['organization_id']);
 }};

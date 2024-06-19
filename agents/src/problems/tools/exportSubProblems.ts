@@ -11,7 +11,7 @@ const main = async () => {
     const redisKey = `st_mem:${projectId}:id`;
     const currentProject = JSON.parse(
       (await redis.get(redisKey)) || ""
-    ) as PsBaseMemoryData;
+    ) as PsSmarterCrowdsourcingMemoryData;
     let outCsvFile = `Title,Description,"Why important","Elo Rating","Search type","Published","URL"`;
     // trim this.memory.subProblems with newLength
     currentProject.subProblems.forEach((subProblem) => {

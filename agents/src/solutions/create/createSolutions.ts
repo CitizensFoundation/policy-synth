@@ -85,7 +85,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     subProblemIndex: number,
     solutionsForInspiration: PsSolution[],
     alreadyCreatedSolutions: string | undefined = undefined,
-    stageName: PsMemoryStageTypes = "create-seed-solutions"
+    stageName: PsScMemoryStageTypes = "create-seed-solutions"
   ): Promise<PsSolution[]> {
     if (DISABLE_LLM_FOR_DEBUG) {
       this.logger.info("DISABLE_LLM_FOR_DEBUG is true, skipping LLM call");

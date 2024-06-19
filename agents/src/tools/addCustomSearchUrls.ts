@@ -11,7 +11,7 @@ const projectId = process.argv[2];
 const addCustomUrls = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
+    const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
     memory.subProblems[1].customSearchUrls = [
       "https://www.reuters.com/world/us/pro-trump-activists-swamp-election-officials-with-sprawling-records-requests-2022-08-03",

@@ -17,9 +17,9 @@ import { PolicySynthAgentBase } from "../baseAgent.js";
 import { RemoveDuplicateWebSolutions } from "./create/dedupWebSolutions.js";
 
 export class AgentSolutions extends BaseAgentProcessor {
-  declare memory: PsBaseMemoryData;
+  declare memory: PsSmarterCrowdsourcingMemoryData;
 
-  async setStage(stage: PsMemoryStageTypes) {
+  async setStage(stage: PsScMemoryStageTypes) {
     this.memory.currentStage = stage;
     this.memory.stages[stage].timeStart = Date.now();
 

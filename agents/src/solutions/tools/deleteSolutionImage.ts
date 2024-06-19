@@ -15,7 +15,7 @@ const title = "Enhancing Public Faith Through Accountability and Transparency in
 const loadProject = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
+    const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
     for (let i = 0; i < memory.subProblems[subProblemIndex].solutions.populations[generationIndex].length; i++) {
       if (memory.subProblems[subProblemIndex].solutions.populations[generationIndex][i].title === title) {

@@ -1,7 +1,7 @@
 import { BaseAgentProcessor } from "../baseAgentProcessor.js";
 export declare class AgentProblems extends BaseAgentProcessor {
-    memory: PsBaseMemoryData;
-    setStage(stage: PsMemoryStageTypes): Promise<void>;
+    memory: PsSmarterCrowdsourcingMemoryData;
+    setStage(stage: PsScMemoryStageTypes): Promise<void>;
     processSubProblems(): Promise<void>;
     process(): Promise<void>;
 }

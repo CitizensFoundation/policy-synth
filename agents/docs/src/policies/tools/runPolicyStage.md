@@ -28,7 +28,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
   const output = await redis.get(redisKey);
 
-  const memory = JSON.parse(output!) as PsBaseMemoryData;
+  const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
   // Update the current stage as needed
   // memory.currentStage = "desired-stage";

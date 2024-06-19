@@ -11,7 +11,7 @@ const projectId = process.argv[2];
 const loadProject = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
+    const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
     memory.subProblems[4].imageUrl = undefined;
     await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memory));
     process.exit(0);

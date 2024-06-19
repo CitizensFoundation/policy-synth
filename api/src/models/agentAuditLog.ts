@@ -4,7 +4,7 @@ import { sequelize } from "./sequelize.js";
 interface PsAgentAuditLogCreationAttributes
   extends Optional<
     PsAgentAuditLogAttributes,
-    "id" | "uuid" | "created_at" | "updated_at" | "details"
+    "id" | "created_at" | "updated_at" | "details"
   > {}
 
 export class PsAgentAuditLog
@@ -12,7 +12,6 @@ export class PsAgentAuditLog
   implements PsAgentAuditLogAttributes
 {
   public id!: number;
-  public uuid!: string;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
@@ -20,7 +19,6 @@ export class PsAgentAuditLog
   public connector_id!: number;
   public action!: string;
   public details?: PsAgentAuditLogDetails;
-  public timestamp!: Date;
 }
 
 PsAgentAuditLog.init(
@@ -29,11 +27,6 @@ PsAgentAuditLog.init(
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      allowNull: false,
     },
     user_id: {
       type: DataTypes.INTEGER,
@@ -64,20 +57,12 @@ PsAgentAuditLog.init(
     details: {
       type: DataTypes.JSONB,
       allowNull: true,
-    },
-    timestamp: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
+    }
   },
   {
     sequelize,
     tableName: "ps_agent_audit_logs",
     indexes: [
-      {
-        fields: ["uuid"],
-      },
       {
         fields: ["user_id"],
       },

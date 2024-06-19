@@ -10,11 +10,6 @@ module.exports = {
       autoIncrement: true,
       primaryKey: true,
     },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      allowNull: false,
-    },
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -44,15 +39,9 @@ module.exports = {
     details: {
       type: DataTypes.JSONB,
       allowNull: true,
-    },
-    timestamp: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
+    }
   });
 
-  await queryInterface.addIndex('ps_agent_audit_logs', ['uuid']);
   await queryInterface.addIndex('ps_agent_audit_logs', ['user_id']);
   await queryInterface.addIndex('ps_agent_audit_logs', ['agent_id']);
   await queryInterface.addIndex('ps_agent_audit_logs', ['connector_id']);

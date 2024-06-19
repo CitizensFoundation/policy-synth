@@ -14,7 +14,7 @@ This class extends `BaseProblemSolvingAgent` to identify and remove duplicate we
 
 | Name             | Parameters                  | Return Type | Description                                       |
 |------------------|-----------------------------|-------------|---------------------------------------------------|
-| constructor      | memory: PsBaseMemoryData    | void        | Initializes the agent with memory data.           |
+| constructor      | memory: PsSmarterCrowdsourcingMemoryData    | void        | Initializes the agent with memory data.           |
 | removeDuplicates | subProblemIndex: number     | Promise<void> | Processes and removes duplicate web pages for a given sub-problem index. |
 | process          | none                        | Promise<void> | Processes all sub-problems to remove duplicate web solutions. |
 

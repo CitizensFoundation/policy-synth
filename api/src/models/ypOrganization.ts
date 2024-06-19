@@ -1,35 +1,36 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
 
-interface PsModelCostClassCreationAttributes
-  extends Optional<
-    PsModelCostClassAttributes,
-    "id" | "uuid" | "created_at" | "updated_at"
-  > {}
+interface YpOrganizationDataCreationAttributes
+  extends Optional<YpOrganizationsData, "id" | "created_at" | "updated_at"> {}
 
-export class PsModelCostClass
-  extends Model<PsModelCostClassAttributes, PsModelCostClassCreationAttributes>
-  implements PsModelCostClassAttributes
+export class Group
+  extends Model<YpOrganizationsData, YpOrganizationDataCreationAttributes>
+  implements YpOrganizationsData
 {
   public id!: number;
-  public uuid!: string;
+  public name!: string;
+  public type!: string;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
-  public model_id!: string;
-  public configuration!: PsBaseModelCostConfiguration;
+
+  public configuration!: any;
 }
 
-PsModelCostClass.init(
+Group.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
     user_id: {
@@ -46,10 +47,6 @@ PsModelCostClass.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    model_id: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
     configuration: {
       type: DataTypes.JSONB,
       allowNull: false,
@@ -57,16 +54,10 @@ PsModelCostClass.init(
   },
   {
     sequelize,
-    tableName: "ps_model_cost_classes",
+    tableName: "organizations",
     indexes: [
       {
-        fields: ["uuid"],
-      },
-      {
-        fields: ["user_id"],
-      },
-      {
-        fields: ["model_id"],
+        fields: ["name"],
       },
     ],
     timestamps: true,

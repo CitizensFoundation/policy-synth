@@ -10,11 +10,6 @@ module.exports = {
       autoIncrement: true,
       primaryKey: true,
     },
-    uuid: {
-      type: Sequelize.UUID,
-      defaultValue: Sequelize.UUIDV4,
-      allowNull: false,
-    },
     user_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
@@ -29,12 +24,12 @@ module.exports = {
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
-    cost_class_id: {
+    ps_external_api_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
     },
-    cost: {
-      type: Sequelize.FLOAT,
+    callCount: {
+      type: Sequelize.INTEGER,
       allowNull: false,
     },
     agent_id: {
@@ -47,9 +42,8 @@ module.exports = {
     },
   });
 
-  await queryInterface.addIndex('ps_api_costs', ['uuid']);
   await queryInterface.addIndex('ps_api_costs', ['user_id']);
-  await queryInterface.addIndex('ps_api_costs', ['cost_class_id']);
+  await queryInterface.addIndex('ps_api_costs', ['ps_external_api_id']);
   await queryInterface.addIndex('ps_api_costs', ['agent_id']);
   await queryInterface.addIndex('ps_api_costs', ['connector_id']);
 }

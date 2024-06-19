@@ -283,8 +283,8 @@ export class PsBaseChatBot {
         tokensOutCost: 0,
         tokensIn: 0,
         tokensOut: 0,
-      } as PsInnovationStagesData,
-    } as Record<PSChatBotMemoryStageTypes, PsInnovationStagesData>;
+      } as PsScStagesData,
+    } as Record<PSChatBotMemoryStageTypes, PsScStagesData>;
   }
 
   getEmptyMemory() {

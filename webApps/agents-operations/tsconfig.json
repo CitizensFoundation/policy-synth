@@ -34,8 +34,8 @@
     "**/*.ts",
     "./node_modules/@policysynth/agents/*.d.ts",
     "./node_modules/@yrpri/webapp/*.d.ts",
-    "src/flexbox-literals/literals.ts",
-    "src/@yrpri/yp-post/yp-post-edit.ts.unused", "../../agents/src/agents.d.ts"],
+    "src/flexbox-literals/literals.ts"
+  ],
   "importHelpers": true,
   "plugins": [
     {

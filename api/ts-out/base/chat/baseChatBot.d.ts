@@ -37,7 +37,7 @@ export declare class PsBaseChatBot {
     startBroadcastingLiveCosts(): void;
     broadCastLiveCosts(): void;
     stopBroadcastingLiveCosts(): void;
-    get emptyChatBotStagesData(): Record<PSChatBotMemoryStageTypes, PsInnovationStagesData>;
+    get emptyChatBotStagesData(): Record<PSChatBotMemoryStageTypes, PsScStagesData>;
     getEmptyMemory(): PsChatBotMemoryData;
     sendToClient(sender: string, message: string, type?: string): void;
     streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;

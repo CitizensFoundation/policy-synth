@@ -35,7 +35,9 @@ module.exports = {
     },
   });
 
-  await queryInterface.addIndex('ps_agent_registries', ['uuid']);
+  await queryInterface.addIndex('ps_agent_registries', ['uuid'], {
+    unique: true,
+  });
   await queryInterface.addIndex('ps_agent_registries', ['user_id']);
 }
 };

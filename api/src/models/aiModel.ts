@@ -14,6 +14,7 @@ export class PsAiModel
   public id!: number;
   public uuid!: string;
   public user_id!: number;
+  public organization_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
   public name!: string;
@@ -33,6 +34,10 @@ PsAiModel.init(
       allowNull: false,
     },
     user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    organization_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -61,10 +66,14 @@ PsAiModel.init(
     indexes: [
       {
         fields: ["uuid"],
+        unique: true
       },
       {
         fields: ["user_id"],
       },
+      {
+        fields: ["organization_id"],
+      }
     ],
     timestamps: true,
     underscored: true,

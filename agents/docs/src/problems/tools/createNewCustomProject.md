@@ -64,7 +64,7 @@ if (projectId) {
       },
       subProblems: [],
       currentStageData: undefined,
-    } as PsBaseMemoryData;
+    } as PsSmarterCrowdsourcingMemoryData;
 
     await redis.set(redisKey, JSON.stringify(project));
   }

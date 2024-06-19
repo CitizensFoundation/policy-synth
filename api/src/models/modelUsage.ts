@@ -1,44 +1,34 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
-import { PsAgent } from "./agent.js";
-import { PsAgentConnector } from "./agentConnector.js";
 
-interface PsApiCostCreationAttributes
+interface PsModelUsageCreationAttributes
   extends Optional<
-    PsApiCostAttributes,
-    "id" | "uuid" | "created_at" | "updated_at"
+  PsModelUsageAttributes,
+    "id" | "created_at" | "updated_at"
   > {}
 
-export class PsApiCost
-  extends Model<PsApiCostAttributes, PsApiCostCreationAttributes>
-  implements PsApiCostAttributes
+export class PsModelUsage
+  extends Model<PsModelUsageAttributes, PsModelUsageCreationAttributes>
+  implements PsModelUsageAttributes
 {
   public id!: number;
-  public uuid!: string;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
-  public cost_class_id!: number;
-  public cost!: number;
+  public model_id!: number;
+  public tokenInCount!: number;
+  public tokenOutCount!: number;
+  public tokenInCachedContextCount!: number;
   public agent_id!: number;
   public connector_id!: number;
-
-  // Associations
-  public Agent?: PsAgentAttributes;
-  public Connector?: PsAgentConnectorAttributes;
 }
 
-PsApiCost.init(
+PsModelUsage.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
-    },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      allowNull: false,
     },
     user_id: {
       type: DataTypes.INTEGER,
@@ -54,35 +44,40 @@ PsApiCost.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    cost_class_id: {
+    model_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    cost: {
-      type: DataTypes.FLOAT,
+    tokenInCount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    tokenOutCount: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    tokenInCachedContextCount: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     agent_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
     connector_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
   },
   {
     sequelize,
-    tableName: "ps_api_costs",
+    tableName: "ps_model_usage",
     indexes: [
-      {
-        fields: ["uuid"],
-      },
       {
         fields: ["user_id"],
       },
       {
-        fields: ["cost_class_id"],
+        fields: ["model_id"],
       },
       {
         fields: ["agent_id"],
@@ -95,14 +90,3 @@ PsApiCost.init(
     underscored: true,
   }
 );
-
-(PsApiCost as any).associate = (models: any) => {
-  PsApiCost.belongsTo(models.PsAgent, {
-    foreignKey: 'agent_id',
-    as: 'Agent',
-  });
-  PsApiCost.belongsTo(models.PsAgentConnector, {
-    foreignKey: 'connector_id',
-    as: 'Connector',
-  });
-};

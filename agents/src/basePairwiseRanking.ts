@@ -104,7 +104,7 @@ export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAg
 
   async getResultsFromLLM(
     subProblemIndex: number,
-    stageName: PsMemoryStageTypes,
+    stageName: PsScMemoryStageTypes,
     modelConstant: PsBaseAIModelConstants,
     messages: (HumanMessage | SystemMessage)[],
     itemOneIndex: number,

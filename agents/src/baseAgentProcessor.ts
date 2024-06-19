@@ -43,7 +43,7 @@ export abstract class BaseAgentProcessor extends PolicySynthAgentBase {
       },
       subProblems: [],
       currentStageData: undefined,
-    } as PsBaseMemoryData;
+    } as PsSmarterCrowdsourcingMemoryData;
     await this.saveMemory();
   }
 

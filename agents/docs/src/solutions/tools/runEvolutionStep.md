@@ -11,14 +11,14 @@ This script manages the execution of various stages in the evolution process of 
 | queueEvents   | QueueEvents                  | BullMQ QueueEvents instance for monitoring job events. |
 | projectId     | string \| undefined          | Project identifier passed as a command-line argument. |
 | redisKey      | string                       | Redis key constructed for storing memory data related to the project. |
-| stages        | PsMemoryStageTypes           | Array of stages in the evolution process. |
+| stages        | PsScMemoryStageTypes           | Array of stages in the evolution process. |
 
 ## Methods
 
 | Name            | Parameters                  | Return Type       | Description                 |
 |-----------------|-----------------------------|-------------------|-----------------------------|
-| getInnovationData | none                      | Promise<PsBaseMemoryData> | Retrieves and parses the innovation data from Redis. |
-| runStages       | startStage: PsMemoryStageTypes | Promise<void>   | Executes the specified stages in order, handling job creation, execution, and monitoring. |
+| getInnovationData | none                      | Promise<PsSmarterCrowdsourcingMemoryData> | Retrieves and parses the innovation data from Redis. |
+| runStages       | startStage: PsScMemoryStageTypes | Promise<void>   | Executes the specified stages in order, handling job creation, execution, and monitoring. |
 
 ## Example
 

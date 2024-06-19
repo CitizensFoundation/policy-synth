@@ -13,14 +13,14 @@ This script sets up custom instructions and problem statements for various proje
 
 | Name               | Parameters                | Return Type | Description                 |
 |--------------------|---------------------------|-------------|-----------------------------|
-| setupProjectOne    | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project One. |
-| setupProjectTwo    | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project Two. |
-| setupProjectThree  | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project Three. |
-| setupProjectFour   | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project Four. |
-| setupProjectFive   | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project Five. |
-| setupProjectSix    | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project Six. |
-| setupProjectSeven  | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project Seven. |
-| setupProjectEight  | memory: PsBaseMemoryData  | void        | Sets up custom instructions and problem statement for Project Eight. |
+| setupProjectOne    | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project One. |
+| setupProjectTwo    | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project Two. |
+| setupProjectThree  | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project Three. |
+| setupProjectFour   | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project Four. |
+| setupProjectFive   | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project Five. |
+| setupProjectSix    | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project Six. |
+| setupProjectSeven  | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project Seven. |
+| setupProjectEight  | memory: PsSmarterCrowdsourcingMemoryData  | void        | Sets up custom instructions and problem statement for Project Eight. |
 
 ## Example
 
@@ -32,7 +32,7 @@ const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-const setupProjectOne = (memory: PsBaseMemoryData) => {
+const setupProjectOne = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -86,7 +86,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
   const output = await redis.get(redisKey);
 
-  const memory = JSON.parse(output!) as PsBaseMemoryData;
+  const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
   if (projectId == "1") {
     setupProjectOne(memory);

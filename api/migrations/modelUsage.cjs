@@ -2,16 +2,11 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('ps_model_costs', {
+    await queryInterface.createTable('ps_model_usage', {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-      },
-      uuid: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        allowNull: false,
       },
       user_id: {
         type: Sequelize.INTEGER,
@@ -27,13 +22,24 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.NOW,
       },
-      cost_class_id: {
+      model_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      cost: {
-        type: Sequelize.FLOAT,
+      tokenInCount: {
+        type: Sequelize.INTEGER,
         allowNull: false,
+        defaultValue: 0
+      },
+      tokenOutCount: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
+      tokenInCachedContextCount: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
       },
       agent_id: {
         type: Sequelize.INTEGER,
@@ -45,14 +51,13 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex('ps_model_costs', ['uuid']);
-    await queryInterface.addIndex('ps_model_costs', ['user_id']);
-    await queryInterface.addIndex('ps_model_costs', ['cost_class_id']);
-    await queryInterface.addIndex('ps_model_costs', ['agent_id']);
-    await queryInterface.addIndex('ps_model_costs', ['connector_id']);
+    await queryInterface.addIndex('ps_model_usage', ['user_id']);
+    await queryInterface.addIndex('ps_model_usage', ['model_id']);
+    await queryInterface.addIndex('ps_model_usage', ['agent_id']);
+    await queryInterface.addIndex('ps_model_usage', ['connector_id']);
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('ps_model_costs');
+    await queryInterface.dropTable('ps_model_usage');
   },
 };

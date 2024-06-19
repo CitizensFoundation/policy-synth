@@ -2,7 +2,7 @@ import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseR
 export declare class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     rankingRules: string | undefined;
     documentSummary: string | undefined;
-    constructor(memory?: PsBaseMemoryData | undefined, progressFunction?: Function | undefined);
+    constructor(memory?: PsSmarterCrowdsourcingMemoryData | undefined, progressFunction?: Function | undefined);
     voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
     rankDocumentChunks(chunksToRank: PsRagChunk[], rankingRules: string, documentSummary: string, eloRatingKey: string): Promise<PsRagChunk[]>;
 }

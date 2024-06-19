@@ -57,6 +57,7 @@ PsAgentConnector.init({
     indexes: [
         {
             fields: ["uuid"],
+            unique: true
         },
         {
             fields: ["user_id"],
@@ -85,6 +86,14 @@ PsAgentConnector.associate = (models) => {
     PsAgentConnector.belongsTo(models.Group, {
         foreignKey: "group_id",
         as: "Group",
+    });
+    PsAgentConnector.hasMany(models.PsExternalApiUsage, {
+        foreignKey: "connector_id",
+        as: "ExternalApiUsage",
+    });
+    PsAgentConnector.hasMany(models.PsModelUsage, {
+        foreignKey: "connector_id",
+        as: "ModelUsage",
     });
     // Through a join table
     PsAgentConnector.belongsToMany(models.PsAgent, {

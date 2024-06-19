@@ -63,6 +63,15 @@ interface PsWorkerData {
   initialProblemStatement: string;
 }
 
+interface PsScStagesData {
+  timeStart?: number;
+  userFeedback?: PsUserFeedback[];
+  tokensIn?: number;
+  tokensOut?: number;
+  tokensInCost?: number;
+  tokensOutCost?: number;
+}
+
 interface PsProblemStatement extends PsEloRateable{
   description: string;
   searchQueries: PsSearchQueries;
@@ -175,19 +184,19 @@ interface PsProCon extends PsEloRateable {
   description: string;
 }
 
-interface IEEngineSearchResultPage {
+interface PsSearchResultPage {
   url: string;
   title: string;
   description: string;
   data?: string;
 }
 
-interface IEEngineSearchResultData {
+interface PsSearchResultData {
   searchQuery: string;
-  pages: IEEngineSearchResultPage[];
+  pages: PsSearchResultPage[];
 }
 
-type PsMemoryStageTypes =
+type PsScMemoryStageTypes =
   | "create-root-causes-search-queries"
   | "rank-root-causes-search-queries"
   | "web-search-root-causes"
@@ -258,26 +267,6 @@ interface PsBaseAIModelConstants {
   verbose: boolean;
 }
 
-interface PsMemoryData {
-  redisKey: string;
-  timeStart: number;
-  totalCost: number;
-  groupId: number;
-  communityId: number;
-  domainId: number;
-  lastSavedAt?: number;
-  currentStageError?: string | undefined;
-}
-
-interface PsInnovationStagesData {
-  timeStart?: number;
-  userFeedback?: PsUserFeedback[];
-  tokensIn?: number;
-  tokensOut?: number;
-  tokensInCost?: number;
-  tokensOutCost?: number;
-}
-
 interface PsSearchQueries {
   general: string[];
   scientific: string[];
@@ -313,9 +302,9 @@ interface PsSearchResults {
   };
 }
 
-interface PsBaseMemoryData extends PsMemoryData {
-  currentStage: PsMemoryStageTypes;
-  stages: Record<PsMemoryStageTypes, PsInnovationStagesData>;
+interface PsSmarterCrowdsourcingMemoryData extends PsAgentMemoryData {
+  currentStage: PsScMemoryStageTypes;
+  stages: Record<PsScMemoryStageTypes, PsScStagesData>;
   problemStatement: PsProblemStatement;
   customInstructions: {
     createRootCause?: string;
@@ -332,9 +321,11 @@ interface PsBaseMemoryData extends PsMemoryData {
   subProblems: PsSubProblem[];
   allSubProblems?: PsSubProblem[];
   subProblemClientColors?: string[];
+  currentStageError?: string | undefined;
+  totalCost: number;
   currentStageData?:
-    | IEEngineSearchResultData
-    | IEEngineSearchResultPage
+    | PsSearchResultData
+    | PsSearchResultPage
     | undefined;
 }
 
@@ -398,12 +389,6 @@ interface PsWebPageGraphQlSingleResult {
   };
 }
 
-interface PsRateLimits {
-  [modelName: string]: {
-    requests: Array<{ timestamp: number }>;
-    tokens: Array<{ count: number; timestamp: number }>;
-  };
-}
 
 interface PsExternalSolutionAnalysis {
   externalSolutionIndex: number;

@@ -8,7 +8,7 @@ export class StageOneRanker extends BasePairwiseRankingsProcessor {
   rankInstructions: string | undefined;
 
   constructor(
-    memory: PsBaseMemoryData | undefined = undefined,
+    memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined,
     progressFunction: Function | undefined = undefined
   ) {
     super(undefined as any, undefined as any);

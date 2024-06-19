@@ -11,7 +11,7 @@ This script is responsible for updating the current stage of a problem-solving p
 | projectId  | string | Project ID passed as a command-line argument.    |
 | redisKey   | string | Redis key constructed using the project ID.      |
 | output     | string | JSON string retrieved from Redis.                |
-| memory     | PsBaseMemoryData | Parsed JSON object representing the memory data. |
+| memory     | PsSmarterCrowdsourcingMemoryData | Parsed JSON object representing the memory data. |
 
 ## Methods
 
@@ -37,7 +37,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
   const output = await redis.get(redisKey);
 
-  const memory = JSON.parse(output!) as PsBaseMemoryData;
+  const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
   //memory.currentStage = "create-root-causes-search-queries"
   //memory.currentStage = "rank-root-causes-search-queries"

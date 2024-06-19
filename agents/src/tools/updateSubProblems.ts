@@ -12,7 +12,7 @@ const projectId = process.argv[2];
 const loadProject = async (): Promise<void> => {
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
+    const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
     memory.subProblems[1].title = "Misuse of the Legal System";
     memory.subProblems[1].description = "In recent elections, saboteurs have misused the administrative and legal systems in a coordinated effort to obstruct election administration and sow doubt in the outcomes of fair elections in the minds of the public.";
     memory.subProblems[1].whyIsSubProblemImportant = "Frivolous FOIA requests and lawsuits intend to distract election officials from essential election administration duties, disrupt the effective management of electoral operations, obstruct and delay election results, and damage legitimacy and credibility of elections and election outcomes.";

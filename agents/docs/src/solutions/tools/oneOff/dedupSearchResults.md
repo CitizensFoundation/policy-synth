@@ -6,7 +6,7 @@ This class is responsible for deduplicating search results based on specific pro
 
 | Name              | Type                          | Description                                   |
 |-------------------|-------------------------------|-----------------------------------------------|
-| memory            | PsBaseMemoryData              | Memory data structure used for processing.    |
+| memory            | PsSmarterCrowdsourcingMemoryData              | Memory data structure used for processing.    |
 | deduplicatedCount | number                        | Counter for the number of deduplicated items. |
 | totalCount        | number                        | Total count of items before deduplication.    |
 | seenUrls          | Map<string, Set<string>>      | Tracks URLs that have been seen to avoid duplicates. |
@@ -26,7 +26,7 @@ This class is responsible for deduplicating search results based on specific pro
 ```typescript
 import { DeduplicateSearchProcessor } from '@policysynth/agents/solutions/tools/oneOff/dedupSearchResults.js';
 
-// Assuming `memory` is already defined as PsBaseMemoryData
+// Assuming `memory` is already defined as PsSmarterCrowdsourcingMemoryData
 const dedupper = new DeduplicateSearchProcessor(memory);
 dedupper.process();
 ```

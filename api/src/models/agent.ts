@@ -3,8 +3,6 @@ import { sequelize } from "./sequelize.js";
 import { PsAgentClass } from "./agentClass.js";
 import { User } from "./ypUser.js";
 import { Group } from "./ypGroup.js";
-import { PsApiCost } from "./apiCost.js";
-import { PsModelCost } from "./modelCost.js";
 import { PsAgentConnector } from "./agentConnector.js";
 import { PsAiModel } from "./aiModel.js";
 
@@ -32,8 +30,8 @@ export class PsAgent
   public Class?: PsAgentClass;
   public User?: YpUserData;
   public Group?: YpGroupData;
-  public ApiCosts?: PsApiCostAttributes[];
-  public ModelCosts?: PsModelCostAttributes[];
+  public ExternalApiUsage?: PsExternalApiUsageAttributes[];
+  public ModelUsage?: PsModelUsageAttributes[];
   public ParentAgent?: PsAgent;
   public SubAgents?: PsAgent[];
   public Connectors?: PsAgentConnectorAttributes[];
@@ -107,6 +105,7 @@ PsAgent.init(
     indexes: [
       {
         fields: ["uuid"],
+        unique: true
       },
       {
         fields: ["user_id"],
@@ -137,17 +136,20 @@ PsAgent.init(
     foreignKey: "user_id",
     as: "User",
   });
+
   PsAgent.belongsTo(models.Group, {
     foreignKey: "group_id",
     as: "Group",
   });
-  PsAgent.hasMany(models.PsApiCost, {
+
+  PsAgent.hasMany(models.PsExternalApiUsage, {
     foreignKey: "agent_id",
-    as: "ApiCosts",
+    as: "ExternalApiUsage",
   });
-  PsAgent.hasMany(models.PsModelCost, {
+
+  PsAgent.hasMany(models.PsModelUsage, {
     foreignKey: "agent_id",
-    as: "ModelCosts",
+    as: "ModelUsage",
   });
 
   PsAgent.belongsTo(models.PsAiModel, {

@@ -75,7 +75,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
 
       // Search the web
       this.logger.info("Searching the Web...");
-      const webSearch = new ResearchWeb(this.memory as PsBaseMemoryData);
+      const webSearch = new ResearchWeb(this.memory as PsSmarterCrowdsourcingMemoryData);
       const searchResults = await webSearch.search(queriesToSearch);
       this.logger.info(`Found ${searchResults.length} Web Pages`);
 

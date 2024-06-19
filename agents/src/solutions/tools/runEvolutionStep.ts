@@ -14,7 +14,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`
   const getInnovationData = async () => {
     const output = await redis.get(redisKey);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
+    const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
     return memory;
   };
 
@@ -26,7 +26,7 @@ if (projectId) {
     "rank-solutions",
     "create-solution-images",
     "group-solutions"
-  ] as unknown as PsMemoryStageTypes;
+  ] as unknown as PsScMemoryStageTypes;
 
   const runStages = async (startStage = stages[0]) => {
     const startIndex = stages.indexOf(startStage);

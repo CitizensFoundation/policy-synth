@@ -19,8 +19,9 @@ export declare class AgentsController {
         group_id: number;
         User?: YpUserData | undefined;
         Group?: YpGroupData | undefined;
-        ApiCosts?: PsApiCostAttributes[] | undefined;
-        ModelCosts?: PsModelCostAttributes[] | undefined;
+        ApiUsage?: PsExternalApiUsageAttributes[] | undefined;
+        ModelUsage?: PsModelUsageAttributes[] | undefined;
+        ExternalApis?: PsExternalApiAttributes[] | undefined;
         id: number;
         uuid: string;
         user_id: number;

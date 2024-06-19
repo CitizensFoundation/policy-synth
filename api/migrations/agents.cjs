@@ -45,7 +45,9 @@ module.exports = {
     },
   });
 
-  await queryInterface.addIndex('ps_agents', ['uuid']);
+  await queryInterface.addIndex('ps_agents', ['uuid'], {
+    unique: true,
+  });
   await queryInterface.addIndex('ps_agents', ['user_id']);
   await queryInterface.addIndex('ps_agents', ['class_id']);
   await queryInterface.addIndex('ps_agents', ['group_id']);

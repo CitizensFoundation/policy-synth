@@ -58,6 +58,7 @@ PsAgentConnectorClass.init({
     indexes: [
         {
             fields: ["uuid"],
+            unique: true
         },
         {
             fields: ["user_id"],

@@ -46,7 +46,9 @@ module.exports = {
     },
   });
 
-  await queryInterface.addIndex('ps_agent_connector_classes', ['uuid']);
+  await queryInterface.addIndex('ps_agent_connector_classes', ['uuid'], {
+    unique: true,
+  });
   await queryInterface.addIndex('ps_agent_connector_classes', ['user_id']);
   await queryInterface.addIndex('ps_agent_connector_classes', ['name']);
   await queryInterface.addIndex('ps_agent_connector_classes', ['version']);

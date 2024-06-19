@@ -22,9 +22,9 @@ import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSe
 import { PolicySynthAgentBase } from "../baseAgent.js";
 
 export class AgentProblemsProcessor extends BaseAgentProcessor {
-  declare memory: PsBaseMemoryData;
+  declare memory: PsSmarterCrowdsourcingMemoryData;
 
-  async setStage(stage: PsMemoryStageTypes) {
+  async setStage(stage: PsScMemoryStageTypes) {
     this.memory.currentStage = stage;
     this.memory.stages[stage].timeStart = Date.now();
 

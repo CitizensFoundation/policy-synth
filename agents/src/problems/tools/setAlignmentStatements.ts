@@ -5,7 +5,7 @@ const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-const setupProjectOne = (memory: PsBaseMemoryData) => {
+const setupProjectOne = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -52,7 +52,7 @@ const setupProjectOne = (memory: PsBaseMemoryData) => {
   `;
 };
 
-const setupProjectTwo = (memory: PsBaseMemoryData) => {
+const setupProjectTwo = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -144,7 +144,7 @@ const setupProjectTwo = (memory: PsBaseMemoryData) => {
   `;
 };
 
-const setupProjectThree = (memory: PsBaseMemoryData) => {
+const setupProjectThree = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -235,7 +235,7 @@ const setupProjectThree = (memory: PsBaseMemoryData) => {
   `;
 };
 
-const setupProjectFour = (memory: PsBaseMemoryData) => {
+const setupProjectFour = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -327,7 +327,7 @@ const setupProjectFour = (memory: PsBaseMemoryData) => {
   `;
 };
 
-const setupProjectFive = (memory: PsBaseMemoryData) => {
+const setupProjectFive = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -417,7 +417,7 @@ const setupProjectFive = (memory: PsBaseMemoryData) => {
   `;
 };
 
-const setupProjectSix = (memory: PsBaseMemoryData) => {
+const setupProjectSix = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -507,7 +507,7 @@ const setupProjectSix = (memory: PsBaseMemoryData) => {
   `;
 };
 
-const setupProjectSeven = (memory: PsBaseMemoryData) => {
+const setupProjectSeven = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -653,7 +653,7 @@ Understanding how AI-driven changes might reshape workforce dynamics, economic s
   `;
 };
 
-const setupProjectEight = (memory: PsBaseMemoryData) => {
+const setupProjectEight = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -744,7 +744,7 @@ const setupProjectEight = (memory: PsBaseMemoryData) => {
   `;
 };
 
-const setupProjectNine = (memory: PsBaseMemoryData) => {
+const setupProjectNine = (memory: PsSmarterCrowdsourcingMemoryData) => {
   if (!memory.customInstructions) {
     memory.customInstructions = {} as any;
   }
@@ -843,7 +843,7 @@ if (projectId) {
   const redisKey = `st_mem:${projectId}:id`;
   const output = await redis.get(redisKey);
 
-  const memory = JSON.parse(output!) as PsBaseMemoryData;
+  const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
   if (projectId == "1") {
     setupProjectOne(memory);

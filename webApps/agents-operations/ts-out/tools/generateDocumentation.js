@@ -2,7 +2,7 @@ const renderSystemPrompt = (path, type) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
 
 Important Instructions
-For Type use the Typescript definition like for currentMemory use PsBaseMemoryData | undefined
+For Type use the Typescript definition like for currentMemory use PsSmarterCrowdsourcingMemoryData | undefined
 
 Look at the markdown sections below and always output those with your detailed documentation.
 

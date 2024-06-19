@@ -16,9 +16,9 @@ No public properties are documented.
 
 ```typescript
 import { ResearchWeb } from '@policysynth/agents/webResearch/researchWeb.js';
-import { PsBaseMemoryData } from 'path/to/PsBaseMemoryData';
+import { PsSmarterCrowdsourcingMemoryData } from 'path/to/PsSmarterCrowdsourcingMemoryData';
 
-const memoryData: PsBaseMemoryData = /* Initialize memory data */;
+const memoryData: PsSmarterCrowdsourcingMemoryData = /* Initialize memory data */;
 const researchWeb = new ResearchWeb(memoryData);
 
 const searchQueries = ["policy synthesis", "AI research"];

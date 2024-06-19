@@ -3,7 +3,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-  await queryInterface.createTable('ps_api_cost_classes', {
+  await queryInterface.createTable('ps_external_apis', {
     id: {
       type: Sequelize.INTEGER,
       autoIncrement: true,
@@ -28,18 +28,25 @@ module.exports = {
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
-    model_id: {
+    organization_id: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+    },
+    type: {
       type: Sequelize.STRING,
       allowNull: false,
     },
-    configuration: {
+    priceAdapter: {
       type: Sequelize.JSONB,
       allowNull: false,
     },
   });
 
-  await queryInterface.addIndex('ps_api_cost_classes', ['uuid']);
-  await queryInterface.addIndex('ps_api_cost_classes', ['user_id']);
-  await queryInterface.addIndex('ps_api_cost_classes', ['model_id']);
+  await queryInterface.addIndex('ps_external_apis', ['uuid'], {
+    unique: true,
+  });
+  await queryInterface.addIndex('ps_external_apis', ['user_id']);
+  await queryInterface.addIndex('ps_external_apis', ['type']);
+  await queryInterface.addIndex('ps_external_apis', ['organization_id']);
 }
 };

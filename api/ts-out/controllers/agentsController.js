@@ -1,6 +1,6 @@
 import express from "express";
 import { createClient } from "redis";
-import { PsAgent, PsAgentConnector, PsAgentClass, User, Group, PsApiCost, PsModelCost, PsAiModel, PsAgentConnectorClass, } from "../models/index.js";
+import { PsAgent, PsAgentConnector, PsAgentClass, User, Group, PsExternalApiUsage, PsModelUsage, PsAiModel, PsAgentConnectorClass, } from "../models/index.js";
 let redisClient;
 // TODO: Share this do not start on each controller
 if (process.env.REDIS_URL) {
@@ -72,8 +72,8 @@ export class AgentsController {
                 { model: PsAgentClass, as: "Class" },
                 { model: User, as: "User" },
                 { model: Group, as: "Group" },
-                { model: PsApiCost, as: "ApiCosts" },
-                { model: PsModelCost, as: "ModelCosts" },
+                { model: PsExternalApiUsage, as: "ExternalApiUsage" },
+                { model: PsModelUsage, as: "ModelUsage" },
                 { model: PsAiModel, as: "AiModels" },
             ],
         });
@@ -105,8 +105,8 @@ export class AgentsController {
                 { model: PsAgentClass, as: "Class" },
                 { model: User, as: "User" },
                 { model: Group, as: "Group" },
-                { model: PsApiCost, as: "ApiCosts" },
-                { model: PsModelCost, as: "ModelCosts" },
+                { model: PsExternalApiUsage, as: "ExternalApiUsage" },
+                { model: PsModelUsage, as: "ModelUsage" },
                 { model: PsAiModel, as: "AiModels" },
             ],
         });

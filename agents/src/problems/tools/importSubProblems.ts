@@ -13,7 +13,7 @@ const importSubProblems = async (projectId: string, filePath: string) => {
   if (!memoryDataJson) {
     throw new Error(`No memory data found for project ID ${projectId}`);
   }
-  const memoryData: PsBaseMemoryData = JSON.parse(memoryDataJson);
+  const memoryData: PsSmarterCrowdsourcingMemoryData = JSON.parse(memoryDataJson);
 
   // Read the new sub problems from the file
   const fileContent = await fs.readFile(filePath, "utf8");

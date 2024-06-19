@@ -6,13 +6,12 @@ import { Group } from "../models/ypGroup.js";
 import { PsAgentClass } from "../models/agentClass.js";
 import { PsAgentConnector } from "../models/agentConnector.js";
 import { PsAgent } from "../models/agent.js";
-import { PsApiCost } from "../models/apiCost.js";
-import { PsModelCost } from "../models/modelCost.js";
+import { PsExternalApiUsage } from "../models/externalApiUsage.js";
+import { PsModelUsage } from "../models/modelUsage.js";
 import { PsAgentAuditLog } from "../models/agentAuditLog.js";
 import { PsAgentRegistry } from "../models/agentRegistry.js";
 import { PsAiModel } from "../models/aiModel.js";
-import { PsApiCostClass } from "../models/apiCostClass.js";
-import { PsModelCostClass } from "../models/modelCostClass.js";
+import { PsExternalApi } from "../models/externalApis.js";
 import { connectToDatabase } from "../models/sequelize.js";
 
 await connectToDatabase();

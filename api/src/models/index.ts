@@ -4,13 +4,12 @@ import { Group } from "./ypGroup.js";
 import { PsAgentClass } from "./agentClass.js";
 import { PsAgentConnector } from "./agentConnector.js";
 import { PsAgent } from "./agent.js";
-import { PsApiCost } from "./apiCost.js";
-import { PsModelCost } from "./modelCost.js";
+import { PsExternalApiUsage } from "./externalApiUsage.js";
+import { PsModelUsage } from "./modelUsage.js";
 import { PsAgentAuditLog } from "./agentAuditLog.js";
 import { PsAgentRegistry } from "./agentRegistry.js";
 import { PsAiModel } from "./aiModel.js";
-import { PsApiCostClass } from "./apiCostClass.js";
-import { PsModelCostClass } from "./modelCostClass.js";
+import { PsExternalApi } from "./externalApis.js";
 
 import { sequelize } from "./sequelize.js";
 
@@ -22,16 +21,15 @@ const models: Models = {
   PsAgentClass,
   User,
   Group,
-  PsApiCost,
-  PsModelCost,
+  PsExternalApiUsage,
+  PsModelUsage,
   PsAgentConnector,
   PsAgent,
   PsAgentAuditLog,
   PsAgentConnectorClass,
   PsAgentRegistry,
   PsAiModel,
-  PsApiCostClass,
-  PsModelCostClass,
+  PsExternalApi
 };
 
 const initializeModels = async () => {
@@ -63,11 +61,10 @@ export {
   PsAgentClass,
   PsAgentConnector,
   PsAgent,
-  PsApiCost,
-  PsModelCost,
+  PsExternalApiUsage,
+  PsModelUsage,
   PsAgentAuditLog,
   PsAgentRegistry,
   PsAiModel,
-  PsApiCostClass,
-  PsModelCostClass,
+  PsExternalApi
  };

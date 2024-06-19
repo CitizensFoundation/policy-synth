@@ -6,14 +6,14 @@ This class extends `BaseAgentProcessor` to handle various stages of solution pro
 
 | Name    | Type             | Description               |
 |---------|------------------|---------------------------|
-| memory  | PsBaseMemoryData | Holds the state and data needed for processing solutions across different stages. |
+| memory  | PsSmarterCrowdsourcingMemoryData | Holds the state and data needed for processing solutions across different stages. |
 
 ## Methods
 
 | Name             | Parameters        | Return Type | Description                                                                 |
 |------------------|-------------------|-------------|-----------------------------------------------------------------------------|
 | initializeMemory | job: Job          | Promise<void> | Initializes the memory with job-specific data and default values.           |
-| setStage         | stage: PsMemoryStageTypes | Promise<void> | Sets the current processing stage in memory and updates the start time.     |
+| setStage         | stage: PsScMemoryStageTypes | Promise<void> | Sets the current processing stage in memory and updates the start time.     |
 | process          | -                 | Promise<void> | Processes the current stage's task by delegating to the appropriate processor based on `currentStage`. |
 
 ## Example

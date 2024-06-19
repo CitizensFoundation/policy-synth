@@ -10,12 +10,12 @@ const populationIndex = 18;
 const replacePopulation = async (): Promise<void> => {
   console.log('Fetching memory 1 from Redis...');
   const output = await redis.get('st_mem:1:id');
-  const memoryToReplaceTo = JSON.parse(output!) as PsBaseMemoryData;
+  const memoryToReplaceTo = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
   console.log('Memory fetched successfully.');
 
   console.log('Reading data from file...');
   const fileData = await fs.readFile('currentMemoryToReplaceFrom.json', 'utf-8');
-  const memoryToReplaceFrom = JSON.parse(fileData) as PsBaseMemoryData;
+  const memoryToReplaceFrom = JSON.parse(fileData) as PsSmarterCrowdsourcingMemoryData;
   console.log('File data read successfully.');
 
   console.log('Replacing population data...');

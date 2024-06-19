@@ -6,7 +6,7 @@ This class represents the raw evidence component in the application. It extends 
 
 | Name                    | Type                                                         | Description                                                                 |
 |-------------------------|--------------------------------------------------------------|-----------------------------------------------------------------------------|
-| memory                  | `PsBaseMemoryData`                                           | The memory data associated with the evidence.                               |
+| memory                  | `PsSmarterCrowdsourcingMemoryData`                                           | The memory data associated with the evidence.                               |
 | policy                  | `PSPolicy`                                                   | The policy data associated with the evidence.                               |
 | activeSubProblemIndex   | `number`                                                     | The index of the active sub-problem.                                        |
 | activeRawEvidence       | `PSEvidenceRawWebPageData[]`                                 | The list of active raw evidence web page data.                              |

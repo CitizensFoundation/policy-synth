@@ -1,28 +1,27 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
 
-interface PsModelCostCreationAttributes
+interface PsExternalApiCreationAttributes
   extends Optional<
-    PsModelCostAttributes,
+  PsExternalApiAttributes,
     "id" | "uuid" | "created_at" | "updated_at"
   > {}
 
-export class PsModelCost
-  extends Model<PsModelCostAttributes, PsModelCostCreationAttributes>
-  implements PsModelCostAttributes
+export class PsExternalApi
+  extends Model<PsExternalApiAttributes, PsExternalApiCreationAttributes>
+  implements PsExternalApiAttributes
 {
   public id!: number;
   public uuid!: string;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
-  public cost_class_id!: number;
-  public cost!: number;
-  public agent_id!: number;
-  public connector_id!: number;
+  public organization_id!: number;
+  public type!: string;
+  public priceAdapter!: PsBaseApiPriceAdapter;
 }
 
-PsModelCost.init(
+PsExternalApi.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -48,41 +47,35 @@ PsModelCost.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    cost_class_id: {
+    organization_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    cost: {
-      type: DataTypes.FLOAT,
+    type: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
-    agent_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    connector_id: {
-      type: DataTypes.INTEGER,
+    priceAdapter: {
+      type: DataTypes.JSONB,
       allowNull: false,
     },
   },
   {
     sequelize,
-    tableName: "ps_model_costs",
+    tableName: "ps_external_apis",
     indexes: [
       {
         fields: ["uuid"],
+        unique: true
       },
       {
         fields: ["user_id"],
       },
       {
-        fields: ["cost_class_id"],
+        fields: ["organization_id"],
       },
       {
-        fields: ["agent_id"],
-      },
-      {
-        fields: ["connector_id"],
+        fields: ["type"],
       },
     ],
     timestamps: true,

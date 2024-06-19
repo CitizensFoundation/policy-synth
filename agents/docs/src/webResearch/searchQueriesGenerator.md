@@ -13,7 +13,7 @@ This class is responsible for generating search queries based on a given questio
 
 | Name                 | Parameters        | Return Type       | Description                 |
 |----------------------|-------------------|-------------------|-----------------------------|
-| constructor          | memory: PsBaseMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string | - | Initializes the generator with memory, number of queries to generate, question, and optional overrides for prompts. |
+| constructor          | memory: PsSmarterCrowdsourcingMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string | - | Initializes the generator with memory, number of queries to generate, question, and optional overrides for prompts. |
 | renderMessages       | -                 | Promise<SystemMessage[] \| HumanMessage[]> | Prepares the system and user prompts as messages. |
 | generateSearchQueries| -                 | Promise<string[]> | Generates search queries using the configured OpenAI model and prompts. |
 
@@ -21,9 +21,9 @@ This class is responsible for generating search queries based on a given questio
 
 ```typescript
 import { SearchQueriesGenerator } from '@policysynth/agents/webResearch/searchQueriesGenerator.js';
-import { PsBaseMemoryData } from '@policysynth/agents/baseAgent.js';
+import { PsSmarterCrowdsourcingMemoryData } from '@policysynth/agents/baseAgent.js';
 
-const memoryData: PsBaseMemoryData = {
+const memoryData: PsSmarterCrowdsourcingMemoryData = {
   // example memory data
 };
 

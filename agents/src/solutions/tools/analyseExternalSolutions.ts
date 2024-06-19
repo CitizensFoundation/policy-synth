@@ -306,7 +306,7 @@ async function run() {
 
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
+    const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
     const counts = new AnalyseExternalSolutions({} as any, memory);
     await counts.processAnalysis(folderPath);

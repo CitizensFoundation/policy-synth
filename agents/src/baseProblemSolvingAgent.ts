@@ -3,11 +3,11 @@ import { PolicySynthAgentBase } from "./baseAgent.js";
 import { PsConstants } from "./constants.js";
 
 export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
-  override memory: PsBaseMemoryData;
+  override memory: PsSmarterCrowdsourcingMemoryData;
   job!: Job;
   currentSubProblemIndex: number | undefined;
 
-  constructor(job: Job, memory: PsBaseMemoryData) {
+  constructor(job: Job, memory: PsSmarterCrowdsourcingMemoryData) {
     super();
     this.job = job;
     this.memory = memory;

@@ -8,7 +8,7 @@ export declare class CreateSolutionsVectorStoreProcessor extends BaseProblemSolv
     renderCreateSystemMessage(): SystemMessage;
     renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (HumanMessage | SystemMessage)[];
     renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
-    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsMemoryStageTypes): Promise<PsSolution[]>;
+    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsScMemoryStageTypes): Promise<PsSolution[]>;
     randomSearchQueryIndex(searchQueries: PsSearchQueries, type: PsWebPageTypes): number;
     getAllTypeQueries(searchQueries: PsSearchQueries, subProblemIndex: number | undefined): {
         general: string;

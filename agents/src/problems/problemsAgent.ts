@@ -23,7 +23,7 @@ import { PolicySynthAgentBase } from "../baseAgent.js";
 import { AgentProblemsProcessor } from "./problemsProcessor.js";
 
 export class ProblemsAgent extends AgentProblemsProcessor {
-  declare memory: PsBaseMemoryData;
+  declare memory: PsSmarterCrowdsourcingMemoryData;
 
   async processSubProblems() {
     const subProblemsProcessor = new CreateSubProblemsProcessor(
