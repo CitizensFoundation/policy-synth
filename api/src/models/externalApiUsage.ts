@@ -53,7 +53,7 @@ PsExternalApiUsage.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    callCount: {
+    call_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -68,7 +68,7 @@ PsExternalApiUsage.init(
   },
   {
     sequelize,
-    tableName: "ps_api_usage",
+    tableName: "ps_external_api_usage",
     indexes: [
       {
         fields: ["user_id"],

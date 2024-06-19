@@ -26,17 +26,17 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      tokenInCount: {
+      token_in_count: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0
       },
-      tokenOutCount: {
+      token_out_count: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0
       },
-      tokenInCachedContextCount: {
+      token_in_cached_context_count: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0

@@ -51,7 +51,7 @@ PsExternalApiUsage.init({
     },
 }, {
     sequelize,
-    tableName: "ps_api_usage",
+    tableName: "ps_external_api_usage",
     indexes: [
         {
             fields: ["user_id"],

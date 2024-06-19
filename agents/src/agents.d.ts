@@ -53,9 +53,9 @@ interface PsExternalApiAttributes extends PsBaseModelClass {
 // tablename "ps_model_usage"
 interface PsModelUsageAttributes extends PsBaseModelClassNoUuid {
   model_id: number;
-  tokenInCount: number;
-  tokenOutCount: number;
-  tokenInCachedContextCount?: number;
+  token_in_count: number;
+  token_out_count: number;
+  token_in_cached_context_count?: number;
   agent_id: number;
   connector_id: number;
 }
@@ -63,7 +63,7 @@ interface PsModelUsageAttributes extends PsBaseModelClassNoUuid {
 // tablename "ps_external_api_usage"
 interface PsExternalApiUsageAttributes extends PsBaseModelClassNoUuid {
   external_api_id: number;
-  callCount: number;
+  call_count: number;
   agent_id: number; // or
   connector_id: number; // or
 }

@@ -16,9 +16,9 @@ export class PsModelUsage
   public created_at!: Date;
   public updated_at!: Date;
   public model_id!: number;
-  public tokenInCount!: number;
-  public tokenOutCount!: number;
-  public tokenInCachedContextCount!: number;
+  public token_in_count!: number;
+  public token_out_count!: number;
+  public token_in_cached_context_count!: number;
   public agent_id!: number;
   public connector_id!: number;
 }
@@ -48,15 +48,15 @@ PsModelUsage.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    tokenInCount: {
+    token_in_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    tokenOutCount: {
+    token_out_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    tokenInCachedContextCount: {
+    token_in_cached_context_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

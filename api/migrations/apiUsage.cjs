@@ -4,7 +4,7 @@ const { DataTypes } = require('sequelize');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-  await queryInterface.createTable('ps_api_costs', {
+  await queryInterface.createTable('ps_external_api_usage', {
     id: {
       type: Sequelize.INTEGER,
       autoIncrement: true,
@@ -24,11 +24,11 @@ module.exports = {
       allowNull: false,
       defaultValue: Sequelize.NOW,
     },
-    ps_external_api_id: {
+    external_api_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
     },
-    callCount: {
+    call_count: {
       type: Sequelize.INTEGER,
       allowNull: false,
     },
@@ -42,9 +42,9 @@ module.exports = {
     },
   });
 
-  await queryInterface.addIndex('ps_api_costs', ['user_id']);
-  await queryInterface.addIndex('ps_api_costs', ['ps_external_api_id']);
-  await queryInterface.addIndex('ps_api_costs', ['agent_id']);
-  await queryInterface.addIndex('ps_api_costs', ['connector_id']);
+  await queryInterface.addIndex('ps_external_api_usage', ['user_id']);
+  await queryInterface.addIndex('ps_external_api_usage', ['external_api_id']);
+  await queryInterface.addIndex('ps_external_api_usage', ['agent_id']);
+  await queryInterface.addIndex('ps_external_api_usage', ['connector_id']);
 }
 };
