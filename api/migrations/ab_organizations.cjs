@@ -30,6 +30,6 @@ module.exports = {
       },
     });
 
-    await queryInterface.addIndex("users", ["email"]);
+    await queryInterface.addIndex("users", ["name"]);
   },
 };
