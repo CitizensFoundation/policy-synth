@@ -1,14 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsAgentAuditLog extends Model {
-    id;
-    user_id;
-    created_at;
-    updated_at;
-    agent_id;
-    connector_id;
-    action;
-    details;
 }
 PsAgentAuditLog.init({
     id: {

@@ -11,14 +11,14 @@ export class PsAiModel
   extends Model<PsAiModelAttributes, PsAiModelCreationAttributes>
   implements PsAiModelAttributes
 {
-  public id!: number;
-  public uuid!: string;
-  public user_id!: number;
-  public organization_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public name!: string;
-  public configuration!: PsAiModelConfiguration;
+  declare id: number;
+  declare uuid: string;
+  declare user_id: number;
+  declare organization_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare name: string;
+  declare configuration: PsAiModelConfiguration;
 }
 
 PsAiModel.init(

@@ -13,15 +13,15 @@ export class PsAgentRegistry
   extends Model<PsAgentRegistryAttributes, PsAgentRegistryCreationAttributes>
   implements PsAgentRegistryAttributes
 {
-  public id!: number;
-  public uuid!: string;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public configuration!: PsAgentRegistryConfiguration;
+  declare id: number;
+  declare uuid: string;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare configuration: PsAgentRegistryConfiguration;
 
-  public Agents?: PsAgentClassAttributes[];
-  public Connectors?: PsAgentConnectorClassAttributes[];
+  declare Agents?: PsAgentClassAttributes[];
+  declare Connectors?: PsAgentConnectorClassAttributes[];
 }
 
 PsAgentRegistry.init(

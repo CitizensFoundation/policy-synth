@@ -14,13 +14,13 @@ export class User
   extends Model<YpUserData, YpUserDataCreationAttributes>
   implements YpUserData
 {
-  public id!: number;
-  public name!: string;
-  public email!: string;
+  declare id: number;
+  declare name: string;
+  declare email: string;
 
   // timestamps!
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
+  declare created_at: Date;
+  declare updated_at: Date;
 }
 
 User.init(

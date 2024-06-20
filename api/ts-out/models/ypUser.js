@@ -1,12 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class User extends Model {
-    id;
-    name;
-    email;
-    // timestamps!
-    created_at;
-    updated_at;
 }
 User.init({
     id: {

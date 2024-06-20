@@ -1,25 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsAgent extends Model {
-    id;
-    uuid;
-    user_id;
-    created_at;
-    updated_at;
-    class_id;
-    group_id;
-    configuration;
-    parent_agent_id;
-    // Associations
-    Class;
-    User;
-    Group;
-    ExternalApiUsage;
-    ModelUsage;
-    ParentAgent;
-    SubAgents;
-    Connectors;
-    AiModels;
 }
 PsAgent.init({
     id: {

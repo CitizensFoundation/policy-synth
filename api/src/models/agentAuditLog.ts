@@ -11,14 +11,14 @@ export class PsAgentAuditLog
   extends Model<PsAgentAuditLogAttributes, PsAgentAuditLogCreationAttributes>
   implements PsAgentAuditLogAttributes
 {
-  public id!: number;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public agent_id!: number;
-  public connector_id!: number;
-  public action!: string;
-  public details?: PsAgentAuditLogDetails;
+  declare id: number;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare agent_id: number;
+  declare connector_id: number;
+  declare action: string;
+  declare details?: PsAgentAuditLogDetails;
 }
 
 PsAgentAuditLog.init(

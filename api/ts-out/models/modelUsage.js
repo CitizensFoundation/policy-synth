@@ -1,16 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsModelUsage extends Model {
-    id;
-    user_id;
-    created_at;
-    updated_at;
-    model_id;
-    token_in_count;
-    token_out_count;
-    token_in_cached_context_count;
-    agent_id;
-    connector_id;
 }
 PsModelUsage.init({
     id: {

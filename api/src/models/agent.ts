@@ -16,26 +16,26 @@ export class PsAgent
   extends Model<PsAgentAttributes, PsAgentCreationAttributes>
   implements PsAgentAttributes
 {
-  public id!: number;
-  public uuid!: string;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public class_id!: number;
-  public group_id!: number;
-  public configuration!: PsBaseNodeConfiguration;
-  public parent_agent_id?: number;
+  declare id: number;
+  declare uuid: string;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare class_id: number;
+  declare group_id: number;
+  declare configuration: PsBaseNodeConfiguration;
+  declare parent_agent_id?: number;
 
   // Associations
-  public Class?: PsAgentClass;
-  public User?: YpUserData;
-  public Group?: YpGroupData;
-  public ExternalApiUsage?: PsExternalApiUsageAttributes[];
-  public ModelUsage?: PsModelUsageAttributes[];
-  public ParentAgent?: PsAgent;
-  public SubAgents?: PsAgent[];
-  public Connectors?: PsAgentConnectorAttributes[];
-  public AiModels?: PsAiModelAttributes[];
+  declare Class?: PsAgentClass;
+  declare User?: YpUserData;
+  declare Group?: YpGroupData;
+  declare ExternalApiUsage?: PsExternalApiUsageAttributes[];
+  declare ModelUsage?: PsModelUsageAttributes[];
+  declare ParentAgent?: PsAgent;
+  declare SubAgents?: PsAgent[];
+  declare Connectors?: PsAgentConnectorAttributes[];
+  declare AiModels?: PsAiModelAttributes[];
 
   declare addConnector: (connector: PsAgentConnector) => Promise<void>;
   declare addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;

@@ -1,16 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsExternalApiUsage extends Model {
-    user_id;
-    created_at;
-    updated_at;
-    external_api_id;
-    call_count;
-    agent_id;
-    connector_id;
-    // Associations
-    Agent;
-    Connector;
 }
 PsExternalApiUsage.init({
     id: {

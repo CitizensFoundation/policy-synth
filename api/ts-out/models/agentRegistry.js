@@ -3,14 +3,6 @@ import { sequelize } from "./sequelize.js";
 import { PsAgentClass } from "./agentClass.js";
 import { PsAgentConnectorClass } from "./agentConnectorClass.js";
 export class PsAgentRegistry extends Model {
-    id;
-    uuid;
-    user_id;
-    created_at;
-    updated_at;
-    configuration;
-    Agents;
-    Connectors;
 }
 PsAgentRegistry.init({
     id: {

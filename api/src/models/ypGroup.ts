@@ -8,13 +8,12 @@ export class Group
   extends Model<YpGroupData, YpGroupDataCreationAttributes>
   implements YpGroupData
 {
-  public id!: number;
-  public name!: string;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-
-  public configuration!: YpPsGroupConfigurationData;
+  declare id: number;
+  declare name: string;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare configuration: YpPsGroupConfigurationData;
 }
 
 Group.init(

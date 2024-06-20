@@ -5,8 +5,8 @@ export declare class User extends Model<YpUserData, YpUserDataCreationAttributes
     id: number;
     name: string;
     email: string;
-    readonly created_at: Date;
-    readonly updated_at: Date;
+    created_at: Date;
+    updated_at: Date;
 }
 export {};
 //# sourceMappingURL=ypUser.d.ts.map

@@ -8,14 +8,13 @@ export class Group
   extends Model<YpOrganizationsData, YpOrganizationDataCreationAttributes>
   implements YpOrganizationsData
 {
-  public id!: number;
-  public name!: string;
-  public type!: string;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-
-  public configuration!: any;
+  declare id: number;
+  declare name: string;
+  declare type: string;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare configuration: any;
 }
 
 Group.init(

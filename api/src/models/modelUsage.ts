@@ -11,16 +11,16 @@ export class PsModelUsage
   extends Model<PsModelUsageAttributes, PsModelUsageCreationAttributes>
   implements PsModelUsageAttributes
 {
-  public id!: number;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public model_id!: number;
-  public token_in_count!: number;
-  public token_out_count!: number;
-  public token_in_cached_context_count!: number;
-  public agent_id!: number;
-  public connector_id!: number;
+  declare id: number;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare model_id: number;
+  declare token_in_count: number;
+  declare token_out_count: number;
+  declare token_in_cached_context_count: number;
+  declare agent_id: number;
+  declare connector_id: number;
 }
 
 PsModelUsage.init(

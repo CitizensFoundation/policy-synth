@@ -11,15 +11,15 @@ export class PsAgentClass
   extends Model<PsAgentClassAttributes, PsAgentClassAttributesCreation>
   implements PsAgentClassAttributes
 {
-  public id!: number;
-  public uuid!: string;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public name!: string;
-  public version!: number;
-  public configuration!: PsAgentClassAttributesConfiguration;
-  public available!: boolean;
+  declare id: number;
+  declare uuid: string;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare name: string;
+  declare version: number;
+  declare configuration: PsAgentClassAttributesConfiguration;
+  declare available: boolean;
 }
 
 PsAgentClass.init(

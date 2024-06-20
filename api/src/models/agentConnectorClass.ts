@@ -11,15 +11,15 @@ export class PsAgentConnectorClass
   extends Model<PsAgentConnectorClassAttributes, PsAgentConnectorClassCreationAttributes>
   implements PsAgentConnectorClassAttributes
 {
-  public id!: number;
-  public uuid!: string;
-  public user_id!: number;
-  public created_at!: Date;
-  public updated_at!: Date;
-  public name!: string;
-  public version!: number;
-  public available!: boolean;
-  public configuration!: PsAgentConnectorConfiguration;
+  declare id: number;
+  declare uuid: string;
+  declare user_id: number;
+  declare created_at: Date;
+  declare updated_at: Date;
+  declare name: string;
+  declare version: number;
+  declare available: boolean;
+  declare configuration: PsAgentConnectorConfiguration;
 }
 
 PsAgentConnectorClass.init(
