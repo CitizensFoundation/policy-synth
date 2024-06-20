@@ -1,12 +1,11 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsExternalApiUsage extends Model {
-    id;
     user_id;
     created_at;
     updated_at;
     external_api_id;
-    callCount;
+    call_count;
     agent_id;
     connector_id;
     // Associations
@@ -37,7 +36,7 @@ PsExternalApiUsage.init({
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    callCount: {
+    call_count: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },

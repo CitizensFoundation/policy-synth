@@ -7,9 +7,9 @@ export declare class PsModelUsage extends Model<PsModelUsageAttributes, PsModelU
     created_at: Date;
     updated_at: Date;
     model_id: number;
-    tokenInCount: number;
-    tokenOutCount: number;
-    tokenInCachedContextCount: number;
+    token_in_count: number;
+    token_out_count: number;
+    token_in_cached_context_count: number;
     agent_id: number;
     connector_id: number;
 }

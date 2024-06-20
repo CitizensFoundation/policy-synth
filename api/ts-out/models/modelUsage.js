@@ -6,9 +6,9 @@ export class PsModelUsage extends Model {
     created_at;
     updated_at;
     model_id;
-    tokenInCount;
-    tokenOutCount;
-    tokenInCachedContextCount;
+    token_in_count;
+    token_out_count;
+    token_in_cached_context_count;
     agent_id;
     connector_id;
 }
@@ -36,15 +36,15 @@ PsModelUsage.init({
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    tokenInCount: {
+    token_in_count: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    tokenOutCount: {
+    token_out_count: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
-    tokenInCachedContextCount: {
+    token_in_cached_context_count: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },

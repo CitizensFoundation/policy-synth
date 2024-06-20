@@ -7,7 +7,7 @@ export declare class PsExternalApiUsage extends Model<PsExternalApiUsageAttribut
     created_at: Date;
     updated_at: Date;
     external_api_id: number;
-    callCount: number;
+    call_count: number;
     agent_id: number;
     connector_id: number;
     Agent?: PsAgentAttributes;

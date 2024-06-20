@@ -13,12 +13,12 @@ export class PsExternalApiUsage
   extends Model<PsExternalApiUsageAttributes, PsExternalApiUsageCreationAttributes>
   implements PsExternalApiUsageAttributes
 {
-  public id!: number;
+  declare id!: number;
   public user_id!: number;
   public created_at!: Date;
   public updated_at!: Date;
   public external_api_id!: number;
-  public callCount!: number;
+  public call_count!: number;
   public agent_id!: number;
   public connector_id!: number;
 
