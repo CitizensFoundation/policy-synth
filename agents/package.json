@@ -37,7 +37,7 @@
     "destroyWeaviateRagDocument": "node ts-out/rag/vectorstore/tools/destroyRagDocument.js",
     "build": "tsc --project ./ --outDir ./ts-out",
     "start": "nodemon -q ts-out/queue.js",
-    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ts-out/queue.js"
+    "watch-start": "tsc --project ./ --outDir ./ts-out -w & node ts-out/queue.js"
   },
   "cacheDirectories": [
     "node_modules"
@@ -52,6 +52,7 @@
     "aws-sdk": "^2.1639.0",
     "axios": "^1.7.2",
     "bullmq": "^5.8.0",
+    "colors": "^1.4.0",
     "csv-parser": "^3.0.0",
     "density-clustering": "^1.3.0",
     "gpt-tokenizer": "^2.1.1",
@@ -79,6 +80,7 @@
     "puppeteer": "22.10.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "sequelize": "^6.37.3",
     "tiktoken": "^1.0.15",
     "weaviate-ts-client": "^2.2.0",
     "winston": "^3.13.0",

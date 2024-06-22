@@ -60,7 +60,14 @@ enum PsAiModelType {
 
 interface PsAiModelConfiguration {
   type: PsAiModelType;
+  provider: string;
   prices: PsBaseModelPriceConfiguration;
+  maxTokensOut: number;
+  deploymentName?: string;
+  endpoint?: string;
+  defaultTemperature: number;
+  limitTPM?: number;
+  limitRPM?: number;
 }
 
 // tablename "ps_ai_models"
@@ -90,8 +97,8 @@ interface PsModelUsageAttributes extends PsBaseModelClassNoUuid {
   token_in_count: number;
   token_out_count: number;
   token_in_cached_context_count?: number;
-  agent_id: number;
-  connector_id: number;
+  agent_id?: number;
+  connector_id?: number;
 }
 
 // tablename "ps_external_api_usage"
@@ -167,6 +174,8 @@ interface PsBaseNodeConfiguration {
   apiUsageEstimates?: PsAgentApiUsageEstimate[];
   graphPosX: number;
   graphPosY: number;
+  maxTokensOut?: number;
+  temperature?: number;
 }
 
 interface PsBaseNodeInstance extends PsBaseModelClass {
@@ -256,7 +265,7 @@ interface PsAgentAuditLogAttributes extends PsBaseModelClassNoUuid {
 }
 
 interface PsAiModelAccessConfiguration {
-  aiModelId: string;
+  aiModelId: number;
   projectId?: string;
   apiKey: string;
 }
@@ -271,6 +280,8 @@ interface YpGroupData {
   name: string;
   user_id: number;
   configuration: YpPsGroupConfigurationData;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // tablename "users"
@@ -278,6 +289,8 @@ interface YpUserData {
   id: number;
   name: string;
   email: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // tablename "organizations"

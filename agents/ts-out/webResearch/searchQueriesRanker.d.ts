@@ -1,4 +1,4 @@
-import { BasePairwiseRankingsProcessor } from "../basePairwiseRanking.js";
+import { BasePairwiseRankingsProcessor } from "../base/basePairwiseRanking.js";
 export declare class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     searchQuestion: string | undefined;
     constructor(memory: PsSmarterCrowdsourcingMemoryData, progressFunction?: Function | undefined);

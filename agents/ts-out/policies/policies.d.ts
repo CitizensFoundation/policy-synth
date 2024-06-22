@@ -1,4 +1,4 @@
-import { BaseAgentProcessor } from "../baseAgentProcessor.js";
+import { BaseAgentProcessor } from "../base/baseAgentProcessor.js";
 import { Job } from "bullmq";
 export declare class AgentPolicies extends BaseAgentProcessor {
     memory: PsSmarterCrowdsourcingMemoryData;

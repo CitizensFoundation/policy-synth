@@ -1,4 +1,4 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;

@@ -15,6 +15,7 @@ export abstract class BaseAgentProcessor extends PolicySynthScAgentBase {
     const jobData = job.data as PsWorkerData;
 
     this.memory = {
+      lastSavedAt: Date.now(),
       redisKey: this.getRedisKey(jobData.groupId),
       groupId: jobData.groupId,
       communityId: jobData.communityId,

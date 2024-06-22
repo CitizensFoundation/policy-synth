@@ -10,7 +10,7 @@ import { dirname } from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import WebSocket, { WebSocketServer } from "ws";
-import { connectToDatabase } from "./models/sequelize.js";
+import { connectToDatabase } from "@policysynth/agents/dbModels/sequelize.js";
 import { initializeModels } from "./models/index.js";
 
 export class PolicySynthApiApp {

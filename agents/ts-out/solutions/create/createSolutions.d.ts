@@ -1,9 +1,9 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     useLanguage: string | undefined;
     renderCreateSystemMessage(): SystemMessage;
-    renderCreatePrompt(subProblemIndex: number, solutionsForInspiration: PsSolution[], alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
+    renderCreatePrompt(subProblemIndex: number, solutionsForInspiration: PsSolution[], alreadyCreatedSolutions?: string | undefined): Promise<(SystemMessage | HumanMessage)[]>;
     createSolutions(subProblemIndex: number, solutionsForInspiration: PsSolution[], alreadyCreatedSolutions?: string | undefined, stageName?: PsScMemoryStageTypes): Promise<PsSolution[]>;
     countTokensForString(text: string): Promise<number>;
     getRandomSolutions(subProblemIndex: number, alreadyCreatedSolutions: string | undefined): PsSolution[];

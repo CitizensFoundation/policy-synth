@@ -1,8 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     folderPath: string;
-    renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<(HumanMessage | SystemMessage)[]>;
+    renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<(SystemMessage | HumanMessage)[]>;
     compareSolutionToExternal(solutionDescription: string, requirement: string): Promise<PsExternalSolutionAnalysisResults>;
     analyze(): Promise<void>;
     toCSV(analysisResult: PsExternalSolutionAnalysis): string;

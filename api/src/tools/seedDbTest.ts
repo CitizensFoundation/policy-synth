@@ -1,18 +1,18 @@
 import { initializeModels, models } from "../models/index.js";
 
-import { PsAgentConnectorClass } from "../models/agentConnectorClass.js"; // Adjust the path as needed
-import { User } from "../models/ypUser.js";
-import { Group } from "../models/ypGroup.js";
-import { PsAgentClass } from "../models/agentClass.js";
-import { PsAgentConnector } from "../models/agentConnector.js";
-import { PsAgent } from "../models/agent.js";
-import { PsExternalApiUsage } from "../models/externalApiUsage.js";
-import { PsModelUsage } from "../models/modelUsage.js";
-import { PsAgentAuditLog } from "../models/agentAuditLog.js";
-import { PsAgentRegistry } from "../models/agentRegistry.js";
-import { PsAiModel } from "../models/aiModel.js";
-import { PsExternalApi } from "../models/externalApis.js";
-import { connectToDatabase } from "../models/sequelize.js";
+import { PsAgentConnectorClass } from "@policysynth/agents/dbModels/agentConnectorClass.js"; // Adjust the path as needed
+import { User } from "@policysynth/agents/dbModels/ypUser.js";
+import { Group } from "@policysynth/agents/dbModels/ypGroup.js";
+import { PsAgentClass } from "@policysynth/agents/dbModels/agentClass.js";
+import { PsAgentConnector } from "@policysynth/agents/dbModels/agentConnector.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PsExternalApiUsage } from "@policysynth/agents/dbModels/externalApiUsage.js";
+import { PsModelUsage } from "@policysynth/agents/dbModels/modelUsage.js";
+import { PsAgentAuditLog } from "@policysynth/agents/dbModels/agentAuditLog.js";
+import { PsAgentRegistry } from "@policysynth/agents/dbModels/agentRegistry.js";
+import { PsAiModel } from "@policysynth/agents/dbModels/aiModel.js";
+import { PsExternalApi } from "@policysynth/agents/dbModels/externalApis.js";
+import { connectToDatabase } from "@policysynth/agents/dbModels/sequelize.js";
 
 await connectToDatabase();
 await initializeModels();

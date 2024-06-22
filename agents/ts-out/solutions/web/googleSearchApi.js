@@ -1,5 +1,5 @@
 import axios from "axios";
-import { PolicySynthScAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class GoogleSearchApi extends PolicySynthScAgentBase {

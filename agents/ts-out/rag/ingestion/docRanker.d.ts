@@ -1,4 +1,4 @@
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
+import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
 export declare class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
     rankingRules: string | undefined;
     overallTopic: string | undefined;

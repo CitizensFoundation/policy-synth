@@ -1,4 +1,4 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { PsConstants } from "../../constants.js";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 import ioredis from "ioredis";

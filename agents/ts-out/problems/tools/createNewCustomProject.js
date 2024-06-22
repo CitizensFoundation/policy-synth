@@ -1,5 +1,5 @@
 import ioredis from "ioredis";
-import { PolicySynthScAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const projectId = process.argv[2];
 const force = process.argv[3];

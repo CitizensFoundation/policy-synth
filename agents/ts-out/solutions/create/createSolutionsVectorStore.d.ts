@@ -1,13 +1,13 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
     useLanguage: string | undefined;
-    renderRefinePrompt(results: PsSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
+    renderRefinePrompt(results: PsSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(SystemMessage | HumanMessage)[]>;
     renderCreateSystemMessage(): SystemMessage;
-    renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (HumanMessage | SystemMessage)[];
-    renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(HumanMessage | SystemMessage)[]>;
+    renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (SystemMessage | HumanMessage)[];
+    renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(SystemMessage | HumanMessage)[]>;
     createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsScMemoryStageTypes): Promise<PsSolution[]>;
     randomSearchQueryIndex(searchQueries: PsSearchQueries, type: PsWebPageTypes): number;
     getAllTypeQueries(searchQueries: PsSearchQueries, subProblemIndex: number | undefined): {

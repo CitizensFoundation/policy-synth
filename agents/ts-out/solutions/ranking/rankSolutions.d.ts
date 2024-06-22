@@ -1,4 +1,4 @@
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
+import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
 export declare class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
     voteOnPromptPair(subProblemIndex: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
     processSubProblem(subProblemIndex: number): Promise<void>;

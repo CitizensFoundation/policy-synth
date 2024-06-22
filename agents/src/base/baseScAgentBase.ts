@@ -30,9 +30,8 @@ export class PolicySynthScAgentBase extends PolicySynthBaseAgent {
   declare memory?: PsSmarterCrowdsourcingMemoryData;
   logger: winston.Logger;
   timeStart: number = Date.now();
-  chat: ChatOpenAI | undefined;
 
-  private rateLimits: PsModelRateLimitTracking = {};
+  rateLimits: PsModelRateLimitTracking = {};
 
   constructor(memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined) {
     super(memory);
@@ -225,7 +224,7 @@ export class PolicySynthScAgentBase extends PolicySynthBaseAgent {
   }
 
 
-  private updateMemoryStages(
+  updateMemoryStages(
     stage: PsScMemoryStageTypes,
     tokensIn: number,
     tokensOut: number,

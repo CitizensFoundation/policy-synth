@@ -1,7 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PsConstants } from "../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
+import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
 export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     renderProblemDetail(additionalData) {
         let detail = ``;

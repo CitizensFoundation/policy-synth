@@ -1,4 +1,4 @@
-import { PolicySynthScAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
 export declare class GoogleSearchApi extends PolicySynthScAgentBase {
     search(query: string): Promise<PsSearchResultItem[]>;
 }

@@ -1,4 +1,4 @@
-import { BaseAgentProcessor } from "../baseAgentProcessor.js";
+import { BaseAgentProcessor } from "../base/baseAgentProcessor.js";
 export declare class AgentSolutions extends BaseAgentProcessor {
     memory: PsSmarterCrowdsourcingMemoryData;
     setStage(stage: PsScMemoryStageTypes): Promise<void>;

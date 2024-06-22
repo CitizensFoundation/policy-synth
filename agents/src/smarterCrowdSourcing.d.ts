@@ -304,6 +304,10 @@ interface PsSearchResults {
 
 interface PsSmarterCrowdsourcingMemoryData extends PsAgentBaseMemoryData {
   redisKey: string;
+  groupId: number;
+  communityId: number;
+  domainId: number;
+  lastSavedAt?: number;
   currentStage: PsScMemoryStageTypes;
   stages: Record<PsScMemoryStageTypes, PsScStagesData>;
   problemStatement: PsProblemStatement;

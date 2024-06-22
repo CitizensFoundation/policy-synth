@@ -1,11 +1,11 @@
 import { initializeModels } from "../models/index.js";
-import { PsAgentConnectorClass } from "../models/agentConnectorClass.js"; // Adjust the path as needed
-import { User } from "../models/ypUser.js";
-import { Group } from "../models/ypGroup.js";
-import { PsAgentClass } from "../models/agentClass.js";
-import { PsAgentConnector } from "../models/agentConnector.js";
-import { PsAgent } from "../models/agent.js";
-import { connectToDatabase } from "../models/sequelize.js";
+import { PsAgentConnectorClass } from "@policysynth/agents/dbModels/agentConnectorClass.js"; // Adjust the path as needed
+import { User } from "@policysynth/agents/dbModels/ypUser.js";
+import { Group } from "@policysynth/agents/dbModels/ypGroup.js";
+import { PsAgentClass } from "@policysynth/agents/dbModels/agentClass.js";
+import { PsAgentConnector } from "@policysynth/agents/dbModels/agentConnector.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { connectToDatabase } from "@policysynth/agents/dbModels/sequelize.js";
 await connectToDatabase();
 await initializeModels();
 let googleDocsQuestions = [

@@ -1,4 +1,4 @@
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
+import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
 export declare class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
     subProblemIndex: number;
     entitiesIndex: number;

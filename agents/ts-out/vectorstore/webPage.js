@@ -1,5 +1,5 @@
 import weaviate from "weaviate-ts-client";
-import { PolicySynthScAgentBase } from "../baseAgent.js";
+import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
 import { PsConstants } from "../constants.js";
 import fs from "fs/promises";
 export class WebPageVectorStore extends PolicySynthScAgentBase {

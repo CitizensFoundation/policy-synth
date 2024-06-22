@@ -1,4 +1,4 @@
-import { BaseAgentProcessor } from "../baseAgentProcessor.js";
+import { BaseAgentProcessor } from "../base/baseAgentProcessor.js";
 import { Worker } from "bullmq";
 import { CreateSubProblemsProcessor } from "./create/createSubProblems.js";
 import { CreateEntitiesProcessor } from "./create/createEntities.js";
