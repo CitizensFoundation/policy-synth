@@ -1,24 +1,12 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
-export class PsModelCostClass extends Model {
-    id;
-    uuid;
-    user_id;
-    created_at;
-    updated_at;
-    model_id;
-    configuration;
+export class PsEval extends Model {
 }
-PsModelCostClass.init({
+PsEval.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-    },
-    uuid: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
     },
     user_id: {
         type: DataTypes.INTEGER,
@@ -34,29 +22,34 @@ PsModelCostClass.init({
         allowNull: false,
         defaultValue: DataTypes.NOW,
     },
-    model_id: {
-        type: DataTypes.STRING,
+    agent_id: {
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
-    configuration: {
+    overall_score: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    results: {
         type: DataTypes.JSONB,
         allowNull: false,
     },
+    notes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    },
 }, {
     sequelize,
-    tableName: "ps_model_cost_classes",
+    tableName: "ps_agent_evals",
     indexes: [
-        {
-            fields: ["uuid"],
-        },
         {
             fields: ["user_id"],
         },
         {
-            fields: ["model_id"],
-        },
+            fields: ["agent_id"],
+        }
     ],
     timestamps: true,
     underscored: true,
 });
-//# sourceMappingURL=modelCostClass.js.map
+//# sourceMappingURL=agentEval.js.map

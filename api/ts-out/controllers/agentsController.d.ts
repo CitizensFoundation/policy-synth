@@ -14,6 +14,7 @@ export declare class AgentsController {
         SubAgents?: PsAgentAttributes[] | undefined;
         Connectors?: PsAgentConnectorAttributes[] | undefined;
         AiModels?: PsAiModelAttributes[] | undefined;
+        Evals?: PsAgentEvalAttributes[] | undefined;
         configuration: PsAgentBaseConfiguration;
         class_id: number;
         group_id: number;

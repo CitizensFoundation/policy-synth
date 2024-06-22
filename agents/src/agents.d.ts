@@ -8,6 +8,40 @@ interface PsBaseModelClass {
 
 interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, 'uuid'> {}
 
+// Evaluation result for a single criterion
+interface PsAgentEvalCriterionResult {
+  criterionUuid: string;
+  score: number;
+  feedback: string;
+}
+
+// Configuration for a single evaluation criterion
+interface PsAgentEvalCriterionConfig {
+  uuid: string;
+  name: string;
+  description: string;
+  weight: number;
+  scoringGuidelines: string;
+  allOurIdeasGroupId?: number;
+  yourPrioritiesGroupId?: number;
+}
+
+// Evaluation configuration for an agent class
+interface PsAgentEvalConfig {
+  criteria: PsAgentEvalCriterionConfig[];
+  minimumOverallScore: number;
+  evaluationFrequency: 'daily' | 'weekly' | 'monthly' | 'onDemand';
+  autoEvaluate: boolean;
+}
+
+// Table name: "ps_agent_evals" - ADD
+interface PsAgentEvalAttributes extends PsBaseModelClassNoUuid {
+  agent_id: number;
+  overall_score: number;
+  results: PsAgentEvalCriterionResult[];
+  notes: string;
+}
+
 interface PsBaseModelPriceConfiguration {
   costInTokensPerMillion: number;
   costOutTokensPerMillion: number;
@@ -95,6 +129,7 @@ interface PsAgentClassAttributesConfiguration {
   outputJsonInterface: string;
   questions: YpStructuredQuestionData[];
   supportedConnectors: PsBaseAgentConnectorClass[];
+  evalConfig?: PsAgentEvalConfig; // ADDED
 }
 
 // tablename "ps_agent_classes"
@@ -105,7 +140,23 @@ interface PsAgentClassAttributes extends PsBaseModelClass {
   available: boolean;
 }
 
+interface PsAgentModelUsageEstimate {
+  modelId: number;
+  tokenInCount?: number;
+  tokenOutCount?: number;
+  tokenInCachedContextCount?: number;
+  timestamp: number;
+}
+
+interface PsAgentApiUsageEstimate {
+  externalApiId: number;
+  callCount: number;
+  timestamp: number;
+}
+
 interface PsBaseNodeConfiguration {
+  modelUsageEstimates?: PsAgentModelUsageEstimate[];
+  apiUsageEstimates?: PsAgentApiUsageEstimate[];
   graphPosX: number;
   graphPosY: number;
 }
@@ -139,6 +190,7 @@ interface PsAgentAttributes extends PsBaseNodeInstance {
   SubAgents?: PsAgentAttributes[]; // through a join table
   Connectors?: PsAgentConnectorAttributes[]; // through a join table
   AiModels?: PsAiModelAttributes[];
+  Evals?: PsAgentEvalAttributes[]; // ADDED
   configuration: PsAgentBaseConfiguration;
 }
 
