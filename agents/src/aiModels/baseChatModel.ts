@@ -11,12 +11,12 @@ export abstract class BaseChatModel {
   }
 
   abstract generate(
-    messages: PsModelChatItem[],
+    messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
   ): Promise<any>;
 
   abstract getNumTokensFromMessages(
-    messages: PsModelChatItem[]
+    messages: PsModelMessage[]
   ): Promise<number>;
 }

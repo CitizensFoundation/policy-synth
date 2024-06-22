@@ -14,8 +14,8 @@ The `GoogleGeminiChat` class is a chat model that integrates with Google's Gener
 | Name                     | Parameters                                                                 | Return Type | Description                                                                 |
 |--------------------------|---------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
 | constructor              | config: PSModelConfig                                                     | void        | Initializes the `GoogleGeminiChat` instance with the provided configuration. |
-| generate                 | messages: PsModelChatItem[], streaming?: boolean, streamingCallback?: Function | Promise<any> | Generates a response based on the input messages. Supports streaming.       |
-| getNumTokensFromMessages | messages: PsModelChatItem[]                                               | Promise<number> | Calculates the number of tokens in the input messages.                      |
+| generate                 | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function | Promise<any> | Generates a response based on the input messages. Supports streaming.       |
+| getNumTokensFromMessages | messages: PsModelMessage[]                                               | Promise<number> | Calculates the number of tokens in the input messages.                      |
 
 ## Example
 

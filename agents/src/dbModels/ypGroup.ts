@@ -13,7 +13,7 @@ export class Group
   declare user_id: number;
   declare created_at: Date;
   declare updated_at: Date;
-  declare configuration: YpPsGroupConfigurationData;
+  declare private_access_configuration: PsAiModelAccessConfiguration[];
 }
 
 Group.init(
@@ -41,7 +41,7 @@ Group.init(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    configuration: {
+    private_access_configuration: {
       type: DataTypes.JSONB,
       allowNull: false,
     },

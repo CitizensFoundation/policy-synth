@@ -14,8 +14,8 @@ The `AzureOpenAiChat` class is a specialized chat model that interacts with the 
 | Name                    | Parameters                                                                 | Return Type  | Description                                                                 |
 |-------------------------|----------------------------------------------------------------------------|--------------|-----------------------------------------------------------------------------|
 | constructor             | config: PSAzureModelConfig                                                 | void         | Initializes a new instance of the `AzureOpenAiChat` class.                  |
-| generate                | messages: PsModelChatItem[], streaming?: boolean, streamingCallback?: Function | Promise<any> | Generates chat completions based on the provided messages.                  |
-| getNumTokensFromMessages| messages: PsModelChatItem[]                                                | Promise<number> | Calculates the number of tokens in the provided messages.                   |
+| generate                | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function | Promise<any> | Generates chat completions based on the provided messages.                  |
+| getNumTokensFromMessages| messages: PsModelMessage[]                                                | Promise<number> | Calculates the number of tokens in the provided messages.                   |
 
 ## Example
 

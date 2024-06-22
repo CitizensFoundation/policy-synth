@@ -13,8 +13,8 @@ The `OpenAiChat` class is a specialized chat model that interacts with the OpenA
 | Name                      | Parameters                                                                 | Return Type | Description                                                                 |
 |---------------------------|----------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
 | constructor               | config: PSOpenAiModelConfig                                                | void        | Initializes the `OpenAiChat` instance with the provided configuration.      |
-| generate                  | messages: PsModelChatItem[], streaming?: boolean, streamingCallback?: Function | Promise<any> | Generates a response based on the provided messages. Supports streaming.    |
-| getNumTokensFromMessages  | messages: PsModelChatItem[]                                                | Promise<number> | Calculates the number of tokens in the provided messages.                   |
+| generate                  | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function | Promise<any> | Generates a response based on the provided messages. Supports streaming.    |
+| getNumTokensFromMessages  | messages: PsModelMessage[]                                                | Promise<number> | Calculates the number of tokens in the provided messages.                   |
 
 ## Example
 

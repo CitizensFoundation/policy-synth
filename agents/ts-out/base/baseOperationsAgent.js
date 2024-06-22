@@ -21,13 +21,13 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         if (!aiModels || aiModels.length === 0) {
             throw new Error("No AI models associated with this agent");
         }
-        if (!this.agent.Group || !this.agent.Group.configuration) {
+        if (!this.agent.Group || !this.agent.Group.private_access_configuration) {
             throw new Error("Agent group or group configuration not found");
         }
-        const groupConfig = this.agent.Group.configuration;
+        const groupConfig = this.agent.Group.private_access_configuration;
         for (const model of aiModels) {
             const modelType = model.configuration.type;
-            const apiKeyConfig = groupConfig.aiModelAccess.find(access => access.aiModelId === model.id);
+            const apiKeyConfig = groupConfig.find(access => access.aiModelId === model.id);
             if (!apiKeyConfig) {
                 this.logger.warn(`API key configuration not found for model ${model.id}`);
                 continue;
@@ -66,17 +66,17 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     async callModel(modelType, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
         switch (modelType) {
             case PsAiModelType.Text:
-                return this.callTextModel(messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+                return await this.callTextModel(messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
             case PsAiModelType.Embedding:
-                return this.callEmbeddingModel(messages);
+                return await this.callEmbeddingModel(messages);
             case PsAiModelType.MultiModal:
-                return this.callMultiModalModel(messages);
+                return await this.callMultiModalModel(messages);
             case PsAiModelType.Audio:
-                return this.callAudioModel(messages);
+                return await this.callAudioModel(messages);
             case PsAiModelType.Video:
-                return this.callVideoModel(messages);
+                return await this.callVideoModel(messages);
             case PsAiModelType.Image:
-                return this.callImageModel(messages);
+                return await this.callImageModel(messages);
             default:
                 throw new Error(`Unsupported model type: ${modelType}`);
         }

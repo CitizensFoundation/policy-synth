@@ -270,16 +270,12 @@ interface PsAiModelAccessConfiguration {
   apiKey: string;
 }
 
-interface YpPsGroupConfigurationData {
-  aiModelAccess: PsAiModelAccessConfiguration[];
-}
-
 // tablename "groups"
 interface YpGroupData {
   id: number;
   name: string;
   user_id: number;
-  configuration: YpPsGroupConfigurationData;
+  private_access_configuration: PsAiModelAccessConfiguration[];
   created_at: Date;
   updated_at: Date;
 }

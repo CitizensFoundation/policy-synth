@@ -9,13 +9,13 @@ export declare class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     rateLimits: PsModelRateLimitTracking;
     constructor(agent: PsAgent);
     initializeModels(): Promise<void>;
-    callModel(modelType: PsAiModelType, messages: PsModelChatItem[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
-    callTextModel(messages: PsModelChatItem[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
-    callEmbeddingModel(messages: PsModelChatItem[]): Promise<null>;
-    callMultiModalModel(messages: PsModelChatItem[]): Promise<null>;
-    callAudioModel(messages: PsModelChatItem[]): Promise<null>;
-    callVideoModel(messages: PsModelChatItem[]): Promise<null>;
-    callImageModel(messages: PsModelChatItem[]): Promise<null>;
+    callModel(modelType: PsAiModelType, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
+    callTextModel(messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
+    callEmbeddingModel(messages: PsModelMessage[]): Promise<null>;
+    callMultiModalModel(messages: PsModelMessage[]): Promise<null>;
+    callAudioModel(messages: PsModelMessage[]): Promise<null>;
+    callVideoModel(messages: PsModelMessage[]): Promise<null>;
+    callImageModel(messages: PsModelMessage[]): Promise<null>;
     saveTokenUsage(modelType: PsAiModelType, tokensIn: number, tokensOut: number): Promise<void>;
     formatNumber(number: number, fractions?: number): string;
 }

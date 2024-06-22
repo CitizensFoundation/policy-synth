@@ -14,8 +14,8 @@ The `BaseChatModel` is an abstract class that serves as a base for chat models. 
 | Name                      | Parameters                                                                 | Return Type       | Description                                                                 |
 |---------------------------|----------------------------------------------------------------------------|-------------------|-----------------------------------------------------------------------------|
 | constructor               | modelName: string \| TiktokenModel, maxTokensOut?: number                   | void              | Initializes a new instance of the `BaseChatModel` class.                    |
-| generate                  | messages: PsModelChatItem[], streaming?: boolean, streamingCallback?: Function | Promise<any>      | Abstract method to generate a response based on the provided messages.      |
-| getNumTokensFromMessages  | messages: PsModelChatItem[]                                                | Promise<number>   | Abstract method to get the number of tokens from the provided messages.     |
+| generate                  | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function | Promise<any>      | Abstract method to generate a response based on the provided messages.      |
+| getNumTokensFromMessages  | messages: PsModelMessage[]                                                | Promise<number>   | Abstract method to get the number of tokens from the provided messages.     |
 
 ## Example
 
@@ -23,11 +23,11 @@ The `BaseChatModel` is an abstract class that serves as a base for chat models. 
 import { BaseChatModel } from '@policysynth/agents/models/baseChatModel.js';
 
 class MyChatModel extends BaseChatModel {
-  async generate(messages: PsModelChatItem[], streaming?: boolean, streamingCallback?: Function): Promise<any> {
+  async generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<any> {
     // Implementation here
   }
 
-  async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
+  async getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
     // Implementation here
   }
 }

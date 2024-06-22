@@ -13,7 +13,7 @@ export class ClaudeOpusChat extends BaseChatModel {
   }
 
   async generate(
-    messages: PsModelChatItem[],
+    messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
   ): Promise<any> {
@@ -46,7 +46,7 @@ export class ClaudeOpusChat extends BaseChatModel {
     }
   }
 
-  async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
+  async getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
     const encoding = encoding_for_model(this.modelName as TiktokenModel);
     const formattedMessages = messages.map((msg) => msg.message).join(" ");
     const tokenCount = encoding.encode(formattedMessages).length;

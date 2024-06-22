@@ -30,15 +30,15 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
       throw new Error("No AI models associated with this agent");
     }
 
-    if (!this.agent.Group || !this.agent.Group.configuration) {
+    if (!this.agent.Group || !this.agent.Group.private_access_configuration) {
       throw new Error("Agent group or group configuration not found");
     }
 
-    const groupConfig = this.agent.Group.configuration as YpPsGroupConfigurationData;
+    const groupConfig = this.agent.Group.private_access_configuration as PsAiModelAccessConfiguration[];
 
     for (const model of aiModels) {
       const modelType = model.configuration.type as PsAiModelType;
-      const apiKeyConfig = groupConfig.aiModelAccess.find(access => access.aiModelId === model.id);
+      const apiKeyConfig = groupConfig.find(access => access.aiModelId === model.id);
 
       if (!apiKeyConfig) {
         this.logger.warn(`API key configuration not found for model ${model.id}`);
@@ -81,7 +81,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
 
   async callModel(
     modelType: PsAiModelType,
-    messages: PsModelChatItem[],
+    messages: PsModelMessage[],
     parseJson = true,
     limitedRetries = false,
     tokenOutEstimate = 120,
@@ -89,24 +89,24 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   ) {
     switch (modelType) {
       case PsAiModelType.Text:
-        return this.callTextModel(messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+        return await this.callTextModel(messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
       case PsAiModelType.Embedding:
-        return this.callEmbeddingModel(messages);
+        return await this.callEmbeddingModel(messages);
       case PsAiModelType.MultiModal:
-        return this.callMultiModalModel(messages);
+        return await this.callMultiModalModel(messages);
       case PsAiModelType.Audio:
-        return this.callAudioModel(messages);
+        return await this.callAudioModel(messages);
       case PsAiModelType.Video:
-        return this.callVideoModel(messages);
+        return await this.callVideoModel(messages);
       case PsAiModelType.Image:
-        return this.callImageModel(messages);
+        return await this.callImageModel(messages);
       default:
         throw new Error(`Unsupported model type: ${modelType}`);
     }
   }
 
   async callTextModel(
-    messages: PsModelChatItem[],
+    messages: PsModelMessage[],
     parseJson = true,
     limitedRetries = false,
     tokenOutEstimate = 120,
@@ -216,31 +216,31 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   }
 
 
-  async callEmbeddingModel(messages: PsModelChatItem[]) {
+  async callEmbeddingModel(messages: PsModelMessage[]) {
     // Placeholder for embedding model call
     this.logger.warn("Embedding model call not yet implemented");
     return null;
   }
 
-  async callMultiModalModel(messages: PsModelChatItem[]) {
+  async callMultiModalModel(messages: PsModelMessage[]) {
     // Placeholder for multi-modal model call
     this.logger.warn("Multi-modal model call not yet implemented");
     return null;
   }
 
-  async callAudioModel(messages: PsModelChatItem[]) {
+  async callAudioModel(messages: PsModelMessage[]) {
     // Placeholder for audio model call
     this.logger.warn("Audio model call not yet implemented");
     return null;
   }
 
-  async callVideoModel(messages: PsModelChatItem[]) {
+  async callVideoModel(messages: PsModelMessage[]) {
     // Placeholder for video model call
     this.logger.warn("Video model call not yet implemented");
     return null;
   }
 
-  async callImageModel(messages: PsModelChatItem[]) {
+  async callImageModel(messages: PsModelMessage[]) {
     // Placeholder for image model call
     this.logger.warn("Image model call not yet implemented");
     return null;

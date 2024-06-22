@@ -36,7 +36,7 @@ interface PsSimpleChatLog {
   message: string;
 }
 
-interface PsModelChatItem {
+interface PsModelMessage {
   role: string;
   message: string;
 }

@@ -13,7 +13,7 @@ export class GoogleGeminiChat extends BaseChatModel {
   }
 
   async generate(
-    messages: PsModelChatItem[],
+    messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
   ): Promise<any> {
@@ -50,7 +50,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     }
   }
 
-  async getNumTokensFromMessages(messages: PsModelChatItem[]): Promise<number> {
+  async getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
     const contents = messages.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.message }],
