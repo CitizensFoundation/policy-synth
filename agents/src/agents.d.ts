@@ -264,8 +264,9 @@ interface PsAgentAuditLogAttributes extends PsBaseModelClassNoUuid {
   details?: PsAgentAuditLogDetails;
 }
 
-interface PsAiModelAccessConfiguration {
-  aiModelId: number;
+interface YpGroupPrivateAccessConfiguration {
+  aiModelId?: number;
+  externalApiId?: number;
   projectId?: string;
   apiKey: string;
 }
@@ -275,7 +276,7 @@ interface YpGroupData {
   id: number;
   name: string;
   user_id: number;
-  private_access_configuration: PsAiModelAccessConfiguration[];
+  private_access_configuration: YpGroupPrivateAccessConfiguration[];
   created_at: Date;
   updated_at: Date;
 }

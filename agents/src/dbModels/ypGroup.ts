@@ -13,7 +13,7 @@ export class Group
   declare user_id: number;
   declare created_at: Date;
   declare updated_at: Date;
-  declare private_access_configuration: PsAiModelAccessConfiguration[];
+  declare private_access_configuration: YpGroupPrivateAccessConfiguration[];
 }
 
 Group.init(

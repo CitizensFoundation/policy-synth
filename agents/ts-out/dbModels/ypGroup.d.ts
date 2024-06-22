@@ -7,7 +7,7 @@ export declare class Group extends Model<YpGroupData, YpGroupDataCreationAttribu
     user_id: number;
     created_at: Date;
     updated_at: Date;
-    private_access_configuration: PsAiModelAccessConfiguration[];
+    private_access_configuration: YpGroupPrivateAccessConfiguration[];
 }
 export {};
 //# sourceMappingURL=ypGroup.d.ts.map

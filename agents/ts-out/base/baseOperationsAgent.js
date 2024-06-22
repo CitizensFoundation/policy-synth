@@ -24,10 +24,10 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         if (!this.agent.Group || !this.agent.Group.private_access_configuration) {
             throw new Error("Agent group or group configuration not found");
         }
-        const groupConfig = this.agent.Group.private_access_configuration;
+        const accessConfiguration = this.agent.Group.private_access_configuration;
         for (const model of aiModels) {
             const modelType = model.configuration.type;
-            const apiKeyConfig = groupConfig.find(access => access.aiModelId === model.id);
+            const apiKeyConfig = accessConfiguration.find(access => access.aiModelId === model.id);
             if (!apiKeyConfig) {
                 this.logger.warn(`API key configuration not found for model ${model.id}`);
                 continue;
