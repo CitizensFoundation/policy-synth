@@ -1,9 +1,9 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "../baseAgent.js";
+import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
 import { PsConstants } from "../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
-export class PsBaseValidationAgent extends PolicySynthAgentBase {
+export class PsBaseValidationAgent extends PolicySynthScAgentBase {
   name: string;
   options: PsBaseValidationAgentOptions;
 

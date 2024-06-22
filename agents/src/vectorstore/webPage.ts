@@ -1,11 +1,11 @@
 import weaviate from "weaviate-ts-client";
 import { WeaviateClient } from "weaviate-ts-client";
-import { PolicySynthAgentBase } from "../baseAgent.js";
+import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
 
 import { PsConstants } from "../constants.js";
 import fs from "fs/promises";
 
-export class WebPageVectorStore extends PolicySynthAgentBase {
+export class WebPageVectorStore extends PolicySynthScAgentBase {
   //@ts-ignore
   static client: WeaviateClient = weaviate.client({
     scheme: process.env.WEAVIATE_HTTP_SCHEME || "http",

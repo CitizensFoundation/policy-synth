@@ -1,10 +1,10 @@
 import { Job } from "bullmq";
 import ioredis from "ioredis";
-import { PolicySynthAgentBase } from "./baseAgent.js";
+import { PolicySynthScAgentBase } from "./baseScAgentBase.js";
 
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
-export abstract class BaseAgentProcessor extends PolicySynthAgentBase {
+export abstract class BaseAgentProcessor extends PolicySynthScAgentBase {
   job!: Job;
 
   getRedisKey(groupId: number) {
@@ -20,7 +20,7 @@ export abstract class BaseAgentProcessor extends PolicySynthAgentBase {
       communityId: jobData.communityId,
       domainId: jobData.domainId,
       currentStage: "create-sub-problems",
-      stages: PolicySynthAgentBase.emptyDefaultStages,
+      stages: PolicySynthScAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},

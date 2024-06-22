@@ -1,6 +1,6 @@
 # SearchQueriesGenerator
 
-This class is responsible for generating search queries based on a given question. It extends the `PolicySynthAgentBase` class and utilizes the OpenAI API to generate queries.
+This class is responsible for generating search queries based on a given question. It extends the `PolicySynthScAgentBase` class and utilizes the OpenAI API to generate queries.
 
 ## Properties
 

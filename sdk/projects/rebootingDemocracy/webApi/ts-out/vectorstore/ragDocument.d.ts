@@ -1,6 +1,6 @@
 import { WeaviateClient } from "weaviate-ts-client";
-import { PolicySynthAgentBase } from "@policysynth/agents//baseAgent.js";
-export declare class PsRagDocumentVectorStore extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "@policysynth/agents//baseAgent.js";
+export declare class PsRagDocumentVectorStore extends PolicySynthScAgentBase {
     static allFieldsToExtract: string;
     static urlField: string;
     static weaviateKey: string;

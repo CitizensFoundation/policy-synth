@@ -12,6 +12,7 @@ import {
   PsAiModel,
   PsAgentConnectorClass,
 } from "../models/index.js";
+import { AgentManagerService } from "../operations/agentManager.js";
 
 let redisClient;
 
@@ -33,15 +34,82 @@ export class AgentsController {
   public path = "/api/agents";
   public router = express.Router();
   public wsClients = new Map<string, WebSocket>();
+  private agentManager: AgentManagerService;
 
   constructor(wsClients: Map<string, WebSocket>) {
     this.wsClients = wsClients;
+    this.agentManager = new AgentManagerService();
     this.initializeRoutes();
   }
 
   public initializeRoutes() {
     this.router.get(this.path + "/:id", this.getAgent);
   }
+
+  getAgentStatus = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.id);
+
+    try {
+      const status = await this.agentManager.getAgentStatus(agentId);
+      if (status) {
+        res.json(status);
+      } else {
+        res.status(404).send('Agent status not found');
+      }
+    } catch (error) {
+      console.error("Error getting agent status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  updateAgentStatus = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.id);
+    const { state, details } = req.body;
+
+    try {
+      const success = await this.agentManager.updateAgentStatus(agentId, state, details);
+      if (success) {
+        res.json({ message: 'Agent status updated successfully' });
+      } else {
+        res.status(404).send('Agent not found');
+      }
+    } catch (error) {
+      console.error("Error updating agent status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  startAgentProcessing = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.id);
+
+    try {
+      const success = await this.agentManager.startAgentProcessing(agentId);
+      if (success) {
+        res.json({ message: 'Agent processing started successfully' });
+      } else {
+        res.status(404).send('Agent not found');
+      }
+    } catch (error) {
+      console.error("Error starting agent processing:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  pauseAgentProcessing = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.id);
+
+    try {
+      const success = await this.agentManager.pauseAgentProcessing(agentId);
+      if (success) {
+        res.json({ message: 'Agent processing paused successfully' });
+      } else {
+        res.status(404).send('Agent not found');
+      }
+    } catch (error) {
+      console.error("Error pausing agent processing:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
 
   getAgent = async (req: express.Request, res: express.Response) => {
     const agentId = req.params.id;

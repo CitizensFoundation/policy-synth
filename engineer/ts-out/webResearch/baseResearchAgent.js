@@ -1,4 +1,4 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { SearchQueriesGenerator } from "./searchQueriesGenerator.js";
 import { SearchQueriesRanker } from "./searchQueriesRanker.js";
 import { ResearchWeb } from "./searchWeb.js";
@@ -7,7 +7,7 @@ import { WebPageScanner } from "./webPageScanner.js";
 import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
 import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 import fs from "fs";
-export class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
+export class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentBase {
     numberOfQueriesToGenerate = 12;
     percentOfQueriesToSearch = 0.25;
     percentOfResultsToScan = 0.3;

@@ -1,6 +1,6 @@
 import { Job } from "bullmq";
-import { PolicySynthAgentBase } from "./baseAgent.js";
-export declare abstract class BaseAgentProcessor extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "./baseAgent.js";
+export declare abstract class BaseAgentProcessor extends PolicySynthScAgentBase {
     job: Job;
     getRedisKey(groupId: number): string;
     initializeMemory(job: Job): Promise<void>;

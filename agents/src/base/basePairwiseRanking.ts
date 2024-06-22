@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseProblemSolvingAgent } from "./baseProblemSolvingAgent.js";
-import { PsConstants } from "./constants.js";
+import { PsConstants } from "../constants.js";
 
 export abstract class BasePairwiseRankingsProcessor extends BaseProblemSolvingAgent {
   prompts: Record<number, number[][]> = {};

@@ -1,8 +1,8 @@
 import { Job } from "bullmq";
-import { PolicySynthAgentBase } from "./baseAgent.js";
-import { PsConstants } from "./constants.js";
+import { PolicySynthScAgentBase } from "./baseScAgentBase.js";
+import { PsConstants } from "../constants.js";
 
-export abstract class BaseProblemSolvingAgent extends PolicySynthAgentBase {
+export abstract class BaseProblemSolvingAgent extends PolicySynthScAgentBase {
   override memory: PsSmarterCrowdsourcingMemoryData;
   job!: Job;
   currentSubProblemIndex: number | undefined;

@@ -1,6 +1,6 @@
-import { PolicySynthAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
 import { PsConstants } from "../../constants.js";
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";

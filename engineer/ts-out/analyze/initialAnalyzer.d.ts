@@ -1,5 +1,5 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-export declare class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
+export declare class PsEngineerInitialAnalyzer extends PolicySynthScAgentBase {
     memory: PsEngineerMemoryData;
     constructor(memory: PsEngineerMemoryData);
     readNpmDependencies(): any;

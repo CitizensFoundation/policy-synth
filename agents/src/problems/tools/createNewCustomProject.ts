@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import ioredis from "ioredis";
-import { PolicySynthAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -27,7 +27,7 @@ if (projectId) {
       domainId: 1,
       stage: "create-sub-problems",
       currentStage: "create-sub-problems",
-      stages: PolicySynthAgentBase.emptyDefaultStages,
+      stages: PolicySynthScAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {

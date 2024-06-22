@@ -1,6 +1,6 @@
 # PsRagChunkVectorStore
 
-This class manages the storage and retrieval of document chunks in a vector database using Weaviate. It extends the functionality of the `PolicySynthAgentBase` class.
+This class manages the storage and retrieval of document chunks in a vector database using Weaviate. It extends the functionality of the `PolicySynthScAgentBase` class.
 
 ## Properties
 

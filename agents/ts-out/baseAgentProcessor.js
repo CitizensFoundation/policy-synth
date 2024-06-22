@@ -1,7 +1,7 @@
 import ioredis from "ioredis";
-import { PolicySynthAgentBase } from "./baseAgent.js";
+import { PolicySynthScAgentBase } from "./baseAgent.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class BaseAgentProcessor extends PolicySynthAgentBase {
+export class BaseAgentProcessor extends PolicySynthScAgentBase {
     job;
     getRedisKey(groupId) {
         return `st_mem:${groupId}:id`;
@@ -14,7 +14,7 @@ export class BaseAgentProcessor extends PolicySynthAgentBase {
             communityId: jobData.communityId,
             domainId: jobData.domainId,
             currentStage: "create-sub-problems",
-            stages: PolicySynthAgentBase.emptyDefaultStages,
+            stages: PolicySynthScAgentBase.emptyDefaultStages,
             timeStart: Date.now(),
             totalCost: 0,
             customInstructions: {},

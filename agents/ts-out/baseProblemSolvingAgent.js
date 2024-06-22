@@ -1,6 +1,6 @@
-import { PolicySynthAgentBase } from "./baseAgent.js";
+import { PolicySynthScAgentBase } from "./baseAgent.js";
 import { PsConstants } from "./constants.js";
-export class BaseProblemSolvingAgent extends PolicySynthAgentBase {
+export class BaseProblemSolvingAgent extends PolicySynthScAgentBase {
     memory;
     job;
     currentSubProblemIndex;

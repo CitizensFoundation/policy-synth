@@ -45,7 +45,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { OpenAI } from 'openai';
-import { PolicySynthAgentBase } from '../baseAgent.js';
+import { PolicySynthScAgentBase } from '../base/baseScAgentBase.js';
 
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

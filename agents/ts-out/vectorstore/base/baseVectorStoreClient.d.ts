@@ -1,6 +1,6 @@
 import { WeaviateClient } from 'weaviate-ts-client';
-import { PolicySynthAgentBase } from "../../baseAgent.js";
-export declare abstract class BaseVectorStoreClient extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "../../baseAgent.js";
+export declare abstract class BaseVectorStoreClient extends PolicySynthScAgentBase {
     static client: WeaviateClient;
     addSchema(): Promise<void>;
     showScheme(): Promise<void>;

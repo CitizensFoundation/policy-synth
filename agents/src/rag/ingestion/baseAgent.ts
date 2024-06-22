@@ -3,10 +3,10 @@ import crypto, { createHash } from "crypto";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 
-import { PolicySynthAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
 
-export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
+export abstract class BaseIngestionAgent extends PolicySynthScAgentBase {
   minChunkTokenLength: number = 1000;
   maxChunkTokenLength: number = 3500;
   maxFileProcessTokenLength: number = 110000;

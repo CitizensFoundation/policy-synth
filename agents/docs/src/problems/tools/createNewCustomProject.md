@@ -15,7 +15,7 @@ No methods are defined in this script as it is a standalone executable script de
 ```typescript
 import { Queue } from "bullmq";
 import ioredis from "ioredis";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -41,7 +41,7 @@ if (projectId) {
       domainId: 1,
       stage: "create-sub-problems",
       currentStage: "create-sub-problems",
-      stages: PolicySynthAgentBase.emptyDefaultStages,
+      stages: PolicySynthScAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},

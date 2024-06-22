@@ -1,6 +1,6 @@
 
 import winston from "winston";
-import { PsConstants } from "./constants.js";
+import { PsConstants } from "../constants.js";
 import { jsonrepair } from "jsonrepair";
 import ioredis from "ioredis";
 import { ChatOpenAI } from "@langchain/openai";
@@ -25,73 +25,19 @@ const logger = winston.createLogger({
   ],
 });
 
-export class PolicySynthAgentBase {
-  memory?: PsSmarterCrowdsourcingMemoryData;
+export class PolicySynthBaseAgent {
+  memory?: PsAgentBaseMemoryData;
   logger: winston.Logger;
   timeStart: number = Date.now();
   chat: ChatOpenAI | undefined;
 
-  private rateLimits: PsModelRateLimitTracking = {};
+  rateLimits: PsModelRateLimitTracking = {};
 
   constructor(memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined) {
     if (memory) {
       this.memory = memory;
     }
     this.logger = logger;
-  }
-
-  static get emptyDefaultStages() {
-    return {
-      "create-root-causes-search-queries": {},
-      "web-search-root-causes": {},
-      "web-get-root-causes-pages": {},
-      "rank-web-root-causes": {},
-      "rate-web-root-causes": {},
-      "web-get-refined-root-causes": {},
-      "get-metadata-for-top-root-causes": {},
-      "create-problem-statement-image": {},
-      "create-sub-problems": {},
-      "rank-sub-problems": {},
-      "policies-seed": {},
-      "policies-create-images": {},
-      "create-entities": {},
-      "rank-entities": {},
-      "reduce-sub-problems": {},
-      "create-search-queries": {},
-      "rank-root-causes-search-results": {},
-      "rank-root-causes-search-queries": {},
-      "create-sub-problem-images": {},
-      "rank-search-queries": {},
-      "web-search": {},
-      "dedup-web-solutions": {},
-      "rank-web-solutions": {},
-      "rate-solutions": {},
-      "rank-search-results": {},
-      "web-get-pages": {},
-      "create-seed-solutions": {},
-      "create-pros-cons": {},
-      "create-solution-images": {},
-      "rank-pros-cons": {},
-      "rank-solutions": {},
-      "group-solutions": {},
-      "evolve-create-population": {},
-      "evolve-mutate-population": {},
-      "evolve-recombine-population": {},
-      "evolve-reap-population": {},
-      "topic-map-solutions": {},
-      "evolve-rank-population": {},
-      "analyse-external-solutions": {},
-      "create-evidence-search-queries": {},
-      "web-get-evidence-pages": {},
-      "web-search-evidence": {},
-      "rank-web-evidence": {},
-      "rate-web-evidence": {},
-      "web-get-refined-evidence": {},
-      "get-metadata-for-top-evidence": {},
-      "validation-agent": {},
-      "ingestion-agent": {},
-      "engineering-agent": {},
-    };
   }
 
   getJsonBlock(text: string) {
@@ -106,20 +52,8 @@ export class PolicySynthAgentBase {
     }
   }
 
-  get fullLLMCostsForMemory() {
-    let totalCost: number | undefined = undefined;
-    if (this.memory && this.memory.stages) {
-      totalCost = 0;
-      Object.values(this.memory.stages).forEach((stage) => {
-        if (stage.tokensInCost && stage.tokensOutCost) {
-          totalCost! += stage.tokensInCost + stage.tokensOutCost;
-        }
-      });
-    }
-    return totalCost;
-  }
 
-  private repairJson(text: string): string {
+  repairJson(text: string): string {
     let repaired;
     try {
       repaired = jsonrepair(text);
@@ -130,7 +64,7 @@ export class PolicySynthAgentBase {
     return repaired;
   }
 
-  private parseJsonResponse(response: string): any {
+  parseJsonResponse(response: string): any {
     let parsedJson;
 
     response = response.replace("```json", "").trim();
@@ -187,15 +121,6 @@ export class PolicySynthAgentBase {
 
           if (response) {
             const tokensOut = await this.getTokensFromMessages([response]);
-
-            if (this.memory) {
-              this.updateMemoryStages(stage, tokensIn, tokensOut, modelConstants);
-              await this.saveMemory();
-            } else {
-              this.logger.debug(
-                "Memory is not initialized and token counts not updated"
-              );
-            }
 
             await this.updateRateLimits(modelConstants, tokensOut);
 
@@ -269,7 +194,7 @@ export class PolicySynthAgentBase {
     }
   }
 
-  private async updateRateLimits(
+  async updateRateLimits(
     model: PsBaseAIModelConstants,
     tokensToAdd: number
   ) {
@@ -286,7 +211,7 @@ export class PolicySynthAgentBase {
     this.addTokenEntry(model, tokensToAdd);
   }
 
-  private async checkRateLimits(
+  async checkRateLimits(
     model: PsBaseAIModelConstants,
     tokensToAdd: number
   ) {
@@ -342,12 +267,18 @@ export class PolicySynthAgentBase {
     }
   }
 
-  private addRequestTimestamp(model: PsBaseAIModelConstants) {
+  formatNumber(number: number, fractions = 0) {
+    return new Intl.NumberFormat("en-US", {
+      maximumFractionDigits: fractions,
+    }).format(number);
+  }
+
+  addRequestTimestamp(model: PsBaseAIModelConstants) {
     const now = Date.now();
     this.rateLimits[model.name].requests.push({ timestamp: now });
   }
 
-  private addTokenEntry(model: PsBaseAIModelConstants, tokensToAdd: number) {
+  addTokenEntry(model: PsBaseAIModelConstants, tokensToAdd: number) {
     const now = Date.now();
     this.rateLimits[model.name].tokens.push({
       count: tokensToAdd,
@@ -355,7 +286,7 @@ export class PolicySynthAgentBase {
     });
   }
 
-  private slideWindowForRequests(model: PsBaseAIModelConstants) {
+  slideWindowForRequests(model: PsBaseAIModelConstants) {
     const now = Date.now();
     const windowSize = 60000; // 60 seconds
     this.rateLimits[model.name].requests = this.rateLimits[model.name].requests.filter(
@@ -363,7 +294,7 @@ export class PolicySynthAgentBase {
     );
   }
 
-  private slideWindowForTokens(model: PsBaseAIModelConstants) {
+  slideWindowForTokens(model: PsBaseAIModelConstants) {
     const now = Date.now();
     const windowSize = 60000; // 60 seconds
     this.rateLimits[model.name].tokens = this.rateLimits[model.name].tokens.filter(
@@ -371,49 +302,8 @@ export class PolicySynthAgentBase {
     );
   }
 
-  private async getTokensFromMessages(messages: BaseMessage[]): Promise<number> {
+  async getTokensFromMessages(messages: BaseMessage[]): Promise<number> {
     const tokens = await this.chat!.getNumTokensFromMessages(messages);
     return tokens.totalCount;
-  }
-
-  private updateMemoryStages(
-    stage: PsScMemoryStageTypes,
-    tokensIn: number,
-    tokensOut: number,
-    modelConstants: PsBaseAIModelConstants
-  ) {
-    if (!this.memory!.stages[stage]) {
-      this.memory!.stages[stage] = {
-        tokensIn: 0,
-        tokensOut: 0,
-        tokensInCost: 0,
-        tokensOutCost: 0,
-      };
-    }
-
-    this.memory!.stages[stage].tokensIn! += tokensIn;
-    this.memory!.stages[stage].tokensOut! += tokensOut;
-    this.memory!.stages[stage].tokensInCost! +=
-      tokensIn * modelConstants.inTokenCostUSD;
-    this.memory!.stages[stage].tokensOutCost! +=
-      tokensOut * modelConstants.outTokenCostUSD;
-  }
-
-  formatNumber(number: number, fractions = 0) {
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: fractions,
-    }).format(number);
-  }
-
-  async saveMemory() {
-    if (this.memory) {
-      try {
-        await redis.set(this.memory.redisKey, JSON.stringify(this.memory));
-      } catch (error) {
-        this.logger.error("Can't save memory to redis", error);
-      }
-    } else {
-      this.logger.warn("Memory is not initialized");
-    }
   }
 }

@@ -102,14 +102,21 @@ interface PsExternalApiUsageAttributes extends PsBaseModelClassNoUuid {
   connector_id: number; // or
 }
 
-interface PsAgentMemoryData {
-  redisKey: string;
-  timeStart: number;
-  groupId: number;
-  communityId: number;
-  domainId: number;
-  lastSavedAt?: number;
-  modelsTokenUsage?: Record<number, PsModelTokenUsage>;
+interface PsAgentBaseMemoryData {
+  startTime?: number;
+}
+
+interface PsAgentStatus {
+  state: 'processing' | 'paused' | 'error' | 'completed';
+  progress: number;
+  messages: string[];
+  lastUpdated: number;
+  details?: Record<string, any>;
+}
+
+interface PsAgentMemoryData extends PsAgentBaseMemoryData {
+  agentId: number;
+  status: PsAgentStatus;
 }
 
 interface PsModelTokenUsage {
@@ -121,6 +128,7 @@ interface PsModelTokenUsage {
 
 interface PsAgentClassAttributesConfiguration {
   description: string;
+  queueName: string;
   imageUrl: string;
   iconName: string;
   assistantSystemInstructions: string;
@@ -129,7 +137,7 @@ interface PsAgentClassAttributesConfiguration {
   outputJsonInterface: string;
   questions: YpStructuredQuestionData[];
   supportedConnectors: PsBaseAgentConnectorClass[];
-  evalConfig?: PsAgentEvalConfig; // ADDED
+  evalConfig?: PsAgentEvalConfig;
 }
 
 // tablename "ps_agent_classes"

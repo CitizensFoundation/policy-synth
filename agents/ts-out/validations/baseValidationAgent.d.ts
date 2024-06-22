@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "../baseAgent.js";
-export declare class PsBaseValidationAgent extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "../baseAgent.js";
+export declare class PsBaseValidationAgent extends PolicySynthScAgentBase {
     name: string;
     options: PsBaseValidationAgentOptions;
     constructor(name: string, options?: PsBaseValidationAgentOptions);

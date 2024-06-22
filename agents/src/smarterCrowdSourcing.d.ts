@@ -302,7 +302,8 @@ interface PsSearchResults {
   };
 }
 
-interface PsSmarterCrowdsourcingMemoryData extends PsAgentMemoryData {
+interface PsSmarterCrowdsourcingMemoryData extends PsAgentBaseMemoryData {
+  redisKey: string;
   currentStage: PsScMemoryStageTypes;
   stages: Record<PsScMemoryStageTypes, PsScStagesData>;
   problemStatement: PsProblemStatement;

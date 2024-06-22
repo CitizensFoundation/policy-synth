@@ -4,8 +4,13 @@ export declare class AgentsController {
     path: string;
     router: import("express-serve-static-core").Router;
     wsClients: Map<string, WebSocket>;
+    private agentManager;
     constructor(wsClients: Map<string, WebSocket>);
     initializeRoutes(): void;
+    getAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
+    updateAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
+    startAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
+    pauseAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
     getAgent: (req: express.Request, res: express.Response) => Promise<void>;
     fetchAgentWithSubAgents(agentId: string): Promise<{
         Class?: PsAgentClassAttributes | undefined;

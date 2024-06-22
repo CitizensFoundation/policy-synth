@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
 
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 
 //TODO: Use tiktoken
@@ -292,7 +292,7 @@ export class PsBaseChatBot {
       redisKey: this.redisKey,
       currentStage: "chatbot-conversation",
       stages: {
-        ...PolicySynthAgentBase.emptyDefaultStages,
+        ...PolicySynthScAgentBase.emptyDefaultStages,
         ...this.emptyChatBotStagesData,
       },
       timeStart: Date.now(),

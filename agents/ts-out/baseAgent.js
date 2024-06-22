@@ -13,7 +13,7 @@ const logger = winston.createLogger({
         }),
     ],
 });
-export class PolicySynthAgentBase {
+export class PolicySynthScAgentBase {
     memory;
     logger;
     timeStart = Date.now();

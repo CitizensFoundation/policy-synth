@@ -6,7 +6,7 @@ import { HTTPResponse, Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 import { IngestionAgentProcessor } from "@policysynth/agents/rag/ingestion/processor.js";
 import { DocumentCleanupAgent } from "@policysynth/agents/rag/ingestion/docCleanup.js";

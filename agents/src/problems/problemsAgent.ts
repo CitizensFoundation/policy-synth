@@ -1,4 +1,4 @@
-import { BaseAgentProcessor } from "../baseAgentProcessor.js";
+import { BaseAgentProcessor } from "../base/baseAgentProcessor.js";
 import { Worker, Job } from "bullmq";
 import { CreateSubProblemsProcessor } from "./create/createSubProblems.js";
 import { CreateEntitiesProcessor } from "./create/createEntities.js";
@@ -19,7 +19,7 @@ import { GetMetaDataForTopWebRootCausesProcessor } from "./web/getMetaDataForTop
 import { ReduceSubProblemsProcessor } from "./create/reduceSubProblems.js";
 import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
 import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
-import { PolicySynthAgentBase } from "../baseAgent.js";
+import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
 import { AgentProblemsProcessor } from "./problemsProcessor.js";
 
 export class ProblemsAgent extends AgentProblemsProcessor {

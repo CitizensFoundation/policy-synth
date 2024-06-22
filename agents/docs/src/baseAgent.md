@@ -1,6 +1,6 @@
-# PolicySynthAgentBase
+# PolicySynthScAgentBase
 
-The `PolicySynthAgentBase` class is designed to interact with a language model, manage memory, and handle rate limits for API calls. It includes methods for parsing and repairing JSON responses, managing rate limits, and saving memory states.
+The `PolicySynthScAgentBase` class is designed to interact with a language model, manage memory, and handle rate limits for API calls. It includes methods for parsing and repairing JSON responses, managing rate limits, and saving memory states.
 
 ## Properties
 
@@ -37,10 +37,10 @@ The `PolicySynthAgentBase` class is designed to interact with a language model, 
 ## Example
 
 ```typescript
-// Example usage of PolicySynthAgentBase
-import { PolicySynthAgentBase } from '@policysynth/agents/baseAgent.js';
+// Example usage of PolicySynthScAgentBase
+import { PolicySynthScAgentBase } from '@policysynth/agents/baseAgent.js';
 
-const agent = new PolicySynthAgentBase();
+const agent = new PolicySynthScAgentBase();
 agent.callLLM(
   'create-root-causes-search-queries',
   modelConstants,

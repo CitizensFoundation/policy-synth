@@ -1,6 +1,6 @@
 # WebPageVectorStore
 
-This class is responsible for managing web page data using the Weaviate vector database. It extends the `PolicySynthAgentBase` class and provides methods to manipulate the schema and data of web pages in the vector database.
+This class is responsible for managing web page data using the Weaviate vector database. It extends the `PolicySynthScAgentBase` class and provides methods to manipulate the schema and data of web pages in the vector database.
 
 ## Properties
 

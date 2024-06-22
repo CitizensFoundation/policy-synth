@@ -1,4 +1,4 @@
-import { BaseAgentProcessor } from "../baseAgentProcessor.js";
+import { BaseAgentProcessor } from "../base/baseAgentProcessor.js";
 import { Worker, Job } from "bullmq";
 import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
@@ -9,7 +9,7 @@ import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
 import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
 import { GetRefinedEvidenceProcessor } from "./web/getRefinedEvidence.js";
 import { GetMetaDataForTopWebEvidenceProcessor } from "./web/getMetaDataForTopWebEvidence.js";
-import { PolicySynthAgentBase } from "../baseAgent.js";
+import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
 
 export class AgentPolicies extends BaseAgentProcessor {
   declare memory: PsSmarterCrowdsourcingMemoryData;
@@ -23,7 +23,7 @@ export class AgentPolicies extends BaseAgentProcessor {
       communityId: jobData.communityId,
       domainId: jobData.domainId,
       currentStage: "policies-seed",
-      stages: PolicySynthAgentBase.emptyDefaultStages,
+      stages: PolicySynthScAgentBase.emptyDefaultStages,
       timeStart: Date.now(),
       totalCost: 0,
       customInstructions: {},

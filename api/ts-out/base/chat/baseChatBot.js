@@ -1,7 +1,7 @@
 import { OpenAI } from "openai";
 import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
@@ -257,7 +257,7 @@ export class PsBaseChatBot {
             redisKey: this.redisKey,
             currentStage: "chatbot-conversation",
             stages: {
-                ...PolicySynthAgentBase.emptyDefaultStages,
+                ...PolicySynthScAgentBase.emptyDefaultStages,
                 ...this.emptyChatBotStagesData,
             },
             timeStart: Date.now(),

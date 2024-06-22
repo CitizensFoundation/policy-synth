@@ -1,5 +1,5 @@
 import ioredis from "ioredis";
-import { PolicySynthAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../baseAgent.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const projectId = process.argv[2];
 const force = process.argv[3];
@@ -19,7 +19,7 @@ if (projectId) {
             domainId: 1,
             stage: "create-sub-problems",
             currentStage: "create-sub-problems",
-            stages: PolicySynthAgentBase.emptyDefaultStages,
+            stages: PolicySynthScAgentBase.emptyDefaultStages,
             timeStart: Date.now(),
             totalCost: 0,
             customInstructions: {},

@@ -1,4 +1,4 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { PsConstants } from "../../constants.js";
 import ioredis from "ioredis";
 import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";

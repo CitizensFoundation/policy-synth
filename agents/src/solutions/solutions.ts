@@ -1,4 +1,4 @@
-import { BaseAgentProcessor } from "../baseAgentProcessor.js";
+import { BaseAgentProcessor } from "../base/baseAgentProcessor.js";
 import { Worker, Job } from "bullmq";
 import { CreateProsConsProcessor } from "./create/createProsCons.js";
 import { CreateSolutionsProcessor } from "./create/createSolutions.js";
@@ -13,7 +13,7 @@ import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
 import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
 import { RankWebSolutionsProcessor } from "./ranking/rankWebSolutions.js";
 import { RankSearchResultsProcessor } from "./ranking/rankSearchResults.js";
-import { PolicySynthAgentBase } from "../baseAgent.js";
+import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
 import { RemoveDuplicateWebSolutions } from "./create/dedupWebSolutions.js";
 
 export class AgentSolutions extends BaseAgentProcessor {

@@ -1,6 +1,6 @@
 # BaseProblemSolvingAgent
 
-This class extends `PolicySynthAgentBase` and provides methods for processing and rendering problem-solving tasks related to policy synthesis.
+This class extends `PolicySynthScAgentBase` and provides methods for processing and rendering problem-solving tasks related to policy synthesis.
 
 ## Properties
 

@@ -16,7 +16,7 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
 import { htmlToText } from "html-to-text";
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 
 import weaviate, { WeaviateClient } from "weaviate-ts-client";
 
