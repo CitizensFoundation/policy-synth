@@ -1,6 +1,9 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsAgent extends Model {
+    get redisMemoryKey() {
+        return "ps:agent:memory:" + this.id;
+    }
 }
 PsAgent.init({
     id: {

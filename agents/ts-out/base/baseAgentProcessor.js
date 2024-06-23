@@ -1,5 +1,6 @@
 import ioredis from "ioredis";
 import { PolicySynthScAgentBase } from "./baseScAgentBase.js";
+//TODO: Look to pool redis connections
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class BaseAgentProcessor extends PolicySynthScAgentBase {
     job;

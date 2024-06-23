@@ -396,9 +396,8 @@ PsPrivateAccessStore.init(
         fields: ["external_api_id"],
       },
       {
-        unique: true,
-        fields: ["group_id", "ai_model_id", "external_api_id"],
-      },
+        fields: ["is_active"],
+      }
     ],
     timestamps: true,
     underscored: true,

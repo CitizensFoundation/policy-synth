@@ -8,6 +8,7 @@ export declare class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     mainLLMmaxRetryCount: number;
     rateLimits: PsModelRateLimitTracking;
     constructor(agent: PsAgent);
+    loadAgentMemoryFromRedis(): Promise<void>;
     initializeModels(): Promise<void>;
     callModel(modelType: PsAiModelType, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
     callTextModel(messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;

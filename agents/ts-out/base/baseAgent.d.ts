@@ -8,7 +8,7 @@ export declare class PolicySynthBaseAgent {
     timeStart: number;
     chat: ChatOpenAI | undefined;
     rateLimits: PsModelRateLimitTracking;
-    constructor(memory?: PsSmarterCrowdsourcingMemoryData | undefined);
+    constructor(memory?: PsAgentBaseMemoryData | undefined);
     getJsonBlock(text: string): string;
     repairJson(text: string): string;
     parseJsonResponse(response: string): any;

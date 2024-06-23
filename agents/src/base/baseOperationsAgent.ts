@@ -1,3 +1,5 @@
+import ioredis from "ioredis";
+
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { ClaudeOpusChat } from "../aiModels/claudeOpusChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
@@ -8,6 +10,11 @@ import { PsAgent } from "../dbModels/agent.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { Op } from "sequelize";
 import { PolicySynthBaseAgent } from "./baseAgent.js";
+
+//TODO: Look to pool redis connections
+const redis = new ioredis(
+  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+);
 
 export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   agent: PsAgent;
@@ -22,6 +29,21 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     super();
     this.agent = agent;
     this.initializeModels();
+    this.loadAgentMemoryFromRedis();
+  }
+
+  async loadAgentMemoryFromRedis() {
+    try {
+      const memoryData = await redis.get(this.agent.redisMemoryKey);
+      if (memoryData) {
+        this.memory = JSON.parse(memoryData);
+      } else {
+        console.error("No memory data found!");
+      }
+    } catch (error) {
+      this.logger.error("Error initializing agent memory");
+      this.logger.error(error);
+    }
   }
 
   async initializeModels() {
@@ -38,18 +60,28 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
 
     for (const model of aiModels) {
       const modelType = model.configuration.type as PsAiModelType;
-      const apiKeyConfig = accessConfiguration.find(access => access.aiModelId === model.id);
+      const apiKeyConfig = accessConfiguration.find(
+        (access) => access.aiModelId === model.id
+      );
 
       if (!apiKeyConfig) {
-        this.logger.warn(`API key configuration not found for model ${model.id}`);
+        this.logger.warn(
+          `API key configuration not found for model ${model.id}`
+        );
         continue;
       }
 
       const baseConfig = {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.name,
-        maxTokensOut: this.agent.configuration.maxTokensOut || model.configuration.maxTokensOut || 4096,
-        temperature: this.agent.configuration.temperature || model.configuration.defaultTemperature || 0.5,
+        maxTokensOut:
+          this.agent.configuration.maxTokensOut ||
+          model.configuration.maxTokensOut ||
+          4096,
+        temperature:
+          this.agent.configuration.temperature ||
+          model.configuration.defaultTemperature ||
+          0.5,
       } as PSModelConfig;
 
       switch (model.configuration.provider) {
@@ -63,14 +95,19 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
           this.models.set(modelType, new GoogleGeminiChat(baseConfig));
           break;
         case "azure":
-          this.models.set(modelType, new AzureOpenAiChat({
-            ...baseConfig,
-            endpoint: model.configuration.endpoint!,
-            deploymentName: model.configuration.deploymentName!,
-          }));
+          this.models.set(
+            modelType,
+            new AzureOpenAiChat({
+              ...baseConfig,
+              endpoint: model.configuration.endpoint!,
+              deploymentName: model.configuration.deploymentName!,
+            })
+          );
           break;
         default:
-          this.logger.warn(`Unsupported model provider: ${model.configuration.provider}`);
+          this.logger.warn(
+            `Unsupported model provider: ${model.configuration.provider}`
+          );
       }
     }
 
@@ -89,7 +126,13 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   ) {
     switch (modelType) {
       case PsAiModelType.Text:
-        return await this.callTextModel(messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+        return await this.callTextModel(
+          messages,
+          parseJson,
+          limitedRetries,
+          tokenOutEstimate,
+          streamingCallbacks
+        );
       case PsAiModelType.Embedding:
         return await this.callEmbeddingModel(messages);
       case PsAiModelType.MultiModal:
@@ -140,7 +183,9 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
           );
 
           if (response) {
-            const tokensOut = await model.getNumTokensFromMessages([{ role: "assistant", message: response }]);
+            const tokensOut = await model.getNumTokensFromMessages([
+              { role: "assistant", message: response },
+            ]);
 
             //await this.updateRateLimits(PsAiModelType.Text, tokensOut);
             await this.saveTokenUsage(PsAiModelType.Text, tokensIn, tokensOut);
@@ -215,7 +260,6 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }
   }
 
-
   async callEmbeddingModel(messages: PsModelMessage[]) {
     // Placeholder for embedding model call
     this.logger.warn("Embedding model call not yet implemented");
@@ -246,7 +290,11 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     return null;
   }
 
-  async saveTokenUsage(modelType: PsAiModelType, tokensIn: number, tokensOut: number) {
+  async saveTokenUsage(
+    modelType: PsAiModelType,
+    tokensIn: number,
+    tokensOut: number
+  ) {
     const model = this.models.get(modelType);
     if (!model) {
       throw new Error(`Model of type ${modelType} not initialized`);
@@ -256,19 +304,23 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
       const [usage, created] = await PsModelUsage.findOrCreate({
         where: {
           //TODO: Check this, make less fragile
-          model_id: this.agent.AiModels!.find(m => m.name === model.modelName)!.id,
+          model_id: this.agent.AiModels!.find(
+            (m) => m.name === model.modelName
+          )!.id,
           agent_id: this.agent.id,
           created_at: {
-            [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)) // Today's date
-          }
+            [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)), // Today's date
+          },
         },
         defaults: {
           token_in_count: tokensIn,
           token_out_count: tokensOut,
-          model_id: this.agent.AiModels!.find(m => m.name === model.modelName)!.id,
+          model_id: this.agent.AiModels!.find(
+            (m) => m.name === model.modelName
+          )!.id,
           agent_id: this.agent.id,
-          user_id: this.agent.user_id
-        }
+          user_id: this.agent.user_id,
+        },
       });
 
       if (!created) {
@@ -279,7 +331,9 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         });
       }
 
-      this.logger.info(`Token usage updated for agent ${this.agent.id} and model ${model.modelName}`);
+      this.logger.info(
+        `Token usage updated for agent ${this.agent.id} and model ${model.modelName}`
+      );
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
       this.logger.error(error);

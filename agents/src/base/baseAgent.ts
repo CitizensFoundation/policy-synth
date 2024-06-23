@@ -33,7 +33,7 @@ export class PolicySynthBaseAgent {
 
   rateLimits: PsModelRateLimitTracking = {};
 
-  constructor(memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined) {
+  constructor(memory: PsAgentBaseMemoryData | undefined = undefined) {
     if (memory) {
       this.memory = memory;
     }
