@@ -1,6 +1,6 @@
-import { PolicySynthAgentBase } from "../../baseAgent.js";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 import { PsConstants } from "../../constants.js";
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/smarterCrowdsourcingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
@@ -136,7 +136,7 @@ async function run() {
 
   if (projectId) {
     const output = await redis.get(`st_mem:${projectId}:id`);
-    const memory = JSON.parse(output!) as PsBaseMemoryData;
+    const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
     const counts = new ShowCounts({} as any, memory);
     await counts.process();

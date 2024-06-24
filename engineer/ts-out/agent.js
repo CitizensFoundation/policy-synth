@@ -1,4 +1,4 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsEngineerInitialAnalyzer } from "./analyze/initialAnalyzer.js";
 import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
 import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
@@ -10,7 +10,7 @@ import { PsConstants } from "@policysynth/agents/constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import axios from "axios";
-export class PSEngineerAgent extends PolicySynthAgentBase {
+export class PSEngineerAgent extends PolicySynthScAgentBase {
     memory;
     githubIssueUrl;
     constructor(githubIssueUrl = undefined) {

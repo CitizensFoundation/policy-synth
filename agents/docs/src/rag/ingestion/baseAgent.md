@@ -1,6 +1,6 @@
 # BaseIngestionAgent
 
-The `BaseIngestionAgent` class is an abstract class that extends `PolicySynthAgentBase`. It provides various methods and properties to handle data ingestion, processing, and interaction with the OpenAI language model.
+The `BaseIngestionAgent` class is an abstract class that extends `PolicySynthScAgentBase`. It provides various methods and properties to handle data ingestion, processing, and interaction with the OpenAI language model.
 
 ## Properties
 

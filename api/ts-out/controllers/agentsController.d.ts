@@ -4,8 +4,13 @@ export declare class AgentsController {
     path: string;
     router: import("express-serve-static-core").Router;
     wsClients: Map<string, WebSocket>;
+    private agentManager;
     constructor(wsClients: Map<string, WebSocket>);
     initializeRoutes(): void;
+    getAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
+    updateAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
+    startAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
+    pauseAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
     getAgent: (req: express.Request, res: express.Response) => Promise<void>;
     fetchAgentWithSubAgents(agentId: string): Promise<{
         Class?: PsAgentClassAttributes | undefined;
@@ -14,13 +19,15 @@ export declare class AgentsController {
         SubAgents?: PsAgentAttributes[] | undefined;
         Connectors?: PsAgentConnectorAttributes[] | undefined;
         AiModels?: PsAiModelAttributes[] | undefined;
+        Evals?: PsAgentEvalAttributes[] | undefined;
         configuration: PsAgentBaseConfiguration;
         class_id: number;
         group_id: number;
         User?: YpUserData | undefined;
         Group?: YpGroupData | undefined;
-        ApiCosts?: PsApiCostAttributes[] | undefined;
-        ModelCosts?: PsModelCostAttributes[] | undefined;
+        ApiUsage?: PsExternalApiUsageAttributes[] | undefined;
+        ModelUsage?: PsModelUsageAttributes[] | undefined;
+        ExternalApis?: PsExternalApiAttributes[] | undefined;
         id: number;
         uuid: string;
         user_id: number;

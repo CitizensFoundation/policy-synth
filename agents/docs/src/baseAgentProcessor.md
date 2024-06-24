@@ -1,6 +1,6 @@
 # BaseAgentProcessor
 
-This class extends `PolicySynthAgentBase` and provides an abstract structure for processing jobs with memory management using Redis.
+This class extends `PolicySynthScAgentBase` and provides an abstract structure for processing jobs with memory management using Redis.
 
 ## Properties
 

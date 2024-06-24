@@ -1,4 +1,4 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { HumanMessage } from "@langchain/core/messages";
 export declare class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
     renderSelectPrompt(problemStatement: string, subProblemsToConsider: PsSubProblem[]): Promise<HumanMessage[]>;

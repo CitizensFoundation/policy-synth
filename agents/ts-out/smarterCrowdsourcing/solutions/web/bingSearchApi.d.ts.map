@@ -1,0 +1,1 @@
+{"version":3,"file":"bingSearchApi.d.ts","sourceRoot":"","sources":["../../../../src/smarterCrowdsourcing/solutions/web/bingSearchApi.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,sBAAsB,EAAE,MAAM,kCAAkC,CAAC;AAO1E,qBAAa,aAAc,SAAQ,sBAAsB;IACvD,OAAO,CAAC,gBAAgB,CAAqB;;IAWhC,MAAM,CAAC,KAAK,EAAE,MAAM,GAAG,OAAO,CAAC,kBAAkB,EAAE,CAAC;CA2ElE"}

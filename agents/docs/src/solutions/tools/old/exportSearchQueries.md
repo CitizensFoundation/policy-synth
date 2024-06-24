@@ -19,7 +19,7 @@ No properties are directly defined in this module.
 import fs from "fs";
 import process from "process";
 import path from "path";
-import { PsBaseMemoryData } from "@policysynth/agents/solutions/tools/old/exportSearchQueries.js";
+import { PsSmarterCrowdsourcingMemoryData } from "@policysynth/agents/solutions/tools/old/exportSearchQueries.js";
 
 let filePath = process.argv[2] || "currentMemory.json";
 
@@ -30,7 +30,7 @@ if (!path.isAbsolute(filePath)) {
 console.log(`Reading memory from ${filePath}`);
 
 const memoryData = fs.readFileSync(filePath, "utf-8");
-const memory = JSON.parse(memoryData) as PsBaseMemoryData;
+const memory = JSON.parse(memoryData) as PsSmarterCrowdsourcingMemoryData;
 
 // Example usage of formatElo and formatSearchQueries
 const eloRating = formatElo(memory.eloRating);

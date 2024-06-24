@@ -6,14 +6,14 @@ This class extends `BaseAgentProcessor` and is responsible for managing the life
 
 | Name   | Type                | Description                           |
 |--------|---------------------|---------------------------------------|
-| memory | PsBaseMemoryData    | Holds the state and data for a job.   |
+| memory | PsSmarterCrowdsourcingMemoryData    | Holds the state and data for a job.   |
 
 ## Methods
 
 | Name             | Parameters            | Return Type | Description                                                                 |
 |------------------|-----------------------|-------------|-----------------------------------------------------------------------------|
 | initializeMemory | job: Job              | Promise<void> | Initializes the memory for the agent with the job's data.                   |
-| setStage         | stage: PsMemoryStageTypes | Promise<void> | Sets the current stage of processing and updates the memory.                |
+| setStage         | stage: PsScMemoryStageTypes | Promise<void> | Sets the current stage of processing and updates the memory.                |
 | process          | -                     | Promise<void> | Processes the job based on the current stage in the memory.                 |
 
 ## Example

@@ -1,5 +1,5 @@
 import { PsConstants } from "../../constants.js";
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");

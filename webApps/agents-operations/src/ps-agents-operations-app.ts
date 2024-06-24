@@ -86,7 +86,7 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
   pageIndex = PagesTypes.AgentsView;
 
   @property({ type: Object })
-  currentMemory: PsBaseMemoryData | undefined;
+  currentMemory: PsSmarterCrowdsourcingMemoryData | undefined;
 
   @property({ type: Number })
   totalNumberOfVotes = 0;

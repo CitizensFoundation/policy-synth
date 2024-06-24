@@ -1,6 +1,6 @@
 import { AgentProblemsProcessor } from "./problemsProcessor.js";
 export declare class ProblemsAgent extends AgentProblemsProcessor {
-    memory: PsBaseMemoryData;
+    memory: PsSmarterCrowdsourcingMemoryData;
     processSubProblems(): Promise<void>;
     process(): Promise<void>;
     setup(): Promise<void>;

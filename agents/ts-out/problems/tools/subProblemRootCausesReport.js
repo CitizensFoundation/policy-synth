@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { createReadStream } from 'fs';
 import csv from 'csv-parser';
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PsConstants } from "../../constants.js";

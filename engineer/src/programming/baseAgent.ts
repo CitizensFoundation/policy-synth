@@ -1,4 +1,4 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
@@ -6,7 +6,7 @@ import { Project, ReturnTypedNode } from "ts-morph";
 
 import fs from "fs";
 
-export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
+export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentBase {
   override memory: PsEngineerMemoryData;
   otherFilesToKeepInContextContent: string | undefined | null;
   documentationFilesInContextContent: string | undefined | null;

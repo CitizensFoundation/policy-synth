@@ -2,7 +2,7 @@ const renderSystemPrompt = (path: string) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
 
 Important Instructions
-For Type use the Typescript definition like for currentMemory use PsBaseMemoryData | undefined
+For Type use the Typescript definition like for currentMemory use PsSmarterCrowdsourcingMemoryData | undefined
 
 Do not output other sections.
 
@@ -45,7 +45,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { OpenAI } from 'openai';
-import { PolicySynthAgentBase } from '../baseAgent.js';
+import { PolicySynthSimpleAgentBase } from '../base/simpleAgent.js';
 
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

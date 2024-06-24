@@ -6,7 +6,7 @@ PsStageBase is an abstract class that extends YpBaseElement to provide functiona
 
 | Name                        | Type                                  | Description                                                                 |
 |-----------------------------|---------------------------------------|-----------------------------------------------------------------------------|
-| memory                      | PsBaseMemoryData                      | Memory object containing data related to the current state.                 |
+| memory                      | PsSmarterCrowdsourcingMemoryData                      | Memory object containing data related to the current state.                 |
 | childType                   | "solution" \| "policy"                | Type of child element, either "solution" or "policy".                       |
 | showEloRatings              | boolean                               | Flag to show or hide ELO ratings.                                           |
 | activeSubProblemIndex       | number \| null                        | Index of the currently active sub-problem.                                  |

@@ -1,5 +1,5 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-export declare class PsRagVectorSearch extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
+export declare class PsRagVectorSearch extends PolicySynthScAgentBase {
     getChunkId(chunk: PsRagChunk, documentUrl: string): string;
     setupChunkMaps(chunkResults: PsRagChunk[], documentsMap: Map<string, PsRagDocumentSource>, chunksMap: Map<string, PsRagChunk>, addedChunkIdsMap: Map<string, Set<string>>): void;
     processChunk(documentUrl: string, chunk: PsRagChunk, chunksMap: Map<string, PsRagChunk>, documentsMap: Map<string, PsRagDocumentSource>, addedChunkIdsMap: Map<string, Set<string>>): void;

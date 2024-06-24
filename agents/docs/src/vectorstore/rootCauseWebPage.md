@@ -1,6 +1,6 @@
 # RootCauseWebPageVectorStore
 
-This class is responsible for managing the storage and retrieval of web page vectors related to root causes in a Weaviate vector database. It extends the `PolicySynthAgentBase` class, providing methods to interact with the Weaviate schema, perform CRUD operations on web page data, and query the database for web pages based on various criteria.
+This class is responsible for managing the storage and retrieval of web page vectors related to root causes in a Weaviate vector database. It extends the `PolicySynthScAgentBase` class, providing methods to interact with the Weaviate schema, perform CRUD operations on web page data, and query the database for web pages based on various criteria.
 
 ## Properties
 

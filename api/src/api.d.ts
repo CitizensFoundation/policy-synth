@@ -1,7 +1,7 @@
-type PSChatBotMemoryStageTypes = PsMemoryStageTypes | "chatbot-conversation";
+type PSChatBotMemoryStageTypes = PsScMemoryStageTypes | "chatbot-conversation";
 
-interface PsChatBotMemoryData extends PsBaseMemoryData {
-  stages: Record<PSChatBotMemoryStageTypes, PsInnovationStagesData>;
+interface PsChatBotMemoryData extends PsSmarterCrowdsourcingMemoryData {
+  stages: Record<PSChatBotMemoryStageTypes, PsScStagesData>;
   chatLog?: PsSimpleChatLog[];
   problemStatement?: PsProblemStatement;
   currentStage: PSChatBotMemoryStageTypes;

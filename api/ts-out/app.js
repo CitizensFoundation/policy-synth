@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { v4 as uuidv4 } from "uuid";
 import { WebSocketServer } from "ws";
-import { connectToDatabase } from "./models/sequelize.js";
+import { connectToDatabase } from "@policysynth/agents/dbModels/sequelize.js";
 import { initializeModels } from "./models/index.js";
 export class PolicySynthApiApp {
     app;

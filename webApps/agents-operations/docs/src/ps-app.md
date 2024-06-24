@@ -12,7 +12,7 @@ This class represents the main application component for the Policy Synth web ap
 | activeSolutionIndex         | number \| undefined               | The index of the active solution.                                           |
 | activePolicyIndex           | number \| undefined               | The index of the active policy.                                             |
 | pageIndex                   | number                            | The index of the current page.                                              |
-| currentMemory               | PsBaseMemoryData \| undefined     | The current memory data.                                                    |
+| currentMemory               | PsSmarterCrowdsourcingMemoryData \| undefined     | The current memory data.                                                    |
 | totalNumberOfVotes          | number                            | The total number of votes.                                                  |
 | showAllCosts                | boolean                           | Flag to show all costs.                                                     |
 | lastSnackbarText            | string \| undefined               | The text of the last snackbar.                                              |

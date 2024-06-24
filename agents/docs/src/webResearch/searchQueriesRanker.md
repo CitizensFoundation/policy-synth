@@ -12,7 +12,7 @@ This class extends `BasePairwiseRankingsProcessor` to rank search queries based 
 
 | Name              | Parameters                                             | Return Type                        | Description                                                                 |
 |-------------------|--------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| constructor       | memory: PsBaseMemoryData, progressFunction?: Function  | void                               | Initializes a new instance of the SearchQueriesRanker with optional progress function. |
+| constructor       | memory: PsSmarterCrowdsourcingMemoryData, progressFunction?: Function  | void                               | Initializes a new instance of the SearchQueriesRanker with optional progress function. |
 | voteOnPromptPair  | index: number, promptPair: number[]                    | Promise<PsPairWiseVoteResults>| Processes a pair of prompts and returns the ranking results.                |
 | rankSearchQueries | queriesToRank: string[], searchQuestion: string, maxPrompts: number = 120 | Promise<string[]> | Ranks a list of search queries based on their relevance to the specified research question. |
 
@@ -20,10 +20,10 @@ This class extends `BasePairwiseRankingsProcessor` to rank search queries based 
 
 ```typescript
 import { SearchQueriesRanker } from '@policysynth/agents/webResearch/searchQueriesRanker.js';
-import { PsBaseMemoryData } from '@policysynth/agents/memoryDataTypes.js';
+import { PsSmarterCrowdsourcingMemoryData } from '@policysynth/agents/memoryDataTypes.js';
 import { PsConstants } from '../constants.js';
 
-const memoryData: PsBaseMemoryData = {
+const memoryData: PsSmarterCrowdsourcingMemoryData = {
   // example memory data
 };
 

@@ -1,6 +1,6 @@
 # BaseVectorStoreClient
 
-This class provides an abstract base for interacting with a vector store using the Weaviate client. It extends the `PolicySynthAgentBase` class and includes methods for managing schemas, querying, and manipulating data related to web pages.
+This class provides an abstract base for interacting with a vector store using the Weaviate client. It extends the `PolicySynthScAgentBase` class and includes methods for managing schemas, querying, and manipulating data related to web pages.
 
 ## Properties
 

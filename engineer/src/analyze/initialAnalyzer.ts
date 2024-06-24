@@ -1,12 +1,12 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 
 import fs from "fs";
 import path from "path";
 
-export class PsEngineerInitialAnalyzer extends PolicySynthAgentBase {
+export class PsEngineerInitialAnalyzer extends PolicySynthScAgentBase {
   override memory: PsEngineerMemoryData;
 
   constructor(memory: PsEngineerMemoryData) {

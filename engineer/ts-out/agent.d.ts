@@ -1,9 +1,9 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 interface GitHubIssue {
     title: string;
     body: string;
 }
-export declare class PSEngineerAgent extends PolicySynthAgentBase {
+export declare class PSEngineerAgent extends PolicySynthScAgentBase {
     memory: PsEngineerMemoryData;
     githubIssueUrl: string | undefined;
     constructor(githubIssueUrl?: string | undefined);

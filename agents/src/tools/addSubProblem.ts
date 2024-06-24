@@ -19,7 +19,7 @@ if (projectId) {
   const projectTxt = await redis.get(`st_mem:${projectId}:id`);
   const project = JSON.parse(
     projectTxt!
-  ) as PsBaseMemoryData;
+  ) as PsSmarterCrowdsourcingMemoryData;
 
   project.subProblems.push(subProblem);
 

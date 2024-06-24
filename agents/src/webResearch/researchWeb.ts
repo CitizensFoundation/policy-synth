@@ -1,8 +1,8 @@
-import { SearchWebProcessor } from "../solutions/web/searchWeb.js";
+import { SearchWebProcessor } from "../smarterCrowdsourcing/solutions/web/searchWeb.js";
 
 export class ResearchWeb extends SearchWebProcessor {
-  constructor(memory: PsBaseMemoryData) {
-    super(undefined as any, memory);
+  constructor(memory: PsSmarterCrowdsourcingMemoryData) {
+    super(memory);
   }
 
   async search(searchQueries: string[]) {

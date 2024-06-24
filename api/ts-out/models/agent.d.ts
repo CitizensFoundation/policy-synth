@@ -17,8 +17,8 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     Class?: PsAgentClass;
     User?: YpUserData;
     Group?: YpGroupData;
-    ApiCosts?: PsApiCostAttributes[];
-    ModelCosts?: PsModelCostAttributes[];
+    ExternalApiUsage?: PsExternalApiUsageAttributes[];
+    ModelUsage?: PsModelUsageAttributes[];
     ParentAgent?: PsAgent;
     SubAgents?: PsAgent[];
     Connectors?: PsAgentConnectorAttributes[];

@@ -1,11 +1,11 @@
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     webPageVectorStore: WebPageVectorStore;
     allUrls: Set<string>;
     duplicateUrls: string[];
-    renderMessages(solutions: PsSolution[]): (HumanMessage | SystemMessage)[];
+    renderMessages(solutions: PsSolution[]): (SystemMessage | HumanMessage)[];
     dedup(solutions: PsSolution[]): Promise<PsSolution[]>;
     processSubProblems(): Promise<void>;
     copyEntitySolutionsToSubProblem(subProblemIndex: number): Promise<void>;

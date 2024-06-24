@@ -7,7 +7,7 @@ The `CreateSubProblemsProcessor` class is a specialized agent for creating and r
 | Name          | Type   | Description               |
 |---------------|--------|---------------------------|
 | chat          | ChatOpenAI | Instance of the ChatOpenAI class used for interacting with the language model. |
-| memory        | PsBaseMemoryData | Memory object that stores the problem statement and sub-problems. |
+| memory        | PsSmarterCrowdsourcingMemoryData | Memory object that stores the problem statement and sub-problems. |
 | logger        | Logger | Logger instance for logging information. |
 
 ## Methods

@@ -1,6 +1,4 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
   maxCompressionRetries = 15;
@@ -16,7 +14,7 @@ export class IngestionChunkCompressorAgent extends BaseIngestionAgent {
     "No additional content in compressed text.";
 
   hallucinationValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything in the compressed text that is not in the uncompressed text.
@@ -26,7 +24,7 @@ Instructions:
 `);
 
   correctnessValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything important that is incorrect in the compressed text compared to the uncompressed text and give exact instructions on how to improve the compressed text as short clear unnumbered sentences.
@@ -43,7 +41,7 @@ Instructions:
 `);
 
   completionValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything that is not at all in the compressed text but is in the uncompressed text and give exact instructions on how to improve the compressed text, item by item.
@@ -52,7 +50,7 @@ Instructions:
 `);
 
   validationUserMessage = (uncompressed: string, compressed: string) =>
-    new HumanMessage(`<UNCOMPRESSED_TEXT>${uncompressed}</UNCOMPRESSED_TEXT>
+    this.createHumanMessage(`<UNCOMPRESSED_TEXT>${uncompressed}</UNCOMPRESSED_TEXT>
 
 <COMPRESSED_TEXT>${compressed}</COMPRESSED_TEXT>
 
@@ -60,7 +58,7 @@ Think step by step and output your analysis here:
 `);
 
   compressionSystemMessage =
-    new SystemMessage(`You are an expert text compressor.
+    this.createSystemMessage(`You are an expert text compressor.
 
 Instructions:
 - You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
@@ -71,7 +69,7 @@ Instructions:
 `);
 
   compressionRetrySystemMessage =
-    new SystemMessage(`You are an expert text compressor.
+    this.createSystemMessage(`You are an expert text compressor.
 
 Instructions:
 - You will compress each paragraph in the text marked <ORIGINAL_TEXT_TO_COMPRESS> into as many paragraphs as there are in the original text.
@@ -82,7 +80,7 @@ Instructions:
 `);
 
   compressionUserMessage = (data: string) =>
-    new HumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
+    this.createHumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
 ${data}
 </ORIGINAL_TEXT_TO_COMPRESS>
 
@@ -96,7 +94,7 @@ Your compressed text:
     previousValidationResults: string,
     retryCount: number
   ) =>
-    new HumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
+    this.createHumanMessage(`<ORIGINAL_TEXT_TO_COMPRESS>
 ${data}
 </ORIGINAL_TEXT_TO_COMPRESS>
 
@@ -125,8 +123,6 @@ Your new improved compressed text:
 `);
 
   async compress(uncompressedData: string): Promise<string> {
-    this.resetLlmTemperature();
-
     let compressedText;
 
     let validated = false;
@@ -146,12 +142,11 @@ Your new improved compressed text:
               currentValidationResults,
               previousValidationResults,
               retryCount
-            ).content
+            ).message
           );
         }
         compressedText = (await this.callLLM(
           "ingestion-agent",
-          PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(
             currentValidationResults && lastCompressedData
               ? this.compressionRetrySystemMessage
@@ -201,10 +196,6 @@ Your new improved compressed text:
             `\nCompression Validation failed ${retryCount}:\n\n${currentValidationResults}\n\n`
           );
         }
-
-        if (retryCount > this.retryCountBeforeRandomizingLlmTemperature) {
-          this.randomizeLlmTemperature();
-        }
       } catch (error) {
         retryCount++;
         console.warn(`Compression failed ${retryCount}: ${error}`);
@@ -235,7 +226,6 @@ Your new improved compressed text:
       ),*/
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.correctnessValidationSystemMessage,
           this.validationUserMessage(uncompressed, compressed)
@@ -244,7 +234,6 @@ Your new improved compressed text:
       ),
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.hallucinationValidationSystemMessage,
           this.validationUserMessage(uncompressed, compressed)

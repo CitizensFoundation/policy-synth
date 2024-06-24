@@ -1,14 +1,14 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "../baseAgent.js";
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 import { PsConstants } from "../constants.js";
 
-export class SearchQueriesGenerator extends PolicySynthAgentBase {
+export class SearchQueriesGenerator extends PolicySynthSimpleAgentBase {
   systemPrompt: string;
   userPrompt: string;
 
   constructor(
-    memory: PsBaseMemoryData,
+    memory: PsSmarterCrowdsourcingMemoryData,
     numberOfQueriesToGenerate: number,
     question: string,
     overRideSystemPrompt?: string,
@@ -35,8 +35,8 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
 
   async renderMessages() {
     return [
-      new SystemMessage(this.systemPrompt),
-      new HumanMessage(this.userPrompt),
+      this.createSystemMessage(this.systemPrompt),
+      this.createHumanMessage(this.userPrompt),
     ];
   }
 

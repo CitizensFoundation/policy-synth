@@ -4,7 +4,7 @@ import puppeteer from "puppeteer-extra";
 import { createGzip } from "zlib";
 import { promisify } from "util";
 import { writeFile, readFile } from "fs";
-import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
+import { GetWebPagesProcessor } from "../smarterCrowdsourcing/solutions/web/getWebPages.js";
 import { PsConstants } from "../constants.js";
 const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);

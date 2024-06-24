@@ -1,5 +1,5 @@
 import { PsConstants } from "../../constants.js";
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";

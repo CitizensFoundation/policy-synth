@@ -1,7 +1,7 @@
 import { SearchWebProcessor } from "@policysynth/agents/solutions/web/searchWeb.js";
 
 export class ResearchWeb extends SearchWebProcessor {
-  constructor(memory: PsBaseMemoryData) {
+  constructor(memory: PsSmarterCrowdsourcingMemoryData) {
     super(undefined as any, memory);
   }
 

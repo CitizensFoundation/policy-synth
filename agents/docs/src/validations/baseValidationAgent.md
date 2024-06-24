@@ -1,6 +1,6 @@
 # PsBaseValidationAgent
 
-This class extends `PolicySynthAgentBase` to provide validation functionalities using a language model. It manages the interaction with a WebSocket for real-time streaming and handles the execution of validation logic.
+This class extends `PolicySynthScAgentBase` to provide validation functionalities using a language model. It manages the interaction with a WebSocket for real-time streaming and handles the execution of validation logic.
 
 ## Properties
 

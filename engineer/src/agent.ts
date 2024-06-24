@@ -1,4 +1,4 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsEngineerInitialAnalyzer } from "./analyze/initialAnalyzer.js";
 import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
 import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
@@ -16,7 +16,7 @@ interface GitHubIssue {
   body: string;
 }
 
-export class PSEngineerAgent extends PolicySynthAgentBase {
+export class PSEngineerAgent extends PolicySynthScAgentBase {
   override memory: PsEngineerMemoryData;
   githubIssueUrl: string | undefined;
 

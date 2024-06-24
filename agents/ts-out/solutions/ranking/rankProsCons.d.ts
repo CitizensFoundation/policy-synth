@@ -1,4 +1,4 @@
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
+import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
 export declare class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData: {
         solution: string;

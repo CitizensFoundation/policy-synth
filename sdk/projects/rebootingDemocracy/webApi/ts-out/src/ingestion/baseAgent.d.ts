@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-export declare abstract class BaseIngestionAgent extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
+export declare abstract class BaseIngestionAgent extends PolicySynthScAgentBase {
     minChunkTokenLength: number;
     maxChunkTokenLength: number;
     maxFileProcessTokenLength: number;

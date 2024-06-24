@@ -1,9 +1,9 @@
 import path from "path";
 import crypto, { createHash } from "crypto";
 import { ChatOpenAI } from "@langchain/openai";
-import { PolicySynthAgentBase } from "../../baseAgent.js";
+import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
-export class BaseIngestionAgent extends PolicySynthAgentBase {
+export class BaseIngestionAgent extends PolicySynthScAgentBase {
     minChunkTokenLength = 1000;
     maxChunkTokenLength = 3500;
     maxFileProcessTokenLength = 110000;

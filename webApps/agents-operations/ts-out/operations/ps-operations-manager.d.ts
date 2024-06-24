@@ -40,7 +40,6 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     currentStreaminReponse: OpsStreamingAIResponse | undefined;
     constructor();
     getAgent(): Promise<void>;
-    setupTestData(): void;
     connectedCallback(): Promise<void>;
     openEditNodeDialog(event: CustomEvent): void;
     saveAnswers(): void;

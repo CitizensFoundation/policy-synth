@@ -1,4 +1,4 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { SearchQueriesGenerator } from "./searchQueriesGenerator.js";
 import { SearchQueriesRanker } from "./searchQueriesRanker.js";
 import { ResearchWeb } from "./searchWeb.js";
@@ -8,7 +8,7 @@ import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
 import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
 import fs from "fs";
 
-export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
+export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentBase {
   numberOfQueriesToGenerate = 12;
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.3;
@@ -75,7 +75,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBas
 
       // Search the web
       this.logger.info("Searching the Web...");
-      const webSearch = new ResearchWeb(this.memory as PsBaseMemoryData);
+      const webSearch = new ResearchWeb(this.memory as PsSmarterCrowdsourcingMemoryData);
       const searchResults = await webSearch.search(queriesToSearch);
       this.logger.info(`Found ${searchResults.length} Web Pages`);
 

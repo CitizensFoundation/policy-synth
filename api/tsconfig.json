@@ -8,10 +8,10 @@
     "outDir": "ts-out/",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
+    "sourceMap": true
   },
   "include": [
     "**/*.ts",
     "./node_modules/@policysynth/agents/**/*.d.ts"
-, "migrations/agentRegistries.cjs"  ]
+  ]
 }

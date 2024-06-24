@@ -1,13 +1,13 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Page } from "puppeteer";
-import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
+import { GetWebPagesProcessor } from "../smarterCrowdsourcing/solutions/web/getWebPages.js";
 export declare class WebPageScanner extends GetWebPagesProcessor {
     jsonSchemaForResults: string | undefined;
     systemPromptOverride: string | undefined;
     collectedWebPages: any[];
     progressFunction: Function | undefined;
-    constructor(memory: PsBaseMemoryData);
-    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (HumanMessage | SystemMessage)[];
+    constructor(memory: PsSmarterCrowdsourcingMemoryData);
+    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
         promptTokenCount: {

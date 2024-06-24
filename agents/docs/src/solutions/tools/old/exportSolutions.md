@@ -16,7 +16,7 @@ No methods are directly defined in this script.
 import fs from "fs";
 import process from "process";
 import path from "path";
-import { PsBaseMemoryData, PsProCon } from "@policysynth/agents/solutions/tools/old/exportSolutions.js";
+import { PsSmarterCrowdsourcingMemoryData, PsProCon } from "@policysynth/agents/solutions/tools/old/exportSolutions.js";
 
 let filePath = process.argv[2] || "currentMemory.json";
 
@@ -27,7 +27,7 @@ if (!path.isAbsolute(filePath)) {
 console.log(`Reading memory from ${filePath}`);
 
 const memoryData = fs.readFileSync(filePath, "utf-8");
-const memory = JSON.parse(memoryData) as PsBaseMemoryData;
+const memory = JSON.parse(memoryData) as PsSmarterCrowdsourcingMemoryData;
 
 // Example usage of formatting and generating HTML content based on memory data
 const formatElo = (elo: number | undefined) => Math.floor(elo || -1);

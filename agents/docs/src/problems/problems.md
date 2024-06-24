@@ -6,14 +6,14 @@ The `AgentProblems` class is responsible for processing various stages of proble
 
 | Name          | Type                | Description               |
 |---------------|---------------------|---------------------------|
-| memory        | PsBaseMemoryData    | The memory data for the agent. |
+| memory        | PsSmarterCrowdsourcingMemoryData    | The memory data for the agent. |
 
 ## Methods
 
 | Name             | Parameters                | Return Type | Description                                                                 |
 |------------------|---------------------------|-------------|-----------------------------------------------------------------------------|
 | initializeMemory | job: Job                  | Promise<void> | Initializes the memory for the agent using job data.                        |
-| setStage         | stage: PsMemoryStageTypes | Promise<void> | Sets the current stage and updates the memory.                              |
+| setStage         | stage: PsScMemoryStageTypes | Promise<void> | Sets the current stage and updates the memory.                              |
 | processSubProblems |                         | Promise<void> | Processes sub-problems using the `CreateSubProblemsProcessor`.              |
 | process          |                           | Promise<void> | Processes the current stage using the appropriate processor.                |
 

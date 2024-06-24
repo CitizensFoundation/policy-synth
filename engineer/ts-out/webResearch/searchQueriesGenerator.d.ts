@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-export declare class SearchQueriesGenerator extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
+export declare class SearchQueriesGenerator extends PolicySynthScAgentBase {
     systemPrompt: string;
     userPrompt: string;
     memory: PsEngineerMemoryData;

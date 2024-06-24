@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BaseProblemSolvingAgent } from "../../baseProblemSolvingAgent.js";
+import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
 import { PsConstants } from "../../constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {

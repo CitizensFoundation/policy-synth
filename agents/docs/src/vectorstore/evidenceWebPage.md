@@ -1,6 +1,6 @@
 # EvidenceWebPageVectorStore
 
-This class extends the PolicySynthAgentBase to interact with Weaviate for storing and retrieving evidence web pages.
+This class extends the PolicySynthScAgentBase to interact with Weaviate for storing and retrieving evidence web pages.
 
 ## Methods
 

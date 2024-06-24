@@ -6,7 +6,7 @@
 
 | Name             | Type                | Description                                                                 |
 |------------------|---------------------|-----------------------------------------------------------------------------|
-| memory           | PsBaseMemoryData    | The memory data containing information about subproblems and their solutions. |
+| memory           | PsSmarterCrowdsourcingMemoryData    | The memory data containing information about subproblems and their solutions. |
 | subProblemIndex  | number              | The index of the current subproblem within the memory's subproblems list.   |
 | solution         | PsSolution     | The solution data for which the family tree is being visualized.            |
 

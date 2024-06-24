@@ -1,10 +1,8 @@
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 
 export class DocumentClassifierAgent extends BaseIngestionAgent {
   systemMessage = (schema: string, about: string) =>
-    new SystemMessage(`You are an expert classification agent that analyzes documents and classifies them.
+    this.createSystemMessage(`You are an expert classification agent that analyzes documents and classifies them.
 
 Instructions:
 - Use the available categories to classify the content the user will provide you with in the DOCUMENT_TO_CLASSIFY tag
@@ -26,7 +24,7 @@ JSON Output:
 `);
 
   userMessage = (title: string, decription: string, url: string) =>
-    new HumanMessage(`<DOCUMENT_TO_CLASSIFY>
+    this.createHumanMessage(`<DOCUMENT_TO_CLASSIFY>
 Title: ${title}
 Full description: ${decription}
 </DOCUMENT_TO_CLASSIFY>
@@ -43,7 +41,6 @@ Your JSON classification:
     const documentClassification: PsRagDocumentClassificationResponse =
       await this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.systemMessage(
             JSON.stringify(dataLayout.categories),
