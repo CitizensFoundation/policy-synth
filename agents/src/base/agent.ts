@@ -11,6 +11,9 @@ export class PolicySynthBaseAgent {
   chat: ChatOpenAI | undefined;
   rateLimits: PsModelRateLimitTracking = {};
 
+  maxModelTokensOut?: number;
+  modelTemperature?: number;
+
   constructor() {
     this.logger = winston.createLogger({
       level: process.env.WORKER_LOG_LEVEL || "debug",

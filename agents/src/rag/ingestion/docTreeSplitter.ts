@@ -1,5 +1,4 @@
 import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 import { BaseIngestionAgent } from "./baseAgent.js";
 
@@ -148,7 +147,6 @@ YOUR EVALUATION: `);
     }
     const chunkingStrategy = (await this.callLLM(
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.strategySystemMessage,
         review
@@ -172,7 +170,6 @@ YOUR EVALUATION: `);
 
     const chunkingStrategyReview = (await this.callLLM(
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.reviewStrategySystemMessage,
         this.reviewStrategyUserMessage(data, chunkingStrategy)
@@ -215,7 +212,8 @@ YOUR EVALUATION: `);
       `Splitting document into chunks...(isSubChunk: ${isSubChunk}) (totalLinesInChunk: ${totalLinesInChunk})`
     );
     if (!isSubChunk) {
-      this.resetLlmTemperature();
+      //TODO: Look if we want to bring this back
+      //this.resetLlmTemperature();
     }
     let retryCount = 0;
     let validated = false;

@@ -1,6 +1,9 @@
 import { PolicySynthOperationsAgent } from "./operationsAgent.js";
 
 export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent {
+  maxModelTokensOut = 3;
+  modelTemperature = 0.0;
+
   prompts: Record<number, number[][]> = {};
   allItems: Record<number, (PsEloRateable[] | string[]) | undefined> = {};
   INITIAL_ELO_RATING: number = 1000;

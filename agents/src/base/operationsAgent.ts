@@ -17,7 +17,7 @@ const redis = new ioredis(
 );
 
 export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
-  memory?: PsAgentMemoryData;
+  memory!: PsAgentMemoryData;
   agent: PsAgent;
   models: Map<PsAiModelType, BaseChatModel> = new Map();
 
@@ -26,11 +26,18 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
 
   rateLimits: PsModelRateLimitTracking = {};
 
-  constructor(agent: PsAgent) {
+  constructor(
+    agent: PsAgent,
+    memory: PsAgentMemoryData | undefined = undefined
+  ) {
     super();
     this.agent = agent;
     this.initializeModels();
-    this.loadAgentMemoryFromRedis();
+    if (memory) {
+      this.memory = memory;
+    } else {
+      this.loadAgentMemoryFromRedis();
+    }
   }
 
   async loadAgentMemoryFromRedis() {
@@ -76,12 +83,14 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.name,
         maxTokensOut:
-          this.agent.configuration.maxTokensOut ||
-          model.configuration.maxTokensOut ||
+          this.maxModelTokensOut ??
+          this.agent.configuration.maxTokensOut ??
+          model.configuration.maxTokensOut ??
           4096,
         temperature:
-          this.agent.configuration.temperature ||
-          model.configuration.defaultTemperature ||
+          this.modelTemperature ??
+          this.agent.configuration.temperature ??
+          model.configuration.defaultTemperature ??
           0.5,
       } as PsAiModelConfig;
 
@@ -350,7 +359,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   async updateMemoryStatus(progress: number, message: string) {
     if (!this.memory.status) {
       this.memory.status = {
-        state: 'processing',
+        state: "processing",
         progress: 0,
         messages: [],
         lastUpdated: Date.now(),

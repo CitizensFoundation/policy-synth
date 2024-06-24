@@ -3,6 +3,8 @@ import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 export class PsBaseValidationAgent extends PolicySynthSimpleAgentBase {
   name: string;
   options: PsBaseValidationAgentOptions;
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.0;
 
   constructor(name: string, options: PsBaseValidationAgentOptions = {}) {
     super();

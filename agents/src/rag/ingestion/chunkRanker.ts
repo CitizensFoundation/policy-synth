@@ -1,9 +1,10 @@
 import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
 
 export class IngestionChunkRanker extends SimplePairwiseRankingsAgent {
   rankingRules: string | undefined;
   documentSummary: string | undefined;
+  maxModelTokensOut = 3;
+  modelTemperature = 0.0;
 
   constructor(
     memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined,
@@ -60,7 +61,6 @@ export class IngestionChunkRanker extends SimplePairwiseRankingsAgent {
     return await this.getResultsFromLLM(
       index,
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -76,12 +76,9 @@ export class IngestionChunkRanker extends SimplePairwiseRankingsAgent {
     this.rankingRules = rankingRules;
     this.documentSummary = documentSummary;
 
-    this.chat = new ChatOpenAI({
-      temperature: PsIngestionConstants.ingestionRankingModel.temperature,
-      maxTokens: PsIngestionConstants.ingestionRankingModel.maxOutputTokens,
-      modelName: PsIngestionConstants.ingestionRankingModel.name,
-      verbose: PsIngestionConstants.ingestionRankingModel.verbose,
-    });
+    this.maxModelTokensOut = 3;
+    this.modelTemperature = 0.0;
+
     this.setupRankingPrompts(
       -1,
       chunksToRank as PsEloRateable[],

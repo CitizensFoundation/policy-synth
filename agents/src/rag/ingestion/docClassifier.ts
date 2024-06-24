@@ -1,5 +1,3 @@
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 
 export class DocumentClassifierAgent extends BaseIngestionAgent {
@@ -43,7 +41,6 @@ Your JSON classification:
     const documentClassification: PsRagDocumentClassificationResponse =
       await this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.systemMessage(
             JSON.stringify(dataLayout.categories),

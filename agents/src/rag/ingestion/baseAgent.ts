@@ -7,6 +7,8 @@ export abstract class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
   maxChunkTokenLength: number = 3500;
   maxFileProcessTokenLength: number = 110000;
   roughFastWordTokenRatio: number = 1.25;
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.0;
 
   logShortLines(text: string, maxLength = 50) {
     // Split the text into lines

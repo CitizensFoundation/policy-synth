@@ -1,8 +1,4 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
 import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
 
 export class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
   rankingRules: string | undefined;
@@ -12,7 +8,7 @@ export class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
     memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined,
     progressFunction: Function | undefined = undefined
   ) {
-    super(undefined as any, memory!);
+    super(memory!);
     this.progressFunction = progressFunction;
   }
 
@@ -63,7 +59,6 @@ export class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
     return await this.getResultsFromLLM(
       index,
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -78,13 +73,6 @@ export class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
   ) {
     this.rankingRules = rankingRules;
     this.overallTopic = overallTopic;
-
-    this.chat = new ChatOpenAI({
-      temperature: PsIngestionConstants.ingestionRankingModel.temperature,
-      maxTokens: PsIngestionConstants.ingestionRankingModel.maxOutputTokens,
-      modelName: PsIngestionConstants.ingestionRankingModel.name,
-      verbose: PsIngestionConstants.ingestionRankingModel.verbose,
-    });
 
     this.setupRankingPrompts(
       -1,

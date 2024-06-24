@@ -1,6 +1,4 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class DocumentCleanupAgent extends BaseIngestionAgent {
   maxCleanupTokenLength: number = 4000;
@@ -96,8 +94,6 @@ Your one word analysis:
 `);
 
   async clean(data: string): Promise<string> {
-    this.resetLlmTemperature();
-
     const splitPartsForCleanup = this.splitDataForProcessing(
       data,
       this.maxCleanupTokenLength
@@ -129,7 +125,6 @@ Your one word analysis:
       while (!validated && retryCount < this.maxCleanupRetries) {
         const referenceAnalysis = (await this.callLLM(
           "ingestion-agent",
-          PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(
             this.systemMessage,
             this.userMessage(part, validationTextResults)
@@ -146,7 +141,6 @@ Your one word analysis:
         } else {
           cleanedPart = (await this.callLLM(
             "ingestion-agent",
-            PsIngestionConstants.ingestionMainModel,
             this.getFirstMessages(
               this.systemMessage,
               this.userMessage(part, validationTextResults)
@@ -164,10 +158,6 @@ Your one word analysis:
           if (!validated) {
             console.warn(`\nValidation failed ${retryCount}\n`);
             validationTextResults = validationResults.validationTextResults;
-          }
-
-          if (retryCount > 2) {
-            this.randomizeLlmTemperature();
           }
         }
       }
@@ -211,7 +201,6 @@ Your one word analysis:
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.completionValidationSystemMessage,
           this.validationUserMessage(original, cleaned)
@@ -220,7 +209,6 @@ Your one word analysis:
       ),
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.correctnessValidationSystemMessage,
           this.validationUserMessage(original, cleaned)
@@ -229,7 +217,6 @@ Your one word analysis:
       ),
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.hallucinationValidationSystemMessage,
           this.validationUserMessage(original, cleaned)

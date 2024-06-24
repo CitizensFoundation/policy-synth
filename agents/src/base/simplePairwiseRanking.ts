@@ -1,6 +1,9 @@
 import { PolicySynthSimpleAgentBase } from "./simpleAgent.js";
 
 export abstract class SimplePairwiseRankingsAgent extends PolicySynthSimpleAgentBase {
+  maxModelTokensOut = 3;
+  modelTemperature = 0.0;
+
   prompts: Record<number, number[][]> = {};
   allItems: Record<number, (PsEloRateable[] | string[]) | undefined> = {};
   INITIAL_ELO_RATING: number = 1000;
@@ -106,7 +109,6 @@ export abstract class SimplePairwiseRankingsAgent extends PolicySynthSimpleAgent
   async getResultsFromLLM(
     subProblemIndex: number,
     stageName: string,
-    modelConstant: PsBaseAIModelConstants,
     messages: PsModelMessage[],
     itemOneIndex: number,
     itemTwoIndex: number

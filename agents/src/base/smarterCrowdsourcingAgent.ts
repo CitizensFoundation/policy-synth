@@ -69,6 +69,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
 
     const currentProgress =
       this.startProgress + (this.endProgress - this.startProgress) * 0.5; // 50% complete
+
     await this.updateProgress(currentProgress);
   }
 

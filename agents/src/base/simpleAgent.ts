@@ -36,12 +36,14 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
     const baseConfig: PsAiModelConfig = {
       apiKey: process.env.AI_MODEL_API_KEY!,
       modelName: process.env.AI_MODEL_NAME,
-      maxTokensOut: process.env.AI_MODEL_MAX_TOKENS_OUT
-        ? parseInt(process.env.AI_MODEL_MAX_TOKENS_OUT)
-        : 4096,
-      temperature: process.env.AI_MODEL_TEMPERATURE
-        ? parseFloat(process.env.AI_MODEL_TEMPERATURE)
-        : 0.5,
+      maxTokensOut: this.maxModelTokensOut ??
+        (process.env.AI_MODEL_MAX_TOKENS_OUT
+          ? parseInt(process.env.AI_MODEL_MAX_TOKENS_OUT)
+          : 4096),
+      temperature: this.modelTemperature ??
+        (process.env.AI_MODEL_TEMPERATURE
+          ? parseFloat(process.env.AI_MODEL_TEMPERATURE)
+          : 0.5),
     };
 
     switch (process.env.AI_MODEL_PROVIDER.toLowerCase()) {

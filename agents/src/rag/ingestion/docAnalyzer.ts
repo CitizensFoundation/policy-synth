@@ -1,5 +1,3 @@
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 
 interface RefineInput {
@@ -86,7 +84,6 @@ Your refined JSON analysis:
       const chunkData = dataChunks[i];
       const documentAnalysis = (await this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(this.systemMessage, this.userMessage(chunkData))
       )) as LlmDocumentAnalysisReponse;
 
@@ -155,7 +152,6 @@ Your refined JSON analysis:
 
     const refinedMetadata = (await this.callLLM(
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.finalReviewSystemMessage,
         this.finalReviewUserMessage(refineInput as LlmDocumentAnalysisReponse)

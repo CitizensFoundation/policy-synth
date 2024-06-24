@@ -2,7 +2,7 @@ import { SearchWebProcessor } from "../smarterCrowdsourcing/solutions/web/search
 
 export class ResearchWeb extends SearchWebProcessor {
   constructor(memory: PsSmarterCrowdsourcingMemoryData) {
-    super(undefined as any, memory);
+    super(memory);
   }
 
   async search(searchQueries: string[]) {
