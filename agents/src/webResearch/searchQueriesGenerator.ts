@@ -1,9 +1,9 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 import { PsConstants } from "../constants.js";
 
-export class SearchQueriesGenerator extends PolicySynthScAgentBase {
+export class SearchQueriesGenerator extends PolicySynthSimpleAgentBase {
   systemPrompt: string;
   userPrompt: string;
 
@@ -35,8 +35,8 @@ export class SearchQueriesGenerator extends PolicySynthScAgentBase {
 
   async renderMessages() {
     return [
-      new SystemMessage(this.systemPrompt),
-      new HumanMessage(this.userPrompt),
+      this.createSystemMessage(this.systemPrompt),
+      this.createHumanMessage(this.userPrompt),
     ];
   }
 

@@ -14,7 +14,7 @@ export class DocumentCleanupAgent extends BaseIngestionAgent {
     "No additional content in cleaned text.";
 
   hallucinationValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything in the cleaned text that is not in the original text.
@@ -24,7 +24,7 @@ Instructions:
 `);
 
   correctnessValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything that is not the same in the original text as in the cleaned text except for items that have been cleaned away.
@@ -34,7 +34,7 @@ Instructions:
 `);
 
   completionValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Make sure that all main content in the original text is present in the cleaned text, that no main content is missing.
@@ -47,14 +47,14 @@ Instructions:
 `);
 
   validationUserMessage = (original: string, cleaned: string) =>
-    new HumanMessage(`<ORIGINAL_TEXT>${original}</ORIGINAL_TEXT>
+    this.createHumanMessage(`<ORIGINAL_TEXT>${original}</ORIGINAL_TEXT>
 
 <CLEANED_TEXT>${cleaned}</CLEANED_TEXT>
 
 Think step by step and output your analysis here:
 `);
   systemMessage =
-    new SystemMessage(`You are an expert document cleaner. Your job is to help cleanup documents coming from various sources. PDFs, etc.
+    this.createSystemMessage(`You are an expert document cleaner. Your job is to help cleanup documents coming from various sources. PDFs, etc.
 
 Instruction:
 - We own all copyright to the materials we are cleaning for our RAG chatbot.
@@ -71,7 +71,7 @@ Instruction:
 `);
 
   userMessage = (data: string, validationTextResults: string | undefined) =>
-    new HumanMessage(`${
+    this.createHumanMessage(`${
       validationTextResults
         ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n`
         : ``
@@ -81,7 +81,7 @@ ${data}
 `);
 
   referencesCheckSystemMessage =
-    new SystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
+    this.createSystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
 
   If the documents contains only references without text explainations or URLs output, only: ONLY_REFERENCES_OR_URLS
 
@@ -89,7 +89,7 @@ ${data}
 `);
 
   referencesCheckUserMessage = (data: string) =>
-    new HumanMessage(`Document to analyze:
+    this.createHumanMessage(`Document to analyze:
 ${data}
 
 Your one word analysis:

@@ -9,7 +9,7 @@ import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
 import { writeFile, readFile, existsSync } from "fs";
 import { htmlToText } from "html-to-text";
-import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
+import { GetWebPagesProcessor } from "../smarterCrowdsourcing/solutions/web/getWebPages.js";
 import { PsConstants } from "../constants.js";
 
 const gzip = promisify(createGzip);
@@ -34,7 +34,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     entityIndex?: number
   ) {
     return [
-      new SystemMessage(
+      this.createSystemMessage(
         this.systemPromptOverride ||
           `Your are an AI expert in researching website data:
 
@@ -45,7 +45,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
           ${this.jsonSchemaForResults}
         `
       ),
-      new HumanMessage(
+      this.createHumanMessage(
         `
         Text Context:
         ${text}

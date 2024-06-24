@@ -7,7 +7,7 @@ export class AzureOpenAiChat extends BaseChatModel {
   private client: OpenAIClient;
   private deploymentName: string;
 
-  constructor(config: PSAzureModelConfig) {
+  constructor(config: PsAzureAiModelConfig) {
     super(config.modelName || "gpt-4o", config.maxTokensOut || 4096);
     this.client = new OpenAIClient(config.endpoint, new AzureKeyCredential(config.apiKey));
     this.deploymentName = config.deploymentName;

@@ -256,5 +256,29 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             maximumFractionDigits: fractions,
         }).format(number);
     }
+    async updateMemoryStatus(progress, message) {
+        if (!this.memory.status) {
+            this.memory.status = {
+                state: 'processing',
+                progress: 0,
+                messages: [],
+                lastUpdated: Date.now(),
+            };
+        }
+        this.memory.status.progress = progress;
+        this.memory.status.messages.push(message);
+        this.memory.status.lastUpdated = Date.now();
+        // Save updated memory to Redis
+        await this.saveMemoryToRedis();
+    }
+    async saveMemoryToRedis() {
+        try {
+            await redis.set(this.agent.redisMemoryKey, JSON.stringify(this.memory));
+        }
+        catch (error) {
+            this.logger.error("Error saving agent memory to Redis");
+            this.logger.error(error);
+        }
+    }
 }
 //# sourceMappingURL=baseOperationsAgent.js.map

@@ -4,10 +4,14 @@ export class BaseProblemSolvingAgent extends PolicySynthScAgentBase {
     memory;
     job;
     currentSubProblemIndex;
-    constructor(job, memory) {
+    startProgress;
+    endProgress;
+    constructor(job, memory, startProgress, endProgress) {
         super();
         this.job = job;
         this.memory = memory;
+        this.startProgress = startProgress;
+        this.endProgress = endProgress;
     }
     getProCons(prosCons) {
         if (prosCons && prosCons.length > 0) {
@@ -99,7 +103,9 @@ export class BaseProblemSolvingAgent extends PolicySynthScAgentBase {
         })
             .join("")}`;
         return `
-      ${includeMainProblemStatement ? `Problem Statement:\n${this.memory.problemStatement.description}\n\nSub Problem:\n` : `Problem:\n`}
+      ${includeMainProblemStatement
+            ? `Problem Statement:\n${this.memory.problemStatement.description}\n\nSub Problem:\n`
+            : `Problem:\n`}
       ${subProblem.title}\n
       ${subProblem.description}\n
 

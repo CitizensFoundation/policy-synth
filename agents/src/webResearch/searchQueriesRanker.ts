@@ -1,10 +1,10 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { BasePairwiseRankingsProcessor } from "../base/basePairwiseRanking.js";
+import { SimplePairwiseRankingsAgent } from "../base/simplePairwiseRanking.js";
 import { PsConstants } from "../constants.js";
 
-export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
+export class SearchQueriesRanker extends SimplePairwiseRankingsAgent {
   searchQuestion: string | undefined;
 
   constructor(
@@ -26,7 +26,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     const itemTwo = this.allItems![index]![itemTwoIndex] as string;
 
     const messages = [
-      new SystemMessage(
+      this.createSystemMessage(
         `
         You are an AI expert trained to rank search queries based on their relevance to the user research question.
 
@@ -38,7 +38,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         5. Let's think step by step.
         `
       ),
-      new HumanMessage(
+      this.createHumanMessage(
         `
         Research question: ${this.searchQuestion}
 

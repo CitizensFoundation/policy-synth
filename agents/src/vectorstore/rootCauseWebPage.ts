@@ -1,11 +1,11 @@
 import weaviate from "weaviate-ts-client";
 import { WeaviateClient } from "weaviate-ts-client";
-import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 
 import { PsConstants } from "../constants.js";
 import fs from "fs/promises";
 
-export class RootCauseWebPageVectorStore extends PolicySynthScAgentBase {
+export class RootCauseWebPageVectorStore extends PolicySynthSimpleAgentBase {
   static fieldsToExtract =
     "searchType groupId rootCauseRelevanceToProblemStatement \
     allPossibleHistoricalRootCausesIdentifiedInTextContext\

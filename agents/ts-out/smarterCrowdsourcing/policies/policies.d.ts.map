@@ -1,0 +1,1 @@
+{"version":3,"file":"policies.d.ts","sourceRoot":"","sources":["../../../src/smarterCrowdsourcing/policies/policies.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAAE,MAAM,kCAAkC,CAAC;AACtE,OAAO,EAAU,GAAG,EAAE,MAAM,QAAQ,CAAC;AAYrC,qBAAa,aAAc,SAAQ,kBAAkB;IAC3C,MAAM,EAAE,gCAAgC,CAAC;IAElC,gBAAgB,CAAC,GAAG,EAAE,GAAG;IAoClC,QAAQ,CAAC,KAAK,EAAE,oBAAoB;IAOpC,OAAO;CAwDd"}

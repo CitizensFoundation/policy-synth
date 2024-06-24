@@ -1,11 +1,7 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
+import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
-import { it } from "node:test";
 
-export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
+export class IngestionChunkRanker extends SimplePairwiseRankingsAgent {
   rankingRules: string | undefined;
   documentSummary: string | undefined;
 
@@ -13,7 +9,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined,
     progressFunction: Function | undefined = undefined
   ) {
-    super(undefined as any, memory!);
+    super(memory!);
     this.progressFunction = progressFunction;
   }
 
@@ -28,7 +24,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
     const itemTwo = this.allItems![index]![itemTwoIndex] as PsRagChunk;
 
     const messages = [
-      new SystemMessage(
+      this.createSystemMessage(
         `
         You are an AI expert trained to rank chunks of documents based on their relevance to the users ranking rules.
 
@@ -40,7 +36,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         5. Let's think step by step.
         `
       ),
-      new HumanMessage(
+      this.createHumanMessage(
         `
         User Ranking Rules:
         ${this.rankingRules}

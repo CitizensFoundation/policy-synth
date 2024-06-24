@@ -6,7 +6,7 @@ import { HTTPResponse, Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
-import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 import { PsConstants } from "../../constants.js";
 import { DocumentCleanupAgent } from "./docCleanup.js";
 import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";

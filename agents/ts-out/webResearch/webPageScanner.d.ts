@@ -1,6 +1,6 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Page } from "puppeteer";
-import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
+import { GetWebPagesProcessor } from "../smarterCrowdsourcing/solutions/web/getWebPages.js";
 export declare class WebPageScanner extends GetWebPagesProcessor {
     jsonSchemaForResults: string | undefined;
     systemPromptOverride: string | undefined;

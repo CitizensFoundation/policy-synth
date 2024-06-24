@@ -17,7 +17,7 @@ export class DocumentTreeSplitAgent extends BaseIngestionAgent {
   maxChunkLinesLength = 15;
 
   strategySystemMessage =
-    new SystemMessage(`You are an expert document split strategy generator.
+    this.createSystemMessage(`You are an expert document split strategy generator.
 
 Instructions:
 - Your job is to analyze the text document and outline a strategy how best to split this document up into chapters.
@@ -48,7 +48,7 @@ Output:
 `);
 
   strategyUserMessage = (data: string) =>
-    new HumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
+    this.createHumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
     ${data}
 </DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
 
@@ -56,7 +56,7 @@ YOUR THOUGHTFUL STRATEGY:
 `);
 
   strategyWithReviewUserMessage = (data: string, lastAttempt: string, reviewComments: string) =>
-    new HumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
+    this.createHumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
     ${data}
   </DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
 
@@ -73,7 +73,7 @@ YOUR THOUGHTFUL STRATEGY:
   `);
 
   reviewStrategySystemMessage =
-    new SystemMessage(`You are an expert document split strategy evaluator.
+    this.createSystemMessage(`You are an expert document split strategy evaluator.
 
 Instructions:
 - Your job is to evaluate a split strategy for a document.
@@ -94,7 +94,7 @@ Output:
 `);
 
   reviewStrategyUserMessage = (data: string, splitStrategy: string) =>
-    new HumanMessage(`<DOCUMENT_FOR_SPLIT_STRATEGY>
+    this.createHumanMessage(`<DOCUMENT_FOR_SPLIT_STRATEGY>
     ${data}
 </DOCUMENT_FOR_SPLIT_STRATEGY>
 

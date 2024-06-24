@@ -2,6 +2,7 @@ import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAgent } from "../dbModels/agent.js";
 import { PolicySynthBaseAgent } from "./baseAgent.js";
 export declare class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
+    memory: PsAgentMemoryData;
     agent: PsAgent;
     models: Map<PsAiModelType, BaseChatModel>;
     limitedLLMmaxRetryCount: number;
@@ -19,5 +20,7 @@ export declare class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     callImageModel(messages: PsModelMessage[]): Promise<null>;
     saveTokenUsage(modelType: PsAiModelType, tokensIn: number, tokensOut: number): Promise<void>;
     formatNumber(number: number, fractions?: number): string;
+    updateMemoryStatus(progress: number, message: string): Promise<void>;
+    saveMemoryToRedis(): Promise<void>;
 }
 //# sourceMappingURL=baseOperationsAgent.d.ts.map

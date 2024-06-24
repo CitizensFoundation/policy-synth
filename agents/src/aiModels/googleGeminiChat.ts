@@ -6,7 +6,7 @@ export class GoogleGeminiChat extends BaseChatModel {
   private client: GoogleGenerativeAI;
   private model: any;
 
-  constructor(config: PSModelConfig) {
+  constructor(config: PsAiModelConfig) {
     super(config.modelName || "gemini-pro", config.maxTokensOut || 4096);
     this.client = new GoogleGenerativeAI(config.apiKey);
     this.model = this.client.getGenerativeModel({ model: this.modelName });

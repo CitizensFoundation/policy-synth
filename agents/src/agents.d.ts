@@ -8,6 +8,22 @@ interface PsBaseModelClass {
 
 interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, 'uuid'> {}
 
+interface PsAiModelConfig {
+  apiKey: string;
+  modelName?: string;
+  maxTokensOut?: number;
+  temperature?: number;
+};
+
+interface PsAzureAiModelConfig extends PsAiModelConfig {
+  endpoint: string;
+  deploymentName: string;
+};
+
+interface PsOpenAiModelConfig extends PsAiModelConfig {
+  projectId?: string;
+};
+
 // Evaluation result for a single criterion
 interface PsAgentEvalCriterionResult {
   criterionUuid: string;
@@ -119,6 +135,19 @@ interface PsAgentStatus {
   messages: string[];
   lastUpdated: number;
   details?: Record<string, any>;
+}
+
+interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
+  groupId: number;
+  communityId: number;
+  domainId: number;
+  aiModelProvider?: string;
+  aiModelName?: string;
+  lastSavedAt?: number;
+  currentStage: any;
+  stages: Record<any, PsSimpleStagesData>;
+  currentStageError?: string | undefined;
+  totalCost: number;
 }
 
 interface PsAgentMemoryData extends PsAgentBaseMemoryData {

@@ -1,10 +1,10 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
-import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
+import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
 
-export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
+export class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
   rankingRules: string | undefined;
   overallTopic: string | undefined;
 
@@ -27,7 +27,7 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
     const itemTwo = this.allItems![index]![itemTwoIndex] as PsRagDocumentSource;
 
     const messages = [
-      new SystemMessage(
+      this.createSystemMessage(
         `
         You are an AI expert trained to documents based on their relevance to the users ranking rules.
 
@@ -39,7 +39,7 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
         5. Let's think step by step.
         `
       ),
-      new HumanMessage(
+      this.createHumanMessage(
         `
         User Ranking Rules:
         ${this.rankingRules}

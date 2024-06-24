@@ -4,7 +4,9 @@ export declare abstract class BaseProblemSolvingAgent extends PolicySynthScAgent
     memory: PsSmarterCrowdsourcingMemoryData;
     job: Job;
     currentSubProblemIndex: number | undefined;
-    constructor(job: Job, memory: PsSmarterCrowdsourcingMemoryData);
+    private startProgress;
+    private endProgress;
+    constructor(job: Job, memory: PsSmarterCrowdsourcingMemoryData, startProgress: number, endProgress: number);
     getProCons(prosCons: PsProCon[] | undefined): string[];
     process(): Promise<void>;
     lastPopulationIndex(subProblemIndex: number): number;
