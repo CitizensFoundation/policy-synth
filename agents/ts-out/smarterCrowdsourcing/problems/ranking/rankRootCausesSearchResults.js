@@ -1,15 +1,12 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { RankRootCausesSearchQueriesProcessor } from "./rankRootCausesSearchQueries.js";
-export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQueriesProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankRootCausesSearchResultsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(index, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert trained to rank root causes search results based on their relevance to the problem statement.
         We will later visit those websites to discover the root causes presented in the problem statement.
 
@@ -20,7 +17,7 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 
         Root Causes Search Results to Rank:
@@ -38,17 +35,11 @@ export class RankRootCausesSearchResultsProcessor extends RankRootCausesSearchQu
         The Most Relevant Search Results Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-results", PsConstants.searchResultsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
         this.logger.info("Rank Root Causes Search Results Processor");
-        //super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.searchResultsRankingsModel.temperature,
-            maxTokens: PsConstants.searchResultsRankingsModel.maxOutputTokens,
-            modelName: PsConstants.searchResultsRankingsModel.name,
-            verbose: PsConstants.searchResultsRankingsModel.verbose,
-        });
+        super.process();
         for (const searchQueryType of this.rootCauseTypes) {
             this.logger.info(`Ranking search results for ${searchQueryType}`);
             let queriesToRank = this.memory.problemStatement.rootCauseSearchResults[searchQueryType];

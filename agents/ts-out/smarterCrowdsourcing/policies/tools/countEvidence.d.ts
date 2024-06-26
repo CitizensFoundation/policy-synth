@@ -1,6 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
-export declare class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
+export declare class CountWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
     countAll(policy: PSPolicy, subProblemIndex: number): Promise<void>;
     process(): Promise<void>;

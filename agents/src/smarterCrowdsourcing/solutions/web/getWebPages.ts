@@ -1,7 +1,6 @@
 import { HTTPResponse, Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PsConstants } from "../../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 import crypto from "crypto";
@@ -16,32 +15,23 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
 import { htmlToText } from "html-to-text";
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-
-import weaviate, { WeaviateClient } from "weaviate-ts-client";
-
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { ChatOpenAI } from "@langchain/openai";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-
-import ioredis from "ioredis";
-
-const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-);
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 
 const onlyCheckWhatNeedsToBeScanned = false;
 
-export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
+export class SmarterCrowdsourcingGetWebPagesAgent extends BaseSmarterCrowdsourcingAgent {
   webPageVectorStore = new WebPageVectorStore();
   urlsScanned = new Set<string>();
 
   totalPagesSave = 0;
+
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.0;
 
   renderScanningPrompt(
     problemStatement: PsProblemStatement,
@@ -115,20 +105,16 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       subProblemIndex
     );
 
-    const promptTokenCount = await this.chat!.getNumTokensFromMessages(
-      emptyMessages
-    );
+    const promptTokenCount = await this.getTokensFromMessages(emptyMessages);
 
     const textForTokenCount = this.createHumanMessage(text);
 
-    const textTokenCount = await this.chat!.getNumTokensFromMessages([
+    const textTokenCount = await this.getTokensFromMessages([
       textForTokenCount,
     ]);
 
     const totalTokenCount =
-      promptTokenCount.totalCount +
-      textTokenCount.totalCount +
-      PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+      promptTokenCount + textTokenCount + this.maxModelTokensOut || 4096;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -140,7 +126,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       subProblemIndex
     );
 
-    const promptMessagesText = promptMessages.map((m) => m.text).join("\n");
+    const promptMessagesText = promptMessages.map((m) => m.message).join("\n");
 
     return `${promptMessagesText} ${text}`;
   }
@@ -274,9 +260,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       entityIndex
     );
 
-    const analysis = (await this.callLLM(
-      "web-get-pages",
-      PsConstants.getSolutionsPagesAnalysisModel,
+    const analysis = (await this.callModel(
+      PsAiModelType.Text,
       messages,
       true,
       true
@@ -304,14 +289,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
       let textAnalysis: PsSolution[];
 
-      if (
-        PsConstants.getSolutionsPagesAnalysisModel.tokenLimit <
-        totalTokenCount
-      ) {
+      if (this.tokenInLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          PsConstants.getSolutionsPagesAnalysisModel.tokenLimit -
-          promptTokenCount.totalCount -
-          128;
+          this.tokenInLimit - promptTokenCount - 128;
 
         this.logger.debug(
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
@@ -375,10 +355,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ): Promise<void | PSRefinedRootCause[]> {
@@ -486,10 +463,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
   async getAndProcessPdf(
     subProblemIndex: number | undefined,
     url: string,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -547,9 +521,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
           pdfBuffer = gunzipSync(cachedPdf);
         } else {
           const sleepingForMs =
-            PsConstants.minSleepBeforeBrowserRequest +
-            Math.random() *
-              PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+            this.minSleepBeforeBrowserRequest +
+            Math.random() * this.maxAdditionalRandomSleepBeforeBrowserRequest;
 
           this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
 
@@ -621,10 +594,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ) {
@@ -665,9 +635,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         htmlText = gunzipSync(cachedData).toString();
       } else {
         const sleepingForMs =
-          PsConstants.minSleepBeforeBrowserRequest +
-          Math.random() *
-            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+          this.minSleepBeforeBrowserRequest +
+          Math.random() * this.maxAdditionalRandomSleepBeforeBrowserRequest;
 
         this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
 
@@ -736,10 +705,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined
   ) {
     if (onlyCheckWhatNeedsToBeScanned) {
@@ -787,20 +753,16 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
     for (
       let s = 0;
-      s <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      s < Math.min(this.memory.subProblems.length, this.maxSubProblems);
       s++
     ) {
-
       promises.push(
         (async () => {
           const newPage = await browser.newPage();
-          newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-          newPage.setDefaultNavigationTimeout(
-            PsConstants.webPageNavTimeout
-          );
+          newPage.setDefaultTimeout(this.webPageNavTimeout);
+          newPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
 
-          await newPage.setUserAgent(PsConstants.currentUserAgent);
+          await newPage.setUserAgent(this.currentUserAgent);
 
           for (const searchQueryType of searchQueryTypes) {
             await this.processEntities(s, searchQueryType, newPage);
@@ -860,7 +822,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        PsConstants.maxTopEntitiesToSearch
+        this.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -905,9 +867,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
     outArray = allPages.slice(
       0,
-      Math.floor(
-        allPages.length * PsConstants.maxPercentOfSolutionsWebPagesToGet
-      )
+      Math.floor(allPages.length * this.maxPercentOfSolutionsWebPagesToGet)
     );
 
     // Map to URLs and remove duplicates
@@ -963,7 +923,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, this.maxSubProblems);
       subProblemIndex++
     ) {
       const customUrls =
@@ -990,10 +950,10 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(this.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
 
-    await browserPage.setUserAgent(PsConstants.currentUserAgent);
+    await browserPage.setUserAgent(this.currentUserAgent);
 
     await this.processSubProblems(browser);
 
@@ -1012,10 +972,10 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
 
     const processPromises = searchQueryTypes.map(async (searchQueryType) => {
       const newPage = await browser.newPage();
-      newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-      newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+      newPage.setDefaultTimeout(this.webPageNavTimeout);
+      newPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
 
-      await newPage.setUserAgent(PsConstants.currentUserAgent);
+      await newPage.setUserAgent(this.currentUserAgent);
 
       await this.processProblemStatement(
         searchQueryType as PsWebPageTypes,
@@ -1040,14 +1000,6 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     super.process();
 
     this.totalPagesSave = 0;
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
-      maxTokens:
-        PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-      modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
-      verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
-    });
 
     await this.getAllPages();
 

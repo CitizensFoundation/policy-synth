@@ -1,13 +1,10 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
 export class CreateProblemStatementImageProcessor extends CreateSolutionImagesProcessor {
     async renderCreatePrompt(subProblemIndex = 0) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an expert in generating visual Dalle-3 prompts from a problem statement.
 
         Important Instructions:
@@ -21,7 +18,7 @@ export class CreateProblemStatementImageProcessor extends CreateSolutionImagesPr
         8. Never ask to generate something complex or with too many objects.
         9. Let's think step by step.
 `),
-            new HumanMessage(`
+            this.createHumanMessage(`
          ${this.renderProblemStatement()}
 
          Generate and output the Dall-E 3 image prompt below:
@@ -37,7 +34,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     async createProblemStatementImage() {
         let imagePrompt;
         if (process.env.STABILITY_API_KEY) {
-            imagePrompt = (await this.callLLM("create-problem-statement-image", PsConstants.createSolutionImagesModel, await this.renderCreatePrompt(), false));
+            imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(), false));
         }
         else {
             imagePrompt = this.getDalleImagePrompt();
@@ -67,12 +64,6 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     }
     async process() {
         this.logger.info("Create Problem Statement Image Processor");
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createSolutionImagesModel.temperature,
-            maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
-            modelName: PsConstants.createSolutionImagesModel.name,
-            verbose: PsConstants.createSolutionImagesModel.verbose,
-        });
         try {
             await this.createProblemStatementImage();
         }

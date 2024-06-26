@@ -1,14 +1,11 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import ioredis from "ioredis";
-import { PsConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
+export class CountWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
 
   async countAll(policy: PSPolicy, subProblemIndex: number) {
@@ -18,14 +15,14 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
 
     this.logger.info(`Counting all web evidence for policy ${policy.title}`);
     try {
-      for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+      for (const evidenceType of this.policyEvidenceFieldTypes) {
         //this.logger.info(`Counting all web evidence for type ${evidenceType}`);
         let offset = 0;
         let refinedCount = 0;
         let totalCount = 0;
         let revidenceCount = 0;
         let reommendationCount = 0;
-        const searchType = PsConstants.simplifyEvidenceType(evidenceType);
+        const searchType = this.simplifyEvidenceType(evidenceType);
 
         while (true) {
           const results =
@@ -92,7 +89,7 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];
@@ -111,8 +108,7 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
           const policies = subProblem.policies.populations[currentGeneration];
           for (
             let p = 0;
-            p <
-            Math.min(policies.length, PsConstants.maxTopPoliciesToProcess);
+            p < Math.min(policies.length, this.maxTopPoliciesToProcess);
             p++
           ) {
             const policy = policies[p];
@@ -142,7 +138,12 @@ async function run() {
     const output = await redis.get(`st_mem:${projectId}:id`);
     const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
-    const counts = new CountWebEvidenceProcessor({} as any, memory);
+    const counts = new CountWebEvidenceProcessor(
+      {} as any,
+      memory as any,
+      0,
+      0
+    );
     await counts.process();
     process.exit(0);
   } else {

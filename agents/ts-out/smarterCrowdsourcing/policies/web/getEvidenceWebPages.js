@@ -1,14 +1,10 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { PsConstants } from "../../../constants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
-import ioredis from "ioredis";
-import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
+import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
-import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
@@ -41,7 +37,7 @@ class EvidenceTypeLookup {
         return this.evidenceTypeMapping[evidenceType];
     }
 }
-export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
+export class GetEvidenceWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     renderEvidenceScanningPrompt(subProblemIndex, policy, type, text) {
         const nameOfColumn = EvidenceTypeLookup.getPropertyName(type);
@@ -49,7 +45,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             throw new Error(`No corresponding property found for type: ${type}`);
         }
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         Your are an expert in analyzing textual data:
 
         Important Instructions:
@@ -79,7 +75,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
         Text context:
         ${EvidenceExamplePrompts.render(type)}
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderSubProblem(subProblemIndex)}
 
         Policy Proposal:
@@ -97,13 +93,13 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     }
     async getEvidenceTokenCount(text, subProblemIndex, policy, type) {
         const emptyMessages = this.renderEvidenceScanningPrompt(subProblemIndex, policy, type, "");
-        const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanMessage(text);
-        const textTokenCount = await this.chat.getNumTokensFromMessages([
+        const promptTokenCount = await this.getTokensFromMessages(emptyMessages);
+        const textForTokenCount = this.createHumanMessage(text);
+        const textTokenCount = await this.getTokensFromMessages([
             textForTokenCount,
         ]);
-        const totalTokenCount = promptTokenCount.totalCount +
-            textTokenCount.totalCount +
+        const totalTokenCount = promptTokenCount +
+            textTokenCount +
             PsConstants.getPageAnalysisModel.maxOutputTokens;
         return { totalTokenCount, promptTokenCount };
     }
@@ -112,9 +108,9 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
             const { totalTokenCount, promptTokenCount } = await this.getEvidenceTokenCount(text, subProblemIndex, policy, type);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
-            if (PsConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = PsConstants.getPageAnalysisModel.tokenLimit -
-                    promptTokenCount.totalCount -
+            if (this.tokenInLimit < totalTokenCount) {
+                const maxTokenLengthForChunk = this.tokenInLimit -
+                    promptTokenCount -
                     512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
                 const splitText = this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
@@ -150,7 +146,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     async getEvidenceAIAnalysis(subProblemIndex, policy, type, text) {
         this.logger.info("Get Evidence AI Analysis");
         const messages = this.renderEvidenceScanningPrompt(subProblemIndex, policy, type, text);
-        const analysis = (await this.callLLM("web-get-evidence-pages", PsConstants.getPageAnalysisModel, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, messages, true, true));
         return analysis;
     }
     mergeAnalysisData(data1, data2) {
@@ -339,7 +335,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     async processSubProblems(browser) {
         const promises = [];
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, this.maxSubProblems); subProblemIndex++) {
             promises.push((async () => {
                 const newPage = await browser.newPage();
                 newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
@@ -351,7 +347,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
                     for (let policyIndex = 0; policyIndex < policies.length; policyIndex++) {
                         this.logger.info(`Getting evidence web pages for policy ${policyIndex}/${policies.length} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(subProblemIndex)})`);
                         const policy = policies[policyIndex];
-                        for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+                        for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
                             const urlsToGet = policy.evidenceSearchResults[searchResultType];
                             if (urlsToGet) {
                                 for (let i = 0; i < urlsToGet.length; i++) {
@@ -385,13 +381,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     }
     async process() {
         this.logger.info("Get Evidence Web Pages Processor");
-        //super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.getPageAnalysisModel.temperature,
-            maxTokens: PsConstants.getPageAnalysisModel.maxOutputTokens,
-            modelName: PsConstants.getPageAnalysisModel.name,
-            verbose: PsConstants.getPageAnalysisModel.verbose,
-        });
+        super.process();
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);
         this.logger.info("Get Evidence Web Pages Processor Complete");

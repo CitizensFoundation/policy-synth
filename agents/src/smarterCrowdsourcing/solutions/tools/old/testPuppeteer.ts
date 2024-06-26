@@ -47,7 +47,7 @@ async function getAndProcessPdf(
             base64Pdf,
             "EX",
             1000000
-            //PsConstants.getPageCacheExpiration
+            //this.getPageCacheExpiration
           );
         }
       }
@@ -118,7 +118,7 @@ async function getAndProcessHtml(
             htmlText.toString(),
             "EX",
             1000000
-            //PsConstants.getPageCacheExpiration
+            //this.getPageCacheExpiration
           );
         }
       }

@@ -1,15 +1,12 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankWebSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
         const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
         const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemMessage(`You're an expert in evaluating and ranking solutions to problems.
+            this.createSystemMessage(`You're an expert in evaluating and ranking solutions to problems.
 
          Instructions:
          1. Analyze a problem and two solutions, labeled "Solution One" and "Solution Two"
@@ -23,7 +20,7 @@ export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
          Always output your decision as "One", "Two" or "Neither". No explanation is necessary.
 
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${subProblemIndex == -1
                 ? this.renderProblemStatement()
                 : this.renderSubProblem(subProblemIndex, true)}
@@ -41,7 +38,7 @@ export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
         The more important and practial solution component is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", PsConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblem(subProblemIndex) {
         this.logger.info(`Ranking web solution for sub problem ${subProblemIndex} population`);
@@ -59,12 +56,6 @@ export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
         this.logger.info("Rank Web Solutions Processor");
         super.process();
         try {
-            this.chat = new ChatOpenAI({
-                temperature: PsConstants.solutionsRankingsModel.temperature,
-                maxTokens: PsConstants.solutionsRankingsModel.maxOutputTokens,
-                modelName: PsConstants.solutionsRankingsModel.name,
-                verbose: PsConstants.solutionsRankingsModel.verbose,
-            });
             if (!this.memory.problemStatement.solutionsFromSearch[0].eloRating) {
                 this.setupRankingPrompts(-1, this.memory.problemStatement.solutionsFromSearch, this.memory.problemStatement.solutionsFromSearch.length * 10);
                 await this.performPairwiseRanking(-1);
@@ -72,7 +63,7 @@ export class RankWebSolutionsProcessor extends BasePairwiseRankingsProcessor {
                     this.getOrderedListOfItems(-1, true);
             }
             const subProblemsPromises = Array.from({
-                length: Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems),
+                length: Math.min(this.memory.subProblems.length, this.maxSubProblems),
             }, async (_, subProblemIndex) => this.processSubProblem(subProblemIndex));
             await Promise.all(subProblemsPromises);
             await this.saveMemory();

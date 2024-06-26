@@ -1,8 +1,5 @@
-import { PsConstants } from "../../../constants.js";
-import ioredis from "ioredis";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 const FORCE_RESEARCH = true;
 export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
     searchCounter = 0;
@@ -24,10 +21,10 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
                 this.searchCounter = 300;
             }
             if (FORCE_RESEARCH || !problemStatement.rootCauseSearchResults[searchResultType]) {
-                let queriesToSearch = problemStatement.rootCauseSearchQueries[searchResultType].slice(0, PsConstants.maxTopRootCauseQueriesToSearchPerType);
+                let queriesToSearch = problemStatement.rootCauseSearchQueries[searchResultType].slice(0, this.maxTopRootCauseQueriesToSearchPerType);
                 this.logger.debug(`Searching for root cause type ${searchResultType} with queries ${JSON.stringify(queriesToSearch, null, 2)}`);
                 const results = await this.getQueryResults(queriesToSearch, `rootCause_${searchResultType}`);
-                this.searchCounter += PsConstants.maxTopEvidenceQueriesToSearchPerType;
+                this.searchCounter += this.maxTopEvidenceQueriesToSearchPerType;
                 problemStatement.rootCauseSearchResults[searchResultType] = results.searchResults;
                 this.logger.info(`Have saved search results root cause type ${searchResultType}`);
                 await this.saveMemory();
@@ -40,7 +37,7 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
     async process() {
         this.logger.info("Search Web for Root Causes Processor");
         this.seenUrls = new Map();
-        //super.process();
+        super.process();
         this.logger.info("Searching web for root causes");
         await this.searchWeb();
         this.logger.info("Finished creating root causes search results");

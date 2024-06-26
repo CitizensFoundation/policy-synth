@@ -1,11 +1,12 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
-export declare class PsBaseValidationAgent extends PolicySynthScAgentBase {
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
+export declare class PsBaseValidationAgent extends PolicySynthSimpleAgentBase {
     name: string;
     options: PsBaseValidationAgentOptions;
+    maxModelTokensOut: number;
+    modelTemperature: number;
     constructor(name: string, options?: PsBaseValidationAgentOptions);
     set nextAgent(agent: PsValidationAgent);
-    protected renderPrompt(): Promise<(SystemMessage | HumanMessage)[]>;
+    protected renderPrompt(): Promise<PsModelMessage[]>;
     runValidationLLM(): Promise<PsValidationAgentResult>;
     execute(): Promise<PsValidationAgentResult>;
     protected beforeExecute(): Promise<void>;

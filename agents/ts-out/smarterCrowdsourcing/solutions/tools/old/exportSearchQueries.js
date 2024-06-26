@@ -1,4 +1,3 @@
-import { PsConstants } from "../../../../constants.js";
 import fs from "fs";
 import process from "process";
 import path from "path";
@@ -43,7 +42,7 @@ let html = `
     <h1>${memory.problemStatement.description}</h1>
     ${formatSearchQueries(memory.problemStatement.searchQueries)}
 `;
-for (let s = 0; s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems); s++) {
+for (let s = 0; s < Math.min(memory.subProblems.length, this.maxSubProblems); s++) {
     const subProblem = memory.subProblems[s];
     html += `
     <div class="card">
@@ -53,7 +52,7 @@ for (let s = 0; s < Math.min(memory.subProblems.length, PsConstants.maxSubProble
       <h3>Entities:</h3>
       <ul>
         ${subProblem.entities
-        .slice(0, PsConstants.maxTopEntitiesToSearch)
+        .slice(0, this.maxTopEntitiesToSearch)
         .map((entity) => `<li><b>${entity.name}</b> <br> ELO: ${formatElo(entity.eloRating)} <br> Positive Effects: ${entity.positiveEffects?.join(", ")} <br> Negative Effects: ${entity.negativeEffects?.join(", ")} <br> <br><b>Search Queries:</b> ${formatSearchQueries(entity.searchQueries)}</li>`)
         .join("")}
       </ul>

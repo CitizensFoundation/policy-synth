@@ -1,11 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export class RateSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
     async renderRatePrompt(subProblemIndex, solution) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
          You are an expert in rating solution components to problems on multiple attributes.
 
          Instructions:
@@ -17,7 +14,7 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
 
         Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
         Solution Component to rate:
@@ -31,10 +28,10 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
         Main obstacle: ${solution.mainObstacleToSolutionComponentAdoption}
 
         Best pros:
-        ${this.getProCons(solution.pros).slice(0, PsConstants.maxTopProsConsUsedForRating)}
+        ${this.getProCons(solution.pros).slice(0, this.maxTopProsConsUsedForRating)}
 
         Best cons:
-        ${this.getProCons(solution.cons).slice(0, PsConstants.maxTopProsConsUsedForRating)}
+        ${this.getProCons(solution.cons).slice(0, this.maxTopProsConsUsedForRating)}
 
         Your ratings in JSON format:
         `),
@@ -42,7 +39,7 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
         return messages;
     }
     async rateSolutions() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
             for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
@@ -50,7 +47,7 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
                 const solution = solutions[solutionIndex];
                 this.logger.debug(solution.title);
                 if (!solution.ratings) {
-                    const rating = (await this.callLLM("rate-solutions", PsConstants.rateSolutionsModel, await this.renderRatePrompt(subProblemIndex, solution)));
+                    const rating = (await this.callModel(PsAiModelType.Text, await this.renderRatePrompt(subProblemIndex, solution)));
                     this.logger.debug(`Rating for: ${solution.title} ${JSON.stringify(rating, null, 2)}`);
                     solution.ratings = rating;
                 }
@@ -63,12 +60,6 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Rate Solution Components Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.rateSolutionsModel.temperature,
-            maxTokens: PsConstants.rateSolutionsModel.maxOutputTokens,
-            modelName: PsConstants.rateSolutionsModel.name,
-            verbose: PsConstants.rateSolutionsModel.verbose,
-        });
         try {
             await this.rateSolutions();
         }

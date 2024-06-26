@@ -1,11 +1,10 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export declare class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class CreateRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourcingAgent {
     generateInLanguage: string | undefined;
     static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[];
-    renderCreatePrompt(searchResultType: PSRootCauseWebPageTypes): Promise<(SystemMessage | HumanMessage)[]>;
-    renderRefinePrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRefine: string[]): Promise<(SystemMessage | HumanMessage)[]>;
-    renderRankPrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRank: string[]): Promise<(SystemMessage | HumanMessage)[]>;
+    renderCreatePrompt(searchResultType: PSRootCauseWebPageTypes): Promise<PsModelMessage[]>;
+    renderRefinePrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRefine: string[]): Promise<PsModelMessage[]>;
+    renderRankPrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRank: string[]): Promise<PsModelMessage[]>;
     createRootCauseSearchQueries(): Promise<void>;
     process(): Promise<void>;
 }

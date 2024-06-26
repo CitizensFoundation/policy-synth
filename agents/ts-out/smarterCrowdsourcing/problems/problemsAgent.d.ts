@@ -1,4 +1,4 @@
-import { PolicySynthOperationsAgent } from "../../base/baseOperationsAgent.js";
+import { PolicySynthOperationsAgent } from "../../base/operationsAgent.js";
 import { Job } from "bullmq";
 export declare class ProblemsAgent extends PolicySynthOperationsAgent {
     memory: PsSmarterCrowdsourcingMemoryData;

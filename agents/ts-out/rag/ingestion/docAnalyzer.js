@@ -1,9 +1,7 @@
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 export class DocumentAnalyzerAgent extends BaseIngestionAgent {
     maxAnalyzeTokenLength = 8000;
-    systemMessage = new SystemMessage(`You are an expert document analyzer.
+    systemMessage = this.createSystemMessage(`You are an expert document analyzer.
 
   Instructions:
   - You will analyze the document.
@@ -22,12 +20,12 @@ export class DocumentAnalyzerAgent extends BaseIngestionAgent {
     allReferencesWithUrls: { reference: string; url: string }[];
     allOtherReferences: string[];
   }`);
-    userMessage = (data) => new HumanMessage(`Document to analyze:
+    userMessage = (data) => this.createHumanMessage(`Document to analyze:
 ${data}
 
 Your JSON analysis:
 `);
-    finalReviewSystemMessage = new SystemMessage(`You are an expert document analyze refiner.
+    finalReviewSystemMessage = this.createSystemMessage(`You are an expert document analyze refiner.
 Instructions:
 - You will recieve a document analysis in JSON format.
 - Refine description and shortDescription with all the data from the fullDescriptionOfAllContents.
@@ -39,7 +37,7 @@ Instructions:
   compressedFullDescriptionOfAllContents: string;
 }
 `);
-    finalReviewUserMessage = (analysis) => new HumanMessage(`Document analysis to review:
+    finalReviewUserMessage = (analysis) => this.createHumanMessage(`Document analysis to review:
 ${JSON.stringify(analysis, null, 2)}
 
 Your refined JSON analysis:
@@ -53,7 +51,7 @@ Your refined JSON analysis:
         for (let i = 0; i < dataChunks.length; i++) {
             console.log(`Analyzing chunk ${i + 1} of ${dataChunks.length}`);
             const chunkData = dataChunks[i];
-            const documentAnalysis = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.systemMessage, this.userMessage(chunkData))));
+            const documentAnalysis = (await this.callLLM("ingestion-agent", this.getFirstMessages(this.systemMessage, this.userMessage(chunkData))));
             console.log(`Chunk ${i + 1} results: ${JSON.stringify(documentAnalysis, null, 2)}`);
             // For the first chunk, initialize metadata with analysis results
             if (i === 0) {
@@ -111,7 +109,7 @@ Your refined JSON analysis:
             allOtherReferences: metadata.allOtherReferences,
         };
         console.log(`Final analysis results: ${JSON.stringify(refineInput, null, 2)}`);
-        const refinedMetadata = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.finalReviewSystemMessage, this.finalReviewUserMessage(refineInput))));
+        const refinedMetadata = (await this.callLLM("ingestion-agent", this.getFirstMessages(this.finalReviewSystemMessage, this.finalReviewUserMessage(refineInput))));
         console.log(`Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`);
         metadata.shortDescription = refinedMetadata.shortDescription;
         metadata.description = refinedMetadata.description;

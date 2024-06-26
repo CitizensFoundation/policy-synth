@@ -1,10 +1,9 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export declare class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class CreateSeedPoliciesProcessor extends BaseSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution: PsSolution): string;
-    renderCreatePrompt(subProblemIndex: number, solution: PsSolution): Promise<(SystemMessage | HumanMessage)[]>;
-    renderRefinePrompt(subProblemIndex: number, solution: PsSolution, policyProposalsToRefine: PSPolicy[]): Promise<(SystemMessage | HumanMessage)[]>;
-    renderChoosePrompt(subProblemIndex: number, solution: PsSolution, policyProposalsToChooseFrom: PSPolicy[]): Promise<(SystemMessage | HumanMessage)[]>;
+    renderCreatePrompt(subProblemIndex: number, solution: PsSolution): Promise<PsModelMessage[]>;
+    renderRefinePrompt(subProblemIndex: number, solution: PsSolution, policyProposalsToRefine: PSPolicy[]): Promise<PsModelMessage[]>;
+    renderChoosePrompt(subProblemIndex: number, solution: PsSolution, policyProposalsToChooseFrom: PSPolicy[]): Promise<PsModelMessage[]>;
     createSeedPolicyForSolution(populationIndex: number, subProblemIndex: number, solution: PsSolution, solutionIndex: number): Promise<PSPolicy>;
     createSeedPolicies(): Promise<void>;
     process(): Promise<void>;

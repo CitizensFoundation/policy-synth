@@ -1,21 +1,19 @@
 /// <reference types="node" />
-import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
-export declare abstract class BaseIngestionAgent extends PolicySynthScAgentBase {
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
+export declare abstract class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
     minChunkTokenLength: number;
     maxChunkTokenLength: number;
     maxFileProcessTokenLength: number;
     roughFastWordTokenRatio: number;
-    constructor();
-    resetLlmTemperature(): void;
-    randomizeLlmTemperature(): void;
+    maxModelTokensOut: number;
+    modelTemperature: number;
     logShortLines(text: string, maxLength?: number): void;
     splitDataForProcessing(data: string, maxTokenLength?: number): string[];
     parseJsonFromLlmResponse(data: string): any;
     splitDataForProcessingWorksBigChunks(data: string, maxTokenLength?: number): string[];
     getEstimateTokenLength(data: string): number;
     computeHash(data: Buffer | string): string;
-    getFirstMessages(systemMessage: SystemMessage, userMessage: BaseMessage): BaseMessage[];
+    getFirstMessages(systemMessage: PsModelMessage, userMessage: PsModelMessage): PsModelMessage[];
     getFileName(url: string, isJsonData: boolean): string;
     getExternalUrlsFromJson(jsonData: any): string[];
     generateFileId(url: string): string;

@@ -3,18 +3,11 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { PsConstants } from "../../../constants.js";
 
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
-import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
+import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
-import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
-
-const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-);
+import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -59,7 +52,7 @@ class EvidenceTypeLookup {
   }
 }
 
-export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
+export class GetEvidenceWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
   renderEvidenceScanningPrompt(
     subProblemIndex: number,
@@ -131,19 +124,19 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
       ""
     );
 
-    const promptTokenCount = await this.chat!.getNumTokensFromMessages(
+    const promptTokenCount = await this.getTokensFromMessages(
       emptyMessages
     );
 
     const textForTokenCount = this.createHumanMessage(text);
 
-    const textTokenCount = await this.chat!.getNumTokensFromMessages([
+    const textTokenCount = await this.getTokensFromMessages([
       textForTokenCount,
     ]);
 
     const totalTokenCount =
-      promptTokenCount.totalCount +
-      textTokenCount.totalCount +
+      promptTokenCount +
+      textTokenCount +
       PsConstants.getPageAnalysisModel.maxOutputTokens;
 
     return { totalTokenCount, promptTokenCount };
@@ -171,10 +164,10 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
       let textAnalysis: PSEvidenceRawWebPageData;
 
-      if (PsConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
+      if (this.tokenInLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          PsConstants.getPageAnalysisModel.tokenLimit -
-          promptTokenCount.totalCount -
+          this.tokenInLimit -
+          promptTokenCount -
           512;
 
         this.logger.debug(
@@ -255,9 +248,8 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
       text
     );
 
-    const analysis = (await this.callLLM(
-      "web-get-evidence-pages",
-      PsConstants.getPageAnalysisModel,
+    const analysis = (await this.callModel(
+      PsAiModelType.Text,
       messages,
       true,
       true
@@ -514,7 +506,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, this.maxSubProblems);
       subProblemIndex++
     ) {
       promises.push(
@@ -550,7 +542,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
               const policy = policies[policyIndex];
 
-              for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+              for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
                 const urlsToGet =
                   policy.evidenceSearchResults![searchResultType];
 
@@ -608,14 +600,7 @@ export class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
 
   async process() {
     this.logger.info("Get Evidence Web Pages Processor");
-    //super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.getPageAnalysisModel.temperature,
-      maxTokens: PsConstants.getPageAnalysisModel.maxOutputTokens,
-      modelName: PsConstants.getPageAnalysisModel.name,
-      verbose: PsConstants.getPageAnalysisModel.verbose,
-    });
+    super.process();
 
     await this.getAllPages();
 

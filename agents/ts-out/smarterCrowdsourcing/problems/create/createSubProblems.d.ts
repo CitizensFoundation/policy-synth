@@ -1,8 +1,7 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { BaseMessage } from "@langchain/core/messages";
-export declare class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
-    renderRefinePrompt(results: PsSubProblem[]): Promise<BaseMessage[]>;
-    renderCreatePrompt(): Promise<BaseMessage[]>;
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class CreateSubProblemsProcessor extends BaseSmarterCrowdsourcingAgent {
+    renderRefinePrompt(results: PsSubProblem[]): Promise<PsModelMessage[]>;
+    renderCreatePrompt(): Promise<PsModelMessage[]>;
     createSubProblems(): Promise<void>;
     process(): Promise<void>;
 }

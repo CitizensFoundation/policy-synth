@@ -1,8 +1,5 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     rootCauseTypes = [
         "historicalRootCause",
         "economicRootCause",
@@ -22,7 +19,7 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert trained to rank search queries based on their relevance to problem statement and it's root causes.
 
         Instructions:
@@ -33,7 +30,7 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
         5. If the problem statement refers to specific places or countries, it is not necessarily better to always include the name in the search query.
         6. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 
         Root Causes Search Queries to Rank:
@@ -47,17 +44,11 @@ export class RankRootCausesSearchQueriesProcessor extends BasePairwiseRankingsPr
         The Most Relevant Search Query Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
         this.logger.info("Rank Root Causes Search Queries Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.searchQueryRankingsModel.temperature,
-            maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-            modelName: PsConstants.searchQueryRankingsModel.name,
-            verbose: PsConstants.searchQueryRankingsModel.verbose,
-        });
         for (const searchQueryType of this.rootCauseTypes) {
             this.logger.info(`Ranking search queries for ${searchQueryType}`);
             let queriesToRank = this.memory.problemStatement.rootCauseSearchQueries[searchQueryType];

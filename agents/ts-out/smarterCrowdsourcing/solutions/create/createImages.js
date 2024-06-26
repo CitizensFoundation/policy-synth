@@ -1,7 +1,4 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { OpenAI } from "openai";
 import axios from "axios";
 import AWS from "aws-sdk";
@@ -10,7 +7,7 @@ import path from "path";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
-export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
+export class CreateSolutionImagesProcessor extends BaseSmarterCrowdsourcingAgent {
     cloudflareProxy = "https://cps-images.citizens.is";
     subProblemColors = [
         "blue",
@@ -62,7 +59,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
         let response;
         let retryCount = 0;
         let retrying = true;
-        while (retrying && retryCount < PsConstants.maxStabilityRetryCount) {
+        while (retrying && retryCount < this.maxStabilityRetryCount) {
             try {
                 response = await axios.post(`${apiHost}/v1/generation/${engineId}/text-to-image`, {
                     text_prompts: [
@@ -99,12 +96,12 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
                 let sleepingFor;
                 if (error.message && error.message.indexOf("400") > -1) {
                     if (retryCount > 3) {
-                        imagePrompt = (await this.callLLM("create-solution-images", PsConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy, "8. Make it very simple and colorful with no complicated ideas or details."), false));
+                        imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy, "8. Make it very simple and colorful with no complicated ideas or details."), false));
                         this.logger.debug(`New (altered) Image Prompt: ${imagePrompt}`);
                         sleepingFor = 2500 + retryCount * 1500;
                     }
                     else {
-                        imagePrompt = (await this.callLLM("create-solution-images", PsConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy), false));
+                        imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy), false));
                         this.logger.debug(`New Image Prompt: ${imagePrompt}`);
                     }
                     sleepingFor = 2500 + retryCount * 1000;
@@ -167,7 +164,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     }
     async renderCreatePrompt(subProblemIndex, solution, injectText) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an expert in generating Dall-E 3 prompts from titles and descriptions of solution components.
 
         Important Instructions:
@@ -180,7 +177,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
         7. No explanations are needed only output the prompt.
         8. Keep the images simple and vibrant with no complicated ideas or details or many people.
         ${injectText ? injectText : ""}`),
-            new HumanMessage(`
+            this.createHumanMessage(`
          Solution component:
          ${solution.title}
          ${solution.description}
@@ -198,7 +195,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
         let retryCount = 0;
         let retrying = true; // Initialize as true
         let result;
-        while (retrying && retryCount < PsConstants.maxDalleRetryCount) {
+        while (retrying && retryCount < this.maxDalleRetryCount) {
             try {
                 result = await client.images.generate({
                     model: "dall-e-3",
@@ -242,7 +239,7 @@ ${solution.title}
 Image style: very simple abstract geometric cartoon with max 3 items in the image using those colors ${this.getSubProblemColor(subProblemIndex)} and ${this.randomSecondaryColor}. Use a very light variation of ${this.getSubProblemColor(subProblemIndex)} for the background.`;
     }
     async createImages() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
             for (let solutionIndex = 0; solutionIndex < solutions.length; solutionIndex++) {
@@ -258,7 +255,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
                     }
                     else {
                         if (process.env.STABILITY_API_KEY) {
-                            imagePrompt = (await this.callLLM("create-solution-images", PsConstants.createSolutionImagesModel, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                            imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solution), false));
                         }
                         else {
                             imagePrompt = this.getDalleImagePrompt(subProblemIndex, solution);
@@ -311,12 +308,6 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     async process() {
         this.logger.info("Create Images Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createSolutionImagesModel.temperature,
-            maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
-            modelName: PsConstants.createSolutionImagesModel.name,
-            verbose: PsConstants.createSolutionImagesModel.verbose,
-        });
         try {
             await this.createImages();
         }

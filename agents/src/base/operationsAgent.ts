@@ -24,11 +24,19 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   limitedLLMmaxRetryCount = 3;
   mainLLMmaxRetryCount = 10;
 
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.7;
+
+  startProgress: number;
+  endProgress: number;
+
   rateLimits: PsModelRateLimitTracking = {};
 
   constructor(
     agent: PsAgent,
-    memory: PsAgentMemoryData | undefined = undefined
+    memory: PsAgentMemoryData | undefined = undefined,
+    startProgress: number,
+    endProgress: number
   ) {
     super();
     this.agent = agent;
@@ -38,6 +46,21 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     } else {
       this.loadAgentMemoryFromRedis();
     }
+
+    this.startProgress = startProgress;
+    this.endProgress = endProgress;
+  }
+
+  async process() {
+    if (!this.memory) {
+      this.logger.error("Memory is not initialized");
+      throw new Error("Memory is not initialized");
+    }
+
+    const currentProgress =
+      this.startProgress + (this.endProgress - this.startProgress) * 0.10; // 10% complete
+      const className = this.constructor.name;
+      await this.updateProgress(currentProgress, `Agent ${className} Starting`);
   }
 
   async loadAgentMemoryFromRedis() {
@@ -83,15 +106,9 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.name,
         maxTokensOut:
-          this.maxModelTokensOut ??
-          this.agent.configuration.maxTokensOut ??
-          model.configuration.maxTokensOut ??
-          4096,
+          this.maxModelTokensOut,
         temperature:
-          this.modelTemperature ??
-          this.agent.configuration.temperature ??
-          model.configuration.defaultTemperature ??
-          0.5,
+          this.modelTemperature,
       } as PsAiModelConfig;
 
       switch (model.configuration.provider) {
@@ -356,7 +373,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }).format(number);
   }
 
-  async updateMemoryStatus(progress: number, message: string) {
+  async updateProgress(progress: number, message: string) {
     if (!this.memory.status) {
       this.memory.status = {
         state: "processing",
@@ -371,10 +388,10 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     this.memory.status.lastUpdated = Date.now();
 
     // Save updated memory to Redis
-    await this.saveMemoryToRedis();
+    await this.saveMemory();
   }
 
-  async saveMemoryToRedis() {
+  async saveMemory() {
     try {
       await redis.set(this.agent.redisMemoryKey, JSON.stringify(this.memory));
     } catch (error) {

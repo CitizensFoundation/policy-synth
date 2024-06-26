@@ -1,8 +1,5 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export class CreateProsConsProcessor extends BaseSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution) {
         return `
       Solution Component:
@@ -16,7 +13,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
     }
     async renderRefinePrompt(prosOrCons, results, subProblemIndex, solution) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         As an AI expert, it's your responsibility to refine the given ${prosOrCons} pertaining to solution components to problems.
 
         Instructions:
@@ -28,10 +25,10 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
         5. The ${prosOrCons} should be outputed as an JSON array: [ "...", "..." ].
         6. Reorder the points based on importance to the problem
         7. Never offer explanations.
-        8. Always output ${PsConstants.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array.
+        8. Always output ${this.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array.
         9. Follow a step-by-step approach in your thought process.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
         ${this.renderCurrentSolution(solution)}
@@ -47,12 +44,12 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
     async renderCreatePrompt(prosOrCons, subProblemIndex, solution) {
         const prosconsSingle = prosOrCons.slice(0, -1);
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         As an AI expert, your task is to creatively generate practical top ${prosOrCons} for the provided solution components, keeping the problem provided in mind.
 
         Important Instructions:
 
-        1. Always generate and output ${PsConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
+        1. Always generate and output ${this.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
         2. Each ${prosconsSingle} should be directly applicable to the solution.
         3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
         4. The ${prosOrCons} must be in line with the context given by the problem.
@@ -60,10 +57,10 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
         6. The ${prosOrCons} should be outputted as an JSON array: [ "...", "..." ].
         7. Never output the index number of the ${prosOrCons} in the text.
         8. Never offer explanations.
-        9. Always output ${PsConstants.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array
+        9. Always output ${this.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array
         10. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
          ${this.renderSubProblem(subProblemIndex, true)}
 
          ${this.renderCurrentSolution(solution)}
@@ -74,7 +71,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
         return messages;
     }
     async createProsCons() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         // Create an array of Promises to resolve all the subproblems concurrently
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const solutions = this.getActiveSolutionsLastPopulation(subProblemIndex);
@@ -93,11 +90,11 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
                         let retries = 0;
                         let gotFullPoints = false;
                         while (!gotFullPoints && retries < maxPointRetries) {
-                            let results = (await this.callLLM("create-pros-cons", PsConstants.createProsConsModel, await this.renderCreatePrompt(prosOrCons, subProblemIndex, solution), true, false, 135));
-                            if (PsConstants.enable.refine.createProsCons) {
-                                results = (await this.callLLM("create-pros-cons", PsConstants.createProsConsModel, await this.renderRefinePrompt(prosOrCons, results, subProblemIndex, solution), true, false, 135));
+                            let results = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(prosOrCons, subProblemIndex, solution), true, false, 135));
+                            if (this.createProsConsRefinedEnabled) {
+                                results = (await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(prosOrCons, results, subProblemIndex, solution), true, false, 135));
                             }
-                            if (results && results.length === PsConstants.maxNumberGeneratedProsConsForSolution) {
+                            if (results && results.length === this.maxNumberGeneratedProsConsForSolution) {
                                 gotFullPoints = true;
                                 this.logger.debug(`${prosOrCons}: ${JSON.stringify(results, null, 2)}`);
                                 solution[prosOrCons] = results;
@@ -122,12 +119,6 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Create ProsCons Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createProsConsModel.temperature,
-            maxTokens: PsConstants.createProsConsModel.maxOutputTokens,
-            modelName: PsConstants.createProsConsModel.name,
-            verbose: PsConstants.createProsConsModel.verbose,
-        });
         try {
             await this.createProsCons();
         }

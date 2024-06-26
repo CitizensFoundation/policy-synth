@@ -1,8 +1,5 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { PsConstants } from "../../../constants.js";
-import { ChatOpenAI } from "@langchain/openai";
-export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAgent {
     static evidenceWebPageTypesArray = [
         "positiveEvidence",
         "negativeEvidence",
@@ -25,7 +22,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
         "localPerspective",
         "globalPerspective",
         "costAnalysis",
-        "implementationFeasibility"
+        "implementationFeasibility",
     ];
     filterPolicyParameters(policy) {
         const { imageUrl, imagePrompt, solutionIndex, ...filteredPolicy } = policy;
@@ -33,7 +30,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
     }
     async renderCreatePrompt(subProblemIndex, policy, searchResultType) {
         return [
-            new SystemMessage(`Adhere to the following guidelines:
+            this.createSystemMessage(`Adhere to the following guidelines:
         1. You generate high quality search queries based on a Problem statement and Policy Proposal.
         2. Always focus your search queries on the policy proposal and it's core ideas.
         3. Use your knowledge and experience to create the best possible search queries.
@@ -48,7 +45,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
         Let's think step by step.
 
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
          ${this.renderSubProblem(subProblemIndex, true)}
 
          Policy Proposal:
@@ -62,7 +59,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
     }
     async renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResultsToRefine) {
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in refining search queries based on a Problem statement and Policy Proposal.
         2. Always focus your search queries on the policy proposal and it's core ideas.
@@ -76,7 +73,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
         Let's think step by step.
 
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
          Policy Proposal:
@@ -93,7 +90,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
     }
     async renderRankPrompt(subProblemIndex, policy, searchResultType, searchResultsToRank) {
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in ranking the most important search queries based on a Problem statement and Policy Proposal.
         2. Use your knowledge and experience to rank the search queries.
@@ -105,7 +102,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
 
         Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderSubProblem(subProblemIndex, true)}
 
          Policy Proposal:
@@ -128,15 +125,15 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
             //@ts-ignore
             policy.evidenceSearchQueries = {};
         }
-        for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+        for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
             if (!policy.evidenceSearchQueries[searchResultType]) {
                 this.logger.info(`Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
                 // create search queries for each type
-                let searchResults = (await this.callLLM("create-evidence-search-queries", PsConstants.createEvidenceSearchQueriesModel, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
+                let searchResults = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
                 this.logger.info(`Refine evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-                searchResults = (await this.callLLM("create-evidence-search-queries", PsConstants.createEvidenceSearchQueriesModel, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                searchResults = (await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
                 this.logger.info(`Ranking evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-                searchResults = (await this.callLLM("create-evidence-search-queries", PsConstants.createEvidenceSearchQueriesModel, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                searchResults = (await this.callModel(PsAiModelType.Text, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
                 this.logger.debug(`Search query type: ${searchResultType} ${JSON.stringify(searchResults, null, 2)}`);
                 policy.evidenceSearchQueries[searchResultType] = searchResults;
             }
@@ -148,13 +145,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
     async process() {
         this.logger.info("Create Evidence Search Queries Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createEvidenceSearchQueriesModel.temperature,
-            maxTokens: PsConstants.createEvidenceSearchQueriesModel.maxOutputTokens,
-            modelName: PsConstants.createEvidenceSearchQueriesModel.name,
-            verbose: PsConstants.createEvidenceSearchQueriesModel.verbose,
-        });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const subProblem = this.memory.subProblems[subProblemIndex];
             const policies = subProblem.policies?.populations[subProblem.policies.populations.length - 1];

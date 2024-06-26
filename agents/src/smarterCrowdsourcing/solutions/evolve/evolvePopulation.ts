@@ -1,8 +1,3 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { PsConstants } from "../../../constants.js";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
 
 //TODO: Pentalty for similar ideas in the ranking somehow
@@ -120,16 +115,10 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     parentB: PsSolution,
     subProblemIndex: number
   ) {
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.evolutionRecombineModel.temperature,
-      maxTokens: PsConstants.evolutionRecombineModel.maxOutputTokens,
-      modelName: PsConstants.evolutionRecombineModel.name,
-      verbose: PsConstants.evolutionRecombineModel.verbose,
-    });
 
-    return (await this.callLLM(
-      "evolve-recombine-population",
-      PsConstants.evolutionRecombineModel,
+
+    return (await this.callModel(
+      PsAiModelType.Text,
       this.renderRecombinationPrompt(parentA, parentB, subProblemIndex)
     )) as PsSolution;
   }
@@ -153,19 +142,13 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     mutateRate: PsMutationRates
   ) {
     this.logger.debug("Performing mutation");
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.evolutionMutateModel.temperature,
-      maxTokens: PsConstants.evolutionMutateModel.maxOutputTokens,
-      modelName: PsConstants.evolutionMutateModel.name,
-      verbose: PsConstants.evolutionMutateModel.verbose,
-    });
+
 
     this.logger.debug("Before mutation");
 
     try {
-      const mutant = (await this.callLLM(
-        "evolve-mutate-population",
-        PsConstants.evolutionMutateModel,
+      const mutant = (await this.callModel(
+        PsAiModelType.Text,
         this.renderMutatePrompt(individual, subProblemIndex, mutateRate)
       )) as PsSolution;
 
@@ -203,13 +186,6 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     subProblemIndex: number
   ) {
     this.logger.info(`Getting new solutions`);
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.evolveSolutionsModel.temperature,
-      maxTokens: PsConstants.evolveSolutionsModel.maxOutputTokens,
-      modelName: PsConstants.evolveSolutionsModel.name,
-      verbose: PsConstants.evolveSolutionsModel.verbose,
-    });
 
     let alreadyCreatedSolutionsText;
 
@@ -262,7 +238,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     excludedIndividual?: PsSolution
   ) {
     const tournamentSize =
-      PsConstants.evolution.selectParentTournamentSize;
+      this.evolutionSelectParentTournamentSize;
 
     let tournament = [];
     while (tournament.length < tournamentSize) {
@@ -308,9 +284,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     previousPopulation: PsSolution[],
     subProblemIndex: number
   ) {
-    const populationSize = PsConstants.evolution.populationSize;
+    const populationSize = this.evolutionPopulationSize;
     let mutationCount = Math.floor(
-      populationSize * PsConstants.evolution.mutationOffspringPercent
+      populationSize * this.evolutionMutationOffspringPercent
     );
 
     if (newPopulation.length + mutationCount > populationSize) {
@@ -326,12 +302,12 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       try {
         const random = Math.random();
         let mutateRate: PsMutationRates;
-        if (random < PsConstants.evolution.lowMutationRate) {
+        if (random < this.evolutionLowMutationRate) {
           mutateRate = "low";
         } else if (
           random <
-          PsConstants.evolution.lowMutationRate +
-            PsConstants.evolution.mediumMutationRate
+          this.evolutionLowMutationRate +
+            this.evolutionMediumMutationRate
         ) {
           mutateRate = "medium";
         } else {
@@ -363,8 +339,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
   ) {
     // Crossover
     let crossoverCount = Math.floor(
-      PsConstants.evolution.populationSize *
-        PsConstants.evolution.crossoverPercent
+      this.evolutionPopulationSize *
+        this.evolutionCrossoverPercent
     );
 
     this.logger.debug(`Crossover count: ${crossoverCount}`);
@@ -380,7 +356,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
 
       let mutationRate: PsMutationRates | undefined = undefined;
 
-      if (Math.random() < PsConstants.evolution.crossoverMutationPercent) {
+      if (Math.random() < this.evolutionCrossoverMutationPercent) {
         mutationRate = "low";
         offspring = await this.mutate(offspring, subProblemIndex, mutationRate);
       }
@@ -406,10 +382,10 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     newPopulation: PsSolution[],
     subProblemIndex: number
   ) {
-    const populationSize = PsConstants.evolution.populationSize;
+    const populationSize = this.evolutionPopulationSize;
 
     let immigrationCount = Math.floor(
-      populationSize * PsConstants.evolution.randomImmigrationPercent
+      populationSize * this.evolutionRandomImmigrationPercent
     );
 
     this.logger.info(`Immigration count: ${immigrationCount}`);
@@ -467,7 +443,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         if (
           solution.eloRating &&
           solution.eloRating >=
-            PsConstants.evolution.limitTopTopicClusterElitesToEloRating
+            this.evolutionLimitTopTopicClusterElitesToEloRating
         ) {
           groups.get(groupId)!.push({ ...solution });
         } else {
@@ -509,7 +485,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
   ): void {
     this.logger.debug(`Adding elites`);
     const eliteCount = Math.floor(
-      previousPopulation.length * PsConstants.evolution.keepElitePercent
+      previousPopulation.length * this.evolutionKeepElitePercent
     );
 
     this.logger.debug(`Elite count: ${eliteCount}`);
@@ -546,7 +522,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
       // Keep top items by the defined constant
       const topItems = group.slice(
         0,
-        PsConstants.topItemsToKeepForTopicClusterPruning
+        this.topItemsToKeepForTopicClusterPruning
       );
 
       // Add top items to the pruned set
@@ -624,7 +600,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, this.maxSubProblems);
       subProblemIndex++
     ) {
       subProblemPromises.push(this.evolveSubProblem(subProblemIndex));

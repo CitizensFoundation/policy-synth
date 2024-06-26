@@ -1,5 +1,5 @@
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export declare class RankSearchResultsProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export declare class RankSearchResultsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     subProblemIndex: number;
     entitiesIndex: number;
     currentEntity: PsAffectedEntity;

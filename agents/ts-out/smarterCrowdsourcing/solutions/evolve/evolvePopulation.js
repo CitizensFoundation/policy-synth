@@ -1,6 +1,3 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
 //TODO: Pentalty for similar ideas in the ranking somehow
 //TODO: Track the evolution of the population with a log of parents and mutations, family tree
@@ -17,7 +14,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     }
     renderRecombinationPrompt(parentA, parentB, subProblemIndex) {
         return [
-            new SystemMessage(`As an AI genetic algorithm expert, your task is to create a new solution component from two parent solution components: "Solution Component Parent A" and "Solution Component Parent B".
+            this.createSystemMessage(`As an AI genetic algorithm expert, your task is to create a new solution component from two parent solution components: "Solution Component Parent A" and "Solution Component Parent B".
 
         Instructions:
         1. Use one best attribute from "Parent A" and one best attribute from "Parent B" to create a new solution component with one core idea. Be very creative here do not just take one idea from Parent A and one idea from Parent B, make something unique and innovative.
@@ -38,7 +35,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Always output your merged solution component in the following JSON format: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not add any new JSON properties.
         Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex, false)}
 
         Solution Component Parent A:
@@ -54,7 +51,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     renderMutatePrompt(individual, subProblemIndex, mutateRate) {
         this.logger.debug(`Mutate rate: ${mutateRate}`);
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         As an AI expert specializing in genetic algorithms, your task is to mutate the following solution component.
 
         Instructions:
@@ -72,7 +69,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         Always format your mutated solution component in the following JSON structure: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not introduce any new JSON properties.
         Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex, false)}
 
         Solution component to mutate:
@@ -83,13 +80,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         ];
     }
     async performRecombination(parentA, parentB, subProblemIndex) {
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.evolutionRecombineModel.temperature,
-            maxTokens: PsConstants.evolutionRecombineModel.maxOutputTokens,
-            modelName: PsConstants.evolutionRecombineModel.name,
-            verbose: PsConstants.evolutionRecombineModel.verbose,
-        });
-        return (await this.callLLM("evolve-recombine-population", PsConstants.evolutionRecombineModel, this.renderRecombinationPrompt(parentA, parentB, subProblemIndex)));
+        return (await this.callModel(PsAiModelType.Text, this.renderRecombinationPrompt(parentA, parentB, subProblemIndex)));
     }
     async recombine(parentA, parentB, subProblemIndex) {
         const offspring = await this.performRecombination(parentA, parentB, subProblemIndex);
@@ -97,15 +88,9 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     }
     async performMutation(individual, subProblemIndex, mutateRate) {
         this.logger.debug("Performing mutation");
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.evolutionMutateModel.temperature,
-            maxTokens: PsConstants.evolutionMutateModel.maxOutputTokens,
-            modelName: PsConstants.evolutionMutateModel.name,
-            verbose: PsConstants.evolutionMutateModel.verbose,
-        });
         this.logger.debug("Before mutation");
         try {
-            const mutant = (await this.callLLM("evolve-mutate-population", PsConstants.evolutionMutateModel, this.renderMutatePrompt(individual, subProblemIndex, mutateRate)));
+            const mutant = (await this.callModel(PsAiModelType.Text, this.renderMutatePrompt(individual, subProblemIndex, mutateRate)));
             this.logger.debug("After mutation");
             return mutant;
         }
@@ -128,12 +113,6 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     }
     async getNewSolutions(alreadyCreatedSolutions, subProblemIndex) {
         this.logger.info(`Getting new solutions`);
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.evolveSolutionsModel.temperature,
-            maxTokens: PsConstants.evolveSolutionsModel.maxOutputTokens,
-            modelName: PsConstants.evolveSolutionsModel.name,
-            verbose: PsConstants.evolveSolutionsModel.verbose,
-        });
         let alreadyCreatedSolutionsText;
         if (alreadyCreatedSolutions.length > 0) {
             alreadyCreatedSolutionsText = alreadyCreatedSolutions
@@ -159,7 +138,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         return newSolutions;
     }
     selectParent(population, excludedIndividual) {
-        const tournamentSize = PsConstants.evolution.selectParentTournamentSize;
+        const tournamentSize = this.evolutionSelectParentTournamentSize;
         let tournament = [];
         while (tournament.length < tournamentSize) {
             const randomIndex = Math.floor(Math.random() * population.length);
@@ -190,8 +169,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         return previousPopulation.findIndex((solution) => solution === parent);
     }
     async addRandomMutation(newPopulation, previousPopulation, subProblemIndex) {
-        const populationSize = PsConstants.evolution.populationSize;
-        let mutationCount = Math.floor(populationSize * PsConstants.evolution.mutationOffspringPercent);
+        const populationSize = this.evolutionPopulationSize;
+        let mutationCount = Math.floor(populationSize * this.evolutionMutationOffspringPercent);
         if (newPopulation.length + mutationCount > populationSize) {
             mutationCount = populationSize - newPopulation.length;
         }
@@ -203,12 +182,12 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             try {
                 const random = Math.random();
                 let mutateRate;
-                if (random < PsConstants.evolution.lowMutationRate) {
+                if (random < this.evolutionLowMutationRate) {
                     mutateRate = "low";
                 }
                 else if (random <
-                    PsConstants.evolution.lowMutationRate +
-                        PsConstants.evolution.mediumMutationRate) {
+                    this.evolutionLowMutationRate +
+                        this.evolutionMediumMutationRate) {
                     mutateRate = "medium";
                 }
                 else {
@@ -233,8 +212,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     }
     async addCrossover(newPopulation, previousPopulation, subProblemIndex) {
         // Crossover
-        let crossoverCount = Math.floor(PsConstants.evolution.populationSize *
-            PsConstants.evolution.crossoverPercent);
+        let crossoverCount = Math.floor(this.evolutionPopulationSize *
+            this.evolutionCrossoverPercent);
         this.logger.debug(`Crossover count: ${crossoverCount}`);
         for (let i = 0; i < crossoverCount; i++) {
             const parentA = this.selectParent(previousPopulation);
@@ -243,7 +222,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
             this.logger.debug(`Parent B: ${parentB.title}`);
             let offspring = await this.recombine(parentA, parentB, subProblemIndex);
             let mutationRate = undefined;
-            if (Math.random() < PsConstants.evolution.crossoverMutationPercent) {
+            if (Math.random() < this.evolutionCrossoverMutationPercent) {
                 mutationRate = "low";
                 offspring = await this.mutate(offspring, subProblemIndex, mutationRate);
             }
@@ -258,8 +237,8 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         }
     }
     async addRandomImmigration(newPopulation, subProblemIndex) {
-        const populationSize = PsConstants.evolution.populationSize;
-        let immigrationCount = Math.floor(populationSize * PsConstants.evolution.randomImmigrationPercent);
+        const populationSize = this.evolutionPopulationSize;
+        let immigrationCount = Math.floor(populationSize * this.evolutionRandomImmigrationPercent);
         this.logger.info(`Immigration count: ${immigrationCount}`);
         if (newPopulation.length + immigrationCount > populationSize) {
             immigrationCount = populationSize - newPopulation.length;
@@ -291,7 +270,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
                 }
                 if (solution.eloRating &&
                     solution.eloRating >=
-                        PsConstants.evolution.limitTopTopicClusterElitesToEloRating) {
+                        this.evolutionLimitTopTopicClusterElitesToEloRating) {
                     groups.get(groupId).push({ ...solution });
                 }
                 else {
@@ -318,7 +297,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     }
     addElites(previousPopulation, newPopulation, usedSolutionTitles) {
         this.logger.debug(`Adding elites`);
-        const eliteCount = Math.floor(previousPopulation.length * PsConstants.evolution.keepElitePercent);
+        const eliteCount = Math.floor(previousPopulation.length * this.evolutionKeepElitePercent);
         this.logger.debug(`Elite count: ${eliteCount}`);
         for (let i = 0; i < eliteCount; i++) {
             if (!usedSolutionTitles.has(previousPopulation[i].title)) {
@@ -345,7 +324,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         const prunedSolutionSet = new Set();
         for (const group of groups.values()) {
             // Keep top items by the defined constant
-            const topItems = group.slice(0, PsConstants.topItemsToKeepForTopicClusterPruning);
+            const topItems = group.slice(0, this.topItemsToKeepForTopicClusterPruning);
             // Add top items to the pruned set
             topItems.forEach((solution) => prunedSolutionSet.add(solution));
             // Additionally, add solutions with eloRating > 1000 to the pruned set
@@ -380,7 +359,7 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     async evolvePopulation() {
         const subProblemPromises = [];
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, this.maxSubProblems); subProblemIndex++) {
             subProblemPromises.push(this.evolveSubProblem(subProblemIndex));
         }
         await Promise.all(subProblemPromises);

@@ -1,16 +1,10 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import {
-  BaseMessage,
-  HumanMessage,
-  SystemMessage,
-} from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
 const USE_SHORT_DESCRIPTIONS = false;
-export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
+
+export class CreateSubProblemsProcessor extends BaseSmarterCrowdsourcingAgent {
   async renderRefinePrompt(results: PsSubProblem[]) {
-    const messages: BaseMessage[] = [
+    const messages: PsModelMessage[] = [
       this.createSystemMessage(
         `
             As an AI expert, your role involves the analysis and refinement of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
@@ -49,7 +43,7 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
 
   async renderCreatePrompt() {
     //TODO: Human review and improvements of those GPT-4 generated few-shots
-    const messages: BaseMessage[] = [
+    const messages: PsModelMessage[] = [
       this.createSystemMessage(
         `
             As an AI expert, your role involves the analysis of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
@@ -92,16 +86,14 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
   }
 
   async createSubProblems() {
-    let results = (await this.callLLM(
-      "create-sub-problems",
-      PsConstants.createSubProblemsModel,
+    let results = (await this.callModel(
+      PsAiModelType.Text,
       await this.renderCreatePrompt()
     )) as PsSubProblem[];
 
-    if (PsConstants.enable.refine.createSubProblems) {
-      results = await this.callLLM(
-        "create-sub-problems",
-        PsConstants.createSubProblemsModel,
+    if (this.createSubProblemsRefineEnabled) {
+      results = await this.callModel(
+        PsAiModelType.Text,
         await this.renderRefinePrompt(results)
       );
     }
@@ -120,12 +112,6 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Sub Problems Processor");
     super.process();
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createSubProblemsModel.temperature,
-      maxTokens: PsConstants.createSubProblemsModel.maxOutputTokens,
-      modelName: PsConstants.createSubProblemsModel.name,
-      verbose: PsConstants.createSubProblemsModel.verbose,
-    });
 
     await this.createSubProblems();
   }

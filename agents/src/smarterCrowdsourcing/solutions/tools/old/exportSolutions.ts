@@ -66,7 +66,7 @@ let html = `
 
 for (
   let s = 0;
-  s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems);
+  s < Math.min(memory.subProblems.length, this.maxSubProblems);
   s++
 ) {
   const subProblem = memory.subProblems[s];
@@ -112,7 +112,7 @@ for (
               ? `<h4>Pros:</h4>
                 <ul>
                 ${(pros as PsProCon[])
-                  .slice(0, PsConstants.maxTopProsConsUsedForRating)
+                  .slice(0, this.maxTopProsConsUsedForRating)
                   .map(
                     (pro) =>
                       `<li>${pro.description} (${formatElo(pro.eloRating)})</li>`
@@ -127,7 +127,7 @@ for (
               ? `<h4>Cons:</h4>
                 <ul>
                 ${(cons as PsProCon[])
-                  .slice(0, PsConstants.maxTopProsConsUsedForRating)
+                  .slice(0, this.maxTopProsConsUsedForRating)
                   .map(
                     (con) =>
                       `<li>${con.description} (${formatElo(con.eloRating)})</li>`

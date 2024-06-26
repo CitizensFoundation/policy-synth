@@ -1,15 +1,15 @@
-import { BaseAgentProcessor } from "../../base/baseAgentProcessor.js";
+import { BaseAgentProcessor } from "../../base/agentProcessor.js";
 import { Worker } from "bullmq";
 import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
-import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
+import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
 import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
 import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
 import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
 import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
 import { GetRefinedEvidenceProcessor } from "./web/getRefinedEvidence.js";
 import { GetMetaDataForTopWebEvidenceProcessor } from "./web/getMetaDataForTopWebEvidence.js";
-import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 export class AgentPolicies extends BaseAgentProcessor {
     async initializeMemory(job) {
         const jobData = job.data;
@@ -19,7 +19,7 @@ export class AgentPolicies extends BaseAgentProcessor {
             communityId: jobData.communityId,
             domainId: jobData.domainId,
             currentStage: "policies-seed",
-            stages: PolicySynthScAgentBase.emptyDefaultStages,
+            stages: PolicySynthSimpleAgentBase.emptyDefaultStages,
             timeStart: Date.now(),
             totalCost: 0,
             customInstructions: {},
@@ -61,7 +61,7 @@ export class AgentPolicies extends BaseAgentProcessor {
                 await createPolicyImages.process();
                 break;
             case "create-evidence-search-queries":
-                const createEvidenceSearchQueries = new CreateEvidenceSearchQueriesProcessor(this.job, this.memory);
+                const createEvidenceSearchQueries = new CreateEvidenceSearchQueriesAgent(this.job, this.memory);
                 await createEvidenceSearchQueries.process();
                 break;
             case "web-search-evidence":

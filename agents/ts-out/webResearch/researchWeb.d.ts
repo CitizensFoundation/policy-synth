@@ -1,5 +1,5 @@
-import { SearchWebProcessor } from "../smarterCrowdsourcing/solutions/web/searchWeb.js";
-export declare class ResearchWeb extends SearchWebProcessor {
+import { BaseSearchWebProcessor } from "./searchWeb.js";
+export declare class ResearchWeb extends BaseSearchWebProcessor {
     constructor(memory: PsSmarterCrowdsourcingMemoryData);
     search(searchQueries: string[]): Promise<PsSearchResultItem[]>;
 }

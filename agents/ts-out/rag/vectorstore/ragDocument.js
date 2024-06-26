@@ -1,11 +1,11 @@
 import weaviate from "weaviate-ts-client";
-import { PolicySynthScAgentBase } from "../../base/baseScAgentBase.js";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 import { PsConstants } from "../../constants.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export class PsRagDocumentVectorStore extends PolicySynthScAgentBase {
+export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
     static allFieldsToExtract = "title url lastModified size \
        description shortDescription fullDescriptionOfAllContents \
       compressedFullDescriptionOfAllContents \

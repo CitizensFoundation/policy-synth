@@ -1,11 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export class CreateEntitiesProcessor extends BaseSmarterCrowdsourcingAgent {
     async renderRefinePrompt(subProblemIndex, results) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         As an AI expert, you're tasked with refining entities affected by complex problem statements and subproblems. Entities can include individuals, groups, systems, the planet, or even inanimate objects.
 
         Instructions:
@@ -22,7 +19,7 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
         10. Always output in exactly this format: [ { name: name, negativeEffects: [ reason ], positiveEffects: [ reason ] } ].
         11. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
          ${this.renderProblemStatement()}
 
          ${this.renderSubProblem(subProblemIndex)}
@@ -37,12 +34,12 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
     }
     async renderCreatePrompt(subProblemIndex) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         As an AI expert, your task is to identify entities affected by complex problem statements and subproblems. Entities can range from individuals, groups, systems, to the planet, or even inanimate objects.
 
         Instructions:
 
-        1. Generate and output up to ${PsConstants.maxNumberGeneratedOfEntities} affected entities.
+        1. Generate and output up to ${this.maxNumberGeneratedOfEntities} affected entities.
         2. Identify all entities impacted by the main problem and its subproblems.
         3. Highlight all direct negative effects, and any positive effects, without suggesting solution components. Multiple effects may be listed in the array.
         4. Use short, concise, and consistent names for entities.
@@ -93,7 +90,7 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
             }
         ]
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
          ${this.renderProblemStatement()}
 
          ${this.renderSubProblem(subProblemIndex)}
@@ -104,11 +101,11 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
         return messages;
     }
     async createEntities() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
-            let results = (await this.callLLM("create-entities", PsConstants.createEntitiesModel, await this.renderCreatePrompt(subProblemIndex)));
-            if (PsConstants.enable.refine.createEntities) {
-                results = (await this.callLLM("create-entities", PsConstants.createEntitiesModel, await this.renderRefinePrompt(subProblemIndex, results)));
+            let results = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex)));
+            if (this.createEntitiesRefinedEnabled) {
+                results = (await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(subProblemIndex, results)));
             }
             this.memory.subProblems[subProblemIndex].entities = results;
             await this.saveMemory();
@@ -119,12 +116,6 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Create Entities Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createEntitiesModel.temperature,
-            maxTokens: PsConstants.createEntitiesModel.maxOutputTokens,
-            modelName: PsConstants.createEntitiesModel.name,
-            verbose: PsConstants.createEntitiesModel.verbose,
-        });
         await this.createEntities();
     }
 }

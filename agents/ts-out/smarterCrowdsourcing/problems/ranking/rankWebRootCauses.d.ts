@@ -1,9 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
-export declare class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
+export declare class RankWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
-    renderProblemPrompt(rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData): Promise<(SystemMessage | HumanMessage)[]>;
+    renderProblemPrompt(rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData): Promise<PsModelMessage[]>;
     rankWebRootCauses(): Promise<void>;
     process(): Promise<void>;
 }

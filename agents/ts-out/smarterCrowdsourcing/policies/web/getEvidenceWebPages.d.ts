@@ -1,16 +1,12 @@
 import { Page, Browser } from "puppeteer";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
+import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
-export declare class GetEvidenceWebPagesProcessor extends GetWebPagesProcessor {
+export declare class GetEvidenceWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
-    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): (SystemMessage | HumanMessage)[];
+    renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): PsModelMessage[];
     getEvidenceTokenCount(text: string, subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes): Promise<{
         totalTokenCount: number;
-        promptTokenCount: {
-            totalCount: number;
-            countPerMessage: number[];
-        };
+        promptTokenCount: number;
     }>;
     getEvidenceTextAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSEvidenceRawWebPageData | PSRefinedPolicyEvidence>;
     getEvidenceAIAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSEvidenceRawWebPageData>;

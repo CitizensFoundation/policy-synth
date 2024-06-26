@@ -1,8 +1,5 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export class CreateRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourcingAgent {
     generateInLanguage = "Icelandic";
     static rootCauseWebPageTypesArray = [
         "caseStudies",
@@ -19,7 +16,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     ];
     async renderCreatePrompt(searchResultType) {
         return [
-            new SystemMessage(`Instructions:
+            this.createSystemMessage(`Instructions:
       1. You generate high quality search queries for identifying root causes based on a Problem Statement and a Search Query Type.
       2. Always focus your search queries on the problem statement and its core ideas, frame creatively with the Search Query Type provided.
       3. Use your knowledge and experience to create the best possible search queries.
@@ -35,7 +32,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
 ​
       Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
          ${this.renderProblemStatement()}
 ​
          Search Query Type: ${searchResultType}
@@ -46,7 +43,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     }
     async renderRefinePrompt(searchResultType, searchResultsToRefine) {
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in refining search queries for identifying root causes based on a Problem Statement.
         2. Always focus your search queries on the problem statement and its core ideas.
@@ -59,7 +56,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
         Let's think step by step.
 ​
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 ​
          Search Query Type: ${searchResultType}
@@ -73,7 +70,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     }
     async renderRankPrompt(searchResultType, searchResultsToRank) {
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         Adhere to the following guidelines:
         1. You are an expert in ranking the most important search queries for identifying root causes based on a Problem Statement.
         2. Use your knowledge and experience to rank the search queries.
@@ -84,7 +81,7 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
 ​
         Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 ​
          Search Query Type: ${searchResultType}
@@ -110,14 +107,14 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
                 !problemStatement.rootCauseSearchQueries[searchResultType]) {
                 this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
                 // create search queries for each type
-                let searchResults = await this.callLLM("create-root-causes-search-queries", PsConstants.createRootCauseSearchQueriesModel, await this.renderCreatePrompt(searchResultType));
+                let searchResults = await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(searchResultType));
                 if (refineSearchQueriesHere) {
                     this.logger.info(`Refine root cause search queries for ${searchResultType} search results`);
-                    searchResults = await this.callLLM("create-root-causes-search-queries", PsConstants.createRootCauseSearchQueriesModel, await this.renderRefinePrompt(searchResultType, searchResults));
+                    searchResults = await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(searchResultType, searchResults));
                 }
                 if (rankeSearchQueriesHere) {
                     this.logger.info(`Ranking root cause search queries for ${searchResultType} search results`);
-                    searchResults = await this.callLLM("create-root-causes-search-queries", PsConstants.createRootCauseSearchQueriesModel, await this.renderRankPrompt(searchResultType, searchResults));
+                    searchResults = await this.callModel(PsAiModelType.Text, await this.renderRankPrompt(searchResultType, searchResults));
                 }
                 this.logger.debug(`Search query type: ${searchResultType} - ${JSON.stringify(searchResults, null, 2)}`);
                 problemStatement.rootCauseSearchQueries[searchResultType] =
@@ -132,12 +129,6 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
     async process() {
         this.logger.info("Create Root Cause Search Queries Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createRootCauseSearchQueriesModel.temperature,
-            maxTokens: PsConstants.createRootCauseSearchQueriesModel.maxOutputTokens,
-            modelName: PsConstants.createRootCauseSearchQueriesModel.name,
-            verbose: PsConstants.createRootCauseSearchQueriesModel.verbose,
-        });
         this.logger.info("Creating root cause search queries");
         await this.createRootCauseSearchQueries();
         this.logger.info("Finished creating root cause search queries");

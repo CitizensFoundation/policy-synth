@@ -1,6 +1,5 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PsConstants } from "../../../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 import crypto from "crypto";
@@ -12,22 +11,20 @@ const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-import ioredis from "ioredis";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
-export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
+export class SmarterCrowdsourcingGetWebPagesAgent extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     urlsScanned = new Set();
     totalPagesSave = 0;
+    maxModelTokensOut = 4096;
+    modelTemperature = 0.0;
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         return [
-            new SystemMessage(`Your are an AI expert in analyzing text for practical solutions to difficult problems:
+            this.createSystemMessage(`Your are an AI expert in analyzing text for practical solutions to difficult problems:
 
         Important Instructions:
         1. Examine the <TextContext> and determine how it relates to the problem statement and any specified sub problem.
@@ -50,7 +47,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         6. Output the data part of the JSON in English.
         7. It is very important for society that you find the best solutions to those problems.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         Problem Statement:
         ${problemStatement.description}
 
@@ -78,19 +75,17 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
     async getTokenCount(text, subProblemIndex) {
         const emptyMessages = this.renderScanningPrompt(this.memory.problemStatement, "", subProblemIndex);
-        const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanMessage(text);
-        const textTokenCount = await this.chat.getNumTokensFromMessages([
+        const promptTokenCount = await this.getTokensFromMessages(emptyMessages);
+        const textForTokenCount = this.createHumanMessage(text);
+        const textTokenCount = await this.getTokensFromMessages([
             textForTokenCount,
         ]);
-        const totalTokenCount = promptTokenCount.totalCount +
-            textTokenCount.totalCount +
-            PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+        const totalTokenCount = promptTokenCount + textTokenCount + this.maxModelTokensOut || 4096;
         return { totalTokenCount, promptTokenCount };
     }
     getAllTextForTokenCheck(text, subProblemIndex) {
         const promptMessages = this.renderScanningPrompt(this.memory.problemStatement, "", subProblemIndex);
-        const promptMessagesText = promptMessages.map((m) => m.text).join("\n");
+        const promptMessagesText = promptMessages.map((m) => m.message).join("\n");
         return `${promptMessagesText} ${text}`;
     }
     mergeAnalysisData(data1, data2) {
@@ -179,7 +174,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt(this.memory.problemStatement, text, subProblemIndex, entityIndex);
-        const analysis = (await this.callLLM("web-get-pages", PsConstants.getSolutionsPagesAnalysisModel, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, messages, true, true));
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex, entityIndex) {
@@ -187,11 +182,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             const { totalTokenCount, promptTokenCount } = await this.getTokenCount(text, subProblemIndex);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
-            if (PsConstants.getSolutionsPagesAnalysisModel.tokenLimit <
-                totalTokenCount) {
-                const maxTokenLengthForChunk = PsConstants.getSolutionsPagesAnalysisModel.tokenLimit -
-                    promptTokenCount.totalCount -
-                    128;
+            if (this.tokenInLimit < totalTokenCount) {
+                const maxTokenLengthForChunk = this.tokenInLimit - promptTokenCount - 128;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
                 const splitText = this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
@@ -344,9 +336,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
                     pdfBuffer = gunzipSync(cachedPdf);
                 }
                 else {
-                    const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
-                        Math.random() *
-                            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                    const sleepingForMs = this.minSleepBeforeBrowserRequest +
+                        Math.random() * this.maxAdditionalRandomSleepBeforeBrowserRequest;
                     this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
                     await new Promise((r) => setTimeout(r, sleepingForMs));
                     const axiosResponse = await axios.get(url, {
@@ -431,9 +422,8 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
                 htmlText = gunzipSync(cachedData).toString();
             }
             else {
-                const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
-                    Math.random() *
-                        PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                const sleepingForMs = this.minSleepBeforeBrowserRequest +
+                    Math.random() * this.maxAdditionalRandomSleepBeforeBrowserRequest;
                 this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
                 await new Promise((r) => setTimeout(r, sleepingForMs));
                 const response = await browserPage.goto(url, {
@@ -514,13 +504,12 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
             "news",
         ];
         const promises = [];
-        for (let s = 0; s <
-            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); s++) {
+        for (let s = 0; s < Math.min(this.memory.subProblems.length, this.maxSubProblems); s++) {
             promises.push((async () => {
                 const newPage = await browser.newPage();
-                newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-                newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-                await newPage.setUserAgent(PsConstants.currentUserAgent);
+                newPage.setDefaultTimeout(this.webPageNavTimeout);
+                newPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
+                await newPage.setUserAgent(this.currentUserAgent);
                 for (const searchQueryType of searchQueryTypes) {
                     await this.processEntities(s, searchQueryType, newPage);
                     if (this.memory.subProblems[s].solutionsFromSearch &&
@@ -544,7 +533,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
     async processEntities(subProblemIndex, searchQueryType, browserPage) {
         for (let e = 0; e <
-            Math.min(this.memory.subProblems[subProblemIndex].entities.length, PsConstants.maxTopEntitiesToSearch); e++) {
+            Math.min(this.memory.subProblems[subProblemIndex].entities.length, this.maxTopEntitiesToSearch); e++) {
             if (this.memory.subProblems[subProblemIndex].entities[e]
                 .solutionsFromSearch &&
                 this.memory.subProblems[subProblemIndex].entities[e]
@@ -565,7 +554,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
     getUrlsToFetch(allPages) {
         let outArray = [];
-        outArray = allPages.slice(0, Math.floor(allPages.length * PsConstants.maxPercentOfSolutionsWebPagesToGet));
+        outArray = allPages.slice(0, Math.floor(allPages.length * this.maxPercentOfSolutionsWebPagesToGet));
         // Map to URLs and remove duplicates
         const urlsToGet = Array.from(outArray
             .map((p) => p.url)
@@ -585,7 +574,7 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
     }
     async getAllCustomSearchUrls(browserPage) {
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, this.maxSubProblems); subProblemIndex++) {
             const customUrls = this.memory.subProblems[subProblemIndex].customSearchUrls;
             if (customUrls && customUrls.length > 0) {
                 for (let i = 0; i < customUrls.length; i++) {
@@ -602,9 +591,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(PsConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(this.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
+        await browserPage.setUserAgent(this.currentUserAgent);
         await this.processSubProblems(browser);
         await this.saveMemory();
         await this.getAllCustomSearchUrls(browserPage);
@@ -617,9 +606,9 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         ];
         const processPromises = searchQueryTypes.map(async (searchQueryType) => {
             const newPage = await browser.newPage();
-            newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-            newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-            await newPage.setUserAgent(PsConstants.currentUserAgent);
+            newPage.setDefaultTimeout(this.webPageNavTimeout);
+            newPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
+            await newPage.setUserAgent(this.currentUserAgent);
             await this.processProblemStatement(searchQueryType, newPage);
             await newPage.close();
             this.logger.info(`Closed page for ${searchQueryType} search results`);
@@ -633,12 +622,6 @@ export class GetWebPagesProcessor extends BaseProblemSolvingAgent {
         this.logger.info("Get Web Pages Processor");
         super.process();
         this.totalPagesSave = 0;
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
-            maxTokens: PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-            modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
-            verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
-        });
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);
         this.logger.info("Get Web Pages Processor Complete");

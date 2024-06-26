@@ -1,10 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-
-export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
+export class CreateSearchQueriesProcessor extends BaseSmarterCrowdsourcingAgent {
   //TODO: Maybe add a review and refine stage here as well
 
   //TODO: Put in memory
@@ -83,22 +79,14 @@ export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
     this.logger.info("Create Search Queries Processor");
     super.process();
 
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createSearchQueriesModel.temperature,
-      maxTokens: PsConstants.createSearchQueriesModel.maxOutputTokens,
-      modelName: PsConstants.createSearchQueriesModel.name,
-      verbose: false,
-    });
-
-    this.memory.problemStatement.searchQueries = await this.callLLM(
-      "create-search-queries",
-      PsConstants.createSearchQueriesModel,
+    this.memory.problemStatement.searchQueries = await this.callModel(
+      PsAiModelType.Text,
       await this.renderProblemPrompt(this.memory.problemStatement.description)
     );
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -113,9 +101,8 @@ export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
         `;
 
         this.memory.subProblems[subProblemIndex].searchQueries =
-          await this.callLLM(
-            "create-search-queries",
-            PsConstants.createSearchQueriesModel,
+          await this.callModel(
+            PsAiModelType.Text,
             await this.renderProblemPrompt(problemText)
           );
         await this.saveMemory();
@@ -127,14 +114,13 @@ export class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
           e <
           Math.min(
             this.memory.subProblems[subProblemIndex].entities.length,
-            PsConstants.maxTopEntitiesToSearch
+            this.maxTopEntitiesToSearch
           );
           e++
         ) {
           this.memory.subProblems[subProblemIndex].entities[e].searchQueries =
-            await this.callLLM(
-              "create-search-queries",
-              PsConstants.createSearchQueriesModel,
+            await this.callModel(
+              PsAiModelType.Text,
               await this.renderEntityPrompt(
                 problemText,
                 this.memory.subProblems[subProblemIndex].entities[e]

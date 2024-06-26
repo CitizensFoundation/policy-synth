@@ -45,7 +45,7 @@ class DeduplicateSearchProcessor {
   deduplicateSubProblems(searchQueryType: PsWebPageTypes) {
     const subProblemsCount = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
     for (let s = 0; s < subProblemsCount; s++) {
       if (this.memory.subProblems[s].searchResults) {
@@ -79,7 +79,7 @@ class DeduplicateSearchProcessor {
       this.memory.subProblems[subProblemIndex];
     const entitiesCount = Math.min(
       subProblem.entities.length,
-      PsConstants.maxTopEntitiesToSearch
+      this.maxTopEntitiesToSearch
     );
     for (let e = 0; e < entitiesCount; e++) {
       if (subProblem.entities[e].searchResults) {

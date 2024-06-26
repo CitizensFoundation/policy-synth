@@ -1,29 +1,26 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
         const solutionOne = this.allItems[subProblemIndex][itemOneIndex];
         const solutionTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemMessage(`You're an expert in evaluating and ranking solution components to problems.
+            this.createSystemMessage(`You're an expert in evaluating and ranking solution components to problems.
 
          Instructions:
          1. Analyze a problem and two solution components, labeled "Solution Component One" and "Solution Component Two"
          2. Determine which is more important and practical.
-         ${this.memory.customInstructions.rankSolutions
+         ${this.customInstructionsRankSolutions
                 ? `
-           Important Instructions: ${this.memory.customInstructions.rankSolutions}
+           Important Instructions: ${this.customInstructionsRankSolutions}
            `
                 : ""}
 
          Always output your decision as "One", "Two" or "Neither". No explanation is necessary.
          Let's think step by step.
         `),
-            new HumanMessage(`${this.renderSubProblem(subProblemIndex, true)}
+            this.createHumanMessage(`${this.renderSubProblem(subProblemIndex, true)}
 
         Solution Components to assess:
 
@@ -66,12 +63,12 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         The more important and practial solution component is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-solutions", PsConstants.solutionsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblem(subProblemIndex) {
         const lastPopulationIndex = this.lastPopulationIndex(subProblemIndex);
         this.logger.info(`Ranking solution components for sub problem ${subProblemIndex} population ${lastPopulationIndex}`);
-        this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex), PsConstants.minimumNumberOfPairwiseVotesForPopulation *
+        this.setupRankingPrompts(subProblemIndex, this.getActiveSolutionsLastPopulation(subProblemIndex), this.minimumNumberOfPairwiseVotesForPopulation *
             this.getActiveSolutionsLastPopulation(subProblemIndex).length);
         await this.performPairwiseRanking(subProblemIndex);
         this.memory.subProblems[subProblemIndex].solutions.populations[lastPopulationIndex] = this.getOrderedListOfItems(subProblemIndex, true);
@@ -81,14 +78,8 @@ export class RankSolutionsProcessor extends BasePairwiseRankingsProcessor {
         this.logger.info("Rank Solution Components Processor");
         super.process();
         try {
-            this.chat = new ChatOpenAI({
-                temperature: PsConstants.solutionsRankingsModel.temperature,
-                maxTokens: PsConstants.solutionsRankingsModel.maxOutputTokens,
-                modelName: PsConstants.solutionsRankingsModel.name,
-                verbose: PsConstants.solutionsRankingsModel.verbose,
-            });
             const subProblemsPromises = Array.from({
-                length: Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems),
+                length: Math.min(this.memory.subProblems.length, this.maxSubProblems),
             }, async (_, subProblemIndex) => this.processSubProblem(subProblemIndex));
             await Promise.all(subProblemsPromises);
             this.logger.info("Rank Solution Components Processor Completed");

@@ -1,25 +1,19 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
 
-import { Queue } from "bullmq";
 import ioredis from "ioredis";
-import fs from "fs/promises";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-export class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAgent {
+export class RemoveDuplicateVectorStoreWebSolutions extends BaseSmarterCrowdsourcingAgent {
   webPageVectorStore = new WebPageVectorStore();
   allUrls = new Set<string>();
   duplicateUrls: string[] = [];
 
   constructor(memory: PsSmarterCrowdsourcingMemoryData) {
-    super(null as any, memory);
+    super(null as any, memory,1,1);
     this.memory = memory;
   }
 
@@ -81,7 +75,7 @@ export class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAg
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];

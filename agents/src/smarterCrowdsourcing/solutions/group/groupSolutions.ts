@@ -1,9 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
+export class GroupSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
   async renderGroupPrompt(solutionsToGroup: PsSolutionForGroupCheck[]) {
     const messages = [
       this.createSystemMessage(
@@ -44,9 +41,8 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
 
     this.logger.debug(`Solution Components going into LLM ${solutionsToGroup.length}`);
 
-    const groupedIndexes: Array<Array<PsSolutionForGroupCheck>> = await this.callLLM(
-      "group-solutions",
-      PsConstants.groupSolutionsModel,
+    const groupedIndexes: Array<Array<PsSolutionForGroupCheck>> = await this.callModel(
+      PsAiModelType.Text,
       await this.renderGroupPrompt(solutionsToGroup)
     );
 
@@ -109,7 +105,7 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
   async groupSolutions() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -138,13 +134,6 @@ export class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Group Solution Components Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.groupSolutionsModel.temperature,
-      maxTokens: PsConstants.groupSolutionsModel.maxOutputTokens,
-      modelName: PsConstants.groupSolutionsModel.name,
-      verbose: PsConstants.groupSolutionsModel.verbose,
-    });
 
     try {
       await this.groupSolutions();

@@ -1,34 +1,22 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { HTTPResponse, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
-import { PdfReader } from "pdfreader";
-import axios from "axios";
 
-import { createGzip, gunzipSync, gzipSync } from "zlib";
-import { promisify } from "util";
-import { writeFile, readFile, existsSync } from "fs";
-import { htmlToText } from "html-to-text";
-import { GetWebPagesProcessor } from "../smarterCrowdsourcing/solutions/web/getWebPages.js";
 import { PsConstants } from "../constants.js";
+import { BaseGetWebPagesAgent } from "./getWebPages.js";
 
-const gzip = promisify(createGzip);
-const writeFileAsync = promisify(writeFile);
-const readFileAsync = promisify(readFile);
-
-export class WebPageScanner extends GetWebPagesProcessor {
+export class WebPageScanner extends BaseGetWebPagesAgent {
   jsonSchemaForResults: string | undefined;
   systemPromptOverride: string | undefined;
   collectedWebPages: any[] = [];
 
   progressFunction: Function | undefined;
 
-  constructor(memory: PsSmarterCrowdsourcingMemoryData) {
-    super(undefined as any, memory);
+  constructor(memory: PsSimpleAgentMemoryData) {
+    super(memory);
   }
 
   renderScanningPrompt(
-    problemStatement: PsProblemStatement,
+    problemStatement: string,
     text: string,
     subProblemIndex?: number,
     entityIndex?: number
@@ -56,17 +44,6 @@ export class WebPageScanner extends GetWebPagesProcessor {
     ];
   }
 
-  async getTokenCount(text: string, subProblemIndex: number | undefined) {
-    const words = text.split(" ");
-    const tokenCount = words.length*1.25
-    const promptTokenCount = { totalCount: 500, countPerMessage: [] };
-    const totalTokenCount =
-      tokenCount + 500 +
-      PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
-
-    return { totalTokenCount, promptTokenCount };
-  }
-
   async getAIAnalysis(
     text: string,
     subProblemIndex?: number,
@@ -84,9 +61,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     const analysis = await this.callLLM(
       "web-get-pages",
-      PsConstants.getSolutionsPagesAnalysisModel,
       messages,
-      true,
       true
     ) as PsWebPageAnalysisData;
 
@@ -97,7 +72,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
   getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined) {
     const promptMessages = this.renderScanningPrompt("" as any, "", -1);
 
-    const promptMessagesText = promptMessages.map((m) => m.text).join("\n");
+    const promptMessagesText = promptMessages.map((m) => m.message).join("\n");
 
     return `${promptMessagesText} ${text}`;
   }
@@ -172,14 +147,6 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.jsonSchemaForResults = jsonSchemaForResults;
     this.systemPromptOverride = scanSystemPrompt;
     this.progressFunction = progressFunction;
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
-      maxTokens: PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-      modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
-      verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
-    });
-
 
     this.logger.info("Web Pages Scanner");
 

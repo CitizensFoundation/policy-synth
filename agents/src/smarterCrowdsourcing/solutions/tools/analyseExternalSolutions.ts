@@ -1,9 +1,6 @@
-import { PsConstants } from "../../../constants.js";
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 
 import fetch from "node-fetch";
@@ -116,7 +113,7 @@ const externalSolutionsMisuseOfLegalSystem = [
   },
 ];
 
-export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
+export class AnalyseExternalSolutions extends BaseSmarterCrowdsourcingAgent {
   folderPath!: string;
 
   async renderAnalysisPrompt(solutionDescription: string, requirement: string) {
@@ -147,9 +144,8 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     solutionDescription: string,
     requirement: string
   ) {
-    const result = (await this.callLLM(
-      "analyse-external-solutions",
-      PsConstants.analyseExternalSolutionsModel,
+    const result = (await this.callModel(
+      PsAiModelType.Text,
       await this.renderAnalysisPrompt(solutionDescription, requirement)
     )) as PsExternalSolutionAnalysisResults;
 
@@ -256,13 +252,6 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
     this.logger.info("Create Analysis Processor");
     super.process();
 
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.analyseExternalSolutionsModel.temperature,
-      maxTokens: PsConstants.analyseExternalSolutionsModel.maxOutputTokens,
-      modelName: PsConstants.analyseExternalSolutionsModel.name,
-      verbose: PsConstants.analyseExternalSolutionsModel.verbose,
-    });
-
     try {
       await this.analyze();
     } catch (error: any) {
@@ -308,7 +297,7 @@ async function run() {
     const output = await redis.get(`st_mem:${projectId}:id`);
     const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
-    const counts = new AnalyseExternalSolutions({} as any, memory);
+    const counts = new AnalyseExternalSolutions({} as any, memory, 1, 1);
     await counts.processAnalysis(folderPath);
     process.exit(0);
   } else {

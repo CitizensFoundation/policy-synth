@@ -1,9 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
+export class CreateProsConsProcessor extends BaseSmarterCrowdsourcingAgent {
   renderCurrentSolution(solution: PsSolution) {
     return `
       Solution Component:
@@ -36,7 +33,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
         5. The ${prosOrCons} should be outputed as an JSON array: [ "...", "..." ].
         6. Reorder the points based on importance to the problem
         7. Never offer explanations.
-        8. Always output ${PsConstants.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array.
+        8. Always output ${this.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array.
         9. Follow a step-by-step approach in your thought process.
         `
       ),
@@ -70,7 +67,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
 
         Important Instructions:
 
-        1. Always generate and output ${PsConstants.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
+        1. Always generate and output ${this.maxNumberGeneratedProsConsForSolution} best ${prosOrCons} for the solution below with the best point first.
         2. Each ${prosconsSingle} should be directly applicable to the solution.
         3. Ensure that each ${prosconsSingle} is important, consistent, and thoughtful.
         4. The ${prosOrCons} must be in line with the context given by the problem.
@@ -78,7 +75,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
         6. The ${prosOrCons} should be outputted as an JSON array: [ "...", "..." ].
         7. Never output the index number of the ${prosOrCons} in the text.
         8. Never offer explanations.
-        9. Always output ${PsConstants.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array
+        9. Always output ${this.maxNumberGeneratedProsConsForSolution} ${prosOrCons} in the JSON string array
         10. Let's think step by step.
         `
       ),
@@ -99,7 +96,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
   async createProsCons() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     // Create an array of Promises to resolve all the subproblems concurrently
@@ -142,9 +139,8 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
               let gotFullPoints = false;
 
               while (!gotFullPoints && retries < maxPointRetries) {
-                let results = (await this.callLLM(
-                  "create-pros-cons",
-                  PsConstants.createProsConsModel,
+                let results = (await this.callModel(
+                  PsAiModelType.Text,
                   await this.renderCreatePrompt(
                     prosOrCons,
                     subProblemIndex,
@@ -155,10 +151,9 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
                   135
                 )) as string[];
 
-                if (PsConstants.enable.refine.createProsCons) {
-                  results = (await this.callLLM(
-                    "create-pros-cons",
-                    PsConstants.createProsConsModel,
+                if (this.createProsConsRefinedEnabled) {
+                  results = (await this.callModel(
+                    PsAiModelType.Text,
                     await this.renderRefinePrompt(
                       prosOrCons,
                       results,
@@ -171,7 +166,7 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
                   )) as string[];
                 }
 
-                if (results && results.length === PsConstants.maxNumberGeneratedProsConsForSolution) {
+                if (results && results.length === this.maxNumberGeneratedProsConsForSolution) {
                   gotFullPoints = true;
                   this.logger.debug(
                     `${prosOrCons}: ${JSON.stringify(results, null, 2)}`
@@ -207,13 +202,6 @@ export class CreateProsConsProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Create ProsCons Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createProsConsModel.temperature,
-      maxTokens: PsConstants.createProsConsModel.maxOutputTokens,
-      modelName: PsConstants.createProsConsModel.name,
-      verbose: PsConstants.createProsConsModel.verbose,
-    });
 
     try {
       await this.createProsCons();

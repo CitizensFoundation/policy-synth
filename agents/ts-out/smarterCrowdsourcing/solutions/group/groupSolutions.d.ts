@@ -1,7 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export declare class GroupSolutionsProcessor extends BaseProblemSolvingAgent {
-    renderGroupPrompt(solutionsToGroup: PsSolutionForGroupCheck[]): Promise<(SystemMessage | HumanMessage)[]>;
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class GroupSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
+    renderGroupPrompt(solutionsToGroup: PsSolutionForGroupCheck[]): Promise<PsModelMessage[]>;
     groupSolutionsForSubProblem(subProblemIndex: number, solutions: Array<PsSolution>): Promise<void>;
     calculateGroupStats(solutions: Array<PsSolution>): Promise<void>;
     groupSolutions(): Promise<void>;

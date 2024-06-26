@@ -1,10 +1,6 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-import { SimplePairwiseRankingsAgent } from "../../../base/simplePairwiseRanking.js";
-
-export class RankWebSolutionsProcessor extends SimplePairwiseRankingsAgent {
+export class RankWebSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
   async voteOnPromptPair(
     subProblemIndex: number,
     promptPair: number[]
@@ -63,8 +59,6 @@ export class RankWebSolutionsProcessor extends SimplePairwiseRankingsAgent {
 
     return await this.getResultsFromLLM(
       subProblemIndex,
-      "rank-solutions",
-      PsConstants.solutionsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -101,13 +95,6 @@ export class RankWebSolutionsProcessor extends SimplePairwiseRankingsAgent {
     super.process();
 
     try {
-      this.chat = new ChatOpenAI({
-        temperature: PsConstants.solutionsRankingsModel.temperature,
-        maxTokens: PsConstants.solutionsRankingsModel.maxOutputTokens,
-        modelName: PsConstants.solutionsRankingsModel.name,
-        verbose: PsConstants.solutionsRankingsModel.verbose,
-      });
-
       if (!this.memory.problemStatement.solutionsFromSearch![0].eloRating) {
         this.setupRankingPrompts(
           -1,
@@ -125,7 +112,7 @@ export class RankWebSolutionsProcessor extends SimplePairwiseRankingsAgent {
         {
           length: Math.min(
             this.memory.subProblems.length,
-            PsConstants.maxSubProblems
+            this.maxSubProblems
           ),
         },
         async (_, subProblemIndex) => this.processSubProblem(subProblemIndex)

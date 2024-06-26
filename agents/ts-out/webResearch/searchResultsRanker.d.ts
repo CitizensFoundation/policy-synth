@@ -1,7 +1,7 @@
-import { BasePairwiseRankingsProcessor } from "../base/basePairwiseRanking.js";
-export declare class SearchResultsRanker extends BasePairwiseRankingsProcessor {
+import { SimplePairwiseRankingsAgent } from "../base/simplePairwiseRanking.js";
+export declare class SearchResultsRanker extends SimplePairwiseRankingsAgent {
     searchQuestion: string | undefined;
-    constructor(memory: PsSmarterCrowdsourcingMemoryData, progressFunction?: Function | undefined);
+    constructor(memory: PsSimpleAgentMemoryData, progressFunction?: Function | undefined);
     voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
     rankSearchResults(queriesToRank: PsSearchResultItem[], searchQuestion: string, maxPrompts?: number): Promise<PsSearchResultItem[]>;
 }

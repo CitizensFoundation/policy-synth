@@ -1,10 +1,6 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-import { SimplePairwiseRankingsAgent } from "../../../base/simplePairwiseRanking.js";
-
-export class RankSearchResultsProcessor extends SimplePairwiseRankingsAgent {
+export class RankSearchResultsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
   subProblemIndex = 0;
   entitiesIndex = 0;
   currentEntity!: PsAffectedEntity;
@@ -82,8 +78,6 @@ export class RankSearchResultsProcessor extends SimplePairwiseRankingsAgent {
 
     return await this.getResultsFromLLM(
       subProblemIndex,
-      "rank-search-results",
-      PsConstants.searchResultsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -94,7 +88,7 @@ export class RankSearchResultsProcessor extends SimplePairwiseRankingsAgent {
     for (
       let s = 0;
       s <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, this.maxSubProblems);
       s++
     ) {
       this.logger.info(`Ranking Sub Problem ${s} for ${searchResultType} search results`)
@@ -124,7 +118,7 @@ export class RankSearchResultsProcessor extends SimplePairwiseRankingsAgent {
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        PsConstants.maxTopEntitiesToSearch
+        this.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -145,13 +139,6 @@ export class RankSearchResultsProcessor extends SimplePairwiseRankingsAgent {
   async process() {
     this.logger.info("Rank Search Results Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.searchResultsRankingsModel.temperature,
-      maxTokens: PsConstants.searchResultsRankingsModel.maxOutputTokens,
-      modelName: PsConstants.searchResultsRankingsModel.name,
-      verbose: PsConstants.searchResultsRankingsModel.verbose,
-    });
 
     for (const searchResultType of [
       "general",

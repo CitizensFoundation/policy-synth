@@ -1,19 +1,18 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class DocumentCleanupAgent extends BaseIngestionAgent {
     maxCleanupTokenLength: number;
     maxCleanupRetries: number;
     completionValidationSuccessMessage: string;
     correctnessValidationSuccessMessage: string;
     hallucinationValidationSuccessMessage: string;
-    hallucinationValidationSystemMessage: SystemMessage;
-    correctnessValidationSystemMessage: SystemMessage;
-    completionValidationSystemMessage: SystemMessage;
-    validationUserMessage: (original: string, cleaned: string) => HumanMessage;
-    systemMessage: SystemMessage;
-    userMessage: (data: string, validationTextResults: string | undefined) => HumanMessage;
-    referencesCheckSystemMessage: SystemMessage;
-    referencesCheckUserMessage: (data: string) => HumanMessage;
+    hallucinationValidationSystemMessage: PsModelMessage;
+    correctnessValidationSystemMessage: PsModelMessage;
+    completionValidationSystemMessage: PsModelMessage;
+    validationUserMessage: (original: string, cleaned: string) => PsModelMessage;
+    systemMessage: PsModelMessage;
+    userMessage: (data: string, validationTextResults: string | undefined) => PsModelMessage;
+    referencesCheckSystemMessage: PsModelMessage;
+    referencesCheckUserMessage: (data: string) => PsModelMessage;
     clean(data: string): Promise<string>;
     validateCleanedPart(original: string, cleaned: string): Promise<{
         valid: boolean;

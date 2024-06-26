@@ -1,17 +1,13 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
 import { SimplePairwiseRankingsAgent } from "../base/simplePairwiseRanking.js";
-import { PsConstants } from "../constants.js";
 
 export class SearchQueriesRanker extends SimplePairwiseRankingsAgent {
   searchQuestion: string | undefined;
 
   constructor(
-    memory: PsSmarterCrowdsourcingMemoryData,
+    memory: PsSimpleAgentMemoryData,
     progressFunction: Function | undefined = undefined
   ) {
-    super(undefined as any, memory);
+    super(memory);
     this.progressFunction = progressFunction;
   }
 
@@ -58,7 +54,6 @@ export class SearchQueriesRanker extends SimplePairwiseRankingsAgent {
     return await this.getResultsFromLLM(
       index,
       "rank-search-queries",
-      PsConstants.searchQueryRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -71,13 +66,6 @@ export class SearchQueriesRanker extends SimplePairwiseRankingsAgent {
     maxPrompts = 120
   ) {
     this.searchQuestion = searchQuestion;
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.searchQueryRankingsModel.temperature,
-      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: PsConstants.searchQueryRankingsModel.name,
-      verbose: PsConstants.searchQueryRankingsModel.verbose,
-    });
 
     this.setupRankingPrompts(
       -1,

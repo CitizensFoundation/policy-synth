@@ -1,14 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { PsConstants } from "../../../constants.js";
-import ioredis from "ioredis";
-import { BingSearchApi } from "./bingSearchApi.js";
-import { GoogleSearchApi } from "./googleSearchApi.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { GoogleSearchApi } from "../../../webResearch/googleSearchApi.js";
+import { BingSearchApi } from "../../../webResearch/bingSearchApi.js";
 
-const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-);
-
-export class SearchWebProcessor extends BaseProblemSolvingAgent {
+export class SearchWebProcessor extends BaseSmarterCrowdsourcingAgent {
   seenUrls!: Map<string, Set<string>>;
 
   async callSearchApi(query: string): Promise<PsSearchResultItem[]> {
@@ -73,12 +67,12 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
     for (
       let s = 0;
       s <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, this.maxSubProblems);
       s++
     ) {
       let queriesToSearch = this.memory.subProblems[s].searchQueries[
         searchQueryType
-      ].slice(0, PsConstants.maxTopQueriesToSearchPerType);
+      ].slice(0, this.maxTopQueriesToSearchPerType);
 
       const results = await this.getQueryResults(
         queriesToSearch,
@@ -114,7 +108,7 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        PsConstants.maxTopEntitiesToSearch
+        this.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -122,7 +116,7 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
         e
       ].searchQueries![searchQueryType].slice(
         0,
-        PsConstants.maxTopQueriesToSearchPerType
+        this.maxTopQueriesToSearchPerType
       );
 
       const results = await this.getQueryResults(
@@ -152,7 +146,7 @@ export class SearchWebProcessor extends BaseProblemSolvingAgent {
   async processProblemStatement(searchQueryType: PsWebPageTypes) {
     let queriesToSearch = this.memory.problemStatement.searchQueries![
       searchQueryType
-    ].slice(0, PsConstants.maxTopQueriesToSearchPerType);
+    ].slice(0, this.maxTopQueriesToSearchPerType);
 
     this.logger.info("Getting search data for problem statement");
 

@@ -1,8 +1,5 @@
-import { PsConstants } from "../../../constants.js";
-import ioredis from "ioredis";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
-import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
 export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
     searchCounter = 0;
     async searchWeb(policy, subProblemIndex, policyIndex) {
@@ -10,7 +7,7 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
             //@ts-ignore
             policy.evidenceSearchResults = {};
         }
-        for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+        for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
             // If searchCounter mod 10 then print
             if (this.searchCounter % 10 == 0) {
                 this.logger.info(`Have searched ${this.searchCounter} queries`);
@@ -23,9 +20,9 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
             }
             if (!policy.evidenceSearchResults[searchResultType]) {
                 let queriesToSearch = policy.evidenceSearchQueries[searchResultType]
-                    .slice(0, PsConstants.maxTopEvidenceQueriesToSearchPerType);
+                    .slice(0, this.maxTopEvidenceQueriesToSearchPerType);
                 const results = await this.getQueryResults(queriesToSearch, `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`);
-                this.searchCounter += PsConstants.maxTopEvidenceQueriesToSearchPerType;
+                this.searchCounter += this.maxTopEvidenceQueriesToSearchPerType;
                 policy.evidenceSearchResults[searchResultType] = results.searchResults;
                 this.logger.info(`Have saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
                 await this.saveMemory();
@@ -38,8 +35,8 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
     async process() {
         this.logger.info("Search Web for Evidence Processor");
         this.seenUrls = new Map();
-        //super.process();
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        super.process();
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         for (let subProblemIndex = 0; subProblemIndex < subProblemsLimit; subProblemIndex++) {
             const subProblem = this.memory.subProblems[subProblemIndex];
             const policies = subProblem.policies?.populations[subProblem.policies.populations.length - 1];

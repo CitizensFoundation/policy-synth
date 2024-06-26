@@ -1,14 +1,13 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 export declare class DocumentTreeSplitAgent extends BaseIngestionAgent {
     maxSplitRetries: number;
     minChunkCharacterLength: number;
     maxChunkLinesLength: number;
-    strategySystemMessage: SystemMessage;
-    strategyUserMessage: (data: string) => HumanMessage;
-    strategyWithReviewUserMessage: (data: string, lastAttempt: string, reviewComments: string) => HumanMessage;
-    reviewStrategySystemMessage: SystemMessage;
-    reviewStrategyUserMessage: (data: string, splitStrategy: string) => HumanMessage;
+    strategySystemMessage: PsModelMessage;
+    strategyUserMessage: (data: string) => PsModelMessage;
+    strategyWithReviewUserMessage: (data: string, lastAttempt: string, reviewComments: string) => PsModelMessage;
+    reviewStrategySystemMessage: PsModelMessage;
+    reviewStrategyUserMessage: (data: string, splitStrategy: string) => PsModelMessage;
     generateDiff(str1: string, str2: string): string;
     fetchLlmChunkingStrategy(data: string, review: string | undefined, lastJson: LlmDocumentChunksStrategy[] | undefined): Promise<{
         chunkingStrategy: string;

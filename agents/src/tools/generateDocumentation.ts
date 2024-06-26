@@ -33,7 +33,7 @@ Brief description of the class.
 
 \`\`\`typescript
 // Example usage of agents
-{ BaseProblemSolvingAgent } from '@policysynth/agents/baseProblemSolvingAgent.js';
+{ BaseSmarterCrowdsourcingAgent } from '@policysynth/agents/BaseSmarterCrowdsourcingAgent.js';
 
 ...example...
 \`\`\`

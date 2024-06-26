@@ -1,20 +1,12 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { Page } from "puppeteer";
-import { GetWebPagesProcessor } from "../smarterCrowdsourcing/solutions/web/getWebPages.js";
-export declare class WebPageScanner extends GetWebPagesProcessor {
+import { BaseGetWebPagesAgent } from "./getWebPages.js";
+export declare class WebPageScanner extends BaseGetWebPagesAgent {
     jsonSchemaForResults: string | undefined;
     systemPromptOverride: string | undefined;
     collectedWebPages: any[];
     progressFunction: Function | undefined;
-    constructor(memory: PsSmarterCrowdsourcingMemoryData);
-    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
-    getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
-        totalTokenCount: number;
-        promptTokenCount: {
-            totalCount: number;
-            countPerMessage: never[];
-        };
-    }>;
+    constructor(memory: PsSimpleAgentMemoryData);
+    renderScanningPrompt(problemStatement: string, text: string, subProblemIndex?: number, entityIndex?: number): PsModelMessage[];
     getAIAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<PsWebPageAnalysisData>;
     getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined): string;
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;

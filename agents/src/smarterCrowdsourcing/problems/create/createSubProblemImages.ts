@@ -1,10 +1,3 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { AxiosResponse } from "axios";
-import axios from "axios";
-import AWS from "aws-sdk";
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
@@ -62,9 +55,8 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
       if (recreateImagesNeeded || !this.memory.subProblems[s].imageUrl) {
         let imagePrompt;
         if (process.env.STABILITY_API_KEY) {
-          imagePrompt = (await this.callLLM(
-            "create-sub-problem-images",
-            PsConstants.createSolutionImagesModel,
+          imagePrompt = (await this.callModel(
+            PsAiModelType.Text,
             await this.renderCreatePrompt(s),
             false
           )) as string;
@@ -117,13 +109,6 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
 
   async process() {
     this.logger.info("Create Sub Problem Processor");
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createSolutionImagesModel.temperature,
-      maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
-      modelName: PsConstants.createSolutionImagesModel.name,
-      verbose: PsConstants.createSolutionImagesModel.verbose,
-    });
 
     try {
       await this.createSubProblemImages();

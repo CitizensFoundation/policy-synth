@@ -1,21 +1,13 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
-import { PsConstants } from "../constants.js";
-import { ChatOpenAI } from "@langchain/openai";
-export class PsBaseValidationAgent extends PolicySynthScAgentBase {
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
+export class PsBaseValidationAgent extends PolicySynthSimpleAgentBase {
     name;
     options;
+    maxModelTokensOut = 4096;
+    modelTemperature = 0.0;
     constructor(name, options = {}) {
         super();
         this.name = name;
         this.options = options;
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.validationModel.temperature,
-            maxTokens: PsConstants.validationModel.maxOutputTokens,
-            modelName: PsConstants.validationModel.name,
-            verbose: PsConstants.validationModel.verbose,
-            streaming: true
-        });
         const webSocket = this.options.webSocket;
         if (webSocket && !this.options.disableStreaming) {
             const myCallback = {
@@ -41,8 +33,8 @@ export class PsBaseValidationAgent extends PolicySynthScAgentBase {
     async renderPrompt() {
         if (this.options.systemMessage && this.options.userMessage) {
             return [
-                new SystemMessage(this.options.systemMessage),
-                new HumanMessage(this.options.userMessage),
+                this.createSystemMessage(this.options.systemMessage),
+                this.createHumanMessage(this.options.userMessage),
             ];
         }
         else {
@@ -50,7 +42,7 @@ export class PsBaseValidationAgent extends PolicySynthScAgentBase {
         }
     }
     async runValidationLLM() {
-        const llmResponse = await this.callLLM("validation-agent", PsConstants.validationModel, await this.renderPrompt(), true, false, 120, this.options.streamingCallbacks);
+        const llmResponse = await this.callLLM("validation-agent", await this.renderPrompt(), true, 120, this.options.streamingCallbacks);
         if (!llmResponse) {
             throw new Error("LLM response is undefined");
         }

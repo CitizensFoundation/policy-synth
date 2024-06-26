@@ -65,7 +65,7 @@ let html = `
 
 for (
   let s = 0;
-  s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems);
+  s < Math.min(memory.subProblems.length, this.maxSubProblems);
   s++
 ) {
   const subProblem = memory.subProblems[s];
@@ -80,7 +80,7 @@ for (
       <h3>Entities:</h3>
       <ul>
         ${subProblem.entities
-          .slice(0, PsConstants.maxTopEntitiesToSearch)
+          .slice(0, this.maxTopEntitiesToSearch)
           .map(
             (entity) =>
               `<li><b>${entity.name}</b> <br> ELO: ${formatElo(

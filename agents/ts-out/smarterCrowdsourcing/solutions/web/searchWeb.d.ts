@@ -1,5 +1,5 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-export declare class SearchWebProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class SearchWebProcessor extends BaseSmarterCrowdsourcingAgent {
     seenUrls: Map<string, Set<string>>;
     callSearchApi(query: string): Promise<PsSearchResultItem[]>;
     getQueryResults(queriesToSearch: string[], id: string): Promise<{

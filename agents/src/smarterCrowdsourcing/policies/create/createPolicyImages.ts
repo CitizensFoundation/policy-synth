@@ -1,9 +1,6 @@
-import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 import fs from "fs";
-import { PsConstants } from "../../../constants.js";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
   async renderCreatePolicyImagePrompt(
@@ -55,7 +52,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
   async createPolicyImages() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -93,9 +90,8 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
                   `Using existing image prompt: ${imagePrompt}`
                 );
               } else {
-                imagePrompt = (await this.callLLM(
-                  "policies-create-images",
-                  PsConstants.createSolutionImagesModel,
+                imagePrompt = (await this.callModel(
+                  PsAiModelType.Text,
                   await this.renderCreatePolicyImagePrompt(subProblemIndex, policy),
                   false
                 )) as string;
@@ -175,14 +171,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
 
   async process() {
     this.logger.info("Create Policy Images Processor");
-    //super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createSolutionImagesModel.temperature,
-      maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
-      modelName: PsConstants.createSolutionImagesModel.name,
-      verbose: PsConstants.createSolutionImagesModel.verbose,
-    });
+    super.process();
 
     try {
       await this.createPolicyImages();

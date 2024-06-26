@@ -1,6 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-export declare class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAgent {
+export declare class RemoveDuplicateVectorStoreWebSolutions extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore: WebPageVectorStore;
     allUrls: Set<string>;
     duplicateUrls: string[];

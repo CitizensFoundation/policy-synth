@@ -5,6 +5,7 @@ import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PolicySynthBaseAgent } from "./agent.js";
 import ioredis from "ioredis";
+import tiktoken from "tiktoken";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -15,13 +16,66 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
   timeStart: number = Date.now();
   rateLimits: PsModelRateLimitTracking = {};
   models: Map<PsAiModelType, BaseChatModel> = new Map();
+  private tokenizer: tiktoken.Tiktoken | null = null;
 
   constructor(memory: PsSimpleAgentMemoryData | undefined = undefined) {
     super();
     if (memory) {
       this.memory = memory;
     }
+    this.initializeTokenizer();
     this.initializeModels();
+  }
+
+  private initializeTokenizer() {
+    try {
+      const modelName = process.env.AI_MODEL_NAME || "gpt-3.5-turbo";
+      this.tokenizer = tiktoken.encoding_for_model(modelName as tiktoken.TiktokenModel);
+    } catch (error) {
+      this.logger.error("Failed to initialize tokenizer", error);
+    }
+  }
+
+  private getTokenizer(): tiktoken.Tiktoken {
+    if (!this.tokenizer) {
+      this.initializeTokenizer();
+      if (!this.tokenizer) {
+        throw new Error("Failed to initialize tokenizer");
+      }
+    }
+    return this.tokenizer;
+  }
+
+  protected getNumTokensFromMessages(messages: PsModelMessage[]): number {
+    try {
+      const tokenizer = this.getTokenizer();
+      let tokenCount = 0;
+      for (const message of messages) {
+        tokenCount += tokenizer.encode(message.role).length;
+        tokenCount += tokenizer.encode(message.message).length;
+        tokenCount += 3; // Every message follows <im_start>{role/name}\n{content}<im_end>\n
+      }
+      tokenCount += 3; // Every reply is primed with <im_start>assistant
+      return tokenCount;
+    } catch (error) {
+      this.logger.warn("Error in token counting, using approximate count", error);
+      return this.getApproximateTokenCount(JSON.stringify(messages));
+    }
+  }
+
+  protected getNumTokensFromText(text: string): number {
+    try {
+      const tokenizer = this.getTokenizer();
+      return tokenizer.encode(text).length;
+    } catch (error) {
+      this.logger.warn("Error in token counting, using approximate count", error);
+      return this.getApproximateTokenCount(text);
+    }
+  }
+
+  private getApproximateTokenCount(text: string): number {
+    // Approximate token count based on words (assuming average of 4 characters per token)
+    return Math.ceil(text.length / 4);
   }
 
   initializeModels() {
@@ -94,7 +148,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
 
       while (retry && retryCount < maxRetries) {
         try {
-          const tokensIn = await model.getNumTokensFromMessages(messages);
+          const tokensIn = this.getNumTokensFromMessages(messages);
           const estimatedTokensToAdd = tokensIn + tokenOutEstimate;
 
           // TODO: Implement rate limiting
@@ -108,7 +162,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
           );
 
           if (response) {
-            const tokensOut = await model.getNumTokensFromMessages([
+            const tokensOut = this.getNumTokensFromMessages([
               { role: "assistant", message: response },
             ]);
 

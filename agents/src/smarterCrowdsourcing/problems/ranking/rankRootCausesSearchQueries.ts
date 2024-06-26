@@ -1,10 +1,6 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-import { SimplePairwiseRankingsAgent } from "../../../base/simplePairwiseRanking.js";
-
-export class RankRootCausesSearchQueriesProcessor extends SimplePairwiseRankingsAgent {
+export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
   rootCauseTypes = [
     "historicalRootCause",
     "economicRootCause",
@@ -62,8 +58,6 @@ export class RankRootCausesSearchQueriesProcessor extends SimplePairwiseRankings
 
     return await this.getResultsFromLLM(
       index,
-      "rank-search-queries",
-      PsConstants.searchQueryRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -73,13 +67,6 @@ export class RankRootCausesSearchQueriesProcessor extends SimplePairwiseRankings
   async process() {
     this.logger.info("Rank Root Causes Search Queries Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.searchQueryRankingsModel.temperature,
-      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: PsConstants.searchQueryRankingsModel.name,
-      verbose: PsConstants.searchQueryRankingsModel.verbose,
-    });
 
     for (const searchQueryType of this.rootCauseTypes) {
       this.logger.info(`Ranking search queries for ${searchQueryType}`);

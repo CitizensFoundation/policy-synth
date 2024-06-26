@@ -1,14 +1,13 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAgent {
+export class RemoveDuplicateVectorStoreWebSolutions extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     allUrls = new Set();
     duplicateUrls = [];
     constructor(memory) {
-        super(null, memory);
+        super(null, memory, 1, 1);
         this.memory = memory;
     }
     async removeDuplicates(subProblemIndex) {
@@ -47,7 +46,7 @@ export class RemoveDuplicateVectorStoreWebSolutions extends BaseProblemSolvingAg
     async process() {
         this.logger.info("Dedup web solutions Processor");
         super.process();
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             this.logger.info(`Ranking sub problem ${subProblemIndex}`);

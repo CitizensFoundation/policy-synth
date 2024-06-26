@@ -1,16 +1,13 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
-export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
+export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     simplifyRootCauseType(rootCauseType) {
         return rootCauseType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
     }
     async renderProblemPrompt(rawWebData, rootCausesToRank, rootCauseType) {
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an expert in rating websites with root causes for a problem statement, on multiple attributes.
 
         Instructions:
@@ -27,7 +24,7 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
         Never explain only output JSON.
 
         Let's think step by step.`),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 
         Root Cause type:
@@ -37,7 +34,7 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
         ${rawWebData.url}
 
         Root Causes found on the website:
-        ${JSON.stringify(rootCausesToRank.slice(0, PsConstants.maxRootCausesToUseForRatingRootCauses), null, 2)}
+        ${JSON.stringify(rootCausesToRank.slice(0, this.maxRootCausesToUseForRatingRootCauses), null, 2)}
 
         Your ratings in JSON format:
        `),
@@ -46,10 +43,10 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
     async rateWebRootCauses() {
         this.logger.info("Rating all web root causes");
         try {
-            for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
+            for (const rootCauseType of this.rootCauseFieldTypes) {
                 let offset = 0;
                 const limit = 100;
-                const searchType = PsConstants.simplifyRootCauseType(rootCauseType);
+                const searchType = this.simplifyRootCauseType(rootCauseType);
                 while (true) {
                     const results = await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, searchType, limit, offset);
                     this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
@@ -65,7 +62,7 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
                         if (webPage[fieldKey] && Array.isArray(webPage[fieldKey]) && webPage[fieldKey].length > 0) {
                             const rootCausesToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Root causes to rate (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-                            let ratedRootCauses = await this.callLLM("rate-web-root-causes", PsConstants.rateWebRootCausesModel, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
+                            let ratedRootCauses = await this.callLLM("rate-web-root-causes", this.rateWebRootCausesModel, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
                             await this.rootCauseWebPageVectorStore.updateScores(id, ratedRootCauses, true);
                             this.logger.debug(`${id} - Root Causes ratings (${rootCauseType}):\n${JSON.stringify(ratedRootCauses, null, 2)}`);
                         }
@@ -83,12 +80,6 @@ export class RateWebRootCausesProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Rate web root causes Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.rateWebRootCausesModel.temperature,
-            maxTokens: PsConstants.rateWebRootCausesModel.maxOutputTokens,
-            modelName: PsConstants.rateWebRootCausesModel.name,
-            verbose: PsConstants.rateWebRootCausesModel.verbose,
-        });
         try {
             await this.rateWebRootCauses();
             this.logger.debug("Finished rating all web root causes");

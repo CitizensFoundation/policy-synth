@@ -1,21 +1,7 @@
 import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PsConstants } from "../../../constants.js";
-
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { ChatOpenAI } from "@langchain/openai";
-import ioredis from "ioredis";
-import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
-import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
-import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
-import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
 import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
-
-const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-);
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -98,10 +84,10 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
 
       let textAnalysis: PSRefinedPolicyEvidence;
 
-      if (PsConstants.getRefinedEvidenceModel.tokenLimit < totalTokenCount) {
+      if (this.tokenInLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          PsConstants.getRefinedEvidenceModel.tokenLimit -
-          promptTokenCount.totalCount -
+          this.tokenInLimit -
+          promptTokenCount -
           64;
 
         this.logger.debug(
@@ -182,9 +168,8 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
       text
     );
 
-    const analysis = (await this.callLLM(
-      "web-get-refined-evidence",
-      PsConstants.getRefinedEvidenceModel,
+    const analysis = (await this.callModel(
+      PsAiModelType.Text,
       messages,
       true,
       true
@@ -336,8 +321,8 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
     const limit = 10;
 
     try {
-      for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
-        const searchType = PsConstants.simplifyEvidenceType(evidenceType);
+      for (const evidenceType of this.policyEvidenceFieldTypes) {
+        const searchType = this.simplifyEvidenceType(evidenceType);
         const results =
           await this.evidenceWebPageVectorStore.getTopPagesForProcessing(
             this.memory.groupId,
@@ -382,7 +367,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
   async processSubProblems(browser: Browser) {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];
@@ -394,10 +379,10 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
       async (_, subProblemIndex) => {
         this.logger.info(`Refining evidence for sub problem ${subProblemIndex}`);
         const newPage = await browser.newPage();
-        newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-        newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+        newPage.setDefaultTimeout(this.webPageNavTimeout);
+        newPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
 
-        await newPage.setUserAgent(PsConstants.currentUserAgent);
+        await newPage.setUserAgent(this.currentUserAgent);
             const subProblem = this.memory.subProblems[subProblemIndex];
         if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
           if (subProblem.policies) {
@@ -407,7 +392,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
               p <
               Math.min(
                 policies.length,
-                PsConstants.maxTopPoliciesToProcess
+                this.maxTopPoliciesToProcess
               );
               p++
             ) {
@@ -438,10 +423,10 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(this.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
 
-    await browserPage.setUserAgent(PsConstants.currentUserAgent);
+    await browserPage.setUserAgent(this.currentUserAgent);
 
     await this.processSubProblems(browser);
 
@@ -454,14 +439,7 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
 
   async process() {
     this.logger.info("Refined Evidence Web Pages Processor");
-    //super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.getRefinedEvidenceModel.temperature,
-      maxTokens: PsConstants.getRefinedEvidenceModel.maxOutputTokens,
-      modelName: PsConstants.getRefinedEvidenceModel.name,
-      verbose: PsConstants.getRefinedEvidenceModel.verbose,
-    });
+    super.process();
 
     await this.getAllPages();
 

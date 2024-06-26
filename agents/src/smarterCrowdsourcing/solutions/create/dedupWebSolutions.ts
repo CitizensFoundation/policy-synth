@@ -1,23 +1,11 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-
-import { Queue } from "bullmq";
-import ioredis from "ioredis";
-import fs from "fs/promises";
-
-const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-);
 
 interface SolutionToRemove {
   titleOfSimilarSolutionToDrop: string;
 }
 
-export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
+export class RemoveDuplicateWebSolutions extends BaseSmarterCrowdsourcingAgent {
   webPageVectorStore = new WebPageVectorStore();
   allUrls = new Set<string>();
   duplicateUrls: string[] = [];
@@ -79,9 +67,8 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
       );
 
       // Step 2: Call the LLM for a list of duplicates to remove
-      const duplicateSolutionTitlesToRemove = (await this.callLLM(
-        "web-get-pages",
-        PsConstants.createSolutionsModel,
+      const duplicateSolutionTitlesToRemove = (await this.callModel(
+        PsAiModelType.Text,
         this.renderMessages(randomSolutions),
         true,
         true
@@ -146,7 +133,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     for (
       let s = 0;
       s <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, this.maxSubProblems);
       s++
     ) {
       promises.push(
@@ -174,7 +161,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        PsConstants.maxTopEntitiesToSearch
+        this.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -222,13 +209,6 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Dedup Web Solutions Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: 0.0,
-      maxTokens: 4096,
-      modelName: "gpt-4o",
-      verbose: false,
-    });
 
     await this.processAll();
 

@@ -1,6 +1,6 @@
 import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 import { PsConstants } from "../../constants.js";
-import { BaseProblemSolvingAgent } from "../../base/smarterCrowdsourcingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../smarterCrowdsourcing/baseAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
@@ -9,7 +9,7 @@ const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-class ShowCounts extends BaseProblemSolvingAgent {
+class ShowCounts extends BaseSmarterCrowdsourcingAgent {
   webPageVectorStore = new WebPageVectorStore();
 
   foundIds = new Set<string>();
@@ -88,7 +88,7 @@ class ShowCounts extends BaseProblemSolvingAgent {
     );
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(

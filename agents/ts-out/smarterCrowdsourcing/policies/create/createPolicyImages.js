@@ -1,13 +1,10 @@
-import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 import fs from "fs";
-import { PsConstants } from "../../../constants.js";
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
     async renderCreatePolicyImagePrompt(subProblemIndex, policy, injectText) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an expert in generating Dall-E 2 prompts from titles and descriptions of policy components.
 
         Important Instructions:
@@ -29,7 +26,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
 
         While detail and creativity are crucial, keep your prompts concise. Limit your prompts to one or two essential details for the model to generate images quickly and accurately.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
          Solution component:
          ${policy.title}
          ${policy.description}
@@ -40,7 +37,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
         return messages;
     }
     async createPolicyImages() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const policies = this.memory.subProblems[subProblemIndex].policies?.populations[this.memory.subProblems[subProblemIndex].policies.populations.length - 1];
             if (policies) {
@@ -55,7 +52,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
                             this.logger.debug(`Using existing image prompt: ${imagePrompt}`);
                         }
                         else {
-                            imagePrompt = (await this.callLLM("policies-create-images", PsConstants.createSolutionImagesModel, await this.renderCreatePolicyImagePrompt(subProblemIndex, policy), false));
+                            imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePolicyImagePrompt(subProblemIndex, policy), false));
                         }
                         policy.imagePrompt = imagePrompt;
                         this.logger.debug(`subProblemIndex ${subProblemIndex} policyIndex ${policyIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}}`);
@@ -94,13 +91,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
     }
     async process() {
         this.logger.info("Create Policy Images Processor");
-        //super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createSolutionImagesModel.temperature,
-            maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
-            modelName: PsConstants.createSolutionImagesModel.name,
-            verbose: PsConstants.createSolutionImagesModel.verbose,
-        });
+        super.process();
         try {
             await this.createPolicyImages();
         }

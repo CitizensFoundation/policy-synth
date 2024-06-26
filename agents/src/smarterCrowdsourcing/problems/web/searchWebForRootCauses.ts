@@ -1,11 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { PsConstants } from "../../../constants.js";
-import ioredis from "ioredis";
-import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 
 const FORCE_RESEARCH = true;
 
@@ -32,14 +27,14 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
       if (FORCE_RESEARCH || !problemStatement.rootCauseSearchResults![searchResultType]) {
         let queriesToSearch = problemStatement.rootCauseSearchQueries![searchResultType].slice(
           0,
-          PsConstants.maxTopRootCauseQueriesToSearchPerType,
+          this.maxTopRootCauseQueriesToSearchPerType,
         );
 
         this.logger.debug(`Searching for root cause type ${searchResultType} with queries ${JSON.stringify(queriesToSearch, null, 2)}`)
 
         const results = await this.getQueryResults(queriesToSearch, `rootCause_${searchResultType}`);
 
-        this.searchCounter += PsConstants.maxTopEvidenceQueriesToSearchPerType;
+        this.searchCounter += this.maxTopEvidenceQueriesToSearchPerType;
 
         problemStatement.rootCauseSearchResults![searchResultType] = results.searchResults;
 
@@ -56,7 +51,7 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
     this.logger.info("Search Web for Root Causes Processor");
     this.seenUrls = new Map();
 
-    //super.process();
+    super.process();
 
     this.logger.info("Searching web for root causes");
 

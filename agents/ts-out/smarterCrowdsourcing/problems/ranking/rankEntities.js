@@ -1,8 +1,5 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankEntitiesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
@@ -13,7 +10,7 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
         let itemTwoTitle = itemTwo.name;
         let itemTwoEffects = this.renderEntityPosNegReasons(itemTwo);
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert specializing in analyzing complex problem statements, sub-problems, and ranking affected entities.
 
         Instructions:
@@ -24,7 +21,7 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
         4. Consider both positive and negative impacts, if available, while ranking.
         5. Output your decision as either "One", "Two" or "Neither". An explanation is not required.
         6. Let's think step by step.`),
-            new HumanMessage(`
+            this.createHumanMessage(`
          ${this.renderProblemStatement()}
 
          ${this.renderSubProblem(subProblemIndex)}
@@ -42,18 +39,12 @@ export class RankEntitiesProcessor extends BasePairwiseRankingsProcessor {
          The More Affected Entity Is:
        `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-entities", PsConstants.entitiesRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
         this.logger.info("Rank Entities Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.entitiesRankingsModel.temperature,
-            maxTokens: PsConstants.entitiesRankingsModel.maxOutputTokens,
-            modelName: PsConstants.entitiesRankingsModel.name,
-            verbose: PsConstants.entitiesRankingsModel.verbose,
-        });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const filteredEntities = this.memory.subProblems[subProblemIndex].entities.filter((entity) => {
                 return ((entity.positiveEffects && entity.positiveEffects.length > 0) ||

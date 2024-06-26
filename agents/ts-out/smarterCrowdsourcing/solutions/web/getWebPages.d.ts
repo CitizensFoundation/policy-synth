@@ -1,18 +1,16 @@
 import { Page, Browser } from "puppeteer";
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-export declare class GetWebPagesProcessor extends BaseProblemSolvingAgent {
+export declare class SmarterCrowdsourcingGetWebPagesAgent extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore: WebPageVectorStore;
     urlsScanned: Set<string>;
     totalPagesSave: number;
-    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
+    maxModelTokensOut: number;
+    modelTemperature: number;
+    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): PsModelMessage[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;
-        promptTokenCount: {
-            totalCount: number;
-            countPerMessage: number[];
-        };
+        promptTokenCount: number;
     }>;
     getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined): string;
     mergeAnalysisData(data1: PsWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData, data2: PsWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData): PsWebPageAnalysisData | PSEvidenceRawWebPageData | PSRootCauseRawWebPageData;

@@ -1,13 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { PsConstants } from "../../../constants.js";
-import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
 const DISABLE_LLM_FOR_DEBUG = false;
 
-export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
+export class CreateSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
   useLanguage: string | undefined = "English";
 
   renderCreateSystemMessage() {
@@ -97,9 +92,8 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
       return [];
     } else {
       this.logger.info(`Calling LLM for sub problem ${subProblemIndex}`);
-      let results = await this.callLLM(
-        stageName,
-        PsConstants.createSolutionsModel,
+      let results = await this.callModel(
+        PsAiModelType.Text,
         await this.renderCreatePrompt(
           subProblemIndex,
           solutionsForInspiration,
@@ -115,10 +109,10 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
   }
 
   async countTokensForString(text: string) {
-    const tokenCountData = await this.chat!.getNumTokensFromMessages([
+    const tokenCountData = await this.getTokensFromMessages([
       this.createHumanMessage(text),
     ]);
-    return tokenCountData.totalCount;
+    return tokenCountData;
   }
 
   getRandomSolutions(
@@ -232,7 +226,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     for (
       let subProblemIndex = 0;
       subProblemIndex <
-      Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+      Math.min(this.memory.subProblems.length, this.maxSubProblems);
       subProblemIndex++
     ) {
       this.currentSubProblemIndex = subProblemIndex;
@@ -305,13 +299,6 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Create Seed Solution Components Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: 0.25,
-      maxTokens: PsConstants.createSolutionsModel.maxOutputTokens,
-      modelName: PsConstants.createSolutionsModel.name,
-      verbose: PsConstants.createSolutionsModel.verbose,
-    });
 
     try {
       await this.createAllSeedSolutions();

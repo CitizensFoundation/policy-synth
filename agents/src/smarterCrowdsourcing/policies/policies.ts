@@ -2,7 +2,7 @@ import { BaseAgentProcessor } from "../../base/agentProcessor.js";
 import { Worker, Job } from "bullmq";
 import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
 import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
-import { CreateEvidenceSearchQueriesProcessor } from "./create/createEvidenceSearchQueries.js";
+import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
 import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
 import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
 import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
@@ -75,7 +75,7 @@ export class AgentPolicies extends BaseAgentProcessor {
         break;
       case "create-evidence-search-queries":
         const createEvidenceSearchQueries =
-          new CreateEvidenceSearchQueriesProcessor(this.job, this.memory);
+          new CreateEvidenceSearchQueriesAgent(this.job, this.memory);
         await createEvidenceSearchQueries.process();
         break;
       case "web-search-evidence":

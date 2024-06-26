@@ -1,17 +1,12 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-import ioredis from "ioredis";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
+export class RemoveDuplicateWebSolutions extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     allUrls = new Set();
     duplicateUrls = [];
     renderMessages(solutions) {
         const messages = [
-            new SystemMessage(`Take a deep breath and analyze the array of solution oriented JSON objects provided to you by the user, if some of them are identical, choose the less important ones to drop and output as as JSON array: [
+            this.createSystemMessage(`Take a deep breath and analyze the array of solution oriented JSON objects provided to you by the user, if some of them are identical, choose the less important ones to drop and output as as JSON array: [
           {
              titleOfSimilarSolutionToDrop: string;
           }
@@ -20,7 +15,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
         If none of the solutions are identical output only an empty JSON array: []
 
         `),
-            new HumanMessage(`</SolutionsToAnalyzeForIdenticalSimilarities>
+            this.createHumanMessage(`</SolutionsToAnalyzeForIdenticalSimilarities>
           ${JSON.stringify(solutions.map(({ fromUrl, contacts, fromSearchType, ...rest }) => rest), null, 2)}
         </SolutionsToAnalyzeForIdenticalSimilarities>
 
@@ -45,7 +40,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
             }
             this.logger.debug(`Random Solutions: ${JSON.stringify(randomSolutions.map((s) => s.title), null, 2)}`);
             // Step 2: Call the LLM for a list of duplicates to remove
-            const duplicateSolutionTitlesToRemove = (await this.callLLM("web-get-pages", PsConstants.createSolutionsModel, this.renderMessages(randomSolutions), true, true));
+            const duplicateSolutionTitlesToRemove = (await this.callModel(PsAiModelType.Text, this.renderMessages(randomSolutions), true, true));
             this.logger.debug(JSON.stringify(duplicateSolutionTitlesToRemove, null, 2));
             // Step 3: Count duplicates
             const titlesToRemoveCount = new Map();
@@ -87,7 +82,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     async processSubProblems() {
         const promises = [];
         for (let s = 0; s <
-            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); s++) {
+            Math.min(this.memory.subProblems.length, this.maxSubProblems); s++) {
             promises.push((async () => {
                 this.copyEntitySolutionsToSubProblem(s);
                 await this.saveMemory();
@@ -99,7 +94,7 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     }
     async copyEntitySolutionsToSubProblem(subProblemIndex) {
         for (let e = 0; e <
-            Math.min(this.memory.subProblems[subProblemIndex].entities.length, PsConstants.maxTopEntitiesToSearch); e++) {
+            Math.min(this.memory.subProblems[subProblemIndex].entities.length, this.maxTopEntitiesToSearch); e++) {
             this.memory.subProblems[subProblemIndex].solutionsFromSearch = [
                 ...this.memory.subProblems[subProblemIndex].solutionsFromSearch,
                 ...this.memory.subProblems[subProblemIndex].entities[e]
@@ -124,12 +119,6 @@ export class RemoveDuplicateWebSolutions extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Dedup Web Solutions Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: 0.0,
-            maxTokens: 4096,
-            modelName: "gpt-4o",
-            verbose: false,
-        });
         await this.processAll();
         this.logger.info("Get Web Pages Processor Complete");
     }

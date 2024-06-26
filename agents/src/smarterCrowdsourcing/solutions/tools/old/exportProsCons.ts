@@ -40,7 +40,7 @@ let html = `
 
 for (
   let s = 0;
-  s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems);
+  s < Math.min(memory.subProblems.length, this.maxSubProblems);
   s++
 ) {
   const subProblem = memory.subProblems[s];

@@ -1,10 +1,6 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-import { SimplePairwiseRankingsAgent } from "../../../base/simplePairwiseRanking.js";
-
-export class RankSolutionsProcessor extends SimplePairwiseRankingsAgent {
+export class RankSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
   async voteOnPromptPair(
     subProblemIndex: number,
     promptPair: number[]
@@ -27,9 +23,9 @@ export class RankSolutionsProcessor extends SimplePairwiseRankingsAgent {
          1. Analyze a problem and two solution components, labeled "Solution Component One" and "Solution Component Two"
          2. Determine which is more important and practical.
          ${
-           this.memory.customInstructions.rankSolutions
+           this.customInstructionsRankSolutions
              ? `
-           Important Instructions: ${this.memory.customInstructions.rankSolutions}
+           Important Instructions: ${this.customInstructionsRankSolutions}
            `
              : ""
          }
@@ -94,8 +90,6 @@ export class RankSolutionsProcessor extends SimplePairwiseRankingsAgent {
 
     return await this.getResultsFromLLM(
       subProblemIndex,
-      "rank-solutions",
-      PsConstants.solutionsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -111,7 +105,7 @@ export class RankSolutionsProcessor extends SimplePairwiseRankingsAgent {
     this.setupRankingPrompts(
       subProblemIndex,
       this.getActiveSolutionsLastPopulation(subProblemIndex),
-      PsConstants.minimumNumberOfPairwiseVotesForPopulation *
+      this.minimumNumberOfPairwiseVotesForPopulation *
         this.getActiveSolutionsLastPopulation(subProblemIndex).length
     );
 
@@ -129,18 +123,11 @@ export class RankSolutionsProcessor extends SimplePairwiseRankingsAgent {
     super.process();
 
     try {
-      this.chat = new ChatOpenAI({
-        temperature: PsConstants.solutionsRankingsModel.temperature,
-        maxTokens: PsConstants.solutionsRankingsModel.maxOutputTokens,
-        modelName: PsConstants.solutionsRankingsModel.name,
-        verbose: PsConstants.solutionsRankingsModel.verbose,
-      });
-
       const subProblemsPromises = Array.from(
         {
           length: Math.min(
             this.memory.subProblems.length,
-            PsConstants.maxSubProblems
+            this.maxSubProblems
           ),
         },
         async (_, subProblemIndex) => this.processSubProblem(subProblemIndex)

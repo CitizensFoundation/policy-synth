@@ -108,8 +108,6 @@ export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperati
 
   async getResultsFromLLM(
     subProblemIndex: number,
-    stageName: string,
-    modelConstant: PsBaseAIModelConstants,
     messages: PsModelMessage[],
     itemOneIndex: number,
     itemTwoIndex: number

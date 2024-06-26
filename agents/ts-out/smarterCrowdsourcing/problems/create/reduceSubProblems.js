@@ -1,11 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export class ReduceSubProblemsProcessor extends BaseSmarterCrowdsourcingAgent {
     async renderSelectPrompt(problemStatement, subProblemsToConsider) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an expert in analyzing sub problems.
 
         You should choose 21 sub problems, from the top, that are
@@ -17,7 +14,7 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
 
         Offer no explanations.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         Problem statement:
         ${problemStatement}
 
@@ -38,7 +35,7 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
             delete sp.eloRating;
             delete sp.fromUrl;
         });
-        const reducedSubProblems = (await this.callLLM("reduce-sub-problems", PsConstants.reduceSubProblemsModel, await this.renderSelectPrompt(this.memory.problemStatement.description, subProblemsToConsider)));
+        const reducedSubProblems = (await this.callModel(PsAiModelType.Text, await this.renderSelectPrompt(this.memory.problemStatement.description, subProblemsToConsider)));
         // Go through all the reducedSubProblems and add the eloRating at 0
         reducedSubProblems.forEach((sp) => {
             sp.solutions = {
@@ -67,12 +64,6 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Reduce Sub Problems Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.reduceSubProblemsModel.temperature,
-            maxTokens: PsConstants.reduceSubProblemsModel.maxOutputTokens,
-            modelName: PsConstants.reduceSubProblemsModel.name,
-            verbose: PsConstants.reduceSubProblemsModel.verbose,
-        });
         const subProblemsToConsider = this.memory.subProblems.filter((sp) => sp.eloRating && sp.eloRating > 1100);
         await this.reduceSubProblems(subProblemsToConsider);
         this.logger.info("Reduce Sub Problems Processor Completed");

@@ -1,9 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
+export class ReapSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
   async renderReapPrompt(solution: PsSolution) {
     const messages = [
       this.createSystemMessage(
@@ -44,9 +41,8 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
 
       const solution = solutions[solutionIndex];
 
-      const reapedResults: PsReapingResults = await this.callLLM(
-        "evolve-reap-population",
-        PsConstants.reapSolutionsModel,
+      const reapedResults: PsReapingResults = await this.callModel(
+        PsAiModelType.Text,
         await this.renderReapPrompt(solution)
       );
 
@@ -64,7 +60,7 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
   async reapSolutions() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -97,13 +93,6 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Reap Solution Components Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.reapSolutionsModel.temperature,
-      maxTokens: PsConstants.reapSolutionsModel.maxOutputTokens,
-      modelName: PsConstants.reapSolutionsModel.name,
-      verbose: PsConstants.reapSolutionsModel.verbose,
-    });
 
     try {
       await this.reapSolutions();

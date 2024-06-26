@@ -1,7 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export declare class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
-    renderReapPrompt(solution: PsSolution): Promise<(SystemMessage | HumanMessage)[]>;
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class ReapSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
+    renderReapPrompt(solution: PsSolution): Promise<PsModelMessage[]>;
     reapSolutionsForSubProblem(subProblemIndex: number, solutions: Array<PsSolution>): Promise<void>;
     reapSolutions(): Promise<void>;
     process(): Promise<void>;

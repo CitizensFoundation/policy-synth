@@ -1,9 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAgent {
+export class CreateRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourcingAgent {
   generateInLanguage: string | undefined = "Icelandic";
 
   static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[] = [
@@ -128,18 +125,16 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
           `Creating root cause search queries for result ${searchResultType} search results`
         );
         // create search queries for each type
-        let searchResults = await this.callLLM(
-          "create-root-causes-search-queries",
-          PsConstants.createRootCauseSearchQueriesModel,
+        let searchResults = await this.callModel(
+          PsAiModelType.Text,
           await this.renderCreatePrompt(searchResultType)
         );
         if (refineSearchQueriesHere) {
           this.logger.info(
             `Refine root cause search queries for ${searchResultType} search results`
           );
-          searchResults = await this.callLLM(
-            "create-root-causes-search-queries",
-            PsConstants.createRootCauseSearchQueriesModel,
+          searchResults = await this.callModel(
+            PsAiModelType.Text,
             await this.renderRefinePrompt(searchResultType, searchResults)
           );
         }
@@ -147,9 +142,8 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
           this.logger.info(
             `Ranking root cause search queries for ${searchResultType} search results`
           );
-          searchResults = await this.callLLM(
-            "create-root-causes-search-queries",
-            PsConstants.createRootCauseSearchQueriesModel,
+          searchResults = await this.callModel(
+            PsAiModelType.Text,
             await this.renderRankPrompt(searchResultType, searchResults)
           );
         }
@@ -174,16 +168,11 @@ export class CreateRootCausesSearchQueriesProcessor extends BaseProblemSolvingAg
   async process() {
     this.logger.info("Create Root Cause Search Queries Processor");
     super.process();
-    this.chat = new ChatOpenAI({
-      temperature:
-        PsConstants.createRootCauseSearchQueriesModel.temperature,
-      maxTokens:
-        PsConstants.createRootCauseSearchQueriesModel.maxOutputTokens,
-      modelName: PsConstants.createRootCauseSearchQueriesModel.name,
-      verbose: PsConstants.createRootCauseSearchQueriesModel.verbose,
-    });
+
     this.logger.info("Creating root cause search queries");
+
     await this.createRootCauseSearchQueries();
+
     this.logger.info("Finished creating root cause search queries");
   }
 }

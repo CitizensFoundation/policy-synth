@@ -1,6 +1,5 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export declare class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class CreateSolutionImagesProcessor extends BaseSmarterCrowdsourcingAgent {
     cloudflareProxy: string;
     subProblemColors: string[];
     secondaryColors: string[];
@@ -9,7 +8,7 @@ export declare class CreateSolutionImagesProcessor extends BaseProblemSolvingAge
     uploadImageToS3(bucket: string, filePath: string, key: string): Promise<unknown>;
     get randomSecondaryColor(): string;
     getSubProblemColor(subProblemIndex: number): string;
-    renderCreatePrompt(subProblemIndex: number, solution: PsSolution | PSPolicy, injectText?: string): Promise<(SystemMessage | HumanMessage)[]>;
+    renderCreatePrompt(subProblemIndex: number, solution: PsSolution | PSPolicy, injectText?: string): Promise<PsModelMessage[]>;
     getImageUrlFromPrompt(prompt: string): Promise<any>;
     getDalleImagePrompt(subProblemIndex?: number | undefined, solution?: PsSolution | undefined): string;
     createImages(): Promise<void>;

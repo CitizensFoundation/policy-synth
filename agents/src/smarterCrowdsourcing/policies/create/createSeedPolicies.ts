@@ -1,9 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
+export class CreateSeedPoliciesProcessor extends BaseSmarterCrowdsourcingAgent {
   renderCurrentSolution(solution: PsSolution) {
     return `
       Solution Component:
@@ -19,13 +16,13 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
       Best pros:
       ${this.getProCons(solution.pros as PsProCon[]).slice(
         0,
-        PsConstants.maxTopProsConsUsedForRating
+        this.maxTopProsConsUsedForRating
       )}
 
       Best cons:
       ${this.getProCons(solution.cons as PsProCon[]).slice(
         0,
-        PsConstants.maxTopProsConsUsedForRating
+        this.maxTopProsConsUsedForRating
       )}
     `;
   }
@@ -154,19 +151,19 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
     solutionIndex: number
   ): Promise<PSPolicy> {
     try {
-      let policyOptions = (await this.callLLM(
-        "policies-seed",
-        PsConstants.policiesSeedModel,
+      let policyOptions = (await this.callModel(
+        PsAiModelType.Text,
         await this.renderCreatePrompt(subProblemIndex, solution),
         true,
         false,
         1500
       )) as PSPolicy[];
 
-      if (PsConstants.enable.refine.policiesSeed) {
-        policyOptions = (await this.callLLM(
-          "policies-seed",
-          PsConstants.policiesSeedModel,
+      const refinePolicy = false;
+
+      if (refinePolicy) {
+        policyOptions = (await this.callModel(
+          PsAiModelType.Text,
           await this.renderRefinePrompt(
             subProblemIndex,
             solution,
@@ -178,9 +175,8 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
         )) as PSPolicy[];
       }
 
-      const choosenPolicy = (await this.callLLM(
-        "policies-seed",
-        PsConstants.policiesSeedModel,
+      const choosenPolicy = (await this.callModel(
+        PsAiModelType.Text,
         await this.renderChoosePrompt(subProblemIndex, solution, policyOptions),
         true,
         false,
@@ -200,7 +196,7 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
   async createSeedPolicies() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -230,7 +226,7 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
 
           for (
             let solutionIndex = 0;
-            solutionIndex < PsConstants.maxTopSolutionsToCreatePolicies;
+            solutionIndex < this.maxTopSolutionsToCreatePolicies;
             solutionIndex++
           ) {
             this.logger.info(
@@ -280,14 +276,7 @@ export class CreateSeedPoliciesProcessor extends BaseProblemSolvingAgent {
 
   async process() {
     this.logger.info("Create Seed Policies Processor");
-    //super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.policiesSeedModel.temperature,
-      maxTokens: PsConstants.policiesSeedModel.maxOutputTokens,
-      modelName: PsConstants.policiesSeedModel.name,
-      verbose: PsConstants.policiesSeedModel.verbose,
-    });
+    super.process();
 
     try {
       await this.createSeedPolicies();

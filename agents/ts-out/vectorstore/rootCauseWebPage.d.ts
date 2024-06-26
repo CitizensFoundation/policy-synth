@@ -1,6 +1,6 @@
 import { WeaviateClient } from "weaviate-ts-client";
-import { PolicySynthScAgentBase } from "../base/baseScAgentBase.js";
-export declare class RootCauseWebPageVectorStore extends PolicySynthScAgentBase {
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
+export declare class RootCauseWebPageVectorStore extends PolicySynthSimpleAgentBase {
     static fieldsToExtract: string;
     static client: WeaviateClient;
     addSchema(): Promise<void>;

@@ -1,12 +1,9 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 const DISABLE_LLM_FOR_DEBUG = false;
-export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
+export class CreateSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
     useLanguage = "English";
     renderCreateSystemMessage() {
-        return new SystemMessage(`As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities based on the <SolutionsToBaseYourSolutionComponentsOn> provided by the user.
+        return this.createSystemMessage(`As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities based on the <SolutionsToBaseYourSolutionComponentsOn> provided by the user.
 
       Instructions:
       1. Generate four simple solution components focused on the sub problem and its affected entities based on the <SolutionsToBaseYourSolutionComponentsOn>.
@@ -38,7 +35,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     async renderCreatePrompt(subProblemIndex, solutionsForInspiration, alreadyCreatedSolutions = undefined) {
         const messages = [
             this.renderCreateSystemMessage(),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatementSubProblemsAndEntities(subProblemIndex, false)}
 
         <SolutionsToBaseYourSolutionComponentsOn>
@@ -67,15 +64,15 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
         }
         else {
             this.logger.info(`Calling LLM for sub problem ${subProblemIndex}`);
-            let results = await this.callLLM(stageName, PsConstants.createSolutionsModel, await this.renderCreatePrompt(subProblemIndex, solutionsForInspiration, alreadyCreatedSolutions), true, false, 860);
+            let results = await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solutionsForInspiration, alreadyCreatedSolutions), true, false, 860);
             return results;
         }
     }
     async countTokensForString(text) {
-        const tokenCountData = await this.chat.getNumTokensFromMessages([
-            new HumanMessage(text),
+        const tokenCountData = await this.getTokensFromMessages([
+            this.createHumanMessage(text),
         ]);
-        return tokenCountData.totalCount;
+        return tokenCountData;
     }
     getRandomSolutions(subProblemIndex, alreadyCreatedSolutions) {
         this.logger.info(`Getting random solutions for sub problem ${subProblemIndex}`);
@@ -123,7 +120,7 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     }
     async createAllSeedSolutions() {
         for (let subProblemIndex = 0; subProblemIndex <
-            Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems); subProblemIndex++) {
+            Math.min(this.memory.subProblems.length, this.maxSubProblems); subProblemIndex++) {
             this.currentSubProblemIndex = subProblemIndex;
             this.logger.info(`Creating solutions for sub problem ${subProblemIndex}`);
             let solutions = [];
@@ -168,12 +165,6 @@ export class CreateSolutionsProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Create Seed Solution Components Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: 0.25,
-            maxTokens: PsConstants.createSolutionsModel.maxOutputTokens,
-            modelName: PsConstants.createSolutionsModel.name,
-            verbose: PsConstants.createSolutionsModel.verbose,
-        });
         try {
             await this.createAllSeedSolutions();
         }

@@ -1,4 +1,4 @@
-import { PolicySynthOperationsAgent } from "../../base/baseOperationsAgent.js";
+import { PolicySynthOperationsAgent } from "../../base/operationsAgent.js";
 import { Worker } from "bullmq";
 import { CreateSubProblemsProcessor } from "./create/createSubProblems.js";
 import { CreateEntitiesProcessor } from "./create/createEntities.js";

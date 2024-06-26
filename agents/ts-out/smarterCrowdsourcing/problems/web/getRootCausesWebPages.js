@@ -1,10 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PsConstants } from "../../../constants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
-import { GetWebPagesProcessor } from "../../solutions/web/getWebPages.js";
+import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -31,14 +28,14 @@ class RootCauseTypeLookup {
         return this.rootCauseTypeMapping[rootCauseType];
     }
 }
-export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
+export class GetRootCausesWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     hasPrintedPrompt = false;
     outputInLanguage = "English";
     processesUrls = new Set();
     renderRootCauseScanningPrompt(type, text) {
         return [
-            new SystemMessage(`You are an expert in identifying and analyzing root causes for a particular problem statement in a given text context.
+            this.createSystemMessage(`You are an expert in identifying and analyzing root causes for a particular problem statement in a given text context.
 
         Important Instructions:
         1. Take a deep breath and examine the contents of the "<textContext>" section in detail, identify all specific root causes in the <textContext> that could be causes of the problem statement presented by the user.
@@ -66,7 +63,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
                 ? `11. Always output text in the ${this.outputInLanguage} language even if the <textContext> is in a different language.`
                 : ""}
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 
         <textContext>
@@ -79,14 +76,14 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     }
     async getRootCauseTokenCount(text, type) {
         const emptyMessages = this.renderRootCauseScanningPrompt(type, "");
-        const promptTokenCount = await this.chat.getNumTokensFromMessages(emptyMessages);
-        const textForTokenCount = new HumanMessage(text);
-        const textTokenCount = await this.chat.getNumTokensFromMessages([
+        const promptTokenCount = await this.getTokensFromMessages(emptyMessages);
+        const textForTokenCount = this.createHumanMessage(text);
+        const textTokenCount = await this.getTokensFromMessages([
             textForTokenCount,
         ]);
-        const totalTokenCount = promptTokenCount.totalCount +
-            textTokenCount.totalCount +
-            PsConstants.getPageAnalysisModel.maxOutputTokens;
+        const totalTokenCount = promptTokenCount +
+            textTokenCount +
+            this.maxModelTokensOut;
         return { totalTokenCount, promptTokenCount };
     }
     async getRootCauseTextAnalysis(type, text, url) {
@@ -95,9 +92,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             this.logger.debug(`Searching ${url}...`);
             let textAnalysis;
-            if (PsConstants.getPageAnalysisModel.tokenLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = PsConstants.getPageAnalysisModel.tokenLimit -
-                    promptTokenCount.totalCount -
+            if (this.tokenInLimit < totalTokenCount) {
+                const maxTokenLengthForChunk = this.tokenInLimit -
+                    promptTokenCount -
                     512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
                 const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
@@ -208,7 +205,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             console.log(JSON.stringify(messages, null, 2));
             this.hasPrintedPrompt = true;
         }
-        const analysis = (await this.callLLM("web-get-root-causes-pages", PsConstants.getPageAnalysisModel, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, messages, true, true));
         return analysis;
     }
     isUrlInSubProblemMemory(url) {
@@ -259,9 +256,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     async processRootCauses(browser) {
         const problemStatement = this.memory.problemStatement;
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(PsConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(this.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
+        await browserPage.setUserAgent(this.currentUserAgent);
         const clearSubProblems = false;
         if (clearSubProblems) {
             this.memory.subProblems = [];
@@ -282,7 +279,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
             let urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
             if (urlsToGet) {
                 urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length *
-                    PsConstants.maxRootCausePercentOfSearchResultWebPagesToGet));
+                    this.maxRootCausePercentOfSearchResultWebPagesToGet));
                 for (let i = 0; i < urlsToGet.length; i++) {
                     await this.getAndProcessRootCausePage(urlsToGet[i].url, browserPage, searchResultType);
                 }
@@ -299,9 +296,9 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(PsConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(this.webPageNavTimeout);
+        browserPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
+        await browserPage.setUserAgent(this.currentUserAgent);
         await this.processRootCauses(browser);
         await this.saveMemory();
         await browser.close();
@@ -309,13 +306,7 @@ export class GetRootCausesWebPagesProcessor extends GetWebPagesProcessor {
     }
     async process() {
         this.logger.info("Get Root Cause Web Pages Processor");
-        //super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.getPageAnalysisModel.temperature,
-            maxTokens: PsConstants.getPageAnalysisModel.maxOutputTokens,
-            modelName: PsConstants.getPageAnalysisModel.name,
-            verbose: PsConstants.getPageAnalysisModel.verbose,
-        });
+        super.process();
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);
         this.logger.info("Get Root Cause Web Pages Processor Complete");

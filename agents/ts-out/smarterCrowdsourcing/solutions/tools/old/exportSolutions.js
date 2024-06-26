@@ -1,4 +1,3 @@
-import { PsConstants } from "../../../../constants.js";
 import fs from "fs";
 import process from "process";
 import path from "path";
@@ -50,7 +49,7 @@ result.url || result.link}</a></li>`)
     .join("")}
     </ul>
 `;
-for (let s = 0; s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems); s++) {
+for (let s = 0; s < Math.min(memory.subProblems.length, this.maxSubProblems); s++) {
     const subProblem = memory.subProblems[s];
     const solutions = subProblem.solutions.populations[0];
     html += `
@@ -89,7 +88,7 @@ for (let s = 0; s < Math.min(memory.subProblems.length, PsConstants.maxSubProble
                 ? `<h4>Pros:</h4>
                 <ul>
                 ${pros
-                    .slice(0, PsConstants.maxTopProsConsUsedForRating)
+                    .slice(0, this.maxTopProsConsUsedForRating)
                     .map((pro) => `<li>${pro.description} (${formatElo(pro.eloRating)})</li>`)
                     .join("")}
                 </ul>`
@@ -99,7 +98,7 @@ for (let s = 0; s < Math.min(memory.subProblems.length, PsConstants.maxSubProble
                 ? `<h4>Cons:</h4>
                 <ul>
                 ${cons
-                    .slice(0, PsConstants.maxTopProsConsUsedForRating)
+                    .slice(0, this.maxTopProsConsUsedForRating)
                     .map((con) => `<li>${con.description} (${formatElo(con.eloRating)})</li>`)
                     .join("")}
                 </ul>`

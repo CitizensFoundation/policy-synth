@@ -1,9 +1,5 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { OpenAI } from "openai";
-import { AxiosResponse } from "axios";
 import axios from "axios";
 import AWS from "aws-sdk";
 import fs from "fs";
@@ -21,7 +17,7 @@ interface GenerationResponse {
   }>;
 }
 
-export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
+export class CreateSolutionImagesProcessor extends BaseSmarterCrowdsourcingAgent {
   cloudflareProxy = "https://cps-images.citizens.is";
 
   subProblemColors = [
@@ -92,7 +88,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     let retryCount = 0;
     let retrying = true;
 
-    while (retrying && retryCount < PsConstants.maxStabilityRetryCount) {
+    while (retrying && retryCount < this.maxStabilityRetryCount) {
       try {
         response = await axios.post(
           `${apiHost}/v1/generation/${engineId}/text-to-image`,
@@ -138,9 +134,8 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
 
         if (error.message && error.message.indexOf("400") > -1) {
           if (retryCount > 3) {
-            imagePrompt = (await this.callLLM(
-              "create-solution-images",
-              PsConstants.createSolutionImagesModel,
+            imagePrompt = (await this.callModel(
+              PsAiModelType.Text,
               await this.renderCreatePrompt(
                 subProblemIndex,
                 solutionOrPolicy!,
@@ -151,9 +146,8 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
             this.logger.debug(`New (altered) Image Prompt: ${imagePrompt}`);
             sleepingFor = 2500 + retryCount * 1500;
           } else {
-            imagePrompt = (await this.callLLM(
-              "create-solution-images",
-              PsConstants.createSolutionImagesModel,
+            imagePrompt = (await this.callModel(
+              PsAiModelType.Text,
               await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy!),
               false
             )) as string;
@@ -274,7 +268,7 @@ export class CreateSolutionImagesProcessor extends BaseProblemSolvingAgent {
     let retrying = true; // Initialize as true
     let result: any;
 
-    while (retrying && retryCount < PsConstants.maxDalleRetryCount) {
+    while (retrying && retryCount < this.maxDalleRetryCount) {
       try {
         result = await client.images.generate({
           model: "dall-e-3",
@@ -326,7 +320,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
   async createImages() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -363,9 +357,8 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
               this.logger.debug(`Using existing image prompt: ${imagePrompt}`);
             } else {
               if (process.env.STABILITY_API_KEY) {
-                imagePrompt = (await this.callLLM(
-                  "create-solution-images",
-                  PsConstants.createSolutionImagesModel,
+                imagePrompt = (await this.callModel(
+                  PsAiModelType.Text,
                   await this.renderCreatePrompt(subProblemIndex, solution),
                   false
                 )) as string;
@@ -459,13 +452,6 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
   async process() {
     this.logger.info("Create Images Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createSolutionImagesModel.temperature,
-      maxTokens: PsConstants.createSolutionImagesModel.maxOutputTokens,
-      modelName: PsConstants.createSolutionImagesModel.name,
-      verbose: PsConstants.createSolutionImagesModel.verbose,
-    });
 
     try {
       await this.createImages();

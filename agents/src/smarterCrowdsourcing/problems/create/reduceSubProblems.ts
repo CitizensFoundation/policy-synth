@@ -1,14 +1,11 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
+export class ReduceSubProblemsProcessor extends BaseSmarterCrowdsourcingAgent {
   async renderSelectPrompt(
     problemStatement: string,
     subProblemsToConsider: PsSubProblem[]
-  ): Promise<HumanMessage[]> {
-    const messages: HumanMessage[] = [
+  ): Promise<PsModelMessage[]> {
+    const messages: PsModelMessage[] = [
       this.createSystemMessage(
         `
         You are an expert in analyzing sub problems.
@@ -48,9 +45,8 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
       delete (sp as any).eloRating;
       delete (sp as any).fromUrl;
     });
-    const reducedSubProblems = (await this.callLLM(
-      "reduce-sub-problems",
-      PsConstants.reduceSubProblemsModel,
+    const reducedSubProblems = (await this.callModel(
+      PsAiModelType.Text,
       await this.renderSelectPrompt(
         this.memory.problemStatement.description,
         subProblemsToConsider
@@ -87,13 +83,6 @@ export class ReduceSubProblemsProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Reduce Sub Problems Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.reduceSubProblemsModel.temperature,
-      maxTokens: PsConstants.reduceSubProblemsModel.maxOutputTokens,
-      modelName: PsConstants.reduceSubProblemsModel.name,
-      verbose: PsConstants.reduceSubProblemsModel.verbose,
-    });
 
     const subProblemsToConsider = this.memory.subProblems.filter(
       (sp) => sp.eloRating && sp.eloRating > 1100

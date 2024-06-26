@@ -1,10 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-
-export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
+export class CreateEntitiesProcessor extends BaseSmarterCrowdsourcingAgent {
   async renderRefinePrompt(subProblemIndex: number, results: PsAffectedEntity[]) {
     const messages = [
       this.createSystemMessage(
@@ -50,7 +46,7 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
 
         Instructions:
 
-        1. Generate and output up to ${PsConstants.maxNumberGeneratedOfEntities} affected entities.
+        1. Generate and output up to ${this.maxNumberGeneratedOfEntities} affected entities.
         2. Identify all entities impacted by the main problem and its subproblems.
         3. Highlight all direct negative effects, and any positive effects, without suggesting solution components. Multiple effects may be listed in the array.
         4. Use short, concise, and consistent names for entities.
@@ -118,21 +114,19 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
 
 
   async createEntities() {
-    const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+    const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
 
     const subProblemsPromises = Array.from(
       { length: subProblemsLimit },
       async (_, subProblemIndex) => {
-        let results = (await this.callLLM(
-          "create-entities",
-          PsConstants.createEntitiesModel,
+        let results = (await this.callModel(
+          PsAiModelType.Text,
           await this.renderCreatePrompt(subProblemIndex)
         )) as PsAffectedEntity[];
 
-        if (PsConstants.enable.refine.createEntities) {
-          results = (await this.callLLM(
-            "create-entities",
-            PsConstants.createEntitiesModel,
+        if (this.createEntitiesRefinedEnabled) {
+          results = (await this.callModel(
+            PsAiModelType.Text,
             await this.renderRefinePrompt(subProblemIndex, results)
           )) as PsAffectedEntity[];
         }
@@ -150,13 +144,6 @@ export class CreateEntitiesProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Create Entities Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createEntitiesModel.temperature,
-      maxTokens: PsConstants.createEntitiesModel.maxOutputTokens,
-      modelName: PsConstants.createEntitiesModel.name,
-      verbose: PsConstants.createEntitiesModel.verbose,
-    });
 
     await this.createEntities();
   }

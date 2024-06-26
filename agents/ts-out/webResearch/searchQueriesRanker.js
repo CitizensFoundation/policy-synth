@@ -1,11 +1,8 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BasePairwiseRankingsProcessor } from "../base/basePairwiseRanking.js";
-import { PsConstants } from "../constants.js";
-export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
+import { SimplePairwiseRankingsAgent } from "../base/simplePairwiseRanking.js";
+export class SearchQueriesRanker extends SimplePairwiseRankingsAgent {
     searchQuestion;
     constructor(memory, progressFunction = undefined) {
-        super(undefined, memory);
+        super(memory);
         this.progressFunction = progressFunction;
     }
     async voteOnPromptPair(index, promptPair) {
@@ -14,7 +11,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert trained to rank search queries based on their relevance to the user research question.
 
         Instructions:
@@ -24,7 +21,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         Research question: ${this.searchQuestion}
 
         Search Queries to Rank:
@@ -38,16 +35,10 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
         The Most Relevant Search Query Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "rank-search-queries", messages, itemOneIndex, itemTwoIndex);
     }
     async rankSearchQueries(queriesToRank, searchQuestion, maxPrompts = 120) {
         this.searchQuestion = searchQuestion;
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.searchQueryRankingsModel.temperature,
-            maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-            modelName: PsConstants.searchQueryRankingsModel.name,
-            verbose: PsConstants.searchQueryRankingsModel.verbose,
-        });
         this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
         await this.performPairwiseRanking(-1);
         return this.getOrderedListOfItems(-1);

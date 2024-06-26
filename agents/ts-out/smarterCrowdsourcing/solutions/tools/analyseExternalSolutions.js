@@ -1,9 +1,6 @@
-import { PsConstants } from "../../../constants.js";
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
 import path from "path";
 import fetch from "node-fetch";
 //@ts-ignore
@@ -94,14 +91,14 @@ const externalSolutionsMisuseOfLegalSystem = [
         description: "Engage communities and build coalitions to ensure that the voices of key stakeholders are represented in funding decisions related to election administration. ",
     },
 ];
-export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
+export class AnalyseExternalSolutions extends BaseSmarterCrowdsourcingAgent {
     folderPath;
     async renderAnalysisPrompt(solutionDescription, requirement) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         1. You are an expert in analyzing how well a solution matches a requirement
         2. Always and only output the following JSON format: { solutionCoversPercentOfKeyRequirements }        `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         Requirement:
         ${requirement}
 
@@ -115,7 +112,7 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
         return messages;
     }
     async compareSolutionToExternal(solutionDescription, requirement) {
-        const result = (await this.callLLM("analyse-external-solutions", PsConstants.analyseExternalSolutionsModel, await this.renderAnalysisPrompt(solutionDescription, requirement)));
+        const result = (await this.callModel(PsAiModelType.Text, await this.renderAnalysisPrompt(solutionDescription, requirement)));
         return result;
     }
     async analyze() {
@@ -176,12 +173,6 @@ export class AnalyseExternalSolutions extends BaseProblemSolvingAgent {
         this.folderPath = folderPath;
         this.logger.info("Create Analysis Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.analyseExternalSolutionsModel.temperature,
-            maxTokens: PsConstants.analyseExternalSolutionsModel.maxOutputTokens,
-            modelName: PsConstants.analyseExternalSolutionsModel.name,
-            verbose: PsConstants.analyseExternalSolutionsModel.verbose,
-        });
         try {
             await this.analyze();
         }
@@ -224,7 +215,7 @@ async function run() {
     if (projectId) {
         const output = await redis.get(`st_mem:${projectId}:id`);
         const memory = JSON.parse(output);
-        const counts = new AnalyseExternalSolutions({}, memory);
+        const counts = new AnalyseExternalSolutions({}, memory, 1, 1);
         await counts.processAnalysis(folderPath);
         process.exit(0);
     }

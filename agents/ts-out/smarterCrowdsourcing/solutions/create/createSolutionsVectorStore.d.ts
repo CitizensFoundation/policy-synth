@@ -1,14 +1,13 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-export declare class CreateSolutionsVectorStoreProcessor extends BaseProblemSolvingAgent {
+export declare class CreateSolutionsVectorStoreProcessor extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore: WebPageVectorStore;
     useLanguage: string | undefined;
-    renderRefinePrompt(results: PsSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(SystemMessage | HumanMessage)[]>;
-    renderCreateSystemMessage(): SystemMessage;
-    renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): (SystemMessage | HumanMessage)[];
-    renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<(SystemMessage | HumanMessage)[]>;
-    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: PsScMemoryStageTypes): Promise<PsSolution[]>;
+    renderRefinePrompt(results: PsSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<PsModelMessage[]>;
+    renderCreateSystemMessage(): PsModelMessage;
+    renderCreateForTestTokens(subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): PsModelMessage[];
+    renderCreatePrompt(generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<PsModelMessage[]>;
+    createSolutions(subProblemIndex: number, generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, alreadyCreatedSolutions?: string | undefined, stageName?: string): Promise<PsSolution[]>;
     randomSearchQueryIndex(searchQueries: PsSearchQueries, type: PsWebPageTypes): number;
     getAllTypeQueries(searchQueries: PsSearchQueries, subProblemIndex: number | undefined): {
         general: string;

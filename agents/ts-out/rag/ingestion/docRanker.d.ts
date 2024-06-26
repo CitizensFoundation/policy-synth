@@ -1,5 +1,5 @@
-import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
-export declare class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
+import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
+export declare class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
     rankingRules: string | undefined;
     overallTopic: string | undefined;
     constructor(memory?: PsSmarterCrowdsourcingMemoryData | undefined, progressFunction?: Function | undefined);

@@ -1,8 +1,5 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankSubProblemsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     subProblemIndex = 0;
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
@@ -10,7 +7,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[subProblemIndex][itemOneIndex];
         const itemTwo = this.allItems[subProblemIndex][itemTwoIndex];
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert trained to analyse complex problem statements and associated sub-problems to determine their relevance.
 
         Instructions:
@@ -26,7 +23,7 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
 
         Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 
         Sub-Problems for Consideration:
@@ -44,20 +41,14 @@ export class RankSubProblemsProcessor extends BasePairwiseRankingsProcessor {
         The Most Relevant Sub-Problem Is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-sub-problems", PsConstants.subProblemsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
         this.logger.info("Rank Sub Problems Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.subProblemsRankingsModel.temperature,
-            maxTokens: PsConstants.subProblemsRankingsModel.maxOutputTokens,
-            modelName: PsConstants.subProblemsRankingsModel.name,
-            verbose: PsConstants.subProblemsRankingsModel.verbose,
-        });
         let maxPrompts;
         if (this.memory.subProblems.length > 100) {
-            maxPrompts = this.memory.subProblems.length * PsConstants.subProblemsRankingMinNumberOfMatches;
+            maxPrompts = this.memory.subProblems.length * this.subProblemsRankingMinNumberOfMatches;
         }
         this.setupRankingPrompts(-1, this.memory.subProblems, maxPrompts);
         await this.performPairwiseRanking(-1);

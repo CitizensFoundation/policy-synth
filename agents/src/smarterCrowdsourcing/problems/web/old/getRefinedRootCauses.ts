@@ -91,11 +91,11 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
       let textAnalysis: PSRefinedRootCause[];
 
       if (
-        PsConstants.getRefinedRootCausesModel.tokenLimit < totalTokenCount
+        this.tokenInLimit < totalTokenCount
       ) {
         const maxTokenLengthForChunk =
-          PsConstants.getRefinedRootCausesModel.tokenLimit -
-          promptTokenCount.totalCount -
+          this.tokenInLimit -
+          promptTokenCount -
           64;
 
         this.logger.debug(
@@ -233,7 +233,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
     const analysis = (await this.callLLM(
       "web-get-refined-root-causes",
-      PsConstants.getRefinedEvidenceModel,
+      this.getRefinedEvidenceModel,
       messages,
       true,
       true
@@ -315,7 +315,7 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
   }
 
   async refineWebRootCauses(page: Page) {
-    const limit = PsConstants.topWebPagesToGetForRefineRootCausesScan;
+    const limit = this.topWebPagesToGetForRefineRootCausesScan;
 
     let typeCount = 0;
 
@@ -336,10 +336,10 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
     if (runMainEvent) {
       try {
-        for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
+        for (const rootCauseType of this.rootCauseFieldTypes) {
           typeCount++;
           const searchType =
-            PsConstants.simplifyRootCauseType(rootCauseType);
+            this.simplifyRootCauseType(rootCauseType);
           const results =
             await this.rootCauseWebPageVectorStore.getTopPagesForProcessing(
               this.memory.groupId,
@@ -397,10 +397,10 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(this.webPageNavTimeout);
+    browserPage.setDefaultNavigationTimeout(this.webPageNavTimeout);
 
-    await browserPage.setUserAgent(PsConstants.currentUserAgent);
+    await browserPage.setUserAgent(this.currentUserAgent);
 
     try {
       await this.refineWebRootCauses(browserPage);
@@ -419,13 +419,13 @@ export class GetRefinedRootCausesProcessor extends GetRootCausesWebPagesProcesso
 
   async process() {
     this.logger.info("Refined Root Causes Web Pages Processor");
-    //super.process();
+    super.process();
 
     this.chat = new ChatOpenAI({
-      temperature: PsConstants.getRefinedRootCausesModel.temperature,
-      maxTokens: PsConstants.getRefinedRootCausesModel.maxOutputTokens,
-      modelName: PsConstants.getRefinedRootCausesModel.name,
-      verbose: PsConstants.getRefinedRootCausesModel.verbose,
+      temperature: this.getRefinedRootCausesModel.temperature,
+      maxTokens: this.getRefinedRootCausesModel.maxOutputTokens,
+      modelName: this.getRefinedRootCausesModel.name,
+      verbose: this.getRefinedRootCausesModel.verbose,
     });
 
     await this.getAllPages();

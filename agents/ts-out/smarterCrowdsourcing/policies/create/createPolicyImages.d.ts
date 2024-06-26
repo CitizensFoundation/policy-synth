@@ -1,7 +1,6 @@
 import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 export declare class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
-    renderCreatePolicyImagePrompt(subProblemIndex: number, policy: PSPolicy, injectText?: string): Promise<(SystemMessage | HumanMessage)[]>;
+    renderCreatePolicyImagePrompt(subProblemIndex: number, policy: PSPolicy, injectText?: string): Promise<PsModelMessage[]>;
     createPolicyImages(): Promise<void>;
     process(): Promise<void>;
 }

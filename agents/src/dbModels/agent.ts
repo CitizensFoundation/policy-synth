@@ -56,7 +56,7 @@ export class PsAgent
   declare removeAiModels: (models: PsAiModel[]) => Promise<void>;
 
   get redisMemoryKey() {
-    return "ps:agent:memory:"+this.id;
+    return `ps:agent:memory:${this.id}:${this.uuid}`;
   }
 }
 

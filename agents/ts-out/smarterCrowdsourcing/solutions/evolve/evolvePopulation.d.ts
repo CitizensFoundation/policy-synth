@@ -1,9 +1,8 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { CreateSolutionsProcessor } from "../create/createSolutions.js";
 export declare class EvolvePopulationProcessor extends CreateSolutionsProcessor {
     renderSolution(solution: PsSolution): string;
-    renderRecombinationPrompt(parentA: PsSolution, parentB: PsSolution, subProblemIndex: number): (SystemMessage | HumanMessage)[];
-    renderMutatePrompt(individual: PsSolution, subProblemIndex: number, mutateRate: PsMutationRates): (SystemMessage | HumanMessage)[];
+    renderRecombinationPrompt(parentA: PsSolution, parentB: PsSolution, subProblemIndex: number): PsModelMessage[];
+    renderMutatePrompt(individual: PsSolution, subProblemIndex: number, mutateRate: PsMutationRates): PsModelMessage[];
     performRecombination(parentA: PsSolution, parentB: PsSolution, subProblemIndex: number): Promise<PsSolution>;
     recombine(parentA: PsSolution, parentB: PsSolution, subProblemIndex: number): Promise<PsSolution>;
     performMutation(individual: PsSolution, subProblemIndex: number, mutateRate: PsMutationRates): Promise<PsSolution>;

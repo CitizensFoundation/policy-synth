@@ -1,9 +1,8 @@
-import { PsConstants } from "../../constants.js";
-import { BaseProblemSolvingAgent } from "../../base/baseProblemSolvingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../smarterCrowdsourcing/baseAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-class ShowCounts extends BaseProblemSolvingAgent {
+class ShowCounts extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     foundIds = new Set();
     foundUrls = new Set();
@@ -56,7 +55,7 @@ class ShowCounts extends BaseProblemSolvingAgent {
         this.logger.debug("+++++++++++++++++++++++++++++++++++++");
         this.logger.debug(`Problem Statement Web Page Count: ${counts.webPageCount}`);
         this.logger.debug(`Problem Statement Solutions Count: ${counts.solutionsCount}`);
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             this.logger.info(`Count sub problem ${subProblemIndex + 1}`);
             const subProblemTitle = this.memory.subProblems[subProblemIndex].title;

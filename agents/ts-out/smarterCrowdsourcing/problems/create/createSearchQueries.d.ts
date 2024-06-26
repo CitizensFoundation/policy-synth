@@ -1,10 +1,9 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-export declare class CreateSearchQueriesProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export declare class CreateSearchQueriesProcessor extends BaseSmarterCrowdsourcingAgent {
     useLanguage: string | undefined;
     renderCommonPromptSection(): string;
-    renderProblemPrompt(problem: string): Promise<(SystemMessage | HumanMessage)[]>;
-    renderEntityPrompt(problem: string, entity: PsAffectedEntity): Promise<(SystemMessage | HumanMessage)[]>;
+    renderProblemPrompt(problem: string): Promise<PsModelMessage[]>;
+    renderEntityPrompt(problem: string, entity: PsAffectedEntity): Promise<PsModelMessage[]>;
     process(): Promise<void>;
 }
 //# sourceMappingURL=createSearchQueries.d.ts.map

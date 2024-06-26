@@ -1,12 +1,9 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage, } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 const USE_SHORT_DESCRIPTIONS = false;
-export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
+export class CreateSubProblemsProcessor extends BaseSmarterCrowdsourcingAgent {
     async renderRefinePrompt(results) {
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
             As an AI expert, your role involves the analysis and refinement of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
@@ -22,7 +19,7 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
             10. Never explain only output JSON.
             12. Always output in the follwing JSON format: [ { title, description, whyIsSubProblemImportant }  ]
             13. Let's think step by step.`),
-            new HumanMessage(`
+            this.createHumanMessage(`
            Problem Statement:
            "${this.memory.problemStatement.description}"
 
@@ -37,7 +34,7 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
     async renderCreatePrompt() {
         //TODO: Human review and improvements of those GPT-4 generated few-shots
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
             As an AI expert, your role involves the analysis of problem statements to identify the root causes of the stated problem and output in the form of sub problems.
 
             Instructions:
@@ -61,7 +58,7 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
               ]
             12. Let's think step by step.
             `),
-            new HumanMessage(`
+            this.createHumanMessage(`
            Problem Statement:
            "${this.memory.problemStatement.description}"
 
@@ -71,9 +68,9 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
         return messages;
     }
     async createSubProblems() {
-        let results = (await this.callLLM("create-sub-problems", PsConstants.createSubProblemsModel, await this.renderCreatePrompt()));
-        if (PsConstants.enable.refine.createSubProblems) {
-            results = await this.callLLM("create-sub-problems", PsConstants.createSubProblemsModel, await this.renderRefinePrompt(results));
+        let results = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt()));
+        if (this.createSubProblemsRefineEnabled) {
+            results = await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(results));
         }
         if (this.memory.subProblems && this.memory.subProblems.length > 0) {
             this.memory.subProblems = [...this.memory.subProblems, ...results];
@@ -87,12 +84,6 @@ export class CreateSubProblemsProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Sub Problems Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.createSubProblemsModel.temperature,
-            maxTokens: PsConstants.createSubProblemsModel.maxOutputTokens,
-            modelName: PsConstants.createSubProblemsModel.name,
-            verbose: PsConstants.createSubProblemsModel.verbose,
-        });
         await this.createSubProblems();
     }
 }

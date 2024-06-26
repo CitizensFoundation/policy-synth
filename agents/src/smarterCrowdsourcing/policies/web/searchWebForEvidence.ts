@@ -1,13 +1,5 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { PsConstants } from "../../../constants.js";
-import ioredis from "ioredis";
-import { BingSearchApi } from "../../solutions/web/bingSearchApi.js";
 import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
-import { CreateEvidenceSearchQueriesProcessor } from "../create/createEvidenceSearchQueries.js";
-
-const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-);
+import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
 
 export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
   searchCounter = 0
@@ -20,7 +12,7 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
       //@ts-ignore
       policy.evidenceSearchResults = {};
     }
-    for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+    for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
 
       // If searchCounter mod 10 then print
       if (this.searchCounter % 10 == 0) {
@@ -36,14 +28,14 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
       if (!policy.evidenceSearchResults![searchResultType]) {
 
         let queriesToSearch =  policy.evidenceSearchQueries![searchResultType]
-         .slice(0, PsConstants.maxTopEvidenceQueriesToSearchPerType);
+         .slice(0, this.maxTopEvidenceQueriesToSearchPerType);
 
         const results = await this.getQueryResults(
           queriesToSearch,
           `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`
         );
 
-        this.searchCounter+=PsConstants.maxTopEvidenceQueriesToSearchPerType;
+        this.searchCounter+=this.maxTopEvidenceQueriesToSearchPerType;
 
         policy.evidenceSearchResults![searchResultType] = results.searchResults;
 
@@ -62,11 +54,11 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
     this.logger.info("Search Web for Evidence Processor");
     this.seenUrls = new Map();
 
-    //super.process();
+    super.process();
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     for (

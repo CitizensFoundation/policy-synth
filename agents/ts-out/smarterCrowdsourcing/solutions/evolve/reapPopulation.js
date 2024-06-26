@@ -1,16 +1,13 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+export class ReapSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
     async renderReapPrompt(solution) {
         const messages = [
-            new SystemMessage(`You are an expert in assessing if a solution component fits given requirements.
+            this.createSystemMessage(`You are an expert in assessing if a solution component fits given requirements.
          Do not output markdown.
          Offer no explanations.
          Output either true or false as JSON Object: { solutionFitsRequirements }
          `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         Solution component to assess:
         ${solution.title}
         ${solution.description}
@@ -31,7 +28,7 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
         const leaveOutFirstTopOnes = 3;
         for (let solutionIndex = leaveOutFirstTopOnes; solutionIndex < solutions.length; solutionIndex++) {
             const solution = solutions[solutionIndex];
-            const reapedResults = await this.callLLM("evolve-reap-population", PsConstants.reapSolutionsModel, await this.renderReapPrompt(solution));
+            const reapedResults = await this.callModel(PsAiModelType.Text, await this.renderReapPrompt(solution));
             if (reapedResults.solutionFitsRequirements === false) {
                 this.logger.info(`Reaped solution: ${solution.title}`);
                 solution.reaped = true;
@@ -41,7 +38,7 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
         this.logger.info(`Population size after reaping: ${afterSize}`);
     }
     async reapSolutions() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const solutions = this.memory.subProblems[subProblemIndex].solutions.populations[this.lastPopulationIndex(subProblemIndex)];
             await this.reapSolutionsForSubProblem(subProblemIndex, solutions);
@@ -57,12 +54,6 @@ export class ReapSolutionsProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Reap Solution Components Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.reapSolutionsModel.temperature,
-            maxTokens: PsConstants.reapSolutionsModel.maxOutputTokens,
-            modelName: PsConstants.reapSolutionsModel.name,
-            verbose: PsConstants.reapSolutionsModel.verbose,
-        });
         try {
             await this.reapSolutions();
         }

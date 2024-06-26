@@ -1,13 +1,11 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
-export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
+export class RankWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+    modelTemperature = 0.0;
     async renderProblemPrompt(subProblemIndex, policy, evidenceToRank, evidenceType) {
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an expert in filtering and ranking policy evidence.
 
         1. Filter out irrelevant policy evidence.
@@ -16,7 +14,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
         4. Always and only output a JSON String Array: [ policyEvidence ].
 
         Let's think step by step.`),
-            new HumanMessage(`
+            this.createHumanMessage(`
         Evidence type: ${evidenceType}
 
         Policy proposal:
@@ -34,10 +32,10 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     async rankWebEvidence(policy, subProblemIndex) {
         this.logger.info(`Ranking all web evidence for policy ${policy.title}`);
         try {
-            for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+            for (const evidenceType of this.policyEvidenceFieldTypes) {
                 let offset = 0;
                 const limit = 100;
-                const searchType = PsConstants.simplifyEvidenceType(evidenceType);
+                const searchType = this.simplifyEvidenceType(evidenceType);
                 while (true) {
                     const results = await this.evidenceWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, subProblemIndex, searchType, policy.title, limit, offset);
                     this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
@@ -55,7 +53,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Evidence before ranking (${evidenceType}):\n${JSON.stringify(evidenceToRank, null, 2)}`);
-                            let rankedEvidence = await this.callLLM("rank-web-evidence", PsConstants.rankWebEvidenceModel, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
+                            let rankedEvidence = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
                             await this.evidenceWebPageVectorStore.updateWebSolutions(id, fieldKey, rankedEvidence, true);
                             this.logger.debug(`${id} - Evidence after ranking (${evidenceType}):\n${JSON.stringify(rankedEvidence, null, 2)}`);
                         }
@@ -76,13 +74,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Rank web evidence Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.rankWebEvidenceModel.temperature,
-            maxTokens: PsConstants.rankWebEvidenceModel.maxOutputTokens,
-            modelName: PsConstants.rankWebEvidenceModel.name,
-            verbose: PsConstants.rankWebEvidenceModel.verbose,
-        });
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
@@ -92,7 +84,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
                 if (subProblem.policies) {
                     const policies = subProblem.policies.populations[currentGeneration];
                     for (let p = 0; p <
-                        Math.min(policies.length, PsConstants.maxTopPoliciesToProcess); p++) {
+                        Math.min(policies.length, this.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
                             await this.rankWebEvidence(policy, subProblemIndex);

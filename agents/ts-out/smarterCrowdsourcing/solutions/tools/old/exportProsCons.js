@@ -1,7 +1,6 @@
 import fs from "fs";
 import process from "process";
 import path from "path";
-import { PsConstants } from "../../../../constants.js";
 let filePath = process.argv[2] || "currentMemory.json";
 if (!path.isAbsolute(filePath)) {
     filePath = path.join(process.cwd(), filePath);
@@ -32,7 +31,7 @@ let html = `
   <body>
     <h1>${memory.problemStatement.description}</h1>
 `;
-for (let s = 0; s < Math.min(memory.subProblems.length, PsConstants.maxSubProblems); s++) {
+for (let s = 0; s < Math.min(memory.subProblems.length, this.maxSubProblems); s++) {
     const subProblem = memory.subProblems[s];
     const solutions = subProblem.solutions.seed;
     for (const solution of solutions) {

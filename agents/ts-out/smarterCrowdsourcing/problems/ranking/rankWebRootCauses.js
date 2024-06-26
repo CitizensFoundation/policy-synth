@@ -1,13 +1,10 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
-export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
+export class RankWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     async renderProblemPrompt(rootCausesToRank, rootCauseType) {
         return [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an expert in filtering and ranking root causes of a particular problem.
 
         1. Filter out irrelevant root causes and solutions to the problem.
@@ -16,7 +13,7 @@ export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
         4. Always and only output a JSON String Array and never explain only output JSON.
 
         Let's think step by step.`),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemStatement()}
 
         Root Cause type: ${rootCauseType}
@@ -32,10 +29,10 @@ export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
     async rankWebRootCauses() {
         this.logger.info("Ranking all web root causes");
         try {
-            for (const rootCauseType of PsConstants.rootCauseFieldTypes) {
+            for (const rootCauseType of this.rootCauseFieldTypes) {
                 let offset = 0;
                 const limit = 100;
-                const searchType = PsConstants.simplifyRootCauseType(rootCauseType);
+                const searchType = this.simplifyRootCauseType(rootCauseType);
                 while (true) {
                     const results = await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(this.memory.groupId, searchType, limit, offset);
                     this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
@@ -48,10 +45,12 @@ export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
                         const webPage = retrievedObject;
                         const id = webPage._additional.id;
                         const fieldKey = rootCauseType;
-                        if (webPage[fieldKey] && Array.isArray(webPage[fieldKey]) && webPage[fieldKey].length > 0) {
+                        if (webPage[fieldKey] &&
+                            Array.isArray(webPage[fieldKey]) &&
+                            webPage[fieldKey].length > 0) {
                             const rootCausesToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Root Causes before ranking (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-                            let rankedRootCauses = await this.callLLM("rank-web-root-causes", PsConstants.rankWebRootCausesModel, await this.renderProblemPrompt(rootCausesToRank, fieldKey));
+                            let rankedRootCauses = await this.callLLM("rank-web-root-causes", this.rankWebRootCausesModel, await this.renderProblemPrompt(rootCausesToRank, fieldKey));
                             await this.rootCauseWebPageVectorStore.updateWebRootCause(id, fieldKey, rankedRootCauses, true);
                             this.logger.debug(`${id} - Root Causes after ranking (${rootCauseType}):\n${JSON.stringify(rankedRootCauses, null, 2)}`);
                         }
@@ -71,12 +70,6 @@ export class RankWebRootCausesProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Rank web root cause Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.rankWebRootCausesModel.temperature,
-            maxTokens: PsConstants.rankWebRootCausesModel.maxOutputTokens,
-            modelName: PsConstants.rankWebRootCausesModel.name,
-            verbose: PsConstants.rankWebRootCausesModel.verbose,
-        });
         try {
             await this.rankWebRootCauses();
             this.logger.debug(`Finished ranking root causes`);

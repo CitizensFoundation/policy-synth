@@ -1,8 +1,5 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankProsConsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(subProblemIndex, promptPair, additionalData) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
@@ -16,7 +13,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
             proConSingle = "Con";
         }
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         As an AI expert, your role involves analyzing ${additionalData.prosOrCons} associated with solution components to problems and decide on which ${additionalData.prosOrCons} is more important.
 
         Instructions:
@@ -25,7 +22,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
         2. Analyze and compare the ${additionalData.prosOrCons} based on their relevance and importance to the solution component and choose which is more important and output your decision as either "One", "Two" or "Neither".
         3. Never explain your reasoning.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderSubProblem(additionalData.subProblemIndex, true)}
 
         ${additionalData.solution}
@@ -39,7 +36,7 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
         The more important ${proConSingle} is:
         `),
         ];
-        return await this.getResultsFromLLM(subProblemIndex, "rank-pros-cons", PsConstants.prosConsRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(subProblemIndex, messages, itemOneIndex, itemTwoIndex);
     }
     convertProsConsToObjects(prosCons) {
         return prosCons.map((prosCon) => {
@@ -51,16 +48,10 @@ export class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
     async process() {
         this.logger.info("Rank Pros Cons Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.prosConsRankingsModel.temperature,
-            maxTokens: PsConstants.prosConsRankingsModel.maxOutputTokens,
-            modelName: PsConstants.prosConsRankingsModel.name,
-            verbose: PsConstants.prosConsRankingsModel.verbose,
-        });
         try {
             // Parallel execution of the subproblems
             const subProblemPromises = this.memory.subProblems
-                .slice(0, PsConstants.maxSubProblems)
+                .slice(0, this.maxSubProblems)
                 .map((subProblem, subProblemIndex) => {
                 return this.processSubProblem(subProblem, subProblemIndex);
             });

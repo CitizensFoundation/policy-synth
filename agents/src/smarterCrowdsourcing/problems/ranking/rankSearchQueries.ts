@@ -1,10 +1,6 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-import { SimplePairwiseRankingsAgent } from "../../../base/simplePairwiseRanking.js";
-
-export class RankSearchQueriesProcessor extends SimplePairwiseRankingsAgent {
+export class RankSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
   renderProblemDetail(
     additionalData: {
       subProblemIndex: number,
@@ -84,8 +80,6 @@ export class RankSearchQueriesProcessor extends SimplePairwiseRankingsAgent {
 
     return await this.getResultsFromLLM(
       index,
-      "rank-search-queries",
-      PsConstants.searchQueryRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -95,7 +89,7 @@ export class RankSearchQueriesProcessor extends SimplePairwiseRankingsAgent {
   async processSubProblems() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -157,7 +151,7 @@ export class RankSearchQueriesProcessor extends SimplePairwiseRankingsAgent {
       e <
       Math.min(
         this.memory.subProblems[subProblemIndex].entities.length,
-        PsConstants.maxTopEntitiesToSearch
+        this.maxTopEntitiesToSearch
       );
       e++
     ) {
@@ -195,13 +189,6 @@ export class RankSearchQueriesProcessor extends SimplePairwiseRankingsAgent {
   async process() {
     this.logger.info("Rank Search Queries Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.searchQueryRankingsModel.temperature,
-      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: PsConstants.searchQueryRankingsModel.name,
-      verbose: PsConstants.searchQueryRankingsModel.verbose,
-    });
 
     this.logger.info("Rank Search Queries Processor: Sub Problems");
 

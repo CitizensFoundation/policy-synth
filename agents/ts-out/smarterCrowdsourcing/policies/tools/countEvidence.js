@@ -1,9 +1,8 @@
-import { BaseProblemSolvingAgent } from "../../../base/baseProblemSolvingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import ioredis from "ioredis";
-import { PsConstants } from "../../../constants.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
+export class CountWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     async countAll(policy, subProblemIndex) {
         let offset = 0;
@@ -11,14 +10,14 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
         const logDetail = false;
         this.logger.info(`Counting all web evidence for policy ${policy.title}`);
         try {
-            for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+            for (const evidenceType of this.policyEvidenceFieldTypes) {
                 //this.logger.info(`Counting all web evidence for type ${evidenceType}`);
                 let offset = 0;
                 let refinedCount = 0;
                 let totalCount = 0;
                 let revidenceCount = 0;
                 let reommendationCount = 0;
-                const searchType = PsConstants.simplifyEvidenceType(evidenceType);
+                const searchType = this.simplifyEvidenceType(evidenceType);
                 while (true) {
                     const results = await this.evidenceWebPageVectorStore.getTopWebPagesForProcessing(this.memory.groupId, subProblemIndex, searchType, policy.title, limit, offset);
                     /*this.logger.debug(
@@ -62,7 +61,7 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
     async process() {
         this.logger.info("Count evidence Processor");
         super.process();
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const skipSubProblemsIndexes = [];
         const currentGeneration = 0;
         for (let subProblemIndex = 0; subProblemIndex < subProblemsLimit; subProblemIndex++) {
@@ -71,8 +70,7 @@ export class CountWebEvidenceProcessor extends BaseProblemSolvingAgent {
             if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
                 if (subProblem.policies) {
                     const policies = subProblem.policies.populations[currentGeneration];
-                    for (let p = 0; p <
-                        Math.min(policies.length, PsConstants.maxTopPoliciesToProcess); p++) {
+                    for (let p = 0; p < Math.min(policies.length, this.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
                             await this.countAll(policy, subProblemIndex);
@@ -97,7 +95,7 @@ async function run() {
     if (projectId) {
         const output = await redis.get(`st_mem:${projectId}:id`);
         const memory = JSON.parse(output);
-        const counts = new CountWebEvidenceProcessor({}, memory);
+        const counts = new CountWebEvidenceProcessor({}, memory, 0, 0);
         await counts.process();
         process.exit(0);
     }

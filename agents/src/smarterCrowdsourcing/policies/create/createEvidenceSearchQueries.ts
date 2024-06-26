@@ -1,10 +1,6 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-import { PsConstants } from "../../../constants.js";
-import { ChatOpenAI } from "@langchain/openai";
-
-export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgent {
+export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAgent {
   static evidenceWebPageTypesArray: PSEvidenceWebPageTypes[] = [
     "positiveEvidence",
     "negativeEvidence",
@@ -33,7 +29,7 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
     "globalPerspective",
 
     "costAnalysis",
-    "implementationFeasibility"
+    "implementationFeasibility",
   ];
 
   filterPolicyParameters(
@@ -177,15 +173,14 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
       policy.evidenceSearchQueries = {};
     }
 
-    for (const searchResultType of CreateEvidenceSearchQueriesProcessor.evidenceWebPageTypesArray) {
+    for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
       if (!policy.evidenceSearchQueries![searchResultType]) {
         this.logger.info(
           `Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
         );
         // create search queries for each type
-        let searchResults = (await this.callLLM(
-          "create-evidence-search-queries",
-          PsConstants.createEvidenceSearchQueriesModel,
+        let searchResults = (await this.callModel(
+          PsAiModelType.Text,
           await this.renderCreatePrompt(
             subProblemIndex,
             policy,
@@ -197,9 +192,8 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
           `Refine evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
         );
 
-        searchResults = (await this.callLLM(
-          "create-evidence-search-queries",
-          PsConstants.createEvidenceSearchQueriesModel,
+        searchResults = (await this.callModel(
+          PsAiModelType.Text,
           await this.renderRefinePrompt(
             subProblemIndex,
             policy,
@@ -212,9 +206,8 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
           `Ranking evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
         );
 
-        searchResults = (await this.callLLM(
-          "create-evidence-search-queries",
-          PsConstants.createEvidenceSearchQueriesModel,
+        searchResults = (await this.callModel(
+          PsAiModelType.Text,
           await this.renderRankPrompt(
             subProblemIndex,
             policy,
@@ -244,18 +237,9 @@ export class CreateEvidenceSearchQueriesProcessor extends BaseProblemSolvingAgen
     this.logger.info("Create Evidence Search Queries Processor");
     super.process();
 
-    this.chat = new ChatOpenAI({
-      temperature:
-        PsConstants.createEvidenceSearchQueriesModel.temperature,
-      maxTokens:
-        PsConstants.createEvidenceSearchQueriesModel.maxOutputTokens,
-      modelName: PsConstants.createEvidenceSearchQueriesModel.name,
-      verbose: PsConstants.createEvidenceSearchQueriesModel.verbose,
-    });
-
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(

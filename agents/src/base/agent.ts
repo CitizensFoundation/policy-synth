@@ -1,14 +1,9 @@
 import winston from "winston";
-import { PsConstants } from "../constants.js";
 import { jsonrepair } from "jsonrepair";
-import { ChatOpenAI } from "@langchain/openai";
-import { BaseMessage } from "@langchain/core/messages";
-import { Callbacks } from "@langchain/core/callbacks/manager";
 
 export class PolicySynthBaseAgent {
   logger: winston.Logger;
   timeStart: number = Date.now();
-  chat: ChatOpenAI | undefined;
   rateLimits: PsModelRateLimitTracking = {};
 
   maxModelTokensOut?: number;
@@ -184,8 +179,8 @@ export class PolicySynthBaseAgent {
     );
   }
 
-  async getTokensFromMessages(messages: BaseMessage[]): Promise<number> {
-    const tokens = await this.chat!.getNumTokensFromMessages(messages);
-    return tokens.totalCount;
+  async getTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+    const tokens = await this.getTokensFromMessages(messages);
+    return tokens;
   }
 }

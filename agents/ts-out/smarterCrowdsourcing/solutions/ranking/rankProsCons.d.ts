@@ -1,5 +1,5 @@
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export declare class RankProsConsProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export declare class RankProsConsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData: {
         solution: string;
         prosOrCons: "pros" | "cons";

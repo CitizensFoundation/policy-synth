@@ -1,8 +1,5 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
-import { BasePairwiseRankingsProcessor } from "../../../base/basePairwiseRanking.js";
-export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+export class RankSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     renderProblemDetail(additionalData) {
         let detail = ``;
         if (additionalData.searchQueryTarget === "problemStatement") {
@@ -32,7 +29,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert trained to rank search queries based on their relevance to complex problem statements, sub-problems and affected entities.
 
         Instructions:
@@ -42,7 +39,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         ${this.renderProblemDetail(additionalData)}
 
         Search Queries to Rank:
@@ -56,10 +53,10 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
         The Most Relevant Search Query Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "rank-search-queries", PsConstants.searchQueryRankingsModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
     async processSubProblems() {
-        const subProblemsLimit = Math.min(this.memory.subProblems.length, PsConstants.maxSubProblems);
+        const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             await this.processEntities(subProblemIndex);
             for (const searchQueryType of [
@@ -103,7 +100,7 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     }
     async processEntities(subProblemIndex) {
         for (let e = 0; e <
-            Math.min(this.memory.subProblems[subProblemIndex].entities.length, PsConstants.maxTopEntitiesToSearch); e++) {
+            Math.min(this.memory.subProblems[subProblemIndex].entities.length, this.maxTopEntitiesToSearch); e++) {
             for (const searchQueryType of [
                 "general",
                 "scientific",
@@ -129,12 +126,6 @@ export class RankSearchQueriesProcessor extends BasePairwiseRankingsProcessor {
     async process() {
         this.logger.info("Rank Search Queries Processor");
         super.process();
-        this.chat = new ChatOpenAI({
-            temperature: PsConstants.searchQueryRankingsModel.temperature,
-            maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-            modelName: PsConstants.searchQueryRankingsModel.name,
-            verbose: PsConstants.searchQueryRankingsModel.verbose,
-        });
         this.logger.info("Rank Search Queries Processor: Sub Problems");
         await this.processSubProblems();
         this.logger.info("Rank Search Queries Processor: Problem Statement");

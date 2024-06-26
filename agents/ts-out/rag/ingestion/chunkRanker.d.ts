@@ -1,7 +1,9 @@
-import { BasePairwiseRankingsProcessor } from "../../base/basePairwiseRanking.js";
-export declare class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
+import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
+export declare class IngestionChunkRanker extends SimplePairwiseRankingsAgent {
     rankingRules: string | undefined;
     documentSummary: string | undefined;
+    maxModelTokensOut: number;
+    modelTemperature: number;
     constructor(memory?: PsSmarterCrowdsourcingMemoryData | undefined, progressFunction?: Function | undefined);
     voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
     rankDocumentChunks(chunksToRank: PsRagChunk[], rankingRules: string, documentSummary: string, eloRatingKey: string): Promise<PsRagChunk[]>;

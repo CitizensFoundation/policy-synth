@@ -1,9 +1,6 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 
-export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
+export class RateSolutionsProcessor extends BaseSmarterCrowdsourcingAgent {
   async renderRatePrompt(subProblemIndex: number, solution: PsSolution) {
     const messages = [
       this.createSystemMessage(
@@ -37,13 +34,13 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
         Best pros:
         ${this.getProCons(solution.pros as PsProCon[]).slice(
           0,
-          PsConstants.maxTopProsConsUsedForRating
+          this.maxTopProsConsUsedForRating
         )}
 
         Best cons:
         ${this.getProCons(solution.cons as PsProCon[]).slice(
           0,
-          PsConstants.maxTopProsConsUsedForRating
+          this.maxTopProsConsUsedForRating
         )}
 
         Your ratings in JSON format:
@@ -56,7 +53,7 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
   async rateSolutions() {
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const subProblemsPromises = Array.from(
@@ -83,9 +80,8 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
           this.logger.debug(solution.title);
 
           if (!solution.ratings) {
-            const rating = (await this.callLLM(
-              "rate-solutions",
-              PsConstants.rateSolutionsModel,
+            const rating = (await this.callModel(
+              PsAiModelType.Text,
               await this.renderRatePrompt(subProblemIndex, solution)
             )) as object;
 
@@ -109,13 +105,6 @@ export class RateSolutionsProcessor extends BaseProblemSolvingAgent {
   async process() {
     this.logger.info("Rate Solution Components Processor");
     super.process();
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.rateSolutionsModel.temperature,
-      maxTokens: PsConstants.rateSolutionsModel.maxOutputTokens,
-      modelName: PsConstants.rateSolutionsModel.name,
-      verbose: PsConstants.rateSolutionsModel.verbose,
-    });
 
     try {
       await this.rateSolutions();

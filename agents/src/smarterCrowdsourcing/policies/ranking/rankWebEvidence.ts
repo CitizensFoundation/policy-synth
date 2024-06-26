@@ -1,12 +1,9 @@
-import { BaseProblemSolvingAgent } from "../../../base/smarterCrowdsourcingAgent.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { PsConstants } from "../../../constants.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
 
-export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
+export class RankWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
+  modelTemperature = 0.0;
 
   async renderProblemPrompt(
     subProblemIndex: number | null,
@@ -48,10 +45,10 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     this.logger.info(`Ranking all web evidence for policy ${policy.title}`);
 
     try {
-      for (const evidenceType of PsConstants.policyEvidenceFieldTypes) {
+      for (const evidenceType of this.policyEvidenceFieldTypes) {
         let offset = 0;
         const limit = 100;
-        const searchType = PsConstants.simplifyEvidenceType(evidenceType);
+        const searchType = this.simplifyEvidenceType(evidenceType);
 
         while (true) {
           const results =
@@ -91,9 +88,8 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
                 `${id} - Evidence before ranking (${evidenceType}):\n${JSON.stringify(evidenceToRank, null, 2)}`
               );
 
-              let rankedEvidence = await this.callLLM(
-                "rank-web-evidence",
-                PsConstants.rankWebEvidenceModel,
+              let rankedEvidence = await this.callModel(
+                PsAiModelType.Text,
                 await this.renderProblemPrompt(
                   subProblemIndex,
                   policy,
@@ -135,16 +131,9 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
     this.logger.info("Rank web evidence Processor");
     super.process();
 
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.rankWebEvidenceModel.temperature,
-      maxTokens: PsConstants.rankWebEvidenceModel.maxOutputTokens,
-      modelName: PsConstants.rankWebEvidenceModel.name,
-      verbose: PsConstants.rankWebEvidenceModel.verbose,
-    });
-
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
-      PsConstants.maxSubProblems
+      this.maxSubProblems
     );
 
     const skipSubProblemsIndexes: number[] = [];
@@ -164,7 +153,7 @@ export class RankWebEvidenceProcessor extends BaseProblemSolvingAgent {
               p <
               Math.min(
                 policies.length,
-                PsConstants.maxTopPoliciesToProcess
+                this.maxTopPoliciesToProcess
               );
               p++
             ) {
