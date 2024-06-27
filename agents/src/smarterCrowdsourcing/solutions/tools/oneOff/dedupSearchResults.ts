@@ -1,6 +1,4 @@
 import ioredis from "ioredis";
-import fs from "fs/promises";
-import { PsConstants } from "../../../../constants.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -42,6 +40,8 @@ class DeduplicateSearchProcessor {
     return deduplicatedArray;
   }
 
+  maxSubProblems = 10;
+
   deduplicateSubProblems(searchQueryType: PsWebPageTypes) {
     const subProblemsCount = Math.min(
       this.memory.subProblems.length,
@@ -70,6 +70,8 @@ class DeduplicateSearchProcessor {
       this.deduplicateEntities(s, searchQueryType);
     }
   }
+
+  maxTopEntitiesToSearch = 3;
 
   deduplicateEntities(
     subProblemIndex: number,

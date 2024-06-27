@@ -49,7 +49,7 @@ result.url || result.link}</a></li>`)
     .join("")}
     </ul>
 `;
-for (let s = 0; s < Math.min(memory.subProblems.length, this.maxSubProblems); s++) {
+for (let s = 0; s < Math.min(memory.subProblems.length, 7); s++) {
     const subProblem = memory.subProblems[s];
     const solutions = subProblem.solutions.populations[0];
     html += `
@@ -88,7 +88,7 @@ for (let s = 0; s < Math.min(memory.subProblems.length, this.maxSubProblems); s+
                 ? `<h4>Pros:</h4>
                 <ul>
                 ${pros
-                    .slice(0, this.maxTopProsConsUsedForRating)
+                    .slice(0, 3)
                     .map((pro) => `<li>${pro.description} (${formatElo(pro.eloRating)})</li>`)
                     .join("")}
                 </ul>`
@@ -98,7 +98,7 @@ for (let s = 0; s < Math.min(memory.subProblems.length, this.maxSubProblems); s+
                 ? `<h4>Cons:</h4>
                 <ul>
                 ${cons
-                    .slice(0, this.maxTopProsConsUsedForRating)
+                    .slice(0, 3)
                     .map((con) => `<li>${con.description} (${formatElo(con.eloRating)})</li>`)
                     .join("")}
                 </ul>`

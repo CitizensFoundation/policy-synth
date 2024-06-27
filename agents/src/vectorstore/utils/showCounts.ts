@@ -138,7 +138,7 @@ async function run() {
     const output = await redis.get(`st_mem:${projectId}:id`);
     const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
-    const counts = new ShowCounts({} as any, memory);
+    const counts = new ShowCounts({} as any, memory, 0, 1);
     await counts.process();
     process.exit(0);
   } else {

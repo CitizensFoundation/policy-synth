@@ -29,6 +29,7 @@ class DeduplicateSearchProcessor {
         this.deduplicatedCount += deduplicatedArray.length;
         return deduplicatedArray;
     }
+    maxSubProblems = 10;
     deduplicateSubProblems(searchQueryType) {
         const subProblemsCount = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         for (let s = 0; s < subProblemsCount; s++) {
@@ -46,6 +47,7 @@ class DeduplicateSearchProcessor {
             this.deduplicateEntities(s, searchQueryType);
         }
     }
+    maxTopEntitiesToSearch = 3;
     deduplicateEntities(subProblemIndex, searchQueryType) {
         const subProblem = this.memory.subProblems[subProblemIndex];
         const entitiesCount = Math.min(subProblem.entities.length, this.maxTopEntitiesToSearch);

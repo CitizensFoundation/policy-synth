@@ -50,7 +50,7 @@ export class RankWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
                             webPage[fieldKey].length > 0) {
                             const rootCausesToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Root Causes before ranking (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-                            let rankedRootCauses = await this.callLLM("rank-web-root-causes", this.rankWebRootCausesModel, await this.renderProblemPrompt(rootCausesToRank, fieldKey));
+                            let rankedRootCauses = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(rootCausesToRank, fieldKey));
                             await this.rootCauseWebPageVectorStore.updateWebRootCause(id, fieldKey, rankedRootCauses, true);
                             this.logger.debug(`${id} - Root Causes after ranking (${rootCauseType}):\n${JSON.stringify(rankedRootCauses, null, 2)}`);
                         }

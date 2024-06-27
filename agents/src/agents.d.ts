@@ -1,3 +1,28 @@
+interface YpStructuredQuestionData {
+  uniqueId?: string;
+  text: string;
+  html?: string;
+  type?: string;
+  subType?: string;
+  value?: string | number | boolean;
+  maxLength?: number;
+  required?: boolean;
+  rows?: number;
+  pattern?: string;
+  charCounter?: boolean;
+  richTextAllowed?: boolean;
+  segmentName?: string;
+  subTitle?: string;
+  halfWidthDesktop?: boolean;
+  extraTopMargin?: boolean;
+  lessBottomMargin?: boolean;
+}
+
+interface YpStructuredAnswer {
+  uniqueId: string;
+  value: string | boolean | number;
+}
+
 interface PsBaseModelClass {
   id: number;
   uuid: string;
@@ -205,6 +230,7 @@ interface PsBaseNodeConfiguration {
   graphPosY: number;
   maxTokensOut?: number;
   temperature?: number;
+  answers?: YpStructuredAnswer[];
 }
 
 interface PsBaseNodeInstance extends PsBaseModelClass {
@@ -336,3 +362,178 @@ interface PsModelRateLimitTracking {
     tokens: Array<{ count: number; timestamp: number }>;
   };
 }
+
+/* Examples of structured questions for agent classes
+
+"googleDocsQuestions": [
+  {
+    "uniqueId": "name",
+    "text": "Name",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "googleDocsId",
+    "text": "Document ID",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "googleServiceAccount",
+    "text": "ServiceAccount JSON",
+    "type": "textArea",
+    "rows": 10,
+    "required": false
+  }
+] as YpStructuredQuestionData[]
+
+"discordQuestions": [
+  {
+    "uniqueId": "name",
+    "text": "Name",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "discordBotToken",
+    "text": "Bot Token",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "discordChannelName",
+    "text": "Discord Channel Name",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  }
+] as YpStructuredQuestionData[]
+
+"yourPrioritiesQuestions": [
+  {
+    "uniqueId": "name",
+    "text": "Name",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "user_id",
+    "text": "User ID",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "userKey",
+    "text": "User Key",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "group_id",
+    "text": "Group ID",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  }
+] as YpStructuredQuestionData[]
+
+"rootCausesQuestions": [
+  {
+    "uniqueId": "name",
+    "text": "Name",
+    "type": "textField",
+    "maxLength": 200,
+    "required": false
+  },
+  {
+    "uniqueId": "problemStatement",
+    "text": "Problem Statement",
+    "type": "textArea",
+    "rows": 5,
+    "maxLength": 2500,
+    "required": false
+  },
+  {
+    "uniqueId": "rankingInstructions",
+    "text": "Ranking Instructions",
+    "type": "textArea",
+    "rows": 3,
+    "maxLength": 1000,
+    "required": false
+  },
+  {
+    "uniqueId": "howManySearchQueries",
+    "text": "How many search queries",
+    "type": "textField",
+    "maxLength": 200,
+    "subType": "number",
+    "required": false
+  },
+  {
+    "uniqueId": "percentToUseSearchQueries",
+    "text": "% of top search queries to use",
+    "type": "textField",
+    "maxLength": 200,
+    "subType": "number",
+    "required": false
+  },
+  {
+    "uniqueId": "percentToUseSearchResults",
+    "text": "% of top search results to use",
+    "type": "textField",
+    "maxLength": 200,
+    "subType": "number",
+    "required": false
+  }
+] as YpStructuredQuestionData[]
+
+// Example of a Connector Class
+
+"googleDocsConnectorClass": {
+  "id": 1,
+  "name": "Google Docs",
+  "uuid": "1",
+  "version": 1,
+  "created_at": "2024-06-27T00:00:00Z",
+  "updated_at": "2024-06-27T00:00:00Z",
+  "user_id": 1,
+  "available": true,
+  "configuration": {
+    "description": "Connector for Google Docs",
+    "imageUrl": "https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png",
+    "iconName": "docs",
+    "questions": googleDocsQuestions
+  }
+}
+
+// Example of an Agent Class
+"smarterCrowdsourcingAgentClass": {
+  "id": 1,
+  "version": 1,
+  "name": "Smarter Crowdsourcing Agent",
+  "uuid": "1",
+  "user_id": 1,
+  "created_at": "2024-06-27T00:00:00Z",
+  "updated_at": "2024-06-27T00:00:00Z",
+  "available": true,
+  "configuration": {
+    "description": "An agent for running the Smarter Crowdsourcing process",
+    "imageUrl": "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
+    "iconName": "smarter_crowdsourcing",
+    "assistantSystemInstructions": "Explain the process",
+    "capabilities": ["research", "analysis"],
+    "inputJsonInterface": "{}",
+    "outputJsonInterface": "{}",
+    "questions": rootCausesQuestions // Just an example
+    supportedConnectors: []
+  }
+}
+
+*/

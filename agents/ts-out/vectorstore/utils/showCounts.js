@@ -84,7 +84,7 @@ async function run() {
     if (projectId) {
         const output = await redis.get(`st_mem:${projectId}:id`);
         const memory = JSON.parse(output);
-        const counts = new ShowCounts({}, memory);
+        const counts = new ShowCounts({}, memory, 0, 1);
         await counts.process();
         process.exit(0);
     }

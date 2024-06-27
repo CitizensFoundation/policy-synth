@@ -10,9 +10,10 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
         }
     }
     async search(query) {
+        const maxBingResults = process.env.PS_MAX_BING_RESULTS ? parseInt(process.env.PS_MAX_BING_RESULTS) : 10;
         const requestParams = {
             method: "GET",
-            url: `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${PsConstants.maxBingSearchResults}&q=` +
+            url: `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${maxBingResults}&q=` +
                 encodeURIComponent(query),
             headers: {
                 "Ocp-Apim-Subscription-Key": this.SUBSCRIPTION_KEY,

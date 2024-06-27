@@ -3,7 +3,9 @@ import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPa
 export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     simplifyRootCauseType(rootCauseType) {
-        return rootCauseType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
+        return rootCauseType
+            .replace(/allPossible/g, "")
+            .replace(/IdentifiedInTextContext/g, "");
     }
     async renderProblemPrompt(rawWebData, rootCausesToRank, rootCauseType) {
         return [
@@ -59,10 +61,12 @@ export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
                         const webPage = retrievedObject;
                         const id = webPage._additional.id;
                         const fieldKey = rootCauseType;
-                        if (webPage[fieldKey] && Array.isArray(webPage[fieldKey]) && webPage[fieldKey].length > 0) {
+                        if (webPage[fieldKey] &&
+                            Array.isArray(webPage[fieldKey]) &&
+                            webPage[fieldKey].length > 0) {
                             const rootCausesToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Root causes to rate (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-                            let ratedRootCauses = await this.callLLM("rate-web-root-causes", this.rateWebRootCausesModel, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
+                            let ratedRootCauses = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
                             await this.rootCauseWebPageVectorStore.updateScores(id, ratedRootCauses, true);
                             this.logger.debug(`${id} - Root Causes ratings (${rootCauseType}):\n${JSON.stringify(ratedRootCauses, null, 2)}`);
                         }

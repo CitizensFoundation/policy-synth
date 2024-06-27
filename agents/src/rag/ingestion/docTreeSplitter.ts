@@ -1,5 +1,3 @@
-import { PsIngestionConstants } from "./ingestionConstants.js";
-
 import { BaseIngestionAgent } from "./baseAgent.js";
 
 interface Chunk {

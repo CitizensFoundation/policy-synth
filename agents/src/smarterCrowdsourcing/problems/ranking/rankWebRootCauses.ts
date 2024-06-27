@@ -70,9 +70,8 @@ export class RankWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
                   2
                 )}`
               );
-              let rankedRootCauses = await this.callLLM(
-                "rank-web-root-causes",
-                this.rankWebRootCausesModel,
+              let rankedRootCauses = await this.callModel(
+                PsAiModelType.Text,
                 await this.renderProblemPrompt(rootCausesToRank, fieldKey)
               );
               await this.rootCauseWebPageVectorStore.updateWebRootCause(

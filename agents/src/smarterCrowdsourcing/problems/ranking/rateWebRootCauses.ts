@@ -4,12 +4,14 @@ import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPa
 export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
   rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
   simplifyRootCauseType(rootCauseType: string) {
-    return rootCauseType.replace(/allPossible/g, "").replace(/IdentifiedInTextContext/g, "");
+    return rootCauseType
+      .replace(/allPossible/g, "")
+      .replace(/IdentifiedInTextContext/g, "");
   }
   async renderProblemPrompt(
     rawWebData: PSRootCauseRawWebPageData,
     rootCausesToRank: string[],
-    rootCauseType: keyof PSRootCauseRawWebPageData,
+    rootCauseType: keyof PSRootCauseRawWebPageData
   ) {
     return [
       this.createSystemMessage(`
@@ -39,7 +41,11 @@ export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
         ${rawWebData.url}
 
         Root Causes found on the website:
-        ${JSON.stringify(rootCausesToRank.slice(0, this.maxRootCausesToUseForRatingRootCauses), null, 2)}
+        ${JSON.stringify(
+          rootCausesToRank.slice(0, this.maxRootCausesToUseForRatingRootCauses),
+          null,
+          2
+        )}
 
         Your ratings in JSON format:
        `),
@@ -53,13 +59,16 @@ export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
         const limit = 100;
         const searchType = this.simplifyRootCauseType(rootCauseType);
         while (true) {
-          const results = await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(
-            this.memory.groupId,
-            searchType,
-            limit,
-            offset,
+          const results =
+            await this.rootCauseWebPageVectorStore.getWebPagesForProcessing(
+              this.memory.groupId,
+              searchType,
+              limit,
+              offset
+            );
+          this.logger.debug(
+            `Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`
           );
-          this.logger.debug(`Got ${results.data.Get["RootCauseWebPage"].length} WebPage results from Weaviate`);
           if (results.data.Get["RootCauseWebPage"].length === 0) {
             this.logger.info("Exiting");
             break;
@@ -69,16 +78,39 @@ export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
             const webPage = retrievedObject as PSRootCauseRawWebPageData;
             const id = webPage._additional!.id!;
             const fieldKey = rootCauseType as keyof PSRootCauseRawWebPageData;
-            if (webPage[fieldKey] && Array.isArray(webPage[fieldKey]) && (webPage[fieldKey] as string[]).length > 0) {
+            if (
+              webPage[fieldKey] &&
+              Array.isArray(webPage[fieldKey]) &&
+              (webPage[fieldKey] as string[]).length > 0
+            ) {
               const rootCausesToRank = webPage[fieldKey] as string[];
-              this.logger.debug(`${id} - Root causes to rate (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-              let ratedRootCauses = await this.callLLM(
-                "rate-web-root-causes",
-                this.rateWebRootCausesModel,
-                await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey),
+              this.logger.debug(
+                `${id} - Root causes to rate (${rootCauseType}):\n${JSON.stringify(
+                  rootCausesToRank,
+                  null,
+                  2
+                )}`
               );
-              await this.rootCauseWebPageVectorStore.updateScores(id, ratedRootCauses, true);
-              this.logger.debug(`${id} - Root Causes ratings (${rootCauseType}):\n${JSON.stringify(ratedRootCauses, null, 2)}`);
+              let ratedRootCauses = await this.callModel(
+                PsAiModelType.Text,
+                await this.renderProblemPrompt(
+                  webPage,
+                  rootCausesToRank,
+                  fieldKey
+                )
+              );
+              await this.rootCauseWebPageVectorStore.updateScores(
+                id,
+                ratedRootCauses,
+                true
+              );
+              this.logger.debug(
+                `${id} - Root Causes ratings (${rootCauseType}):\n${JSON.stringify(
+                  ratedRootCauses,
+                  null,
+                  2
+                )}`
+              );
             }
             this.logger.info(`(+${offset + pageCounter++}) - ${id} - Updated`);
           }
