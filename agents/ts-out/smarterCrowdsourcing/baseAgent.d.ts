@@ -1,12 +1,21 @@
 import { Job } from "bullmq";
 import { PolicySynthOperationsAgent } from "../base/operationsAgent.js";
 import { PsAgent } from "../dbModels/agent.js";
+type PsAgentClassCreationAttributes = Omit<PsAgentClassAttributes, "id" | "created_at" | "updated_at">;
 export declare abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
     memory: PsSmarterCrowdsourcingMemoryData;
     job: Job;
     currentSubProblemIndex: number | undefined;
     constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number);
     private getConfig;
+    private static readonly PROBLEMS_AGENT_UUID;
+    private static readonly SOLUTIONS_AGENT_UUID;
+    private static readonly POLICIES_AGENT_UUID;
+    static getProblemsAgentClass(): PsAgentClassCreationAttributes;
+    static getSolutionsAgentClass(): PsAgentClassCreationAttributes;
+    static getPoliciesAgentClass(): PsAgentClassCreationAttributes;
+    static createAgentClassesIfNeeded(userId: number): Promise<void>;
+    static getConfigurationQuestions(): YpStructuredQuestionData[];
     static getMainConfigurationSettings(): {
         uniqueId: string;
         type: string;
@@ -94,4 +103,5 @@ export declare abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthO
     renderProblemStatementSubProblemsAndEntities(index: number, includeMainProblemStatement?: boolean): string;
     renderEntityPosNegReasons(item: PsAffectedEntity): string;
 }
+export {};
 //# sourceMappingURL=baseAgent.d.ts.map

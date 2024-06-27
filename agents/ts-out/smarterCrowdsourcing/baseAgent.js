@@ -1,4 +1,5 @@
 import { PolicySynthOperationsAgent } from "../base/operationsAgent.js";
+import { PsAgentClass } from "../dbModels/agentClass.js";
 export class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
     job;
     currentSubProblemIndex;
@@ -20,6 +21,113 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
             return answer.value;
         }
         return defaultValue;
+    }
+    static PROBLEMS_AGENT_UUID = "3f9f7a9f-98f4-4e54-8bf8-5936b82e5bd3";
+    static SOLUTIONS_AGENT_UUID = "b2a5d8f1-5e8a-4b1d-8c2c-7d45e3b1f123";
+    static POLICIES_AGENT_UUID = "c7e6f3d2-9a1b-4d8e-b6f4-1c2d3e4f5a6b";
+    static getProblemsAgentClass() {
+        return {
+            uuid: this.PROBLEMS_AGENT_UUID,
+            user_id: 0,
+            name: "Smarter Crowdsourcing Problems Agent",
+            version: 1,
+            available: true,
+            configuration: {
+                description: "An agent for identifying and analyzing problems in the Smarter Crowdsourcing process",
+                queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_PROBLEMS,
+                imageUrl: "https://your-image-url-for-problems-agent.png",
+                iconName: "problems",
+                assistantSystemInstructions: "You are an AI assistant specialized in identifying and analyzing complex societal problems.",
+                capabilities: [
+                    "problem identification",
+                    "root cause analysis",
+                    "sub-problem generation",
+                ],
+                inputJsonInterface: "{}",
+                outputJsonInterface: "{}",
+                questions: this.getConfigurationQuestions(),
+                supportedConnectors: [],
+            },
+        };
+    }
+    static getSolutionsAgentClass() {
+        return {
+            uuid: this.SOLUTIONS_AGENT_UUID,
+            user_id: 0,
+            name: "Smarter Crowdsourcing Solutions Agent",
+            version: 1,
+            available: true,
+            configuration: {
+                description: "An agent for generating and evaluating solutions in the Smarter Crowdsourcing process",
+                queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS,
+                imageUrl: "https://your-image-url-for-solutions-agent.png",
+                iconName: "solutions",
+                assistantSystemInstructions: "You are an AI assistant specialized in generating innovative solutions to complex societal problems.",
+                capabilities: [
+                    "solution generation",
+                    "solution evaluation",
+                    "solution refinement",
+                ],
+                inputJsonInterface: "{}",
+                outputJsonInterface: "{}",
+                questions: this.getConfigurationQuestions(),
+                supportedConnectors: [],
+            },
+        };
+    }
+    static getPoliciesAgentClass() {
+        return {
+            uuid: this.POLICIES_AGENT_UUID,
+            user_id: 0,
+            name: "Smarter Crowdsourcing Policies Agent",
+            version: 1,
+            available: true,
+            configuration: {
+                description: "An agent for developing and assessing policies based on solutions in the Smarter Crowdsourcing process",
+                queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_POLICIES,
+                imageUrl: "https://your-image-url-for-policies-agent.png",
+                iconName: "policies",
+                assistantSystemInstructions: "You are an AI assistant specialized in developing and assessing policies based on innovative solutions to complex societal problems.",
+                capabilities: [
+                    "policy development",
+                    "policy assessment",
+                    "stakeholder analysis",
+                ],
+                inputJsonInterface: "{}",
+                outputJsonInterface: "{}",
+                questions: this.getConfigurationQuestions(),
+                supportedConnectors: [],
+            },
+        };
+    }
+    static async createAgentClassesIfNeeded(userId) {
+        const agentClasses = [
+            this.getProblemsAgentClass(),
+            this.getSolutionsAgentClass(),
+            this.getPoliciesAgentClass(),
+        ];
+        for (const agentClass of agentClasses) {
+            const [instance, created] = await PsAgentClass.findOrCreate({
+                where: { uuid: agentClass.uuid },
+                defaults: {
+                    ...agentClass,
+                    user_id: userId,
+                },
+            });
+            if (created) {
+                console.log(`Created agent class: ${instance.uuid}`);
+            }
+        }
+    }
+    static getConfigurationQuestions() {
+        return [
+            ...this.getMainConfigurationSettings(),
+            {
+                type: "textDescription",
+                text: "Advanced Configuration Settings",
+            },
+            ...this.getExtraConfigurationQuestions(),
+        ];
     }
     static getMainConfigurationSettings() {
         return [
