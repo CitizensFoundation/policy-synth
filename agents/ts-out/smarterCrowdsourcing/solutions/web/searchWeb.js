@@ -1,7 +1,7 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
 import { GoogleSearchApi } from "../../../webResearch/googleSearchApi.js";
 import { BingSearchApi } from "../../../webResearch/bingSearchApi.js";
-export class SearchWebProcessor extends BaseSmarterCrowdsourcingAgent {
+export class SearchWebProcessor extends SolutionsSmarterCrowdsourcingAgent {
     seenUrls;
     async callSearchApi(query) {
         if (process.env.GOOGLE_SEARCH_API_KEY &&

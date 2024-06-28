@@ -1,6 +1,6 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
-export class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
+export class RateWebRootCausesProcessor extends ProblemsSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     simplifyRootCauseType(rootCauseType) {
         return rootCauseType

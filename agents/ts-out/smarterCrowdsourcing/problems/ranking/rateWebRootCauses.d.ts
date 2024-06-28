@@ -1,6 +1,6 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
-export declare class RateWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
+export declare class RateWebRootCausesProcessor extends ProblemsSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
     simplifyRootCauseType(rootCauseType: string): string;
     renderProblemPrompt(rawWebData: PSRootCauseRawWebPageData, rootCausesToRank: string[], rootCauseType: keyof PSRootCauseRawWebPageData): Promise<PsModelMessage[]>;

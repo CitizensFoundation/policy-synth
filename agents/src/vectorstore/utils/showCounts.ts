@@ -1,6 +1,6 @@
 import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 import { PsConstants } from "../../constants.js";
-import { BaseSmarterCrowdsourcingAgent } from "../../smarterCrowdsourcing/baseAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../smarterCrowdsourcing/agents/scBaseAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";

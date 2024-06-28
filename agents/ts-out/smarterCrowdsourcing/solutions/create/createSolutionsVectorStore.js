@@ -1,7 +1,7 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
 const DISABLE_LLM_FOR_DEBUG = false;
-export class CreateSolutionsVectorStoreProcessor extends BaseSmarterCrowdsourcingAgent {
+export class CreateSolutionsVectorStoreProcessor extends SolutionsSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     useLanguage = "English";
     async renderRefinePrompt(results, generalTextContext, scientificTextContext, openDataTextContext, newsTextContext, subProblemIndex, alreadyCreatedSolutions = undefined) {

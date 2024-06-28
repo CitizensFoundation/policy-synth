@@ -1,6 +1,6 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-export declare class CreateSolutionsVectorStoreProcessor extends BaseSmarterCrowdsourcingAgent {
+export declare class CreateSolutionsVectorStoreProcessor extends SolutionsSmarterCrowdsourcingAgent {
     webPageVectorStore: WebPageVectorStore;
     useLanguage: string | undefined;
     renderRefinePrompt(results: PsSolution[], generalTextContext: string, scientificTextContext: string, openDataTextContext: string, newsTextContext: string, subProblemIndex: number, alreadyCreatedSolutions?: string | undefined): Promise<PsModelMessage[]>;

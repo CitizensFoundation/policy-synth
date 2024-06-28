@@ -4,7 +4,7 @@ import { sequelize } from "./sequelize.js";
 interface PsAgentClassAttributesCreation
   extends Optional<
     PsAgentClassAttributes,
-    "id" | "uuid" | "created_at" | "updated_at"
+    "id" | "uuid" |  "class_base_id" | "created_at" | "updated_at"
   > {}
 
 export class PsAgentClass
@@ -13,6 +13,7 @@ export class PsAgentClass
 {
   declare id: number;
   declare uuid: string;
+  declare class_base_id: string;
   declare user_id: number;
   declare created_at: Date;
   declare updated_at: Date;
@@ -30,6 +31,11 @@ PsAgentClass.init(
       primaryKey: true,
     },
     uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
+    class_base_id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       allowNull: false,

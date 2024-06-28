@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../vectorstore/evidenceWebPage.js";
 export declare class RankWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;

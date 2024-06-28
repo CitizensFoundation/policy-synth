@@ -51,5 +51,6 @@ module.exports = {
   await queryInterface.addIndex('ps_agents', ['user_id']);
   await queryInterface.addIndex('ps_agents', ['class_id']);
   await queryInterface.addIndex('ps_agents', ['group_id']);
+  // Add index to both id and version on agent_classes
 }
 };

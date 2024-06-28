@@ -1,6 +1,6 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../vectorstore/rootCauseWebPage.js";
-export class RankWebRootCausesProcessor extends BaseSmarterCrowdsourcingAgent {
+export class RankWebRootCausesProcessor extends ProblemsSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     async renderProblemPrompt(rootCausesToRank, rootCauseType) {
         return [

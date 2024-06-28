@@ -1,7 +1,7 @@
 import { Page, Browser } from "puppeteer";
-import { BaseSmarterCrowdsourcingAgent } from "../../baseAgent.js";
+import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
 import { WebPageVectorStore } from "../../../vectorstore/webPage.js";
-export declare class SmarterCrowdsourcingGetWebPagesAgent extends BaseSmarterCrowdsourcingAgent {
+export declare class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsSmarterCrowdsourcingAgent {
     webPageVectorStore: WebPageVectorStore;
     urlsScanned: Set<string>;
     totalPagesSave: number;

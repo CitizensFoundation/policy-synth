@@ -13,6 +13,11 @@ PsAgentClass.init({
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
     },
+    class_base_id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+    },
     user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,

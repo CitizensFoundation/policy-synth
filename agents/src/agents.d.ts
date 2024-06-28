@@ -203,6 +203,7 @@ interface PsAgentClassAttributesConfiguration {
 
 // tablename "ps_agent_classes"
 interface PsAgentClassAttributes extends PsBaseModelClass {
+  class_base_id: string;
   name: string;
   version: number;
   configuration: PsAgentClassAttributesConfiguration;
@@ -363,7 +364,12 @@ interface PsModelRateLimitTracking {
   };
 }
 
-/* Examples of structured questions for agent classes
+type PsAgentClassCreationAttributes = Omit<
+  PsAgentClassAttributes,
+  "id" | "uuid" | "created_at" | "updated_at"
+>;
+
+/* Examples of structured questions for agent classes (for AI programmers)
 
 "googleDocsQuestions": [
   {
