@@ -192,7 +192,6 @@ interface PsAgentClassAttributesConfiguration {
   queueName: string;
   imageUrl: string;
   iconName: string;
-  assistantSystemInstructions: string;
   capabilities: string[];
   inputJsonInterface: string;
   outputJsonInterface: string;

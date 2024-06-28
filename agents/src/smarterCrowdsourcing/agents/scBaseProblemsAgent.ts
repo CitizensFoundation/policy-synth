@@ -19,8 +19,6 @@ export abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowd
         queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_PROBLEMS,
         imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png",
         iconName: "problems",
-        assistantSystemInstructions:
-          "You are an AI assistant specialized in identifying and analyzing complex societal problems.",
         capabilities: [
           "problem identification",
           "root cause analysis",

@@ -19,8 +19,6 @@ export abstract class SolutionsSmarterCrowdsourcingAgent extends BaseSmarterCrow
         queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS,
         imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
         iconName: "solutions",
-        assistantSystemInstructions:
-          "You are an AI assistant specialized in generating innovative solutions to complex societal problems.",
         capabilities: [
           "solution generation",
           "solution evaluation",
