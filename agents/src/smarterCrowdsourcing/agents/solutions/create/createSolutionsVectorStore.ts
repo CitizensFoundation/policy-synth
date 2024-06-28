@@ -576,7 +576,7 @@ export class CreateSolutionsVectorStoreProcessor extends SolutionsSmarterCrowdso
 
     const random = Math.random();
 
-    if (random < this.reateSolutionsVectorSearchAcrossAllProblemsChance) {
+    if (random < this.createSolutionsVectorSearchAcrossAllProblemsChance) {
       this.logger.debug("Using vector search across all problems");
       rawSearchResults = await this.webPageVectorStore.searchWebPages(
         searchQuery,

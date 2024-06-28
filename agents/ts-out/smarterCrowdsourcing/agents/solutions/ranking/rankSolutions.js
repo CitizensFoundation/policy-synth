@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
 export class RankSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];

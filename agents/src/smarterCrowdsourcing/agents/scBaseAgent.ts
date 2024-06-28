@@ -21,23 +21,6 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
     super(agent, memory, startProgress, endProgress);
   }
 
-  getConfig<T>(uniqueId: string, defaultValue: T): T {
-    const answer = this.agent.configuration.answers?.find(
-      (a) => a.uniqueId === uniqueId
-    );
-    if (answer) {
-      if (typeof defaultValue === "number") {
-        return Number(answer.value) as T;
-      } else if (typeof defaultValue === "boolean") {
-        return (answer.value === "true") as T;
-      } else if (Array.isArray(defaultValue)) {
-        return JSON.parse(answer.value as string) as T[] as T;
-      }
-      return answer.value as T;
-    }
-    return defaultValue;
-  }
-
   static getConfigurationQuestions(): YpStructuredQuestionData[] {
     return [
       ...this.getMainCommonConfigurationSettings(),
@@ -403,6 +386,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
   }
 
   // Problems-specific configuration options
+
+
   get maxTopRootCauseQueriesToSearchPerType() {
     return this.getConfig("maxTopRootCauseQueriesToSearchPerType", 15);
   }

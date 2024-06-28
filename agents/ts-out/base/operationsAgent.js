@@ -297,5 +297,21 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             this.logger.error(error);
         }
     }
+    getConfig(uniqueId, defaultValue) {
+        const answer = this.agent.configuration.answers?.find((a) => a.uniqueId === uniqueId);
+        if (answer) {
+            if (typeof defaultValue === "number") {
+                return Number(answer.value);
+            }
+            else if (typeof defaultValue === "boolean") {
+                return (answer.value === "true");
+            }
+            else if (Array.isArray(defaultValue)) {
+                return JSON.parse(answer.value);
+            }
+            return answer.value;
+        }
+        return defaultValue;
+    }
 }
 //# sourceMappingURL=operationsAgent.js.map

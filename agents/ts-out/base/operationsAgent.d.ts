@@ -27,5 +27,6 @@ export declare class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     formatNumber(number: number, fractions?: number): string;
     updateProgress(progress: number, message: string): Promise<void>;
     saveMemory(): Promise<void>;
+    getConfig<T>(uniqueId: string, defaultValue: T): T;
 }
 //# sourceMappingURL=operationsAgent.d.ts.map

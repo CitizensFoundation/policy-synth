@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../pairwiseAgent.js";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
 export declare class RankSearchResultsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
     subProblemIndex: number;
     entitiesIndex: number;

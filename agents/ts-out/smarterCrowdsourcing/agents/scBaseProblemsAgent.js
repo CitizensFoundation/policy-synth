@@ -98,6 +98,19 @@ export class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingA
             },
         ];
     }
+    rootCauseTypes = [
+        "historicalRootCause",
+        "economicRootCause",
+        "scientificRootCause",
+        "culturalRootCause",
+        "socialRootCause",
+        "environmentalRootCause",
+        "legalRootCause",
+        "technologicalRootCause",
+        "geopoliticalRootCause",
+        "ethicalRootCause",
+        "caseStudies",
+    ];
     // Problems-specific configuration options
     get maxTopRootCauseQueriesToSearchPerType() {
         return this.getConfig("maxTopRootCauseQueriesToSearchPerType", 15);

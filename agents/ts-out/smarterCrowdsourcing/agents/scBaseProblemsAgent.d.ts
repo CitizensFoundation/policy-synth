@@ -5,6 +5,7 @@ export declare abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmar
     static getAgentClass(): PsAgentClassCreationAttributes;
     static getMainConfigurationSettings(): never[];
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
+    rootCauseTypes: string[];
     get maxTopRootCauseQueriesToSearchPerType(): number;
     get maxRootCausePercentOfSearchResultWebPagesToGet(): number;
     get maxRootCausesToUseForRatingRootCauses(): number;

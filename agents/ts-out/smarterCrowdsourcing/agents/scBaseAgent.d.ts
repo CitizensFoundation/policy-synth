@@ -6,7 +6,6 @@ export declare abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthO
     job: Job;
     currentSubProblemIndex: number | undefined;
     constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number);
-    getConfig<T>(uniqueId: string, defaultValue: T): T;
     static getConfigurationQuestions(): YpStructuredQuestionData[];
     static getMainConfigurationSettings(): YpStructuredQuestionData[];
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];

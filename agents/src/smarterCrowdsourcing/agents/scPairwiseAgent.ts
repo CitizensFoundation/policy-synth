@@ -7,11 +7,39 @@ export abstract class BaseSmarterCrowdsourcingPairwiseAgent extends OperationsPa
   job!: Job;
   currentSubProblemIndex: number | undefined;
 
-  get maxSubProblems() {
-    return process.env.PS_MAX_SUB_PROBLEMS_TO_PROCESS
-      ? parseInt(process.env.PS_MAX_SUB_PROBLEMS_TO_PROCESS)
-      : 7;
+  get customInstructionsRankSolutions() {
+    return this.getConfig("customInstructionsRankSolutions", "");
   }
+
+  get minimumNumberOfPairwiseVotesForPopulation() {
+    return this.getConfig("minimumNumberOfPairwiseVotesForPopulation", 10);
+  }
+
+  get maxTopEntitiesToSearch() {
+    return this.getConfig("maxTopEntitiesToSearch", 3);
+  }
+
+  get subProblemsRankingMinNumberOfMatches() {
+    return this.getConfig("subProblemsRankingMinNumberOfMatches", 10);
+  }
+
+  get maxSubProblems() {
+    return this.getConfig("maxSubProblems", 7);
+  }
+
+  rootCauseTypes = [
+    "historicalRootCause",
+    "economicRootCause",
+    "scientificRootCause",
+    "culturalRootCause",
+    "socialRootCause",
+    "environmentalRootCause",
+    "legalRootCause",
+    "technologicalRootCause",
+    "geopoliticalRootCause",
+    "ethicalRootCause",
+    "caseStudies",
+  ];
 
   getProCons(prosCons: PsProCon[] | undefined) {
     if (prosCons && prosCons.length > 0) {
