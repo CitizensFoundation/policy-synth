@@ -192,17 +192,45 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   async handleSaveEditNode() {
     this.saveAnswers();
-    this.closeEditNodeDialog();
 
-    if (this.currentAgentId) {
+    if (this.currentAgentId && this.nodeToEditInfo) {
       try {
-        await this.api.updateNode(this.currentAgentId, this.nodeToEdit);
+        // Only send the updated configuration
+        const updatedConfig = this.nodeToEditInfo.configuration;
+
+        // Determine if it's an agent or a connector
+        const nodeType = this.nodeToEditInfo.Class.name.indexOf('Agent') > -1 ? 'agent' : 'connector';
+
+        // Send the updated configuration to the server
+        await this.api.updateNodeConfiguration(this.currentAgentId, this.nodeToEditInfo.id, nodeType, updatedConfig);
+
+        // Update the local state
+        if (this.currentAgent) {
+          // Find the node in the current agent structure and update its configuration
+          this.updateNodeConfigurationInAgent(this.currentAgent, this.nodeToEditInfo.id, updatedConfig);
+        }
 
         this.closeEditNodeDialog();
-        //TODO: Do this with less brute force, actually update the element
-        this.currentAgent = { ...this.currentAgent };
+        this.requestUpdate();
       } catch (error) {
-        console.error('Error updating node:', error);
+        console.error('Error updating node configuration:', error);
+      }
+    }
+  }
+
+  updateNodeConfigurationInAgent(agent: PsAgentAttributes, nodeId: number, newConfig: any) {
+    if (agent.id === nodeId) {
+      agent.configuration = newConfig;
+    } else if (agent.SubAgents) {
+      for (let subAgent of agent.SubAgents) {
+        this.updateNodeConfigurationInAgent(subAgent, nodeId, newConfig);
+      }
+    }
+    if (agent.Connectors) {
+      for (let connector of agent.Connectors) {
+        if (connector.id === nodeId) {
+          connector.configuration = newConfig;
+        }
       }
     }
   }

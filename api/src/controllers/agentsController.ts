@@ -44,7 +44,42 @@ export class AgentsController {
 
   public initializeRoutes() {
     this.router.get(this.path + "/:id", this.getAgent);
+    this.router.put(this.path + "/:agentId/:nodeType/:nodeId/configuration", this.updateNodeConfiguration);
   }
+
+  updateNodeConfiguration = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.agentId);
+    const nodeId = parseInt(req.params.nodeId);
+    const nodeType = req.params.nodeType as 'agent' | 'connector';
+    const updatedConfig = req.body;
+
+    try {
+      let node;
+      if (nodeType === 'agent') {
+        node = await PsAgent.findByPk(nodeId);
+      } else if (nodeType === 'connector') {
+        node = await PsAgentConnector.findByPk(nodeId);
+      }
+
+      if (!node) {
+        return res.status(404).send(`${nodeType} not found`);
+      }
+
+      // Update the node's configuration
+      node.configuration = {
+        ...node.configuration,
+        ...updatedConfig
+      };
+
+      await node.save();
+
+      res.json({ message: `${nodeType} configuration updated successfully` });
+    } catch (error) {
+      console.error(`Error updating ${nodeType} configuration:`, error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
 
   getAgentStatus = async (req: express.Request, res: express.Response) => {
     const agentId = parseInt(req.params.id);

@@ -46,6 +46,7 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     closeEditNodeDialog(): void;
     addChildChanged(): void;
     handleSaveEditNode(): Promise<void>;
+    updateNodeConfigurationInAgent(agent: PsAgentAttributes, nodeId: number, newConfig: any): void;
     handleDeleteNode(): void;
     removeNodeRecursively(nodes: PsOperationsBaseNode[], nodeId: string): void;
     confirmDeleteNode(): Promise<void>;

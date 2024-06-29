@@ -7,6 +7,7 @@ export declare class AgentsController {
     private agentManager;
     constructor(wsClients: Map<string, WebSocket>);
     initializeRoutes(): void;
+    updateNodeConfiguration: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     getAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
     updateAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
     startAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;

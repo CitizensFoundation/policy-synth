@@ -1,19 +1,20 @@
 import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
 import { PsOperationsBaseNode } from "./ps-operations-base-node";
+import { BaseChatBotServerApi } from "../chatBot/BaseChatBotApi";
 
-export class OpsServerApi extends YpServerApi {
-  baseLtpPath = '/agents/';
+export class OpsServerApi extends BaseChatBotServerApi {
+  baseAgentsPath = '/agents/';
   constructor(urlPath: string = '/api') {
     super();
     this.baseUrlPath = urlPath;
   }
 
   public async getAgent(agentId: number): Promise<PsAgentAttributes> {
-    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${agentId}`,{}, false)) as unknown as PsAgentAttributes;
+    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}`,{}, false)) as unknown as PsAgentAttributes;
   }
 
   public async getCrt(groupId: number): Promise<LtpCurrentRealityTreeData> {
-    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
+    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
   }
 
   public createTree(
@@ -35,7 +36,7 @@ export class OpsServerApi extends YpServerApi {
     childrenIds: string[]
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${treeId}/updateChildren`,
+      this.baseUrlPath + `${this.baseAgentsPath}${treeId}/updateChildren`,
       {
         method: 'PUT',
         body: JSON.stringify({
@@ -53,7 +54,7 @@ export class OpsServerApi extends YpServerApi {
     crt: LtpCurrentRealityTreeData
   ): Promise<string> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}/reviewConfiguration`,
+      this.baseUrlPath + `${this.baseAgentsPath}/reviewConfiguration`,
       {
         method: 'PUT',
         body: JSON.stringify({
@@ -72,7 +73,7 @@ export class OpsServerApi extends YpServerApi {
     parentNodeId: string
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${treeId}/createDirectCauses`,
+      this.baseUrlPath + `${this.baseAgentsPath}${treeId}/createDirectCauses`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -90,7 +91,7 @@ export class OpsServerApi extends YpServerApi {
     type: CrtNodeType
   ): Promise<LtpCurrentRealityTreeDataNode[]> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${treeId}/addDirectCauses`,
+      this.baseUrlPath + `${this.baseAgentsPath}${treeId}/addDirectCauses`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -125,7 +126,7 @@ export class OpsServerApi extends YpServerApi {
     });
 
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${crtTreeId}/getRefinedCauses`,
+      this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/getRefinedCauses`,
       {
         method: 'POST',
         body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog, effect, causes, validationErrors }),
@@ -155,7 +156,7 @@ export class OpsServerApi extends YpServerApi {
     });
 
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${crtTreeId}/runValidationChain`,
+      this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/runValidationChain`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -172,14 +173,30 @@ export class OpsServerApi extends YpServerApi {
 
 
   public updateNode(
-    treeId: string | number,
-    updatedNode: PsOperationsBaseNode
+    agentId: number,
+    updatedNode: PsAgentAttributes
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${treeId}`,
+      this.baseUrlPath + `${this.baseAgentsPath}${agentId}`,
       {
         method: 'PUT',
         body: JSON.stringify(updatedNode),
+      },
+      false
+    ) as Promise<void>;
+  }
+
+  public updateNodeConfiguration(
+    agentId: number,
+    nodeId: number,
+    nodeType: 'agent' | 'connector',
+    updatedConfig: any
+  ): Promise<void> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}${agentId}/${nodeType}/${nodeId}/configuration`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updatedConfig),
       },
       false
     ) as Promise<void>;
@@ -190,7 +207,7 @@ export class OpsServerApi extends YpServerApi {
     nodeId: string
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseLtpPath}${treeId}`,
+      this.baseUrlPath + `${this.baseAgentsPath}${treeId}`,
       {
         method: 'DELETE',
         body: JSON.stringify({ nodeId }),

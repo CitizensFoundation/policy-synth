@@ -1,15 +1,15 @@
-import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
-export class OpsServerApi extends YpServerApi {
+import { BaseChatBotServerApi } from "../chatBot/BaseChatBotApi";
+export class OpsServerApi extends BaseChatBotServerApi {
     constructor(urlPath = '/api') {
         super();
-        this.baseLtpPath = '/agents/';
+        this.baseAgentsPath = '/agents/';
         this.baseUrlPath = urlPath;
     }
     async getAgent(agentId) {
-        return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${agentId}`, {}, false));
+        return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}`, {}, false));
     }
     async getCrt(groupId) {
-        return (await this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${groupId}`, {}, false));
+        return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
     }
     createTree(crt) {
         return this.fetchWrapper(this.baseUrlPath + `/crt`, {
@@ -18,7 +18,7 @@ export class OpsServerApi extends YpServerApi {
         }, false);
     }
     updateNodeChildren(treeId, nodeId, childrenIds) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${treeId}/updateChildren`, {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${treeId}/updateChildren`, {
             method: 'PUT',
             body: JSON.stringify({
                 nodeId,
@@ -27,7 +27,7 @@ export class OpsServerApi extends YpServerApi {
         }, false);
     }
     reviewConfiguration(wsClientId, crt) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}/reviewConfiguration`, {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}/reviewConfiguration`, {
             method: 'PUT',
             body: JSON.stringify({
                 context: crt.context,
@@ -37,7 +37,7 @@ export class OpsServerApi extends YpServerApi {
         }, false, undefined);
     }
     createDirectCauses(treeId, parentNodeId) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${treeId}/createDirectCauses`, {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${treeId}/createDirectCauses`, {
             method: 'POST',
             body: JSON.stringify({
                 parentNodeId,
@@ -45,7 +45,7 @@ export class OpsServerApi extends YpServerApi {
         }, false);
     }
     addDirectCauses(treeId, parentNodeId, causes, type) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${treeId}/addDirectCauses`, {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${treeId}/addDirectCauses`, {
             method: 'POST',
             body: JSON.stringify({
                 parentNodeId,
@@ -65,7 +65,7 @@ export class OpsServerApi extends YpServerApi {
                     : chatMessage.message,
             };
         });
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${crtTreeId}/getRefinedCauses`, {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/getRefinedCauses`, {
             method: 'POST',
             body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog, effect, causes, validationErrors }),
         }, false);
@@ -81,7 +81,7 @@ export class OpsServerApi extends YpServerApi {
                     : chatMessage.message,
             };
         });
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${crtTreeId}/runValidationChain`, {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/runValidationChain`, {
             method: 'POST',
             body: JSON.stringify({
                 wsClientId,
@@ -92,14 +92,20 @@ export class OpsServerApi extends YpServerApi {
             }),
         }, false);
     }
-    updateNode(treeId, updatedNode) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${treeId}`, {
+    updateNode(agentId, updatedNode) {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}`, {
             method: 'PUT',
             body: JSON.stringify(updatedNode),
         }, false);
     }
+    updateNodeConfiguration(agentId, nodeId, nodeType, updatedConfig) {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/${nodeType}/${nodeId}/configuration`, {
+            method: 'PUT',
+            body: JSON.stringify(updatedConfig),
+        }, false);
+    }
     deleteNode(treeId, nodeId) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseLtpPath}${treeId}`, {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${treeId}`, {
             method: 'DELETE',
             body: JSON.stringify({ nodeId }),
         }, false);
