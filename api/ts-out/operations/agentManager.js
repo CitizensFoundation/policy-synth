@@ -66,7 +66,7 @@ export class AgentManagerService {
             type: 'start-processing',
             agentId: agent.id,
         });
-        await this.updateAgentStatus(agent.id, 'processing');
+        await this.updateAgentStatus(agent.id, 'running');
         return true;
     }
     async pauseAgentProcessing(agentId) {
@@ -139,7 +139,7 @@ export class AgentManagerService {
             startTime: Date.now(),
             agentId: agentId,
             status: {
-                state: 'processing',
+                state: 'running',
                 progress: 0,
                 messages: [],
                 lastUpdated: Date.now()

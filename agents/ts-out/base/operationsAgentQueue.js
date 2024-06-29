@@ -116,7 +116,7 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
             });
             worker.on("active", (job) => {
                 this.logger.info(`Job ${job.id} has started processing for agent ${this.agentQueueName}`);
-                this.updateProgress(undefined, "Agent started");
+                this.updateProgress(5, "Agent started");
             });
             worker.on("stalled", (jobId) => {
                 this.logger.warn(`Job ${jobId} has been stalled for agent ${this.agentQueueName}`);

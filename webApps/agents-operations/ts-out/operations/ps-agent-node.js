@@ -8,6 +8,7 @@ import { css, html, nothing } from 'lit';
 import { property, customElement, state } from 'lit/decorators.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
+import '@material/web/progress/linear-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { OpsServerApi } from './OpsServerApi.js';
@@ -17,7 +18,6 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         super();
         this.isWorking = false;
         this.latestMessage = '';
-        this.progress = 0;
         this.api = new OpsServerApi();
     }
     connectedCallback() {
@@ -60,8 +60,13 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
           display: block;
         }
 
+        md-linear-progress {
+          margin: 16px;
+          margin-bottom: 8px;
+        }
+
         .mainContainer {
-          height: 275px;
+          height: 320px;
           border-radius: 16px;
           display: flex;
           flex-direction: column;
@@ -92,13 +97,14 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         .agentName {
           font-size: 14px;
           text-align: center;
-          flex-grow: 1;
         }
 
         .statusMessage {
-          font-size: 12px;
+          font-size: 11px;
           text-align: center;
           margin-top: 8px;
+          border-radius: 16px;
+          flex-grow: 1;
           color: var(--md-sys-color-on-surface-variant);
         }
 
@@ -191,42 +197,54 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         }
         this.requestUpdate();
     }
+    renderProgress() {
+        if (this.progress === undefined) {
+            return html `<md-linear-progress indeterminate></md-linear-progress>`;
+        }
+        else {
+            const progress = Math.min(1, Math.max(0, this.progress / 100));
+            return html `<md-linear-progress
+          value="${progress}"
+        ></md-linear-progress>`;
+        }
+    }
     render() {
         if (!this.agent)
             return nothing;
         if (this.agent.id == this.currentRunningAgentId) {
-            this.parentElement.className = "agentContainer agentContainerRunning";
+            this.parentElement.className = 'agentContainer agentContainerRunning';
         }
         else {
-            this.parentElement.className = "agentContainer";
+            this.parentElement.className = 'agentContainer';
         }
         return html `
       <div class="mainContainer">
-        <img class="image" src="${this.agent.Class.configuration.imageUrl}" alt="${this.agent.Class.name}">
+        <img
+          class="image"
+          src="${this.agent.Class.configuration.imageUrl}"
+          alt="${this.agent.Class.name}"
+        />
         <div class="contentContainer">
           <div class="agentClassName">${this.agent.Class.name}</div>
           <div class="agentName">${this.agent.configuration['name']}</div>
+          ${this.isWorking ? this.renderProgress() : nothing}
           <div class="statusMessage">${this.latestMessage}</div>
         </div>
         <div class="buttonContainer">
           <md-icon-button @click="${this.toggleMenu}">
             <md-icon>more_vert</md-icon>
           </md-icon-button>
-          ${this.isWorking
-            ? html `<md-circular-progress progress="${this.progress / 100}"></md-circular-progress>`
-            : html `
-                <md-icon-button
-                  ?disabled="${window.psAppGlobals.currentRunningAgentId &&
-                this.agent.id != window.psAppGlobals.currentRunningAgentId}"
-                  @click="${this.clickPlayPause}"
-                >
-                  <md-icon>
-                    ${this.agent.id == window.psAppGlobals.currentRunningAgentId
-                ? 'pause'
-                : 'play_arrow'}
-                  </md-icon>
-                </md-icon-button>
-              `}
+          <md-icon-button
+            ?disabled="${window.psAppGlobals.currentRunningAgentId &&
+            this.agent.id != window.psAppGlobals.currentRunningAgentId}"
+            @click="${this.clickPlayPause}"
+          >
+            <md-icon>
+              ${this.agent.id == window.psAppGlobals.currentRunningAgentId
+            ? 'pause'
+            : 'play_arrow'}
+            </md-icon>
+          </md-icon-button>
           <md-icon-button @click="${this.editNode}">
             <md-icon>settings</md-icon>
           </md-icon-button>
