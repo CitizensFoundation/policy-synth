@@ -40,9 +40,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             this.logger.error("Memory is not initialized");
             throw new Error("Memory is not initialized");
         }
-        const currentProgress = this.startProgress + (this.endProgress - this.startProgress) * 0.1; // 10% complete
-        const className = this.constructor.name;
-        await this.updateProgress(undefined, `Agent ${className} Starting`);
+        await this.updateProgress(undefined, `Agent ${this.agent.Class?.name} Starting`);
     }
     async loadAgentMemoryFromRedis() {
         try {
@@ -279,6 +277,24 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         return new Intl.NumberFormat("en-US", {
             maximumFractionDigits: fractions,
         }).format(number);
+    }
+    async updateRangedProgress(progress, message) {
+        if (!this.memory.status) {
+            this.memory.status = {
+                state: "running",
+                progress: this.startProgress,
+                messages: [],
+                lastUpdated: Date.now(),
+            };
+        }
+        // Calculate the progress within the range
+        const rangeSize = this.endProgress - this.startProgress;
+        const scaledProgress = this.startProgress + (progress / 100) * rangeSize;
+        this.memory.status.progress = Math.min(Math.max(scaledProgress, this.startProgress), this.endProgress);
+        this.memory.status.messages.push(message);
+        this.memory.status.lastUpdated = Date.now();
+        // Save updated memory to Redis
+        await this.saveMemory();
     }
     async updateProgress(progress, message) {
         if (!this.memory.status) {

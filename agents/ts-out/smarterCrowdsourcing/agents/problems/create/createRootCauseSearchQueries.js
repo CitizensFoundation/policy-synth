@@ -103,10 +103,14 @@ export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdso
             //@ts-ignore
             problemStatement.rootCauseSearchQueries = {};
         }
-        for (const searchResultType of CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray) {
+        const totalTypes = CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray.length;
+        for (let typeIndex = 0; typeIndex < totalTypes; typeIndex++) {
+            const searchResultType = CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray[typeIndex];
+            const progress = (typeIndex / (totalTypes - 1)) * 100; // Calculate progress percentage
             if (regenerate ||
                 !problemStatement.rootCauseSearchQueries[searchResultType]) {
                 this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
+                await this.updateRangedProgress(progress, `Creating search queries for ${searchResultType}`);
                 // create search queries for each type
                 let searchResults = await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(searchResultType));
                 if (refineSearchQueriesHere) {

@@ -27,6 +27,7 @@ export declare abstract class PolicySynthOperationsAgent extends PolicySynthBase
     callImageModel(messages: PsModelMessage[]): Promise<null>;
     saveTokenUsage(modelType: PsAiModelType, tokensIn: number, tokensOut: number): Promise<void>;
     formatNumber(number: number, fractions?: number): string;
+    updateRangedProgress(progress: number, message: string): Promise<void>;
     updateProgress(progress: number | undefined, message: string): Promise<void>;
     saveMemory(): Promise<void>;
     getConfig<T>(uniqueId: string, defaultValue: T): T;

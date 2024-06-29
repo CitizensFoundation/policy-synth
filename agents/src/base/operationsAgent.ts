@@ -63,10 +63,10 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
       throw new Error("Memory is not initialized");
     }
 
-    const currentProgress =
-      this.startProgress + (this.endProgress - this.startProgress) * 0.1; // 10% complete
-    const className = this.constructor.name;
-    await this.updateProgress(undefined, `Agent ${className} Starting`);
+    await this.updateProgress(
+      undefined,
+      `Agent ${this.agent.Class?.name} Starting`
+    );
   }
 
   async loadAgentMemoryFromRedis() {
@@ -383,6 +383,31 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }).format(number);
   }
 
+  async updateRangedProgress(progress: number, message: string) {
+    if (!this.memory.status) {
+      this.memory.status = {
+        state: "running",
+        progress: this.startProgress,
+        messages: [],
+        lastUpdated: Date.now(),
+      };
+    }
+
+    // Calculate the progress within the range
+    const rangeSize = this.endProgress - this.startProgress;
+    const scaledProgress = this.startProgress + (progress / 100) * rangeSize;
+    this.memory.status.progress = Math.min(
+      Math.max(scaledProgress, this.startProgress),
+      this.endProgress
+    );
+
+    this.memory.status.messages.push(message);
+    this.memory.status.lastUpdated = Date.now();
+
+    // Save updated memory to Redis
+    await this.saveMemory();
+  }
+
   async updateProgress(progress: number | undefined, message: string) {
     if (!this.memory.status) {
       this.memory.status = {
@@ -393,7 +418,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
       };
     }
 
-    if (progress!==undefined) {
+    if (progress !== undefined) {
       this.memory.status.progress = progress;
     }
 
