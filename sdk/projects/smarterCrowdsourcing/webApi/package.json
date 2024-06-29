@@ -1,0 +1,65 @@
+{
+  "name": "@policysynth/smarter-crowdsourcing",
+  "version": "1.0.0",
+  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/sdk/projects/smarterCrowdsourcing/webApi"
+  },
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "ts-out/**/*",
+    "src/api.d.ts"
+  ],
+  "dependencies": {
+    "@policysynth/agents": "^1.2.12",
+    "axios": "^1.7.2",
+    "colors": "^1.4.0",
+    "connect-redis": "^7.1.1",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "ioredis": "^5.4.1",
+    "jsonrepair": "^3.8.0",
+    "langchain": "^0.2.5",
+    "pg": "^8.12.0",
+    "pg-hstore": "^2.3.4",
+    "pgvector": "^0.1.8",
+    "ps": "^1.0.0",
+    "redis": "^4.6.14",
+    "sequelize": "^6.37.3",
+    "sequelize-cli": "^6.6.2",
+    "socket.io": "^4.7.5",
+    "uuid": "^10.0.0",
+    "weaviate-ts-client": "^2.2.0",
+    "winston": "^3.13.0",
+    "ws": "^8.17.0"
+  },
+  "scripts": {
+    "prepublishOnly": "npm pack && node repack",
+    "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
+    "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
+    "start": "nodemon -e ts ts-out/server.js",
+    "copyInLocalAgents": "cp -R ../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
+    "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/server.js",
+    "dev": "nodemon --config nodemon.json ./ts-out/server.js",
+    "dev:debug": "nodemon --config nodemon.json --inspect-brk server.ts",
+    "build": "tsc --project ./ --outDir ./ts-out"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "@types/axios": "^0.14.0",
+    "@types/express": "^4.17.21",
+    "@types/express-session": "^1.18.0",
+    "@types/node": "^20.14.2",
+    "@types/pg": "^8.11.6",
+    "@types/redis": "^4.0.11",
+    "@types/sequelize": "^4.28.20",
+    "@types/uuid": "^9.0.8",
+    "@types/validator": "^13.11.10",
+    "@types/ws": "^8.5.10",
+    "nodemon": "^3.1.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}
