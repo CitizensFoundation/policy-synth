@@ -170,9 +170,9 @@ await User.create({ email: "robert@citizens.is", name: "Robert" });
 await Group.create({
   name: "Citizens",
   user_id: 1,
-  configuration: {
+  private_access_configuration: {
     aiModelAccess: [],
-  },
+  } as any,
 });
 
 const googleDocsConnectorClassInst = await PsAgentConnectorClass.create(
@@ -256,7 +256,6 @@ let smarterCrowdsourcingAgentClass = {
     imageUrl:
       "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
     iconName: "smarter_crowdsourcing",
-    assistantSystemInstructions: "Explain the process",
     capabilities: ["research", "analysis"],
     inputJsonInterface: "{}",
     outputJsonInterface: "{}",
@@ -278,7 +277,6 @@ let rootCausesSubAgentClass = {
     imageUrl:
       "https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png",
     iconName: "root_causes_research",
-    assistantSystemInstructions: "Conduct root causes research",
     capabilities: ["research", "analysis"],
     inputJsonInterface: "{}",
     outputJsonInterface: "{}",
@@ -300,7 +298,6 @@ let solutionsSubAgentClass = {
     imageUrl:
       "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
     iconName: "solutions_search",
-    assistantSystemInstructions: "Conduct solutions search",
     capabilities: ["research", "analysis"],
     inputJsonInterface: "{}",
     outputJsonInterface: "{}",
@@ -322,7 +319,6 @@ let policyGenerationSubAgentClass = {
     imageUrl:
       "https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png",
     iconName: "generate_policies",
-    assistantSystemInstructions: "Generate policies",
     capabilities: ["research", "analysis", "policyGeneration"],
     inputJsonInterface: "{}",
     outputJsonInterface: "{}",
