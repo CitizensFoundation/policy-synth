@@ -144,6 +144,8 @@ export class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent 
                 if (this.progressFunction) {
                     this.progressFunction(`${p + 1}/${this.prompts[subProblemIndex].length}`);
                 }
+                const progress = (p + 1 / (this.prompts[subProblemIndex].length - 1)) * 100;
+                this.updateRangedProgress(progress, `Prompt ${p + 1}/${this.prompts[subProblemIndex].length}`);
                 const promptPair = this.prompts[subProblemIndex][p];
                 this.logger.debug(`Prompt pair: ${promptPair}`);
                 const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(subProblemIndex, promptPair, additionalData);

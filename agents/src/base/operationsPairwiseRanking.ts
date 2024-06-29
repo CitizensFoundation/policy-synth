@@ -69,6 +69,7 @@ export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperati
 
     for (let i = 0; i < this.allItems[subProblemIndex]!.length; i++) {
       //this.logger.debug(`Current number of Prompts looped ${i}`);
+
       for (let j = i + 1; j < this.allItems[subProblemIndex]!.length; j++) {
         this.prompts[subProblemIndex].push([i, j]);
       }
@@ -207,6 +208,10 @@ export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperati
             `${p + 1}/${this.prompts[subProblemIndex].length}`
           );
         }
+
+        const progress = (p+1 / (this.prompts[subProblemIndex].length - 1)) * 100;
+        this.updateRangedProgress(progress, `Prompt ${p + 1}/${this.prompts[subProblemIndex].length}`);
+
         const promptPair = this.prompts[subProblemIndex][p];
         this.logger.debug(`Prompt pair: ${promptPair}`);
         const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(
