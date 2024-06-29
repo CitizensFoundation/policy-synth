@@ -27,8 +27,9 @@ export class RootCausesAgentQueue extends PolicySynthAgentQueue {
 
   get processors() {
     return [
-      { processor: CreateRootCausesSearchQueriesAgent, weight: 10 },
-     /* { processor: RankRootCausesSearchQueriesAgent, weight: 10 },
+
+     /*  { processor: CreateRootCausesSearchQueriesAgent, weight: 10 },*/
+     { processor: RankRootCausesSearchQueriesAgent, weight: 10 },/*
       { processor: SearchWebForRootCausesAgent, weight: 10 },
       { processor: RankRootCausesSearchResultsAgent, weight: 30 },
       { processor: GetRootCausesWebPagesAgent, weight: 40 },*/

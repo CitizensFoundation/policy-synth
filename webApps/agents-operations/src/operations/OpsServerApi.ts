@@ -104,6 +104,17 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<LtpCurrentRealityTreeDataNode[]>;
   }
 
+  public async getAgentCosts(agentId: number): Promise<number> {
+    const response = await this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}${agentId}/costs`,
+      {
+        method: 'GET',
+      },
+      false
+    ) as { totalCost: string };
+    return parseFloat(response.totalCost);
+  }
+
   public sendGetRefinedCauseQuery(
     crtTreeId: string | number,
     crtNodeId: string,

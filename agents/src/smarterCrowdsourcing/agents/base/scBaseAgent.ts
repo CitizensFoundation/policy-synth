@@ -178,6 +178,14 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
   static getExtraCommonConfigurationQuestions(): YpStructuredQuestionData[] {
     return [
       {
+        uniqueId: "generateInLanguage",
+        type: "textField",
+        value: "",
+        maxLength: 30,
+        required: false,
+        text: "Generate in language (leave empty for English)",
+      },
+      {
         uniqueId: "maxSubProblems",
         type: "textField",
         subType: "number",
@@ -367,6 +375,10 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
         text: "Token input limit",
       },
     ];
+  }
+
+  get generateInLanguage() {
+    return this.getConfig("generateInLanguage", "");
   }
 
   // General configuration options

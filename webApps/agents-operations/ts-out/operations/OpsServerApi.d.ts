@@ -9,6 +9,7 @@ export declare class OpsServerApi extends BaseChatBotServerApi {
     reviewConfiguration(wsClientId: string, crt: LtpCurrentRealityTreeData): Promise<string>;
     createDirectCauses(treeId: string | number, parentNodeId: string): Promise<LtpCurrentRealityTreeDataNode[]>;
     addDirectCauses(treeId: string | number, parentNodeId: string, causes: string[], type: CrtNodeType): Promise<LtpCurrentRealityTreeDataNode[]>;
+    getAgentCosts(agentId: number): Promise<number>;
     sendGetRefinedCauseQuery(crtTreeId: string | number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect?: string, causes?: string[], validationErrors?: string[]): Promise<LtpChatBotCrtMessage>;
     runValidationChain(crtTreeId: string | number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect: string, causes: string[]): Promise<LtpChatBotCrtMessage>;
     updateNode(agentId: number, updatedNode: PsAgentAttributes): Promise<void>;

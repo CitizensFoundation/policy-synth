@@ -33,6 +33,15 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
     static getExtraConfigurationQuestions() {
         return [
             {
+                uniqueId: "numberOfRootCausesSearchQueries",
+                type: "textField",
+                subType: "number",
+                value: 20,
+                maxLength: 3,
+                required: true,
+                text: "Number of root causes search queries",
+            },
+            {
                 uniqueId: "directRootCauseUrlsToScan",
                 type: "textField",
                 value: "",
@@ -103,6 +112,9 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
         "ethicalRootCause",
         "caseStudies",
     ];
+    get numberOfRootCausesSearchQueries() {
+        return this.getConfig("numberOfRootCausesSearchQueries", 20);
+    }
     // Problems-specific configuration options
     get maxTopRootCauseQueriesToSearchPerType() {
         return this.getConfig("maxTopRootCauseQueriesToSearchPerType", 15);

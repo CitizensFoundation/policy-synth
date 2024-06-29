@@ -46,6 +46,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
                 this.progress = status.progress;
                 this.latestMessage = status.messages[status.messages.length - 1] || '';
                 this.requestUpdate();
+                this.fire('get-costs');
             }
         }
         catch (error) {

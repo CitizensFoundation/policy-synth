@@ -54,6 +54,12 @@ export class OpsServerApi extends BaseChatBotServerApi {
             }),
         }, false);
     }
+    async getAgentCosts(agentId) {
+        const response = await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/costs`, {
+            method: 'GET',
+        }, false);
+        return parseFloat(response.totalCost);
+    }
     sendGetRefinedCauseQuery(crtTreeId, crtNodeId, chatLog, wsClientId, effect, causes, validationErrors) {
         // Filter out all chatMessages with type==thinking
         chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming');

@@ -1,4 +1,4 @@
-import { CreateRootCausesSearchQueriesAgent } from "./create/createRootCauseSearchQueries.js";
+import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearchQueries.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
 import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
@@ -18,8 +18,8 @@ export class RootCausesAgentQueue extends PolicySynthAgentQueue {
     }
     get processors() {
         return [
-            { processor: CreateRootCausesSearchQueriesAgent, weight: 10 },
-            /* { processor: RankRootCausesSearchQueriesAgent, weight: 10 },
+            /*  { processor: CreateRootCausesSearchQueriesAgent, weight: 10 },*/
+            { processor: RankRootCausesSearchQueriesAgent, weight: 10 }, /*
              { processor: SearchWebForRootCausesAgent, weight: 10 },
              { processor: RankRootCausesSearchResultsAgent, weight: 30 },
              { processor: GetRootCausesWebPagesAgent, weight: 40 },*/

@@ -6,6 +6,7 @@ export declare abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSm
     static getMainConfigurationSettings(): never[];
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
     rootCauseTypes: string[];
+    get numberOfRootCausesSearchQueries(): number;
     get maxTopRootCauseQueriesToSearchPerType(): number;
     get maxRootCausePercentOfSearchResultWebPagesToGet(): number;
     get maxRootCausesToUseForRatingRootCauses(): number;

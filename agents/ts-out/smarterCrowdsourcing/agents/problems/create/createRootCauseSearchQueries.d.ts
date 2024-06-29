@@ -1,6 +1,5 @@
 import { RootCausesSmarterCrowdsourcingAgent } from "../../base/scBaseRootCausesAgent.js";
 export declare class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdsourcingAgent {
-    generateInLanguage: string | undefined;
     static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[];
     renderCreatePrompt(searchResultType: PSRootCauseWebPageTypes): Promise<PsModelMessage[]>;
     renderRefinePrompt(searchResultType: PSRootCauseWebPageTypes, searchResultsToRefine: string[]): Promise<PsModelMessage[]>;

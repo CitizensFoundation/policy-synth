@@ -17,6 +17,7 @@ export declare abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthO
     get subProblemClientColors(): any;
     get subProblemColors(): any;
     static getExtraCommonConfigurationQuestions(): YpStructuredQuestionData[];
+    get generateInLanguage(): string;
     get maxSubProblems(): number;
     get maxNumberGeneratedOfEntities(): number;
     get maxStabilityRetryCount(): number;

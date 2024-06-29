@@ -66,6 +66,18 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             this.fetchCurrentAgent();
         }
         this.addEventListener('edit-node', this.openEditNodeDialog);
+        //TODO: Remove listeners
+        this.addEventListener('get-costs', this.fetchAgentCosts);
+    }
+    async fetchAgentCosts() {
+        if (this.currentAgentId) {
+            try {
+                this.totalCosts = await this.api.getAgentCosts(this.currentAgentId);
+            }
+            catch (error) {
+                console.error('Error fetching agent costs:', error);
+            }
+        }
     }
     openEditNodeDialog(event) {
         this.nodeToEditInfo = event.detail.element;
@@ -117,7 +129,9 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 // Only send the updated configuration
                 const updatedConfig = this.nodeToEditInfo.configuration;
                 // Determine if it's an agent or a connector
-                const nodeType = this.nodeToEditInfo.Class.name.indexOf('Agent') > -1 ? 'agent' : 'connector';
+                const nodeType = this.nodeToEditInfo.Class.name.indexOf('Agent') > -1
+                    ? 'agent'
+                    : 'connector';
                 // Send the updated configuration to the server
                 await this.api.updateNodeConfiguration(this.currentAgentId, this.nodeToEditInfo.id, nodeType, updatedConfig);
                 // Update the local state
@@ -736,6 +750,10 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
       </md-dialog>
     `;
     }
+    renderTotalCosts() {
+        return html `${this.t('Costs')}
+    ${this.totalCosts !== undefined ? `($${this.totalCosts.toFixed(2)})` : ''}`;
+    }
     render() {
         if (this.isFetchingAgent) {
             return html `<md-linear-progress indeterminate></md-linear-progress>`;
@@ -755,7 +773,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
           </md-primary-tab>
           <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
             <md-icon slot="icon">account_balance</md-icon>
-            ${this.t('Costs')}
+            ${this.renderTotalCosts()}
           </md-primary-tab>
         </md-tabs>
         <ps-operations-view
@@ -768,6 +786,9 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
 __decorate([
     property({ type: Number })
 ], PsOperationsManager.prototype, "currentAgentId", void 0);
+__decorate([
+    property({ type: Number })
+], PsOperationsManager.prototype, "totalCosts", void 0);
 __decorate([
     property({ type: Object })
 ], PsOperationsManager.prototype, "currentAgent", void 0);

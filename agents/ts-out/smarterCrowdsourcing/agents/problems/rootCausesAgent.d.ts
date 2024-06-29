@@ -1,4 +1,4 @@
-import { CreateRootCausesSearchQueriesAgent } from "./create/createRootCauseSearchQueries.js";
+import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearchQueries.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 export declare class RootCausesAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
@@ -6,7 +6,7 @@ export declare class RootCausesAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName(): "smarter_crowdsourcing_root_causes";
     setupMemoryIfNeeded(): Promise<void>;
     get processors(): {
-        processor: typeof CreateRootCausesSearchQueriesAgent;
+        processor: typeof RankRootCausesSearchQueriesAgent;
         weight: number;
     }[];
 }

@@ -1,7 +1,6 @@
 import { PsAiModelType } from "../../../../aiModelTypes.js";
 import { RootCausesSmarterCrowdsourcingAgent } from "../../base/scBaseRootCausesAgent.js";
 export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdsourcingAgent {
-    generateInLanguage = "Icelandic";
     static rootCauseWebPageTypesArray = [
         "caseStudies",
         "economicRootCause",
@@ -22,7 +21,7 @@ export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdso
       2. Always focus your search queries on the problem statement and its core ideas, frame creatively with the Search Query Type provided.
       3. Use your knowledge and experience to create the best possible search queries.
       4. Search queries should be concise, consistent, short, and succinct. They will be used to search on Google or Bing.
-      5. Always create 40 high quality search queries with a wide range
+      5. Always create ${this.numberOfRootCausesSearchQueries} high quality search queries with a wide range
       6. If the search query is about a specific place or country do not include the name of the place or country in the search query but in some.
       7. List the search queries in a JSON string array.
       8. Never explain, just output JSON.

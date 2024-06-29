@@ -22,6 +22,7 @@ import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     currentAgentId: number | undefined;
+    totalCosts: number | undefined;
     currentAgent: PsAgentAttributes | undefined;
     isFetchingAgent: boolean;
     nodeToEditInfo: PsAgentAttributes | PsAgentConnectorAttributes | undefined;
@@ -41,6 +42,7 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     constructor();
     getAgent(): Promise<void>;
     connectedCallback(): Promise<void>;
+    fetchAgentCosts(): Promise<void>;
     openEditNodeDialog(event: CustomEvent): void;
     saveAnswers(): void;
     closeEditNodeDialog(): void;
@@ -76,6 +78,7 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     openAddCauseDialog(event: CustomEvent): void;
     closeAddCauseDialog(): void;
     renderAddCauseDialog(): import("lit").TemplateResult<1>;
+    renderTotalCosts(): import("lit").TemplateResult<1>;
     render(): any;
 }
 //# sourceMappingURL=ps-operations-manager.d.ts.map

@@ -47,6 +47,9 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
   @property({ type: Number })
   currentAgentId: number | undefined = 1;
 
+  @property({ type: Number })
+  totalCosts: number | undefined;
+
   @property({ type: Object })
   currentAgent: PsAgentAttributes | undefined;
 
@@ -130,6 +133,22 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
       'edit-node',
       this.openEditNodeDialog as EventListenerOrEventListenerObject
     );
+
+    //TODO: Remove listeners
+    this.addEventListener(
+      'get-costs',
+      this.fetchAgentCosts as EventListenerOrEventListenerObject
+    );
+  }
+
+  async fetchAgentCosts() {
+    if (this.currentAgentId) {
+      try {
+        this.totalCosts = await this.api.getAgentCosts(this.currentAgentId);
+      } catch (error) {
+        console.error('Error fetching agent costs:', error);
+      }
+    }
   }
 
   openEditNodeDialog(event: CustomEvent) {
@@ -199,15 +218,27 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         const updatedConfig = this.nodeToEditInfo.configuration;
 
         // Determine if it's an agent or a connector
-        const nodeType = this.nodeToEditInfo.Class.name.indexOf('Agent') > -1 ? 'agent' : 'connector';
+        const nodeType =
+          this.nodeToEditInfo.Class.name.indexOf('Agent') > -1
+            ? 'agent'
+            : 'connector';
 
         // Send the updated configuration to the server
-        await this.api.updateNodeConfiguration(this.currentAgentId, this.nodeToEditInfo.id, nodeType, updatedConfig);
+        await this.api.updateNodeConfiguration(
+          this.currentAgentId,
+          this.nodeToEditInfo.id,
+          nodeType,
+          updatedConfig
+        );
 
         // Update the local state
         if (this.currentAgent) {
           // Find the node in the current agent structure and update its configuration
-          this.updateNodeConfigurationInAgent(this.currentAgent, this.nodeToEditInfo.id, updatedConfig);
+          this.updateNodeConfigurationInAgent(
+            this.currentAgent,
+            this.nodeToEditInfo.id,
+            updatedConfig
+          );
         }
 
         this.closeEditNodeDialog();
@@ -218,7 +249,11 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     }
   }
 
-  updateNodeConfigurationInAgent(agent: PsAgentAttributes, nodeId: number, newConfig: any) {
+  updateNodeConfigurationInAgent(
+    agent: PsAgentAttributes,
+    nodeId: number,
+    newConfig: any
+  ) {
     if (agent.id === nodeId) {
       agent.configuration = newConfig;
     } else if (agent.SubAgents) {
@@ -886,6 +921,11 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     `;
   }
 
+  renderTotalCosts() {
+    return html`${this.t('Costs')}
+    ${this.totalCosts !== undefined ? `($${this.totalCosts.toFixed(2)})` : ''}`;
+  }
+
   render(): any {
     if (this.isFetchingAgent) {
       return html`<md-linear-progress indeterminate></md-linear-progress>`;
@@ -904,7 +944,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
           </md-primary-tab>
           <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
             <md-icon slot="icon">account_balance</md-icon>
-            ${this.t('Costs')}
+            ${this.renderTotalCosts()}
           </md-primary-tab>
         </md-tabs>
         <ps-operations-view

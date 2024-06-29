@@ -11,9 +11,11 @@ import {
   PsModelUsage,
   PsAiModel,
   PsAgentConnectorClass,
+  sequelize
 } from "../models/index.js";
 import { AgentManagerService } from "../operations/agentManager.js";
 import { Queue } from "bullmq";
+import { QueryTypes } from "sequelize";
 
 let redisClient;
 
@@ -49,6 +51,7 @@ export class AgentsController {
 
     this.router.post(this.path + "/:id/control", this.controlAgent());
     this.router.get(this.path + "/:id/status", this.getAgentStatus);
+    this.router.get(this.path + "/:id/costs", this.getAgentCosts);
   }
 
   controlAgent = () => async (req: express.Request, res: express.Response) => {
@@ -178,6 +181,35 @@ export class AgentsController {
       res.status(500).send("Internal Server Error");
     }
   };
+
+  public async getAgentCosts(req: express.Request, res: express.Response) {
+    const agentId = parseInt(req.params.id);
+
+    try {
+      const results = await sequelize.query(`
+        SELECT
+          COALESCE(SUM(
+            (COALESCE(mu.token_in_count, 0) * COALESCE(CAST(am.configuration#>>'{prices,costInTokensPerMillion}' AS FLOAT), 0) +
+             COALESCE(mu.token_out_count, 0) * COALESCE(CAST(am.configuration#>>'{prices,costOutTokensPerMillion}' AS FLOAT), 0)) / 1000000.0
+          ), 0) as total_cost
+        FROM ps_agents a
+        LEFT JOIN "AgentModels" am_join ON a.id = am_join.agent_id
+        LEFT JOIN ps_ai_models am ON am_join.ai_model_id = am.id
+        LEFT JOIN ps_model_usage mu ON mu.model_id = am.id AND mu.agent_id = a.id
+        WHERE a.id = :agentId
+      `, {
+        replacements: { agentId },
+        type: QueryTypes.SELECT
+      });
+
+      const totalCost = (results[0] as { total_cost: string }).total_cost;
+      res.json({ totalCost: parseFloat(totalCost).toFixed(2) });
+    } catch (error) {
+      console.error('Error calculating agent costs:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  }
+
 
   getAgent = async (req: express.Request, res: express.Response) => {
     const agentId = req.params.id;

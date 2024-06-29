@@ -45,8 +45,8 @@ const openAiGpt4Config: PsAiModelConfiguration = {
   type: PsAiModelType.Text,
   provider: "openai",
   prices: {
-    costInTokensPerMillion: 10,
-    costOutTokensPerMillion: 30,
+    costInTokensPerMillion: 5,
+    costOutTokensPerMillion: 15,
     currency: "USD"
   },
   maxTokensOut: 4096,

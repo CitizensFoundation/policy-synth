@@ -132,6 +132,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
             maxRetriesPerRequest: null,
           },
           concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
+          maxStalledCount: 0
         }
       );
 
