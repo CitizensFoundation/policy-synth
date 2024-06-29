@@ -1,7 +1,7 @@
 import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
 import { PolicySynthBaseAgent } from "../base/agent.js";
-export class BaseSearchWebProcessor extends PolicySynthBaseAgent {
+export class BaseSearchWebAgent extends PolicySynthBaseAgent {
     seenUrls;
     async callSearchApi(query) {
         if (process.env.GOOGLE_SEARCH_API_KEY &&

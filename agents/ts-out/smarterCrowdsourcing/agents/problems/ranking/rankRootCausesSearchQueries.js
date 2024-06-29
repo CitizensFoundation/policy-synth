@@ -1,5 +1,5 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
-export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankRootCausesSearchQueriesAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
     rootCauseTypes = [
         "historicalRootCause",
         "economicRootCause",
@@ -47,7 +47,7 @@ export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourci
         return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
-        this.logger.info("Rank Root Causes Search Queries Processor");
+        this.logger.info("Rank Root Causes Search Queries Agent");
         super.process();
         for (const searchQueryType of this.rootCauseTypes) {
             this.logger.info(`Ranking search queries for ${searchQueryType}`);
@@ -60,7 +60,7 @@ export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourci
             this.logger.info(`Ranking after: ${JSON.stringify(this.memory.problemStatement.rootCauseSearchQueries[searchQueryType], null, 2)}`);
         }
         await this.saveMemory();
-        this.logger.info("Rank Root Causes Search Queries Processor: Done");
+        this.logger.info("Rank Root Causes Search Queries Agent: Done");
     }
 }
 //# sourceMappingURL=rankRootCausesSearchQueries.js.map

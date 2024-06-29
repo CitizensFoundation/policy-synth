@@ -1,6 +1,6 @@
 import { Page, Browser } from "puppeteer";
-import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
-export declare class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
+import { GetEvidenceWebPagesAgent } from "./getEvidenceWebPages.js";
+export declare class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
     renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): PsModelMessage[];
     getEvidenceTextAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSRefinedPolicyEvidence>;
     getRefinedEvidenceTextAIAnalysis(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): Promise<PSRefinedPolicyEvidence>;

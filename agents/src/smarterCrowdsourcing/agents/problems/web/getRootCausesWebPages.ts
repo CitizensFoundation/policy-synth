@@ -10,7 +10,7 @@ import ioredis from "ioredis";
 import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { RootCauseTypeTypeDefs } from "./rootCauseTypeTypeDef.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
-import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
+import { CreateRootCausesSearchQueriesAgent } from "../create/createRootCauseSearchQueries.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -52,7 +52,7 @@ class RootCauseTypeLookup {
   }
 }
 
-export class GetRootCausesWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
+export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAgent {
   rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
   hasPrintedPrompt = false;
 
@@ -417,7 +417,7 @@ export class GetRootCausesWebPagesProcessor extends SmarterCrowdsourcingGetWebPa
       }
     }
 
-    for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
+    for (const searchResultType of CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray) {
       let urlsToGet =
         problemStatement.rootCauseSearchResults![searchResultType];
       if (urlsToGet) {
@@ -469,12 +469,12 @@ export class GetRootCausesWebPagesProcessor extends SmarterCrowdsourcingGetWebPa
   }
 
   async process() {
-    this.logger.info("Get Root Cause Web Pages Processor");
+    this.logger.info("Get Root Cause Web Pages Agent");
     super.process();
 
     await this.getAllPages();
 
     this.logger.info(`Saved ${this.totalPagesSave} pages`);
-    this.logger.info("Get Root Cause Web Pages Processor Complete");
+    this.logger.info("Get Root Cause Web Pages Agent Complete");
   }
 }

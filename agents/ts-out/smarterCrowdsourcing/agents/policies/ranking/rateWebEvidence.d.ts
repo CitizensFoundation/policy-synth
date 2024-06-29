@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
-export declare class RateWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
+export declare class RateWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
     modelTemperature: number;
     simplifyEvidenceType(evidenceType: string): string;

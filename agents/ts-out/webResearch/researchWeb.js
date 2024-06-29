@@ -1,5 +1,5 @@
-import { BaseSearchWebProcessor } from "./searchWeb.js";
-export class ResearchWeb extends BaseSearchWebProcessor {
+import { BaseSearchWebAgent } from "./searchWeb.js";
+export class ResearchWeb extends BaseSearchWebAgent {
     constructor(memory) {
         super();
     }

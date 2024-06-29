@@ -619,12 +619,12 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
         this.logger.info("Browser closed");
     }
     async process() {
-        this.logger.info("Get Web Pages Processor");
+        this.logger.info("Get Web Pages Agent");
         super.process();
         this.totalPagesSave = 0;
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);
-        this.logger.info("Get Web Pages Processor Complete");
+        this.logger.info("Get Web Pages Agent Complete");
     }
 }
 //# sourceMappingURL=getWebPages.js.map

@@ -4,7 +4,7 @@ const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-class DeduplicateSearchProcessor {
+class DeduplicateSearchAgent {
   memory: PsSmarterCrowdsourcingMemoryData;
   deduplicatedCount: number;
   totalCount: number;
@@ -151,7 +151,7 @@ const dedup = async (): Promise<void> => {
     const output = await redis.get(`st_mem:${projectId}:id`);
     const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
-    const dedupper = new DeduplicateSearchProcessor(memory);
+    const dedupper = new DeduplicateSearchAgent(memory);
     dedupper.process();
 
     await redis.set(`st_mem:${projectId}:id`, JSON.stringify(memory));

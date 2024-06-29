@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
 
-export class RankSearchResultsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankSearchResultsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
   subProblemIndex = 0;
   entitiesIndex = 0;
   currentEntity!: PsAffectedEntity;
@@ -137,7 +137,7 @@ export class RankSearchResultsProcessor extends BaseSmarterCrowdsourcingPairwise
   }
 
   async process() {
-    this.logger.info("Rank Search Results Processor");
+    this.logger.info("Rank Search Results Agent");
     super.process();
 
     for (const searchResultType of [

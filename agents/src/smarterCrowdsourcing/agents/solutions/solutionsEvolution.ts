@@ -1,11 +1,11 @@
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
-import { RankSolutionsProcessor } from "./ranking/rankSolutions.js";
-import { EvolvePopulationProcessor } from "./evolve/evolvePopulation.js";
-import { CreateSolutionImagesProcessor } from "./create/createImages.js";
-import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
-import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
-import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
-import { RankProsConsProcessor } from "./ranking/rankProsCons.js";
+import { RankSolutionsAgent } from "./ranking/rankSolutions.js";
+import { EvolvePopulationAgent } from "./evolve/evolvePopulation.js";
+import { CreateSolutionImagesAgent } from "./create/createImages.js";
+import { ReapSolutionsAgent } from "./evolve/reapPopulation.js";
+import { RateSolutionsAgent } from "./ranking/rateSolutions.js";
+import { GroupSolutionsAgent } from "./group/groupSolutions.js";
+import { RankProsConsAgent } from "./ranking/rankProsCons.js";
 
 export class SolutionsEvolutionAgent extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
@@ -20,13 +20,13 @@ export class SolutionsEvolutionAgent extends PolicySynthAgentQueue {
 
   get processors() {
     return [
-      { processor: RankSolutionsProcessor, weight: 10 },
-      { processor: RateSolutionsProcessor, weight: 10 },
-      { processor: GroupSolutionsProcessor, weight: 10 },
-      { processor: EvolvePopulationProcessor, weight: 15 },
-      { processor: ReapSolutionsProcessor, weight: 10 },
-      { processor: CreateSolutionImagesProcessor, weight: 10 },
-      { processor: RankProsConsProcessor, weight: 10 },
+      { processor: RankSolutionsAgent, weight: 10 },
+      { processor: RateSolutionsAgent, weight: 10 },
+      { processor: GroupSolutionsAgent, weight: 10 },
+      { processor: EvolvePopulationAgent, weight: 15 },
+      { processor: ReapSolutionsAgent, weight: 10 },
+      { processor: CreateSolutionImagesAgent, weight: 10 },
+      { processor: RankProsConsAgent, weight: 10 },
     ];
   }
 }

@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
 
-export class RankWebSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankWebSolutionsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
   async voteOnPromptPair(
     subProblemIndex: number,
     promptPair: number[]
@@ -91,7 +91,7 @@ export class RankWebSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseA
   }
 
   async process() {
-    this.logger.info("Rank Web Solutions Processor");
+    this.logger.info("Rank Web Solutions Agent");
     super.process();
 
     try {
@@ -120,9 +120,9 @@ export class RankWebSolutionsProcessor extends BaseSmarterCrowdsourcingPairwiseA
 
       await Promise.all(subProblemsPromises);
       await this.saveMemory();
-      this.logger.info("Rank Web Solutions Processor Completed");
+      this.logger.info("Rank Web Solutions Agent Completed");
     } catch (error) {
-      this.logger.error("Error in Rank Web Solutions Processor");
+      this.logger.error("Error in Rank Web Solutions Agent");
       this.logger.error(error);
       throw error;
     }

@@ -1,5 +1,5 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
-export declare class CreateSolutionImagesProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export declare class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     cloudflareProxy: string;
     subProblemColors: string[];
     secondaryColors: string[];

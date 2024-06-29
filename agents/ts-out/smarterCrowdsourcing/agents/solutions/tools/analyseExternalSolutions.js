@@ -171,7 +171,7 @@ export class AnalyseExternalSolutions extends SolutionsEvolutionSmarterCrowdsour
     }
     async processAnalysis(folderPath) {
         this.folderPath = folderPath;
-        this.logger.info("Create Analysis Processor");
+        this.logger.info("Create Analysis Agent");
         super.process();
         try {
             await this.analyze();

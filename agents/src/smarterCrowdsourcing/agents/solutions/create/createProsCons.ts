@@ -1,6 +1,6 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 
-export class CreateProsConsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   renderCurrentSolution(solution: PsSolution) {
     return `
       Solution Component:
@@ -200,7 +200,7 @@ export class CreateProsConsProcessor extends SolutionsEvolutionSmarterCrowdsourc
   }
 
   async process() {
-    this.logger.info("Create ProsCons Processor");
+    this.logger.info("Create ProsCons Agent");
     super.process();
 
     try {

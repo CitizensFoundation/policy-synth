@@ -1,5 +1,5 @@
-import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
-export declare class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
+import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
+export declare class CreateSubProblemImagesAgent extends CreateSolutionImagesAgent {
     renderCreatePrompt(subProblemIndex: number): Promise<PsModelMessage[]>;
     getDalleImagePrompt(subProblemIndex: number): string;
     createSubProblemImages(): Promise<void>;

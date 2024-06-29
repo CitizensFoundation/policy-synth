@@ -17,7 +17,7 @@ interface GenerationResponse {
   }>;
 }
 
-export class CreateSolutionImagesProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   cloudflareProxy = "https://cps-images.citizens.is";
 
   subProblemColors = [
@@ -450,7 +450,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
   }
 
   async process() {
-    this.logger.info("Create Images Processor");
+    this.logger.info("Create Images Agent");
     super.process();
 
     try {

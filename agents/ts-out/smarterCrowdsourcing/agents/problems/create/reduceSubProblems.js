@@ -1,5 +1,5 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
-export class ReduceSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgent {
+export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
     async renderSelectPrompt(problemStatement, subProblemsToConsider) {
         const messages = [
             this.createSystemMessage(`
@@ -62,11 +62,11 @@ export class ReduceSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgen
         await this.saveMemory();
     }
     async process() {
-        this.logger.info("Reduce Sub Problems Processor");
+        this.logger.info("Reduce Sub Problems Agent");
         super.process();
         const subProblemsToConsider = this.memory.subProblems.filter((sp) => sp.eloRating && sp.eloRating > 1100);
         await this.reduceSubProblems(subProblemsToConsider);
-        this.logger.info("Reduce Sub Problems Processor Completed");
+        this.logger.info("Reduce Sub Problems Agent Completed");
     }
 }
 //# sourceMappingURL=reduceSubProblems.js.map

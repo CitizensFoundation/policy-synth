@@ -1,6 +1,6 @@
 import { Page, Browser } from "puppeteer";
-import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
-export declare class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPagesProcessor {
+import { GetRootCausesWebPagesAgent } from "./getRootCausesWebPages.js";
+export declare class GetMetaDataForTopWebRootCausesAgent extends GetRootCausesWebPagesAgent {
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
     getAndProcessPdf(subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
     getAndProcessHtml(subProblemIndex: number | undefined, url: string, browserPage: Page, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;

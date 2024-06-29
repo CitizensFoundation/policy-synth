@@ -1,7 +1,7 @@
 import { Page, Browser } from "puppeteer";
 import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
-export declare class GetRootCausesWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
+export declare class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAgent {
     rootCauseWebPageVectorStore: RootCauseWebPageVectorStore;
     hasPrintedPrompt: boolean;
     outputInLanguage: string | undefined;

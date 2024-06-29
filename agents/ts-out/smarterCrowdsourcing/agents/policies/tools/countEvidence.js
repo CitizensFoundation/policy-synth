@@ -2,7 +2,7 @@ import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
 import ioredis from "ioredis";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class CountWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
+export class CountWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     async countAll(policy, subProblemIndex) {
         let offset = 0;
@@ -59,7 +59,7 @@ export class CountWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
         }
     }
     async process() {
-        this.logger.info("Count evidence Processor");
+        this.logger.info("Count evidence Agent");
         super.process();
         const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const skipSubProblemsIndexes = [];
@@ -95,7 +95,7 @@ async function run() {
     if (projectId) {
         const output = await redis.get(`st_mem:${projectId}:id`);
         const memory = JSON.parse(output);
-        const counts = new CountWebEvidenceProcessor({}, memory, 0, 0);
+        const counts = new CountWebEvidenceAgent({}, memory, 0, 0);
         await counts.process();
         process.exit(0);
     }

@@ -13,7 +13,7 @@ import metascraperTitle from "metascraper-title";
 import metascraperUrl from "metascraper-url";
 
 import ioredis from "ioredis";
-import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
+import { GetRootCausesWebPagesAgent } from "./getRootCausesWebPages.js";
 import axios from "axios";
 
 import { createGzip, gunzipSync, gzipSync } from "zlib";
@@ -43,7 +43,7 @@ const metascraper = metascraperFactory([
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 
-export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPagesProcessor {
+export class GetMetaDataForTopWebRootCausesAgent extends GetRootCausesWebPagesAgent {
   async processPageText(
     text: string,
     subProblemIndex: number | undefined,
@@ -277,12 +277,12 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
   }
 
   async process() {
-    this.logger.info("Get Web Meta Data Processor");
+    this.logger.info("Get Web Meta Data Agent");
     super.process();
 
     await this.getAllPages();
 
     this.logger.info(`Refined ${this.totalPagesSave} pages`);
-    this.logger.info("Get Web Meta Data Processor Complete");
+    this.logger.info("Get Web Meta Data Agent Complete");
   }
 }

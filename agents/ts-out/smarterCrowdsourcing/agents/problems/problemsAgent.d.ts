@@ -1,9 +1,9 @@
 import { Job } from "bullmq";
-import { CreateSubProblemsProcessor } from "./create/createSubProblems.js";
-import { CreateEntitiesProcessor } from "./create/createEntities.js";
-import { RankEntitiesProcessor } from "./ranking/rankEntities.js";
-import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
-import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
+import { CreateSubProblemsAgent } from "./create/createSubProblems.js";
+import { CreateEntitiesAgent } from "./create/createEntities.js";
+import { RankEntitiesAgent } from "./ranking/rankEntities.js";
+import { CreateSubProblemImagesAgent } from "./create/createSubProblemImages.js";
+import { CreateProblemStatementImageAgent } from "./create/createProblemStatementImage.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 export declare class ProblemsAgent extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
@@ -11,19 +11,19 @@ export declare class ProblemsAgent extends PolicySynthAgentQueue {
     get agentQueueName(): "smarter_crowdsourcing_problems_preperation";
     process(): Promise<void>;
     get processors(): ({
-        processor: typeof CreateProblemStatementImageProcessor;
+        processor: typeof CreateProblemStatementImageAgent;
         weight: number;
     } | {
-        processor: typeof CreateSubProblemsProcessor;
+        processor: typeof CreateSubProblemsAgent;
         weight: number;
     } | {
-        processor: typeof CreateEntitiesProcessor;
+        processor: typeof CreateEntitiesAgent;
         weight: number;
     } | {
-        processor: typeof RankEntitiesProcessor;
+        processor: typeof RankEntitiesAgent;
         weight: number;
     } | {
-        processor: typeof CreateSubProblemImagesProcessor;
+        processor: typeof CreateSubProblemImagesAgent;
         weight: number;
     })[];
 }

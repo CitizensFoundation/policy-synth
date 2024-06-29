@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
 
-export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankRootCausesSearchQueriesAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
   rootCauseTypes = [
     "historicalRootCause",
     "economicRootCause",
@@ -65,7 +65,7 @@ export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourci
   }
 
   async process() {
-    this.logger.info("Rank Root Causes Search Queries Processor");
+    this.logger.info("Rank Root Causes Search Queries Agent");
     super.process();
 
     for (const searchQueryType of this.rootCauseTypes) {
@@ -101,6 +101,6 @@ export class RankRootCausesSearchQueriesProcessor extends BaseSmarterCrowdsourci
 
     await this.saveMemory();
 
-    this.logger.info("Rank Root Causes Search Queries Processor: Done");
+    this.logger.info("Rank Root Causes Search Queries Agent: Done");
   }
 }

@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
+import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
 
 const recreateImagesNeeded = true;
 
-export class CreateSubProblemImagesProcessor extends CreateSolutionImagesProcessor {
+export class CreateSubProblemImagesAgent extends CreateSolutionImagesAgent {
   async renderCreatePrompt(subProblemIndex: number) {
     const messages = [
       this.createSystemMessage(
@@ -108,7 +108,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
   }
 
   async process() {
-    this.logger.info("Create Sub Problem Processor");
+    this.logger.info("Create Sub Problem Agent");
 
     try {
       await this.createSubProblemImages();

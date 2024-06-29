@@ -1,20 +1,20 @@
 import { PolicySynthOperationsAgent } from "../../../base/operationsAgent.js";
 import { Worker, Job } from "bullmq";
-import { CreateSubProblemsProcessor } from "./create/createSubProblems.js";
-import { CreateEntitiesProcessor } from "./create/createEntities.js";
-import { CreateSearchQueriesProcessor } from "../solutions/create/createSearchQueries.js";
-import { RankEntitiesProcessor } from "./ranking/rankEntities.js";
-import { RankSearchQueriesProcessor } from "../solutions/ranking/rankSearchQueries.js";
-import { RankSubProblemsProcessor } from "./ranking/rankSubProblems.js";
-import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
-import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
-import { CreateRootCausesSearchQueriesProcessor } from "./create/createRootCauseSearchQueries.js";
-import { GetRootCausesWebPagesProcessor } from "./web/getRootCausesWebPages.js";
-import { RankWebRootCausesProcessor } from "./ranking/rankWebRootCauses.js";
-import { RateWebRootCausesProcessor } from "./ranking/rateWebRootCauses.js";
-import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js";
-import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
-import { RankRootCausesSearchResultsProcessor } from "./ranking/rankRootCausesSearchResults.js";
+import { CreateSubProblemsAgent } from "./create/createSubProblems.js";
+import { CreateEntitiesAgent } from "./create/createEntities.js";
+import { CreateSearchQueriesAgent } from "../solutions/create/createSearchQueries.js";
+import { RankEntitiesAgent } from "./ranking/rankEntities.js";
+import { RankSearchQueriesAgent } from "../solutions/ranking/rankSearchQueries.js";
+import { RankSubProblemsAgent } from "./ranking/rankSubProblems.js";
+import { CreateSubProblemImagesAgent } from "./create/createSubProblemImages.js";
+import { CreateProblemStatementImageAgent } from "./create/createProblemStatementImage.js";
+import { CreateRootCausesSearchQueriesAgent } from "./create/createRootCauseSearchQueries.js";
+import { GetRootCausesWebPagesAgent } from "./web/getRootCausesWebPages.js";
+import { RankWebRootCausesAgent } from "./ranking/rankWebRootCauses.js";
+import { RateWebRootCausesAgent } from "./ranking/rateWebRootCauses.js";
+import { SearchWebForRootCausesAgent } from "./web/searchWebForRootCauses.js";
+import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearchQueries.js";
+import { RankRootCausesSearchResultsAgent } from "./ranking/rankRootCausesSearchResults.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 
 export class ProblemsAgent extends PolicySynthAgentQueue {
@@ -31,14 +31,14 @@ export class ProblemsAgent extends PolicySynthAgentQueue {
 
   get processors() {
     return [
-        { processor: CreateProblemStatementImageProcessor, weight: 10 },
-        { processor: CreateSubProblemsProcessor, weight: 15 },
-        { processor: CreateEntitiesProcessor, weight: 10 },
-        { processor: RankEntitiesProcessor, weight: 10 },
-        { processor: RankSubProblemsProcessor, weight: 10 },
-        { processor: CreateSubProblemImagesProcessor, weight: 15 },
-        //{ processor: CreateSearchQueriesProcessor, weight: 10 },
-        //{ processor: RankSearchQueriesProcessor, weight: 10 }, // SOLUTIONS
+        { processor: CreateProblemStatementImageAgent, weight: 10 },
+        { processor: CreateSubProblemsAgent, weight: 15 },
+        { processor: CreateEntitiesAgent, weight: 10 },
+        { processor: RankEntitiesAgent, weight: 10 },
+        { processor: RankSubProblemsAgent, weight: 10 },
+        { processor: CreateSubProblemImagesAgent, weight: 15 },
+        //{ processor: CreateSearchQueriesAgent, weight: 10 },
+        //{ processor: RankSearchQueriesAgent, weight: 10 }, // SOLUTIONS
     ];
   }
 }

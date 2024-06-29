@@ -1,7 +1,7 @@
 import { Page, Browser } from "puppeteer";
 import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
-export declare class GetEvidenceWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
+export declare class GetEvidenceWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
     renderEvidenceScanningPrompt(subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes, text: string): PsModelMessage[];
     getEvidenceTokenCount(text: string, subProblemIndex: number, policy: PSPolicy, type: PSEvidenceWebPageTypes): Promise<{

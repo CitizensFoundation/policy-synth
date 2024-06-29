@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
+import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
 
-export class CreateProblemStatementImageProcessor extends CreateSolutionImagesProcessor {
+export class CreateProblemStatementImageAgent extends CreateSolutionImagesAgent {
   override async renderCreatePrompt(subProblemIndex: number = 0) {
     const messages = [
       this.createSystemMessage(
@@ -97,7 +97,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
   }
 
   async process() {
-    this.logger.info("Create Problem Statement Image Processor");
+    this.logger.info("Create Problem Statement Image Agent");
 
     try {
       await this.createProblemStatementImage();

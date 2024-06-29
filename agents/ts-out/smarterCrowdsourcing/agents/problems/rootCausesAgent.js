@@ -1,7 +1,7 @@
-import { CreateRootCausesSearchQueriesProcessor } from "./create/createRootCauseSearchQueries.js";
-import { GetRootCausesWebPagesProcessor } from "./web/getRootCausesWebPages.js";
-import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js";
-import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
+import { CreateRootCausesSearchQueriesAgent } from "./create/createRootCauseSearchQueries.js";
+import { GetRootCausesWebPagesAgent } from "./web/getRootCausesWebPages.js";
+import { SearchWebForRootCausesAgent } from "./web/searchWebForRootCauses.js";
+import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearchQueries.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 export class RootCausesAgent extends PolicySynthAgentQueue {
     job;
@@ -14,10 +14,10 @@ export class RootCausesAgent extends PolicySynthAgentQueue {
     }
     get processors() {
         return [
-            { processor: CreateRootCausesSearchQueriesProcessor, weight: 10 },
-            { processor: RankRootCausesSearchQueriesProcessor, weight: 10 },
-            { processor: SearchWebForRootCausesProcessor, weight: 20 },
-            { processor: GetRootCausesWebPagesProcessor, weight: 20 },
+            { processor: CreateRootCausesSearchQueriesAgent, weight: 10 },
+            { processor: RankRootCausesSearchQueriesAgent, weight: 10 },
+            { processor: SearchWebForRootCausesAgent, weight: 20 },
+            { processor: GetRootCausesWebPagesAgent, weight: 20 },
         ];
     }
 }

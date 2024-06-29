@@ -1,5 +1,5 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
-export class RankProsConsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankProsConsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(subProblemIndex, promptPair, additionalData) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
@@ -46,7 +46,7 @@ export class RankProsConsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent
         });
     }
     async process() {
-        this.logger.info("Rank Pros Cons Processor");
+        this.logger.info("Rank Pros Cons Agent");
         super.process();
         try {
             // Parallel execution of the subproblems
@@ -59,7 +59,7 @@ export class RankProsConsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent
             this.logger.info("Finished processing all sub problems for pros cons ranking");
         }
         catch (error) {
-            this.logger.error("Error in Rank Pros Cons Processor");
+            this.logger.error("Error in Rank Pros Cons Agent");
             this.logger.error(error);
         }
     }

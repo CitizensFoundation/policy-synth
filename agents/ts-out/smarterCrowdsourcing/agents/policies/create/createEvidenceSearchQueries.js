@@ -143,7 +143,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
         }
     }
     async process() {
-        this.logger.info("Create Evidence Search Queries Processor");
+        this.logger.info("Create Evidence Search Queries Agent");
         super.process();
         const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {

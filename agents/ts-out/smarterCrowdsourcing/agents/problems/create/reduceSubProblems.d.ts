@@ -1,5 +1,5 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
-export declare class ReduceSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgent {
+export declare class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
     renderSelectPrompt(problemStatement: string, subProblemsToConsider: PsSubProblem[]): Promise<PsModelMessage[]>;
     reduceSubProblems(subProblemsToConsider: PsSubProblem[]): Promise<void>;
     process(): Promise<void>;

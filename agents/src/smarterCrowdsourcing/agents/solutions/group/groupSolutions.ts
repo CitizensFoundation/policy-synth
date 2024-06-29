@@ -1,6 +1,6 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 
-export class GroupSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   async renderGroupPrompt(solutionsToGroup: PsSolutionForGroupCheck[]) {
     const messages = [
       this.createSystemMessage(
@@ -132,7 +132,7 @@ export class GroupSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourc
   }
 
   async process() {
-    this.logger.info("Group Solution Components Processor");
+    this.logger.info("Group Solution Components Agent");
     super.process();
 
     try {

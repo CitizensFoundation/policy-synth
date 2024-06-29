@@ -1,8 +1,8 @@
 import path from "path";
 import fs from "fs";
-import { CreateSolutionImagesProcessor } from "../../solutions/create/createImages.js";
+import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
 
-export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
+export class CreatePolicyImagesAgent extends CreateSolutionImagesAgent {
   async renderCreatePolicyImagePrompt(
     subProblemIndex: number,
     policy: PSPolicy,
@@ -170,7 +170,7 @@ export class CreatePolicyImagesProcessor extends CreateSolutionImagesProcessor {
   }
 
   async process() {
-    this.logger.info("Create Policy Images Processor");
+    this.logger.info("Create Policy Images Agent");
     super.process();
 
     try {

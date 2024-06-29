@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
-export declare class RankWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
+export declare class RankWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore: EvidenceWebPageVectorStore;
     modelTemperature: number;
     renderProblemPrompt(subProblemIndex: number | null, policy: PSPolicy, evidenceToRank: string[], evidenceType: keyof PSEvidenceRawWebPageData): Promise<PsModelMessage[]>;

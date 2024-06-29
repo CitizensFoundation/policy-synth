@@ -2,7 +2,7 @@ import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js"
 
 const USE_SHORT_DESCRIPTIONS = false;
 
-export class CreateSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgent {
+export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
   async renderRefinePrompt(results: PsSubProblem[]) {
     const messages: PsModelMessage[] = [
       this.createSystemMessage(
@@ -110,7 +110,7 @@ export class CreateSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgen
   }
 
   async process() {
-    this.logger.info("Sub Problems Processor");
+    this.logger.info("Sub Problems Agent");
     super.process();
 
     await this.createSubProblems();

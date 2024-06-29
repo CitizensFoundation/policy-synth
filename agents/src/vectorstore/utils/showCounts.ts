@@ -69,7 +69,7 @@ class ShowCounts extends BaseSmarterCrowdsourcingAgent {
   }
 
   async process() {
-    this.logger.info("Show counts Processor");
+    this.logger.info("Show counts Agent");
     super.process();
 
     let totalWebPages = 0;

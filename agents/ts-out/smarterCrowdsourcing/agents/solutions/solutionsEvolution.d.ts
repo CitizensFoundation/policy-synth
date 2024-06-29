@@ -1,35 +1,35 @@
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
-import { RankSolutionsProcessor } from "./ranking/rankSolutions.js";
-import { EvolvePopulationProcessor } from "./evolve/evolvePopulation.js";
-import { CreateSolutionImagesProcessor } from "./create/createImages.js";
-import { ReapSolutionsProcessor } from "./evolve/reapPopulation.js";
-import { RateSolutionsProcessor } from "./ranking/rateSolutions.js";
-import { GroupSolutionsProcessor } from "./group/groupSolutions.js";
-import { RankProsConsProcessor } from "./ranking/rankProsCons.js";
+import { RankSolutionsAgent } from "./ranking/rankSolutions.js";
+import { EvolvePopulationAgent } from "./evolve/evolvePopulation.js";
+import { CreateSolutionImagesAgent } from "./create/createImages.js";
+import { ReapSolutionsAgent } from "./evolve/reapPopulation.js";
+import { RateSolutionsAgent } from "./ranking/rateSolutions.js";
+import { GroupSolutionsAgent } from "./group/groupSolutions.js";
+import { RankProsConsAgent } from "./ranking/rankProsCons.js";
 export declare class SolutionsEvolutionAgent extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_solutions_evolution";
     process(): Promise<void>;
     get processors(): ({
-        processor: typeof RankSolutionsProcessor;
+        processor: typeof RankSolutionsAgent;
         weight: number;
     } | {
-        processor: typeof RateSolutionsProcessor;
+        processor: typeof RateSolutionsAgent;
         weight: number;
     } | {
-        processor: typeof GroupSolutionsProcessor;
+        processor: typeof GroupSolutionsAgent;
         weight: number;
     } | {
-        processor: typeof EvolvePopulationProcessor;
+        processor: typeof EvolvePopulationAgent;
         weight: number;
     } | {
-        processor: typeof ReapSolutionsProcessor;
+        processor: typeof ReapSolutionsAgent;
         weight: number;
     } | {
-        processor: typeof CreateSolutionImagesProcessor;
+        processor: typeof CreateSolutionImagesAgent;
         weight: number;
     } | {
-        processor: typeof RankProsConsProcessor;
+        processor: typeof RankProsConsAgent;
         weight: number;
     })[];
 }

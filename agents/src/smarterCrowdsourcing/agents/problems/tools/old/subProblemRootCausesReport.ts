@@ -333,7 +333,7 @@ export class PsSubProblemsReportGenerator extends ProblemsSmarterCrowdsourcingAg
   }
 
   async process(): Promise<void> {
-    this.logger.info("Summarization Agent Processor");
+    this.logger.info("Summarization Agent Agent");
     super.process();
 
     const filePath = process.argv[3]; // Path to the CSV file is passed as a command-line argument

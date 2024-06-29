@@ -1,5 +1,5 @@
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
-export declare class CreateSearchQueriesProcessor extends SolutionsWebResearchSmarterCrowdsourcingAgent {
+export declare class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
     useLanguage: string | undefined;
     renderCommonPromptSection(): string;
     renderProblemPrompt(problem: string): Promise<PsModelMessage[]>;

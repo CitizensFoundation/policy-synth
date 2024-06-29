@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
 
-export class RankEntitiesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankEntitiesAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
   async voteOnPromptPair(
     subProblemIndex: number,
     promptPair: number[]
@@ -62,7 +62,7 @@ export class RankEntitiesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent
   }
 
   async process() {
-    this.logger.info("Rank Entities Processor");
+    this.logger.info("Rank Entities Agent");
     super.process();
 
     const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);

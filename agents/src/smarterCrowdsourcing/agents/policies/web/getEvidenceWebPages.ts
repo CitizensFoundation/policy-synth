@@ -52,7 +52,7 @@ class EvidenceTypeLookup {
   }
 }
 
-export class GetEvidenceWebPagesProcessor extends SmarterCrowdsourcingGetWebPagesAgent {
+export class GetEvidenceWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
   renderEvidenceScanningPrompt(
     subProblemIndex: number,
@@ -599,12 +599,12 @@ export class GetEvidenceWebPagesProcessor extends SmarterCrowdsourcingGetWebPage
   }
 
   async process() {
-    this.logger.info("Get Evidence Web Pages Processor");
+    this.logger.info("Get Evidence Web Pages Agent");
     super.process();
 
     await this.getAllPages();
 
     this.logger.info(`Saved ${this.totalPagesSave} pages`);
-    this.logger.info("Get Evidence Web Pages Processor Complete");
+    this.logger.info("Get Evidence Web Pages Agent Complete");
   }
 }

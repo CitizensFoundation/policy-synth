@@ -1,5 +1,5 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
-export declare class RankEntitiesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export declare class RankEntitiesAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
     voteOnPromptPair(subProblemIndex: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
     process(): Promise<void>;
 }

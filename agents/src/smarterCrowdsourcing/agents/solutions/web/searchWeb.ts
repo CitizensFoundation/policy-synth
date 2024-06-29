@@ -2,7 +2,7 @@ import { GoogleSearchApi } from "../../../../webResearch/googleSearchApi.js";
 import { BingSearchApi } from "../../../../webResearch/bingSearchApi.js";
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
 
-export class SearchWebProcessor extends SolutionsWebResearchSmarterCrowdsourcingAgent {
+export class SearchWebAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
   seenUrls!: Map<string, Set<string>>;
 
   async callSearchApi(query: string): Promise<PsSearchResultItem[]> {
@@ -162,7 +162,7 @@ export class SearchWebProcessor extends SolutionsWebResearchSmarterCrowdsourcing
   }
 
   async process() {
-    this.logger.info("Search Web Processor");
+    this.logger.info("Search Web Agent");
     this.seenUrls = new Map();
 
     super.process();

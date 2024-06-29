@@ -1,6 +1,6 @@
 import { RootCausesSmarterCrowdsourcingAgent } from "../../scBaseRootCausesAgent.js";
 
-export class CreateRootCausesSearchQueriesProcessor extends RootCausesSmarterCrowdsourcingAgent {
+export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdsourcingAgent {
   generateInLanguage: string | undefined = "Icelandic";
 
   static rootCauseWebPageTypesArray: PSRootCauseWebPageTypes[] = [
@@ -116,7 +116,7 @@ export class CreateRootCausesSearchQueriesProcessor extends RootCausesSmarterCro
       //@ts-ignore
       problemStatement.rootCauseSearchQueries = {};
     }
-    for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
+    for (const searchResultType of CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray) {
       if (
         regenerate ||
         !problemStatement.rootCauseSearchQueries![searchResultType]
@@ -166,7 +166,7 @@ export class CreateRootCausesSearchQueriesProcessor extends RootCausesSmarterCro
   }
 
   async process() {
-    this.logger.info("Create Root Cause Search Queries Processor");
+    this.logger.info("Create Root Cause Search Queries Agent");
     super.process();
 
     this.logger.info("Creating root cause search queries");

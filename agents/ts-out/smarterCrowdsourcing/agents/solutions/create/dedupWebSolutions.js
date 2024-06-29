@@ -117,10 +117,10 @@ export class RemoveDuplicateWebSolutions extends SolutionsEvolutionSmarterCrowds
         await this.saveMemory();
     }
     async process() {
-        this.logger.info("Dedup Web Solutions Processor");
+        this.logger.info("Dedup Web Solutions Agent");
         super.process();
         await this.processAll();
-        this.logger.info("Get Web Pages Processor Complete");
+        this.logger.info("Get Web Pages Agent Complete");
     }
 }
 //# sourceMappingURL=dedupWebSolutions.js.map

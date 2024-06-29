@@ -2,7 +2,7 @@ import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutio
 
 const DISABLE_LLM_FOR_DEBUG = false;
 
-export class CreateSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class CreateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   useLanguage: string | undefined = "English";
 
   renderCreateSystemMessage() {
@@ -297,7 +297,7 @@ export class CreateSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsour
   }
 
   async process() {
-    this.logger.info("Create Seed Solution Components Processor");
+    this.logger.info("Create Seed Solution Components Agent");
     super.process();
 
     try {

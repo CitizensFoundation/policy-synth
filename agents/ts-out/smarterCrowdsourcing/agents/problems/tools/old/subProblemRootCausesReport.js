@@ -256,7 +256,7 @@ export class PsSubProblemsReportGenerator extends ProblemsSmarterCrowdsourcingAg
         return previousSummary;
     }
     async process() {
-        this.logger.info("Summarization Agent Processor");
+        this.logger.info("Summarization Agent Agent");
         super.process();
         const filePath = process.argv[3]; // Path to the CSV file is passed as a command-line argument
         if (!filePath) {

@@ -5,7 +5,7 @@ const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-export class CountWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
+export class CountWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
 
   async countAll(policy: PSPolicy, subProblemIndex: number) {
@@ -84,7 +84,7 @@ export class CountWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
   }
 
   async process() {
-    this.logger.info("Count evidence Processor");
+    this.logger.info("Count evidence Agent");
     super.process();
 
     const subProblemsLimit = Math.min(
@@ -138,7 +138,7 @@ async function run() {
     const output = await redis.get(`st_mem:${projectId}:id`);
     const memory = JSON.parse(output!) as PsSmarterCrowdsourcingMemoryData;
 
-    const counts = new CountWebEvidenceProcessor(
+    const counts = new CountWebEvidenceAgent(
       {} as any,
       memory as any,
       0,

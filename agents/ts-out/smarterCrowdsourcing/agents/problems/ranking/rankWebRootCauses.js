@@ -1,6 +1,6 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
-export class RankWebRootCausesProcessor extends ProblemsSmarterCrowdsourcingAgent {
+export class RankWebRootCausesAgent extends ProblemsSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     async renderProblemPrompt(rootCausesToRank, rootCauseType) {
         return [
@@ -68,7 +68,7 @@ export class RankWebRootCausesProcessor extends ProblemsSmarterCrowdsourcingAgen
         }
     }
     async process() {
-        this.logger.info("Rank web root cause Processor");
+        this.logger.info("Rank web root cause Agent");
         super.process();
         try {
             await this.rankWebRootCauses();

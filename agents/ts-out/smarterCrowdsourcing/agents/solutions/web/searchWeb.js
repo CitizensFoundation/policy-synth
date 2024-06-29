@@ -1,7 +1,7 @@
 import { GoogleSearchApi } from "../../../../webResearch/googleSearchApi.js";
 import { BingSearchApi } from "../../../../webResearch/bingSearchApi.js";
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
-export class SearchWebProcessor extends SolutionsWebResearchSmarterCrowdsourcingAgent {
+export class SearchWebAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
     seenUrls;
     async callSearchApi(query) {
         if (process.env.GOOGLE_SEARCH_API_KEY &&
@@ -97,7 +97,7 @@ export class SearchWebProcessor extends SolutionsWebResearchSmarterCrowdsourcing
         await this.saveMemory();
     }
     async process() {
-        this.logger.info("Search Web Processor");
+        this.logger.info("Search Web Agent");
         this.seenUrls = new Map();
         super.process();
         try {

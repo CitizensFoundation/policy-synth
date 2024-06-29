@@ -7,7 +7,7 @@ import path from "path";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
-export class CreateSolutionImagesProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     cloudflareProxy = "https://cps-images.citizens.is";
     subProblemColors = [
         "blue",
@@ -306,7 +306,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
         this.logger.info("Finished creating images for all");
     }
     async process() {
-        this.logger.info("Create Images Processor");
+        this.logger.info("Create Images Agent");
         super.process();
         try {
             await this.createImages();

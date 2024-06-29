@@ -1,5 +1,5 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
-export declare class CreateSeedPoliciesProcessor extends BaseSmarterCrowdsourcingAgent {
+export declare class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution: PsSolution): string;
     renderCreatePrompt(subProblemIndex: number, solution: PsSolution): Promise<PsModelMessage[]>;
     renderRefinePrompt(subProblemIndex: number, solution: PsSolution, policyProposalsToRefine: PSPolicy[]): Promise<PsModelMessage[]>;

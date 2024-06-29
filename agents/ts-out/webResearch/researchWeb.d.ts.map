@@ -1,1 +1,1 @@
-{"version":3,"file":"researchWeb.d.ts","sourceRoot":"","sources":["../../src/webResearch/researchWeb.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,sBAAsB,EAAE,MAAM,gBAAgB,CAAC;AAExD,qBAAa,WAAY,SAAQ,sBAAsB;gBACzC,MAAM,EAAE,gCAAgC;IAI9C,MAAM,CAAC,aAAa,EAAE,MAAM,EAAE;CAWrC"}
+{"version":3,"file":"researchWeb.d.ts","sourceRoot":"","sources":["../../src/webResearch/researchWeb.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,kBAAkB,EAAE,MAAM,gBAAgB,CAAC;AAEpD,qBAAa,WAAY,SAAQ,kBAAkB;gBACrC,MAAM,EAAE,gCAAgC;IAI9C,MAAM,CAAC,aAAa,EAAE,MAAM,EAAE;CAWrC"}

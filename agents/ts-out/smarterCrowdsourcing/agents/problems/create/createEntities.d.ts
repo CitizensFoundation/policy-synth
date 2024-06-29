@@ -1,5 +1,5 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
-export declare class CreateEntitiesProcessor extends ProblemsSmarterCrowdsourcingAgent {
+export declare class CreateEntitiesAgent extends ProblemsSmarterCrowdsourcingAgent {
     renderRefinePrompt(subProblemIndex: number, results: PsAffectedEntity[]): Promise<PsModelMessage[]>;
     renderCreatePrompt(subProblemIndex: number): Promise<PsModelMessage[]>;
     createEntities(): Promise<void>;

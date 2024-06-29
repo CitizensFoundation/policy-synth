@@ -70,7 +70,7 @@ export class RemoveDuplicateVectorStoreWebSolutions extends SolutionsEvolutionSm
   }
 
   async process() {
-    this.logger.info("Dedup web solutions Processor");
+    this.logger.info("Dedup web solutions Agent");
     super.process();
 
     const subProblemsLimit = Math.min(

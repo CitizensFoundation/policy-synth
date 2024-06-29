@@ -1,8 +1,8 @@
 import { Job } from "bullmq";
-import { CreateRootCausesSearchQueriesProcessor } from "./create/createRootCauseSearchQueries.js";
-import { GetRootCausesWebPagesProcessor } from "./web/getRootCausesWebPages.js";
-import { SearchWebForRootCausesProcessor } from "./web/searchWebForRootCauses.js";
-import { RankRootCausesSearchQueriesProcessor } from "./ranking/rankRootCausesSearchQueries.js";
+import { CreateRootCausesSearchQueriesAgent } from "./create/createRootCauseSearchQueries.js";
+import { GetRootCausesWebPagesAgent } from "./web/getRootCausesWebPages.js";
+import { SearchWebForRootCausesAgent } from "./web/searchWebForRootCauses.js";
+import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearchQueries.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 export declare class RootCausesAgent extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
@@ -10,16 +10,16 @@ export declare class RootCausesAgent extends PolicySynthAgentQueue {
     process(): Promise<void>;
     get agentQueueName(): "smarter_crowdsourcing_root_causes";
     get processors(): ({
-        processor: typeof CreateRootCausesSearchQueriesProcessor;
+        processor: typeof CreateRootCausesSearchQueriesAgent;
         weight: number;
     } | {
-        processor: typeof RankRootCausesSearchQueriesProcessor;
+        processor: typeof RankRootCausesSearchQueriesAgent;
         weight: number;
     } | {
-        processor: typeof SearchWebForRootCausesProcessor;
+        processor: typeof SearchWebForRootCausesAgent;
         weight: number;
     } | {
-        processor: typeof GetRootCausesWebPagesProcessor;
+        processor: typeof GetRootCausesWebPagesAgent;
         weight: number;
     })[];
 }

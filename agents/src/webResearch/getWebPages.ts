@@ -808,13 +808,13 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
   }
 
   async process() {
-    this.logger.info("Get Web Pages Processor");
+    this.logger.info("Get Web Pages Agent");
 
     this.totalPagesSave = 0;
 
     await this.getAllPages();
 
     this.logger.info(`Saved ${this.totalPagesSave} pages`);
-    this.logger.info("Get Web Pages Processor Complete");
+    this.logger.info("Get Web Pages Agent Complete");
   }
 }

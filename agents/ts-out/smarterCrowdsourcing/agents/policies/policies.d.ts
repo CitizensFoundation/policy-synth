@@ -1,35 +1,35 @@
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
-import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
-import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
-import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
-import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
-import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
-import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
+import { CreateSeedPoliciesAgent } from "./create/createSeedPolicies.js";
+import { CreatePolicyImagesAgent } from "./create/createPolicyImages.js";
+import { SearchWebForEvidenceAgent } from "./web/searchWebForEvidence.js";
+import { GetEvidenceWebPagesAgent } from "./web/getEvidenceWebPages.js";
+import { RankWebEvidenceAgent } from "./ranking/rankWebEvidence.js";
+import { RateWebEvidenceAgent } from "./ranking/rateWebEvidence.js";
 import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
 export declare class PoliciesAgent extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_policies";
     process(): Promise<void>;
     get processors(): ({
-        processor: typeof CreateSeedPoliciesProcessor;
+        processor: typeof CreateSeedPoliciesAgent;
         weight: number;
     } | {
-        processor: typeof CreatePolicyImagesProcessor;
+        processor: typeof CreatePolicyImagesAgent;
         weight: number;
     } | {
         processor: typeof CreateEvidenceSearchQueriesAgent;
         weight: number;
     } | {
-        processor: typeof SearchWebForEvidenceProcessor;
+        processor: typeof SearchWebForEvidenceAgent;
         weight: number;
     } | {
-        processor: typeof GetEvidenceWebPagesProcessor;
+        processor: typeof GetEvidenceWebPagesAgent;
         weight: number;
     } | {
-        processor: typeof RankWebEvidenceProcessor;
+        processor: typeof RankWebEvidenceAgent;
         weight: number;
     } | {
-        processor: typeof RateWebEvidenceProcessor;
+        processor: typeof RateWebEvidenceAgent;
         weight: number;
     })[];
 }

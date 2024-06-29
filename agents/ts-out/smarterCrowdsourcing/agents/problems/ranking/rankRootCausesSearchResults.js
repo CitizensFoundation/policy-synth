@@ -1,5 +1,5 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
-export class RankRootCausesSearchResultsProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankRootCausesSearchResultsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(index, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
@@ -38,7 +38,7 @@ export class RankRootCausesSearchResultsProcessor extends BaseSmarterCrowdsourci
         return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
     async process() {
-        this.logger.info("Rank Root Causes Search Results Processor");
+        this.logger.info("Rank Root Causes Search Results Agent");
         super.process();
         for (const searchQueryType of this.rootCauseTypes) {
             this.logger.info(`Ranking search results for ${searchQueryType}`);
@@ -59,7 +59,7 @@ export class RankRootCausesSearchResultsProcessor extends BaseSmarterCrowdsourci
             this.logger.info(`Ranking results after: ${JSON.stringify(this.memory.problemStatement.rootCauseSearchResults[searchQueryType].map(item => item.title), null, 2)}`);
         }
         await this.saveMemory();
-        this.logger.info("Rank Root Causes Search Results Processor: Done");
+        this.logger.info("Rank Root Causes Search Results Agent: Done");
     }
 }
 //# sourceMappingURL=rankRootCausesSearchResults.js.map

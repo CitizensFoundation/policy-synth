@@ -1,6 +1,6 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
 
-export class ReduceSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgent {
+export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
   async renderSelectPrompt(
     problemStatement: string,
     subProblemsToConsider: PsSubProblem[]
@@ -81,7 +81,7 @@ export class ReduceSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgen
   }
 
   async process() {
-    this.logger.info("Reduce Sub Problems Processor");
+    this.logger.info("Reduce Sub Problems Agent");
     super.process();
 
     const subProblemsToConsider = this.memory.subProblems.filter(
@@ -89,6 +89,6 @@ export class ReduceSubProblemsProcessor extends ProblemsSmarterCrowdsourcingAgen
     );
     await this.reduceSubProblems(subProblemsToConsider);
 
-    this.logger.info("Reduce Sub Problems Processor Completed");
+    this.logger.info("Reduce Sub Problems Agent Completed");
   }
 }

@@ -1,7 +1,7 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
 
-export class RateWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
+export class RateWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
   modelTemperature = 0.0;
 
@@ -153,7 +153,7 @@ export class RateWebEvidenceProcessor extends BaseSmarterCrowdsourcingAgent {
   }
 
   async process() {
-    this.logger.info("Rate web evidence Processor");
+    this.logger.info("Rate web evidence Agent");
     super.process();
 
     const subProblemsLimit = Math.min(

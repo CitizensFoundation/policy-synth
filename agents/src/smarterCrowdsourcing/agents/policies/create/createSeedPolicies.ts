@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
 
-export class CreateSeedPoliciesProcessor extends BaseSmarterCrowdsourcingAgent {
+export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
   renderCurrentSolution(solution: PsSolution) {
     return `
       Solution Component:
@@ -275,7 +275,7 @@ export class CreateSeedPoliciesProcessor extends BaseSmarterCrowdsourcingAgent {
   }
 
   async process() {
-    this.logger.info("Create Seed Policies Processor");
+    this.logger.info("Create Seed Policies Agent");
     super.process();
 
     try {

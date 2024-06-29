@@ -1,12 +1,12 @@
 import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
+import { GetEvidenceWebPagesAgent } from "./getEvidenceWebPages.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 
-export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
+export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
   renderEvidenceScanningPrompt(
     subProblemIndex: number,
     policy: PSPolicy,
@@ -438,12 +438,12 @@ export class GetRefinedEvidenceProcessor extends GetEvidenceWebPagesProcessor {
   }
 
   async process() {
-    this.logger.info("Refined Evidence Web Pages Processor");
+    this.logger.info("Refined Evidence Web Pages Agent");
     super.process();
 
     await this.getAllPages();
 
     this.logger.info(`Refined ${this.totalPagesSave} pages`);
-    this.logger.info("Refine Evidence Web Pages Processor Complete");
+    this.logger.info("Refine Evidence Web Pages Agent Complete");
   }
 }

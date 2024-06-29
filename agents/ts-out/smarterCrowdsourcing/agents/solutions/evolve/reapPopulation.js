@@ -1,5 +1,5 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
-export class ReapSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderReapPrompt(solution) {
         const messages = [
             this.createSystemMessage(`You are an expert in assessing if a solution component fits given requirements.
@@ -52,7 +52,7 @@ export class ReapSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourci
         this.logger.info("Finished Reaping for all");
     }
     async process() {
-        this.logger.info("Reap Solution Components Processor");
+        this.logger.info("Reap Solution Components Agent");
         super.process();
         try {
             await this.reapSolutions();

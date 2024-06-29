@@ -1,5 +1,5 @@
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
-export declare class SearchWebProcessor extends SolutionsWebResearchSmarterCrowdsourcingAgent {
+export declare class SearchWebAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
     seenUrls: Map<string, Set<string>>;
     callSearchApi(query: string): Promise<PsSearchResultItem[]>;
     getQueryResults(queriesToSearch: string[], id: string): Promise<{

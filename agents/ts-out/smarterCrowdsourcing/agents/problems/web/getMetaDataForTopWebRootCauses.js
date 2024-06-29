@@ -11,7 +11,7 @@ import metascraperPublisher from "metascraper-publisher";
 import metascraperTitle from "metascraper-title";
 import metascraperUrl from "metascraper-url";
 import ioredis from "ioredis";
-import { GetRootCausesWebPagesProcessor } from "./getRootCausesWebPages.js";
+import { GetRootCausesWebPagesAgent } from "./getRootCausesWebPages.js";
 import axios from "axios";
 import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
@@ -35,7 +35,7 @@ const metascraper = metascraperFactory([
 ]);
 //@ts-ignore
 puppeteer.use(StealthPlugin());
-export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPagesProcessor {
+export class GetMetaDataForTopWebRootCausesAgent extends GetRootCausesWebPagesAgent {
     async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results`);
         try {
@@ -209,11 +209,11 @@ export class GetMetaDataForTopWebRootCausesProcessor extends GetRootCausesWebPag
         this.logger.info("Browser closed");
     }
     async process() {
-        this.logger.info("Get Web Meta Data Processor");
+        this.logger.info("Get Web Meta Data Agent");
         super.process();
         await this.getAllPages();
         this.logger.info(`Refined ${this.totalPagesSave} pages`);
-        this.logger.info("Get Web Meta Data Processor Complete");
+        this.logger.info("Get Web Meta Data Agent Complete");
     }
 }
 //# sourceMappingURL=getMetaDataForTopWebRootCauses.js.map

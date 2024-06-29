@@ -1,6 +1,6 @@
 import { Page, Browser } from "puppeteer";
-import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
-export declare class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesProcessor {
+import { GetEvidenceWebPagesAgent } from "./getEvidenceWebPages.js";
+export declare class GetMetaDataForTopWebEvidenceAgent extends GetEvidenceWebPagesAgent {
     processPageText(text: string, subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
     getAndProcessPdf(subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;
     getAndProcessHtml(subProblemIndex: number | undefined, url: string, browserPage: Page, type: PsWebPageTypes | PSEvidenceWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void>;

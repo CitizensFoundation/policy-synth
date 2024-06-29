@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
 
-export class RankSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export class RankSearchQueriesAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
   renderProblemDetail(
     additionalData: {
       subProblemIndex: number,
@@ -187,14 +187,14 @@ export class RankSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwise
   }
 
   async process() {
-    this.logger.info("Rank Search Queries Processor");
+    this.logger.info("Rank Search Queries Agent");
     super.process();
 
-    this.logger.info("Rank Search Queries Processor: Sub Problems");
+    this.logger.info("Rank Search Queries Agent: Sub Problems");
 
     await this.processSubProblems();
 
-    this.logger.info("Rank Search Queries Processor: Problem Statement");
+    this.logger.info("Rank Search Queries Agent: Problem Statement");
 
     for (const searchQueryType of [
       "general",
@@ -224,6 +224,6 @@ export class RankSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwise
 
     await this.saveMemory();
 
-    this.logger.info("Rank Search Queries Processor: Done");
+    this.logger.info("Rank Search Queries Agent: Done");
   }
 }

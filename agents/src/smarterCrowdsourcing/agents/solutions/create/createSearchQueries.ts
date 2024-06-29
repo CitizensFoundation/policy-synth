@@ -1,6 +1,6 @@
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
 
-export class CreateSearchQueriesProcessor extends SolutionsWebResearchSmarterCrowdsourcingAgent {
+export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
   //TODO: Maybe add a review and refine stage here as well
 
   //TODO: Put in memory
@@ -76,7 +76,7 @@ export class CreateSearchQueriesProcessor extends SolutionsWebResearchSmarterCro
   }
 
   async process() {
-    this.logger.info("Create Search Queries Processor");
+    this.logger.info("Create Search Queries Agent");
     super.process();
 
     this.memory.problemStatement.searchQueries = await this.callModel(

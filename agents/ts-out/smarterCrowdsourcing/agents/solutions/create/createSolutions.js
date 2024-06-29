@@ -1,6 +1,6 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 const DISABLE_LLM_FOR_DEBUG = false;
-export class CreateSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class CreateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     useLanguage = "English";
     renderCreateSystemMessage() {
         return this.createSystemMessage(`As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities based on the <SolutionsToBaseYourSolutionComponentsOn> provided by the user.
@@ -163,7 +163,7 @@ export class CreateSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsour
         }
     }
     async process() {
-        this.logger.info("Create Seed Solution Components Processor");
+        this.logger.info("Create Seed Solution Components Agent");
         super.process();
         try {
             await this.createAllSeedSolutions();

@@ -1,7 +1,7 @@
-import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
+import { SearchWebAgent } from "../../solutions/web/searchWeb.js";
 import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
 
-export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
+export class SearchWebForEvidenceAgent extends SearchWebAgent {
   searchCounter = 0
   async searchWeb(
     policy: PSPolicy,
@@ -51,7 +51,7 @@ export class SearchWebForEvidenceProcessor extends SearchWebProcessor {
   }
 
   async process() {
-    this.logger.info("Search Web for Evidence Processor");
+    this.logger.info("Search Web for Evidence Agent");
     this.seenUrls = new Map();
 
     super.process();

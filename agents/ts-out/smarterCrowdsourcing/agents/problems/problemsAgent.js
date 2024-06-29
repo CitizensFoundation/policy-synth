@@ -1,9 +1,9 @@
-import { CreateSubProblemsProcessor } from "./create/createSubProblems.js";
-import { CreateEntitiesProcessor } from "./create/createEntities.js";
-import { RankEntitiesProcessor } from "./ranking/rankEntities.js";
-import { RankSubProblemsProcessor } from "./ranking/rankSubProblems.js";
-import { CreateSubProblemImagesProcessor } from "./create/createSubProblemImages.js";
-import { CreateProblemStatementImageProcessor } from "./create/createProblemStatementImage.js";
+import { CreateSubProblemsAgent } from "./create/createSubProblems.js";
+import { CreateEntitiesAgent } from "./create/createEntities.js";
+import { RankEntitiesAgent } from "./ranking/rankEntities.js";
+import { RankSubProblemsAgent } from "./ranking/rankSubProblems.js";
+import { CreateSubProblemImagesAgent } from "./create/createSubProblemImages.js";
+import { CreateProblemStatementImageAgent } from "./create/createProblemStatementImage.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 export class ProblemsAgent extends PolicySynthAgentQueue {
     job;
@@ -16,14 +16,14 @@ export class ProblemsAgent extends PolicySynthAgentQueue {
     }
     get processors() {
         return [
-            { processor: CreateProblemStatementImageProcessor, weight: 10 },
-            { processor: CreateSubProblemsProcessor, weight: 15 },
-            { processor: CreateEntitiesProcessor, weight: 10 },
-            { processor: RankEntitiesProcessor, weight: 10 },
-            { processor: RankSubProblemsProcessor, weight: 10 },
-            { processor: CreateSubProblemImagesProcessor, weight: 15 },
-            //{ processor: CreateSearchQueriesProcessor, weight: 10 },
-            //{ processor: RankSearchQueriesProcessor, weight: 10 }, // SOLUTIONS
+            { processor: CreateProblemStatementImageAgent, weight: 10 },
+            { processor: CreateSubProblemsAgent, weight: 15 },
+            { processor: CreateEntitiesAgent, weight: 10 },
+            { processor: RankEntitiesAgent, weight: 10 },
+            { processor: RankSubProblemsAgent, weight: 10 },
+            { processor: CreateSubProblemImagesAgent, weight: 15 },
+            //{ processor: CreateSearchQueriesAgent, weight: 10 },
+            //{ processor: RankSearchQueriesAgent, weight: 10 }, // SOLUTIONS
         ];
     }
 }

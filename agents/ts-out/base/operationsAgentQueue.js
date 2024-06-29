@@ -13,13 +13,13 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
     async processAllAgents() {
         let totalProgress = 0;
         for (let i = 0; i < this.processors.length; i++) {
-            const { processor: Processor, weight } = this.processors[i];
+            const { processor: Agent, weight } = this.processors[i];
             const startProgress = totalProgress;
             const endProgress = totalProgress + weight;
-            const processorInstance = new Processor(this.agent, this.memory, startProgress, endProgress);
+            const processorInstance = new Agent(this.agent, this.memory, startProgress, endProgress);
             await processorInstance.process();
             totalProgress = endProgress;
-            await this.updateProgress(totalProgress, `${Processor.name} completed`);
+            await this.updateProgress(totalProgress, `${Agent.name} completed`);
         }
     }
     async setupAgentQueue() {

@@ -13,7 +13,7 @@ import metascraperPublisher from "metascraper-publisher";
 import metascraperTitle from "metascraper-title";
 import metascraperUrl from "metascraper-url";
 
-import { GetEvidenceWebPagesProcessor } from "./getEvidenceWebPages.js";
+import { GetEvidenceWebPagesAgent } from "./getEvidenceWebPages.js";
 import axios from "axios";
 
 import { createGzip, gunzipSync, gzipSync } from "zlib";
@@ -41,7 +41,7 @@ const metascraper = metascraperFactory([
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 
-export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesProcessor {
+export class GetMetaDataForTopWebEvidenceAgent extends GetEvidenceWebPagesAgent {
   async processPageText(
     text: string,
     subProblemIndex: number | undefined,
@@ -376,12 +376,12 @@ export class GetMetaDataForTopWebEvidenceProcessor extends GetEvidenceWebPagesPr
   }
 
   async process() {
-    this.logger.info("Get Web Meta Data Processor");
+    this.logger.info("Get Web Meta Data Agent");
     super.process();
 
     await this.getAllPages();
 
     this.logger.info(`Refined ${this.totalPagesSave} pages`);
-    this.logger.info("Get Web Meta Data Processor Complete");
+    this.logger.info("Get Web Meta Data Agent Complete");
   }
 }

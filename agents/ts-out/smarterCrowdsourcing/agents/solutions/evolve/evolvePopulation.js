@@ -1,7 +1,7 @@
-import { CreateSolutionsProcessor } from "../create/createSolutions.js";
+import { CreateSolutionsAgent } from "../create/createSolutions.js";
 //TODO: Pentalty for similar ideas in the ranking somehow
 //TODO: Track the evolution of the population with a log of parents and mutations, family tree
-export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
+export class EvolvePopulationAgent extends CreateSolutionsAgent {
     renderSolution(solution) {
         return JSON.stringify({
             title: solution.title,
@@ -366,12 +366,12 @@ export class EvolvePopulationProcessor extends CreateSolutionsProcessor {
         this.logger.info("Evolve population all complete");
     }
     async process() {
-        this.logger.info("Evolve Population Processor");
+        this.logger.info("Evolve Population Agent");
         try {
             await this.evolvePopulation();
         }
         catch (error) {
-            this.logger.error("Error in Evolve Population Processor");
+            this.logger.error("Error in Evolve Population Agent");
             this.logger.error(error);
             this.logger.error(error.stack);
             throw error;

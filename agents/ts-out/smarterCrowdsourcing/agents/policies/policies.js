@@ -1,12 +1,12 @@
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
-import { CreateSeedPoliciesProcessor } from "./create/createSeedPolicies.js";
-import { CreatePolicyImagesProcessor } from "./create/createPolicyImages.js";
-import { SearchWebForEvidenceProcessor } from "./web/searchWebForEvidence.js";
-import { GetEvidenceWebPagesProcessor } from "./web/getEvidenceWebPages.js";
-import { RankWebEvidenceProcessor } from "./ranking/rankWebEvidence.js";
-import { RateWebEvidenceProcessor } from "./ranking/rateWebEvidence.js";
-import { GetRefinedEvidenceProcessor } from "./web/getRefinedEvidence.js";
-import { GetMetaDataForTopWebEvidenceProcessor } from "./web/getMetaDataForTopWebEvidence.js";
+import { CreateSeedPoliciesAgent } from "./create/createSeedPolicies.js";
+import { CreatePolicyImagesAgent } from "./create/createPolicyImages.js";
+import { SearchWebForEvidenceAgent } from "./web/searchWebForEvidence.js";
+import { GetEvidenceWebPagesAgent } from "./web/getEvidenceWebPages.js";
+import { RankWebEvidenceAgent } from "./ranking/rankWebEvidence.js";
+import { RateWebEvidenceAgent } from "./ranking/rateWebEvidence.js";
+import { GetRefinedEvidenceAgent } from "./web/getRefinedEvidence.js";
+import { GetMetaDataForTopWebEvidenceAgent } from "./web/getMetaDataForTopWebEvidence.js";
 import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
 export class PoliciesAgent extends PolicySynthAgentQueue {
     get agentQueueName() {
@@ -17,15 +17,15 @@ export class PoliciesAgent extends PolicySynthAgentQueue {
     }
     get processors() {
         return [
-            { processor: CreateSeedPoliciesProcessor, weight: 15 },
-            { processor: CreatePolicyImagesProcessor, weight: 10 },
+            { processor: CreateSeedPoliciesAgent, weight: 15 },
+            { processor: CreatePolicyImagesAgent, weight: 10 },
             { processor: CreateEvidenceSearchQueriesAgent, weight: 10 },
-            { processor: SearchWebForEvidenceProcessor, weight: 15 },
-            { processor: GetEvidenceWebPagesProcessor, weight: 15 },
-            { processor: RankWebEvidenceProcessor, weight: 10 },
-            { processor: RateWebEvidenceProcessor, weight: 10 },
-            { processor: GetRefinedEvidenceProcessor, weight: 10 },
-            { processor: GetMetaDataForTopWebEvidenceProcessor, weight: 10 },
+            { processor: SearchWebForEvidenceAgent, weight: 15 },
+            { processor: GetEvidenceWebPagesAgent, weight: 15 },
+            { processor: RankWebEvidenceAgent, weight: 10 },
+            { processor: RateWebEvidenceAgent, weight: 10 },
+            { processor: GetRefinedEvidenceAgent, weight: 10 },
+            { processor: GetMetaDataForTopWebEvidenceAgent, weight: 10 },
         ];
     }
 }

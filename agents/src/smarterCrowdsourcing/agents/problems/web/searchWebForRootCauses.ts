@@ -1,10 +1,10 @@
-import { SearchWebProcessor } from "../../solutions/web/searchWeb.js";
-import { CreateRootCausesSearchQueriesProcessor } from "../create/createRootCauseSearchQueries.js";
+import { SearchWebAgent } from "../../solutions/web/searchWeb.js";
+import { CreateRootCausesSearchQueriesAgent } from "../create/createRootCauseSearchQueries.js";
 
 
 const FORCE_RESEARCH = true;
 
-export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
+export class SearchWebForRootCausesAgent extends SearchWebAgent {
   searchCounter = 0;
   async searchWeb() {
     const problemStatement = this.memory.problemStatement;
@@ -12,7 +12,7 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
       //@ts-ignore
       problemStatement.rootCauseSearchResults = {};
     }
-    for (const searchResultType of CreateRootCausesSearchQueriesProcessor.rootCauseWebPageTypesArray) {
+    for (const searchResultType of CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray) {
       // If searchCounter mod 10 then print
       if (this.searchCounter % 10 == 0) {
         this.logger.info(`Have searched ${this.searchCounter} queries`);
@@ -48,7 +48,7 @@ export class SearchWebForRootCausesProcessor extends SearchWebProcessor {
   }
 
   async process() {
-    this.logger.info("Search Web for Root Causes Processor");
+    this.logger.info("Search Web for Root Causes Agent");
     this.seenUrls = new Map();
 
     super.process();

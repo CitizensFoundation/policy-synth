@@ -1,5 +1,5 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
-export declare class RankSearchQueriesProcessor extends BaseSmarterCrowdsourcingPairwiseAgent {
+export declare class RankSearchQueriesAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
     renderProblemDetail(additionalData: {
         subProblemIndex: number;
         currentEntity?: PsAffectedEntity;

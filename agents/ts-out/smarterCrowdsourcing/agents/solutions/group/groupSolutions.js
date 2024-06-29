@@ -1,5 +1,5 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
-export class GroupSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderGroupPrompt(solutionsToGroup) {
         const messages = [
             this.createSystemMessage(`You are an expert in in grouping solution components containing exactly the same core ideas.
@@ -82,7 +82,7 @@ export class GroupSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourc
         this.logger.info("Finished Grouping for all");
     }
     async process() {
-        this.logger.info("Group Solution Components Processor");
+        this.logger.info("Group Solution Components Agent");
         super.process();
         try {
             await this.groupSolutions();

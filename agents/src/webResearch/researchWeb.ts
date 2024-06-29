@@ -1,6 +1,6 @@
-import { BaseSearchWebProcessor } from "./searchWeb.js";
+import { BaseSearchWebAgent } from "./searchWeb.js";
 
-export class ResearchWeb extends BaseSearchWebProcessor {
+export class ResearchWeb extends BaseSearchWebAgent {
   constructor(memory: PsSmarterCrowdsourcingMemoryData) {
     super();
   }

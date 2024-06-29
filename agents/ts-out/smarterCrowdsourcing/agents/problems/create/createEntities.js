@@ -1,5 +1,5 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
-export class CreateEntitiesProcessor extends ProblemsSmarterCrowdsourcingAgent {
+export class CreateEntitiesAgent extends ProblemsSmarterCrowdsourcingAgent {
     async renderRefinePrompt(subProblemIndex, results) {
         const messages = [
             this.createSystemMessage(`
@@ -114,7 +114,7 @@ export class CreateEntitiesProcessor extends ProblemsSmarterCrowdsourcingAgent {
         this.logger.info("Finished creating entities for all subproblems");
     }
     async process() {
-        this.logger.info("Create Entities Processor");
+        this.logger.info("Create Entities Agent");
         super.process();
         await this.createEntities();
     }

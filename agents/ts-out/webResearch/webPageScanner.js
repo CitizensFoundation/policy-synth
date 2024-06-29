@@ -89,7 +89,7 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
         await browser.close();
         this.logger.info("Browser closed");
         this.logger.info(`Saved ${this.totalPagesSave} pages`);
-        this.logger.info("Get Web Pages Processor Complete");
+        this.logger.info("Get Web Pages Agent Complete");
         return this.collectedWebPages;
     }
 }
