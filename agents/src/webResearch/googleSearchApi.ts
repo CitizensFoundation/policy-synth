@@ -1,7 +1,10 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 
+//TODO: Make a operations version of this with API costs
 export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
+  needsAiModel = false;
+
   public async search(query: string): Promise<PsSearchResultItem[]> {
     const outResults: PsSearchResultItem[] = [];
     try {

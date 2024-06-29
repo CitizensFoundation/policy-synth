@@ -7,6 +7,7 @@ export declare class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
     rateLimits: PsModelRateLimitTracking;
     models: Map<PsAiModelType, BaseChatModel>;
     private tokenizer;
+    needsAiModel: boolean;
     constructor(memory?: PsSimpleAgentMemoryData | undefined);
     private initializeTokenizer;
     private getTokenizer;

@@ -12,13 +12,16 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
     rateLimits = {};
     models = new Map();
     tokenizer = null;
+    needsAiModel = true;
     constructor(memory = undefined) {
         super();
         if (memory) {
             this.memory = memory;
         }
         this.initializeTokenizer();
-        this.initializeModels();
+        if (this.needsAiModel) {
+            this.initializeModels();
+        }
     }
     initializeTokenizer() {
         try {
@@ -73,7 +76,9 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
         if (!process.env.AI_MODEL_API_KEY ||
             !process.env.AI_MODEL_NAME ||
             !process.env.AI_MODEL_PROVIDER) {
-            throw new Error("Memory or AI model configuration not found");
+            //TODO: this should not happen on all agents that have this.needsAiModel = false
+            this.logger.error("Memory or AI model configuration not found");
+            return;
         }
         const baseConfig = {
             apiKey: process.env.AI_MODEL_API_KEY,

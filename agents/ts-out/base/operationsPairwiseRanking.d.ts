@@ -13,6 +13,7 @@ export declare abstract class OperationsPairwiseRankingsAgent extends PolicySynt
     KFactors: Record<number, Record<number, number>>;
     eloRatings: Record<number, Record<number, number>>;
     progressFunction: Function | undefined;
+    updatePrefix: string;
     fisherYatesShuffle(array: any[]): any[];
     setupRankingPrompts(subProblemIndex: number, allItems: PsEloRateable[] | string[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
     abstract voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<PsPairWiseVoteResults>;

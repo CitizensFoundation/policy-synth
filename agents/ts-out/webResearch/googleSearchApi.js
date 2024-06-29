@@ -1,6 +1,8 @@
 import axios from "axios";
 import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
+//TODO: Make a operations version of this with API costs
 export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
+    needsAiModel = false;
     async search(query) {
         const outResults = [];
         try {

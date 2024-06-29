@@ -51,6 +51,7 @@ export class RankRootCausesSearchQueriesAgent extends BaseSmarterCrowdsourcingPa
         super.process();
         for (const searchQueryType of this.rootCauseTypes) {
             this.logger.info(`Ranking search queries for ${searchQueryType}`);
+            this.updatePrefix = `Ranking ${searchQueryType}`;
             let queriesToRank = this.memory.problemStatement.rootCauseSearchQueries[searchQueryType];
             const index = -1;
             this.setupRankingPrompts(index, queriesToRank);

@@ -18,6 +18,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
   rateLimits: PsModelRateLimitTracking = {};
   models: Map<PsAiModelType, BaseChatModel> = new Map();
   private tokenizer: tiktoken.Tiktoken | null = null;
+  needsAiModel = true;
 
   constructor(memory: PsSimpleAgentMemoryData | undefined = undefined) {
     super();
@@ -25,7 +26,9 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
       this.memory = memory;
     }
     this.initializeTokenizer();
-    this.initializeModels();
+    if (this.needsAiModel) {
+      this.initializeModels();
+    }
   }
 
   private initializeTokenizer() {
@@ -85,7 +88,9 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
       !process.env.AI_MODEL_NAME ||
       !process.env.AI_MODEL_PROVIDER
     ) {
-      throw new Error("Memory or AI model configuration not found");
+      //TODO: this should not happen on all agents that have this.needsAiModel = false
+      this.logger.error("Memory or AI model configuration not found");
+      return;
     }
 
     const baseConfig: PsAiModelConfig = {
