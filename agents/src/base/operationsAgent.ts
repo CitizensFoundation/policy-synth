@@ -438,7 +438,9 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }
   }
 
-  getConfig<T>(uniqueId: string, defaultValue: T): T {
+  //TODO: Look at putting the data into answers
+  getConfigOld<T>(uniqueId: string, defaultValue: T): T {
+    this.logger.debug(JSON.stringify(this.agent.configuration, null, 2));
     const answer = this.agent.configuration.answers?.find(
       (a) => a.uniqueId === uniqueId
     );
@@ -451,6 +453,27 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         return JSON.parse(answer.value as string) as T[] as T;
       }
       return answer.value as T;
+    } else {
+      this.logger.error(`Configuration answer not found for ${uniqueId}`);
+    }
+    return defaultValue;
+  }
+
+  getConfig<T>(uniqueId: string, defaultValue: T): T {
+    if (uniqueId in this.agent.configuration) {
+      //@ts-ignore
+      const value = this.agent.configuration[uniqueId];
+
+      if (typeof defaultValue === "number") {
+        return Number(value) as T;
+      } else if (typeof defaultValue === "boolean") {
+        return (value === "true") as T;
+      } else if (Array.isArray(defaultValue)) {
+        return JSON.parse(value as string) as T[] as T;
+      }
+      return value as T;
+    } else {
+      this.logger.error(`Configuration answer not found for ${uniqueId}`);
     }
     return defaultValue;
   }

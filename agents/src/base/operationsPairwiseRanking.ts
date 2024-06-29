@@ -21,6 +21,8 @@ export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperati
 
   progressFunction: Function | undefined = undefined;
 
+  updatePrefix = "Pairwise Ranking";
+
   fisherYatesShuffle(array: any[]) {
     if (array && array.length > 0) {
       for (let i = array.length - 1; i > 0; i--) {
@@ -210,7 +212,7 @@ export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperati
         }
 
         const progress = (p+1 / (this.prompts[subProblemIndex].length - 1)) * 100;
-        this.updateRangedProgress(progress, `Prompt ${p + 1}/${this.prompts[subProblemIndex].length}`);
+        this.updateRangedProgress(progress, `${this.updatePrefix}: ${p + 1}/${this.prompts[subProblemIndex].length}`);
 
         const promptPair = this.prompts[subProblemIndex][p];
         this.logger.debug(`Prompt pair: ${promptPair}`);

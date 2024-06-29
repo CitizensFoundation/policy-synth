@@ -30,6 +30,7 @@ export declare abstract class PolicySynthOperationsAgent extends PolicySynthBase
     updateRangedProgress(progress: number, message: string): Promise<void>;
     updateProgress(progress: number | undefined, message: string): Promise<void>;
     saveMemory(): Promise<void>;
+    getConfigOld<T>(uniqueId: string, defaultValue: T): T;
     getConfig<T>(uniqueId: string, defaultValue: T): T;
 }
 //# sourceMappingURL=operationsAgent.d.ts.map
