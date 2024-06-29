@@ -18,7 +18,7 @@ export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
         ${solution.description}
 
         Requirements:
-        ${this.memory.customInstructions.reapSolutions}
+        ${this.reapSolutionsInstructions}
 
         Let's think step by step.
 

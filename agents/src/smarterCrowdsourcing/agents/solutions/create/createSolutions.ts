@@ -19,9 +19,9 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
       6. Never re-create solution components listed under 'Already Created Solution Components'.
       ${this.useLanguage ? `7. Always output in ${this.useLanguage}` : ""}
       ${
-        false && this.memory.customInstructions.createSolutions
+        false && this.createSolutionsInstructions
           ? `
-        Important Instructions (override the previous instructions if needed):${this.memory.customInstructions.createSolutions}
+        Important Instructions (override the previous instructions if needed):${this.createSolutionsInstructions}
 
     `
           : ""

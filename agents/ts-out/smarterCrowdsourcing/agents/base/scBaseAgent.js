@@ -103,7 +103,51 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
                 charCounter: true,
                 text: "Sub-Problem Colors (JSON array)",
             },
+            {
+                uniqueId: "secondaryColors",
+                type: "textArea",
+                value: JSON.stringify([
+                    "gold",
+                    "silver",
+                    "bronze",
+                    "copper",
+                    "brass",
+                    "steel",
+                    "pewter",
+                ]),
+                maxLength: 500,
+                required: true,
+                rows: 3,
+                charCounter: true,
+                text: "Secondary Colors (JSON array)",
+            },
         ];
+    }
+    get secondaryColors() {
+        return JSON.parse(this.getConfig("secondaryColors", JSON.stringify([
+            "gold",
+            "silver",
+            "bronze",
+            "copper",
+            "brass",
+            "steel",
+            "pewter",
+        ])));
+    }
+    get problemStatementDescription() {
+        return this.getConfig("problemStatementDescription", "");
+    }
+    get rankSubProblemsInstructions() {
+        return this.getConfig("rankSubProblemsInstructions", "");
+    }
+    get directRootCauseUrlsToScan() {
+        return this.getConfig("directRootCauseUrlsToScan", "").split("\n");
+    }
+    get subProblemClientColors() {
+        return JSON.parse(this.getConfig("subProblemClientColors", "[]"));
+    }
+    get subProblemColors() {
+        return JSON.parse(this.getConfig("subProblemColors", "[]"));
     }
     static getExtraCommonConfigurationQuestions() {
         return [
@@ -594,7 +638,7 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
     renderProblemStatement() {
         return `
       Problem Statement:
-      ${this.memory.problemStatement.description}
+      ${this.problemStatementDescription}
       `;
     }
     renderProblemStatementSubProblemsAndEntities(index, includeMainProblemStatement = true) {
@@ -614,7 +658,7 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
             .join("")}`;
         return `
       ${includeMainProblemStatement
-            ? `Problem Statement:\n${this.memory.problemStatement.description}\n\nSub Problem:\n`
+            ? `Problem Statement:\n${this.problemStatementDescription}\n\nSub Problem:\n`
             : `Problem:\n`}
       ${subProblem.title}\n
       ${subProblem.description}\n

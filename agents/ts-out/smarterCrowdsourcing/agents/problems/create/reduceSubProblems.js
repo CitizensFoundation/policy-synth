@@ -36,7 +36,7 @@ export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
             delete sp.eloRating;
             delete sp.fromUrl;
         });
-        const reducedSubProblems = (await this.callModel(PsAiModelType.Text, await this.renderSelectPrompt(this.memory.problemStatement.description, subProblemsToConsider)));
+        const reducedSubProblems = (await this.callModel(PsAiModelType.Text, await this.renderSelectPrompt(this.problemStatementDescription, subProblemsToConsider)));
         // Go through all the reducedSubProblems and add the eloRating at 0
         reducedSubProblems.forEach((sp) => {
             sp.solutions = {

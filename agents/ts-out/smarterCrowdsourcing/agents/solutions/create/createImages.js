@@ -10,39 +10,6 @@ const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
 export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     cloudflareProxy = "https://cps-images.citizens.is";
-    subProblemColors = [
-        "blue",
-        "orange",
-        "yellow",
-        "green",
-        "red",
-        "indigo",
-        "violet",
-        "sea Green",
-        "saddle Brown",
-        "chocolate",
-        "fire Brick",
-        "orange Red",
-        "yellow Green",
-        "gold",
-        "dark Khaki",
-        "dark Magenta",
-        "dark Violet",
-        "wheat",
-        "forest Green",
-        "tan",
-        "gray",
-        "transparent",
-    ];
-    secondaryColors = [
-        "gold",
-        "silver",
-        "bronze",
-        "copper",
-        "brass",
-        "steel",
-        "pewter",
-    ];
     async downloadImage(imageUrl, imageFilePath) {
         const response = await axios({
             method: "GET",
@@ -146,8 +113,8 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
     }
     get randomSecondaryColor() {
         let secondaryColors;
-        if (this.memory.customInstructions.secondaryColors) {
-            secondaryColors = this.memory.customInstructions.secondaryColors;
+        if (this.secondaryColors) {
+            secondaryColors = this.secondaryColors;
         }
         else {
             secondaryColors = this.secondaryColors;
@@ -156,8 +123,8 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
         return secondaryColors[randomSecondaryColorIndex];
     }
     getSubProblemColor(subProblemIndex) {
-        if (this.memory.customInstructions.subProblemColors) {
-            return this.memory.customInstructions.subProblemColors[subProblemIndex];
+        if (this.subProblemColors) {
+            return this.subProblemColors[subProblemIndex];
         }
         else {
             return this.subProblemColors[subProblemIndex];

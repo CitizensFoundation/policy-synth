@@ -24,9 +24,9 @@ export class RankSubProblemsAgent extends BaseSmarterCrowdsourcingPairwiseAgent 
         3. Output your decision as either "One", "Two" or "Neither". An explanation is not required.
 
         ${
-          this.memory.customInstructions.rankSubProblems
+          this.rankSubProblemsInstructions
             ? `
-          Important Instructions: ${this.memory.customInstructions.rankSubProblems}
+          Important Instructions: ${this.rankSubProblemsInstructions}
           `
             : ""
         }

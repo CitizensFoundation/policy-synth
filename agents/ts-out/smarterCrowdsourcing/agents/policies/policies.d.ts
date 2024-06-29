@@ -9,6 +9,7 @@ import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQ
 export declare class PoliciesAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_policies";
+    setupMemoryIfNeeded(): Promise<void>;
     process(): Promise<void>;
     get processors(): ({
         processor: typeof CreateSeedPoliciesAgent;

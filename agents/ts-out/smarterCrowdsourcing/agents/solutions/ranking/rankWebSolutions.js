@@ -11,9 +11,9 @@ export class RankWebSolutionsAgent extends BaseSmarterCrowdsourcingPairwiseAgent
          Instructions:
          1. Analyze a problem and two solutions, labeled "Solution One" and "Solution Two"
          2. Determine which is more important and practical.
-         ${this.memory.customInstructions.rankSolutions
+         ${this.customInstructionsRankSolutions
                 ? `
-           Important Instructions:\n${this.memory.customInstructions.rankSolutions}
+           Important Instructions:\n${this.customInstructionsRankSolutions}
            `
                 : ""}
 

@@ -279,8 +279,6 @@ export class GetEvidenceWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAge
                 textAnalysis.subProblemIndex = subProblemIndex;
                 textAnalysis.searchType = type;
                 textAnalysis.groupId = this.memory.groupId;
-                textAnalysis.communityId = this.memory.communityId;
-                textAnalysis.domainId = this.memory.domainId;
                 textAnalysis.policyTitle = policy.title;
                 if (Array.isArray(textAnalysis.contacts) &&
                     textAnalysis.contacts.length > 0) {

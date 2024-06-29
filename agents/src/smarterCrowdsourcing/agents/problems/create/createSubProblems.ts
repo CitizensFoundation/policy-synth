@@ -29,7 +29,7 @@ export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
       this.createHumanMessage(
         `
            Problem Statement:
-           "${this.memory.problemStatement.description}"
+           "${this.problemStatementDescription}"
 
            Review and Refine the Following Sub-Problems (in JSON format):
            ${JSON.stringify(results, null, 2)}
@@ -76,7 +76,7 @@ export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
       this.createHumanMessage(
         `
            Problem Statement:
-           "${this.memory.problemStatement.description}"
+           "${this.problemStatementDescription}"
 
            Sub-Problems (in JSON format):
          `

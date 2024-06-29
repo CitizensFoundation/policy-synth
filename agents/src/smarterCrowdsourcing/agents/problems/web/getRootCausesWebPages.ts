@@ -401,9 +401,9 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
       this.memory.subProblems = [];
     }
 
-    if (this.memory.customInstructions.rootCauseUrlsToScan) {
-      this.logger.info(`Processing custom urls... ${JSON.stringify(this.memory.customInstructions.rootCauseUrlsToScan, null, 2)}`);
-      for (const url of this.memory.customInstructions.rootCauseUrlsToScan) {
+    if (this.directRootCauseUrlsToScan) {
+      this.logger.info(`Processing custom urls... ${JSON.stringify(this.directRootCauseUrlsToScan, null, 2)}`);
+      for (const url of this.directRootCauseUrlsToScan) {
         this.logger.info(`Processing ${url}`);
         if (this.isUrlInSubProblemMemory(url)) {
           this.logger.info(`Already in memory ${url}`);

@@ -6,6 +6,7 @@ import { CreateSubProblemImagesAgent } from "./create/createSubProblemImages.js"
 import { CreateProblemStatementImageAgent } from "./create/createProblemStatementImage.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
+import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
 export class ProblemsAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_PROBLEMS_PREPERATION;
@@ -13,6 +14,12 @@ export class ProblemsAgentQueue extends PolicySynthAgentQueue {
     async process() {
         await this.processAllAgents();
         ;
+    }
+    async setupMemoryIfNeeded() {
+        if (!this.memory || !this.memory.subProblems) {
+            this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
+            await this.saveMemory();
+        }
     }
     get processors() {
         return [

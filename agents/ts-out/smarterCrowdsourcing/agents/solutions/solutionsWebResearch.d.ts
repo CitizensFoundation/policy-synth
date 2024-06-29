@@ -8,6 +8,7 @@ export declare class SolutionsWebResearchAgentQueue extends PolicySynthAgentQueu
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_solutions_web_research";
     process(): Promise<void>;
+    setupMemoryIfNeeded(): Promise<void>;
     get processors(): ({
         processor: typeof CreateSearchQueriesAgent;
         weight: number;

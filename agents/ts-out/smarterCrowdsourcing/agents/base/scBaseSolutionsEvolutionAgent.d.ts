@@ -6,6 +6,11 @@ export declare abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extend
     static getConfigurationQuestions(): YpStructuredQuestionData[];
     static getMainConfigurationSettings(): YpStructuredQuestionData[];
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
+    get rateSolutionsInstructions(): string;
+    get rateSolutionsJsonFormat(): string;
+    get reapSolutionsInstructions(): string;
+    get createSolutionsInstructions(): string;
+    get rankSolutionsInstructions(): string;
     get topItemsToKeepForTopicClusterPruning(): number;
     get maxTopSearchQueriesForSolutionCreation(): number;
     get createSolutionsNotUsingTopSearchQueriesChance(): number;

@@ -14,9 +14,9 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
       5. Limit the description of each solution component to six sentences maximum and the description should be accessible and free of technical jargon.
       6. Never re-create solution components listed under 'Already Created Solution Components'.
       ${this.useLanguage ? `7. Always output in ${this.useLanguage}` : ""}
-      ${false && this.memory.customInstructions.createSolutions
+      ${false && this.createSolutionsInstructions
             ? `
-        Important Instructions (override the previous instructions if needed):${this.memory.customInstructions.createSolutions}
+        Important Instructions (override the previous instructions if needed):${this.createSolutionsInstructions}
 
     `
             : ""}

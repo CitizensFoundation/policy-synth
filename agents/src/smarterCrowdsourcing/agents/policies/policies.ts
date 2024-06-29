@@ -9,12 +9,20 @@ import { GetRefinedEvidenceAgent } from "./web/getRefinedEvidence.js";
 import { GetMetaDataForTopWebEvidenceAgent } from "./web/getMetaDataForTopWebEvidence.js";
 import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
+import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
 
 export class PoliciesAgentQueue extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
 
   get agentQueueName() {
     return PsClassScAgentType.SMARTER_CROWDSOURCING_POLICIES;
+  }
+
+  async setupMemoryIfNeeded() {
+    if (!this.memory || !this.memory.subProblems) {
+      this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
+      await this.saveMemory();
+    }
   }
 
   async process() {

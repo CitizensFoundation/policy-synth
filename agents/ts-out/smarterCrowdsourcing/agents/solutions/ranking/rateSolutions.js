@@ -11,7 +11,7 @@ export class RateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
          2. Consider the best pro and con while rating.
 
          Always output your ratings in the following JSON format:
-         ${this.memory.customInstructions.rateSolutionsJsonFormat}
+         ${this.rateSolutionsJsonFormat}
 
         Let's think step by step.
         `),

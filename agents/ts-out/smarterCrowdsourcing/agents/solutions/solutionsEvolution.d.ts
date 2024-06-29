@@ -11,6 +11,7 @@ export declare class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue 
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_solutions_evolution";
     process(): Promise<void>;
+    setupMemoryIfNeeded(): Promise<void>;
     get processors(): ({
         processor: typeof CreateInitialSolutionsAgent;
         weight: number;

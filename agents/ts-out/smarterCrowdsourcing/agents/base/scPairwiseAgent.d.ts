@@ -7,7 +7,9 @@ export declare abstract class BaseSmarterCrowdsourcingPairwiseAgent extends Oper
     get customInstructionsRankSolutions(): string;
     get minimumNumberOfPairwiseVotesForPopulation(): number;
     get maxTopEntitiesToSearch(): number;
+    get rankSubProblemsInstructions(): string;
     get subProblemsRankingMinNumberOfMatches(): number;
+    get problemStatementDescription(): string;
     get maxSubProblems(): number;
     rootCauseTypes: string[];
     getProCons(prosCons: PsProCon[] | undefined): string[];

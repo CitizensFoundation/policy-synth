@@ -104,6 +104,21 @@ export class OpsServerApi extends BaseChatBotServerApi {
             body: JSON.stringify(updatedConfig),
         }, false);
     }
+    async controlAgent(agentId, action) {
+        return this.fetchWrapper(`/api/agents/${agentId}/control`, {
+            method: 'POST',
+            body: JSON.stringify({ type: action }),
+        });
+    }
+    async startAgent(agentId) {
+        return this.controlAgent(agentId, 'start');
+    }
+    async pauseAgent(agentId) {
+        return this.controlAgent(agentId, 'pause');
+    }
+    async stopAgent(agentId) {
+        return this.controlAgent(agentId, 'stop');
+    }
     deleteNode(treeId, nodeId) {
         return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${treeId}`, {
             method: 'DELETE',

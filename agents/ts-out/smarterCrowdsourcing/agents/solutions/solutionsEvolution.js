@@ -8,12 +8,19 @@ import { RankProsConsAgent } from "./ranking/rankProsCons.js";
 import { CreateInitialSolutionsAgent } from "./create/createSolutions.js";
 import { CreateProsConsAgent } from "./create/createProsCons.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
+import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
 export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS_EVOLUTION;
     }
     async process() {
         await this.processAllAgents();
+    }
+    async setupMemoryIfNeeded() {
+        if (!this.memory || !this.memory.subProblems) {
+            this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
+            await this.saveMemory();
+        }
     }
     get processors() {
         if (this.memory.subProblems[0].solutions.populations.length === 0) {

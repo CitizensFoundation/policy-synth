@@ -44,8 +44,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             {
                 uniqueId: "createSolutionsInstructions",
                 type: "textField",
-                value: `
-1. Never create solution components in the form of frameworks or holistic approaches
+                value: `1. Never create solution components in the form of frameworks or holistic approaches
 2. Solution components should include only one core idea
 3. Remember that the main facilitator for implementation will be governments.
 4. Frame solution components with the intention of convincing politicians and governments to put them into action.
@@ -59,8 +58,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             {
                 uniqueId: "rankSolutionsInstructions",
                 type: "textField",
-                value: `
-  1. Solution components will be included in larger policy recommendations to governments around the world.
+                value: `1. Solution components will be included in larger policy recommendations to governments around the world.
 `,
                 maxLength: 1000,
                 required: true,
@@ -71,8 +69,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             {
                 uniqueId: "rateSolutionsJsonFormat",
                 type: "textField",
-                value: `
-  {
+                value: `{
     highPriorityRatings: {
       howImportantToProblem,
       howInnovative,
@@ -98,8 +95,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             {
                 uniqueId: "reapSolutionsInstructions",
                 type: "textField",
-                value: `
-  1. Solution components should not include more than one core idea.
+                value: `1. Solution components should not include more than one core idea.
   2. Solution components can have more than one implementation detail ideas.
   3. If the solution components has two core ideas that are hard to implement without each other then the solution component can be included.
   4. Phrases that describe the impact or outcome of implementing the core ideas should not be counted as separate core ideas.
@@ -110,6 +106,16 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
                 rows: 5,
                 charCounter: true,
                 text: "Reap Solutions Instructions",
+            },
+            {
+                uniqueId: "rateSolutionsInstructions",
+                type: "textField",
+                value: ``,
+                maxLength: 1000,
+                required: true,
+                rows: 5,
+                charCounter: true,
+                text: "Rate Solutions Instructions",
             },
         ];
     }
@@ -365,6 +371,21 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
                 text: "Custom instructions for ranking solutions",
             },
         ];
+    }
+    get rateSolutionsInstructions() {
+        return this.getConfig("rateSolutionsInstructions", "");
+    }
+    get rateSolutionsJsonFormat() {
+        return this.getConfig("rateSolutionsJsonFormat", "");
+    }
+    get reapSolutionsInstructions() {
+        return this.getConfig("reapSolutionsInstructions", "");
+    }
+    get createSolutionsInstructions() {
+        return this.getConfig("createSolutionsInstructions", "");
+    }
+    get rankSolutionsInstructions() {
+        return this.getConfig("rankSolutionsInstructions", "");
     }
     // Solutions-specific configuration options
     get topItemsToKeepForTopicClusterPruning() {

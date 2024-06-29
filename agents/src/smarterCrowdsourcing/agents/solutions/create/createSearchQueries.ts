@@ -82,7 +82,7 @@ export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdso
 
     this.memory.problemStatement.searchQueries = await this.callModel(
       PsAiModelType.Text,
-      await this.renderProblemPrompt(this.memory.problemStatement.description)
+      await this.renderProblemPrompt(this.problemStatementDescription)
     );
 
     const subProblemsLimit = Math.min(

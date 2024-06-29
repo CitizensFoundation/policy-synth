@@ -167,15 +167,11 @@ interface PsAgentStatus {
 
 interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
   groupId: number;
-  communityId: number;
-  domainId: number;
-  aiModelProvider?: string;
-  aiModelName?: string;
   lastSavedAt?: number;
-  currentStage: any;
-  stages: Record<any, PsSimpleStagesData>;
+  currentStage?: any;
+  stages?: Record<any, PsSimpleStagesData>;
   currentStageError?: string | undefined;
-  totalCost: number;
+  totalCost?: number;
 }
 
 interface PsAgentMemoryData extends PsAgentBaseMemoryData {
@@ -325,6 +321,7 @@ interface PsAgentAuditLogAttributes extends PsBaseModelClassNoUuid {
 interface PsAgentStartJobData {
   agentId: number;
   userId: number;
+  action: "start" | "pause" | "stop";
 }
 
 interface YpGroupPrivateAccessConfiguration {

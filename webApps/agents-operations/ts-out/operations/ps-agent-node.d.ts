@@ -13,10 +13,12 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     constructor();
     connectedCallback(): void;
     static get styles(): (any[] | import("lit").CSSResult)[];
-    createDirectCauses(): Promise<void>;
+    startAgent(): Promise<void>;
+    pauseAgent(): Promise<void>;
+    stopAgent(): Promise<void>;
     editNode(): void;
     toggleMenu(): void;
     clickPlayPause(): void;
-    render(): import("lit").TemplateResult<1> | typeof nothing;
+    render(): typeof nothing | import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

@@ -5,6 +5,7 @@ import { SearchWebAgent } from "./web/searchWeb.js";
 import { RankSearchResultsAgent } from "./ranking/rankSearchResults.js";
 import { SmarterCrowdsourcingGetWebPagesAgent } from "./web/getWebPages.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
+import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
 
 export class SolutionsWebResearchAgentQueue extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
@@ -15,6 +16,13 @@ export class SolutionsWebResearchAgentQueue extends PolicySynthAgentQueue {
 
   async process() {
     await this.processAllAgents();
+  }
+
+  async setupMemoryIfNeeded() {
+    if (!this.memory || !this.memory.subProblems) {
+      this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
+      await this.saveMemory();
+    }
   }
 
   get processors() {

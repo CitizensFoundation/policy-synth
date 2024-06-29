@@ -49,7 +49,7 @@ export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
     const reducedSubProblems = (await this.callModel(
       PsAiModelType.Text,
       await this.renderSelectPrompt(
-        this.memory.problemStatement.description,
+        this.problemStatementDescription,
         subProblemsToConsider
       )
     )) as PsSubProblem[];

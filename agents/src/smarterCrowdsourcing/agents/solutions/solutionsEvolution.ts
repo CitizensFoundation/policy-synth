@@ -8,6 +8,7 @@ import { RankProsConsAgent } from "./ranking/rankProsCons.js";
 import { CreateInitialSolutionsAgent } from "./create/createSolutions.js";
 import { CreateProsConsAgent } from "./create/createProsCons.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
+import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
 
 export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
@@ -18,6 +19,13 @@ export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
 
   async process() {
     await this.processAllAgents();
+  }
+
+  async setupMemoryIfNeeded() {
+    if (!this.memory || !this.memory.subProblems) {
+      this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
+      await this.saveMemory();
+    }
   }
 
   get processors() {

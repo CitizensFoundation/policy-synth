@@ -411,8 +411,6 @@ export class GetEvidenceWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAge
         textAnalysis.subProblemIndex = subProblemIndex;
         textAnalysis.searchType = type as PSEvidenceWebPageTypes;
         textAnalysis.groupId = this.memory.groupId;
-        textAnalysis.communityId = this.memory.communityId;
-        textAnalysis.domainId = this.memory.domainId;
         textAnalysis.policyTitle = policy!.title;
 
         if (

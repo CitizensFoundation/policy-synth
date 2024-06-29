@@ -13,6 +13,10 @@ export declare class OpsServerApi extends BaseChatBotServerApi {
     runValidationChain(crtTreeId: string | number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect: string, causes: string[]): Promise<LtpChatBotCrtMessage>;
     updateNode(agentId: number, updatedNode: PsAgentAttributes): Promise<void>;
     updateNodeConfiguration(agentId: number, nodeId: number, nodeType: 'agent' | 'connector', updatedConfig: any): Promise<void>;
+    controlAgent(agentId: number, action: 'start' | 'pause' | 'stop'): Promise<any>;
+    startAgent(agentId: number): Promise<any>;
+    pauseAgent(agentId: number): Promise<any>;
+    stopAgent(agentId: number): Promise<any>;
     deleteNode(treeId: string | number, nodeId: string): Promise<void>;
 }
 //# sourceMappingURL=OpsServerApi.d.ts.map

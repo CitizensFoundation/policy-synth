@@ -202,6 +202,28 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<void>;
   }
 
+  async controlAgent(agentId: number, action: 'start' | 'pause' | 'stop') {
+    return this.fetchWrapper(
+      `/api/agents/${agentId}/control`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ type: action }),
+      }
+    );
+  }
+
+  async startAgent(agentId: number) {
+    return this.controlAgent(agentId, 'start');
+  }
+
+  async pauseAgent(agentId: number) {
+    return this.controlAgent(agentId, 'pause');
+  }
+
+  async stopAgent(agentId: number) {
+    return this.controlAgent(agentId, 'stop');
+  }
+
   public deleteNode(
     treeId: string | number,
     nodeId: string

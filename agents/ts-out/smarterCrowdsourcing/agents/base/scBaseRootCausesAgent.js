@@ -33,6 +33,16 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
     static getExtraConfigurationQuestions() {
         return [
             {
+                uniqueId: "directRootCauseUrlsToScan",
+                type: "textField",
+                value: "",
+                maxLength: 2000,
+                required: false,
+                rows: 5,
+                charCounter: true,
+                text: "Direct root cause URLs to scan (one per line)",
+            },
+            {
                 uniqueId: "maxTopRootCauseQueriesToSearchPerType",
                 type: "textField",
                 subType: "number",

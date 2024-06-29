@@ -103,13 +103,37 @@ export class PsAgentNode extends PsOperationsBaseNode {
     ];
   }
 
-  async createDirectCauses() {
-    const nodes = await this.api.createDirectCauses(this.agent.id, this.nodeId);
+  async startAgent() {
+    try {
+      await this.api.startAgent(this.agent.id);
+      this.isWorking = true;
+      window.psAppGlobals.setCurrentRunningAgentId(this.agent.id);
+      this.requestUpdate();
+    } catch (error) {
+      console.error('Failed to start agent:', error);
+    }
+  }
 
-    this.fireGlobal('add-nodes', {
-      parentNodeId: this.nodeId,
-      nodes,
-    });
+  async pauseAgent() {
+    try {
+      await this.api.pauseAgent(this.agent.id);
+      this.isWorking = false;
+      window.psAppGlobals.setCurrentRunningAgentId(undefined);
+      this.requestUpdate();
+    } catch (error) {
+      console.error('Failed to pause agent:', error);
+    }
+  }
+
+  async stopAgent() {
+    try {
+      await this.api.stopAgent(this.agent.id);
+      this.isWorking = false;
+      window.psAppGlobals.setCurrentRunningAgentId(undefined);
+      this.requestUpdate();
+    } catch (error) {
+      console.error('Failed to stop agent:', error);
+    }
   }
 
   editNode() {
@@ -129,8 +153,10 @@ export class PsAgentNode extends PsOperationsBaseNode {
       this.fireGlobal('pause-agent', {
         agentId: this.agent.id,
       });
+      this.pauseAgent();
       window.psAppGlobals.setCurrentRunningAgentId(undefined);
     } else {
+      this.startAgent();
       this.fireGlobal('run-agent', {
         agentId: this.agent.id,
       });
@@ -179,7 +205,7 @@ export class PsAgentNode extends PsOperationsBaseNode {
           </md-icon-button>
         </div>
         <md-menu id="menu">
-          <md-menu-item @click="${this.createDirectCauses}">Create Direct Causes</md-menu-item>
+          <md-menu-item @click="${this.stopAgent}">Stop Agent</md-menu-item>
           <!-- Add more menu items as needed -->
         </md-menu>
       </div>

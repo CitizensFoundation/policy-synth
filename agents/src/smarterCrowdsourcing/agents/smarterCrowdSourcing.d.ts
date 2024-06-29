@@ -73,7 +73,6 @@ interface PsSimpleStagesData {
 }
 
 interface PsProblemStatement extends PsEloRateable{
-  description: string;
   searchQueries: PsSearchQueries;
   searchResults: PsSearchResults;
   solutionsFromSearch?: PsSolution[];
@@ -304,18 +303,6 @@ interface PsSearchResults {
 
 interface PsSmarterCrowdsourcingMemoryData extends PsSimpleAgentMemoryData {
   problemStatement: PsProblemStatement;
-  customInstructions: {
-    createRootCause?: string;
-    createSubProblems?: string;
-    rankSubProblems?: string;
-    createSolutions?: string;
-    rankSolutions?: string;
-    reapSolutions?: string;
-    rateSolutionsJsonFormat?: string;
-    subProblemColors?: string[];
-    secondaryColors?: string[];
-    rootCauseUrlsToScan?: string[];
-  };
   subProblems: PsSubProblem[];
   allSubProblems?: PsSubProblem[];
   subProblemClientColors?: string[];

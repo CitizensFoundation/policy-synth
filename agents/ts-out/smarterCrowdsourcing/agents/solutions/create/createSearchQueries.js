@@ -65,7 +65,7 @@ export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdso
     async process() {
         this.logger.info("Create Search Queries Agent");
         super.process();
-        this.memory.problemStatement.searchQueries = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(this.memory.problemStatement.description));
+        this.memory.problemStatement.searchQueries = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(this.problemStatementDescription));
         const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const problemText = `

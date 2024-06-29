@@ -15,9 +15,9 @@ export class RankSubProblemsAgent extends BaseSmarterCrowdsourcingPairwiseAgent 
         2. Analyse, compare, and rank these two sub-problems in relation to the main problem statement to determine which is more relevant and important.
         3. Output your decision as either "One", "Two" or "Neither". An explanation is not required.
 
-        ${this.memory.customInstructions.rankSubProblems
+        ${this.rankSubProblemsInstructions
                 ? `
-          Important Instructions: ${this.memory.customInstructions.rankSubProblems}
+          Important Instructions: ${this.rankSubProblemsInstructions}
           `
                 : ""}
 

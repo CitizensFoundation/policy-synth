@@ -2,6 +2,7 @@ import express from "express";
 import { createClient } from "redis";
 import { PsAgent, PsAgentConnector, PsAgentClass, User, Group, PsExternalApiUsage, PsModelUsage, PsAiModel, PsAgentConnectorClass, } from "../models/index.js";
 import { AgentManagerService } from "../operations/agentManager.js";
+import { Queue } from "bullmq";
 let redisClient;
 // TODO: Share this do not start on each controller
 if (process.env.REDIS_URL) {
@@ -30,7 +31,31 @@ export class AgentsController {
     initializeRoutes() {
         this.router.get(this.path + "/:id", this.getAgent);
         this.router.put(this.path + "/:agentId/:nodeType/:nodeId/configuration", this.updateNodeConfiguration);
+        this.router.post(this.path + "/:id/control", this.controlAgent());
     }
+    controlAgent = () => async (req, res) => {
+        const agentId = parseInt(req.params.id);
+        const action = req.body.action;
+        try {
+            const agent = await PsAgent.findByPk(agentId, {
+                include: [{ model: PsAgentClass, as: "Class" }],
+            });
+            if (!agent || !agent.Class) {
+                return res.status(404).send('Agent or Agent Class not found');
+            }
+            const queueName = agent.Class.configuration.queueName;
+            if (!queueName) {
+                return res.status(400).send('Queue name not defined for this agent class');
+            }
+            const queue = new Queue(queueName);
+            await queue.add(`${action}Agent`, { agentId, action });
+            res.json({ message: `${action.charAt(0).toUpperCase() + action.slice(1)} request for agent ${agentId} queued in ${queueName}` });
+        }
+        catch (error) {
+            console.error(`Error ${action}ing agent:`, error);
+            res.status(500).send("Internal Server Error");
+        }
+    };
     updateNodeConfiguration = async (req, res) => {
         const agentId = parseInt(req.params.agentId);
         const nodeId = parseInt(req.params.nodeId);

@@ -5,6 +5,7 @@ import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearch
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
 import { RankRootCausesSearchResultsAgent } from "./ranking/rankRootCausesSearchResults.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
+import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
 
 export class RootCausesAgentQueue extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
@@ -15,6 +16,13 @@ export class RootCausesAgentQueue extends PolicySynthAgentQueue {
 
   get agentQueueName() {
     return  PsClassScAgentType.SMARTER_CROWDSOURCING_ROOT_CAUSES;
+  }
+
+  async setupMemoryIfNeeded() {
+    if (!this.memory || !this.memory.subProblems) {
+      this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
+      await this.saveMemory();
+    }
   }
 
   get processors() {

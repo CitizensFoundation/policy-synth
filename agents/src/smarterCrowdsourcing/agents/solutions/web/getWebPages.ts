@@ -69,7 +69,7 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
       this.createHumanMessage(
         `
         Problem Statement:
-        ${problemStatement.description}
+        ${this.problemStatementDescription}
 
         ${
           subProblemIndex !== undefined

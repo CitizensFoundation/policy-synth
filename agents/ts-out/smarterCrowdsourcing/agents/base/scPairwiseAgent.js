@@ -12,8 +12,14 @@ export class BaseSmarterCrowdsourcingPairwiseAgent extends OperationsPairwiseRan
     get maxTopEntitiesToSearch() {
         return this.getConfig("maxTopEntitiesToSearch", 3);
     }
+    get rankSubProblemsInstructions() {
+        return this.getConfig("rankSubProblemsInstructions", "");
+    }
     get subProblemsRankingMinNumberOfMatches() {
         return this.getConfig("subProblemsRankingMinNumberOfMatches", 10);
+    }
+    get problemStatementDescription() {
+        return this.getConfig("problemStatementDescription", "");
     }
     get maxSubProblems() {
         return this.getConfig("maxSubProblems", 7);
@@ -98,7 +104,7 @@ export class BaseSmarterCrowdsourcingPairwiseAgent extends OperationsPairwiseRan
     renderProblemStatement() {
         return `
       Problem Statement:
-      ${this.memory.problemStatement.description}
+      ${this.problemStatementDescription}
       `;
     }
     renderProblemStatementSubProblemsAndEntities(index, includeMainProblemStatement = true) {
@@ -118,7 +124,7 @@ export class BaseSmarterCrowdsourcingPairwiseAgent extends OperationsPairwiseRan
             .join("")}`;
         return `
       ${includeMainProblemStatement
-            ? `Problem Statement:\n${this.memory.problemStatement.description}\n\nSub Problem:\n`
+            ? `Problem Statement:\n${this.problemStatementDescription}\n\nSub Problem:\n`
             : `Problem:\n`}
       ${subProblem.title}\n
       ${subProblem.description}\n

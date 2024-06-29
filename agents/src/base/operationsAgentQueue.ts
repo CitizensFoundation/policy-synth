@@ -47,6 +47,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
   }
 
   abstract get agentQueueName(): string;
+  abstract setupMemoryIfNeeded(): Promise<void>;
 
   async setupAgentQueue() {
     if (this.agentQueueName) {
@@ -58,6 +59,23 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
           if (loadedAgent) {
             this.agent = loadedAgent;
             await this.loadAgentMemoryFromRedis();
+            await this.setupMemoryIfNeeded();
+
+            switch (data.action) {
+              case "start":
+                await this.startAgent();
+                break;
+              case "stop":
+                await this.stopAgent();
+                break;
+              case "pause":
+                await this.pauseAgent();
+                break;
+              default:
+                this.logger.error(
+                  `Unknown action ${data.action} for job ${job.id}`
+                );
+            }
           } else {
             this.logger.error(`Agent not found for job ${job.id}`);
             throw new Error(`Agent not found for job ${job.id}`);
@@ -69,35 +87,79 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
           connection: {
             host: redis.options.host,
             port: redis.options.port,
-            maxRetriesPerRequest: null,  // Add this line
+            maxRetriesPerRequest: null,
           },
           concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
         }
       );
 
-      worker.on('completed', (job: Job) => {
-        this.logger.info(`Job ${job.id} has been completed for agent ${this.agentQueueName}`);
+      worker.on("completed", (job: Job) => {
+        this.logger.info(
+          `Job ${job.id} has been completed for agent ${this.agentQueueName}`
+        );
       });
 
-      worker.on('failed', (job: Job | undefined, err: Error) => {
-        this.logger.error(`Job ${job?.id || 'unknown'} has failed for agent ${this.agentQueueName}`, err);
+      worker.on("failed", (job: Job | undefined, err: Error) => {
+        this.logger.error(
+          `Job ${job?.id || "unknown"} has failed for agent ${
+            this.agentQueueName
+          }`,
+          err
+        );
       });
 
-      worker.on('error', (err: Error) => {
-        this.logger.error(`An error occurred in the worker for agent ${this.agentQueueName}`, err);
+      worker.on("error", (err: Error) => {
+        this.logger.error(
+          `An error occurred in the worker for agent ${this.agentQueueName}`,
+          err
+        );
       });
 
-      worker.on('active', (job: Job) => {
-        this.logger.info(`Job ${job.id} has started processing for agent ${this.agentQueueName}`);
+      worker.on("active", (job: Job) => {
+        this.logger.info(
+          `Job ${job.id} has started processing for agent ${this.agentQueueName}`
+        );
       });
 
-      worker.on('stalled', (jobId: string) => {
-        this.logger.warn(`Job ${jobId} has been stalled for agent ${this.agentQueueName}`);
+      worker.on("stalled", (jobId: string) => {
+        this.logger.warn(
+          `Job ${jobId} has been stalled for agent ${this.agentQueueName}`
+        );
       });
 
-      this.logger.info(`Worker set up successfully for agent ${this.agentQueueName}`);
+      this.logger.info(
+        `Worker set up successfully for agent ${this.agentQueueName}`
+      );
     } else {
       this.logger.error("Top level agent queue name not set");
+    }
+  }
+
+  private async startAgent() {
+    this.logger.info(`Starting agent ${this.agent.id}`);
+    await this.processAllAgents();
+    // Handle Outputs connectors
+  }
+
+  private async stopAgent() {
+    this.logger.info(`Stopping agent ${this.agent.id}`);
+    // Implement logic to stop the agent
+    // This might involve setting a flag in the agent's memory or database record
+    await this.updateAgentStatus("stopped");
+  }
+
+  private async pauseAgent() {
+    this.logger.info(`Pausing agent ${this.agent.id}`);
+    // Implement logic to pause the agent
+    // This might involve setting a flag in the agent's memory or database record
+    await this.updateAgentStatus("paused");
+  }
+
+  private async updateAgentStatus(status: "running" | "stopped" | "paused") {
+    if (this.agent) {
+      //TODO: Implement this
+      //   this.agent.status = status;
+      await this.agent.save();
     }
   }
 }

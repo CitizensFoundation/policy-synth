@@ -247,33 +247,37 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
     tokensOut: number,
     model: BaseChatModel
   ) {
-    if (!this.memory!.stages[stage]) {
-      this.memory!.stages[stage] = {
-        tokensIn: 0,
-        tokensOut: 0,
-        tokensInCost: 0,
-        tokensOutCost: 0,
-      };
-    }
+    if (this.memory!.stages) {
+      if (!this.memory!.stages[stage]) {
+        this.memory!.stages[stage] = {
+          tokensIn: 0,
+          tokensOut: 0,
+          tokensInCost: 0,
+          tokensOutCost: 0,
+        };
+      }
 
-    if (process.env.PS_MODEL_IN_COST_USD && process.env.PS_MODEL_OUT_COST_USD) {
-      const inTokenCost = parseFloat(process.env.PS_MODEL_IN_COST_USD);
-      const outTokenCost = parseFloat(process.env.PS_MODEL_OUT_COST_USD);
+      if (process.env.PS_MODEL_IN_COST_USD && process.env.PS_MODEL_OUT_COST_USD) {
+        const inTokenCost = parseFloat(process.env.PS_MODEL_IN_COST_USD);
+        const outTokenCost = parseFloat(process.env.PS_MODEL_OUT_COST_USD);
 
-      this.memory!.stages[stage].tokensIn! += tokensIn;
-      this.memory!.stages[stage].tokensOut! += tokensOut;
-      this.memory!.stages[stage].tokensInCost! += tokensIn * inTokenCost;
-      this.memory!.stages[stage].tokensOutCost! += tokensOut * outTokenCost;
+        this.memory!.stages[stage].tokensIn! += tokensIn;
+        this.memory!.stages[stage].tokensOut! += tokensOut;
+        this.memory!.stages[stage].tokensInCost! += tokensIn * inTokenCost;
+        this.memory!.stages[stage].tokensOutCost! += tokensOut * outTokenCost;
 
-      // Update total cost
-      this.memory!.totalCost =
-        (this.memory!.totalCost || 0) +
-        tokensIn * inTokenCost +
-        tokensOut * outTokenCost;
+        // Update total cost
+        this.memory!.totalCost =
+          (this.memory!.totalCost || 0) +
+          tokensIn * inTokenCost +
+          tokensOut * outTokenCost;
+      } else {
+        this.logger.warn(
+          "Cost per token not set in environment variables PS_MODEL_IN_COST_USD and PS_MODEL_OUT_COST_USD"
+        );
+      }
     } else {
-      this.logger.warn(
-        "Cost per token not set in environment variables PS_MODEL_IN_COST_USD and PS_MODEL_OUT_COST_USD"
-      );
+      console.warn("Memory is not initialized");
     }
   }
 

@@ -27,9 +27,9 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
         7. Do not refer to "the merged solution component" in your output, the solution component should be presented as a standalone solution component.
         8. Solution should be actionable and the text accessible.
 
-        ${this.memory.customInstructions.createSolutions
+        ${this.createSolutionsInstructions
                 ? `
-          Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
+          Important Instructions (override the previous instructions if needed): ${this.createSolutionsInstructions}
           `
                 : ""}
 
@@ -61,9 +61,9 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
         3. Ensure the mutation is creative, meaningful, and continues to offer a viable solution component to part of the presented problem.
         4. Avoid referring to your output as "the merged solution component" or "the mutated solution component". Instead, present it as a standalone solution component.
         5. Solution should be actionable and the text accessible.
-        ${this.memory.customInstructions.createSolutions
+        ${this.createSolutionsInstructions
                 ? `
-          Important Instructions (override the previous instructions if needed): ${this.memory.customInstructions.createSolutions}
+          Important Instructions (override the previous instructions if needed): ${this.createSolutionsInstructions}
           `
                 : ""}
 

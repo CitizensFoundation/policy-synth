@@ -36,7 +36,7 @@ export class CreateProblemStatementImageAgent extends CreateSolutionImagesAgent 
 
   getDalleImagePrompt() {
     return `Topic (do not reference directly in the prompt you create):
-${this.memory.problemStatement.description}
+${this.problemStatementDescription}
 Image style: very simple abstract geometric cartoon with max 3 items in the image.`;
   }
 
