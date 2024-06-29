@@ -1,6 +1,6 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 
-export class ReapSolutionsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+export class ReapSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   async renderReapPrompt(solution: PsSolution) {
     const messages = [
       this.createSystemMessage(

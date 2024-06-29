@@ -7,16 +7,17 @@ import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PsAgent } from "../dbModels/agent.js";
-import { PsAiModel } from "../dbModels/aiModel.js";
+
 import { Op } from "sequelize";
 import { PolicySynthBaseAgent } from "./agent.js";
+import { Job, Worker } from "bullmq";
 
 //TODO: Look to pool redis connections
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
+export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   memory!: PsAgentMemoryData;
   agent: PsAgent;
   models: Map<PsAiModelType, BaseChatModel> = new Map();
@@ -58,9 +59,9 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }
 
     const currentProgress =
-      this.startProgress + (this.endProgress - this.startProgress) * 0.10; // 10% complete
-      const className = this.constructor.name;
-      await this.updateProgress(currentProgress, `Agent ${className} Starting`);
+      this.startProgress + (this.endProgress - this.startProgress) * 0.1; // 10% complete
+    const className = this.constructor.name;
+    await this.updateProgress(currentProgress, `Agent ${className} Starting`);
   }
 
   async loadAgentMemoryFromRedis() {
@@ -105,10 +106,8 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
       const baseConfig = {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.name,
-        maxTokensOut:
-          this.maxModelTokensOut,
-        temperature:
-          this.modelTemperature,
+        maxTokensOut: this.maxModelTokensOut,
+        temperature: this.modelTemperature,
       } as PsAiModelConfig;
 
       switch (model.configuration.provider) {
@@ -328,27 +327,28 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }
 
     try {
-      const [usage, created] = await PsModelUsage.findOrCreate({
-        where: {
-          //TODO: Check this make more robust
-          model_id: this.agent.AiModels!.find(
-            (m) => m.name === model.modelName
-          )!.id,
-          agent_id: this.agent.id,
-          created_at: {
-            [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)), // Today's date
+      const [usage, created]: [PsModelUsage, boolean] =
+        await PsModelUsage.findOrCreate({
+          where: {
+            //TODO: Check this make more robust
+            model_id: this.agent.AiModels!.find(
+              (m) => m.name === model.modelName
+            )!.id,
+            agent_id: this.agent.id,
+            created_at: {
+              [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)), // Today's date
+            },
           },
-        },
-        defaults: {
-          token_in_count: tokensIn,
-          token_out_count: tokensOut,
-          model_id: this.agent.AiModels!.find(
-            (m) => m.name === model.modelName
-          )!.id,
-          agent_id: this.agent.id,
-          user_id: this.agent.user_id,
-        },
-      });
+          defaults: {
+            token_in_count: tokensIn,
+            token_out_count: tokensOut,
+            model_id: this.agent.AiModels!.find(
+              (m) => m.name === model.modelName
+            )!.id,
+            agent_id: this.agent.id,
+            user_id: this.agent.user_id,
+          },
+        });
 
       if (!created) {
         // If the record already existed, update the counters

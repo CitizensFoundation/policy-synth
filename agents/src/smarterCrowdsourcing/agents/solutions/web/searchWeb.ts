@@ -1,8 +1,8 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
 import { GoogleSearchApi } from "../../../../webResearch/googleSearchApi.js";
 import { BingSearchApi } from "../../../../webResearch/bingSearchApi.js";
+import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
 
-export class SearchWebProcessor extends SolutionsSmarterCrowdsourcingAgent {
+export class SearchWebProcessor extends SolutionsWebResearchSmarterCrowdsourcingAgent {
   seenUrls!: Map<string, Set<string>>;
 
   async callSearchApi(query: string): Promise<PsSearchResultItem[]> {

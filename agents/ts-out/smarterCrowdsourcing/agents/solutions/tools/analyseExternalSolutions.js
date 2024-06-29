@@ -1,4 +1,4 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
 import path from "path";
@@ -91,7 +91,7 @@ const externalSolutionsMisuseOfLegalSystem = [
         description: "Engage communities and build coalitions to ensure that the voices of key stakeholders are represented in funding decisions related to election administration. ",
     },
 ];
-export class AnalyseExternalSolutions extends SolutionsSmarterCrowdsourcingAgent {
+export class AnalyseExternalSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     folderPath;
     async renderAnalysisPrompt(solutionDescription, requirement) {
         const messages = [

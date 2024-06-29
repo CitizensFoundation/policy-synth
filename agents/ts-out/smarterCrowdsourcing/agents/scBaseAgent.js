@@ -1,7 +1,7 @@
 import { PolicySynthOperationsAgent } from "../../base/operationsAgent.js";
 import { PsAgentClass } from "../../dbModels/agentClass.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "./scBaseProblemsAgent.js";
-import { SolutionsSmarterCrowdsourcingAgent } from "./scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "./scBaseSolutionsEvolutionAgent.js";
 import { PoliciesSmarterCrowdsourcingAgent } from "./scBasePoliciesAgent.js";
 export class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
     job;
@@ -32,7 +32,7 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthOperationsAgent {
     static async createAgentClassesIfNeeded(userId) {
         const agentClasses = [
             ProblemsSmarterCrowdsourcingAgent.getAgentClass(),
-            SolutionsSmarterCrowdsourcingAgent.getAgentClass(),
+            SolutionsEvolutionSmarterCrowdsourcingAgent.getAgentClass(),
             PoliciesSmarterCrowdsourcingAgent.getAgentClass(),
         ];
         for (const agentClass of agentClasses) {

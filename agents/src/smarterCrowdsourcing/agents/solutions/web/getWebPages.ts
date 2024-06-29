@@ -15,7 +15,7 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
 import { htmlToText } from "html-to-text";
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
 
@@ -24,7 +24,7 @@ puppeteer.use(StealthPlugin());
 
 const onlyCheckWhatNeedsToBeScanned = false;
 
-export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsSmarterCrowdsourcingAgent {
+export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   webPageVectorStore = new WebPageVectorStore();
   urlsScanned = new Set<string>();
 

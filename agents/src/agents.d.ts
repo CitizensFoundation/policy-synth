@@ -217,6 +217,7 @@ interface PsAgentModelUsageEstimate {
   timestamp: number;
 }
 
+
 interface PsAgentApiUsageEstimate {
   externalApiId: number;
   callCount: number;
@@ -317,6 +318,11 @@ interface PsAgentAuditLogAttributes extends PsBaseModelClassNoUuid {
   connector_id: number; // or
   action: string;
   details?: PsAgentAuditLogDetails;
+}
+
+interface PsAgentStartJobData {
+  agentId: number;
+  userId: number;
 }
 
 interface YpGroupPrivateAccessConfiguration {

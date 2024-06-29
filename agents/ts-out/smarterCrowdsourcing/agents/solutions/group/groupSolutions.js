@@ -1,5 +1,5 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
-export class GroupSolutionsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+export class GroupSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderGroupPrompt(solutionsToGroup) {
         const messages = [
             this.createSystemMessage(`You are an expert in in grouping solution components containing exactly the same core ideas.

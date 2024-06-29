@@ -1,5 +1,5 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
-export class ReapSolutionsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+export class ReapSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderReapPrompt(solution) {
         const messages = [
             this.createSystemMessage(`You are an expert in assessing if a solution component fits given requirements.

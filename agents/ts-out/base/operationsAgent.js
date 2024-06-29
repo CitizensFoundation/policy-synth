@@ -37,7 +37,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             this.logger.error("Memory is not initialized");
             throw new Error("Memory is not initialized");
         }
-        const currentProgress = this.startProgress + (this.endProgress - this.startProgress) * 0.10; // 10% complete
+        const currentProgress = this.startProgress + (this.endProgress - this.startProgress) * 0.1; // 10% complete
         const className = this.constructor.name;
         await this.updateProgress(currentProgress, `Agent ${className} Starting`);
     }

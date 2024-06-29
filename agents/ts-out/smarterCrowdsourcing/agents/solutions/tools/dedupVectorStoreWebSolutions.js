@@ -1,8 +1,8 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
-export class RemoveDuplicateVectorStoreWebSolutions extends SolutionsSmarterCrowdsourcingAgent {
+export class RemoveDuplicateVectorStoreWebSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     allUrls = new Set();
     duplicateUrls = [];

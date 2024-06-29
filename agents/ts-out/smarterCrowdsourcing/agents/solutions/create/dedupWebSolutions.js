@@ -1,6 +1,6 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
-export class RemoveDuplicateWebSolutions extends SolutionsSmarterCrowdsourcingAgent {
+export class RemoveDuplicateWebSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     allUrls = new Set();
     duplicateUrls = [];

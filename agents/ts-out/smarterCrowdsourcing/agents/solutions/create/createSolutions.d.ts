@@ -1,5 +1,5 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
-export declare class CreateSolutionsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+export declare class CreateSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     useLanguage: string | undefined;
     renderCreateSystemMessage(): PsModelMessage;
     renderCreatePrompt(subProblemIndex: number, solutionsForInspiration: PsSolution[], alreadyCreatedSolutions?: string | undefined): Promise<PsModelMessage[]>;

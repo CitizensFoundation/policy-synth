@@ -1,5 +1,5 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
-export declare class RateSolutionsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+export declare class RateSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     renderRatePrompt(subProblemIndex: number, solution: PsSolution): Promise<PsModelMessage[]>;
     rateSolutions(): Promise<void>;
     process(): Promise<void>;

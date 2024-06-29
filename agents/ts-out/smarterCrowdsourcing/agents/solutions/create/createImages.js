@@ -1,4 +1,4 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 import { OpenAI } from "openai";
 import axios from "axios";
 import AWS from "aws-sdk";
@@ -7,7 +7,7 @@ import path from "path";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
-export class CreateSolutionImagesProcessor extends SolutionsSmarterCrowdsourcingAgent {
+export class CreateSolutionImagesProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     cloudflareProxy = "https://cps-images.citizens.is";
     subProblemColors = [
         "blue",

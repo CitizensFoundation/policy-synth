@@ -1,5 +1,5 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
-export declare class ReapSolutionsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+export declare class ReapSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     renderReapPrompt(solution: PsSolution): Promise<PsModelMessage[]>;
     reapSolutionsForSubProblem(subProblemIndex: number, solutions: Array<PsSolution>): Promise<void>;
     reapSolutions(): Promise<void>;

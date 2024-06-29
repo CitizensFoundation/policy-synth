@@ -1,5 +1,5 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
-export declare class AnalyseExternalSolutions extends SolutionsSmarterCrowdsourcingAgent {
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+export declare class AnalyseExternalSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     folderPath: string;
     renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<PsModelMessage[]>;
     compareSolutionToExternal(solutionDescription: string, requirement: string): Promise<PsExternalSolutionAnalysisResults>;

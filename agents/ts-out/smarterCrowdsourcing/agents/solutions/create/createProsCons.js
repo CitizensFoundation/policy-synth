@@ -1,5 +1,5 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
-export class CreateProsConsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+export class CreateProsConsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution) {
         return `
       Solution Component:

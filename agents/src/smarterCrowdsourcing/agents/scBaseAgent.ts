@@ -3,7 +3,7 @@ import { PolicySynthOperationsAgent } from "../../base/operationsAgent.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsAgentClass } from "../../dbModels/agentClass.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "./scBaseProblemsAgent.js";
-import { SolutionsSmarterCrowdsourcingAgent } from "./scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "./scBaseSolutionsEvolutionAgent.js";
 import { PoliciesSmarterCrowdsourcingAgent } from "./scBasePoliciesAgent.js";
 
 
@@ -47,7 +47,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
   static async createAgentClassesIfNeeded(userId: number) {
     const agentClasses = [
       ProblemsSmarterCrowdsourcingAgent.getAgentClass(),
-      SolutionsSmarterCrowdsourcingAgent.getAgentClass(),
+      SolutionsEvolutionSmarterCrowdsourcingAgent.getAgentClass(),
       PoliciesSmarterCrowdsourcingAgent.getAgentClass(),
     ];
 

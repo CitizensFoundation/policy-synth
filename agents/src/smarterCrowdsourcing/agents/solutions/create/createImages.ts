@@ -1,4 +1,4 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 import { OpenAI } from "openai";
 import axios from "axios";
 import AWS from "aws-sdk";
@@ -17,7 +17,7 @@ interface GenerationResponse {
   }>;
 }
 
-export class CreateSolutionImagesProcessor extends SolutionsSmarterCrowdsourcingAgent {
+export class CreateSolutionImagesProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   cloudflareProxy = "https://cps-images.citizens.is";
 
   subProblemColors = [

@@ -1,6 +1,6 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 
-export class RateSolutionsProcessor extends SolutionsSmarterCrowdsourcingAgent {
+export class RateSolutionsProcessor extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   async renderRatePrompt(subProblemIndex: number, solution: PsSolution) {
     const messages = [
       this.createSystemMessage(

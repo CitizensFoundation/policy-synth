@@ -1,6 +1,6 @@
 import winston from 'winston';
 import './smarterCrowdsourcing/agents/problems/problemsProcessor.js';
-import './smarterCrowdsourcing/agents/solutions/solutions.js';
+import './smarterCrowdsourcing/agents/solutions/solutionsWebResearch.js';
 import './smarterCrowdsourcing/agents/policies/policies.js';
 const logger = winston.createLogger({
     level: process.env.WORKER_LOG_LEVEL || 'debug',

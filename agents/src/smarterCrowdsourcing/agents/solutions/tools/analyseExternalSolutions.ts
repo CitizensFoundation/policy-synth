@@ -1,4 +1,4 @@
-import { SolutionsSmarterCrowdsourcingAgent } from "../../scBaseSolutionsAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
 import ioredis from "ioredis";
 import fs from "fs/promises";
 import path from "path";
@@ -113,7 +113,7 @@ const externalSolutionsMisuseOfLegalSystem = [
   },
 ];
 
-export class AnalyseExternalSolutions extends SolutionsSmarterCrowdsourcingAgent {
+export class AnalyseExternalSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   folderPath!: string;
 
   async renderAnalysisPrompt(solutionDescription: string, requirement: string) {
