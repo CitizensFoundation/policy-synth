@@ -21,7 +21,7 @@ export class PolicySynthBaseAgent {
         return { role: "system", message: content };
     }
     createHumanMessage(content) {
-        return { role: "human", message: content };
+        return { role: "user", message: content };
     }
     getJsonBlock(text) {
         let startIndex = text.indexOf("```json");

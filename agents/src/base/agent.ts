@@ -29,7 +29,7 @@ export class PolicySynthBaseAgent {
   }
 
   protected createHumanMessage(content: string): PsModelMessage {
-    return { role: "human", message: content };
+    return { role: "user", message: content };
   }
 
   getJsonBlock(text: string) {

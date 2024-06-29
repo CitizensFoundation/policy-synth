@@ -2,6 +2,14 @@ import ioredis from "ioredis";
 import { PsAgent } from "../dbModels/agent.js";
 import { Worker } from "bullmq";
 import { PolicySynthOperationsAgent } from "./operationsAgent.js";
+import { PsAgentConnector } from "../dbModels/agentConnector.js";
+import { PsAgentConnectorClass } from "../dbModels/agentConnectorClass.js";
+import { PsAgentClass } from "../dbModels/agentClass.js";
+import { User } from "../dbModels/ypUser.js";
+import { Group } from "../dbModels/ypGroup.js";
+import { PsExternalApiUsage } from "../dbModels/externalApiUsage.js";
+import { PsModelUsage } from "../dbModels/modelUsage.js";
+import { PsAiModel } from "../dbModels/aiModel.js";
 //TODO: Look to pool redis connections
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
@@ -26,7 +34,43 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
         if (this.agentQueueName) {
             const worker = new Worker(this.agentQueueName, async (job) => {
                 const data = job.data;
-                const loadedAgent = await PsAgent.findByPk(data.agentId);
+                const loadedAgent = await PsAgent.findByPk(data.agentId, {
+                    include: [
+                        {
+                            model: PsAgent,
+                            as: "SubAgents",
+                            include: [
+                                {
+                                    model: PsAgentConnector,
+                                    as: "Connectors",
+                                    include: [
+                                        {
+                                            model: PsAgentConnectorClass,
+                                            as: "Class",
+                                        },
+                                    ],
+                                },
+                                { model: PsAgentClass, as: "Class" },
+                            ],
+                        },
+                        {
+                            model: PsAgentConnector,
+                            as: "Connectors",
+                            include: [
+                                {
+                                    model: PsAgentConnectorClass,
+                                    as: "Class",
+                                },
+                            ],
+                        },
+                        { model: PsAgentClass, as: "Class" },
+                        { model: User, as: "User" },
+                        { model: Group, as: "Group" },
+                        { model: PsExternalApiUsage, as: "ExternalApiUsage" },
+                        { model: PsModelUsage, as: "ModelUsage" },
+                        { model: PsAiModel, as: "AiModels" },
+                    ]
+                });
                 if (loadedAgent) {
                     this.agent = loadedAgent;
                     await this.loadAgentMemoryFromRedis();

@@ -32,6 +32,7 @@ export class AgentsController {
         this.router.get(this.path + "/:id", this.getAgent);
         this.router.put(this.path + "/:agentId/:nodeType/:nodeId/configuration", this.updateNodeConfiguration);
         this.router.post(this.path + "/:id/control", this.controlAgent());
+        this.router.get(this.path + "/:id/status", this.getAgentStatus);
     }
     controlAgent = () => async (req, res) => {
         const agentId = parseInt(req.params.id);

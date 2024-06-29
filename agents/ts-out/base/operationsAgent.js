@@ -77,7 +77,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             }
             const baseConfig = {
                 apiKey: apiKeyConfig.apiKey,
-                modelName: model.name,
+                modelName: model.configuration.model,
                 maxTokensOut: this.maxModelTokensOut,
                 temperature: this.modelTemperature,
             };
