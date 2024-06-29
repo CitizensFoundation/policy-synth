@@ -8,6 +8,7 @@ import {
   PsExternalApiUsage,
   PsAiModel
 } from '../models/index.js';
+import { PolicySynthOperationsAgent } from '@policysynth/agents/base/operationsAgent.js';
 
 export class AgentManagerService {
   private redisClient!: Redis;
@@ -119,13 +120,21 @@ export class AgentManagerService {
   }
 
   async getAgentStatus(agentId: number): Promise<PsAgentStatus | null> {
-    const memoryKey = `agent:${agentId}:memory`;
-    const memoryData = await this.redisClient.get(memoryKey);
-    if (memoryData) {
-      const parsedMemory: PsAgentMemoryData = JSON.parse(memoryData);
-      return parsedMemory.status;
+    const agent = await PsAgent.findByPk(agentId, {
+      include: [{ model: PsAgentClass, as: 'Class' }],
+    });
+
+    if (agent) {
+      const memoryData = await this.redisClient.get(agent.redisMemoryKey);
+      if (memoryData) {
+        const parsedMemory: PsAgentMemoryData = JSON.parse(memoryData);
+        return parsedMemory.status;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
     }
-    return null;
   }
 
   async updateAgentStatus(

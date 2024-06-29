@@ -393,7 +393,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
       };
     }
 
-    if (progress) {
+    if (progress!==undefined) {
       this.memory.status.progress = progress;
     }
 

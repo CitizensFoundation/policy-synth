@@ -112,7 +112,7 @@ export class OpsServerApi extends BaseChatBotServerApi {
     async controlAgent(agentId, action) {
         return this.fetchWrapper(`/api/agents/${agentId}/control`, {
             method: 'POST',
-            body: JSON.stringify({ type: action }),
+            body: JSON.stringify({ action: action }),
         });
     }
     async startAgent(agentId) {

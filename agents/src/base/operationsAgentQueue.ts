@@ -124,8 +124,6 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
             this.logger.error(`Agent not found for job ${job.id}`);
             throw new Error(`Agent not found for job ${job.id}`);
           }
-          await this.processAllAgents();
-          // Handle Outputs connectors
         },
         {
           connection: {
@@ -141,6 +139,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
         this.logger.info(
           `Job ${job.id} has been completed for agent ${this.agentQueueName}`
         );
+        // Handle Outputs connectors
         this.updateProgress(100, "Agent completed");
       });
 

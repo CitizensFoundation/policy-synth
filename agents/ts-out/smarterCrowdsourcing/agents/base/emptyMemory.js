@@ -20,7 +20,7 @@ export function emptySmarterCrowdsourcingMemory(groupId, agentId) {
             },
         },
         status: {
-            state: "processing",
+            state: "running",
             progress: 0,
             messages: [],
             lastUpdated: Date.now(),

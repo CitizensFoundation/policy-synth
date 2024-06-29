@@ -217,7 +217,7 @@ export class OpsServerApi extends BaseChatBotServerApi {
       `/api/agents/${agentId}/control`,
       {
         method: 'POST',
-        body: JSON.stringify({ type: action }),
+        body: JSON.stringify({ action: action }),
       }
     );
   }

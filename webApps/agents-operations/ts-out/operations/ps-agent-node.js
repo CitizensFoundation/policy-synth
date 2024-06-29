@@ -5,7 +5,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { css, html, nothing } from 'lit';
-import { property, customElement } from 'lit/decorators.js';
+import { property, customElement, state } from 'lit/decorators.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
@@ -16,11 +16,41 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
     constructor() {
         super();
         this.isWorking = false;
+        this.latestMessage = '';
+        this.progress = 0;
         this.api = new OpsServerApi();
     }
     connectedCallback() {
         super.connectedCallback();
         this.agent = window.psAppGlobals.getAgentInstance(this.agentId);
+        this.startStatusUpdates();
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.stopStatusUpdates();
+    }
+    startStatusUpdates() {
+        this.updateAgentStatus();
+        this.statusInterval = window.setInterval(() => this.updateAgentStatus(), 5000);
+    }
+    stopStatusUpdates() {
+        if (this.statusInterval) {
+            clearInterval(this.statusInterval);
+        }
+    }
+    async updateAgentStatus() {
+        try {
+            const status = await this.api.getAgentStatus(this.agent.id);
+            if (status) {
+                this.isWorking = status.state === 'running';
+                this.progress = status.progress;
+                this.latestMessage = status.messages[status.messages.length - 1] || '';
+                this.requestUpdate();
+            }
+        }
+        catch (error) {
+            console.error('Failed to get agent status:', error);
+        }
     }
     static get styles() {
         return [
@@ -65,6 +95,13 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
           flex-grow: 1;
         }
 
+        .statusMessage {
+          font-size: 12px;
+          text-align: center;
+          margin-top: 8px;
+          color: var(--md-sys-color-on-surface-variant);
+        }
+
         .buttonContainer {
           display: flex;
           justify-content: space-between;
@@ -96,6 +133,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             await this.api.startAgent(this.agent.id);
             this.isWorking = true;
             window.psAppGlobals.setCurrentRunningAgentId(this.agent.id);
+            this.startStatusUpdates();
             this.requestUpdate();
         }
         catch (error) {
@@ -107,6 +145,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             await this.api.pauseAgent(this.agent.id);
             this.isWorking = false;
             window.psAppGlobals.setCurrentRunningAgentId(undefined);
+            this.stopStatusUpdates();
             this.requestUpdate();
         }
         catch (error) {
@@ -118,6 +157,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             await this.api.stopAgent(this.agent.id);
             this.isWorking = false;
             window.psAppGlobals.setCurrentRunningAgentId(undefined);
+            this.stopStatusUpdates();
             this.requestUpdate();
         }
         catch (error) {
@@ -166,13 +206,14 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         <div class="contentContainer">
           <div class="agentClassName">${this.agent.Class.name}</div>
           <div class="agentName">${this.agent.configuration['name']}</div>
+          <div class="statusMessage">${this.latestMessage}</div>
         </div>
         <div class="buttonContainer">
           <md-icon-button @click="${this.toggleMenu}">
             <md-icon>more_vert</md-icon>
           </md-icon-button>
           ${this.isWorking
-            ? html `<md-circular-progress indeterminate></md-circular-progress>`
+            ? html `<md-circular-progress progress="${this.progress / 100}"></md-circular-progress>`
             : html `
                 <md-icon-button
                   ?disabled="${window.psAppGlobals.currentRunningAgentId &&
@@ -207,6 +248,12 @@ __decorate([
 __decorate([
     property({ type: Boolean })
 ], PsAgentNode.prototype, "isWorking", void 0);
+__decorate([
+    state()
+], PsAgentNode.prototype, "latestMessage", void 0);
+__decorate([
+    state()
+], PsAgentNode.prototype, "progress", void 0);
 PsAgentNode = __decorate([
     customElement('ps-agent-node')
 ], PsAgentNode);

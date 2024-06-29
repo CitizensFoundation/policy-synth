@@ -9,9 +9,16 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     agent: PsAgentAttributes;
     agentId: number;
     isWorking: boolean;
+    private latestMessage;
+    private progress;
     api: OpsServerApi;
+    private statusInterval;
     constructor();
     connectedCallback(): void;
+    disconnectedCallback(): void;
+    startStatusUpdates(): void;
+    stopStatusUpdates(): void;
+    updateAgentStatus(): Promise<void>;
     static get styles(): (any[] | import("lit").CSSResult)[];
     startAgent(): Promise<void>;
     pauseAgent(): Promise<void>;
@@ -19,6 +26,6 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     editNode(): void;
     toggleMenu(): void;
     clickPlayPause(): void;
-    render(): import("lit").TemplateResult<1> | typeof nothing;
+    render(): typeof nothing | import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

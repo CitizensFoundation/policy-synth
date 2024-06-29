@@ -42,7 +42,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         }
         const currentProgress = this.startProgress + (this.endProgress - this.startProgress) * 0.1; // 10% complete
         const className = this.constructor.name;
-        await this.updateProgress(currentProgress, `Agent ${className} Starting`);
+        await this.updateProgress(undefined, `Agent ${className} Starting`);
     }
     async loadAgentMemoryFromRedis() {
         try {
@@ -283,13 +283,15 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     async updateProgress(progress, message) {
         if (!this.memory.status) {
             this.memory.status = {
-                state: "processing",
+                state: "running",
                 progress: 0,
                 messages: [],
                 lastUpdated: Date.now(),
             };
         }
-        this.memory.status.progress = progress;
+        if (progress !== undefined) {
+            this.memory.status.progress = progress;
+        }
         this.memory.status.messages.push(message);
         this.memory.status.lastUpdated = Date.now();
         // Save updated memory to Redis

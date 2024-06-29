@@ -93,8 +93,6 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
                     this.logger.error(`Agent not found for job ${job.id}`);
                     throw new Error(`Agent not found for job ${job.id}`);
                 }
-                await this.processAllAgents();
-                // Handle Outputs connectors
             }, {
                 connection: {
                     host: redis.options.host,
@@ -105,18 +103,24 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
             });
             worker.on("completed", (job) => {
                 this.logger.info(`Job ${job.id} has been completed for agent ${this.agentQueueName}`);
+                // Handle Outputs connectors
+                this.updateProgress(100, "Agent completed");
             });
             worker.on("failed", (job, err) => {
                 this.logger.error(`Job ${job?.id || "unknown"} has failed for agent ${this.agentQueueName}`, err);
+                this.updateProgress(100, `Agent failed: ${err.message}`);
             });
             worker.on("error", (err) => {
                 this.logger.error(`An error occurred in the worker for agent ${this.agentQueueName}`, err);
+                this.updateProgress(100, `Agent error: ${err.message}`);
             });
             worker.on("active", (job) => {
                 this.logger.info(`Job ${job.id} has started processing for agent ${this.agentQueueName}`);
+                this.updateProgress(undefined, "Agent started");
             });
             worker.on("stalled", (jobId) => {
                 this.logger.warn(`Job ${jobId} has been stalled for agent ${this.agentQueueName}`);
+                this.updateProgress(100, "Agent stalled");
             });
             this.logger.info(`Worker set up successfully for agent ${this.agentQueueName}`);
         }

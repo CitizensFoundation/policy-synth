@@ -99,13 +99,22 @@ export class AgentManagerService {
         return job.id;
     }
     async getAgentStatus(agentId) {
-        const memoryKey = `agent:${agentId}:memory`;
-        const memoryData = await this.redisClient.get(memoryKey);
-        if (memoryData) {
-            const parsedMemory = JSON.parse(memoryData);
-            return parsedMemory.status;
+        const agent = await PsAgent.findByPk(agentId, {
+            include: [{ model: PsAgentClass, as: 'Class' }],
+        });
+        if (agent) {
+            const memoryData = await this.redisClient.get(agent.redisMemoryKey);
+            if (memoryData) {
+                const parsedMemory = JSON.parse(memoryData);
+                return parsedMemory.status;
+            }
+            else {
+                return null;
+            }
         }
-        return null;
+        else {
+            return null;
+        }
     }
     async updateAgentStatus(agentId, state, progress, message, details) {
         const memoryKey = `agent:${agentId}:memory`;
