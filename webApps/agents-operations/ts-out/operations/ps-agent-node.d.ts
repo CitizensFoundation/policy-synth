@@ -5,7 +5,7 @@ import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { OpsServerApi } from './OpsServerApi.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
-export declare abstract class PsAgentNode extends PsOperationsBaseNode {
+export declare class PsAgentNode extends PsOperationsBaseNode {
     agent: PsAgentAttributes;
     agentId: number;
     isWorking: boolean;
@@ -16,7 +16,6 @@ export declare abstract class PsAgentNode extends PsOperationsBaseNode {
     createDirectCauses(): Promise<void>;
     editNode(): void;
     toggleMenu(): void;
-    renderImage(): import("lit").TemplateResult<1>;
     clickPlayPause(): void;
     render(): typeof nothing | import("lit").TemplateResult<1>;
 }
