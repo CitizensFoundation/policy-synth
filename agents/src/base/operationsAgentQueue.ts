@@ -141,6 +141,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
         this.logger.info(
           `Job ${job.id} has been completed for agent ${this.agentQueueName}`
         );
+        this.updateProgress(100, "Agent completed");
       });
 
       worker.on("failed", (job: Job | undefined, err: Error) => {
@@ -150,6 +151,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
           }`,
           err
         );
+        this.updateProgress(100, `Agent failed: ${err.message}`);
       });
 
       worker.on("error", (err: Error) => {
@@ -157,18 +159,21 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
           `An error occurred in the worker for agent ${this.agentQueueName}`,
           err
         );
+        this.updateProgress(100, `Agent error: ${err.message}`);
       });
 
       worker.on("active", (job: Job) => {
         this.logger.info(
           `Job ${job.id} has started processing for agent ${this.agentQueueName}`
         );
+        this.updateProgress(undefined, "Agent started");
       });
 
       worker.on("stalled", (jobId: string) => {
         this.logger.warn(
           `Job ${jobId} has been stalled for agent ${this.agentQueueName}`
         );
+        this.updateProgress(100, "Agent stalled");
       });
 
       this.logger.info(

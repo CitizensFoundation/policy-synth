@@ -202,6 +202,16 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<void>;
   }
 
+  public async getAgentStatus(agentId: number): Promise<PsAgentStatus> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}${agentId}/status`,
+      {
+        method: 'GET',
+      },
+      false
+    ) as Promise<PsAgentStatus>;
+  }
+
   async controlAgent(agentId: number, action: 'start' | 'pause' | 'stop') {
     return this.fetchWrapper(
       `/api/agents/${agentId}/control`,

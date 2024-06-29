@@ -158,7 +158,7 @@ interface PsAgentBaseMemoryData {
 }
 
 interface PsAgentStatus {
-  state: "processing" | "paused" | "error" | "completed";
+  state: "running" | "paused" | "error" | "completed";
   progress: number;
   messages: string[];
   lastUpdated: number;
