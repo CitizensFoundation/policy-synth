@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import { createReadStream } from 'fs';
 import csv from 'csv-parser';
 import { ProblemsSmarterCrowdsourcingAgent } from "../../../base/scBaseProblemsAgent.js";
+import { PsAiModelType } from '../../../../../aiModelTypes.js';
 
 interface Item {
   title: string;

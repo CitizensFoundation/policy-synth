@@ -1,3 +1,4 @@
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 import { RootCausesSmarterCrowdsourcingAgent } from "../../base/scBaseRootCausesAgent.js";
 
 export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdsourcingAgent {

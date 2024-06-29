@@ -8,6 +8,7 @@ import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWeb
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
 import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());

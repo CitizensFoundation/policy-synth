@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 export class CreatePolicyImagesAgent extends CreateSolutionImagesAgent {
     async renderCreatePolicyImagePrompt(subProblemIndex, policy, injectText) {
         const messages = [

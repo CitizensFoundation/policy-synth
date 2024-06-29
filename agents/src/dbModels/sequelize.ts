@@ -10,9 +10,9 @@ const logQuery = (query: any, options: any) => {
 };
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME!, // DB name
-  process.env.DB_USER!, // username
-  process.env.DB_PASS!, // password
+  process.env.PSQL_DB_NAME!,
+  process.env.PSQL_DB_USER!,
+  process.env.PSQL_DB_PASS!,
   {
     host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT!, 10) || 5432,

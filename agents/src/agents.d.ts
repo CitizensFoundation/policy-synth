@@ -90,17 +90,9 @@ interface PsBaseModelPriceConfiguration {
   currency: string;
 }
 
-enum PsAiModelType {
-  Embedding = "embedding",
-  Text = "text",
-  MultiModal = "multiModal",
-  Audio = "audio",
-  Video = "video",
-  Image = "image"
-}
-
 interface PsAiModelConfiguration {
-  type: PsAiModelType;
+  type: import('./aiModelTypes.js').PsAiModelType;
+  model: string;
   provider: string;
   prices: PsBaseModelPriceConfiguration;
   maxTokensOut: number;

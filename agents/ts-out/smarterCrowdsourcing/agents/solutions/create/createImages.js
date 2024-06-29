@@ -4,6 +4,7 @@ import axios from "axios";
 import AWS from "aws-sdk";
 import fs from "fs";
 import path from "path";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;

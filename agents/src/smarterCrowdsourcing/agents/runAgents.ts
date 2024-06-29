@@ -13,6 +13,8 @@ import { RootCausesSmarterCrowdsourcingAgent } from './base/scBaseRootCausesAgen
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from './base/scBaseSolutionsWebResearchAgent.js';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { connectToDatabase } from '../../dbModels/sequelize.js';
+import { initializeModels } from '../../dbModels/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,10 +34,10 @@ class AgentManager extends PolicySynthOperationsAgent {
 
   static async createAgentClassesIfNeeded(userId: number) {
     const agentClasses = [
-      ProblemsSmarterCrowdsourcingAgent.getAgentClass(),
-      SolutionsEvolutionSmarterCrowdsourcingAgent.getAgentClass(),
-      SolutionsWebResearchSmarterCrowdsourcingAgent.getAgentClass(),
       RootCausesSmarterCrowdsourcingAgent.getAgentClass(),
+      ProblemsSmarterCrowdsourcingAgent.getAgentClass(),
+      SolutionsWebResearchSmarterCrowdsourcingAgent.getAgentClass(),
+      SolutionsEvolutionSmarterCrowdsourcingAgent.getAgentClass(),
       PoliciesSmarterCrowdsourcingAgent.getAgentClass(),
     ];
 
@@ -55,6 +57,9 @@ class AgentManager extends PolicySynthOperationsAgent {
   }
 
   async setupAndRunAgents() {
+    await connectToDatabase();
+    await initializeModels();
+
     //TODO: Make this more elegant but using user_id=1 for now
     await AgentManager.createAgentClassesIfNeeded(1);
 

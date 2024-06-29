@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import { createReadStream } from 'fs';
 import csv from 'csv-parser';
 import { ProblemsSmarterCrowdsourcingAgent } from "../../../base/scBaseProblemsAgent.js";
+import { PsAiModelType } from '../../../../../aiModelTypes.js';
 export class PsSubProblemsReportGenerator extends ProblemsSmarterCrowdsourcingAgent {
     summaryCount;
     constructor(memoryData) {

@@ -1,3 +1,4 @@
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 export class CreateEntitiesAgent extends ProblemsSmarterCrowdsourcingAgent {
     async renderRefinePrompt(subProblemIndex, results) {

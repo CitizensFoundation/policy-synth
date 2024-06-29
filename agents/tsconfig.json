@@ -13,5 +13,5 @@
     "outDir": "ts-out"
   },
   "exclude": ["node_modules", "**/*.spec.ts"],
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/tools/seedDbTestClasses.ts"]
 }

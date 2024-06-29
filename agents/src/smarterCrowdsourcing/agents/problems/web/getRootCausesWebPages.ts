@@ -11,6 +11,7 @@ import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWeb
 import { RootCauseTypeTypeDefs } from "./rootCauseTypeTypeDef.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesAgent } from "../create/createRootCauseSearchQueries.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"

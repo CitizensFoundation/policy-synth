@@ -1,6 +1,7 @@
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAgent } from "../dbModels/agent.js";
 import { PolicySynthBaseAgent } from "./agent.js";
+import { PsAiModelType } from "../aiModelTypes.js";
 export declare abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     memory: PsAgentMemoryData;
     agent: PsAgent;

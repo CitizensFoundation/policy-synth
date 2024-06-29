@@ -6,6 +6,7 @@ import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { Op } from "sequelize";
 import { PolicySynthBaseAgent } from "./agent.js";
+import { PsAiModelType } from "../aiModelTypes.js";
 //TODO: Look to pool redis connections
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {

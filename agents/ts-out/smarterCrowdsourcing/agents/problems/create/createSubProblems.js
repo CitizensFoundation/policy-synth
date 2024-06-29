@@ -1,3 +1,4 @@
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 const USE_SHORT_DESCRIPTIONS = false;
 export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {

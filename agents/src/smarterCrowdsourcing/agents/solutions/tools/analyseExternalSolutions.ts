@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 
 import fetch from "node-fetch";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 //@ts-ignore
 global.fetch = fetch;
 

@@ -13,6 +13,7 @@ const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;

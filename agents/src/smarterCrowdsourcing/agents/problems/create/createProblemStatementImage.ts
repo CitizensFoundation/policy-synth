@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 
 export class CreateProblemStatementImageAgent extends CreateSolutionImagesAgent {
   override async renderCreatePrompt(subProblemIndex: number = 0) {

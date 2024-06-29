@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 
 const recreateImagesNeeded = true;
 

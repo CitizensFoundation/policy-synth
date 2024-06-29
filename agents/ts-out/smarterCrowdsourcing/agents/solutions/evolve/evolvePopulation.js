@@ -1,3 +1,4 @@
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 import { CreateInitialSolutionsAgent } from "../create/createSolutions.js";
 //TODO: Pentalty for similar ideas in the ranking somehow
 //TODO: Track the evolution of the population with a log of parents and mutations, family tree

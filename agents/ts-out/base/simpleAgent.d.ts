@@ -1,5 +1,6 @@
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PolicySynthBaseAgent } from "./agent.js";
+import { PsAiModelType } from "../aiModelTypes.js";
 export declare class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
     memory?: PsSimpleAgentMemoryData;
     timeStart: number;

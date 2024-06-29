@@ -1,3 +1,4 @@
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution) {

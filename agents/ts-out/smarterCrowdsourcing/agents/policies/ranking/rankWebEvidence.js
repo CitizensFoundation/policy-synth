@@ -1,5 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 export class RankWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     modelTemperature = 0.0;

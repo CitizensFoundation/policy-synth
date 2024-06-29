@@ -6,6 +6,7 @@ import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PolicySynthBaseAgent } from "./agent.js";
 import ioredis from "ioredis";
 import tiktoken from "tiktoken";
+import { PsAiModelType } from "../aiModelTypes.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"

@@ -1,5 +1,6 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 export class RemoveDuplicateWebSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     allUrls = new Set();

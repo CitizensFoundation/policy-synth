@@ -1,3 +1,4 @@
+import { PsAiModelType } from "../aiModelTypes.js";
 import { PolicySynthOperationsAgent } from "./operationsAgent.js";
 export class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent {
     maxModelTokensOut = 3;

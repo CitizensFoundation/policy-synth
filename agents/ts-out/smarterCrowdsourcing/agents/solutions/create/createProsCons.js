@@ -1,3 +1,4 @@
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution) {

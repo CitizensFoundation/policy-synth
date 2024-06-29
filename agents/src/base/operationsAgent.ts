@@ -11,6 +11,7 @@ import { PsAgent } from "../dbModels/agent.js";
 import { Op } from "sequelize";
 import { PolicySynthBaseAgent } from "./agent.js";
 import { Job, Worker } from "bullmq";
+import { PsAiModelType } from "../aiModelTypes.js";
 
 //TODO: Look to pool redis connections
 const redis = new ioredis(

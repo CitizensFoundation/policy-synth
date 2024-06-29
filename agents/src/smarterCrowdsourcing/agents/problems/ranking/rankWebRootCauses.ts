@@ -1,5 +1,6 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
+import { PsAiModelType } from "../../../../aiModelTypes.js";
 
 export class RankWebRootCausesAgent extends ProblemsSmarterCrowdsourcingAgent {
   rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
