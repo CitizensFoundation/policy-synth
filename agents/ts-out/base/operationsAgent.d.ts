@@ -6,6 +6,7 @@ export declare abstract class PolicySynthOperationsAgent extends PolicySynthBase
     memory: PsAgentMemoryData;
     agent: PsAgent;
     models: Map<PsAiModelType, BaseChatModel>;
+    modelIds: Map<PsAiModelType, number>;
     limitedLLMmaxRetryCount: number;
     mainLLMmaxRetryCount: number;
     maxModelTokensOut: number;

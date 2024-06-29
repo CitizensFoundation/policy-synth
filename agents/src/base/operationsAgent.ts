@@ -23,6 +23,9 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   agent: PsAgent;
   models: Map<PsAiModelType, BaseChatModel> = new Map();
 
+  //TODO: Find a better way, I think
+  modelIds: Map<PsAiModelType, number> = new Map();
+
   limitedLLMmaxRetryCount = 3;
   mainLLMmaxRetryCount = 10;
 
@@ -138,6 +141,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             `Unsupported model provider: ${model.configuration.provider}`
           );
       }
+      this.modelIds.set(modelType, model.id);
     }
 
     if (this.models.size === 0) {
@@ -324,34 +328,37 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     tokensIn: number,
     tokensOut: number
   ) {
+    this.logger.debug(
+      `Saving token usage for model ${modelType} and agent ${this.agent.id} tokensIn: ${tokensIn} tokensOut: ${tokensOut}`
+    );
     const model = this.models.get(modelType);
-    if (!model) {
+    const modelId = this.modelIds.get(modelType);
+
+    if (!model || !modelId) {
       throw new Error(`Model of type ${modelType} not initialized`);
     }
+
+    this.logger.debug(`Model: ${model.modelName}`);
 
     try {
       const [usage, created]: [PsModelUsage, boolean] =
         await PsModelUsage.findOrCreate({
           where: {
             //TODO: Check this make more robust
-            model_id: this.agent.AiModels!.find(
-              (m) => m.name === model.modelName
-            )!.id,
+            model_id: modelId,
             agent_id: this.agent.id,
-            created_at: {
-              [Op.gte]: new Date(new Date().setHours(0, 0, 0, 0)), // Today's date
-            },
           },
           defaults: {
             token_in_count: tokensIn,
             token_out_count: tokensOut,
-            model_id: this.agent.AiModels!.find(
-              (m) => m.name === model.modelName
-            )!.id,
+            token_in_cached_context_count: 0,
+            model_id: modelId,
             agent_id: this.agent.id,
             user_id: this.agent.user_id,
           },
         });
+
+      this.logger.debug("Usage: ", usage);
 
       if (!created) {
         // If the record already existed, update the counters
