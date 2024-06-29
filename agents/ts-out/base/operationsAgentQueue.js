@@ -38,7 +38,11 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
                 await this.processAllAgents();
                 // Handle Outputs connectors
             }, {
-                connection: redis,
+                connection: {
+                    host: redis.options.host,
+                    port: redis.options.port,
+                    maxRetriesPerRequest: null, // Add this line
+                },
                 concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
             });
             worker.on('completed', (job) => {

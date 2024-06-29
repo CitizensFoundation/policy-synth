@@ -66,7 +66,11 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
           // Handle Outputs connectors
         },
         {
-          connection: redis,
+          connection: {
+            host: redis.options.host,
+            port: redis.options.port,
+            maxRetriesPerRequest: null,  // Add this line
+          },
           concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
         }
       );

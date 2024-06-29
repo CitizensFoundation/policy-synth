@@ -42,6 +42,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   ) {
     super();
     this.agent = agent;
+    this.logger.debug(JSON.stringify(agent));
     this.initializeModels();
     if (memory) {
       this.memory = memory;
@@ -82,7 +83,8 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   async initializeModels() {
     const aiModels = this.agent.AiModels;
     if (!aiModels || aiModels.length === 0) {
-      throw new Error("No AI models associated with this agent");
+      this.logger.info(`No AI models found for agent ${this.agent.id}`);
+      return;
     }
 
     if (!this.agent.Group || !this.agent.Group.private_access_configuration) {

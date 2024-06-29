@@ -98,7 +98,7 @@ if (!problemsAgentClassInstance) {
 }
 
 const topLevelAgentClassInstance = await PsAgentClass.create({
-  class_base_id: "2",
+  class_base_id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   name: "Smarter Crowdsourcing Coordinator Agent",
   version: 1,
   available: true,
