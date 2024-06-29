@@ -43,7 +43,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
         return [
             {
                 uniqueId: "createSolutionsInstructions",
-                type: "text",
+                type: "textField",
                 value: `
 1. Never create solution components in the form of frameworks or holistic approaches
 2. Solution components should include only one core idea
@@ -58,7 +58,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "rankSolutionsInstructions",
-                type: "text",
+                type: "textField",
                 value: `
   1. Solution components will be included in larger policy recommendations to governments around the world.
 `,
@@ -70,7 +70,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "rateSolutionsJsonFormat",
-                type: "text",
+                type: "textField",
                 value: `
   {
     highPriorityRatings: {
@@ -97,7 +97,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "reapSolutionsInstructions",
-                type: "text",
+                type: "textField",
                 value: `
   1. Solution components should not include more than one core idea.
   2. Solution components can have more than one implementation detail ideas.
@@ -117,7 +117,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
         return [
             {
                 uniqueId: "topItemsToKeepForTopicClusterPruning",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 3,
                 maxLength: 2,
                 required: true,
@@ -125,7 +126,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "maxTopSearchQueriesForSolutionCreation",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 8,
                 maxLength: 2,
                 required: true,
@@ -133,7 +135,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "maxPercentOfSolutionsWebPagesToGet",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.5,
                 maxLength: 4,
                 required: true,
@@ -141,7 +144,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsNotUsingTopSearchQueriesChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.1,
                 maxLength: 4,
                 required: true,
@@ -149,7 +153,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsWebSolutionsTopChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.05,
                 maxLength: 4,
                 required: true,
@@ -157,7 +162,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsWebSolutionsTopThreeChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.25,
                 maxLength: 4,
                 required: true,
@@ -165,7 +171,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsWebSolutionsTopSevenChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.5,
                 maxLength: 4,
                 required: true,
@@ -173,7 +180,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsVectorSearchAcrossAllProblemsChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.001,
                 maxLength: 5,
                 required: true,
@@ -181,7 +189,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "useRandomTopFromVectorSearchResultsLimits",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 14,
                 maxLength: 3,
                 required: true,
@@ -189,7 +198,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsSearchQueriesUseMainProblemSearchQueriesChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.01,
                 maxLength: 4,
                 required: true,
@@ -197,7 +207,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsSearchQueriesUseOtherSubProblemSearchQueriesChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.01,
                 maxLength: 4,
                 required: true,
@@ -205,7 +216,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsSearchQueriesUseSubProblemSearchQueriesChance",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.38,
                 maxLength: 4,
                 required: true,
@@ -213,21 +225,22 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "createSolutionsRefineEnabled",
-                type: "boolean",
+                type: "checkbox",
                 value: true,
                 required: true,
                 text: "Enable solution refinement",
             },
             {
                 uniqueId: "createProsConsRefinedEnabled",
-                type: "boolean",
+                type: "checkbox",
                 value: true,
                 required: true,
                 text: "Enable refined pros/cons creation",
             },
             {
                 uniqueId: "evolutionPopulationSize",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 80,
                 maxLength: 3,
                 required: true,
@@ -235,7 +248,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionLimitTopTopicClusterElitesToEloRating",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 850,
                 maxLength: 4,
                 required: true,
@@ -243,7 +257,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionKeepElitePercent",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.1,
                 maxLength: 4,
                 required: true,
@@ -251,7 +266,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionRandomImmigrationPercent",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.4,
                 maxLength: 4,
                 required: true,
@@ -259,7 +275,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionMutationOffspringPercent",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.35,
                 maxLength: 4,
                 required: true,
@@ -267,7 +284,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionCrossoverPercent",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.15,
                 maxLength: 4,
                 required: true,
@@ -275,7 +293,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionLowMutationRate",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.5,
                 maxLength: 4,
                 required: true,
@@ -283,7 +302,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionMediumMutationRate",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.3,
                 maxLength: 4,
                 required: true,
@@ -291,7 +311,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionHighMutationRate",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.2,
                 maxLength: 4,
                 required: true,
@@ -299,7 +320,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionSelectParentTournamentSize",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 7,
                 maxLength: 2,
                 required: true,
@@ -307,7 +329,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "evolutionCrossoverMutationPercent",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.05,
                 maxLength: 4,
                 required: true,
@@ -315,7 +338,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "maxPercentOfEloMatched",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.75,
                 maxLength: 4,
                 required: true,
@@ -323,7 +347,8 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "minimumNumberOfPairwiseVotesForPopulation",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 10,
                 maxLength: 3,
                 required: true,
@@ -331,7 +356,7 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
             },
             {
                 uniqueId: "customInstructionsRankSolutions",
-                type: "text",
+                type: "textField",
                 value: "",
                 maxLength: 1000,
                 required: false,

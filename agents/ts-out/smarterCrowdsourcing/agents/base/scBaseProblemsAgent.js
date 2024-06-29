@@ -34,7 +34,8 @@ export class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingA
         return [
             {
                 uniqueId: "subProblemsRankingMinNumberOfMatches",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 10,
                 maxLength: 3,
                 required: true,
@@ -42,18 +43,18 @@ export class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingA
             },
             {
                 uniqueId: "createEntitiesRefinedEnabled",
-                type: "boolean",
+                type: "checkbox",
                 value: true,
                 required: true,
                 text: "Enable refined entity creation",
             },
             {
                 uniqueId: "createSubProblemsRefineEnabled",
-                type: "boolean",
+                type: "checkbox",
                 value: true,
                 required: true,
                 text: "Enable sub-problems refinement",
-            }
+            },
         ];
     }
     // Problems-specific configuration options

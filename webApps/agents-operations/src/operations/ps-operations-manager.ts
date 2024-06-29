@@ -306,7 +306,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     return html`
       <md-dialog
         id="editNodeDialog"
-        style="width: 800px; max-height: 90vh;"
+        style="width: 800px; max-height:100%;height:100%;"
         @closed="${this.closeEditNodeDialog}"
       >
         <div slot="headline">
@@ -315,7 +315,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         <div
           slot="content"
           id="editNodeForm"
-          style="max-height: 90vh;height: 500px;"
+          style="max-height: 90vh;height: 100%;"
           class="layout vertical"
         >
           ${this.nodeToEditInfo

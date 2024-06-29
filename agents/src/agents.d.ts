@@ -2,7 +2,18 @@ interface YpStructuredQuestionData {
   uniqueId?: string;
   text: string;
   html?: string;
-  type?: string;
+  type:
+    | "textField"
+    | "textArea"
+    | "textFieldLong"
+    | "textAreaLong"
+    | "checkbox"
+    | "radios"
+    | "html"
+    | "textHeader"
+    | "textDescription"
+    | "seperator"
+    | "dropdown";
   subType?: string;
   value?: string | number | boolean;
   maxLength?: number;
@@ -31,23 +42,23 @@ interface PsBaseModelClass {
   updated_at: Date;
 }
 
-interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, 'uuid'> {}
+interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, "uuid"> {}
 
 interface PsAiModelConfig {
   apiKey: string;
   modelName?: string;
   maxTokensOut?: number;
   temperature?: number;
-};
+}
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {
   endpoint: string;
   deploymentName: string;
-};
+}
 
 interface PsOpenAiModelConfig extends PsAiModelConfig {
   projectId?: string;
-};
+}
 
 // Evaluation result for a single criterion
 interface PsAgentEvalCriterionResult {
@@ -71,7 +82,7 @@ interface PsAgentEvalCriterionConfig {
 interface PsAgentEvalConfig {
   criteria: PsAgentEvalCriterionConfig[];
   minimumOverallScore: number;
-  evaluationFrequency: 'daily' | 'weekly' | 'monthly' | 'onDemand';
+  evaluationFrequency: "daily" | "weekly" | "monthly" | "onDemand";
   autoEvaluate: boolean;
 }
 
@@ -91,7 +102,7 @@ interface PsBaseModelPriceConfiguration {
 }
 
 interface PsAiModelConfiguration {
-  type: import('./aiModelTypes.js').PsAiModelType;
+  type: import("./aiModelTypes.js").PsAiModelType;
   model: string;
   provider: string;
   prices: PsBaseModelPriceConfiguration;
@@ -147,7 +158,7 @@ interface PsAgentBaseMemoryData {
 }
 
 interface PsAgentStatus {
-  state: 'processing' | 'paused' | 'error' | 'completed';
+  state: "processing" | "paused" | "error" | "completed";
   progress: number;
   messages: string[];
   lastUpdated: number;
@@ -208,7 +219,6 @@ interface PsAgentModelUsageEstimate {
   tokenInCachedContextCount?: number;
   timestamp: number;
 }
-
 
 interface PsAgentApiUsageEstimate {
   externalApiId: number;
@@ -344,7 +354,7 @@ interface YpUserData {
 }
 
 // tablename "organizations"
-interface YpOrganizationsData  {
+interface YpOrganizationsData {
   id: number;
   user_id: number;
   name: string;

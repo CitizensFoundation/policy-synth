@@ -9,16 +9,7 @@ export declare abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthO
     static getConfigurationQuestions(): YpStructuredQuestionData[];
     static getMainConfigurationSettings(): YpStructuredQuestionData[];
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
-    static getMainCommonConfigurationSettings(): {
-        uniqueId: string;
-        type: string;
-        value: string;
-        maxLength: number;
-        required: boolean;
-        rows: number;
-        charCounter: boolean;
-        text: string;
-    }[];
+    static getMainCommonConfigurationSettings(): YpStructuredQuestionData[];
     static getExtraCommonConfigurationQuestions(): YpStructuredQuestionData[];
     get maxSubProblems(): number;
     get maxNumberGeneratedOfEntities(): number;
@@ -75,7 +66,7 @@ export declare abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthO
     get maxTopSolutionsToCreatePolicies(): number;
     get maxTopPoliciesToProcess(): number;
     get maxEvidenceToUseForRatingEvidence(): number;
-    get policyEvidenceFieldTypes(): never[];
+    get policyEvidenceFieldTypes(): string[];
     get maxTopEvidenceQueriesToSearchPerType(): number;
     get maxPercentOfEloMatched(): number;
     get minimumNumberOfPairwiseVotesForPopulation(): number;

@@ -18,7 +18,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
         description:
           "An agent for evolving solutions in the Smarter Crowdsourcing process",
         queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS_EVOLUTION,
-        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
         iconName: "solutions",
         capabilities: [
           "solution generation",
@@ -46,11 +47,11 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
     ];
   }
 
-  static getMainConfigurationSettings() {
+  static getMainConfigurationSettings(): YpStructuredQuestionData[] {
     return [
       {
         uniqueId: "createSolutionsInstructions",
-        type: "text",
+        type: "textField",
         value: `
 1. Never create solution components in the form of frameworks or holistic approaches
 2. Solution components should include only one core idea
@@ -65,7 +66,7 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "rankSolutionsInstructions",
-        type: "text",
+        type: "textField",
         value: `
   1. Solution components will be included in larger policy recommendations to governments around the world.
 `,
@@ -77,7 +78,7 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "rateSolutionsJsonFormat",
-        type: "text",
+        type: "textField",
         value: `
   {
     highPriorityRatings: {
@@ -104,7 +105,7 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "reapSolutionsInstructions",
-        type: "text",
+        type: "textField",
         value: `
   1. Solution components should not include more than one core idea.
   2. Solution components can have more than one implementation detail ideas.
@@ -125,7 +126,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
     return [
       {
         uniqueId: "topItemsToKeepForTopicClusterPruning",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 3,
         maxLength: 2,
         required: true,
@@ -133,7 +135,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "maxTopSearchQueriesForSolutionCreation",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 8,
         maxLength: 2,
         required: true,
@@ -141,7 +144,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "maxPercentOfSolutionsWebPagesToGet",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.5,
         maxLength: 4,
         required: true,
@@ -149,7 +153,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "createSolutionsNotUsingTopSearchQueriesChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.1,
         maxLength: 4,
         required: true,
@@ -157,7 +162,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "createSolutionsWebSolutionsTopChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.05,
         maxLength: 4,
         required: true,
@@ -165,7 +171,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "createSolutionsWebSolutionsTopThreeChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.25,
         maxLength: 4,
         required: true,
@@ -173,7 +180,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "createSolutionsWebSolutionsTopSevenChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.5,
         maxLength: 4,
         required: true,
@@ -181,7 +189,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "createSolutionsVectorSearchAcrossAllProblemsChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.001,
         maxLength: 5,
         required: true,
@@ -189,7 +198,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "useRandomTopFromVectorSearchResultsLimits",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 14,
         maxLength: 3,
         required: true,
@@ -198,7 +208,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       {
         uniqueId:
           "createSolutionsSearchQueriesUseMainProblemSearchQueriesChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.01,
         maxLength: 4,
         required: true,
@@ -207,7 +218,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       {
         uniqueId:
           "createSolutionsSearchQueriesUseOtherSubProblemSearchQueriesChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.01,
         maxLength: 4,
         required: true,
@@ -216,7 +228,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       {
         uniqueId:
           "createSolutionsSearchQueriesUseSubProblemSearchQueriesChance",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.38,
         maxLength: 4,
         required: true,
@@ -224,21 +237,22 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "createSolutionsRefineEnabled",
-        type: "boolean",
+        type: "checkbox",
         value: true,
         required: true,
         text: "Enable solution refinement",
       },
       {
         uniqueId: "createProsConsRefinedEnabled",
-        type: "boolean",
+        type: "checkbox",
         value: true,
         required: true,
         text: "Enable refined pros/cons creation",
       },
       {
         uniqueId: "evolutionPopulationSize",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 80,
         maxLength: 3,
         required: true,
@@ -246,7 +260,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionLimitTopTopicClusterElitesToEloRating",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 850,
         maxLength: 4,
         required: true,
@@ -254,7 +269,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionKeepElitePercent",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.1,
         maxLength: 4,
         required: true,
@@ -262,7 +278,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionRandomImmigrationPercent",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.4,
         maxLength: 4,
         required: true,
@@ -270,7 +287,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionMutationOffspringPercent",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.35,
         maxLength: 4,
         required: true,
@@ -278,7 +296,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionCrossoverPercent",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.15,
         maxLength: 4,
         required: true,
@@ -286,7 +305,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionLowMutationRate",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.5,
         maxLength: 4,
         required: true,
@@ -294,7 +314,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionMediumMutationRate",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.3,
         maxLength: 4,
         required: true,
@@ -302,7 +323,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionHighMutationRate",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.2,
         maxLength: 4,
         required: true,
@@ -310,7 +332,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionSelectParentTournamentSize",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 7,
         maxLength: 2,
         required: true,
@@ -318,7 +341,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "evolutionCrossoverMutationPercent",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.05,
         maxLength: 4,
         required: true,
@@ -326,7 +350,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "maxPercentOfEloMatched",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.75,
         maxLength: 4,
         required: true,
@@ -334,7 +359,8 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "minimumNumberOfPairwiseVotesForPopulation",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 10,
         maxLength: 3,
         required: true,
@@ -342,7 +368,7 @@ export abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSm
       },
       {
         uniqueId: "customInstructionsRankSolutions",
-        type: "text",
+        type: "textField",
         value: "",
         maxLength: 1000,
         required: false,

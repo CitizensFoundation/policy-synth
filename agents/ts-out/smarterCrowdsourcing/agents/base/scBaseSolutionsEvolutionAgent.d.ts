@@ -4,16 +4,7 @@ export declare abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extend
     private static readonly SOLUTIONS_EVOLUTION_AGENT_CLASS_VERSION;
     static getAgentClass(): PsAgentClassCreationAttributes;
     static getConfigurationQuestions(): YpStructuredQuestionData[];
-    static getMainConfigurationSettings(): {
-        uniqueId: string;
-        type: string;
-        value: string;
-        maxLength: number;
-        required: boolean;
-        rows: number;
-        charCounter: boolean;
-        text: string;
-    }[];
+    static getMainConfigurationSettings(): YpStructuredQuestionData[];
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
     get topItemsToKeepForTopicClusterPruning(): number;
     get maxTopSearchQueriesForSolutionCreation(): number;

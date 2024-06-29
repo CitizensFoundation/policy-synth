@@ -18,7 +18,8 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
         description:
           "An agent for creating policies in the Smarter Crowdsourcing process",
         queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_POLICIES,
-        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png",
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png",
         iconName: "problems",
         capabilities: [
           "problem identification",
@@ -41,7 +42,8 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
     return [
       {
         uniqueId: "maxTopSolutionsToCreatePolicies",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 3,
         maxLength: 2,
         required: true,
@@ -49,7 +51,8 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
       },
       {
         uniqueId: "maxTopPoliciesToProcess",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 1,
         maxLength: 2,
         required: true,
@@ -57,7 +60,8 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
       },
       {
         uniqueId: "maxEvidenceToUseForRatingEvidence",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 5,
         maxLength: 2,
         required: true,
@@ -65,7 +69,8 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
       },
       {
         uniqueId: "maxTopEvidenceQueriesToSearchPerType",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 4,
         maxLength: 2,
         required: true,
@@ -74,8 +79,31 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
 
       {
         uniqueId: "policyEvidenceFieldTypes",
-        type: "text",
-        value: "[]",
+        type: "textField",
+        value: JSON.stringify([
+          "allPossiblePositiveEvidenceIdentifiedInTextContext",
+          "allPossibleNegativeEvidenceIdentifiedInTextContext",
+          "allPossibleNeutralEvidenceIdentifiedInTextContext",
+          "allPossibleEconomicEvidenceIdentifiedInTextContext",
+          "allPossibleScientificEvidenceIdentifiedInTextContext",
+          "allPossibleCulturalEvidenceIdentifiedInTextContext",
+          "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
+          "allPossibleLegalEvidenceIdentifiedInTextContext",
+          "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
+          "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
+          "allPossibleCaseStudiesIdentifiedInTextContext",
+          "allPossibleStakeholderOpinionsIdentifiedInTextContext",
+          "allPossibleExpertOpinionsIdentifiedInTextContext",
+          "allPossiblePublicOpinionsIdentifiedInTextContext",
+          "allPossibleHistoricalContextIdentifiedInTextContext",
+          "allPossibleEthicalConsiderationsIdentifiedInTextContext",
+          "allPossibleLongTermImpactIdentifiedInTextContext",
+          "allPossibleShortTermImpactIdentifiedInTextContext",
+          "allPossibleLocalPerspectiveIdentifiedInTextContext",
+          "allPossibleGlobalPerspectiveIdentifiedInTextContext",
+          "allPossibleCostAnalysisIdentifiedInTextContext",
+          "allPossibleImplementationFeasibilityIdentifiedInTextContext",
+        ]),
         maxLength: 1000,
         required: true,
         rows: 5,

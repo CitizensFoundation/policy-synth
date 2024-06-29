@@ -65,7 +65,7 @@ await Group.create({
 const topLevelAgentClassConfig = {
     description: "A top-level agent that coordinates other agents",
     queueName: "noqueue",
-    imageUrl: "https://example.com/top-level-agent.png",
+    imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
     iconName: "coordinator",
     capabilities: ["process coordination", "task management", "result aggregation"],
     inputJsonInterface: "{}",

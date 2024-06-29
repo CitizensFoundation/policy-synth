@@ -17,8 +17,10 @@ export abstract class SolutionsWebResearchSmarterCrowdsourcingAgent extends Base
       configuration: {
         description:
           "An agent for generating and evaluating solutions in the Smarter Crowdsourcing process",
-        queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS_WEB_RESEARCH,
-        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
+        queueName:
+          PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS_WEB_RESEARCH,
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
         iconName: "solutions",
         capabilities: [
           "solution generation",
@@ -47,16 +49,15 @@ export abstract class SolutionsWebResearchSmarterCrowdsourcingAgent extends Base
   }
 
   static getMainConfigurationSettings() {
-    return [
-
-    ];
+    return [];
   }
 
   static getExtraConfigurationQuestions(): YpStructuredQuestionData[] {
     return [
       {
         uniqueId: "maxTopSearchQueriesForSolutionCreation",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 8,
         maxLength: 2,
         required: true,
@@ -64,7 +65,8 @@ export abstract class SolutionsWebResearchSmarterCrowdsourcingAgent extends Base
       },
       {
         uniqueId: "maxPercentOfSolutionsWebPagesToGet",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.5,
         maxLength: 4,
         required: true,

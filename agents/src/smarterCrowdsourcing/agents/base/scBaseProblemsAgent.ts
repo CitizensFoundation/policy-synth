@@ -17,8 +17,10 @@ export abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowd
       configuration: {
         description:
           "An agent for identifying and analyzing problems in the Smarter Crowdsourcing process",
-        queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_PROBLEMS_PREPERATION,
-        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png",
+        queueName:
+          PsClassScAgentType.SMARTER_CROWDSOURCING_PROBLEMS_PREPERATION,
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png",
         iconName: "problems",
         capabilities: [
           "problem identification",
@@ -41,7 +43,8 @@ export abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowd
     return [
       {
         uniqueId: "subProblemsRankingMinNumberOfMatches",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 10,
         maxLength: 3,
         required: true,
@@ -49,19 +52,19 @@ export abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowd
       },
       {
         uniqueId: "createEntitiesRefinedEnabled",
-        type: "boolean",
+        type: "checkbox",
         value: true,
         required: true,
         text: "Enable refined entity creation",
       },
       {
         uniqueId: "createSubProblemsRefineEnabled",
-        type: "boolean",
+        type: "checkbox",
         value: true,
         required: true,
         text: "Enable sub-problems refinement",
-      }
-    ];
+      },
+    ] as YpStructuredQuestionData[];
   }
 
   // Problems-specific configuration options

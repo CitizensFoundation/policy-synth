@@ -18,7 +18,8 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
         description:
           "An agent for identifying and analyzing problems in the Smarter Crowdsourcing process",
         queueName: PsClassScAgentType.SMARTER_CROWDSOURCING_ROOT_CAUSES,
-        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png",
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png",
         iconName: "problems",
         capabilities: [
           "problem identification",
@@ -41,7 +42,8 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
     return [
       {
         uniqueId: "maxTopRootCauseQueriesToSearchPerType",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 15,
         maxLength: 3,
         required: true,
@@ -49,7 +51,8 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
       },
       {
         uniqueId: "maxRootCausePercentOfSearchResultWebPagesToGet",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 0.7,
         maxLength: 4,
         required: true,
@@ -57,7 +60,8 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
       },
       {
         uniqueId: "maxRootCausesToUseForRatingRootCauses",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 5,
         maxLength: 2,
         required: true,
@@ -65,7 +69,8 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
       },
       {
         uniqueId: "topWebPagesToGetForRefineRootCausesScan",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 100,
         maxLength: 4,
         required: true,
@@ -73,7 +78,7 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
       },
       {
         uniqueId: "rootCauseFieldTypes",
-        type: "text",
+        type: "textField",
         value: "[]",
         maxLength: 1000,
         required: true,
@@ -118,5 +123,4 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
   get rootCauseFieldTypes() {
     return this.getConfig("rootCauseFieldTypes", []);
   }
-
 }

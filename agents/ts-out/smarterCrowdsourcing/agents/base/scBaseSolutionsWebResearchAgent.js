@@ -46,7 +46,8 @@ export class SolutionsWebResearchSmarterCrowdsourcingAgent extends BaseSmarterCr
         return [
             {
                 uniqueId: "maxTopSearchQueriesForSolutionCreation",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 8,
                 maxLength: 2,
                 required: true,
@@ -54,7 +55,8 @@ export class SolutionsWebResearchSmarterCrowdsourcingAgent extends BaseSmarterCr
             },
             {
                 uniqueId: "maxPercentOfSolutionsWebPagesToGet",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.5,
                 maxLength: 4,
                 required: true,

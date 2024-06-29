@@ -39,11 +39,11 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
     return [];
   }
 
-  static getMainCommonConfigurationSettings() {
+  static getMainCommonConfigurationSettings(): YpStructuredQuestionData[] {
     return [
       {
         uniqueId: "problemStatementDescription",
-        type: "text",
+        type: "textArea",
         value: "",
         maxLength: 2000,
         required: true,
@@ -53,7 +53,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "rankSubProblemsInstructions",
-        type: "text",
+        type: "textArea",
         value: `
   1. Assess how important the sub problems are as sub problems to the main problem statement.
   2. We are not looking for solutions, only well defined sub problems.
@@ -67,7 +67,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "subProblemClientColors",
-        type: "text",
+        type: "textField",
         value: JSON.stringify([
           "#ee782d",
           "#0b60b9",
@@ -86,7 +86,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "subProblemColors",
-        type: "text",
+        type: "textArea",
         value: JSON.stringify([
           "orange",
           "blue",
@@ -116,7 +116,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
         rows: 5,
         charCounter: true,
         text: "Sub-Problem Colors (JSON array)",
-      }
+      },
     ];
   }
 
@@ -124,7 +124,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
     return [
       {
         uniqueId: "maxSubProblems",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 7,
         maxLength: 3,
         required: true,
@@ -132,7 +133,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxNumberGeneratedOfEntities",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 7,
         maxLength: 3,
         required: true,
@@ -140,7 +142,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxStabilityRetryCount",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 14,
         maxLength: 3,
         required: true,
@@ -148,7 +151,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "mainLLMmaxRetryCount",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 5,
         maxLength: 2,
         required: true,
@@ -156,7 +160,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "limitedLLMmaxRetryCount",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 3,
         maxLength: 2,
         required: true,
@@ -164,7 +169,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "rankingLLMmaxRetryCount",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 40,
         maxLength: 3,
         required: true,
@@ -172,7 +178,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxTopEntitiesToSearch",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 3,
         maxLength: 2,
         required: true,
@@ -180,7 +187,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxTopEntitiesToRender",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 3,
         maxLength: 2,
         required: true,
@@ -188,7 +196,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxTopQueriesToSearchPerType",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 5,
         maxLength: 2,
         required: true,
@@ -196,7 +205,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "mainSearchRetryCount",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 40,
         maxLength: 3,
         required: true,
@@ -204,7 +214,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxDalleRetryCount",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 7,
         maxLength: 2,
         required: true,
@@ -212,7 +223,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxTopWebPagesToGet",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 5,
         maxLength: 2,
         required: true,
@@ -220,7 +232,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxBingSearchResults",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 10,
         maxLength: 3,
         required: true,
@@ -228,7 +241,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxTopProsConsUsedForRating",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 2,
         maxLength: 2,
         required: true,
@@ -236,7 +250,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxNumberGeneratedProsConsForSolution",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 3,
         maxLength: 2,
         required: true,
@@ -244,7 +259,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "minSleepBeforeBrowserRequest",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 50,
         maxLength: 5,
         required: true,
@@ -252,7 +268,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "maxAdditionalRandomSleepBeforeBrowserRequest",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 100,
         maxLength: 5,
         required: true,
@@ -260,7 +277,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "numberOfSearchTypes",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 4,
         maxLength: 2,
         required: true,
@@ -268,7 +286,8 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "webPageNavTimeout",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 30000,
         maxLength: 6,
         required: true,
@@ -276,7 +295,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "currentUserAgent",
-        type: "text",
+        type: "textField",
         value:
           "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
         maxLength: 200,
@@ -285,13 +304,13 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
       },
       {
         uniqueId: "tokenInLimit",
-        type: "number",
+        type: "textField",
+        subType: "number",
         value: 8000,
         maxLength: 5,
         required: true,
         text: "Token input limit",
       },
-
     ];
   }
 
@@ -359,7 +378,6 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
   }
 
   // Problems-specific configuration options
-
 
   get maxTopRootCauseQueriesToSearchPerType() {
     return this.getConfig("maxTopRootCauseQueriesToSearchPerType", 15);
@@ -494,7 +512,30 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
     return this.getConfig("maxEvidenceToUseForRatingEvidence", 5);
   }
   get policyEvidenceFieldTypes() {
-    return this.getConfig("policyEvidenceFieldTypes", []);
+    return this.getConfig("policyEvidenceFieldTypes", [
+      "allPossiblePositiveEvidenceIdentifiedInTextContext",
+      "allPossibleNegativeEvidenceIdentifiedInTextContext",
+      "allPossibleNeutralEvidenceIdentifiedInTextContext",
+      "allPossibleEconomicEvidenceIdentifiedInTextContext",
+      "allPossibleScientificEvidenceIdentifiedInTextContext",
+      "allPossibleCulturalEvidenceIdentifiedInTextContext",
+      "allPossibleEnvironmentalEvidenceIdentifiedInTextContext",
+      "allPossibleLegalEvidenceIdentifiedInTextContext",
+      "allPossibleTechnologicalEvidenceIdentifiedInTextContext",
+      "allPossibleGeopoliticalEvidenceIdentifiedInTextContext",
+      "allPossibleCaseStudiesIdentifiedInTextContext",
+      "allPossibleStakeholderOpinionsIdentifiedInTextContext",
+      "allPossibleExpertOpinionsIdentifiedInTextContext",
+      "allPossiblePublicOpinionsIdentifiedInTextContext",
+      "allPossibleHistoricalContextIdentifiedInTextContext",
+      "allPossibleEthicalConsiderationsIdentifiedInTextContext",
+      "allPossibleLongTermImpactIdentifiedInTextContext",
+      "allPossibleShortTermImpactIdentifiedInTextContext",
+      "allPossibleLocalPerspectiveIdentifiedInTextContext",
+      "allPossibleGlobalPerspectiveIdentifiedInTextContext",
+      "allPossibleCostAnalysisIdentifiedInTextContext",
+      "allPossibleImplementationFeasibilityIdentifiedInTextContext",
+    ]);
   }
   get maxTopEvidenceQueriesToSearchPerType() {
     return this.getConfig("maxTopEvidenceQueriesToSearchPerType", 4);

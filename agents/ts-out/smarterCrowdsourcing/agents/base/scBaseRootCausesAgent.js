@@ -34,7 +34,8 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
         return [
             {
                 uniqueId: "maxTopRootCauseQueriesToSearchPerType",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 15,
                 maxLength: 3,
                 required: true,
@@ -42,7 +43,8 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
             },
             {
                 uniqueId: "maxRootCausePercentOfSearchResultWebPagesToGet",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 0.7,
                 maxLength: 4,
                 required: true,
@@ -50,7 +52,8 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
             },
             {
                 uniqueId: "maxRootCausesToUseForRatingRootCauses",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 5,
                 maxLength: 2,
                 required: true,
@@ -58,7 +61,8 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
             },
             {
                 uniqueId: "topWebPagesToGetForRefineRootCausesScan",
-                type: "number",
+                type: "textField",
+                subType: "number",
                 value: 100,
                 maxLength: 4,
                 required: true,
@@ -66,7 +70,7 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
             },
             {
                 uniqueId: "rootCauseFieldTypes",
-                type: "text",
+                type: "textField",
                 value: "[]",
                 maxLength: 1000,
                 required: true,
