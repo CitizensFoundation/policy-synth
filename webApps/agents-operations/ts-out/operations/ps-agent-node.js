@@ -63,10 +63,11 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         md-linear-progress {
           margin: 16px;
           margin-bottom: 8px;
+          margin-top: 8px;
         }
 
         .mainContainer {
-          height: 320px;
+          height: 300px;
           border-radius: 16px;
           display: flex;
           flex-direction: column;
@@ -89,9 +90,9 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         }
 
         .agentClassName {
-          font-size: 16px;
+          font-size: 9px;
           text-align: center;
-          margin-bottom: 8px;
+          margin: 8px;
         }
 
         .agentName {
@@ -225,8 +226,8 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
           alt="${this.agent.Class.name}"
         />
         <div class="contentContainer">
-          <div class="agentClassName">${this.agent.Class.name}</div>
           <div class="agentName">${this.agent.configuration['name']}</div>
+          <div class="agentClassName">${this.agent.Class.name}</div>
           ${this.isWorking ? this.renderProgress() : nothing}
           <div class="statusMessage">${this.latestMessage}</div>
         </div>
