@@ -1,6 +1,6 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { BaseChatModel } from "./baseChatModel";
+import { BaseChatModel } from "./baseChatModel.js";
 
 export class GoogleGeminiChat extends BaseChatModel {
   private client: GoogleGenerativeAI;

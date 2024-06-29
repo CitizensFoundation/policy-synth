@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
-import { PolicySynthSimpleAgentBase } from "../base/simpleAgent";
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 
 export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
   public async search(query: string): Promise<PsSearchResultItem[]> {

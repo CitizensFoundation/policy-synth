@@ -8,7 +8,8 @@ import { RateWebEvidenceAgent } from "./ranking/rateWebEvidence.js";
 import { GetRefinedEvidenceAgent } from "./web/getRefinedEvidence.js";
 import { GetMetaDataForTopWebEvidenceAgent } from "./web/getMetaDataForTopWebEvidence.js";
 import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
-export class PoliciesAgent extends PolicySynthAgentQueue {
+import { PsClassScAgentType } from "../base/agentTypes.js";
+export class PoliciesAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_POLICIES;
     }

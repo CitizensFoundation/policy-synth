@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../scPairwiseAgent.js";
+import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../base/scPairwiseAgent.js";
 export class RankRootCausesSearchResultsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
     async voteOnPromptPair(index, promptPair) {
         const itemOneIndex = promptPair[0];

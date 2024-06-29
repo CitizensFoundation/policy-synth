@@ -1,8 +1,8 @@
-import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 
 const DISABLE_LLM_FOR_DEBUG = false;
 
-export class CreateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
+export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   useLanguage: string | undefined = "English";
 
   renderCreateSystemMessage() {

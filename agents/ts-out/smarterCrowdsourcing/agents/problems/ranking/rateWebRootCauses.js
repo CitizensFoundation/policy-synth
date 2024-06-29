@@ -1,4 +1,4 @@
-import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
+import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
 export class RateWebRootCausesAgent extends ProblemsSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();

@@ -3,8 +3,9 @@ import { GetRootCausesWebPagesAgent } from "./web/getRootCausesWebPages.js";
 import { SearchWebForRootCausesAgent } from "./web/searchWebForRootCauses.js";
 import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearchQueries.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
-export class RootCausesAgent extends PolicySynthAgentQueue {
-    job;
+import { RankRootCausesSearchResultsAgent } from "./ranking/rankRootCausesSearchResults.js";
+import { PsClassScAgentType } from "../base/agentTypes.js";
+export class RootCausesAgentQueue extends PolicySynthAgentQueue {
     async process() {
         await this.processAllAgents();
         ;
@@ -16,8 +17,9 @@ export class RootCausesAgent extends PolicySynthAgentQueue {
         return [
             { processor: CreateRootCausesSearchQueriesAgent, weight: 10 },
             { processor: RankRootCausesSearchQueriesAgent, weight: 10 },
-            { processor: SearchWebForRootCausesAgent, weight: 20 },
-            { processor: GetRootCausesWebPagesAgent, weight: 20 },
+            { processor: SearchWebForRootCausesAgent, weight: 10 },
+            { processor: RankRootCausesSearchResultsAgent, weight: 30 },
+            { processor: GetRootCausesWebPagesAgent, weight: 40 },
         ];
     }
 }

@@ -1,4 +1,4 @@
-import { BaseChatModel } from "./baseChatModel";
+import { BaseChatModel } from "./baseChatModel.js";
 export declare class GoogleGeminiChat extends BaseChatModel {
     private client;
     private model;

@@ -1,13 +1,11 @@
-import { Job } from "bullmq";
 import { CreateSubProblemsAgent } from "./create/createSubProblems.js";
 import { CreateEntitiesAgent } from "./create/createEntities.js";
 import { RankEntitiesAgent } from "./ranking/rankEntities.js";
 import { CreateSubProblemImagesAgent } from "./create/createSubProblemImages.js";
 import { CreateProblemStatementImageAgent } from "./create/createProblemStatementImage.js";
 import { PolicySynthAgentQueue } from "../../../base/operationsAgentQueue.js";
-export declare class ProblemsAgent extends PolicySynthAgentQueue {
+export declare class ProblemsAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
-    job: Job;
     get agentQueueName(): "smarter_crowdsourcing_problems_preperation";
     process(): Promise<void>;
     get processors(): ({

@@ -1,4 +1,4 @@
-import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 import { OpenAI } from "openai";
 import axios from "axios";
 import AWS from "aws-sdk";

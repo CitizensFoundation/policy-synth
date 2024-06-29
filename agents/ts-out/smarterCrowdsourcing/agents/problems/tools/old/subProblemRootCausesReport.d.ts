@@ -1,4 +1,4 @@
-import { ProblemsSmarterCrowdsourcingAgent } from "../../../scBaseProblemsAgent.js";
+import { ProblemsSmarterCrowdsourcingAgent } from "../../../base/scBaseProblemsAgent.js";
 interface Item {
     title: string;
     description: string;

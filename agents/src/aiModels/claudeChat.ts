@@ -1,6 +1,6 @@
 
 import Anthropic from "@anthropic-ai/sdk";
-import { BaseChatModel } from "./baseChatModel";
+import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 export class ClaudeChat extends BaseChatModel {

@@ -16,7 +16,7 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
 import { htmlToText } from "html-to-text";
-import { BaseSmarterCrowdsourcingAgent } from "../smarterCrowdsourcing/agents/scBaseAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../smarterCrowdsourcing/agents/base/scBaseAgent.js";
 
 import { WebPageVectorStore } from "../vectorstore/webPage.js";
 import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";

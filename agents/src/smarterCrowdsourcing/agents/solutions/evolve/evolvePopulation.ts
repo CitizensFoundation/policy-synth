@@ -1,8 +1,8 @@
-import { CreateSolutionsAgent } from "../create/createSolutions.js";
+import { CreateInitialSolutionsAgent } from "../create/createSolutions.js";
 
 //TODO: Pentalty for similar ideas in the ranking somehow
 //TODO: Track the evolution of the population with a log of parents and mutations, family tree
-export class EvolvePopulationAgent extends CreateSolutionsAgent {
+export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
   renderSolution(solution: PsSolution) {
     return JSON.stringify(
       {

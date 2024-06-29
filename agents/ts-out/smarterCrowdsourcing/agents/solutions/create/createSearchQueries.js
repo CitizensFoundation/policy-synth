@@ -1,4 +1,4 @@
-import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
+import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsWebResearchAgent.js";
 export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
     //TODO: Maybe add a review and refine stage here as well
     //TODO: Put in memory

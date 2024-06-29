@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 export declare class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAgent {
     static evidenceWebPageTypesArray: PSEvidenceWebPageTypes[];
     filterPolicyParameters(policy: PSPolicy): Omit<PSPolicy, "imageUrl" | "imagePrompt" | "solutionIndex">;

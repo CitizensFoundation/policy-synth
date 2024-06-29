@@ -50,7 +50,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
 
   async setupAgentQueue() {
     if (this.agentQueueName) {
-      new Worker(
+      const worker = new Worker(
         this.agentQueueName,
         async (job: Job) => {
           const data = job.data as PsAgentStartJobData;
@@ -60,6 +60,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
             await this.loadAgentMemoryFromRedis();
           } else {
             this.logger.error(`Agent not found for job ${job.id}`);
+            throw new Error(`Agent not found for job ${job.id}`);
           }
           await this.processAllAgents();
           // Handle Outputs connectors
@@ -69,6 +70,28 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
           concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
         }
       );
+
+      worker.on('completed', (job: Job) => {
+        this.logger.info(`Job ${job.id} has been completed for agent ${this.agentQueueName}`);
+      });
+
+      worker.on('failed', (job: Job | undefined, err: Error) => {
+        this.logger.error(`Job ${job?.id || 'unknown'} has failed for agent ${this.agentQueueName}`, err);
+      });
+
+      worker.on('error', (err: Error) => {
+        this.logger.error(`An error occurred in the worker for agent ${this.agentQueueName}`, err);
+      });
+
+      worker.on('active', (job: Job) => {
+        this.logger.info(`Job ${job.id} has started processing for agent ${this.agentQueueName}`);
+      });
+
+      worker.on('stalled', (jobId: string) => {
+        this.logger.warn(`Job ${jobId} has been stalled for agent ${this.agentQueueName}`);
+      });
+
+      this.logger.info(`Worker set up successfully for agent ${this.agentQueueName}`);
     } else {
       this.logger.error("Top level agent queue name not set");
     }

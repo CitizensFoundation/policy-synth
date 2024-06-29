@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../smarterCrowdsourcing/agents/scBaseAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../smarterCrowdsourcing/agents/base/scBaseAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");

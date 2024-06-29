@@ -1,4 +1,4 @@
-import { BaseChatModel } from "./baseChatModel";
+import { BaseChatModel } from "./baseChatModel.js";
 export declare class ClaudeChat extends BaseChatModel {
     private client;
     constructor(config: PsAiModelConfig);

@@ -3,11 +3,13 @@ import { RankSolutionsAgent } from "./ranking/rankSolutions.js";
 import { EvolvePopulationAgent } from "./evolve/evolvePopulation.js";
 import { CreateSolutionImagesAgent } from "./create/createImages.js";
 import { ReapSolutionsAgent } from "./evolve/reapPopulation.js";
-import { RateSolutionsAgent } from "./ranking/rateSolutions.js";
 import { GroupSolutionsAgent } from "./group/groupSolutions.js";
 import { RankProsConsAgent } from "./ranking/rankProsCons.js";
+import { CreateInitialSolutionsAgent } from "./create/createSolutions.js";
+import { CreateProsConsAgent } from "./create/createProsCons.js";
+import { PsClassScAgentType } from "../base/agentTypes.js";
 
-export class SolutionsEvolutionAgent extends PolicySynthAgentQueue {
+export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
 
   get agentQueueName() {
@@ -19,14 +21,26 @@ export class SolutionsEvolutionAgent extends PolicySynthAgentQueue {
   }
 
   get processors() {
-    return [
-      { processor: RankSolutionsAgent, weight: 10 },
-      { processor: RateSolutionsAgent, weight: 10 },
-      { processor: GroupSolutionsAgent, weight: 10 },
-      { processor: EvolvePopulationAgent, weight: 15 },
-      { processor: ReapSolutionsAgent, weight: 10 },
-      { processor: CreateSolutionImagesAgent, weight: 10 },
-      { processor: RankProsConsAgent, weight: 10 },
-    ];
+    if (this.memory.subProblems[0].solutions.populations.length === 0) {
+      // Create initial solutions for the first population
+      return [
+        { processor: CreateInitialSolutionsAgent, weight: 10 },
+        { processor: CreateProsConsAgent, weight: 10 },
+        { processor: RankProsConsAgent, weight: 20 },
+        { processor: RankSolutionsAgent, weight: 30 },
+        { processor: GroupSolutionsAgent, weight: 10 },
+        { processor: CreateSolutionImagesAgent, weight: 20 },
+      ];
+    } else {
+      return [
+        { processor: EvolvePopulationAgent, weight: 20 },
+        { processor: ReapSolutionsAgent, weight: 5 },
+        { processor: CreateProsConsAgent, weight: 10 },
+        { processor: RankProsConsAgent, weight: 10 },
+        { processor: RankSolutionsAgent, weight: 25 },
+        { processor: GroupSolutionsAgent, weight: 5 },
+        { processor: CreateSolutionImagesAgent, weight: 25 },
+      ];
+    }
   }
 }

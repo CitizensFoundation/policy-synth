@@ -1,6 +1,6 @@
 import { GoogleSearchApi } from "../../../../webResearch/googleSearchApi.js";
 import { BingSearchApi } from "../../../../webResearch/bingSearchApi.js";
-import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
+import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsWebResearchAgent.js";
 
 export class SearchWebAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
   seenUrls!: Map<string, Set<string>>;

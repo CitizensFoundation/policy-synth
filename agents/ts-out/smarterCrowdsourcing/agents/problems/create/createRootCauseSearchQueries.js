@@ -1,4 +1,4 @@
-import { RootCausesSmarterCrowdsourcingAgent } from "../../scBaseRootCausesAgent.js";
+import { RootCausesSmarterCrowdsourcingAgent } from "../../base/scBaseRootCausesAgent.js";
 export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdsourcingAgent {
     generateInLanguage = "Icelandic";
     static rootCauseWebPageTypesArray = [

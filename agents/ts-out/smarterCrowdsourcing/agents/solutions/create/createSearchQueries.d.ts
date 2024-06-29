@@ -1,4 +1,4 @@
-import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
+import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsWebResearchAgent.js";
 export declare class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
     useLanguage: string | undefined;
     renderCommonPromptSection(): string;

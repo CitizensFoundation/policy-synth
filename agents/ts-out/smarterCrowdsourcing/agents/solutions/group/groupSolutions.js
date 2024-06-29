@@ -1,4 +1,4 @@
-import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderGroupPrompt(solutionsToGroup) {
         const messages = [

@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution) {
         return `

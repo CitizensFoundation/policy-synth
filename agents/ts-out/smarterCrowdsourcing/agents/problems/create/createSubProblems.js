@@ -1,4 +1,4 @@
-import { ProblemsSmarterCrowdsourcingAgent } from "../../scBaseProblemsAgent.js";
+import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 const USE_SHORT_DESCRIPTIONS = false;
 export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
     async renderRefinePrompt(results) {

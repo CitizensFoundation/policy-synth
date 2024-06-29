@@ -1,4 +1,4 @@
-import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 export declare class AnalyseExternalSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     folderPath: string;
     renderAnalysisPrompt(solutionDescription: string, requirement: string): Promise<PsModelMessage[]>;

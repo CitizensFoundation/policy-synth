@@ -6,7 +6,7 @@ import { GetEvidenceWebPagesAgent } from "./web/getEvidenceWebPages.js";
 import { RankWebEvidenceAgent } from "./ranking/rankWebEvidence.js";
 import { RateWebEvidenceAgent } from "./ranking/rateWebEvidence.js";
 import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
-export declare class PoliciesAgent extends PolicySynthAgentQueue {
+export declare class PoliciesAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_policies";
     process(): Promise<void>;

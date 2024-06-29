@@ -1,5 +1,5 @@
-import { CreateSolutionsAgent } from "../create/createSolutions.js";
-export declare class EvolvePopulationAgent extends CreateSolutionsAgent {
+import { CreateInitialSolutionsAgent } from "../create/createSolutions.js";
+export declare class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
     renderSolution(solution: PsSolution): string;
     renderRecombinationPrompt(parentA: PsSolution, parentB: PsSolution, subProblemIndex: number): PsModelMessage[];
     renderMutatePrompt(individual: PsSolution, subProblemIndex: number, mutateRate: PsMutationRates): PsModelMessage[];

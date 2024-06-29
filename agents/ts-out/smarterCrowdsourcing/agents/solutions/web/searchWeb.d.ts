@@ -1,4 +1,4 @@
-import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../scBaseSolutionsWebResearchAgent.js";
+import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsWebResearchAgent.js";
 export declare class SearchWebAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
     seenUrls: Map<string, Set<string>>;
     callSearchApi(query: string): Promise<PsSearchResultItem[]>;

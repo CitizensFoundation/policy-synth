@@ -1,5 +1,5 @@
 import { OpenAIClient, AzureKeyCredential } from "@azure/openai";
-import { BaseChatModel } from "./baseChatModel";
+import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model } from "tiktoken";
 export class AzureOpenAiChat extends BaseChatModel {
     client;

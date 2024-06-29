@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { createReadStream } from 'fs';
 import csv from 'csv-parser';
-import { ProblemsSmarterCrowdsourcingAgent } from "../../../scBaseProblemsAgent.js";
+import { ProblemsSmarterCrowdsourcingAgent } from "../../../base/scBaseProblemsAgent.js";
 
 interface Item {
   title: string;

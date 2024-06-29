@@ -1,6 +1,6 @@
 
 import OpenAI from "openai";
-import { BaseChatModel } from "./baseChatModel";
+import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 export class OpenAiChat extends BaseChatModel {

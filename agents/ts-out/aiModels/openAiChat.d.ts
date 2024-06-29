@@ -1,4 +1,4 @@
-import { BaseChatModel } from "./baseChatModel";
+import { BaseChatModel } from "./baseChatModel.js";
 export declare class OpenAiChat extends BaseChatModel {
     private client;
     constructor(config: PsOpenAiModelConfig);

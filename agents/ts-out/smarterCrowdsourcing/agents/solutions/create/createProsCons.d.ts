@@ -1,4 +1,4 @@
-import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../scBaseSolutionsEvolutionAgent.js";
+import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 export declare class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution: PsSolution): string;
     renderRefinePrompt(prosOrCons: string, results: string[], subProblemIndex: number, solution: PsSolution): Promise<PsModelMessage[]>;

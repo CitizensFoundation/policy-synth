@@ -8,8 +8,9 @@ import { RateWebEvidenceAgent } from "./ranking/rateWebEvidence.js";
 import { GetRefinedEvidenceAgent } from "./web/getRefinedEvidence.js";
 import { GetMetaDataForTopWebEvidenceAgent } from "./web/getMetaDataForTopWebEvidence.js";
 import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
+import { PsClassScAgentType } from "../base/agentTypes.js";
 
-export class PoliciesAgent extends PolicySynthAgentQueue {
+export class PoliciesAgentQueue extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
 
   get agentQueueName() {

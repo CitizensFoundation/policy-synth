@@ -24,7 +24,7 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
     }
     async setupAgentQueue() {
         if (this.agentQueueName) {
-            new Worker(this.agentQueueName, async (job) => {
+            const worker = new Worker(this.agentQueueName, async (job) => {
                 const data = job.data;
                 const loadedAgent = await PsAgent.findByPk(data.agentId);
                 if (loadedAgent) {
@@ -33,6 +33,7 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
                 }
                 else {
                     this.logger.error(`Agent not found for job ${job.id}`);
+                    throw new Error(`Agent not found for job ${job.id}`);
                 }
                 await this.processAllAgents();
                 // Handle Outputs connectors
@@ -40,6 +41,22 @@ export class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
                 connection: redis,
                 concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
             });
+            worker.on('completed', (job) => {
+                this.logger.info(`Job ${job.id} has been completed for agent ${this.agentQueueName}`);
+            });
+            worker.on('failed', (job, err) => {
+                this.logger.error(`Job ${job?.id || 'unknown'} has failed for agent ${this.agentQueueName}`, err);
+            });
+            worker.on('error', (err) => {
+                this.logger.error(`An error occurred in the worker for agent ${this.agentQueueName}`, err);
+            });
+            worker.on('active', (job) => {
+                this.logger.info(`Job ${job.id} has started processing for agent ${this.agentQueueName}`);
+            });
+            worker.on('stalled', (jobId) => {
+                this.logger.warn(`Job ${jobId} has been stalled for agent ${this.agentQueueName}`);
+            });
+            this.logger.info(`Worker set up successfully for agent ${this.agentQueueName}`);
         }
         else {
             this.logger.error("Top level agent queue name not set");

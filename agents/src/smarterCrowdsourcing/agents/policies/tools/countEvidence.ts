@@ -1,4 +1,4 @@
-import { BaseSmarterCrowdsourcingAgent } from "../../scBaseAgent.js";
+import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import ioredis from "ioredis";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
 const redis = new ioredis(
