@@ -54,7 +54,13 @@ PsAgentClass.init({
     indexes: [
         {
             fields: ["uuid"],
-            unique: true
+            unique: true,
+        },
+        {
+            fields: ["class_base_id"],
+        },
+        {
+            fields: ["class_base_id", "version"],
         },
         {
             fields: ["user_id"],

@@ -14,6 +14,7 @@ export class PsAgentConnectorClass
   declare id: number;
   declare uuid: string;
   declare user_id: number;
+  declare class_base_id: string;
   declare created_at: Date;
   declare updated_at: Date;
   declare name: string;
@@ -30,6 +31,11 @@ PsAgentConnectorClass.init(
       primaryKey: true,
     },
     uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      allowNull: false,
+    },
+    class_base_id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       allowNull: false,
@@ -72,6 +78,12 @@ PsAgentConnectorClass.init(
       {
         fields: ["uuid"],
         unique: true
+      },
+      {
+        fields: ["class_base_id"],
+      },
+      {
+        fields: ["class_base_id","version"],
       },
       {
         fields: ["user_id"],

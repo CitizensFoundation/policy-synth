@@ -14,6 +14,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     memory;
     agent;
     models = new Map();
+    skipAiModels = false;
     //TODO: Find a better way, I think
     modelIds = new Map();
     limitedLLMmaxRetryCount = 3;
@@ -27,7 +28,9 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         super();
         this.agent = agent;
         this.logger.debug(JSON.stringify(agent));
-        this.initializeModels();
+        if (!this.skipAiModels) {
+            this.initializeModels();
+        }
         if (memory) {
             this.memory = memory;
         }

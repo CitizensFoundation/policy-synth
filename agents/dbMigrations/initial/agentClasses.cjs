@@ -56,6 +56,7 @@ module.exports = {
     unique: true,
   });
   await queryInterface.addIndex('ps_agent_classes', ['class_base_id']);
+  await queryInterface.addIndex('ps_agent_classes', ['class_base_id', 'version']);
   await queryInterface.addIndex('ps_agent_classes', ['user_id']);
   await queryInterface.addIndex('ps_agent_classes', ['version']);
 }};

@@ -1,39 +1,3 @@
-interface YpStructuredQuestionData {
-  uniqueId?: string;
-  text: string;
-  html?: string;
-  type:
-    | "textField"
-    | "textArea"
-    | "textFieldLong"
-    | "textAreaLong"
-    | "checkbox"
-    | "radios"
-    | "html"
-    | "textHeader"
-    | "textDescription"
-    | "seperator"
-    | "dropdown";
-  subType?: string;
-  value?: string | number | boolean;
-  maxLength?: number;
-  required?: boolean;
-  rows?: number;
-  pattern?: string;
-  charCounter?: boolean;
-  richTextAllowed?: boolean;
-  segmentName?: string;
-  subTitle?: string;
-  halfWidthDesktop?: boolean;
-  extraTopMargin?: boolean;
-  lessBottomMargin?: boolean;
-}
-
-interface YpStructuredAnswer {
-  uniqueId: string;
-  value: string | boolean | number;
-}
-
 interface PsBaseModelClass {
   id: number;
   uuid: string;
@@ -165,6 +129,7 @@ interface PsAgentStatus {
   details?: Record<string, any>;
 }
 
+
 interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
   groupId: number;
   lastSavedAt?: number;
@@ -177,6 +142,7 @@ interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
 interface PsAgentMemoryData extends PsAgentBaseMemoryData {
   agentId: number;
   status: PsAgentStatus;
+  connectors?: PsConnectorsConfig;
 }
 
 interface PsModelTokenUsage {
@@ -285,6 +251,7 @@ interface PsAgentRegistryAttributes extends PsBaseModelClass {
 }
 
 interface PsAgentConnectorConfiguration {
+  name: string;
   description: string;
   imageUrl: string;
   iconName: string;
@@ -294,6 +261,7 @@ interface PsAgentConnectorConfiguration {
 // tablename "ps_agent_connector_classes"
 interface PsAgentConnectorClassAttributes extends PsBaseModelClass {
   name: string;
+  class_base_id: string;
   version: number;
   available: boolean;
   configuration: PsAgentConnectorConfiguration;
@@ -370,6 +338,11 @@ interface PsModelRateLimitTracking {
 
 type PsAgentClassCreationAttributes = Omit<
   PsAgentClassAttributes,
+  "id" | "uuid" | "created_at" | "updated_at"
+>;
+
+type PsConnectorClassCreationAttributes = Omit<
+  PsConnectorClassAttributes,
   "id" | "uuid" | "created_at" | "updated_at"
 >;
 

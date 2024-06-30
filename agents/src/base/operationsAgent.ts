@@ -25,6 +25,8 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   agent: PsAgent;
   models: Map<PsAiModelType, BaseChatModel> = new Map();
 
+  skipAiModels = false;
+
   //TODO: Find a better way, I think
   modelIds: Map<PsAiModelType, number> = new Map();
 
@@ -48,7 +50,9 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     super();
     this.agent = agent;
     this.logger.debug(JSON.stringify(agent));
-    this.initializeModels();
+    if (!this.skipAiModels) {
+      this.initializeModels();
+    }
     if (memory) {
       this.memory = memory;
     } else {

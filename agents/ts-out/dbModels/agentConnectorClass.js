@@ -13,6 +13,11 @@ PsAgentConnectorClass.init({
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
     },
+    class_base_id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
+    },
     user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -50,6 +55,12 @@ PsAgentConnectorClass.init({
         {
             fields: ["uuid"],
             unique: true
+        },
+        {
+            fields: ["class_base_id"],
+        },
+        {
+            fields: ["class_base_id", "version"],
         },
         {
             fields: ["user_id"],

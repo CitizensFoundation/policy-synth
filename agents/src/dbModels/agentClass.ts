@@ -4,7 +4,7 @@ import { sequelize } from "./sequelize.js";
 interface PsAgentClassAttributesCreation
   extends Optional<
     PsAgentClassAttributes,
-    "id" | "uuid" |  "class_base_id" | "created_at" | "updated_at"
+    "id" | "uuid" | "class_base_id" | "created_at" | "updated_at"
   > {}
 
 export class PsAgentClass
@@ -77,7 +77,13 @@ PsAgentClass.init(
     indexes: [
       {
         fields: ["uuid"],
-        unique: true
+        unique: true,
+      },
+      {
+        fields: ["class_base_id"],
+      },
+      {
+        fields: ["class_base_id", "version"],
       },
       {
         fields: ["user_id"],

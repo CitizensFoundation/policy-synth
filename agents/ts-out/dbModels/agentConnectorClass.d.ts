@@ -5,6 +5,7 @@ export declare class PsAgentConnectorClass extends Model<PsAgentConnectorClassAt
     id: number;
     uuid: string;
     user_id: number;
+    class_base_id: string;
     created_at: Date;
     updated_at: Date;
     name: string;
