@@ -2,7 +2,7 @@ import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PsAgentConnector } from "../../dbModels/agentConnector.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
-export declare class GoogleDocsConnector extends PsBaseDocumentConnector {
+export declare class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     private static readonly GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID;
     private static readonly GOOGLE_DOCS_CONNECTOR_VERSION;
     static getConnectorClass: PsConnectorClassCreationAttributes;

@@ -5,8 +5,6 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
     static DISCORD_CONNECTOR_CLASS_BASE_ID = "8f7e6d5c-4b3a-2a1f-9e8d-7c6b5a4d3f2e";
     static DISCORD_CONNECTOR_VERSION = 1;
     static getConnectorClass = {
-        created_at: new Date(),
-        updated_at: new Date(),
         class_base_id: this.DISCORD_CONNECTOR_CLASS_BASE_ID,
         name: "Discord Bot",
         version: this.DISCORD_CONNECTOR_VERSION,

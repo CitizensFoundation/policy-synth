@@ -19,8 +19,6 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
   private static readonly DISCORD_CONNECTOR_VERSION = 1;
 
   static getConnectorClass: PsConnectorClassCreationAttributes = {
-    created_at: new Date(),
-    updated_at: new Date(),
     class_base_id: this.DISCORD_CONNECTOR_CLASS_BASE_ID,
     name: "Discord Bot",
     version: this.DISCORD_CONNECTOR_VERSION,

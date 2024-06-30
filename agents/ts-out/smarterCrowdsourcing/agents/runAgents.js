@@ -13,7 +13,9 @@ import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "./base/scBaseSolu
 import { fileURLToPath } from "url";
 import path from "path";
 import { connectToDatabase } from "../../dbModels/sequelize.js";
-import { initializeModels } from "../../dbModels/index.js";
+import { PsAgentConnectorClass, initializeModels } from "../../dbModels/index.js";
+import { PsGoogleDocsConnector } from "../../connectors/documents/googleDocsConnector.js";
+import { PsYourPrioritiesConnector } from "../../connectors/collaboration/yourPrioritiesConnector.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 class AgentManager extends PolicySynthOperationsAgent {
@@ -51,11 +53,34 @@ class AgentManager extends PolicySynthOperationsAgent {
             }
         }
     }
+    static async createConnectorClasses(userId) {
+        const connectorClasses = [
+            PsGoogleDocsConnector.getConnectorClass,
+            PsYourPrioritiesConnector.getConnectorClass,
+        ];
+        for (const connectorClass of connectorClasses) {
+            const [instance, created] = await PsAgentConnectorClass.findOrCreate({
+                where: {
+                    class_base_id: connectorClass.class_base_id,
+                    version: connectorClass.version,
+                },
+                //@ts-ignore
+                defaults: {
+                    ...connectorClass,
+                    user_id: userId,
+                },
+            });
+            if (created) {
+                console.log(`Created connector class: ${instance.class_base_id} v${instance.version}`);
+            }
+        }
+    }
     async setupAndRunAgents() {
         await connectToDatabase();
         await initializeModels();
         //TODO: Make this more elegant but using user_id=1 for now
         await AgentManager.createAgentClassesIfNeeded(1);
+        await AgentManager.createConnectorClasses(1);
         for (const AgentClass of this.agentsToRun) {
             const agent = new AgentClass();
             this.logger.info(`Setting up agent: ${agent.agentQueueName}`);

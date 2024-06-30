@@ -5,15 +5,13 @@ import { PsAgentConnector } from "../../dbModels/agentConnector.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
 
-export class GoogleDocsConnector extends PsBaseDocumentConnector {
+export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
   private static readonly GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID =
     "3a7b2c1d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
 
   private static readonly GOOGLE_DOCS_CONNECTOR_VERSION = 1;
 
   static getConnectorClass: PsConnectorClassCreationAttributes = {
-    created_at: new Date(),
-    updated_at: new Date(),
     class_base_id: this.GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID,
     name: "Google Docs",
     version: this.GOOGLE_DOCS_CONNECTOR_VERSION,
