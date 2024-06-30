@@ -58,8 +58,17 @@ export class RankRootCausesSearchResultsAgent extends BaseSmarterCrowdsourcingPa
     this.logger.info("Rank Root Causes Search Results Agent");
     super.process();
 
-    for (const searchQueryType of this.rootCauseTypes) {
+    for (let p = 0; p < this.rootCauseTypes.length; p++) {
+      const searchQueryType = this.rootCauseTypes[p];
       this.logger.info(`Ranking search results for ${searchQueryType}`);
+      this.updatePrefix = `Ranking Results for ${searchQueryType}`;
+      const progress = (p + 1 / (this.rootCauseTypes.length - 1)) * 100;
+
+      this.updateRangedProgress(
+        progress,
+        `Ranking Queries for ${searchQueryType}`
+      );
+
       let queriesToRank =
         this.memory.problemStatement.rootCauseSearchResults![
           searchQueryType as PSRootCauseWebPageTypes

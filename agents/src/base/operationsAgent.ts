@@ -8,10 +8,11 @@ import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PsAgent } from "../dbModels/agent.js";
 
-import { Op } from "sequelize";
+import { Op, Transaction } from "sequelize";
 import { PolicySynthBaseAgent } from "./agent.js";
 import { Job, Worker } from "bullmq";
 import { PsAiModelType } from "../aiModelTypes.js";
+import { sequelize } from "../dbModels/sequelize.js";
 
 //TODO: Look to pool redis connections
 const redis = new ioredis(
@@ -341,10 +342,10 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     this.logger.debug(`Model: ${model.modelName}`);
 
     try {
-      const [usage, created]: [PsModelUsage, boolean] =
-        await PsModelUsage.findOrCreate({
+      // Use a transaction to ensure data consistency
+      await sequelize.transaction(async (t: Transaction) => {
+        const [usage, created] = await PsModelUsage.findOrCreate({
           where: {
-            //TODO: Check this make more robust
             model_id: modelId,
             agent_id: this.agent.id,
           },
@@ -356,17 +357,22 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             agent_id: this.agent.id,
             user_id: this.agent.user_id,
           },
+          transaction: t,
         });
 
-      this.logger.debug("Usage: ", usage);
+        if (!created) {
+          // Use increment to safely update the counters only if the record wasn't just created
+          await usage.increment(
+            {
+              token_in_count: tokensIn,
+              token_out_count: tokensOut,
+            },
+            { transaction: t }
+          );
+        }
 
-      if (!created) {
-        // If the record already existed, update the counters
-        await usage.update({
-          token_in_count: usage.token_in_count + tokensIn,
-          token_out_count: usage.token_out_count + tokensOut,
-        });
-      }
+        this.logger.debug("Usage after update: ", usage.get({ plain: true }));
+      });
 
       this.logger.info(
         `Token usage updated for agent ${this.agent.id} and model ${model.modelName}`
@@ -374,6 +380,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
       this.logger.error(error);
+      throw error; // Re-throw the error to be handled by the caller
     }
   }
 
@@ -383,7 +390,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }).format(number);
   }
 
-  async updateRangedProgress(progress: number, message: string) {
+  async updateRangedProgress(progress: number | undefined, message: string) {
     if (!this.memory.status) {
       this.memory.status = {
         state: "running",
@@ -394,12 +401,14 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     }
 
     // Calculate the progress within the range
-    const rangeSize = this.endProgress - this.startProgress;
-    const scaledProgress = this.startProgress + (progress / 100) * rangeSize;
-    this.memory.status.progress = Math.min(
-      Math.max(scaledProgress, this.startProgress),
-      this.endProgress
-    );
+    if (progress) {
+      const rangeSize = this.endProgress - this.startProgress;
+      const scaledProgress = this.startProgress + (progress / 100) * rangeSize;
+      this.memory.status.progress = Math.min(
+        Math.max(scaledProgress, this.startProgress),
+        this.endProgress
+      );
+    }
 
     this.memory.status.messages.push(message);
     this.memory.status.lastUpdated = Date.now();

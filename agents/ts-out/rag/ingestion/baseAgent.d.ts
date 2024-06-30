@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 export declare abstract class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
     minChunkTokenLength: number;

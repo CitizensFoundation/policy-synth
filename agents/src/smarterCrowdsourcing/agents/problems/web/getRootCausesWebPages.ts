@@ -1,14 +1,8 @@
 import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PsConstants } from "../../../../constants.js";
-
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
-import { ChatOpenAI } from "@langchain/openai";
 import ioredis from "ioredis";
 import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
-import { RootCauseTypeTypeDefs } from "./rootCauseTypeTypeDef.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesAgent } from "../create/createRootCauseSearchQueries.js";
 import { PsAiModelType } from "../../../../aiModelTypes.js";
@@ -112,9 +106,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
   async getRootCauseTokenCount(text: string, type: PSRootCauseWebPageTypes) {
     const emptyMessages = this.renderRootCauseScanningPrompt(type, "");
 
-    const promptTokenCount = await this.getTokensFromMessages(
-      emptyMessages
-    );
+    const promptTokenCount = await this.getTokensFromMessages(emptyMessages);
 
     const textForTokenCount = this.createHumanMessage(text);
 
@@ -123,9 +115,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
     ]);
 
     const totalTokenCount =
-      promptTokenCount +
-      textTokenCount +
-      this.maxModelTokensOut;
+      promptTokenCount + textTokenCount + this.maxModelTokensOut;
 
     return { totalTokenCount, promptTokenCount };
   }
@@ -151,9 +141,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
 
       if (this.tokenInLimit < totalTokenCount) {
         const maxTokenLengthForChunk =
-          this.tokenInLimit -
-          promptTokenCount -
-          512;
+          this.tokenInLimit - promptTokenCount - 512;
 
         this.logger.debug(
           `Splitting text into chunks of ${maxTokenLengthForChunk} tokens`
@@ -402,19 +390,29 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
     }
 
     if (this.directRootCauseUrlsToScan) {
-      this.logger.info(`Processing custom urls... ${JSON.stringify(this.directRootCauseUrlsToScan, null, 2)}`);
+      this.logger.info(
+        `Processing custom urls... ${JSON.stringify(
+          this.directRootCauseUrlsToScan,
+          null,
+          2
+        )}`
+      );
       for (const url of this.directRootCauseUrlsToScan) {
-        this.logger.info(`Processing ${url}`);
-        if (this.isUrlInSubProblemMemory(url)) {
-          this.logger.info(`Already in memory ${url}`);
-          this.processesUrls.add(url);
-          continue;
+        if (url && url.length > 7) {
+          this.logger.info(`Processing ${url}`);
+          if (this.isUrlInSubProblemMemory(url)) {
+            this.logger.info(`Already in memory ${url}`);
+            this.processesUrls.add(url);
+            continue;
+          }
+          await this.getAndProcessRootCausePage(
+            url,
+            browserPage,
+            "adminSubmitted"
+          );
+        } else {
+          this.logger.info(`Invalid url ${url}`);
         }
-        await this.getAndProcessRootCausePage(
-          url,
-          browserPage,
-          "adminSubmitted"
-        );
       }
     }
 

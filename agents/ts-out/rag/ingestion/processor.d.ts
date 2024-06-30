@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Page } from "puppeteer";
 import { DocumentCleanupAgent } from "./docCleanup.js";
 import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";

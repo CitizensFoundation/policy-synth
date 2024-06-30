@@ -82,9 +82,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
         const textTokenCount = await this.getTokensFromMessages([
             textForTokenCount,
         ]);
-        const totalTokenCount = promptTokenCount +
-            textTokenCount +
-            this.maxModelTokensOut;
+        const totalTokenCount = promptTokenCount + textTokenCount + this.maxModelTokensOut;
         return { totalTokenCount, promptTokenCount };
     }
     async getRootCauseTextAnalysis(type, text, url) {
@@ -94,9 +92,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
             this.logger.debug(`Searching ${url}...`);
             let textAnalysis;
             if (this.tokenInLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = this.tokenInLimit -
-                    promptTokenCount -
-                    512;
+                const maxTokenLengthForChunk = this.tokenInLimit - promptTokenCount - 512;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
                 const splitText = this.splitText(text, maxTokenLengthForChunk, undefined);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
@@ -267,13 +263,18 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
         if (this.directRootCauseUrlsToScan) {
             this.logger.info(`Processing custom urls... ${JSON.stringify(this.directRootCauseUrlsToScan, null, 2)}`);
             for (const url of this.directRootCauseUrlsToScan) {
-                this.logger.info(`Processing ${url}`);
-                if (this.isUrlInSubProblemMemory(url)) {
-                    this.logger.info(`Already in memory ${url}`);
-                    this.processesUrls.add(url);
-                    continue;
+                if (url && url.length > 7) {
+                    this.logger.info(`Processing ${url}`);
+                    if (this.isUrlInSubProblemMemory(url)) {
+                        this.logger.info(`Already in memory ${url}`);
+                        this.processesUrls.add(url);
+                        continue;
+                    }
+                    await this.getAndProcessRootCausePage(url, browserPage, "adminSubmitted");
                 }
-                await this.getAndProcessRootCausePage(url, browserPage, "adminSubmitted");
+                else {
+                    this.logger.info(`Invalid url ${url}`);
+                }
             }
         }
         for (const searchResultType of CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray) {

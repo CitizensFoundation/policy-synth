@@ -12,7 +12,7 @@ export declare abstract class BaseVectorStoreClient extends PolicySynthSimpleAge
     updateWebPage(id: string, webPageAnalysis: PsWebPageAnalysisData): Promise<unknown>;
     updateWebSolutions(id: string, webSolutions: string[], quiet?: boolean): Promise<unknown>;
     getWebPage(id: string): Promise<PsWebPageAnalysisData>;
-    getWebPagesForProcessing(groupId: number, subProblemIndex: number | null | undefined, entityIndex: number | null | undefined, searchType: PsSearchQueries | undefined, limit?: number, offset?: number, solutionCountLimit?: number | undefined): Promise<PsWebPageGraphQlResults>;
+    getWebPagesForProcessing(groupId: number, subProblemIndex: number | undefined | null, entityIndex: number | undefined | null, searchType: PsSearchQueries | undefined, limit?: number, offset?: number, solutionCountLimit?: number | undefined): Promise<PsWebPageGraphQlResults>;
     webPageExist(groupId: number, url: string, searchType: PsWebPageTypes, subProblemIndex: number | undefined, entityIndex: number | undefined): Promise<Boolean>;
     searchWebPages(query: string, groupId: number | undefined, subProblemIndex: number | undefined, searchType: PsWebPageTypes | undefined, filterOutEmptySolutions?: boolean): Promise<PsWebPageGraphQlResults>;
 }

@@ -17,6 +17,7 @@ export class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent 
     eloRatings = {};
     progressFunction = undefined;
     updatePrefix = "Pairwise Ranking";
+    disableRelativeProgress = false;
     fisherYatesShuffle(array) {
         if (array && array.length > 0) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -146,7 +147,7 @@ export class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent 
                     this.progressFunction(`${p + 1}/${this.prompts[subProblemIndex].length}`);
                 }
                 const progress = (p + 1 / (this.prompts[subProblemIndex].length - 1)) * 100;
-                this.updateRangedProgress(progress, `${this.updatePrefix}: ${p + 1}/${this.prompts[subProblemIndex].length}`);
+                this.updateRangedProgress(this.disableRelativeProgress ? undefined : progress, `${this.updatePrefix}\n${p + 1}/${this.prompts[subProblemIndex].length}`);
                 const promptPair = this.prompts[subProblemIndex][p];
                 this.logger.debug(`Prompt pair: ${promptPair}`);
                 const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(subProblemIndex, promptPair, additionalData);

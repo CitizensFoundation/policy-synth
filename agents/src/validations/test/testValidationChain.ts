@@ -1,4 +1,3 @@
-import { Callbacks } from "@langchain/core/callbacks/manager";
 import { PsAgentOrchestrator } from "../agentOrchestrator.js";
 import { PsBaseValidationAgent } from "../baseValidationAgent.js";
 import { PsClassificationAgent } from "../classificationAgent.js";
@@ -243,7 +242,7 @@ const streamingCallbacks = [
       process.stdout.write(token);
     },
   },
-] as Callbacks;
+] as any;
 
 const agentOrchestrator = new PsAgentOrchestrator();
 

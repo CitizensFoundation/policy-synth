@@ -1,6 +1,8 @@
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../base/scPairwiseAgent.js";
 
 export class RankRootCausesSearchQueriesAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
+  disableRelativeProgress = true;
+
   rootCauseTypes = [
     "historicalRootCause",
     "economicRootCause",
@@ -68,9 +70,17 @@ export class RankRootCausesSearchQueriesAgent extends BaseSmarterCrowdsourcingPa
     this.logger.info("Rank Root Causes Search Queries Agent");
     super.process();
 
-    for (const searchQueryType of this.rootCauseTypes) {
+    for (let p = 0; p < this.rootCauseTypes.length; p++) {
+      const searchQueryType = this.rootCauseTypes[p];
       this.logger.info(`Ranking search queries for ${searchQueryType}`);
-      this.updatePrefix = `Ranking ${searchQueryType}`;
+      this.updatePrefix = `Ranking Queries for ${searchQueryType}`;
+
+      const progress = (p + 1 / (this.rootCauseTypes.length - 1)) * 100;
+
+      this.updateRangedProgress(
+        progress,
+        `Ranking Queries for ${searchQueryType}`
+      );
 
       let queriesToRank =
         this.memory.problemStatement.rootCauseSearchQueries![

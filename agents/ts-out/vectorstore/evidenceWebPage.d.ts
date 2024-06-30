@@ -15,9 +15,9 @@ export declare class EvidenceWebPageVectorStore extends PolicySynthSimpleAgentBa
     updateRefinedAnalysis(id: string, refinedEvidence: PSRefinedPolicyEvidence, quiet?: boolean): Promise<unknown>;
     updateScores(id: string, scores: PSPolicyRating, quiet?: boolean): Promise<unknown>;
     getWebPage(id: string): Promise<PSEvidenceRawWebPageData>;
-    getTopPagesForProcessing(groupId: number, subProblemIndex: number | null | undefined, policyTitle: string | undefined, searchType: string | undefined, limit?: number): Promise<PSEvidenceWebPageGraphQlResults>;
-    getTopWebPagesForProcessing(groupId: number, subProblemIndex: number | null | undefined, searchType: string | undefined, policyTitle: string | undefined, limit?: number, offset?: number, evidenceCountLimit?: number | undefined, onlyRefined?: boolean): Promise<PSEvidenceWebPageGraphQlResults>;
-    getWebPagesForProcessing(groupId: number, subProblemIndex: number | null | undefined, searchType: string | undefined, policyTitle: string | undefined, limit?: number, offset?: number, evidenceCountLimit?: number | undefined): Promise<PSEvidenceWebPageGraphQlResults>;
+    getTopPagesForProcessing(groupId: number, subProblemIndex: number | undefined | null, policyTitle: string | undefined, searchType: string | undefined, limit?: number): Promise<PSEvidenceWebPageGraphQlResults>;
+    getTopWebPagesForProcessing(groupId: number, subProblemIndex: number | undefined | null, searchType: string | undefined, policyTitle: string | undefined, limit?: number, offset?: number, evidenceCountLimit?: number | undefined, onlyRefined?: boolean): Promise<PSEvidenceWebPageGraphQlResults>;
+    getWebPagesForProcessing(groupId: number, subProblemIndex: number | undefined | null, searchType: string | undefined, policyTitle: string | undefined, limit?: number, offset?: number, evidenceCountLimit?: number | undefined): Promise<PSEvidenceWebPageGraphQlResults>;
     webPageExist(groupId: number, url: string, searchType: PSEvidenceWebPageTypes, subProblemIndex: number | undefined, entityIndex: number | undefined): Promise<Boolean>;
     searchWebPages(query: string, groupId: number | undefined, subProblemIndex: number | undefined, searchType: PSEvidenceWebPageTypes | undefined): Promise<PSEvidenceWebPageGraphQlResults>;
 }

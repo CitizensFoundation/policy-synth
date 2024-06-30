@@ -6,6 +6,7 @@ import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PolicySynthBaseAgent } from "./agent.js";
 import { PsAiModelType } from "../aiModelTypes.js";
+import { sequelize } from "../dbModels/sequelize.js";
 //TODO: Look to pool redis connections
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
@@ -243,34 +244,38 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         }
         this.logger.debug(`Model: ${model.modelName}`);
         try {
-            const [usage, created] = await PsModelUsage.findOrCreate({
-                where: {
-                    //TODO: Check this make more robust
-                    model_id: modelId,
-                    agent_id: this.agent.id,
-                },
-                defaults: {
-                    token_in_count: tokensIn,
-                    token_out_count: tokensOut,
-                    token_in_cached_context_count: 0,
-                    model_id: modelId,
-                    agent_id: this.agent.id,
-                    user_id: this.agent.user_id,
-                },
-            });
-            this.logger.debug("Usage: ", usage);
-            if (!created) {
-                // If the record already existed, update the counters
-                await usage.update({
-                    token_in_count: usage.token_in_count + tokensIn,
-                    token_out_count: usage.token_out_count + tokensOut,
+            // Use a transaction to ensure data consistency
+            await sequelize.transaction(async (t) => {
+                const [usage, created] = await PsModelUsage.findOrCreate({
+                    where: {
+                        model_id: modelId,
+                        agent_id: this.agent.id,
+                    },
+                    defaults: {
+                        token_in_count: tokensIn,
+                        token_out_count: tokensOut,
+                        token_in_cached_context_count: 0,
+                        model_id: modelId,
+                        agent_id: this.agent.id,
+                        user_id: this.agent.user_id,
+                    },
+                    transaction: t,
                 });
-            }
+                if (!created) {
+                    // Use increment to safely update the counters only if the record wasn't just created
+                    await usage.increment({
+                        token_in_count: tokensIn,
+                        token_out_count: tokensOut,
+                    }, { transaction: t });
+                }
+                this.logger.debug("Usage after update: ", usage.get({ plain: true }));
+            });
             this.logger.info(`Token usage updated for agent ${this.agent.id} and model ${model.modelName}`);
         }
         catch (error) {
             this.logger.error("Error saving or updating token usage in database");
             this.logger.error(error);
+            throw error; // Re-throw the error to be handled by the caller
         }
     }
     formatNumber(number, fractions = 0) {
@@ -288,9 +293,11 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             };
         }
         // Calculate the progress within the range
-        const rangeSize = this.endProgress - this.startProgress;
-        const scaledProgress = this.startProgress + (progress / 100) * rangeSize;
-        this.memory.status.progress = Math.min(Math.max(scaledProgress, this.startProgress), this.endProgress);
+        if (progress) {
+            const rangeSize = this.endProgress - this.startProgress;
+            const scaledProgress = this.startProgress + (progress / 100) * rangeSize;
+            this.memory.status.progress = Math.min(Math.max(scaledProgress, this.startProgress), this.endProgress);
+        }
         this.memory.status.messages.push(message);
         this.memory.status.lastUpdated = Date.now();
         // Save updated memory to Redis
