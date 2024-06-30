@@ -1,0 +1,1 @@
+{"version":3,"file":"baseDocumentConnector.d.ts","sourceRoot":"","sources":["../../../src/connectors/base/baseDocumentConnector.ts"],"names":[],"mappings":"AAAA,8BAAsB,qBAAqB;IACzC,QAAQ,CAAC,WAAW,IAAI,OAAO,CAAC,MAAM,CAAC;IACvC,QAAQ,CAAC,cAAc,CAAC,GAAG,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;IACnD,QAAQ,CAAC,cAAc,IAAI,OAAO,CAAC,IAAI,CAAC;CACzC"}
