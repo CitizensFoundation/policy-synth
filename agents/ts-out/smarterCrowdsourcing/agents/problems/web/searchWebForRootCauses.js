@@ -5,6 +5,7 @@ export class SearchWebForRootCausesAgent extends SearchWebAgent {
     searchCounter = 0;
     async searchWeb() {
         const problemStatement = this.memory.problemStatement;
+        this.updateProgress(undefined, "Searching Web for Root Causes");
         if (!problemStatement.rootCauseSearchResults) {
             //@ts-ignore
             problemStatement.rootCauseSearchResults = {};

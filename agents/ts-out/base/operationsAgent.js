@@ -7,6 +7,7 @@ import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PolicySynthBaseAgent } from "./agent.js";
 import { PsAiModelType } from "../aiModelTypes.js";
 import { sequelize } from "../dbModels/sequelize.js";
+import { encoding_for_model } from "tiktoken";
 //TODO: Look to pool redis connections
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
@@ -350,25 +351,73 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         }
         return defaultValue;
     }
+    async getTokensFromMessages(messages) {
+        let encoding;
+        if (this.models.get(PsAiModelType.Text)) {
+            encoding = encoding_for_model(this.models.get(PsAiModelType.Text).modelName);
+        }
+        else {
+            encoding = encoding_for_model("gpt-4o");
+        }
+        let totalTokens = 0;
+        for (const message of messages) {
+            // Every message follows <im_start>{role/name}\n{content}<im_end>\n
+            totalTokens += 4;
+            for (const [key, value] of Object.entries(message)) {
+                totalTokens += encoding.encode(value).length;
+                if (key === "name") {
+                    totalTokens -= 1; // Role is always required and always 1 token
+                }
+            }
+        }
+        totalTokens += 2; // Every reply is primed with <im_start>assistant
+        encoding.free(); // Free up the memory used by the encoder
+        return totalTokens;
+    }
     getConfig(uniqueId, defaultValue) {
         if (uniqueId in this.agent.configuration) {
             //@ts-ignore
             const value = this.agent.configuration[uniqueId];
-            if (typeof defaultValue === "number") {
+            this.logger.debug(`Value for ${uniqueId}: ${value}`);
+            // Check for null, undefined, or empty string and return defaultValue
+            if (value === null ||
+                value === undefined ||
+                (typeof value === "string" && value.trim() === "")) {
+                this.logger.debug(`Returning default value for ${uniqueId}`);
+                return defaultValue;
+            }
+            this.logger.debug(`Type of value for ${uniqueId}: ${typeof value}`);
+            // If value is not a string, return it as is (assuming it's already of type T)
+            if (typeof value !== "string") {
+                this.logger.debug(`Returning value as is for ${uniqueId}`);
+                return value;
+            }
+            // Try to parse the string value intelligently
+            if (value.toLowerCase() === "true") {
+                return true;
+            }
+            else if (value.toLowerCase() === "false") {
+                return false;
+            }
+            else if (!isNaN(Number(value))) {
+                // Check if it's a valid number (integer or float)
                 return Number(value);
             }
-            else if (typeof defaultValue === "boolean") {
-                return (value === "true");
+            else {
+                try {
+                    // Try to parse as JSON (for arrays or objects)
+                    return JSON.parse(value);
+                }
+                catch {
+                    // If all else fails, return the string value
+                    return value;
+                }
             }
-            else if (Array.isArray(defaultValue)) {
-                return JSON.parse(value);
-            }
-            return value;
         }
         else {
             this.logger.error(`Configuration answer not found for ${uniqueId}`);
+            return defaultValue;
         }
-        return defaultValue;
     }
 }
 //# sourceMappingURL=operationsAgent.js.map

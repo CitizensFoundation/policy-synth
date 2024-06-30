@@ -13,6 +13,7 @@ import { PolicySynthBaseAgent } from "./agent.js";
 import { Job, Worker } from "bullmq";
 import { PsAiModelType } from "../aiModelTypes.js";
 import { sequelize } from "../dbModels/sequelize.js";
+import { TiktokenModel, encoding_for_model } from "tiktoken";
 
 //TODO: Look to pool redis connections
 const redis = new ioredis(
@@ -468,22 +469,80 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     return defaultValue;
   }
 
+  async getTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+    let encoding;
+    if (this.models.get(PsAiModelType.Text)) {
+      encoding = encoding_for_model(
+        this.models.get(PsAiModelType.Text)!.modelName as TiktokenModel
+      );
+    } else {
+      encoding = encoding_for_model("gpt-4o");
+    }
+    let totalTokens = 0;
+
+    for (const message of messages) {
+      // Every message follows <im_start>{role/name}\n{content}<im_end>\n
+      totalTokens += 4;
+
+      for (const [key, value] of Object.entries(message)) {
+        totalTokens += encoding.encode(value).length;
+        if (key === "name") {
+          totalTokens -= 1; // Role is always required and always 1 token
+        }
+      }
+    }
+
+    totalTokens += 2; // Every reply is primed with <im_start>assistant
+
+    encoding.free(); // Free up the memory used by the encoder
+
+    return totalTokens;
+  }
+
   getConfig<T>(uniqueId: string, defaultValue: T): T {
     if (uniqueId in this.agent.configuration) {
       //@ts-ignore
-      const value = this.agent.configuration[uniqueId];
+      const value: unknown = this.agent.configuration[uniqueId];
+      this.logger.debug(`Value for ${uniqueId}: ${value}`);
 
-      if (typeof defaultValue === "number") {
-        return Number(value) as T;
-      } else if (typeof defaultValue === "boolean") {
-        return (value === "true") as T;
-      } else if (Array.isArray(defaultValue)) {
-        return JSON.parse(value as string) as T[] as T;
+      // Check for null, undefined, or empty string and return defaultValue
+      if (
+        value === null ||
+        value === undefined ||
+        (typeof value === "string" && value.trim() === "")
+      ) {
+        this.logger.debug(`Returning default value for ${uniqueId}`);
+        return defaultValue;
       }
-      return value as T;
+
+      this.logger.debug(`Type of value for ${uniqueId}: ${typeof value}`);
+
+      // If value is not a string, return it as is (assuming it's already of type T)
+      if (typeof value !== "string") {
+        this.logger.debug(`Returning value as is for ${uniqueId}`);
+        return value as T;
+      }
+
+      // Try to parse the string value intelligently
+      if (value.toLowerCase() === "true") {
+        return true as T;
+      } else if (value.toLowerCase() === "false") {
+        return false as T;
+      } else if (!isNaN(Number(value))) {
+        // Check if it's a valid number (integer or float)
+        return Number(value) as T;
+      } else {
+        try {
+          // Try to parse as JSON (for arrays or objects)
+          return JSON.parse(value) as T;
+        } catch {
+          // If all else fails, return the string value
+          return value as T;
+        }
+      }
     } else {
       this.logger.error(`Configuration answer not found for ${uniqueId}`);
+      return defaultValue;
     }
-    return defaultValue;
   }
 }

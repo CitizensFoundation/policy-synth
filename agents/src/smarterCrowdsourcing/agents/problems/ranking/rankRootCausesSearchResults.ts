@@ -84,7 +84,7 @@ export class RankRootCausesSearchResultsAgent extends BaseSmarterCrowdsourcingPa
         return true;
       });
 
-      this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 7);
+      this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 0.4); //TODO: Change to 7
 
       await this.performPairwiseRanking(index);
 

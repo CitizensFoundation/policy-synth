@@ -998,7 +998,6 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
 
   async process() {
     this.logger.info("Get Web Pages Agent");
-    super.process();
 
     this.totalPagesSave = 0;
 

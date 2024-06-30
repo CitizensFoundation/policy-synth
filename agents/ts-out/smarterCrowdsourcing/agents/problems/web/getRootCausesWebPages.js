@@ -260,7 +260,9 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
         if (clearSubProblems) {
             this.memory.subProblems = [];
         }
+        //this.logger.debug(JSON.stringify(this.memory, null, 2));
         if (this.directRootCauseUrlsToScan) {
+            this.updateRangedProgress(undefined, "Scan websites for custom urls");
             this.logger.info(`Processing custom urls... ${JSON.stringify(this.directRootCauseUrlsToScan, null, 2)}`);
             for (const url of this.directRootCauseUrlsToScan) {
                 if (url && url.length > 7) {
@@ -277,8 +279,13 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
                 }
             }
         }
-        for (const searchResultType of CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray) {
+        for (let s = 0; s < CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray.length; s++) {
+            const searchResultType = CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray[s];
+            this.logger.info(`Processing ${searchResultType}...`);
+            const progress = (s + 1 / (CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray.length - 1)) * 100;
+            this.updateRangedProgress(progress, `Scanning websites for ${searchResultType}`);
             let urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
+            this.logger.debug(`Got ${urlsToGet.length} urls to get using ${this.maxRootCausePercentOfSearchResultWebPagesToGet}`);
             if (urlsToGet) {
                 urlsToGet = urlsToGet.slice(0, Math.floor(urlsToGet.length *
                     this.maxRootCausePercentOfSearchResultWebPagesToGet));
@@ -308,7 +315,6 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
     }
     async process() {
         this.logger.info("Get Root Cause Web Pages Agent");
-        super.process();
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);
         this.logger.info("Get Root Cause Web Pages Agent Complete");

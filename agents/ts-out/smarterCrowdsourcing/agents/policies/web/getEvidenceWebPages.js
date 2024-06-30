@@ -380,7 +380,6 @@ export class GetEvidenceWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAge
     }
     async process() {
         this.logger.info("Get Evidence Web Pages Agent");
-        super.process();
         await this.getAllPages();
         this.logger.info(`Saved ${this.totalPagesSave} pages`);
         this.logger.info("Get Evidence Web Pages Agent Complete");

@@ -56,7 +56,7 @@ export class RankRootCausesSearchResultsAgent extends BaseSmarterCrowdsourcingPa
                 seenUrls.add(item.url);
                 return true;
             });
-            this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 7);
+            this.setupRankingPrompts(index, queriesToRank, queriesToRank.length * 0.4); //TODO: Change to 7
             await this.performPairwiseRanking(index);
             this.logger.info(`Ranking search results before: ${JSON.stringify(queriesToRank.map(item => item.title), null, 2)}`);
             this.memory.problemStatement.rootCauseSearchResults[searchQueryType] = this.getOrderedListOfItems(index);

@@ -1,5 +1,6 @@
 import winston from "winston";
 import { jsonrepair } from "jsonrepair";
+import { encoding_for_model } from "tiktoken";
 export class PolicySynthBaseAgent {
     logger;
     timeStart = Date.now();
@@ -126,8 +127,22 @@ export class PolicySynthBaseAgent {
         this.rateLimits[model.name].tokens = this.rateLimits[model.name].tokens.filter((token) => now - token.timestamp < windowSize);
     }
     async getTokensFromMessages(messages) {
-        const tokens = await this.getTokensFromMessages(messages);
-        return tokens;
+        //TODO: Get the db model name from the agent
+        const encoding = encoding_for_model("gpt-4o");
+        let totalTokens = 0;
+        for (const message of messages) {
+            // Every message follows <im_start>{role/name}\n{content}<im_end>\n
+            totalTokens += 4;
+            for (const [key, value] of Object.entries(message)) {
+                totalTokens += encoding.encode(value).length;
+                if (key === "name") {
+                    totalTokens -= 1; // Role is always required and always 1 token
+                }
+            }
+        }
+        totalTokens += 2; // Every reply is primed with <im_start>assistant
+        encoding.free(); // Free up the memory used by the encoder
+        return totalTokens;
     }
 }
 //# sourceMappingURL=agent.js.map
