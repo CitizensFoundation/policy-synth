@@ -28,6 +28,6 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     toggleMenu(): void;
     clickPlayPause(): void;
     renderProgress(): import("lit").TemplateResult<1>;
-    render(): typeof nothing | import("lit").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1> | typeof nothing;
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

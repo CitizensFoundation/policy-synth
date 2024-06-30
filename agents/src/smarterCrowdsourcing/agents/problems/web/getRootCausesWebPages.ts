@@ -392,7 +392,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
     //this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     if (this.directRootCauseUrlsToScan) {
-      this.updateRangedProgress(undefined, "Scan websites for custom urls");
+      this.updateRangedProgress(undefined, "Scan web for custom urls");
       this.logger.info(
         `Processing custom urls... ${JSON.stringify(
           this.directRootCauseUrlsToScan,
@@ -431,7 +431,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
 
       this.updateRangedProgress(
         progress,
-        `Scanning websites for ${searchResultType}`
+        `Scanning web for ${searchResultType}`
       );
 
       let urlsToGet =

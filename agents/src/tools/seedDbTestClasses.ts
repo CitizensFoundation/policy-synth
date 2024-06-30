@@ -123,7 +123,7 @@ const subAgentInstance = await PsAgent.create({
   user_id: user.id,
   group_id: 1,
   configuration: {
-    name: "Problems Analysis Agent",
+    name: "Root Causes Agent",
     graphPosX: 0,
     graphPosY: 100,
   },

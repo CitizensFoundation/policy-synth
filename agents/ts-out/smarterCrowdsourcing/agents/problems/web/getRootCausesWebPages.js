@@ -262,7 +262,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
         }
         //this.logger.debug(JSON.stringify(this.memory, null, 2));
         if (this.directRootCauseUrlsToScan) {
-            this.updateRangedProgress(undefined, "Scan websites for custom urls");
+            this.updateRangedProgress(undefined, "Scan web for custom urls");
             this.logger.info(`Processing custom urls... ${JSON.stringify(this.directRootCauseUrlsToScan, null, 2)}`);
             for (const url of this.directRootCauseUrlsToScan) {
                 if (url && url.length > 7) {
@@ -283,7 +283,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
             const searchResultType = CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray[s];
             this.logger.info(`Processing ${searchResultType}...`);
             const progress = (s + 1 / (CreateRootCausesSearchQueriesAgent.rootCauseWebPageTypesArray.length - 1)) * 100;
-            this.updateRangedProgress(progress, `Scanning websites for ${searchResultType}`);
+            this.updateRangedProgress(progress, `Scanning web for ${searchResultType}`);
             let urlsToGet = problemStatement.rootCauseSearchResults[searchResultType];
             this.logger.debug(`Got ${urlsToGet.length} urls to get using ${this.maxRootCausePercentOfSearchResultWebPagesToGet}`);
             if (urlsToGet) {

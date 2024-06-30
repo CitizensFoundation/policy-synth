@@ -240,7 +240,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
             updatedConfig
           );
         }
-
+        this.currentAgent = { ...this.currentAgent };
         this.closeEditNodeDialog();
         this.requestUpdate();
       } catch (error) {
@@ -371,6 +371,9 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         id="editNodeDialog"
         style="width: 800px; max-height:100%;height:100%;"
         @closed="${this.closeEditNodeDialog}"
+        scrimClickAction=""
+        escapeKeyAction=""
+        @cancel="${this.scrimCancel}"
       >
         <div slot="headline">
           ${this.nodeToEditInfo ? this.renderNodeEditHeadline() : ''}
@@ -893,12 +896,21 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     this.nodeToAddCauseTo = undefined;
   }
 
+  scrimCancel(event: CustomEvent) {
+    // Disable
+    debugger;
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   renderAddCauseDialog() {
     return html`
       <md-dialog
         id="addCauseDialog"
         style="max-width: 800px;max-height: 90vh;"
         @closed="${this.closeAddCauseDialog}"
+        scrimClickAction=""
+        escapeKeyAction=""
       >
         <div slot="headline">${/*this.nodeToAddCauseTo?.description*/ ''}</div>
         <div slot="content" class="chatContainer">

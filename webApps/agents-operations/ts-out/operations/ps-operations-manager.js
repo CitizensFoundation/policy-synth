@@ -139,6 +139,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                     // Find the node in the current agent structure and update its configuration
                     this.updateNodeConfigurationInAgent(this.currentAgent, this.nodeToEditInfo.id, updatedConfig);
                 }
+                this.currentAgent = { ...this.currentAgent };
                 this.closeEditNodeDialog();
                 this.requestUpdate();
             }
@@ -255,6 +256,9 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         id="editNodeDialog"
         style="width: 800px; max-height:100%;height:100%;"
         @closed="${this.closeEditNodeDialog}"
+        scrimClickAction=""
+        escapeKeyAction=""
+        @cancel="${this.scrimCancel}"
       >
         <div slot="headline">
           ${this.nodeToEditInfo ? this.renderNodeEditHeadline() : ''}
@@ -725,12 +729,20 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.$$('#addCauseDialog').close();
         this.nodeToAddCauseTo = undefined;
     }
+    scrimCancel(event) {
+        // Disable
+        debugger;
+        event.preventDefault();
+        event.stopPropagation();
+    }
     renderAddCauseDialog() {
         return html `
       <md-dialog
         id="addCauseDialog"
         style="max-width: 800px;max-height: 90vh;"
         @closed="${this.closeAddCauseDialog}"
+        scrimClickAction=""
+        escapeKeyAction=""
       >
         <div slot="headline">${ /*this.nodeToAddCauseTo?.description*/''}</div>
         <div slot="content" class="chatContainer">

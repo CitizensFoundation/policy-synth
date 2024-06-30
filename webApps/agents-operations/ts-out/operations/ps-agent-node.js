@@ -45,6 +45,11 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
                 this.isWorking = status.state === 'running';
                 this.progress = status.progress;
                 this.latestMessage = status.messages[status.messages.length - 1] || '';
+                if (this.latestMessage.indexOf("Agent completed") > -1) {
+                    this.isWorking = false;
+                    this.stopAgent();
+                    this.requestUpdate();
+                }
                 this.requestUpdate();
                 this.fire('get-costs');
             }

@@ -77,6 +77,7 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     renderConfiguration(): import("lit").TemplateResult<1>;
     openAddCauseDialog(event: CustomEvent): void;
     closeAddCauseDialog(): void;
+    scrimCancel(event: CustomEvent): void;
     renderAddCauseDialog(): import("lit").TemplateResult<1>;
     renderTotalCosts(): import("lit").TemplateResult<1>;
     render(): any;

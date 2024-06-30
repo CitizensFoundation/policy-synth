@@ -42,6 +42,14 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthOperation
   static getMainCommonConfigurationSettings(): YpStructuredQuestionData[] {
     return [
       {
+        uniqueId: "name",
+        type: "textField",
+        value: "",
+        maxLength: 60,
+        required: true,
+        text: "Agent Name",
+      },
+      {
         uniqueId: "problemStatementDescription",
         type: "textArea",
         value: "",
