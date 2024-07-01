@@ -1,4 +1,6 @@
 import { Model, Optional } from "sequelize";
+import { PsAgentClass } from "./agentClass.js";
+import { PsAgentConnectorClass } from "./agentConnectorClass.js";
 interface PsAgentRegistryCreationAttributes extends Optional<PsAgentRegistryAttributes, "id" | "uuid" | "created_at" | "updated_at"> {
 }
 export declare class PsAgentRegistry extends Model<PsAgentRegistryAttributes, PsAgentRegistryCreationAttributes> implements PsAgentRegistryAttributes {
@@ -10,6 +12,8 @@ export declare class PsAgentRegistry extends Model<PsAgentRegistryAttributes, Ps
     configuration: PsAgentRegistryConfiguration;
     Agents?: PsAgentClassAttributes[];
     Connectors?: PsAgentConnectorClassAttributes[];
+    addAgent: (agent: PsAgentClass) => Promise<void>;
+    addConnector: (connector: PsAgentConnectorClass) => Promise<void>;
 }
 export {};
 //# sourceMappingURL=agentRegistry.d.ts.map

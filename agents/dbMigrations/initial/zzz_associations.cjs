@@ -28,6 +28,16 @@ module.exports = {
         },
         onDelete: "CASCADE",
       },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
     });
 
     await queryInterface.addIndex("AgentRegistryAgents", [
@@ -58,6 +68,16 @@ module.exports = {
           key: "id",
         },
         onDelete: "CASCADE",
+      },
+      created_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
+      },
+      updated_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
     });
 

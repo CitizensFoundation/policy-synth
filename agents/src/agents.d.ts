@@ -69,6 +69,7 @@ interface PsAiModelConfiguration {
   type: import("./aiModelTypes.js").PsAiModelType;
   model: string;
   provider: string;
+  active: boolean;
   prices: PsBaseModelPriceConfiguration;
   maxTokensOut: number;
   deploymentName?: string;

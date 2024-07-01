@@ -22,6 +22,9 @@ export class PsAgentRegistry
 
   declare Agents?: PsAgentClassAttributes[];
   declare Connectors?: PsAgentConnectorClassAttributes[];
+
+  declare addAgent: (agent: PsAgentClass) => Promise<void>;
+  declare addConnector: (connector: PsAgentConnectorClass) => Promise<void>;
 }
 
 PsAgentRegistry.init(
@@ -61,7 +64,7 @@ PsAgentRegistry.init(
     indexes: [
       {
         fields: ["uuid"],
-        unique: true
+        unique: true,
       },
       {
         fields: ["user_id"],
@@ -72,17 +75,20 @@ PsAgentRegistry.init(
   }
 );
 
-// Define associations
-PsAgentRegistry.belongsToMany(PsAgentClass, {
-  through: "AgentRegistryAgents",
-  as: "Agents",
-  foreignKey: "agent_id",
-  timestamps: false
-});
+(PsAgentRegistry as any).associate = (models: any) => {
+  PsAgentRegistry.belongsToMany(models.PsAgentClass, {
+    through: "AgentRegistryAgents",
+    as: "Agents",
+    foreignKey: "ps_agent_registry_id",
+    otherKey: "ps_agent_class_id",
+    timestamps: true,
+  });
 
-PsAgentRegistry.belongsToMany(PsAgentConnectorClass, {
-  through: "AgentRegistryConnectors",
-  foreignKey: "connector_id",
-  as: "Connectors",
-  timestamps: false
-});
+  PsAgentRegistry.belongsToMany(models.PsAgentConnectorClass, {
+    through: "AgentRegistryConnectors",
+    as: "Connectors",
+    foreignKey: "ps_agent_registry_id",
+    otherKey: "ps_agent_connector_class_id",
+    timestamps: true,
+  });
+};

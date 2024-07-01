@@ -1,7 +1,5 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
-import { PsAgentClass } from "./agentClass.js";
-import { PsAgentConnectorClass } from "./agentConnectorClass.js";
 export class PsAgentRegistry extends Model {
 }
 PsAgentRegistry.init({
@@ -39,7 +37,7 @@ PsAgentRegistry.init({
     indexes: [
         {
             fields: ["uuid"],
-            unique: true
+            unique: true,
         },
         {
             fields: ["user_id"],
@@ -48,17 +46,20 @@ PsAgentRegistry.init({
     timestamps: true,
     underscored: true,
 });
-// Define associations
-PsAgentRegistry.belongsToMany(PsAgentClass, {
-    through: "AgentRegistryAgents",
-    as: "Agents",
-    foreignKey: "agent_id",
-    timestamps: false
-});
-PsAgentRegistry.belongsToMany(PsAgentConnectorClass, {
-    through: "AgentRegistryConnectors",
-    foreignKey: "connector_id",
-    as: "Connectors",
-    timestamps: false
-});
+PsAgentRegistry.associate = (models) => {
+    PsAgentRegistry.belongsToMany(models.PsAgentClass, {
+        through: "AgentRegistryAgents",
+        as: "Agents",
+        foreignKey: "ps_agent_registry_id",
+        otherKey: "ps_agent_class_id",
+        timestamps: true,
+    });
+    PsAgentRegistry.belongsToMany(models.PsAgentConnectorClass, {
+        through: "AgentRegistryConnectors",
+        as: "Connectors",
+        foreignKey: "ps_agent_registry_id",
+        otherKey: "ps_agent_connector_class_id",
+        timestamps: true,
+    });
+};
 //# sourceMappingURL=agentRegistry.js.map
