@@ -185,10 +185,13 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         <ps-add-agent-dialog
           ?open="${this.showAddAgentDialog}"
           @close="${() => (this.showAddAgentDialog = false)}"
+          .parentAgentId="${this.currentAgent.id}"
+          .groupId="${this.groupId}"
         ></ps-add-agent-dialog>
 
         <ps-add-connector-dialog
           ?open="${this.showAddConnectorDialog}"
+          .groupid="${this.groupId}"
           .selectedAgentId="${this.selectedAgentIdForConnector}"
           @close="${() => (this.showAddConnectorDialog = false)}"
         ></ps-add-connector-dialog>

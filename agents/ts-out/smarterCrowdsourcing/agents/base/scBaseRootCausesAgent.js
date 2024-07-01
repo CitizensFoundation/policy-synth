@@ -7,7 +7,7 @@ export class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcin
         return {
             class_base_id: this.ROOT_CAUSES_AGENT_CLASS_BASE_ID,
             user_id: 0,
-            name: "Smarter Crowdsourcing Problems Agent",
+            name: "Smarter Crowdsourcing Root Causes Agent",
             version: this.ROOT_CAUSES_AGENT_CLASS_VERSION,
             available: true,
             configuration: {

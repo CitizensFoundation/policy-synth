@@ -7,6 +7,8 @@ import '@material/web/textfield/filled-text-field.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 export declare class PsAddAgentDialog extends YpBaseElement {
     open: boolean;
+    parentAgentId: number;
+    groupId: number;
     private activeAgentClasses;
     private activeAiModels;
     private selectedAgentClassId;

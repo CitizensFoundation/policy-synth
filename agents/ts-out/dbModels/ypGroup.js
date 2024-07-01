@@ -26,6 +26,10 @@ Group.init({
         allowNull: false,
         defaultValue: DataTypes.NOW,
     },
+    configuration: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+    },
     private_access_configuration: {
         type: DataTypes.JSONB,
         allowNull: false,

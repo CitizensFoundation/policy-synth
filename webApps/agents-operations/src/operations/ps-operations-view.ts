@@ -823,12 +823,13 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
         </div>
 
         <div class="flex"></div>
+
+        ${this.renderHeader()}
+
         <md-filled-tonal-button @click="${() => this.fire('add-agent')}">
           <md-icon slot="icon">add</md-icon>
           ${this.t('Add Agent')}
         </md-filled-tonal-button>
-
-        ${this.renderHeader()}
 
         <div class="flex"></div>
 

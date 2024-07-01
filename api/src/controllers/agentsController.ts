@@ -12,7 +12,7 @@ import {
   PsAiModel,
   PsAgentConnectorClass,
   sequelize,
-  PsAgentRegistry
+  PsAgentRegistry,
 } from "../models/index.js";
 import { AgentManagerService } from "../operations/agentManager.js";
 import { Queue } from "bullmq";
@@ -48,23 +48,34 @@ export class AgentsController {
 
   public initializeRoutes() {
     this.router.get(this.path + "/:id", this.getAgent);
-    this.router.put(this.path + "/:agentId/:nodeType/:nodeId/configuration", this.updateNodeConfiguration);
+    this.router.put(
+      this.path + "/:agentId/:nodeType/:nodeId/configuration",
+      this.updateNodeConfiguration
+    );
 
     this.router.post(this.path + "/:id/control", this.controlAgent());
     this.router.get(this.path + "/:id/status", this.getAgentStatus);
     this.router.get(this.path + "/:id/costs", this.getAgentCosts);
-    this.router.get(this.path + "/registry/agentClasses", this.getActiveAgentClasses);
-    this.router.get(this.path + "/registry/connectorClasses", this.getActiveConnectorClasses);
+    this.router.get(
+      this.path + "/registry/agentClasses",
+      this.getActiveAgentClasses
+    );
+    this.router.get(
+      this.path + "/registry/connectorClasses",
+      this.getActiveConnectorClasses
+    );
     this.router.get(this.path + "/registry/aiModels", this.getActiveAiModels);
     this.router.post(this.path, this.createAgent);
     this.router.post(this.path + "/:agentId/connectors", this.createConnector);
   }
 
   createAgent = async (req: express.Request, res: express.Response) => {
-    const { agentClassId, aiModelId } = req.body;
+    const { agentClassId, aiModelId, parentAgentId } = req.body;
 
     if (!agentClassId || !aiModelId) {
-      return res.status(400).send('Agent class ID and AI model ID are required');
+      return res
+        .status(400)
+        .send("Agent class ID and AI model ID are required");
     }
 
     const transaction = await sequelize.transaction();
@@ -75,15 +86,19 @@ export class AgentsController {
 
       if (!agentClass || !aiModel) {
         await transaction.rollback();
-        return res.status(404).send('Agent class or AI model not found');
+        return res.status(404).send("Agent class or AI model not found");
       }
 
-      const newAgent = await PsAgent.create({
-        class_id: agentClassId,
-        user_id: 1, //TODO: Make dynamic
-        group_id: req.body.groupId, // You might want to add this to the request body
-        configuration: {},
-      }, { transaction });
+      const newAgent = await PsAgent.create(
+        {
+          class_id: agentClassId,
+          user_id: 1,
+          group_id: 1,
+          parent_agent_id: parentAgentId,
+          configuration: {},
+        },
+        { transaction }
+      );
 
       await newAgent.addAiModel(aiModel, { transaction });
 
@@ -92,16 +107,16 @@ export class AgentsController {
       // Fetch the created agent with its associations
       const createdAgent = await PsAgent.findByPk(newAgent.id, {
         include: [
-          { model: PsAgentClass, as: 'Class' },
-          { model: PsAiModel, as: 'AiModels' }
-        ]
+          { model: PsAgentClass, as: "Class" },
+          { model: PsAiModel, as: "AiModels" },
+        ],
       });
 
       res.status(201).json(createdAgent);
     } catch (error) {
       await transaction.rollback();
-      console.error('Error creating agent:', error);
-      res.status(500).send('Internal Server Error');
+      console.error("Error creating agent:", error);
+      res.status(500).send("Internal Server Error");
     }
   };
 
@@ -110,57 +125,66 @@ export class AgentsController {
     const { connectorClassId, name } = req.body;
 
     if (!agentId || !connectorClassId || !name) {
-      return res.status(400).send('Agent ID, connector class ID, and name are required');
+      return res
+        .status(400)
+        .send("Agent ID, connector class ID, and name are required");
     }
 
     const transaction = await sequelize.transaction();
 
     try {
       const agent = await PsAgent.findByPk(agentId);
-      const connectorClass = await PsAgentConnectorClass.findByPk(connectorClassId);
+      const connectorClass = await PsAgentConnectorClass.findByPk(
+        connectorClassId
+      );
 
       if (!agent || !connectorClass) {
         await transaction.rollback();
-        return res.status(404).send('Agent or connector class not found');
+        return res.status(404).send("Agent or connector class not found");
       }
 
-      const newConnector = await PsAgentConnector.create({
-        class_id: connectorClassId,
-        user_id: 1, //TODO: Make dynamic
-        group_id: agent.group_id,
-        configuration: {
-          name: name,
-          graphPosX: 200,
-          graphPosY: 200,
-          permissionNeeded: PsAgentConnectorPermissionTypes.ReadWrite
+      const newConnector = await PsAgentConnector.create(
+        {
+          class_id: connectorClassId,
+          user_id: 1, //TODO: Make dynamic
+          group_id: agent.group_id,
+          configuration: {
+            name: name,
+            graphPosX: 200,
+            graphPosY: 200,
+            permissionNeeded: PsAgentConnectorPermissionTypes.ReadWrite,
+          },
         },
-      }, { transaction });
+        { transaction }
+      );
 
       await agent.addConnector(newConnector, { transaction });
 
       await transaction.commit();
 
       // Fetch the created connector with its associations
-      const createdConnector = await PsAgentConnector.findByPk(newConnector.id, {
-        include: [
-          { model: PsAgentConnectorClass, as: 'Class' },
-          { model: PsAgent, as: 'Agent' }
-        ]
-      });
+      const createdConnector = await PsAgentConnector.findByPk(
+        newConnector.id,
+        {
+          include: [
+            { model: PsAgentConnectorClass, as: "Class" },
+            { model: PsAgent, as: "Agent" },
+          ],
+        }
+      );
 
       res.status(201).json(createdConnector);
     } catch (error) {
       await transaction.rollback();
-      console.error('Error creating connector:', error);
-      res.status(500).send('Internal Server Error');
+      console.error("Error creating connector:", error);
+      res.status(500).send("Internal Server Error");
     }
   };
-
 
   getActiveAiModels = async (req: express.Request, res: express.Response) => {
     try {
       const activeAiModels = await PsAiModel.findAll({
-        where: { 'configuration.active': true }
+        where: { "configuration.active": true },
       });
 
       res.json(activeAiModels);
@@ -170,19 +194,24 @@ export class AgentsController {
     }
   };
 
-  getActiveAgentClasses = async (req: express.Request, res: express.Response) => {
+  getActiveAgentClasses = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     try {
       const registry = await PsAgentRegistry.findOne({
-        include: [{
-          model: PsAgentClass,
-          as: 'Agents',
-          where: { available: true },
-          through: { attributes: [] }
-        }]
+        include: [
+          {
+            model: PsAgentClass,
+            as: "Agents",
+            where: { available: true },
+            through: { attributes: [] },
+          },
+        ],
       });
 
       if (!registry) {
-        return res.status(404).send('Agent registry not found');
+        return res.status(404).send("Agent registry not found");
       }
 
       res.json(registry.Agents);
@@ -192,19 +221,24 @@ export class AgentsController {
     }
   };
 
-  getActiveConnectorClasses = async (req: express.Request, res: express.Response) => {
+  getActiveConnectorClasses = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     try {
       const registry = await PsAgentRegistry.findOne({
-        include: [{
-          model: PsAgentConnectorClass,
-          as: 'Connectors',
-          where: { available: true },
-          through: { attributes: [] }
-        }]
+        include: [
+          {
+            model: PsAgentConnectorClass,
+            as: "Connectors",
+            where: { available: true },
+            through: { attributes: [] },
+          },
+        ],
       });
 
       if (!registry) {
-        return res.status(404).send('Agent registry not found');
+        return res.status(404).send("Agent registry not found");
       }
 
       res.json(registry.Connectors);
@@ -224,36 +258,45 @@ export class AgentsController {
       });
 
       if (!agent || !agent.Class) {
-        return res.status(404).send('Agent or Agent Class not found');
+        return res.status(404).send("Agent or Agent Class not found");
       }
 
       const queueName = agent.Class.configuration.queueName;
       if (!queueName) {
-        return res.status(400).send('Queue name not defined for this agent class');
+        return res
+          .status(400)
+          .send("Queue name not defined for this agent class");
       }
 
       const queue = new Queue(queueName);
 
       await queue.add(`${action}Agent`, { agentId, action });
 
-      res.json({ message: `${action.charAt(0).toUpperCase() + action.slice(1)} request for agent ${agentId} queued in ${queueName}` });
+      res.json({
+        message: `${
+          action.charAt(0).toUpperCase() + action.slice(1)
+        } request for agent ${agentId} queued in ${queueName}`,
+      });
     } catch (error) {
       console.error(`Error ${action}ing agent:`, error);
       res.status(500).send("Internal Server Error");
     }
   };
 
-  updateNodeConfiguration = async (req: express.Request, res: express.Response) => {
+  updateNodeConfiguration = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     const agentId = parseInt(req.params.agentId);
     const nodeId = parseInt(req.params.nodeId);
-    const nodeType = req.params.nodeType as 'agent' | 'connector';
+    const nodeType = req.params.nodeType as "agent" | "connector";
     const updatedConfig = req.body;
 
     try {
       let node;
-      if (nodeType === 'agent') {
+      if (nodeType === "agent") {
         node = await PsAgent.findByPk(nodeId);
-      } else if (nodeType === 'connector') {
+      } else if (nodeType === "connector") {
         node = await PsAgentConnector.findByPk(nodeId);
       }
 
@@ -264,7 +307,7 @@ export class AgentsController {
       // Update the node's configuration
       node.configuration = {
         ...node.configuration,
-        ...updatedConfig
+        ...updatedConfig,
       };
 
       await node.save();
@@ -276,7 +319,6 @@ export class AgentsController {
     }
   };
 
-
   getAgentStatus = async (req: express.Request, res: express.Response) => {
     const agentId = parseInt(req.params.id);
 
@@ -285,7 +327,7 @@ export class AgentsController {
       if (status) {
         res.json(status);
       } else {
-        res.status(404).send('Agent status not found');
+        res.status(404).send("Agent status not found");
       }
     } catch (error) {
       console.error("Error getting agent status:", error);
@@ -298,11 +340,15 @@ export class AgentsController {
     const { state, details } = req.body;
 
     try {
-      const success = await this.agentManager.updateAgentStatus(agentId, state, details);
+      const success = await this.agentManager.updateAgentStatus(
+        agentId,
+        state,
+        details
+      );
       if (success) {
-        res.json({ message: 'Agent status updated successfully' });
+        res.json({ message: "Agent status updated successfully" });
       } else {
-        res.status(404).send('Agent not found');
+        res.status(404).send("Agent not found");
       }
     } catch (error) {
       console.error("Error updating agent status:", error);
@@ -310,15 +356,18 @@ export class AgentsController {
     }
   };
 
-  startAgentProcessing = async (req: express.Request, res: express.Response) => {
+  startAgentProcessing = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     const agentId = parseInt(req.params.id);
 
     try {
       const success = await this.agentManager.startAgentProcessing(agentId);
       if (success) {
-        res.json({ message: 'Agent processing started successfully' });
+        res.json({ message: "Agent processing started successfully" });
       } else {
-        res.status(404).send('Agent not found');
+        res.status(404).send("Agent not found");
       }
     } catch (error) {
       console.error("Error starting agent processing:", error);
@@ -326,15 +375,18 @@ export class AgentsController {
     }
   };
 
-  pauseAgentProcessing = async (req: express.Request, res: express.Response) => {
+  pauseAgentProcessing = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     const agentId = parseInt(req.params.id);
 
     try {
       const success = await this.agentManager.pauseAgentProcessing(agentId);
       if (success) {
-        res.json({ message: 'Agent processing paused successfully' });
+        res.json({ message: "Agent processing paused successfully" });
       } else {
-        res.status(404).send('Agent not found');
+        res.status(404).send("Agent not found");
       }
     } catch (error) {
       console.error("Error pausing agent processing:", error);
@@ -346,7 +398,8 @@ export class AgentsController {
     const agentId = parseInt(req.params.id);
 
     try {
-      const results = await sequelize.query(`
+      const results = await sequelize.query(
+        `
         SELECT
           COALESCE(SUM(
             (COALESCE(mu.token_in_count, 0) * COALESCE(CAST(am.configuration#>>'{prices,costInTokensPerMillion}' AS FLOAT), 0) +
@@ -357,37 +410,45 @@ export class AgentsController {
         LEFT JOIN ps_ai_models am ON am_join.ai_model_id = am.id
         LEFT JOIN ps_model_usage mu ON mu.model_id = am.id AND mu.agent_id = a.id
         WHERE a.id = :agentId
-      `, {
-        replacements: { agentId },
-        type: QueryTypes.SELECT
-      });
+      `,
+        {
+          replacements: { agentId },
+          type: QueryTypes.SELECT,
+        }
+      );
 
       const totalCost = (results[0] as { total_cost: string }).total_cost;
       res.json({ totalCost: parseFloat(totalCost).toFixed(2) });
     } catch (error) {
-      console.error('Error calculating agent costs:', error);
-      res.status(500).send('Internal Server Error');
+      console.error("Error calculating agent costs:", error);
+      res.status(500).send("Internal Server Error");
     }
   }
-
-
 
   getAgent = async (req: express.Request, res: express.Response) => {
     const groupId = req.params.id;
 
     if (!groupId) {
-      return res.status(400).send('Group ID is required');
+      return res.status(400).send("Group ID is required");
     }
 
     try {
-      const group = await Group.findByPk(groupId);
+      const group = await Group.findByPk(groupId, {
+        attributes: ["id", "user_id", "configuration"]
+      });
 
       if (!group) {
-        return res.status(404).send('Group not found');
+        return res.status(404).send("Group not found");
       }
 
-      const groupConfig = group.configuration as YpGroupConfiguration;
-      let topLevelAgentId = groupConfig.agents?.topLevelAgentId;
+      console.log(`Fetching top-level agent for group ${group.id} ${group.user_id} ${group.configuration}`);
+
+      let groupConfig = group.configuration as YpGroupConfiguration;
+      let topLevelAgentId = groupConfig
+        ? groupConfig.agents?.topLevelAgentId
+        : undefined;
+
+      console.log(`Top-level agent ID: ${topLevelAgentId}`);
 
       let topLevelAgent: PsAgent | null = null;
       if (topLevelAgentId) {
@@ -395,43 +456,58 @@ export class AgentsController {
       }
 
       if (!topLevelAgent) {
+        if (!group.configuration) {
+          group.configuration = {};
+        }
+        if (!group.configuration.agents) {
+          group.configuration.agents = {};
+        }
+
+        groupConfig = group.configuration as YpGroupConfiguration;
+
         const defaultAgentClassUuid = process.env.CLASS_ID_FOR_TOP_LEVEL_AGENT;
         if (!defaultAgentClassUuid) {
-          return res.status(500).send('Default agent class UUID is not configured');
+          return res
+            .status(500)
+            .send("Default agent class UUID is not configured");
         }
 
         // Create a new top-level agent
-        const agentClass = await PsAgentClass.findOne({ where: { class_base_id: defaultAgentClassUuid } });
+        const agentClass = await PsAgentClass.findOne({
+          where: { class_base_id: defaultAgentClassUuid },
+        });
         if (!agentClass) {
-          return res.status(404).send('Default agent class not found');
-        }
-
-        const defaultAiModel = await PsAiModel.findOne({ where: { configuration: { active: true } } });
-        if (!defaultAiModel) {
-          return res.status(404).send('No active AI model found');
+          return res.status(404).send("Default agent class not found");
         }
 
         const transaction = await sequelize.transaction();
 
+        console.debug(`Creating top-level agent for group ${group.id}`);
+
         try {
-          topLevelAgent = await PsAgent.create({
-            class_id: agentClass.id,
-            user_id: group.user_id,
-            group_id: group.id,
-            configuration: {
-              name: `${group.name} Top-Level Agent`
+          topLevelAgent = await PsAgent.create(
+            {
+              class_id: agentClass.id,
+              user_id: group.user_id,
+              group_id: group.id,
+              configuration: {
+                name: `${group.name} Top-Level Agent`,
+              },
             },
-          }, { transaction });
+            { transaction }
+          );
 
-          await topLevelAgent.addAiModel(defaultAiModel, { transaction });
-
-          group.configuration = {
+          const newConfiguration = {
             ...groupConfig,
             agents: {
               ...groupConfig.agents,
-              topLevelAgentId: topLevelAgent.id
-            }
+              topLevelAgentId: topLevelAgent.id,
+            },
           };
+
+          console.log(JSON.stringify(newConfiguration));
+
+          group.set("configuration", newConfiguration);
           await group.save({ transaction });
 
           await transaction.commit();
@@ -442,23 +518,16 @@ export class AgentsController {
       }
 
       // Fetch the agent with all its associations
-      const fullAgent = await PsAgent.findByPk(topLevelAgent.id, {
-        include: [
-          { model: PsAgentClass, as: 'Class' },
-          { model: PsAiModel, as: 'AiModels' },
-          { model: PsAgent, as: 'SubAgents', include: [{ model: PsAgentClass, as: 'Class' }] },
-          { model: PsAgentConnector, as: 'Connectors', include: [{ model: PsAgentConnectorClass, as: 'Class' }] }
-        ]
-      });
+      const fullAgent = await this.fetchAgentWithSubAgents(topLevelAgent.id);
 
       res.json(fullAgent);
     } catch (error) {
-      console.error('Error in getAgent:', error);
-      res.status(500).send('Internal Server Error');
+      console.error("Error in getAgent:", error);
+      res.status(500).send("Internal Server Error");
     }
   };
 
-  async fetchAgentWithSubAgents(agentId: string) {
+  async fetchAgentWithSubAgents(agentId: number) {
     console.log("Fetching agent with ID:", agentId); // Debug logging
     const agent = await PsAgent.findByPk(agentId, {
       include: [

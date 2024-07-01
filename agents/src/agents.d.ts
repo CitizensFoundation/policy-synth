@@ -306,6 +306,7 @@ interface YpGroupData {
   name: string;
   user_id: number;
   private_access_configuration: YpGroupPrivateAccessConfiguration[];
+  configuration: YpGroupConfiguration;
   created_at: Date;
   updated_at: Date;
 }

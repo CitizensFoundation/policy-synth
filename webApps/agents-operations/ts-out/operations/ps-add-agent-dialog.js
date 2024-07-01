@@ -108,8 +108,9 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
             console.error('Agent name, class, or AI model not selected');
             return;
         }
+        debugger;
         try {
-            const newAgent = await this.api.createAgent(this.agentName, this.selectedAgentClassId, this.selectedAiModelId);
+            const newAgent = await this.api.createAgent(this.agentName, this.selectedAgentClassId, this.selectedAiModelId, this.parentAgentId, this.groupId);
             this.dispatchEvent(new CustomEvent('agent-added', { detail: { agent: newAgent } }));
             this._handleClose();
         }
@@ -133,6 +134,12 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
 __decorate([
     property({ type: Boolean })
 ], PsAddAgentDialog.prototype, "open", void 0);
+__decorate([
+    property({ type: Number })
+], PsAddAgentDialog.prototype, "parentAgentId", void 0);
+__decorate([
+    property({ type: Number })
+], PsAddAgentDialog.prototype, "groupId", void 0);
 __decorate([
     state()
 ], PsAddAgentDialog.prototype, "activeAgentClasses", void 0);

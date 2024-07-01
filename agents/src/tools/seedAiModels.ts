@@ -58,6 +58,10 @@ const openAiGpt4 = await PsAiModel.create({
 await Group.create({
   name: "Example Group",
   user_id: user.id,
+  configuration: {
+    agents: {
+    }
+  },
   private_access_configuration: [
     {
       aiModelId: anthropicSonnet.id,
@@ -85,7 +89,7 @@ const topLevelAgentClassConfig: PsAgentClassAttributesConfiguration = {
 
 await PsAgentClass.create({
   class_base_id: "c375c1fb-58ca-4372-a567-0e02b2c3d479",
-  name: "Operations Agent",
+  name: "Operations",
   version: 1,
   available: true,
   configuration: topLevelAgentClassConfig,

@@ -20,7 +20,7 @@ export declare class AgentsController {
     pauseAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
     getAgentCosts(req: express.Request, res: express.Response): Promise<void>;
     getAgent: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
-    fetchAgentWithSubAgents(agentId: string): Promise<{
+    fetchAgentWithSubAgents(agentId: number): Promise<{
         Class?: PsAgentClassAttributes | undefined;
         parent_agent_id?: number | undefined;
         parentAgent?: PsAgentAttributes | undefined;

@@ -17,12 +17,12 @@ export class OpsServerApi extends BaseChatBotServerApi {
     return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
   }
 
-  public async createAgent(name: string, agentClassId: number, aiModelId: number, groupId?: number): Promise<PsAgentAttributes> {
+  public async createAgent(name: string, agentClassId: number, aiModelId: number, parentAgentId: number, groupId?: number): Promise<PsAgentAttributes> {
     return this.fetchWrapper(
       this.baseUrlPath + this.baseAgentsPath,
       {
         method: 'POST',
-        body: JSON.stringify({ name, agentClassId, aiModelId, groupId }),
+        body: JSON.stringify({ name, agentClassId, aiModelId, parentAgentId, groupId }),
       },
       false
     ) as Promise<PsAgentAttributes>;

@@ -11,10 +11,10 @@ export class OpsServerApi extends BaseChatBotServerApi {
     async getCrt(groupId) {
         return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
     }
-    async createAgent(name, agentClassId, aiModelId, groupId) {
+    async createAgent(name, agentClassId, aiModelId, parentAgentId, groupId) {
         return this.fetchWrapper(this.baseUrlPath + this.baseAgentsPath, {
             method: 'POST',
-            body: JSON.stringify({ name, agentClassId, aiModelId, groupId }),
+            body: JSON.stringify({ name, agentClassId, aiModelId, parentAgentId, groupId }),
         }, false);
     }
     async createConnector(agentId, connectorClassId, name) {

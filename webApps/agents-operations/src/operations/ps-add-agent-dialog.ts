@@ -14,6 +14,9 @@ import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 @customElement('ps-add-agent-dialog')
 export class PsAddAgentDialog extends YpBaseElement {
   @property({ type: Boolean }) open = false;
+  @property({ type: Number }) parentAgentId: number;
+  @property({ type: Number }) groupId: number;
+
   @state() private activeAgentClasses: PsAgentClassAttributes[] = [];
   @state() private activeAiModels: PsAiModelAttributes[] = [];
   @state() private selectedAgentClassId: number | null = null;
@@ -118,11 +121,15 @@ export class PsAddAgentDialog extends YpBaseElement {
       return;
     }
 
+    debugger;
+
     try {
       const newAgent = await this.api.createAgent(
         this.agentName,
         this.selectedAgentClassId,
-        this.selectedAiModelId
+        this.selectedAiModelId,
+        this.parentAgentId,
+        this.groupId
       );
       this.dispatchEvent(
         new CustomEvent('agent-added', { detail: { agent: newAgent } })
