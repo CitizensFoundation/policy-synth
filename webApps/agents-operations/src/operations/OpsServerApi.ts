@@ -16,6 +16,19 @@ export class OpsServerApi extends BaseChatBotServerApi {
   public async getCrt(groupId: number): Promise<LtpCurrentRealityTreeData> {
     return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
   }
+  public async updateAgentConfiguration(
+    agentId: number,
+    updatedConfig: Partial<PsAgentAttributes['configuration']>
+  ): Promise<void> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}${agentId}/configuration`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updatedConfig),
+      },
+      false
+    ) as Promise<void>;
+  }
 
   public async createAgent(name: string, agentClassId: number, aiModelId: number, parentAgentId: number, groupId?: number): Promise<PsAgentAttributes> {
     return this.fetchWrapper(
@@ -249,14 +262,13 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<void>;
   }
 
-  public updateNodeConfiguration(
-    agentId: number,
-    nodeId: number,
+  public async updateNodeConfiguration(
     nodeType: 'agent' | 'connector',
-    updatedConfig: any
+    nodeId: number,
+    updatedConfig: Partial<PsAgentAttributes['configuration'] | PsAgentConnectorAttributes['configuration']>
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseAgentsPath}${agentId}/${nodeType}/${nodeId}/configuration`,
+      this.baseUrlPath + `${this.baseAgentsPath}${nodeId}/${nodeType}/configuration`,
       {
         method: 'PUT',
         body: JSON.stringify(updatedConfig),

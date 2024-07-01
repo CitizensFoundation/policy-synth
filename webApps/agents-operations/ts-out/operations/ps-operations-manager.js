@@ -67,6 +67,51 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             }
         }
     }
+    async handleEditDialogSave(event) {
+        const updatedConfig = event.detail.updatedConfig;
+        if (!this.nodeToEditInfo)
+            return;
+        try {
+            const nodeType = 'Class' in this.nodeToEditInfo &&
+                this.nodeToEditInfo.Class.name.toLowerCase().includes('agent')
+                ? 'agent'
+                : 'connector';
+            const nodeId = this.nodeToEditInfo.id;
+            await this.api.updateNodeConfiguration(nodeType, nodeId, updatedConfig);
+            // Update the local state
+            if (nodeType === 'agent') {
+                this.currentAgent = {
+                    ...this.currentAgent,
+                    configuration: {
+                        ...this.currentAgent.configuration,
+                        ...updatedConfig,
+                    },
+                };
+            }
+            else {
+                // Update the connector in the currentAgent's Connectors array
+                const updatedConnectors = this.currentAgent.Connectors.map(connector => connector.id === nodeId
+                    ? {
+                        ...connector,
+                        configuration: {
+                            ...connector.configuration,
+                            ...updatedConfig,
+                        },
+                    }
+                    : connector);
+                this.currentAgent = {
+                    ...this.currentAgent,
+                    Connectors: updatedConnectors,
+                };
+            }
+            this.requestUpdate();
+            this.showEditNodeDialog = false;
+        }
+        catch (error) {
+            console.error('Failed to update node configuration:', error);
+            // You might want to show an error message to the user here
+        }
+    }
     openEditNodeDialog(event) {
         this.nodeToEditInfo = event.detail.element;
         this.showEditNodeDialog = true;
@@ -137,6 +182,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         <ps-edit-node-dialog
           ?open="${this.showEditNodeDialog}"
           .nodeToEditInfo="${this.nodeToEditInfo}"
+          @save="${this.handleEditDialogSave}"
           @close="${() => (this.showEditNodeDialog = false)}"
         ></ps-edit-node-dialog>
 

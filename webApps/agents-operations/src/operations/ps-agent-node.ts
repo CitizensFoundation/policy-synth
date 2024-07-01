@@ -226,6 +226,7 @@ export class PsAgentNode extends PsOperationsBaseNode {
       element: this.agent,
     });
   }
+
   clickPlayPause() {
     if (this.agent.id == this.currentRunningAgentId) {
       this.fireGlobal('pause-agent', {

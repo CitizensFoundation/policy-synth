@@ -7,13 +7,13 @@ export declare class AgentsController {
     private agentManager;
     constructor(wsClients: Map<string, WebSocket>);
     initializeRoutes(): void;
+    updateNodeConfiguration: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     createAgent: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     createConnector: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     getActiveAiModels: (req: express.Request, res: express.Response) => Promise<void>;
     getActiveAgentClasses: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     getActiveConnectorClasses: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     controlAgent: () => (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
-    updateNodeConfiguration: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     getAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
     updateAgentStatus: (req: express.Request, res: express.Response) => Promise<void>;
     startAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;

@@ -11,6 +11,12 @@ export class OpsServerApi extends BaseChatBotServerApi {
     async getCrt(groupId) {
         return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
     }
+    async updateAgentConfiguration(agentId, updatedConfig) {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/configuration`, {
+            method: 'PUT',
+            body: JSON.stringify(updatedConfig),
+        }, false);
+    }
     async createAgent(name, agentClassId, aiModelId, parentAgentId, groupId) {
         return this.fetchWrapper(this.baseUrlPath + this.baseAgentsPath, {
             method: 'POST',
@@ -131,8 +137,8 @@ export class OpsServerApi extends BaseChatBotServerApi {
             body: JSON.stringify(updatedNode),
         }, false);
     }
-    updateNodeConfiguration(agentId, nodeId, nodeType, updatedConfig) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/${nodeType}/${nodeId}/configuration`, {
+    async updateNodeConfiguration(nodeType, nodeId, updatedConfig) {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${nodeId}/${nodeType}/configuration`, {
             method: 'PUT',
             body: JSON.stringify(updatedConfig),
         }, false);

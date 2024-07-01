@@ -87,10 +87,22 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   override async connectedCallback() {
     super.connectedCallback();
-    this.addEventListener('edit-node', this.openEditNodeDialog as EventListenerOrEventListenerObject);
-    this.addEventListener('add-connector', this.openAddConnectorDialog as EventListenerOrEventListenerObject);
-    this.addEventListener('get-costs', this.fetchAgentCosts as EventListenerOrEventListenerObject);
-    this.addEventListener('add-agent', this.openAddAgentDialog as EventListenerOrEventListenerObject);
+    this.addEventListener(
+      'edit-node',
+      this.openEditNodeDialog as EventListenerOrEventListenerObject
+    );
+    this.addEventListener(
+      'add-connector',
+      this.openAddConnectorDialog as EventListenerOrEventListenerObject
+    );
+    this.addEventListener(
+      'get-costs',
+      this.fetchAgentCosts as EventListenerOrEventListenerObject
+    );
+    this.addEventListener(
+      'add-agent',
+      this.openAddAgentDialog as EventListenerOrEventListenerObject
+    );
   }
 
   async fetchAgentCosts() {
@@ -100,6 +112,57 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
       } catch (error) {
         console.error('Error fetching agent costs:', error);
       }
+    }
+  }
+
+  async handleEditDialogSave(event: CustomEvent) {
+    const updatedConfig = event.detail.updatedConfig;
+    if (!this.nodeToEditInfo) return;
+
+    try {
+      const nodeType =
+        'Class' in this.nodeToEditInfo &&
+        this.nodeToEditInfo.Class.name.toLowerCase().includes('agent')
+          ? 'agent'
+          : 'connector';
+      const nodeId = this.nodeToEditInfo.id;
+
+      await this.api.updateNodeConfiguration(nodeType, nodeId, updatedConfig);
+
+      // Update the local state
+      if (nodeType === 'agent') {
+        this.currentAgent = {
+          ...this.currentAgent!,
+          configuration: {
+            ...this.currentAgent!.configuration,
+            ...updatedConfig,
+          },
+        };
+      } else {
+        // Update the connector in the currentAgent's Connectors array
+        const updatedConnectors = this.currentAgent!.Connectors!.map(
+          connector =>
+            connector.id === nodeId
+              ? {
+                  ...connector,
+                  configuration: {
+                    ...connector.configuration,
+                    ...updatedConfig,
+                  },
+                }
+              : connector
+        );
+        this.currentAgent = {
+          ...this.currentAgent!,
+          Connectors: updatedConnectors,
+        };
+      }
+
+      this.requestUpdate();
+      this.showEditNodeDialog = false;
+    } catch (error) {
+      console.error('Failed to update node configuration:', error);
+      // You might want to show an error message to the user here
     }
   }
 
@@ -179,6 +242,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
         <ps-edit-node-dialog
           ?open="${this.showEditNodeDialog}"
           .nodeToEditInfo="${this.nodeToEditInfo}"
+          @save="${this.handleEditDialogSave}"
           @close="${() => (this.showEditNodeDialog = false)}"
         ></ps-edit-node-dialog>
 
@@ -373,4 +437,3 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     ];
   }
 }
-

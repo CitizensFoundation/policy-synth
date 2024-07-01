@@ -40,7 +40,37 @@ export class AgentsController {
         this.router.get(this.path + "/registry/aiModels", this.getActiveAiModels);
         this.router.post(this.path, this.createAgent);
         this.router.post(this.path + "/:agentId/connectors", this.createConnector);
+        this.router.put(this.path + '/:nodeId/:nodeType/configuration', this.updateNodeConfiguration);
     }
+    updateNodeConfiguration = async (req, res) => {
+        const agentId = parseInt(req.params.agentId);
+        const nodeType = req.params.nodeType;
+        const nodeId = parseInt(req.params.nodeId);
+        const updatedConfig = req.body;
+        try {
+            let node;
+            if (nodeType === 'agent') {
+                node = await PsAgent.findByPk(nodeId);
+            }
+            else if (nodeType === 'connector') {
+                node = await PsAgentConnector.findByPk(nodeId);
+            }
+            if (!node) {
+                return res.status(404).send(`${nodeType} not found`);
+            }
+            // Merge the updated configuration with the existing one
+            node.configuration = {
+                ...node.configuration,
+                ...updatedConfig,
+            };
+            await node.save();
+            res.json({ message: `${nodeType} configuration updated successfully` });
+        }
+        catch (error) {
+            console.error(`Error updating ${nodeType} configuration:`, error);
+            res.status(500).send('Internal Server Error');
+        }
+    };
     createAgent = async (req, res) => {
         const { name, agentClassId, aiModelId, parentAgentId } = req.body;
         if (!agentClassId || !aiModelId) {
@@ -206,35 +236,6 @@ export class AgentsController {
         }
         catch (error) {
             console.error(`Error ${action}ing agent:`, error);
-            res.status(500).send("Internal Server Error");
-        }
-    };
-    updateNodeConfiguration = async (req, res) => {
-        const agentId = parseInt(req.params.agentId);
-        const nodeId = parseInt(req.params.nodeId);
-        const nodeType = req.params.nodeType;
-        const updatedConfig = req.body;
-        try {
-            let node;
-            if (nodeType === "agent") {
-                node = await PsAgent.findByPk(nodeId);
-            }
-            else if (nodeType === "connector") {
-                node = await PsAgentConnector.findByPk(nodeId);
-            }
-            if (!node) {
-                return res.status(404).send(`${nodeType} not found`);
-            }
-            // Update the node's configuration
-            node.configuration = {
-                ...node.configuration,
-                ...updatedConfig,
-            };
-            await node.save();
-            res.json({ message: `${nodeType} configuration updated successfully` });
-        }
-        catch (error) {
-            console.error(`Error updating ${nodeType} configuration:`, error);
             res.status(500).send("Internal Server Error");
         }
     };

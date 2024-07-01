@@ -31,6 +31,7 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     getAgent(): Promise<void>;
     connectedCallback(): Promise<void>;
     fetchAgentCosts(): Promise<void>;
+    handleEditDialogSave(event: CustomEvent): Promise<void>;
     openEditNodeDialog(event: CustomEvent): void;
     openAddConnectorDialog(event: CustomEvent): void;
     openAddAgentDialog(event: CustomEvent): void;
