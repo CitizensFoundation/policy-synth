@@ -60,7 +60,7 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
             label="Select Agent Class"
             @change="${this._handleAgentClassSelection}"
           >
-            ${this.activeAgentClasses.map(agentClass => html `
+            ${this.activeAgentClasses?.map(agentClass => html `
                 <md-select-option value="${agentClass.id}">
                   <div slot="headline">${agentClass.name}</div>
                 </md-select-option>

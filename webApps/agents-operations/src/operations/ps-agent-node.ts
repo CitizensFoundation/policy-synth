@@ -1,5 +1,5 @@
 import { css, html, nothing } from 'lit';
-import { property, customElement, state } from 'lit/decorators.js';
+import { property, query, customElement, state } from 'lit/decorators.js';
 
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
@@ -31,12 +31,24 @@ export class PsAgentNode extends PsOperationsBaseNode {
   @state()
   private menuOpen = false;
 
+  @query('#menuAnchor')
+  menuAnchor!: HTMLElement;
+
+  @query('#agentMenu')
+  agentMenu!: MdMenu;
+
   api: OpsServerApi;
   private statusInterval: number | undefined;
 
   constructor() {
     super();
     this.api = new OpsServerApi();
+  }
+
+  firstUpdated() {
+    if (this.agentMenu && this.menuAnchor) {
+      (this.agentMenu as MdMenu).anchorElement = this.menuAnchor;
+    }
   }
 
   connectedCallback(): void {
@@ -50,10 +62,11 @@ export class PsAgentNode extends PsOperationsBaseNode {
     this.stopStatusUpdates();
   }
 
-  toggleMenu(e: CustomEvent) {
+  toggleMenu(e: Event) {
     e.stopPropagation();
-    this.menuOpen = !this.menuOpen;
-    this.requestUpdate();
+    if (this.agentMenu) {
+      this.agentMenu.open = !this.agentMenu.open;
+    }
   }
 
   addConnector() {
@@ -100,12 +113,6 @@ export class PsAgentNode extends PsOperationsBaseNode {
       css`
         :host {
           display: block;
-        }
-        md-menu {
-          position: absolute;
-          left: 0;
-          top: 100%;
-          z-index: 1000;
         }
 
         md-linear-progress {
@@ -278,9 +285,18 @@ export class PsAgentNode extends PsOperationsBaseNode {
           <div class="statusMessage">${this.latestMessage}</div>
         </div>
         <div class="buttonContainer">
-          <md-icon-button @click="${this.toggleMenu}">
+          <md-icon-button id="menuAnchor" @click="${this.toggleMenu}">
             <md-icon>more_vert</md-icon>
           </md-icon-button>
+          <md-menu id="agentMenu">
+            <md-menu-item @click="${this.stopAgent}"
+              ><div slot="headline">Stop Agent</div></md-menu-item
+            >
+            <md-menu-item @click="${this.addConnector}"
+              ><div slot="headline">Add Connector</div></md-menu-item
+            >
+          </md-menu>
+
           <md-icon-button
             ?disabled="${window.psAppGlobals.currentRunningAgentId &&
             this.agent.id != window.psAppGlobals.currentRunningAgentId}"
@@ -296,22 +312,6 @@ export class PsAgentNode extends PsOperationsBaseNode {
             <md-icon>settings</md-icon>
           </md-icon-button>
         </div>
-        ${this.menuOpen
-          ? html`
-              <md-menu
-                id="menu"
-                .open="${this.menuOpen}"
-                @closed="${() => (this.menuOpen = false)}"
-              >
-                <md-menu-item @click="${this.stopAgent}"
-                  >Stop Agent</md-menu-item
-                >
-                <md-menu-item @click="${this.addConnector}"
-                  >Add Connector</md-menu-item
-                >
-              </md-menu>
-            `
-          : nothing}
       </div>
     `;
   }

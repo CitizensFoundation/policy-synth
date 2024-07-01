@@ -49,7 +49,7 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
             label="Select Connector Class"
             @change="${this._handleConnectorClassSelection}"
           >
-            ${this.activeConnectorClasses.map((connectorClass) => html `
+            ${this.activeConnectorClasses?.map((connectorClass) => html `
                 <md-select-option value="${connectorClass.id}">
                   <div slot="headline">${connectorClass.name}</div>
                 </md-select-option>

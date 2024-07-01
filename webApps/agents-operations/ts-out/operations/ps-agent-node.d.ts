@@ -6,6 +6,7 @@ import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 import { OpsServerApi } from './OpsServerApi.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
+import { MdMenu } from '@material/web/menu/menu.js';
 export declare class PsAgentNode extends PsOperationsBaseNode {
     agent: PsAgentAttributes;
     agentId: number;
@@ -13,12 +14,15 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     private latestMessage;
     private progress;
     private menuOpen;
+    menuAnchor: HTMLElement;
+    agentMenu: MdMenu;
     api: OpsServerApi;
     private statusInterval;
     constructor();
+    firstUpdated(): void;
     connectedCallback(): void;
     disconnectedCallback(): void;
-    toggleMenu(e: CustomEvent): void;
+    toggleMenu(e: Event): void;
     addConnector(): void;
     startStatusUpdates(): void;
     stopStatusUpdates(): void;
@@ -30,6 +34,6 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     editNode(): void;
     clickPlayPause(): void;
     renderProgress(): import("lit").TemplateResult<1>;
-    render(): import("lit").TemplateResult<1> | typeof nothing;
+    render(): typeof nothing | import("lit").TemplateResult<1>;
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

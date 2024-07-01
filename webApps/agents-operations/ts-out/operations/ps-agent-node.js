@@ -5,7 +5,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { css, html, nothing } from 'lit';
-import { property, customElement, state } from 'lit/decorators.js';
+import { property, query, customElement, state } from 'lit/decorators.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/progress/linear-progress.js';
@@ -21,6 +21,11 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         this.menuOpen = false;
         this.api = new OpsServerApi();
     }
+    firstUpdated() {
+        if (this.agentMenu && this.menuAnchor) {
+            this.agentMenu.anchorElement = this.menuAnchor;
+        }
+    }
     connectedCallback() {
         super.connectedCallback();
         this.agent = window.psAppGlobals.getAgentInstance(this.agentId);
@@ -32,8 +37,9 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
     }
     toggleMenu(e) {
         e.stopPropagation();
-        this.menuOpen = !this.menuOpen;
-        this.requestUpdate();
+        if (this.agentMenu) {
+            this.agentMenu.open = !this.agentMenu.open;
+        }
     }
     addConnector() {
         this.fire('add-connector', { agentId: this.agent.id });
@@ -74,12 +80,6 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             css `
         :host {
           display: block;
-        }
-        md-menu {
-          position: absolute;
-          left: 0;
-          top: 100%;
-          z-index: 1000;
         }
 
         md-linear-progress {
@@ -250,9 +250,18 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
           <div class="statusMessage">${this.latestMessage}</div>
         </div>
         <div class="buttonContainer">
-          <md-icon-button @click="${this.toggleMenu}">
+          <md-icon-button id="menuAnchor" @click="${this.toggleMenu}">
             <md-icon>more_vert</md-icon>
           </md-icon-button>
+          <md-menu id="agentMenu">
+            <md-menu-item @click="${this.stopAgent}"
+              ><div slot="headline">Stop Agent</div></md-menu-item
+            >
+            <md-menu-item @click="${this.addConnector}"
+              ><div slot="headline">Add Connector</div></md-menu-item
+            >
+          </md-menu>
+
           <md-icon-button
             ?disabled="${window.psAppGlobals.currentRunningAgentId &&
             this.agent.id != window.psAppGlobals.currentRunningAgentId}"
@@ -268,22 +277,6 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             <md-icon>settings</md-icon>
           </md-icon-button>
         </div>
-        ${this.menuOpen
-            ? html `
-              <md-menu
-                id="menu"
-                .open="${this.menuOpen}"
-                @closed="${() => (this.menuOpen = false)}"
-              >
-                <md-menu-item @click="${this.stopAgent}"
-                  >Stop Agent</md-menu-item
-                >
-                <md-menu-item @click="${this.addConnector}"
-                  >Add Connector</md-menu-item
-                >
-              </md-menu>
-            `
-            : nothing}
       </div>
     `;
     }
@@ -306,6 +299,12 @@ __decorate([
 __decorate([
     state()
 ], PsAgentNode.prototype, "menuOpen", void 0);
+__decorate([
+    query('#menuAnchor')
+], PsAgentNode.prototype, "menuAnchor", void 0);
+__decorate([
+    query('#agentMenu')
+], PsAgentNode.prototype, "agentMenu", void 0);
 PsAgentNode = __decorate([
     customElement('ps-agent-node')
 ], PsAgentNode);
