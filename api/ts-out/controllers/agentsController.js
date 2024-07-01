@@ -334,44 +334,35 @@ export class AgentsController {
         }
         try {
             const group = await Group.findByPk(groupId, {
-                attributes: ["id", "user_id", "configuration"]
+                attributes: ["id", "user_id", "configuration", "name"],
             });
             if (!group) {
                 return res.status(404).send("Group not found");
             }
-            console.log(`Fetching top-level agent for group ${group.id} ${group.user_id} ${group.configuration}`);
-            let groupConfig = group.configuration;
-            let topLevelAgentId = groupConfig
-                ? groupConfig.agents?.topLevelAgentId
-                : undefined;
+            console.log("Initial group:", JSON.stringify(group.toJSON()));
+            //TODO: Check this why does it not work
+            const groupData = group.toJSON();
+            const configuration = groupData.configuration;
+            let topLevelAgentId = configuration?.agents?.topLevelAgentId;
+            //      let topLevelAgentId = group.configuration.agents?.topLevelAgentId;
             console.log(`Top-level agent ID: ${topLevelAgentId}`);
             let topLevelAgent = null;
             if (topLevelAgentId) {
                 topLevelAgent = await PsAgent.findByPk(topLevelAgentId);
             }
             if (!topLevelAgent) {
-                if (!group.configuration) {
-                    group.configuration = {};
-                }
-                if (!group.configuration.agents) {
-                    group.configuration.agents = {};
-                }
-                groupConfig = group.configuration;
                 const defaultAgentClassUuid = process.env.CLASS_ID_FOR_TOP_LEVEL_AGENT;
                 if (!defaultAgentClassUuid) {
-                    return res
-                        .status(500)
-                        .send("Default agent class UUID is not configured");
+                    return res.status(500).send("Default agent class UUID is not configured");
                 }
-                // Create a new top-level agent
                 const agentClass = await PsAgentClass.findOne({
                     where: { class_base_id: defaultAgentClassUuid },
                 });
                 if (!agentClass) {
                     return res.status(404).send("Default agent class not found");
                 }
+                console.log(`Creating top-level agent for group ${group.id}`);
                 const transaction = await sequelize.transaction();
-                console.debug(`Creating top-level agent for group ${group.id}`);
                 try {
                     topLevelAgent = await PsAgent.create({
                         class_id: agentClass.id,
@@ -381,20 +372,35 @@ export class AgentsController {
                             name: `${group.name} Top-Level Agent`,
                         },
                     }, { transaction });
-                    const newConfiguration = {
-                        ...groupConfig,
-                        agents: {
-                            ...groupConfig.agents,
-                            topLevelAgentId: topLevelAgent.id,
+                    console.log("Created top-level agent:", JSON.stringify(topLevelAgent.toJSON()));
+                    // Use a raw query to update the nested JSON field
+                    const [updateCount] = await sequelize.query(`UPDATE groups
+             SET configuration = jsonb_set(
+               COALESCE(configuration, '{}')::jsonb,
+               '{agents,topLevelAgentId}',
+               :topLevelAgentId::jsonb
+             )
+             WHERE id = :groupId`, {
+                        replacements: {
+                            topLevelAgentId: JSON.stringify(topLevelAgent.id),
+                            groupId: group.id,
                         },
-                    };
-                    console.log(JSON.stringify(newConfiguration));
-                    group.set("configuration", newConfiguration);
-                    await group.save({ transaction });
+                        type: QueryTypes.UPDATE,
+                        transaction,
+                    });
+                    console.log(`Updated ${updateCount} group(s)`);
+                    if (updateCount === 0) {
+                        throw new Error(`Failed to update configuration for group ${group.id}`);
+                    }
                     await transaction.commit();
+                    console.log('Transaction committed successfully');
+                    // Fetch the updated group to verify changes
+                    const finalGroup = await Group.findByPk(group.id);
+                    console.log('Final group:', JSON.stringify(finalGroup?.toJSON()));
                 }
                 catch (error) {
                     await transaction.rollback();
+                    console.error('Error creating top-level agent:', error);
                     throw error;
                 }
             }

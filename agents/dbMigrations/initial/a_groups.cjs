@@ -39,5 +39,6 @@ module.exports = {
     });
 
     await queryInterface.addIndex("groups", ["user_id"]);
+
   },
 };
