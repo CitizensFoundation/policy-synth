@@ -88,11 +88,4 @@ export abstract class PsOperationsBaseNode extends PsBaseWithRunningAgentObserve
       element: this,
     });
   }
-
-
-  toggleMenu() {
-    const menu = this.shadowRoot?.getElementById('menu') as Menu;
-    menu.open = !menu.open;
-  }
-
 }

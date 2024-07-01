@@ -25,6 +25,8 @@ export class PsAgentRegistry
 
   declare addAgent: (agent: PsAgentClass) => Promise<void>;
   declare addConnector: (connector: PsAgentConnectorClass) => Promise<void>;
+  declare removeAgent: (agent: PsAgentClass) => Promise<void>;
+  declare removeConnector: (connector: PsAgentConnectorClass) => Promise<void>;
 }
 
 PsAgentRegistry.init(

@@ -12,6 +12,5 @@ export declare abstract class PsOperationsBaseNode extends PsBaseWithRunningAgen
     constructor();
     static get styles(): any[];
     editNode(): void;
-    toggleMenu(): void;
 }
 //# sourceMappingURL=ps-operations-base-node.d.ts.map

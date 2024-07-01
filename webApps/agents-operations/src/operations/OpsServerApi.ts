@@ -17,6 +17,36 @@ export class OpsServerApi extends BaseChatBotServerApi {
     return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
   }
 
+  public async getActiveAiModels(): Promise<PsAiModelAttributes[]> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}registry/aiModels`,
+      {
+        method: 'GET',
+      },
+      false
+    ) as Promise<PsAiModelAttributes[]>;
+  }
+
+  public async getActiveAgentClasses(): Promise<PsAgentClassAttributes[]> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}registry/agentClasses`,
+      {
+        method: 'GET',
+      },
+      false
+    ) as Promise<PsAgentClassAttributes[]>;
+  }
+
+  public async getActiveConnectorClasses(): Promise<PsAgentConnectorClassAttributes[]> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}registry/connectorClasses`,
+      {
+        method: 'GET',
+      },
+      false
+    ) as Promise<PsAgentConnectorClassAttributes[]>;
+  }
+
   public createTree(
     crt: LtpCurrentRealityTreeData
   ): Promise<LtpCurrentRealityTreeData> {

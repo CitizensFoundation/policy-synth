@@ -12,11 +12,14 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     isWorking: boolean;
     private latestMessage;
     private progress;
+    private menuOpen;
     api: OpsServerApi;
     private statusInterval;
     constructor();
     connectedCallback(): void;
     disconnectedCallback(): void;
+    toggleMenu(e: CustomEvent): void;
+    addConnector(): void;
     startStatusUpdates(): void;
     stopStatusUpdates(): void;
     updateAgentStatus(): Promise<void>;
@@ -25,7 +28,6 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     pauseAgent(): Promise<void>;
     stopAgent(): Promise<void>;
     editNode(): void;
-    toggleMenu(): void;
     clickPlayPause(): void;
     renderProgress(): import("lit").TemplateResult<1>;
     render(): import("lit").TemplateResult<1> | typeof nothing;

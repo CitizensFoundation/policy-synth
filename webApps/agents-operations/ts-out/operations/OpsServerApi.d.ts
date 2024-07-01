@@ -4,6 +4,9 @@ export declare class OpsServerApi extends BaseChatBotServerApi {
     constructor(urlPath?: string);
     getAgent(agentId: number): Promise<PsAgentAttributes>;
     getCrt(groupId: number): Promise<LtpCurrentRealityTreeData>;
+    getActiveAiModels(): Promise<PsAiModelAttributes[]>;
+    getActiveAgentClasses(): Promise<PsAgentClassAttributes[]>;
+    getActiveConnectorClasses(): Promise<PsAgentConnectorClassAttributes[]>;
     createTree(crt: LtpCurrentRealityTreeData): Promise<LtpCurrentRealityTreeData>;
     updateNodeChildren(treeId: string | number, nodeId: string, childrenIds: string[]): Promise<void>;
     reviewConfiguration(wsClientId: string, crt: LtpCurrentRealityTreeData): Promise<string>;

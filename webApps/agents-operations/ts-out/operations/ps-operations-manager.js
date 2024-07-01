@@ -5,7 +5,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { css, html, nothing } from 'lit';
-import { property, customElement, query } from 'lit/decorators.js';
+import { property, customElement, query, state } from 'lit/decorators.js';
 import { cache } from 'lit/directives/cache.js';
 import { resolveMarkdown } from '../chatBot/litMarkdown.js';
 import '@material/web/iconbutton/icon-button.js';
@@ -40,6 +40,15 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.activeTabIndex = 0;
         this.isReviewingAgent = false;
         this.isCreatingAgent = false;
+        this.showAddAgentDialog = false;
+        this.activeAgentClasses = [];
+        this.selectedAgentClassId = null;
+        this.activeAiModels = [];
+        this.selectedAiModelId = null;
+        this.showAddConnectorDialog = false;
+        this.selectedAgentId = null;
+        this.activeConnectorClasses = [];
+        this.selectedConnectorClassId = null;
         this.wsMessageListener = undefined;
         this.api = new OpsServerApi();
         //this.setupTestData();
@@ -68,6 +77,92 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.addEventListener('edit-node', this.openEditNodeDialog);
         //TODO: Remove listeners
         this.addEventListener('get-costs', this.fetchAgentCosts);
+        this.addEventListener('open-add-agent-dialog', this.openAddAgentDialog);
+        await this.fetchActiveAgentClasses();
+        await this.fetchActiveAiModels();
+        this.addEventListener('add-connector', this.openAddConnectorDialog);
+        await this.fetchActiveConnectorClasses();
+    }
+    async fetchActiveConnectorClasses() {
+        try {
+            this.activeConnectorClasses = await this.api.getActiveConnectorClasses();
+        }
+        catch (error) {
+            console.error('Error fetching active connector classes:', error);
+        }
+    }
+    openAddConnectorDialog(event) {
+        this.selectedAgentId = event.detail.agentId;
+        this.showAddConnectorDialog = true;
+    }
+    closeAddConnectorDialog() {
+        this.showAddConnectorDialog = false;
+        this.selectedConnectorClassId = null;
+    }
+    handleConnectorClassSelection(e) {
+        const select = e.target;
+        this.selectedConnectorClassId = Number(select.value);
+    }
+    async handleAddConnector() {
+        if (!this.selectedAgentId || !this.selectedConnectorClassId) {
+            console.error('Agent or connector class not selected');
+            return;
+        }
+        try {
+            // TODO: Implement the actual connector creation logic
+            // const newConnector = await this.api.createConnector(this.selectedAgentId, this.selectedConnectorClassId);
+            console.log('New connector created for agent:', this.selectedAgentId, 'with class ID:', this.selectedConnectorClassId);
+            this.closeAddConnectorDialog();
+        }
+        catch (error) {
+            console.error('Error creating new connector:', error);
+        }
+    }
+    renderAddConnectorDialog() {
+        return html `
+      <md-dialog
+        ?open="${this.showAddConnectorDialog}"
+        @closed="${this.closeAddConnectorDialog}"
+      >
+        <div slot="headline">Add New Connector</div>
+        <div slot="content">
+          <md-filled-select
+            label="Select Connector Class"
+            @change="${this.handleConnectorClassSelection}"
+          >
+            ${this.activeConnectorClasses.map(connectorClass => html `
+                <md-select-option value="${connectorClass.id}">
+                  <div slot="headline">${connectorClass.name}</div>
+                </md-select-option>
+              `)}
+          </md-filled-select>
+        </div>
+        <div slot="actions">
+          <md-text-button @click="${this.closeAddConnectorDialog}"
+            >Cancel</md-text-button
+          >
+          <md-filled-button @click="${this.handleAddConnector}"
+            >Add Connector</md-filled-button
+          >
+        </div>
+      </md-dialog>
+    `;
+    }
+    async fetchActiveAiModels() {
+        try {
+            this.activeAiModels = await this.api.getActiveAiModels();
+        }
+        catch (error) {
+            console.error('Error fetching active AI models:', error);
+        }
+    }
+    async fetchActiveAgentClasses() {
+        try {
+            this.activeAgentClasses = await this.api.getActiveAgentClasses();
+        }
+        catch (error) {
+            console.error('Error fetching active agent classes:', error);
+        }
     }
     async fetchAgentCosts() {
         if (this.currentAgentId) {
@@ -339,6 +434,9 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         super.disconnectedCallback();
         this.removeEventListener('open-add-cause-dialog', this.openAddCauseDialog);
         this.removeEventListener('close-add-cause-dialog', this.closeAddCauseDialog);
+        this.removeEventListener('edit-node', this.openEditNodeDialog);
+        this.removeEventListener('get-costs', this.fetchAgentCosts);
+        this.removeEventListener('open-add-agent-dialog', this.openAddAgentDialog);
     }
     camelCaseToHumanReadable(str) {
         // Split the string at each uppercase letter and join with space
@@ -353,7 +451,10 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         md-tabs {
           margin-bottom: 64px;
         }
-
+        md-filled-select {
+          width: 100%;
+          margin-bottom: 16px;
+        }
         .nodeEditHeadlineImage {
           max-width: 100px;
           margin-right: 16px;
@@ -496,6 +597,63 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         }
       `,
         ];
+    }
+    openAddAgentDialog() {
+        this.showAddAgentDialog = true;
+    }
+    closeAddAgentDialog() {
+        this.showAddAgentDialog = false;
+        this.selectedAgentClassId = null;
+    }
+    handleAgentClassSelection(e) {
+        const select = e.target;
+        this.selectedAgentClassId = Number(select.value);
+    }
+    async handleAddAgent() {
+        if (!this.selectedAgentClassId || !this.selectedAiModelId) {
+            console.error('Agent class or AI model not selected');
+            return;
+        }
+        try {
+            // TODO: Implement the actual agent creation logic
+            // const newAgent = await this.api.createAgent(this.selectedAgentClassId, this.selectedAiModelId);
+            // this.agents.push(newAgent);
+            console.log('New agent created with class ID:', this.selectedAgentClassId, 'and AI model ID:', this.selectedAiModelId);
+            this.closeAddAgentDialog();
+        }
+        catch (error) {
+            console.error('Error creating new agent:', error);
+        }
+    }
+    renderAddAgentDialog() {
+        return html `
+      <md-dialog
+        ?open="${this.showAddAgentDialog}"
+        @closed="${this.closeAddAgentDialog}"
+      >
+        <div slot="headline">Add New Agent</div>
+        <div slot="content">
+          <md-filled-select
+            label="Select Agent Class"
+            @change="${this.handleAgentClassSelection}"
+          >
+            ${this.activeAgentClasses.map(agentClass => html `
+                <md-select-option value="${agentClass.id}">
+                  <div slot="headline">${agentClass.name}</div>
+                </md-select-option>
+              `)}
+          </md-filled-select>
+        </div>
+        <div slot="actions">
+          <md-text-button @click="${this.closeAddAgentDialog}"
+            >Cancel</md-text-button
+          >
+          <md-filled-button @click="${this.handleAddAgent}"
+            >Add Agent</md-filled-button
+          >
+        </div>
+      </md-dialog>
+    `;
     }
     tabChanged() {
         this.activeTabIndex = this.$$('#tabBar').activeTabIndex;
@@ -773,7 +931,8 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         else {
             return cache(html `
         ${this.renderAddCauseDialog()} ${this.renderEditNodeDialog()}
-        ${this.renderDeleteConfirmationDialog()}
+        ${this.renderDeleteConfirmationDialog()} ${this.renderAddAgentDialog()}
+        ${this.renderAddConnectorDialog()}
         <md-tabs id="tabBar" @change="${this.tabChanged}">
           <md-primary-tab id="configure-tab" aria-controls="configure-panel">
             <md-icon slot="icon">support_agent</md-icon>
@@ -837,6 +996,33 @@ __decorate([
 __decorate([
     query('ps-operations-view')
 ], PsOperationsManager.prototype, "agentElement", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "showAddAgentDialog", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "activeAgentClasses", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "selectedAgentClassId", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "activeAiModels", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "selectedAiModelId", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "showAddConnectorDialog", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "selectedAgentId", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "activeConnectorClasses", void 0);
+__decorate([
+    state()
+], PsOperationsManager.prototype, "selectedConnectorClassId", void 0);
 __decorate([
     property({ type: Object })
 ], PsOperationsManager.prototype, "nodeToAddCauseTo", void 0);

@@ -1,3 +1,5 @@
+//TODO: Make agentRegistry secure with access control through communities/domains
+//TODO: Make the angentRegistry support many instances of the agent classes running (counters?)
 import { PolicySynthOperationsAgent } from "./operationsAgent.js";
 import { PsAgentRegistry } from "../dbModels/agentRegistry.js";
 import { PsAgentClass } from "../dbModels/agentClass.js";
@@ -7,6 +9,8 @@ import { connectToDatabase } from "../dbModels/sequelize.js";
 export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
     agentsToRun = [];
     agentRegistry = null;
+    registeredAgentClasses = [];
+    registeredConnectorClasses = [];
     constructor() {
         super({}, undefined, 0, 100);
         if (!process.env.YP_USER_ID_FOR_AGENT_CREATION) {
@@ -26,12 +30,11 @@ export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
             await this.registerAgent(agentQueue);
             this.logger.info(`Agent ${agentQueue.agentQueueName} is ready and listening for jobs`);
         }
-        this.logger.info("All agents are set up and running");
-        this.startRenewalProcess();
+        await this.registerConnectors();
+        this.logger.info("All agents and connectors are set up and running");
     }
     inspectDynamicMethods(obj, className) {
         console.log(`Inspecting methods for ${className}:`);
-        // Get all property names, including non-enumerable ones
         const propertyNames = Object.getOwnPropertyNames(Object.getPrototypeOf(obj));
         propertyNames.forEach((name) => {
             const property = obj[name];
@@ -39,7 +42,6 @@ export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
                 console.log(`  - ${name}`);
             }
         });
-        // Check for any enumerable properties that might have been added dynamically
         Object.keys(obj).forEach((key) => {
             if (typeof obj[key] === "function") {
                 console.log(`  - ${key} (dynamically added)`);
@@ -61,7 +63,27 @@ export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
             throw new Error(`Agent class not found in database for ${agentClassInfo.name}`);
         }
         await this.agentRegistry.addAgent(agentClass);
+        this.registeredAgentClasses.push(agentClass);
         this.logger.info(`Registered agent: ${agentClassInfo.name}`);
+    }
+    async registerConnectors() {
+        if (!this.agentRegistry) {
+            throw new Error("Agent registry not initialized");
+        }
+        for (const connectorClass of this.connectorClasses) {
+            const connectorClassInstance = await PsAgentConnectorClass.findOne({
+                where: {
+                    class_base_id: connectorClass.class_base_id,
+                    version: connectorClass.version
+                },
+            });
+            if (!connectorClassInstance) {
+                throw new Error(`Connector class not found in database for ${connectorClass.name}`);
+            }
+            await this.agentRegistry.addConnector(connectorClassInstance);
+            this.registeredConnectorClasses.push(connectorClassInstance);
+            this.logger.info(`Registered connector: ${connectorClass.name}`);
+        }
     }
     async getOrCreateAgentRegistry() {
         const [registry, created] = await PsAgentRegistry.findOrCreate({
@@ -79,22 +101,6 @@ export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
         }
         return registry;
     }
-    startRenewalProcess() {
-        setInterval(() => {
-            this.renewRegistration().catch((error) => {
-                this.logger.error("Error renewing agent registration:", error);
-            });
-        }, 30000); // 30 seconds
-    }
-    async renewRegistration() {
-        if (!this.agentRegistry) {
-            throw new Error("Agent registry not initialized");
-        }
-        // Update the timestamp to show the registration is still active
-        await this.agentRegistry.update({ updated_at: new Date() });
-        this.logger.info("Renewed agent registration");
-    }
-    // New method for creating agent classes
     async createAgentClassesIfNeeded() {
         for (const agentClass of this.agentClasses) {
             const [instance, created] = await PsAgentClass.findOrCreate({
@@ -112,7 +118,6 @@ export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
             }
         }
     }
-    // New method for creating connector classes
     async createConnectorClassesIfNeeded() {
         for (const connectorClass of this.connectorClasses) {
             const [instance, created] = await PsAgentConnectorClass.findOrCreate({
@@ -120,7 +125,6 @@ export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
                     class_base_id: connectorClass.class_base_id,
                     version: connectorClass.version,
                 },
-                //TODO: Check this
                 //@ts-ignore
                 defaults: {
                     ...connectorClass,
@@ -146,8 +150,14 @@ export class PsBaseAgentRunner extends PolicySynthOperationsAgent {
         process.on("SIGINT", async () => {
             this.logger.info("Shutting down gracefully...");
             if (this.agentRegistry) {
-                await this.agentRegistry.destroy();
-                this.logger.info("Unregistered agents");
+                for (const agentClass of this.registeredAgentClasses) {
+                    await this.agentRegistry.removeAgent(agentClass);
+                    this.logger.info(`Unregistered agent: ${agentClass.name}`);
+                }
+                for (const connectorClass of this.registeredConnectorClasses) {
+                    await this.agentRegistry.removeConnector(connectorClass);
+                    this.logger.info(`Unregistered connector: ${connectorClass.name}`);
+                }
             }
             process.exit(0);
         });

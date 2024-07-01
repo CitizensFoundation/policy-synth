@@ -74,10 +74,6 @@ let PsOperationsBaseNode = class PsOperationsBaseNode extends PsBaseWithRunningA
             element: this,
         });
     }
-    toggleMenu() {
-        const menu = this.shadowRoot?.getElementById('menu');
-        menu.open = !menu.open;
-    }
 };
 __decorate([
     property({ type: String })

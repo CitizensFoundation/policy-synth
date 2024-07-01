@@ -18,6 +18,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         super();
         this.isWorking = false;
         this.latestMessage = '';
+        this.menuOpen = false;
         this.api = new OpsServerApi();
     }
     connectedCallback() {
@@ -28,6 +29,15 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
     disconnectedCallback() {
         super.disconnectedCallback();
         this.stopStatusUpdates();
+    }
+    toggleMenu(e) {
+        e.stopPropagation();
+        this.menuOpen = !this.menuOpen;
+        this.requestUpdate();
+    }
+    addConnector() {
+        this.fire('add-connector', { agentId: this.agent.id });
+        this.menuOpen = false;
     }
     startStatusUpdates() {
         this.updateAgentStatus();
@@ -45,7 +55,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
                 this.isWorking = status.state === 'running';
                 this.progress = status.progress;
                 this.latestMessage = status.messages[status.messages.length - 1] || '';
-                if (this.latestMessage.indexOf("Agent completed") > -1) {
+                if (this.latestMessage.indexOf('Agent completed') > -1) {
                     this.isWorking = false;
                     this.stopAgent();
                     this.requestUpdate();
@@ -64,6 +74,12 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             css `
         :host {
           display: block;
+        }
+        md-menu {
+          position: absolute;
+          left: 0;
+          top: 100%;
+          z-index: 1000;
         }
 
         md-linear-progress {
@@ -183,10 +199,6 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             element: this.agent,
         });
     }
-    toggleMenu() {
-        const menu = this.shadowRoot?.getElementById('menu');
-        menu.open = !menu.open;
-    }
     clickPlayPause() {
         if (this.agent.id == this.currentRunningAgentId) {
             this.fireGlobal('pause-agent', {
@@ -211,8 +223,8 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         else {
             const progress = Math.min(1, Math.max(0, this.progress / 100));
             return html `<md-linear-progress
-          value="${progress}"
-        ></md-linear-progress>`;
+        value="${progress}"
+      ></md-linear-progress>`;
         }
     }
     render() {
@@ -256,10 +268,22 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
             <md-icon>settings</md-icon>
           </md-icon-button>
         </div>
-        <md-menu id="menu">
-          <md-menu-item @click="${this.stopAgent}">Stop Agent</md-menu-item>
-          <!-- Add more menu items as needed -->
-        </md-menu>
+        ${this.menuOpen
+            ? html `
+              <md-menu
+                id="menu"
+                .open="${this.menuOpen}"
+                @closed="${() => (this.menuOpen = false)}"
+              >
+                <md-menu-item @click="${this.stopAgent}"
+                  >Stop Agent</md-menu-item
+                >
+                <md-menu-item @click="${this.addConnector}"
+                  >Add Connector</md-menu-item
+                >
+              </md-menu>
+            `
+            : nothing}
       </div>
     `;
     }
@@ -279,6 +303,9 @@ __decorate([
 __decorate([
     state()
 ], PsAgentNode.prototype, "progress", void 0);
+__decorate([
+    state()
+], PsAgentNode.prototype, "menuOpen", void 0);
 PsAgentNode = __decorate([
     customElement('ps-agent-node')
 ], PsAgentNode);

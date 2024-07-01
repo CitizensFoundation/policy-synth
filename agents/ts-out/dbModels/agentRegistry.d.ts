@@ -14,6 +14,8 @@ export declare class PsAgentRegistry extends Model<PsAgentRegistryAttributes, Ps
     Connectors?: PsAgentConnectorClassAttributes[];
     addAgent: (agent: PsAgentClass) => Promise<void>;
     addConnector: (connector: PsAgentConnectorClass) => Promise<void>;
+    removeAgent: (agent: PsAgentClass) => Promise<void>;
+    removeConnector: (connector: PsAgentConnectorClass) => Promise<void>;
 }
 export {};
 //# sourceMappingURL=agentRegistry.d.ts.map

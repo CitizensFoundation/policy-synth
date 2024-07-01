@@ -11,6 +11,21 @@ export class OpsServerApi extends BaseChatBotServerApi {
     async getCrt(groupId) {
         return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
     }
+    async getActiveAiModels() {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}registry/aiModels`, {
+            method: 'GET',
+        }, false);
+    }
+    async getActiveAgentClasses() {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}registry/agentClasses`, {
+            method: 'GET',
+        }, false);
+    }
+    async getActiveConnectorClasses() {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}registry/connectorClasses`, {
+            method: 'GET',
+        }, false);
+    }
     createTree(crt) {
         return this.fetchWrapper(this.baseUrlPath + `/crt`, {
             method: 'POST',

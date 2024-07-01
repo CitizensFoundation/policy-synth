@@ -11,7 +11,8 @@ import {
   PsModelUsage,
   PsAiModel,
   PsAgentConnectorClass,
-  sequelize
+  sequelize,
+  PsAgentRegistry
 } from "../models/index.js";
 import { AgentManagerService } from "../operations/agentManager.js";
 import { Queue } from "bullmq";
@@ -52,7 +53,67 @@ export class AgentsController {
     this.router.post(this.path + "/:id/control", this.controlAgent());
     this.router.get(this.path + "/:id/status", this.getAgentStatus);
     this.router.get(this.path + "/:id/costs", this.getAgentCosts);
+    this.router.get(this.path + "/registry/agentClasses", this.getActiveAgentClasses);
+    this.router.get(this.path + "/registry/connectorClasses", this.getActiveConnectorClasses);
+    this.router.get(this.path + "/registry/aiModels", this.getActiveAiModels);
   }
+
+  getActiveAiModels = async (req: express.Request, res: express.Response) => {
+    try {
+      const activeAiModels = await PsAiModel.findAll({
+        where: { 'configuration.active': true }
+      });
+
+      res.json(activeAiModels);
+    } catch (error) {
+      console.error("Error fetching active AI models:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  getActiveAgentClasses = async (req: express.Request, res: express.Response) => {
+    try {
+      const registry = await PsAgentRegistry.findOne({
+        include: [{
+          model: PsAgentClass,
+          as: 'Agents',
+          where: { available: true },
+          through: { attributes: [] }
+        }]
+      });
+
+      if (!registry) {
+        return res.status(404).send('Agent registry not found');
+      }
+
+      res.json(registry.Agents);
+    } catch (error) {
+      console.error("Error fetching active agent classes:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  getActiveConnectorClasses = async (req: express.Request, res: express.Response) => {
+    try {
+      const registry = await PsAgentRegistry.findOne({
+        include: [{
+          model: PsAgentConnectorClass,
+          as: 'Connectors',
+          where: { available: true },
+          through: { attributes: [] }
+        }]
+      });
+
+      if (!registry) {
+        return res.status(404).send('Agent registry not found');
+      }
+
+      res.json(registry.Connectors);
+    } catch (error) {
+      console.error("Error fetching active connector classes:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
 
   controlAgent = () => async (req: express.Request, res: express.Response) => {
     const agentId = parseInt(req.params.id);
