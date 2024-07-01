@@ -115,6 +115,21 @@ export class PsAgentNode extends PsOperationsBaseNode {
           display: block;
         }
 
+        :host {
+          display: block;
+          position: relative;
+        }
+
+        .mainContainer {
+          position: relative;
+        }
+
+        md-menu {
+          --md-menu-container-color: var(--md-sys-color-surface-container);
+          --md-menu-container-elevation: 2;
+          z-index: 2000;
+        }
+
         md-linear-progress {
           margin: 16px;
           margin-bottom: 8px;
@@ -288,7 +303,7 @@ export class PsAgentNode extends PsOperationsBaseNode {
           <md-icon-button id="menuAnchor" @click="${this.toggleMenu}">
             <md-icon>more_vert</md-icon>
           </md-icon-button>
-          <md-menu id="agentMenu">
+          <md-menu id="agentMenu" positioning="popover">
             <md-menu-item @click="${this.stopAgent}"
               ><div slot="headline">Stop Agent</div></md-menu-item
             >
