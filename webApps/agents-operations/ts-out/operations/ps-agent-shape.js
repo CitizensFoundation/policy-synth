@@ -1,5 +1,19 @@
 import { dia, shapes, util, V } from '@joint/core';
+import { OpsServerApi } from './OpsServerApi';
+const api = new OpsServerApi();
 export class AgentsShapeView extends dia.ElementView {
+    constructor() {
+        super(...arguments);
+        this.updateNodePosition = util.debounce(() => {
+            const nodeType = this.model.attributes.nodeType;
+            const nodeId = nodeType === 'agent' ? this.model.attributes.agentId : this.model.attributes.connectorId;
+            const position = this.model.position();
+            api.updateNodeConfiguration(nodeType, nodeId, {
+                graphPosX: position.x,
+                graphPosY: position.y
+            });
+        }, 500);
+    }
     render() {
         super.render();
         const htmlMarkup = this.model.get('markup');
@@ -43,6 +57,8 @@ export class AgentsShapeView extends dia.ElementView {
             // Force layout recalculation and repaint
             foreignObject.getBoundingClientRect();
         }, 0); // A timeout of 0 ms defers the execution until the browser has finished other processing
+        // Add event listener for position changes
+        this.listenTo(this.model, 'change:position', this.updateNodePosition);
         this.update();
         return this;
     }
