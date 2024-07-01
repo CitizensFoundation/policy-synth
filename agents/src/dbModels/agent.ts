@@ -37,7 +37,7 @@ export class PsAgent
   declare Connectors?: PsAgentConnectorAttributes[];
   declare AiModels?: PsAiModelAttributes[];
 
-  declare addConnector: (connector: PsAgentConnector) => Promise<void>;
+  declare addConnector: (connector: PsAgentConnector, obj?: any | undefined) => Promise<void>;
   declare addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
   declare getConnectors: () => Promise<PsAgentConnector[]>;
   declare setConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
@@ -49,7 +49,7 @@ export class PsAgent
   declare setSubAgents: (agents: PsAgent[]) => Promise<void>;
   declare removeSubAgents: (agents: PsAgent[]) => Promise<void>;
 
-  declare addAiModel: (model: PsAiModel) => Promise<void>;
+  declare addAiModel: (model: PsAiModel, obj?: any | undefined) => Promise<void>;
   declare addAiModels: (models: PsAiModel[]) => Promise<void>;
   declare getAiModels: () => Promise<PsAiModel[]>;
   declare setAiModels: (models: PsAiModel[]) => Promise<void>;

@@ -38,7 +38,87 @@ export class AgentsController {
         this.router.get(this.path + "/registry/agentClasses", this.getActiveAgentClasses);
         this.router.get(this.path + "/registry/connectorClasses", this.getActiveConnectorClasses);
         this.router.get(this.path + "/registry/aiModels", this.getActiveAiModels);
+        this.router.post(this.path, this.createAgent);
+        this.router.post(this.path + "/:agentId/connectors", this.createConnector);
     }
+    createAgent = async (req, res) => {
+        const { agentClassId, aiModelId } = req.body;
+        if (!agentClassId || !aiModelId) {
+            return res.status(400).send('Agent class ID and AI model ID are required');
+        }
+        const transaction = await sequelize.transaction();
+        try {
+            const agentClass = await PsAgentClass.findByPk(agentClassId);
+            const aiModel = await PsAiModel.findByPk(aiModelId);
+            if (!agentClass || !aiModel) {
+                await transaction.rollback();
+                return res.status(404).send('Agent class or AI model not found');
+            }
+            const newAgent = await PsAgent.create({
+                class_id: agentClassId,
+                user_id: 1, //TODO: Make dynamic
+                group_id: req.body.groupId, // You might want to add this to the request body
+                configuration: {},
+            }, { transaction });
+            await newAgent.addAiModel(aiModel, { transaction });
+            await transaction.commit();
+            // Fetch the created agent with its associations
+            const createdAgent = await PsAgent.findByPk(newAgent.id, {
+                include: [
+                    { model: PsAgentClass, as: 'Class' },
+                    { model: PsAiModel, as: 'AiModels' }
+                ]
+            });
+            res.status(201).json(createdAgent);
+        }
+        catch (error) {
+            await transaction.rollback();
+            console.error('Error creating agent:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    };
+    createConnector = async (req, res) => {
+        const { agentId } = req.params;
+        const { connectorClassId, name } = req.body;
+        if (!agentId || !connectorClassId || !name) {
+            return res.status(400).send('Agent ID, connector class ID, and name are required');
+        }
+        const transaction = await sequelize.transaction();
+        try {
+            const agent = await PsAgent.findByPk(agentId);
+            const connectorClass = await PsAgentConnectorClass.findByPk(connectorClassId);
+            if (!agent || !connectorClass) {
+                await transaction.rollback();
+                return res.status(404).send('Agent or connector class not found');
+            }
+            const newConnector = await PsAgentConnector.create({
+                class_id: connectorClassId,
+                user_id: 1, //TODO: Make dynamic
+                group_id: agent.group_id,
+                configuration: {
+                    name: name,
+                    graphPosX: 200,
+                    graphPosY: 200,
+                    permissionNeeded: PsAgentConnectorPermissionTypes.ReadWrite
+                },
+            }, { transaction });
+            await agent.addConnector(newConnector, { transaction });
+            await transaction.commit();
+            // Fetch the created connector with its associations
+            const createdConnector = await PsAgentConnector.findByPk(newConnector.id, {
+                include: [
+                    { model: PsAgentConnectorClass, as: 'Class' },
+                    { model: PsAgent, as: 'Agent' }
+                ]
+            });
+            res.status(201).json(createdConnector);
+        }
+        catch (error) {
+            await transaction.rollback();
+            console.error('Error creating connector:', error);
+            res.status(500).send('Internal Server Error');
+        }
+    };
     getActiveAiModels = async (req, res) => {
         try {
             const activeAiModels = await PsAiModel.findAll({
@@ -235,14 +315,75 @@ export class AgentsController {
         }
     }
     getAgent = async (req, res) => {
-        const agentId = req.params.id;
+        const groupId = req.params.id;
+        if (!groupId) {
+            return res.status(400).send('Group ID is required');
+        }
         try {
-            const agent = await this.fetchAgentWithSubAgents(agentId);
-            res.json(agent);
+            const group = await Group.findByPk(groupId);
+            if (!group) {
+                return res.status(404).send('Group not found');
+            }
+            const groupConfig = group.configuration;
+            let topLevelAgentId = groupConfig.agents?.topLevelAgentId;
+            let topLevelAgent = null;
+            if (topLevelAgentId) {
+                topLevelAgent = await PsAgent.findByPk(topLevelAgentId);
+            }
+            if (!topLevelAgent) {
+                const defaultAgentClassUuid = process.env.CLASS_ID_FOR_TOP_LEVEL_AGENT;
+                if (!defaultAgentClassUuid) {
+                    return res.status(500).send('Default agent class UUID is not configured');
+                }
+                // Create a new top-level agent
+                const agentClass = await PsAgentClass.findOne({ where: { class_base_id: defaultAgentClassUuid } });
+                if (!agentClass) {
+                    return res.status(404).send('Default agent class not found');
+                }
+                const defaultAiModel = await PsAiModel.findOne({ where: { configuration: { active: true } } });
+                if (!defaultAiModel) {
+                    return res.status(404).send('No active AI model found');
+                }
+                const transaction = await sequelize.transaction();
+                try {
+                    topLevelAgent = await PsAgent.create({
+                        class_id: agentClass.id,
+                        user_id: group.user_id,
+                        group_id: group.id,
+                        configuration: {
+                            name: `${group.name} Top-Level Agent`
+                        },
+                    }, { transaction });
+                    await topLevelAgent.addAiModel(defaultAiModel, { transaction });
+                    group.configuration = {
+                        ...groupConfig,
+                        agents: {
+                            ...groupConfig.agents,
+                            topLevelAgentId: topLevelAgent.id
+                        }
+                    };
+                    await group.save({ transaction });
+                    await transaction.commit();
+                }
+                catch (error) {
+                    await transaction.rollback();
+                    throw error;
+                }
+            }
+            // Fetch the agent with all its associations
+            const fullAgent = await PsAgent.findByPk(topLevelAgent.id, {
+                include: [
+                    { model: PsAgentClass, as: 'Class' },
+                    { model: PsAiModel, as: 'AiModels' },
+                    { model: PsAgent, as: 'SubAgents', include: [{ model: PsAgentClass, as: 'Class' }] },
+                    { model: PsAgentConnector, as: 'Connectors', include: [{ model: PsAgentConnectorClass, as: 'Class' }] }
+                ]
+            });
+            res.json(fullAgent);
         }
         catch (error) {
-            console.error("Error fetching agent:", error);
-            res.status(500).send("Internal Server Error");
+            console.error('Error in getAgent:', error);
+            res.status(500).send('Internal Server Error');
         }
     };
     async fetchAgentWithSubAgents(agentId) {

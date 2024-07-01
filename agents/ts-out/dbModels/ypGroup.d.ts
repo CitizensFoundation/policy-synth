@@ -8,6 +8,7 @@ export declare class Group extends Model<YpGroupData, YpGroupDataCreationAttribu
     created_at: Date;
     updated_at: Date;
     private_access_configuration: YpGroupPrivateAccessConfiguration[];
+    configuration: YpGroupConfiguration;
 }
 export {};
 //# sourceMappingURL=ypGroup.d.ts.map

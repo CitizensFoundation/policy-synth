@@ -5,11 +5,23 @@ export class OpsServerApi extends BaseChatBotServerApi {
         this.baseAgentsPath = '/agents/';
         this.baseUrlPath = urlPath;
     }
-    async getAgent(agentId) {
-        return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}`, {}, false));
+    async getAgent(groupId) {
+        return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
     }
     async getCrt(groupId) {
         return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
+    }
+    async createAgent(name, agentClassId, aiModelId, groupId) {
+        return this.fetchWrapper(this.baseUrlPath + this.baseAgentsPath, {
+            method: 'POST',
+            body: JSON.stringify({ name, agentClassId, aiModelId, groupId }),
+        }, false);
+    }
+    async createConnector(agentId, connectorClassId, name) {
+        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/connectors`, {
+            method: 'POST',
+            body: JSON.stringify({ connectorClassId, name }),
+        }, false);
     }
     async getActiveAiModels() {
         return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}registry/aiModels`, {

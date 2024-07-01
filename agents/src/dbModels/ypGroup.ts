@@ -14,6 +14,7 @@ export class Group
   declare created_at: Date;
   declare updated_at: Date;
   declare private_access_configuration: YpGroupPrivateAccessConfiguration[];
+  declare configuration: YpGroupConfiguration;
 }
 
 Group.init(

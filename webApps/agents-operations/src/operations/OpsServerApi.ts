@@ -9,12 +9,34 @@ export class OpsServerApi extends BaseChatBotServerApi {
     this.baseUrlPath = urlPath;
   }
 
-  public async getAgent(agentId: number): Promise<PsAgentAttributes> {
-    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}`,{}, false)) as unknown as PsAgentAttributes;
+  public async getAgent(groupId: number): Promise<PsAgentAttributes> {
+    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as PsAgentAttributes;
   }
 
   public async getCrt(groupId: number): Promise<LtpCurrentRealityTreeData> {
     return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
+  }
+
+  public async createAgent(name: string, agentClassId: number, aiModelId: number, groupId?: number): Promise<PsAgentAttributes> {
+    return this.fetchWrapper(
+      this.baseUrlPath + this.baseAgentsPath,
+      {
+        method: 'POST',
+        body: JSON.stringify({ name, agentClassId, aiModelId, groupId }),
+      },
+      false
+    ) as Promise<PsAgentAttributes>;
+  }
+
+  public async createConnector(agentId: number, connectorClassId: number, name: string): Promise<PsAgentConnectorAttributes> {
+    return this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}${agentId}/connectors`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ connectorClassId, name }),
+      },
+      false
+    ) as Promise<PsAgentConnectorAttributes>;
   }
 
   public async getActiveAiModels(): Promise<PsAiModelAttributes[]> {

@@ -7,6 +7,8 @@ export declare class AgentsController {
     private agentManager;
     constructor(wsClients: Map<string, WebSocket>);
     initializeRoutes(): void;
+    createAgent: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
+    createConnector: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     getActiveAiModels: (req: express.Request, res: express.Response) => Promise<void>;
     getActiveAgentClasses: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     getActiveConnectorClasses: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
@@ -17,7 +19,7 @@ export declare class AgentsController {
     startAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
     pauseAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
     getAgentCosts(req: express.Request, res: express.Response): Promise<void>;
-    getAgent: (req: express.Request, res: express.Response) => Promise<void>;
+    getAgent: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     fetchAgentWithSubAgents(agentId: string): Promise<{
         Class?: PsAgentClassAttributes | undefined;
         parent_agent_id?: number | undefined;

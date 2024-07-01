@@ -1,9 +1,6 @@
 import { PropertyValueMap, css, html, nothing } from 'lit';
 import { property, customElement, query, state } from 'lit/decorators.js';
 
-import { cache } from 'lit/directives/cache.js';
-import { resolveMarkdown } from '../chatBot/litMarkdown.js';
-
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/linear-progress.js';
 import '@material/web/tabs/tabs.js';
@@ -11,36 +8,21 @@ import '@material/web/tabs/primary-tab.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/button/filled-tonal-button.js';
-import '@material/web/dialog/dialog.js';
-import '@material/web/button/text-button.js';
-import '@material/web/checkbox/checkbox.js';
-import '@material/web/menu/menu.js';
-import '@material/web/menu/menu-item.js';
 
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
-
-import '@material/web/button/filled-button.js';
-
 import { MdTabs } from '@material/web/tabs/tabs.js';
 
 import './ps-operations-view.js';
 import './OpsServerApi.js';
 import { OpsServerApi } from './OpsServerApi.js';
 
-import './chat/agent-chat-assistant.js';
-import { MdDialog } from '@material/web/dialog/dialog.js';
-import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
+import './ps-edit-node-dialog.js';
+import './ps-add-agent-dialog.js';
+import './ps-add-connector-dialog.js';
+
 import { PsOperationsView } from './ps-operations-view.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
-import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
-
-import { PsOperationsBaseNode } from './ps-operations-base-node.js';
-import { YpStructuredQuestionEdit } from '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
-
-const TESTING = false;
-
-const nodeTypes = ['agent', 'connector'];
 
 @customElement('ps-operations-manager')
 export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
@@ -59,79 +41,42 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
   @property({ type: Object })
   nodeToEditInfo: PsAgentAttributes | PsAgentConnectorAttributes | undefined;
 
-  @property({ type: Object })
-  nodeToEdit: PsOperationsBaseNode | undefined;
-
-  @property({ type: Array })
-  allCausesExceptCurrentToEdit: PsOperationsBaseNode[] = [];
-
-  @property({ type: Boolean })
-  showDeleteConfirmation = false;
-
   @property({ type: Number })
   activeTabIndex = 0;
 
-  @property({ type: String })
-  currentlySelectedCauseIdToAddAsChild: string | undefined;
-
-  @property({ type: String })
-  AIConfigReview: string | undefined;
+  @property({ type: Boolean })
+  showEditNodeDialog = false;
 
   @property({ type: Boolean })
-  isReviewingAgent = false;
+  showAddAgentDialog = false;
 
   @property({ type: Boolean })
-  isCreatingAgent = false;
+  showAddConnectorDialog = false;
+
+  @property({ type: Number })
+  selectedAgentIdForConnector: number | null = null;
 
   @query('ps-operations-view')
   agentElement!: PsOperationsView;
 
-  @state()
-  private showAddAgentDialog = false;
-
-  @state()
-  private activeAgentClasses: PsAgentClassAttributes[] = [];
-
-  @state()
-  private selectedAgentClassId: number | null = null;
-
-  @state()
-  private activeAiModels: PsAiModelAttributes[] = [];
-
-  @state()
-  private selectedAiModelId: number | null = null;
-
-  @state()
-  private showAddConnectorDialog = false;
-
-  @state()
-  private selectedAgentId: number | null = null;
-
-  @state()
-  private activeConnectorClasses: PsAgentConnectorClassAttributes[] = [];
-
-  @state()
-  private selectedConnectorClassId: number | null = null;
+  @property({ type: Number })
+  groupId: number | undefined = 1; // TODO: No default here
 
   api: OpsServerApi;
-
-  @property({ type: Object })
-  nodeToAddCauseTo: PsOperationsBaseNode | undefined;
-  wsMessageListener: ((event: any) => void) | undefined = undefined;
-
-  currentStreaminReponse: OpsStreamingAIResponse | undefined;
 
   constructor() {
     super();
     this.api = new OpsServerApi();
-    //this.setupTestData();
     this.getAgent();
   }
 
   async getAgent() {
     this.isFetchingAgent = true;
     try {
-      const agent = await this.api.getAgent(this.currentAgentId);
+      if (!this.groupId) {
+        throw new Error('Current group ID is not set');
+      }
+      const agent = await this.api.getAgent(this.groupId);
       this.currentAgent = agent;
     } catch (error) {
       console.error('Error fetching agent:', error);
@@ -142,136 +87,10 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   override async connectedCallback() {
     super.connectedCallback();
-    this.addEventListener(
-      'open-add-cause-dialog',
-      this.openAddCauseDialog as EventListenerOrEventListenerObject
-    );
-
-    this.addEventListener(
-      'close-add-cause-dialog',
-      this.closeAddCauseDialog as EventListenerOrEventListenerObject
-    );
-
-    if (this.currentAgentId) {
-      this.fetchCurrentAgent();
-    }
-
-    this.addEventListener(
-      'edit-node',
-      this.openEditNodeDialog as EventListenerOrEventListenerObject
-    );
-
-    //TODO: Remove listeners
-    this.addEventListener(
-      'get-costs',
-      this.fetchAgentCosts as EventListenerOrEventListenerObject
-    );
-
-    this.addEventListener(
-      'open-add-agent-dialog',
-      this.openAddAgentDialog as EventListenerOrEventListenerObject
-    );
-
-    await this.fetchActiveAgentClasses();
-    await this.fetchActiveAiModels();
-    this.addEventListener(
-      'add-connector',
-      this.openAddConnectorDialog as EventListenerOrEventListenerObject
-    );
-    await this.fetchActiveConnectorClasses();
-  }
-
-  async fetchActiveConnectorClasses() {
-    try {
-      this.activeConnectorClasses = await this.api.getActiveConnectorClasses();
-    } catch (error) {
-      console.error('Error fetching active connector classes:', error);
-    }
-  }
-
-  openAddConnectorDialog(event: CustomEvent) {
-    this.selectedAgentId = event.detail.agentId;
-    this.showAddConnectorDialog = true;
-  }
-
-  closeAddConnectorDialog() {
-    this.showAddConnectorDialog = false;
-    this.selectedConnectorClassId = null;
-  }
-
-  handleConnectorClassSelection(e: Event) {
-    const select = e.target as HTMLSelectElement;
-    this.selectedConnectorClassId = Number(select.value);
-  }
-
-  async handleAddConnector() {
-    if (!this.selectedAgentId || !this.selectedConnectorClassId) {
-      console.error('Agent or connector class not selected');
-      return;
-    }
-
-    try {
-      // TODO: Implement the actual connector creation logic
-      // const newConnector = await this.api.createConnector(this.selectedAgentId, this.selectedConnectorClassId);
-      console.log(
-        'New connector created for agent:',
-        this.selectedAgentId,
-        'with class ID:',
-        this.selectedConnectorClassId
-      );
-      this.closeAddConnectorDialog();
-    } catch (error) {
-      console.error('Error creating new connector:', error);
-    }
-  }
-
-  renderAddConnectorDialog() {
-    return html`
-      <md-dialog
-        ?open="${this.showAddConnectorDialog}"
-        @closed="${this.closeAddConnectorDialog}"
-      >
-        <div slot="headline">Add New Connector</div>
-        <div slot="content">
-          <md-filled-select
-            label="Select Connector Class"
-            @change="${this.handleConnectorClassSelection}"
-          >
-            ${this.activeConnectorClasses.map(
-              connectorClass => html`
-                <md-select-option value="${connectorClass.id}">
-                  <div slot="headline">${connectorClass.name}</div>
-                </md-select-option>
-              `
-            )}
-          </md-filled-select>
-        </div>
-        <div slot="actions">
-          <md-text-button @click="${this.closeAddConnectorDialog}"
-            >Cancel</md-text-button
-          >
-          <md-filled-button @click="${this.handleAddConnector}"
-            >Add Connector</md-filled-button
-          >
-        </div>
-      </md-dialog>
-    `;
-  }
-
-  async fetchActiveAiModels() {
-    try {
-      this.activeAiModels = await this.api.getActiveAiModels();
-    } catch (error) {
-      console.error('Error fetching active AI models:', error);
-    }
-  }
-
-  async fetchActiveAgentClasses() {
-    try {
-      this.activeAgentClasses = await this.api.getActiveAgentClasses();
-    } catch (error) {
-      console.error('Error fetching active agent classes:', error);
-    }
+    this.addEventListener('edit-node', this.openEditNodeDialog as EventListenerOrEventListenerObject);
+    this.addEventListener('add-connector', this.openAddConnectorDialog as EventListenerOrEventListenerObject);
+    this.addEventListener('get-costs', this.fetchAgentCosts as EventListenerOrEventListenerObject);
+    this.addEventListener('add-agent', this.openAddAgentDialog as EventListenerOrEventListenerObject);
   }
 
   async fetchAgentCosts() {
@@ -286,345 +105,114 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   openEditNodeDialog(event: CustomEvent) {
     this.nodeToEditInfo = event.detail.element;
-
-    this.currentlySelectedCauseIdToAddAsChild = undefined;
-
-    /*this.nodeToEdit = this.findNodeRecursively(
-      this.currentAgent?.SubAgents || [],
-      this.nodeToEditInfo!.nodeId
-    );
-    if (!this.nodeToEdit) {
-      console.error(`Could not find node ${this.nodeToEditInfo!.nodeId}`);
-      console.error(JSON.stringify(this.currentAgent, null, 2));
-      return;
-    }
-
-    const childrenIds = (this.nodeToEdit.children || []).map(
-      (child) => child.id
-    );
-    childrenIds.push(this.nodeToEdit.id);
-
-    this.allCausesExceptCurrentToEdit =
-      this.agentElement!.getAllCausesExcept(childrenIds);*/
-
-    (this.$$('#editNodeDialog') as MdDialog).show();
+    this.showEditNodeDialog = true;
   }
 
-  saveAnswers() {
-    for (
-      let a = 0;
-      a < this.nodeToEditInfo.Class.configuration.questions.length;
-      a++
-    ) {
-      const questionElement = this.$$(
-        '#structuredQuestion_' + a
-      ) as YpStructuredQuestionEdit;
-      if (questionElement) {
-        const answer = questionElement.getAnswer();
-        //TODO: See if we can solve the below without any without adding much complexity
-        if (answer && questionElement.question.uniqueId) {
-          (this.nodeToEditInfo.configuration as any)[
-            questionElement.question.uniqueId
-          ] = answer.value;
-        }
-      }
+  openAddConnectorDialog(event: CustomEvent) {
+    this.selectedAgentIdForConnector = event.detail.agentId;
+    this.showAddConnectorDialog = true;
+  }
+
+  openAddAgentDialog(event: CustomEvent) {
+    this.showAddAgentDialog = true;
+  }
+
+  tabChanged() {
+    this.activeTabIndex = (this.$$('#tabBar') as MdTabs).activeTabIndex;
+  }
+
+  toggleDarkMode() {
+    this.fire('yp-theme-dark-mode', !this.themeDarkMode);
+    window.psAppGlobals.activity('Agent - toggle darkmode');
+    if (this.themeDarkMode) {
+      window.psAppGlobals.activity('Settings - dark mode');
+      localStorage.setItem('md3-ps-dark-mode', 'true');
+    } else {
+      window.psAppGlobals.activity('Settings - light mode');
+      localStorage.removeItem('md3-ps-dark-mode');
     }
   }
 
-  closeEditNodeDialog() {
-    (this.$$('#editNodeDialog') as MdDialog).close();
-    this.nodeToEdit = undefined;
-    this.nodeToEditInfo = undefined;
+  randomizeTheme() {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    this.fire('yp-theme-color', `#${randomColor}`);
   }
 
-  addChildChanged() {
-    const effectIdSelect = this.$$('#addEffectToNodeId') as HTMLSelectElement;
-    this.currentlySelectedCauseIdToAddAsChild = effectIdSelect.value;
-  }
-
-  async handleSaveEditNode() {
-    this.saveAnswers();
-
-    if (this.currentAgentId && this.nodeToEditInfo) {
-      try {
-        // Only send the updated configuration
-        const updatedConfig = this.nodeToEditInfo.configuration;
-
-        // Determine if it's an agent or a connector
-        const nodeType =
-          this.nodeToEditInfo.Class.name.indexOf('Agent') > -1
-            ? 'agent'
-            : 'connector';
-
-        // Send the updated configuration to the server
-        await this.api.updateNodeConfiguration(
-          this.currentAgentId,
-          this.nodeToEditInfo.id,
-          nodeType,
-          updatedConfig
-        );
-
-        // Update the local state
-        if (this.currentAgent) {
-          // Find the node in the current agent structure and update its configuration
-          this.updateNodeConfigurationInAgent(
-            this.currentAgent,
-            this.nodeToEditInfo.id,
-            updatedConfig
-          );
-        }
-        this.currentAgent = { ...this.currentAgent };
-        this.closeEditNodeDialog();
-        this.requestUpdate();
-      } catch (error) {
-        console.error('Error updating node configuration:', error);
-      }
-    }
-  }
-
-  updateNodeConfigurationInAgent(
-    agent: PsAgentAttributes,
-    nodeId: number,
-    newConfig: any
-  ) {
-    if (agent.id === nodeId) {
-      agent.configuration = newConfig;
-    } else if (agent.SubAgents) {
-      for (let subAgent of agent.SubAgents) {
-        this.updateNodeConfigurationInAgent(subAgent, nodeId, newConfig);
-      }
-    }
-    if (agent.Connectors) {
-      for (let connector of agent.Connectors) {
-        if (connector.id === nodeId) {
-          connector.configuration = newConfig;
-        }
-      }
-    }
-  }
-
-  handleDeleteNode() {
-    this.showDeleteConfirmation = true;
-  }
-
-  removeNodeRecursively(nodes: PsOperationsBaseNode[], nodeId: string) {
-    const index = nodes.findIndex(node => node.id === nodeId);
-    if (index !== -1) {
-      nodes.splice(index, 1);
-      return;
-    }
-    nodes.forEach(node => {
-      if (node.children) {
-        //this.removeNodeRecursively(node.SubAgents, nodeId);
-      }
-    });
-  }
-
-  async confirmDeleteNode() {
-    if (this.nodeToEdit && this.currentAgentId) {
-      try {
-        await this.api.deleteNode(this.currentAgentId, this.nodeToEdit.id);
-
-        // Remove the node from the agent object
-        // this.removeNodeRecursively(this.currentAgent?.SubAgents || [], this.nodeToEdit.id);
-        this.closeEditNodeDialog();
-        this.currentAgent = { ...this.currentAgent };
-      } catch (error) {
-        console.error('Error deleting node:', error);
-      } finally {
-        this.closeDeleteConfirmationDialog();
-      }
-    }
-  }
-
-  createDirectCauses() {
-    if (this.nodeToEditInfo) {
-      //this.nodeToEditInfo.element.createDirectCauses();
-    }
-
-    this.closeEditNodeDialog();
-  }
-  closeDeleteConfirmationDialog() {
-    this.showDeleteConfirmation = false;
-  }
-
-  renderDeleteConfirmationDialog() {
+  renderThemeToggle() {
     return html`
-      <md-dialog
-        id="deleteConfirmationDialog"
-        ?open="${this.showDeleteConfirmation}"
-        @closed="${() => (this.showDeleteConfirmation = false)}"
-      >
-        <div slot="headline">Confirm Deletion</div>
-        <div slot="content">Are you sure you want to delete this node?</div>
-        <div slot="actions">
-          <md-text-button @click="${this.closeDeleteConfirmationDialog}">
-            Cancel
-          </md-text-button>
-          <md-text-button @click="${this.confirmDeleteNode}">
-            Delete
-          </md-text-button>
-        </div>
-      </md-dialog>
-    `;
-  }
+      <div class="layout horizontal center-center themeToggle">
+        ${!this.themeDarkMode
+          ? html`
+              <md-outlined-icon-button
+                class="darkModeButton"
+                @click="${this.toggleDarkMode}"
+                ><md-icon>dark_mode</md-icon></md-outlined-icon-button
+              >
+            `
+          : html`
+              <md-outlined-icon-button
+                class="darkModeButton"
+                @click="${this.toggleDarkMode}"
+                ><md-icon>light_mode</md-icon></md-outlined-icon-button
+              >
+            `}
 
-  _saveNodeEditState(event: CustomEvent) {}
-
-  renderNodeEditHeadline() {
-    return html`
-      <div class="layout horizontal">
-        <div>
-          <img
-            src="${this.nodeToEditInfo.Class.configuration.imageUrl}"
-            class="nodeEditHeadlineImage"
-          />
-        </div>
-        <div class="nodeEditHeadlineTitle">
-          ${this.nodeToEditInfo.Class.name}
-        </div>
+        <md-outlined-icon-button
+          class="darkModeButton"
+          @click="${this.randomizeTheme}"
+          ><md-icon>shuffle</md-icon></md-outlined-icon-button
+        >
       </div>
     `;
   }
 
-  renderEditNodeDialog() {
-    let initiallyLoadedAnswers = [] as any;
+  renderTotalCosts() {
+    return html`${this.t('Costs')}
+    ${this.totalCosts !== undefined ? `($${this.totalCosts.toFixed(2)})` : ''}`;
+  }
 
-    if (this.nodeToEditInfo) {
-      // Convert this.nodeToEditInfo.configuration object to array with { "uniqueId": key, "value": value }
-      initiallyLoadedAnswers = Object.entries(
-        this.nodeToEditInfo.configuration
-      ).map(([key, value]) => ({
-        uniqueId: key,
-        value: value,
-      }));
+  render() {
+    if (this.isFetchingAgent) {
+      return html`<md-linear-progress indeterminate></md-linear-progress>`;
+    } else {
+      return html`
+        <ps-edit-node-dialog
+          ?open="${this.showEditNodeDialog}"
+          .nodeToEditInfo="${this.nodeToEditInfo}"
+          @close="${() => (this.showEditNodeDialog = false)}"
+        ></ps-edit-node-dialog>
+
+        <ps-add-agent-dialog
+          ?open="${this.showAddAgentDialog}"
+          @close="${() => (this.showAddAgentDialog = false)}"
+        ></ps-add-agent-dialog>
+
+        <ps-add-connector-dialog
+          ?open="${this.showAddConnectorDialog}"
+          .selectedAgentId="${this.selectedAgentIdForConnector}"
+          @close="${() => (this.showAddConnectorDialog = false)}"
+        ></ps-add-connector-dialog>
+
+        <md-tabs id="tabBar" @change="${this.tabChanged}">
+          <md-primary-tab id="configure-tab" aria-controls="configure-panel">
+            <md-icon slot="icon">support_agent</md-icon>
+            ${this.t('Agents Operations')}
+          </md-primary-tab>
+          <md-primary-tab id="crt-tab" aria-controls="crt-panel">
+            <md-icon slot="icon">checklist</md-icon>
+            ${this.t('Audit Log')}
+          </md-primary-tab>
+          <md-primary-tab id="crt-tab" aria-controls="crt-panel">
+            <md-icon slot="icon">account_balance</md-icon>
+            ${this.renderTotalCosts()}
+          </md-primary-tab>
+        </md-tabs>
+        <ps-operations-view
+          .currentAgent="${this.currentAgent}"
+        ></ps-operations-view>
+        ${this.renderThemeToggle()}
+      `;
     }
-    return html`
-      <md-dialog
-        id="editNodeDialog"
-        style="width: 800px; max-height:100%;height:100%;"
-        @closed="${this.closeEditNodeDialog}"
-        scrimClickAction=""
-        escapeKeyAction=""
-        @cancel="${this.scrimCancel}"
-      >
-        <div slot="headline">
-          ${this.nodeToEditInfo ? this.renderNodeEditHeadline() : ''}
-        </div>
-        <div
-          slot="content"
-          id="editNodeForm"
-          style="max-height: 90vh;height: 100%;"
-          class="layout vertical"
-        >
-          ${this.nodeToEditInfo
-            ? html`
-                <div id="surveyContainer">
-                  ${this.nodeToEditInfo.Class.configuration.questions.map(
-                    (question, index) => html`
-                      <yp-structured-question-edit
-                        index="${index}"
-                        id="structuredQuestion_${question.uniqueId
-                          ? index
-                          : `noId_${index}`}"
-                        .structuredAnswers="${initiallyLoadedAnswers}"
-                        @changed="${this._saveNodeEditState}"
-                        .question="${question}"
-                      >
-                      </yp-structured-question-edit>
-                    `
-                  )}
-                </div>
-              `
-            : nothing}
-        </div>
-        <div slot="actions">
-          <md-text-button
-            hidden
-            @click="${this.handleDeleteNode}"
-            class="deleteButton"
-          >
-            Delete
-          </md-text-button>
-          <div class="flex"></div>
-          <md-text-button @click="${this.closeEditNodeDialog}" value="cancel">
-            Cancel
-          </md-text-button>
-          <md-text-button @click="${this.handleSaveEditNode}" value="ok">
-            Save
-          </md-text-button>
-        </div>
-      </md-dialog>
-    `;
-  }
-
-  updatePath() {
-    const dontDoIt = false;
-    if (!dontDoIt) {
-      if (this.currentAgent && this.currentAgent.id) {
-        window.history.pushState({}, '', `/agent/${this.currentAgent.id}`);
-      } else {
-        console.error('Could not fetch current tree: ' + this.currentAgentId);
-      }
-    }
-  }
-
-  async fetchCurrentAgent() {
-    this.isFetchingAgent = true;
-
-    //this.currentAgent = undefined; //  await this.api.getAgent(this.currentAgentId as number);
-
-    this.isFetchingAgent = false;
-
-    if (false && this.currentAgent) {
-      this.updatePath();
-
-      await this.updateComplete;
-
-      (this.$$('#context') as MdOutlinedTextField).value =
-        this.currentAgent.Class.configuration.description;
-      (this.$$('#undesirableEffects') as MdOutlinedTextField).value = '';
-
-      this.activeTabIndex = 1;
-      (this.$$('#tabBar') as MdTabs).activeTabIndex = 1;
-    }
-  }
-
-  override updated(
-    changedProperties: Map<string | number | symbol, unknown>
-  ): void {
-    super.updated(changedProperties);
-  }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this.removeEventListener(
-      'open-add-cause-dialog',
-      this.openAddCauseDialog as EventListenerOrEventListenerObject
-    );
-    this.removeEventListener(
-      'close-add-cause-dialog',
-      this.closeAddCauseDialog as EventListenerOrEventListenerObject
-    );
-    this.removeEventListener(
-      'edit-node',
-      this.openEditNodeDialog as EventListenerOrEventListenerObject
-    );
-    this.removeEventListener(
-      'get-costs',
-      this.fetchAgentCosts as EventListenerOrEventListenerObject
-    );
-    this.removeEventListener(
-      'open-add-agent-dialog',
-      this.openAddAgentDialog as EventListenerOrEventListenerObject
-    );
-  }
-  camelCaseToHumanReadable(str: string) {
-    // Split the string at each uppercase letter and join with space
-    const words = str.replace(/([A-Z])/g, ' $1').trim();
-
-    // Capitalize the first letter of the resulting string
-    return words.charAt(0).toUpperCase() + words.slice(1);
   }
 
   static override get styles() {
@@ -781,406 +369,5 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
       `,
     ];
   }
-
-  openAddAgentDialog() {
-    this.showAddAgentDialog = true;
-  }
-
-  closeAddAgentDialog() {
-    this.showAddAgentDialog = false;
-    this.selectedAgentClassId = null;
-  }
-
-  handleAgentClassSelection(e: Event) {
-    const select = e.target as HTMLSelectElement;
-    this.selectedAgentClassId = Number(select.value);
-  }
-
-  async handleAddAgent() {
-    if (!this.selectedAgentClassId || !this.selectedAiModelId) {
-      console.error('Agent class or AI model not selected');
-      return;
-    }
-
-    try {
-      // TODO: Implement the actual agent creation logic
-      // const newAgent = await this.api.createAgent(this.selectedAgentClassId, this.selectedAiModelId);
-      // this.agents.push(newAgent);
-      console.log(
-        'New agent created with class ID:',
-        this.selectedAgentClassId,
-        'and AI model ID:',
-        this.selectedAiModelId
-      );
-      this.closeAddAgentDialog();
-    } catch (error) {
-      console.error('Error creating new agent:', error);
-    }
-  }
-
-  renderAddAgentDialog() {
-    return html`
-      <md-dialog
-        ?open="${this.showAddAgentDialog}"
-        @closed="${this.closeAddAgentDialog}"
-      >
-        <div slot="headline">Add New Agent</div>
-        <div slot="content">
-          <md-filled-select
-            label="Select Agent Class"
-            @change="${this.handleAgentClassSelection}"
-          >
-            ${this.activeAgentClasses.map(
-              agentClass => html`
-                <md-select-option value="${agentClass.id}">
-                  <div slot="headline">${agentClass.name}</div>
-                </md-select-option>
-              `
-            )}
-          </md-filled-select>
-        </div>
-        <div slot="actions">
-          <md-text-button @click="${this.closeAddAgentDialog}"
-            >Cancel</md-text-button
-          >
-          <md-filled-button @click="${this.handleAddAgent}"
-            >Add Agent</md-filled-button
-          >
-        </div>
-      </md-dialog>
-    `;
-  }
-
-  tabChanged() {
-    this.activeTabIndex = (this.$$('#tabBar') as MdTabs).activeTabIndex;
-  }
-
-  clearForNew() {
-    this.currentAgent = undefined;
-    this.currentAgentId = undefined;
-    this.AIConfigReview = undefined;
-    (this.$$('#context') as MdOutlinedTextField).value = '';
-    (this.$$('#undesirableEffects') as MdOutlinedTextField).value = '';
-    //window.history.pushState({}, '', `/agent`);
-  }
-
-  get agentInputData() {
-    return {
-      description:
-        (this.$$('#description') as MdOutlinedTextField)?.value ?? '',
-      context: (this.$$('#context') as MdOutlinedTextField).value ?? '',
-      undesirableEffects:
-        (this.$$('#undesirableEffects') as MdOutlinedTextField).value.split(
-          '\n'
-        ) ?? [],
-      nodes: [],
-    } as any; //LtpCurrentRealityAgentData;
-  }
-
-  async reviewAgentConfiguration() {
-    this.isReviewingAgent = true;
-
-    if (this.currentStreaminReponse) {
-      this.currentStreaminReponse.close();
-    }
-
-    if (this.wsMessageListener) {
-      this.removeEventListener('wsMessage', this.wsMessageListener);
-    }
-
-    this.AIConfigReview = undefined;
-
-    this.currentStreaminReponse = new OpsStreamingAIResponse(this);
-
-    try {
-      const wsClientId = await this.currentStreaminReponse.connect();
-      this.AIConfigReview = '';
-      console.log('Connected with clientId:', wsClientId);
-
-      this.wsMessageListener = (event: any) => {
-        const { data } = event.detail;
-        if (data.type === 'part' && data.text) {
-          this.AIConfigReview += data.text;
-        } else if (data.type === 'end') {
-          this.removeListener('wsMessage', this.wsMessageListener!);
-          this.wsMessageListener = undefined;
-          this.currentStreaminReponse = undefined;
-          this.isReviewingAgent = false;
-        }
-      };
-
-      this.addEventListener('wsMessage', this.wsMessageListener);
-
-      await this.api.reviewConfiguration(wsClientId, this.agentInputData);
-
-      // Proceed with your logic
-    } catch (error) {
-      console.error('WebSocket connection failed:', error);
-      this.removeListener('wsMessage', this.wsMessageListener!);
-    }
-  }
-
-  async createAgent() {
-    this.isCreatingAgent = true;
-
-    const agentSeed = this.agentInputData;
-
-    if (TESTING && (this.$$('#context') as MdOutlinedTextField).value == '') {
-      agentSeed.context =
-        'We are a software company with a product we have as as service';
-      agentSeed.undesirableEffects = ['End users are unhappy with the service'];
-    }
-
-    //this.currentAgent = await this.api.createAgent(agentSeed);
-
-    this.updatePath();
-
-    this.isCreatingAgent = false;
-    this.activeTabIndex = 1;
-    (this.$$('#tabBar') as MdTabs).activeTabIndex = 1;
-  }
-
-  toggleDarkMode() {
-    this.fire('yp-theme-dark-mode', !this.themeDarkMode);
-    window.psAppGlobals.activity('Agent - toggle darkmode');
-    if (this.themeDarkMode) {
-      window.psAppGlobals.activity('Settings - dark mode');
-      localStorage.setItem('md3-ps-dark-mode', 'true');
-    } else {
-      window.psAppGlobals.activity('Settings - light mode');
-      localStorage.removeItem('md3-ps-dark-mode');
-    }
-  }
-
-  randomizeTheme() {
-    // Create a random hex color
-    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-    // Set the theme color
-    this.fire('yp-theme-color', `#${randomColor}`);
-  }
-
-  renderAIConfigReview() {
-    return html`
-      <div class="aiConfigReview" id="aiConfigReview">
-        ${this.AIConfigReview
-          ? html`
-              ${resolveMarkdown(this.AIConfigReview, {
-                includeImages: true,
-                includeCodeBlockClassNames: true,
-              })}
-            `
-          : nothing}
-      </div>
-    `;
-  }
-
-  renderReviewAndSubmit() {
-    return html`
-      <md-outlined-button
-        @click="${this.reviewAgentConfiguration}"
-        ?hidden="${!this.AIConfigReview || this.currentAgent != undefined}"
-        >${this.t('Review CRT again')}<md-icon slot="icon"
-          >rate_review</md-icon
-        ></md-outlined-button
-      >
-      <md-filled-button
-        @click="${this.reviewAgentConfiguration}"
-        ?hidden="${this.AIConfigReview != undefined ||
-        this.currentAgent != undefined}"
-        ?disabled="${this.isReviewingAgent}"
-        >${this.t('Review CRT')}<md-icon slot="icon"
-          >rate_review</md-icon
-        ></md-filled-button
-      >
-    `;
-  }
-
-  renderThemeToggle() {
-    return html`<div class="layout horizontal center-center themeToggle">
-      ${!this.themeDarkMode
-        ? html`
-            <md-outlined-icon-button
-              class="darkModeButton"
-              @click="${this.toggleDarkMode}"
-              ><md-icon>dark_mode</md-icon></md-outlined-icon-button
-            >
-          `
-        : html`
-            <md-outlined-icon-button
-              class="darkModeButton"
-              @click="${this.toggleDarkMode}"
-              ><md-icon>light_mode</md-icon></md-outlined-icon-button
-            >
-          `}
-
-      <md-outlined-icon-button
-        class="darkModeButton"
-        @click="${this.randomizeTheme}"
-        ><md-icon>shuffle</md-icon></md-outlined-icon-button
-      >
-    </div> `;
-  }
-
-  renderConfiguration() {
-    return html`
-      <div class="layout vertical center-center topDiv">
-        ${this.renderThemeToggle()}
-
-        <div class="formContainer">
-          <div>
-            <md-outlined-text-field
-              type="textarea"
-              label="Context"
-              id="context"
-            ></md-outlined-text-field>
-          </div>
-
-          <div>
-            <md-outlined-text-field
-              type="textarea"
-              label="Undesirable Effects"
-              id="undesirableEffects"
-            ></md-outlined-text-field>
-          </div>
-
-          <div class="layout horizontal center-center">
-            <md-outlined-button
-              @click="${this.clearForNew}"
-              ?hidden="${!this.currentAgent}"
-              >${this.t('Create New Agent')}<md-icon slot="icon"
-                >rate_review</md-icon
-              ></md-outlined-button
-            >
-
-            ${this.renderReviewAndSubmit()}
-
-            <md-filled-button
-              @click="${this.createAgent}"
-              ?hidden="${!this.AIConfigReview ||
-              this.currentAgent != undefined}"
-              ?disabled="${this.isReviewingAgent}"
-              >${this.t('Create CRT')}<md-icon slot="icon"
-                >send</md-icon
-              ></md-filled-button
-            >
-          </div>
-
-          ${this.isReviewingAgent && !this.AIConfigReview
-            ? html`<md-linear-progress indeterminate></md-linear-progress>`
-            : nothing}
-          ${this.AIConfigReview ? this.renderAIConfigReview() : nothing}
-        </div>
-      </div>
-    `;
-  }
-
-  /*findNodeRecursively = (
-    nodes: LtpCurrentRealityAgentDataNode[],
-    nodeId: string
-  ): LtpCurrentRealityAgentDataNode | undefined => {
-    for (const node of nodes) {
-      if (node.id === nodeId) {
-        return node;
-      }
-      if (node.children) {
-        const foundNode = this.findNodeRecursively(node.children, nodeId);
-        if (foundNode) {
-          return foundNode;
-        }
-      }
-    }
-    return undefined;
-  };*/
-
-  openAddCauseDialog(event: CustomEvent) {
-    console.error(`openAddCauseDialog ${event.detail.parentNodeId}`);
-    const parentNodeId = event.detail.parentNodeId;
-    // Get the node from the tree recursively
-
-    // Find the node recursively
-    /* const node = this.findNodeRecursively(this.currentAgent?.nodes || [], parentNodeId);
-    if (!node) {
-      console.error(`Could not find node ${parentNodeId}`);
-      console.error(JSON.stringify(this.currentAgent, null, 2));
-      return;
-    }
-    this.nodeToAddCauseTo = node;
-    (this.$$("#addCauseDialog") as MdDialog).show();*/
-  }
-
-  closeAddCauseDialog() {
-    (this.$$('#addCauseDialog') as MdDialog).close();
-    this.nodeToAddCauseTo = undefined;
-  }
-
-  scrimCancel(event: CustomEvent) {
-    // Disable
-    debugger;
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  renderAddCauseDialog() {
-    return html`
-      <md-dialog
-        id="addCauseDialog"
-        style="max-width: 800px;max-height: 90vh;"
-        @closed="${this.closeAddCauseDialog}"
-        scrimClickAction=""
-        escapeKeyAction=""
-      >
-        <div slot="headline">${/*this.nodeToAddCauseTo?.description*/ ''}</div>
-        <div slot="content" class="chatContainer">
-          ${this.nodeToAddCauseTo
-            ? html`
-                <ltp-chat-assistant
-                  .nodeToAddCauseTo="${this.nodeToAddCauseTo}"
-                  method="dialog"
-                  .textInputLabel="${this.t(
-                    'Enter sufficent direct causes to the effect'
-                  )}"
-                  .agentData="${this.currentAgent}"
-                  @close="${this.closeAddCauseDialog}"
-                >
-                </ltp-chat-assistant>
-              `
-            : nothing}
-        </div>
-      </md-dialog>
-    `;
-  }
-
-  renderTotalCosts() {
-    return html`${this.t('Costs')}
-    ${this.totalCosts !== undefined ? `($${this.totalCosts.toFixed(2)})` : ''}`;
-  }
-
-  render(): any {
-    if (this.isFetchingAgent) {
-      return html`<md-linear-progress indeterminate></md-linear-progress>`;
-    } else {
-      return cache(html`
-        ${this.renderAddCauseDialog()} ${this.renderEditNodeDialog()}
-        ${this.renderDeleteConfirmationDialog()} ${this.renderAddAgentDialog()}
-        ${this.renderAddConnectorDialog()}
-        <md-tabs id="tabBar" @change="${this.tabChanged}">
-          <md-primary-tab id="configure-tab" aria-controls="configure-panel">
-            <md-icon slot="icon">support_agent</md-icon>
-            ${this.t('Agents Operations')}
-          </md-primary-tab>
-          <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
-            <md-icon slot="icon">checklist</md-icon>
-            ${this.t('Audit Log')}
-          </md-primary-tab>
-          <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
-            <md-icon slot="icon">account_balance</md-icon>
-            ${this.renderTotalCosts()}
-          </md-primary-tab>
-        </md-tabs>
-        <ps-operations-view
-          .currentAgent="${this.currentAgent}"
-        ></ps-operations-view>
-      `);
-    }
-  }
 }
+

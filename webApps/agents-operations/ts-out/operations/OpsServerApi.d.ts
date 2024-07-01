@@ -2,8 +2,10 @@ import { BaseChatBotServerApi } from "../chatBot/BaseChatBotApi";
 export declare class OpsServerApi extends BaseChatBotServerApi {
     baseAgentsPath: string;
     constructor(urlPath?: string);
-    getAgent(agentId: number): Promise<PsAgentAttributes>;
+    getAgent(groupId: number): Promise<PsAgentAttributes>;
     getCrt(groupId: number): Promise<LtpCurrentRealityTreeData>;
+    createAgent(name: string, agentClassId: number, aiModelId: number, groupId?: number): Promise<PsAgentAttributes>;
+    createConnector(agentId: number, connectorClassId: number, name: string): Promise<PsAgentConnectorAttributes>;
     getActiveAiModels(): Promise<PsAiModelAttributes[]>;
     getActiveAgentClasses(): Promise<PsAgentClassAttributes[]>;
     getActiveConnectorClasses(): Promise<PsAgentConnectorClassAttributes[]>;

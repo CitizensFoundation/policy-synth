@@ -308,6 +308,11 @@ interface YpGroupConfiguration extends YpCollectionConfiguration {
     media: Array<YpSimpleGroupMediaData>;
   },
   useNewVersion?: boolean;
+  agents?: YpAgentsConfiguration;
+}
+
+interface YpPsAgentConfiguration {
+  topLevelAgentId: number;
 }
 
 interface YpSimpleGroupMediaData {
