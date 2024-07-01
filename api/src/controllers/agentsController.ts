@@ -70,7 +70,7 @@ export class AgentsController {
   }
 
   createAgent = async (req: express.Request, res: express.Response) => {
-    const { agentClassId, aiModelId, parentAgentId } = req.body;
+    const { name, agentClassId, aiModelId, parentAgentId } = req.body;
 
     if (!agentClassId || !aiModelId) {
       return res
@@ -95,7 +95,9 @@ export class AgentsController {
           user_id: 1,
           group_id: 1,
           parent_agent_id: parentAgentId,
-          configuration: {},
+          configuration: {
+            name
+          },
         },
         { transaction }
       );

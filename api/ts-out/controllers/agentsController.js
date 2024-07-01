@@ -42,7 +42,7 @@ export class AgentsController {
         this.router.post(this.path + "/:agentId/connectors", this.createConnector);
     }
     createAgent = async (req, res) => {
-        const { agentClassId, aiModelId, parentAgentId } = req.body;
+        const { name, agentClassId, aiModelId, parentAgentId } = req.body;
         if (!agentClassId || !aiModelId) {
             return res
                 .status(400)
@@ -61,7 +61,9 @@ export class AgentsController {
                 user_id: 1,
                 group_id: 1,
                 parent_agent_id: parentAgentId,
-                configuration: {},
+                configuration: {
+                    name
+                },
             }, { transaction });
             await newAgent.addAiModel(aiModel, { transaction });
             await transaction.commit();
