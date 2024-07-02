@@ -39,8 +39,9 @@ export class AgentsController {
         this.router.get(this.path + "/registry/connectorClasses", this.getActiveConnectorClasses);
         this.router.get(this.path + "/registry/aiModels", this.getActiveAiModels);
         this.router.post(this.path, this.createAgent);
-        this.router.post(this.path + "/:agentId/connectors", this.createConnector);
-        this.router.put(this.path + '/:nodeId/:nodeType/configuration', this.updateNodeConfiguration);
+        this.router.post(this.path + "/:agentId/outputConnectors", this.createOutputConnector);
+        this.router.post(this.path + "/:agentId/inputConnectors", this.createInputConnector);
+        this.router.put(this.path + "/:nodeId/:nodeType/configuration", this.updateNodeConfiguration);
     }
     updateNodeConfiguration = async (req, res) => {
         const agentId = parseInt(req.params.agentId);
@@ -49,10 +50,10 @@ export class AgentsController {
         const updatedConfig = req.body;
         try {
             let node;
-            if (nodeType === 'agent') {
+            if (nodeType === "agent") {
                 node = await PsAgent.findByPk(nodeId);
             }
-            else if (nodeType === 'connector') {
+            else if (nodeType === "connector") {
                 node = await PsAgentConnector.findByPk(nodeId);
             }
             if (!node) {
@@ -68,7 +69,7 @@ export class AgentsController {
         }
         catch (error) {
             console.error(`Error updating ${nodeType} configuration:`, error);
-            res.status(500).send('Internal Server Error');
+            res.status(500).send("Internal Server Error");
         }
     };
     createAgent = async (req, res) => {
@@ -92,7 +93,7 @@ export class AgentsController {
                 group_id: 1,
                 parent_agent_id: parentAgentId,
                 configuration: {
-                    name
+                    name,
                 },
             }, { transaction });
             await newAgent.addAiModel(aiModel, { transaction });
@@ -112,13 +113,24 @@ export class AgentsController {
             res.status(500).send("Internal Server Error");
         }
     };
-    createConnector = async (req, res) => {
+    createInputConnector = async (req, res) => {
+        this.createConnector(req, res, "input");
+    };
+    createOutputConnector = async (req, res) => {
+        this.createConnector(req, res, "output");
+    };
+    createConnector = async (req, res, type) => {
         const { agentId } = req.params;
         const { connectorClassId, name } = req.body;
-        if (!agentId || !connectorClassId || !name) {
+        if (!agentId || !connectorClassId || !name || !type) {
             return res
                 .status(400)
-                .send("Agent ID, connector class ID, and name are required");
+                .send("Agent ID, connector class ID, name, and type (input/output) are required");
+        }
+        if (type !== "input" && type !== "output") {
+            return res
+                .status(400)
+                .send("Connector type must be either 'input' or 'output'");
         }
         const transaction = await sequelize.transaction();
         try {
@@ -136,23 +148,32 @@ export class AgentsController {
                     name: name,
                     graphPosX: 200,
                     graphPosY: 200,
-                    permissionNeeded: PsAgentConnectorPermissionTypes.ReadWrite,
+                    permissionNeeded: "readWrite",
                 },
             }, { transaction });
-            await agent.addConnector(newConnector, { transaction });
+            if (type === "input") {
+                await agent.addInputConnector(newConnector, { transaction });
+            }
+            else {
+                await agent.addOutputConnector(newConnector, { transaction });
+            }
             await transaction.commit();
             // Fetch the created connector with its associations
             const createdConnector = await PsAgentConnector.findByPk(newConnector.id, {
                 include: [
                     { model: PsAgentConnectorClass, as: "Class" },
-                    { model: PsAgent, as: "Agent" },
+                    {
+                        model: PsAgent,
+                        as: type === "input" ? "InputAgents" : "OutputAgents",
+                        through: { attributes: [] }, // This excludes join table attributes from the result
+                    },
                 ],
             });
             res.status(201).json(createdConnector);
         }
         catch (error) {
             await transaction.rollback();
-            console.error("Error creating connector:", error);
+            console.error(`Error creating ${type} connector:`, error);
             res.status(500).send("Internal Server Error");
         }
     };
@@ -199,7 +220,7 @@ export class AgentsController {
                         as: "Connectors",
                         where: { available: true },
                         through: { attributes: [] },
-                    },
+                    }
                 ],
             });
             if (!registry) {
@@ -356,7 +377,9 @@ export class AgentsController {
             if (!topLevelAgent) {
                 const defaultAgentClassUuid = process.env.CLASS_ID_FOR_TOP_LEVEL_AGENT;
                 if (!defaultAgentClassUuid) {
-                    return res.status(500).send("Default agent class UUID is not configured");
+                    return res
+                        .status(500)
+                        .send("Default agent class UUID is not configured");
                 }
                 const agentClass = await PsAgentClass.findOne({
                     where: { class_base_id: defaultAgentClassUuid },
@@ -396,14 +419,14 @@ export class AgentsController {
                         throw new Error(`Failed to update configuration for group ${group.id}`);
                     }
                     await transaction.commit();
-                    console.log('Transaction committed successfully');
+                    console.log("Transaction committed successfully");
                     // Fetch the updated group to verify changes
                     const finalGroup = await Group.findByPk(group.id);
-                    console.log('Final group:', JSON.stringify(finalGroup?.toJSON()));
+                    console.log("Final group:", JSON.stringify(finalGroup?.toJSON()));
                 }
                 catch (error) {
                     await transaction.rollback();
-                    console.error('Error creating top-level agent:', error);
+                    console.error("Error creating top-level agent:", error);
                     throw error;
                 }
             }
@@ -426,7 +449,17 @@ export class AgentsController {
                     include: [
                         {
                             model: PsAgentConnector,
-                            as: "Connectors",
+                            as: "InputConnectors",
+                            include: [
+                                {
+                                    model: PsAgentConnectorClass,
+                                    as: "Class",
+                                },
+                            ],
+                        },
+                        {
+                            model: PsAgentConnector,
+                            as: "OutputConnectors",
                             include: [
                                 {
                                     model: PsAgentConnectorClass,
@@ -439,7 +472,17 @@ export class AgentsController {
                 },
                 {
                     model: PsAgentConnector,
-                    as: "Connectors",
+                    as: "InputConnectors",
+                    include: [
+                        {
+                            model: PsAgentConnectorClass,
+                            as: "Class",
+                        },
+                    ],
+                },
+                {
+                    model: PsAgentConnector,
+                    as: "OutputConnectors",
                     include: [
                         {
                             model: PsAgentConnectorClass,
@@ -477,9 +520,14 @@ export class AgentsController {
                 {
                     model: PsAgent,
                     as: "SubAgents",
-                    include: [{ model: PsAgentConnector, as: "Connectors" }],
+                    include: [
+                        { model: PsAgentConnector, as: "InputConnectors" },
+                        { model: PsAgentConnector, as: "OutputConnectors" },
+                        { model: PsAgentClass, as: "Class" },
+                    ],
                 },
-                { model: PsAgentConnector, as: "Connectors" },
+                { model: PsAgentConnector, as: "InputConnectors" },
+                { model: PsAgentConnector, as: "OutputConnectors" },
                 { model: PsAgentClass, as: "Class" },
                 { model: User, as: "User" },
                 { model: Group, as: "Group" },

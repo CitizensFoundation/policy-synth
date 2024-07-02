@@ -543,19 +543,19 @@ await smarterCrowdsourcingAgentInstance.addSubAgents([
     subAgent2Instance,
     subAgent3Instance,
 ]);
-await subAgent1Instance.addConnectors([
+await subAgent1Instance.addInputConnectors([
     connectorGoogleDocsForRootCausesInst,
     connectorDiscordRootCausesInst,
     connectorAllOurIdeasRootCausesInst,
     connectorGoogleSheetsForRootCausesInst,
 ]);
-await subAgent2Instance.addConnectors([
+await subAgent2Instance.addInputConnectors([
     connectorGoogleSheetsForSolutionsInst,
     connectorDiscordSolutionsInst,
     connectorYourPrioritiesSolutionsInst,
     connectorAllOurIdeasSolutionsInst,
 ]);
-await subAgent3Instance.addConnectors([
+await subAgent3Instance.addInputConnectors([
     connectorYourPrioritiesPoliciesInst,
     connectorDiscordPoliciesInst,
     connectorGoogleSheetsForPoliciesInst,

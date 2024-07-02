@@ -14,7 +14,12 @@ import { OpsServerApi } from './OpsServerApi.js';
 export class PsAddConnectorDialog extends LitElement {
   @property({ type: Boolean }) open = false;
   @property({ type: Number }) selectedAgentId: number | null = null;
-  @state() private activeConnectorClasses: PsAgentConnectorClassAttributes[] = [];
+
+  @property({ type: String })
+  selectedInputOutputType: "input" | "output" | null = null;
+
+  @state() private activeConnectorClasses: PsAgentConnectorClassAttributes[] =
+    [];
   @state() private selectedConnectorClassId: number | null = null;
   @state() private connectorName: string = '';
 
@@ -36,7 +41,7 @@ export class PsAddConnectorDialog extends LitElement {
   render() {
     return html`
       <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
-        <div slot="headline">Add New Connector</div>
+        <div slot="headline">${this.selectedInputOutputType=="input" ? "Add Input Connector" : "Add Output Connector"}</div>
         <div slot="content">
           <md-filled-text-field
             label="Connector Name"
@@ -48,7 +53,7 @@ export class PsAddConnectorDialog extends LitElement {
             @change="${this._handleConnectorClassSelection}"
           >
             ${this.activeConnectorClasses?.map(
-              (connectorClass) => html`
+              connectorClass => html`
                 <md-select-option value="${connectorClass.id}">
                   <div slot="headline">${connectorClass.name}</div>
                 </md-select-option>
@@ -58,7 +63,9 @@ export class PsAddConnectorDialog extends LitElement {
         </div>
         <div slot="actions">
           <md-text-button @click="${this._handleClose}">Cancel</md-text-button>
-          <md-filled-button @click="${this._handleAddConnector}">Add Connector</md-filled-button>
+          <md-filled-button @click="${this._handleAddConnector}"
+            >Add Connector</md-filled-button
+          >
         </div>
       </md-dialog>
     `;
@@ -79,14 +86,27 @@ export class PsAddConnectorDialog extends LitElement {
   }
 
   private async _handleAddConnector() {
-    if (!this.connectorName || !this.selectedAgentId || !this.selectedConnectorClassId) {
+    if (
+      !this.connectorName ||
+      !this.selectedAgentId ||
+      !this.selectedConnectorClassId
+    ) {
       console.error('Connector name, agent, or connector class not selected');
       return;
     }
 
     try {
-      const newConnector = await this.api.createConnector(this.selectedAgentId, this.selectedConnectorClassId, this.connectorName);
-      this.dispatchEvent(new CustomEvent('connector-added', { detail: { connector: newConnector } }));
+      const newConnector = await this.api.createConnector(
+        this.selectedAgentId,
+        this.selectedConnectorClassId,
+        this.connectorName,
+        this.selectedInputOutputType
+      );
+      this.dispatchEvent(
+        new CustomEvent('connector-added', {
+          detail: { connector: newConnector },
+        })
+      );
       this._handleClose();
     } catch (error) {
       console.error('Error creating new connector:', error);

@@ -23,7 +23,8 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     connectedCallback(): void;
     disconnectedCallback(): void;
     toggleMenu(e: Event): void;
-    addConnector(): void;
+    addInputConnector(): void;
+    addOutputConnector(): void;
     startStatusUpdates(): void;
     stopStatusUpdates(): void;
     updateAgentStatus(): Promise<void>;
@@ -34,6 +35,6 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     editNode(): void;
     clickPlayPause(): void;
     renderProgress(): import("lit").TemplateResult<1>;
-    render(): typeof nothing | import("lit").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1> | typeof nothing;
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

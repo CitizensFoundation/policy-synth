@@ -34,14 +34,22 @@ export class PsAgent
   declare ModelUsage?: PsModelUsageAttributes[];
   declare ParentAgent?: PsAgent;
   declare SubAgents?: PsAgent[];
-  declare Connectors?: PsAgentConnectorAttributes[];
   declare AiModels?: PsAiModelAttributes[];
 
-  declare addConnector: (connector: PsAgentConnector, obj?: any | undefined) => Promise<void>;
-  declare addConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
-  declare getConnectors: () => Promise<PsAgentConnector[]>;
-  declare setConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
-  declare removeConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+  declare InputConnectors?: PsAgentConnectorAttributes[];
+  declare OutputConnectors?: PsAgentConnectorAttributes[];
+
+  declare addInputConnector: (connector: PsAgentConnector, obj?: any | undefined) => Promise<void>;
+  declare addInputConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+  declare getInputConnectors: () => Promise<PsAgentConnector[]>;
+  declare setInputConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+  declare removeInputConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+
+  declare addOutputConnector: (connector: PsAgentConnector, obj?: any | undefined) => Promise<void>;
+  declare addOutputConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+  declare getOutputConnectors: () => Promise<PsAgentConnector[]>;
+  declare setOutputConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
+  declare removeOutputConnectors: (connectors: PsAgentConnector[]) => Promise<void>;
 
   declare addSubAgent: (agent: PsAgent) => Promise<void>;
   declare addSubAgents: (agents: PsAgent[]) => Promise<void>;
@@ -171,20 +179,28 @@ PsAgent.init(
     as: 'ParentAgent',
   });
 
-  // Through a join table
-  PsAgent.belongsToMany(models.PsAgentConnector, {
-    through: "AgentConnectors",
-    foreignKey: "agent_id",
-    as: "Connectors",
-    timestamps: false,
-  });
-
-  // Through a join table
   PsAgent.belongsToMany(models.PsAiModel, {
     through: "AgentModels",
     foreignKey: "agent_id",
     otherKey: 'ai_model_id',
     as: "AiModels",
+    timestamps: false,
+  });
+
+  // Through a join table
+  PsAgent.belongsToMany(models.PsAgentConnector, {
+    through: "AgentInputConnectors",
+    foreignKey: "agent_id",
+    otherKey: "connector_id",
+    as: "InputConnectors",
+    timestamps: false,
+  });
+
+  PsAgent.belongsToMany(models.PsAgentConnector, {
+    through: "AgentOutputConnectors",
+    foreignKey: "agent_id",
+    otherKey: "connector_id",
+    as: "OutputConnectors",
     timestamps: false,
   });
 };

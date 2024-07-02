@@ -18,6 +18,7 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
         super(...arguments);
         this.open = false;
         this.selectedAgentId = null;
+        this.selectedInputOutputType = null;
         this.activeConnectorClasses = [];
         this.selectedConnectorClassId = null;
         this.connectorName = '';
@@ -38,7 +39,7 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
     render() {
         return html `
       <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
-        <div slot="headline">Add New Connector</div>
+        <div slot="headline">${this.selectedInputOutputType == "input" ? "Add Input Connector" : "Add Output Connector"}</div>
         <div slot="content">
           <md-filled-text-field
             label="Connector Name"
@@ -49,7 +50,7 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
             label="Select Connector Class"
             @change="${this._handleConnectorClassSelection}"
           >
-            ${this.activeConnectorClasses?.map((connectorClass) => html `
+            ${this.activeConnectorClasses?.map(connectorClass => html `
                 <md-select-option value="${connectorClass.id}">
                   <div slot="headline">${connectorClass.name}</div>
                 </md-select-option>
@@ -58,7 +59,9 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
         </div>
         <div slot="actions">
           <md-text-button @click="${this._handleClose}">Cancel</md-text-button>
-          <md-filled-button @click="${this._handleAddConnector}">Add Connector</md-filled-button>
+          <md-filled-button @click="${this._handleAddConnector}"
+            >Add Connector</md-filled-button
+          >
         </div>
       </md-dialog>
     `;
@@ -75,13 +78,17 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
         this.dispatchEvent(new CustomEvent('close'));
     }
     async _handleAddConnector() {
-        if (!this.connectorName || !this.selectedAgentId || !this.selectedConnectorClassId) {
+        if (!this.connectorName ||
+            !this.selectedAgentId ||
+            !this.selectedConnectorClassId) {
             console.error('Connector name, agent, or connector class not selected');
             return;
         }
         try {
-            const newConnector = await this.api.createConnector(this.selectedAgentId, this.selectedConnectorClassId, this.connectorName);
-            this.dispatchEvent(new CustomEvent('connector-added', { detail: { connector: newConnector } }));
+            const newConnector = await this.api.createConnector(this.selectedAgentId, this.selectedConnectorClassId, this.connectorName, this.selectedInputOutputType);
+            this.dispatchEvent(new CustomEvent('connector-added', {
+                detail: { connector: newConnector },
+            }));
             this._handleClose();
         }
         catch (error) {
@@ -102,6 +109,9 @@ __decorate([
 __decorate([
     property({ type: Number })
 ], PsAddConnectorDialog.prototype, "selectedAgentId", void 0);
+__decorate([
+    property({ type: String })
+], PsAddConnectorDialog.prototype, "selectedInputOutputType", void 0);
 __decorate([
     state()
 ], PsAddConnectorDialog.prototype, "activeConnectorClasses", void 0);

@@ -8,6 +8,7 @@ import '@material/web/textfield/filled-text-field.js';
 export declare class PsAddConnectorDialog extends LitElement {
     open: boolean;
     selectedAgentId: number | null;
+    selectedInputOutputType: "input" | "output" | null;
     private activeConnectorClasses;
     private selectedConnectorClassId;
     private connectorName;

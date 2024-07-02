@@ -41,17 +41,6 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<PsAgentAttributes>;
   }
 
-  public async createConnector(agentId: number, connectorClassId: number, name: string): Promise<PsAgentConnectorAttributes> {
-    return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseAgentsPath}${agentId}/connectors`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ connectorClassId, name }),
-      },
-      false
-    ) as Promise<PsAgentConnectorAttributes>;
-  }
-
   public async getActiveAiModels(): Promise<PsAiModelAttributes[]> {
     return this.fetchWrapper(
       this.baseUrlPath + `${this.baseAgentsPath}registry/aiModels`,
@@ -247,6 +236,26 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<LtpChatBotCrtMessage>;
   }
 
+  async createConnector(
+    agentId: number,
+    connectorClassId: number,
+    name: string,
+    type: 'input' | 'output'
+  ): Promise<PsAgentConnectorAttributes> {
+    const response = await fetch(`/api/agents/${agentId}/${type}Connectors`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ connectorClassId, name }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create ${type} connector`);
+    }
+
+    return response.json();
+  }
 
   public updateNode(
     agentId: number,

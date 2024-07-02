@@ -431,23 +431,21 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
                 const el = this.createAgentElement(subAgent);
                 this.elements[this.getUniqueAgentId(subAgent)] = el;
                 renderedNodes.add(this.getUniqueAgentId(subAgent));
-                if (subAgent.Connectors && subAgent.Connectors.length > 0) {
-                    subAgent.Connectors.forEach(connector => {
-                        const el = this.createConnectorElement(connector, subAgent);
-                        this.elements[this.getUniqueConnectorId(connector)] = el;
-                        renderedNodes.add(this.getUniqueConnectorId(connector));
-                    });
-                }
+                // Collect all subAgent.InputConnectors and subAgent.OutputConnectors into const connectors
+                const connectors = [...subAgent.InputConnectors, ...subAgent.OutputConnectors];
+                connectors.forEach(connector => {
+                    const el = this.createConnectorElement(connector, subAgent);
+                    this.elements[this.getUniqueConnectorId(connector)] = el;
+                    renderedNodes.add(this.getUniqueConnectorId(connector));
+                });
             });
         }
-        if (this.currentAgent.Connectors &&
-            this.currentAgent.Connectors.length > 0) {
-            this.currentAgent.Connectors.forEach(connector => {
-                const el = this.createConnectorElement(connector, this.currentAgent);
-                this.elements[this.getUniqueConnectorId(connector)] = el;
-                renderedNodes.add(this.getUniqueConnectorId(connector));
-            });
-        }
+        const connectors = [...this.currentAgent.InputConnectors, ...this.currentAgent.OutputConnectors];
+        connectors.forEach(connector => {
+            const el = this.createConnectorElement(connector, this.currentAgent);
+            this.elements[this.getUniqueConnectorId(connector)] = el;
+            renderedNodes.add(this.getUniqueConnectorId(connector));
+        });
         setTimeout(() => {
             this.applyDirectedGraphLayout();
             this.updatePaperSize();

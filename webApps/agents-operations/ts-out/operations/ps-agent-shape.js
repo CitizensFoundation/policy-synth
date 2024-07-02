@@ -20,7 +20,7 @@ export class AgentsShapeView extends dia.ElementView {
         //TODO: Make TS work here
         const nodeType = this.model.attributes.nodeType;
         let foreignObjectWidth = 200;
-        let foreignObjectHeight = 230;
+        let foreignObjectHeight = 300;
         if (nodeType === 'connector') {
             foreignObjectWidth = 140;
             foreignObjectHeight = 180;

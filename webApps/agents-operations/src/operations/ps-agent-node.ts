@@ -69,10 +69,16 @@ export class PsAgentNode extends PsOperationsBaseNode {
     }
   }
 
-  addConnector() {
-    this.fire('add-connector', { agentId: this.agent.id });
+  addInputConnector() {
+    this.fire('add-connector', { agentId: this.agent.id, type: 'input' });
     this.menuOpen = false;
   }
+
+  addOutputConnector() {
+    this.fire('add-connector', { agentId: this.agent.id, type: 'output' });
+    this.menuOpen = false;
+  }
+
   startStatusUpdates() {
     this.updateAgentStatus();
     this.statusInterval = window.setInterval(
@@ -304,11 +310,14 @@ export class PsAgentNode extends PsOperationsBaseNode {
             <md-icon>more_vert</md-icon>
           </md-icon-button>
           <md-menu id="agentMenu" positioning="popover">
+            <md-menu-item @click="${this.addInputConnector}"
+              ><div slot="headline">Add Input Connector</div></md-menu-item
+            >
+            <md-menu-item @click="${this.addOutputConnector}"
+              ><div slot="headline">Add Output Connector</div></md-menu-item
+            >
             <md-menu-item @click="${this.stopAgent}"
               ><div slot="headline">Stop Agent</div></md-menu-item
-            >
-            <md-menu-item @click="${this.addConnector}"
-              ><div slot="headline">Add Connector</div></md-menu-item
             >
           </md-menu>
 

@@ -6,7 +6,6 @@ export declare class OpsServerApi extends BaseChatBotServerApi {
     getCrt(groupId: number): Promise<LtpCurrentRealityTreeData>;
     updateAgentConfiguration(agentId: number, updatedConfig: Partial<PsAgentAttributes['configuration']>): Promise<void>;
     createAgent(name: string, agentClassId: number, aiModelId: number, parentAgentId: number, groupId?: number): Promise<PsAgentAttributes>;
-    createConnector(agentId: number, connectorClassId: number, name: string): Promise<PsAgentConnectorAttributes>;
     getActiveAiModels(): Promise<PsAiModelAttributes[]>;
     getActiveAgentClasses(): Promise<PsAgentClassAttributes[]>;
     getActiveConnectorClasses(): Promise<PsAgentConnectorClassAttributes[]>;
@@ -18,6 +17,7 @@ export declare class OpsServerApi extends BaseChatBotServerApi {
     getAgentCosts(agentId: number): Promise<number>;
     sendGetRefinedCauseQuery(crtTreeId: string | number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect?: string, causes?: string[], validationErrors?: string[]): Promise<LtpChatBotCrtMessage>;
     runValidationChain(crtTreeId: string | number, crtNodeId: string, chatLog: PsAiChatWsMessage[], wsClientId: string, effect: string, causes: string[]): Promise<LtpChatBotCrtMessage>;
+    createConnector(agentId: number, connectorClassId: number, name: string, type: 'input' | 'output'): Promise<PsAgentConnectorAttributes>;
     updateNode(agentId: number, updatedNode: PsAgentAttributes): Promise<void>;
     updateNodeConfiguration(nodeType: 'agent' | 'connector', nodeId: number, updatedConfig: Partial<PsAgentAttributes['configuration'] | PsAgentConnectorAttributes['configuration']>): Promise<void>;
     getAgentStatus(agentId: number): Promise<PsAgentStatus>;

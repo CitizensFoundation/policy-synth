@@ -13,6 +13,8 @@ export declare class PsAgentConnector extends Model<PsAgentConnectorAttributes, 
     User?: YpUserData;
     Group?: YpGroupData;
     Class?: PsAgentConnectorClassAttributes;
+    InputAgents?: PsAgentAttributes[];
+    OutputAgents?: PsAgentAttributes[];
 }
 export {};
 //# sourceMappingURL=agentConnector.d.ts.map

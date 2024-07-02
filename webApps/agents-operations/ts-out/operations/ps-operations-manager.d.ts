@@ -24,6 +24,7 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     showAddAgentDialog: boolean;
     showAddConnectorDialog: boolean;
     selectedAgentIdForConnector: number | null;
+    selectedInputOutputType: string | null;
     agentElement: PsOperationsView;
     groupId: number | undefined;
     api: OpsServerApi;

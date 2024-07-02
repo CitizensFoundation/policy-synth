@@ -9,7 +9,9 @@ export declare class AgentsController {
     initializeRoutes(): void;
     updateNodeConfiguration: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     createAgent: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
-    createConnector: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
+    createInputConnector: (req: express.Request, res: express.Response) => Promise<void>;
+    createOutputConnector: (req: express.Request, res: express.Response) => Promise<void>;
+    createConnector: (req: express.Request, res: express.Response, type: "input" | "output") => Promise<express.Response<any, Record<string, any>> | undefined>;
     getActiveAiModels: (req: express.Request, res: express.Response) => Promise<void>;
     getActiveAgentClasses: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     getActiveConnectorClasses: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
@@ -25,7 +27,8 @@ export declare class AgentsController {
         parent_agent_id?: number | undefined;
         parentAgent?: PsAgentAttributes | undefined;
         SubAgents?: PsAgentAttributes[] | undefined;
-        Connectors?: PsAgentConnectorAttributes[] | undefined;
+        InputConnectors?: PsAgentConnectorAttributes[] | undefined;
+        OutputConnectors?: PsAgentConnectorAttributes[] | undefined;
         AiModels?: PsAiModelAttributes[] | undefined;
         Evals?: PsAgentEvalAttributes[] | undefined;
         configuration: PsAgentBaseConfiguration;

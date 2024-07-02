@@ -104,19 +104,26 @@ PsAgent.associate = (models) => {
         foreignKey: 'parent_agent_id',
         as: 'ParentAgent',
     });
-    // Through a join table
-    PsAgent.belongsToMany(models.PsAgentConnector, {
-        through: "AgentConnectors",
-        foreignKey: "agent_id",
-        as: "Connectors",
-        timestamps: false,
-    });
-    // Through a join table
     PsAgent.belongsToMany(models.PsAiModel, {
         through: "AgentModels",
         foreignKey: "agent_id",
         otherKey: 'ai_model_id',
         as: "AiModels",
+        timestamps: false,
+    });
+    // Through a join table
+    PsAgent.belongsToMany(models.PsAgentConnector, {
+        through: "AgentInputConnectors",
+        foreignKey: "agent_id",
+        otherKey: "connector_id",
+        as: "InputConnectors",
+        timestamps: false,
+    });
+    PsAgent.belongsToMany(models.PsAgentConnector, {
+        through: "AgentOutputConnectors",
+        foreignKey: "agent_id",
+        otherKey: "connector_id",
+        as: "OutputConnectors",
         timestamps: false,
     });
 };

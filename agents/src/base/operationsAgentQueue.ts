@@ -71,7 +71,17 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
                 include: [
                   {
                     model: PsAgentConnector,
-                    as: "Connectors",
+                    as: "InputConnectors",
+                    include: [
+                      {
+                        model: PsAgentConnectorClass,
+                        as: "Class",
+                      },
+                    ],
+                  },
+                  {
+                    model: PsAgentConnector,
+                    as: "OutputConnectors",
                     include: [
                       {
                         model: PsAgentConnectorClass,
@@ -84,7 +94,17 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
               },
               {
                 model: PsAgentConnector,
-                as: "Connectors",
+                as: "InputConnectors",
+                include: [
+                  {
+                    model: PsAgentConnectorClass,
+                    as: "Class",
+                  },
+                ],
+              },
+              {
+                model: PsAgentConnector,
+                as: "OutputConnectors",
                 include: [
                   {
                     model: PsAgentConnectorClass,

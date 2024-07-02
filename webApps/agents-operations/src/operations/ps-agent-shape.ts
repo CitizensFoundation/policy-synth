@@ -13,7 +13,7 @@ export class AgentsShapeView extends dia.ElementView {
     const nodeType = this.model.attributes.nodeType as PsAgentsNodeType;
 
     let foreignObjectWidth = 200;
-    let foreignObjectHeight = 230;
+    let foreignObjectHeight = 300;
 
     if (nodeType === 'connector') {
       foreignObjectWidth = 140;

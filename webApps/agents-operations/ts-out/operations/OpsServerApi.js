@@ -23,12 +23,6 @@ export class OpsServerApi extends BaseChatBotServerApi {
             body: JSON.stringify({ name, agentClassId, aiModelId, parentAgentId, groupId }),
         }, false);
     }
-    async createConnector(agentId, connectorClassId, name) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/connectors`, {
-            method: 'POST',
-            body: JSON.stringify({ connectorClassId, name }),
-        }, false);
-    }
     async getActiveAiModels() {
         return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}registry/aiModels`, {
             method: 'GET',
@@ -130,6 +124,19 @@ export class OpsServerApi extends BaseChatBotServerApi {
                 causes,
             }),
         }, false);
+    }
+    async createConnector(agentId, connectorClassId, name, type) {
+        const response = await fetch(`/api/agents/${agentId}/${type}Connectors`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ connectorClassId, name }),
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to create ${type} connector`);
+        }
+        return response.json();
     }
     updateNode(agentId, updatedNode) {
         return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}`, {

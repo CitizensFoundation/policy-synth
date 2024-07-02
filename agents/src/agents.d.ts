@@ -226,7 +226,8 @@ interface PsAgentAttributes extends PsBaseNodeInstance {
   parent_agent_id?: number;
   parentAgent?: PsAgentAttributes;
   SubAgents?: PsAgentAttributes[]; // through a join table
-  Connectors?: PsAgentConnectorAttributes[]; // through a join table
+  InputConnectors?: PsAgentConnectorAttributes[];
+  OutputConnectors?: PsAgentConnectorAttributes[];
   AiModels?: PsAiModelAttributes[];
   Evals?: PsAgentEvalAttributes[]; // ADDED
   configuration: PsAgentBaseConfiguration;

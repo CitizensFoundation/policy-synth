@@ -85,10 +85,18 @@ PsAgentConnector.associate = (models) => {
     });
     // Through a join table
     PsAgentConnector.belongsToMany(models.PsAgent, {
-        through: "AgentConnectors",
+        through: "AgentInputConnectors",
         foreignKey: "connector_id",
-        as: "Agents",
-        timestamps: false
+        otherKey: "agent_id",
+        as: "InputAgents",
+        timestamps: false,
+    });
+    PsAgentConnector.belongsToMany(models.PsAgent, {
+        through: "AgentOutputConnectors",
+        foreignKey: "connector_id",
+        otherKey: "agent_id",
+        as: "OutputAgents",
+        timestamps: false,
     });
 };
 //# sourceMappingURL=agentConnector.js.map

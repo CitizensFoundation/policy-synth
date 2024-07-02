@@ -56,6 +56,9 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
   @property({ type: Number })
   selectedAgentIdForConnector: number | null = null;
 
+  @property({ type: String })
+  selectedInputOutputType: string | null = null;
+
   @query('ps-operations-view')
   agentElement!: PsOperationsView;
 
@@ -117,6 +120,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   async handleEditDialogSave(event: CustomEvent) {
     const updatedConfig = event.detail.updatedConfig;
+    const isInputConnector = event.detail.connectorType === "input";
+
     if (!this.nodeToEditInfo) return;
 
     try {
@@ -139,23 +144,44 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
           },
         };
       } else {
-        // Update the connector in the currentAgent's Connectors array
-        const updatedConnectors = this.currentAgent!.Connectors!.map(
-          connector =>
-            connector.id === nodeId
-              ? {
-                  ...connector,
-                  configuration: {
-                    ...connector.configuration,
-                    ...updatedConfig,
-                  },
-                }
-              : connector
-        );
-        this.currentAgent = {
-          ...this.currentAgent!,
-          Connectors: updatedConnectors,
-        };
+        // Determine if the connector is an input or output connector
+        if (isInputConnector) {
+          // Update the connector in the currentAgent's InputConnectors array
+          const updatedInputConnectors = this.currentAgent!.InputConnectors!.map(
+            connector =>
+              connector.id === nodeId
+                ? {
+                    ...connector,
+                    configuration: {
+                      ...connector.configuration,
+                      ...updatedConfig,
+                    },
+                  }
+                : connector
+          );
+          this.currentAgent = {
+            ...this.currentAgent!,
+            InputConnectors: updatedInputConnectors,
+          };
+        } else {
+          // Update the connector in the currentAgent's OutputConnectors array
+          const updatedOutputConnectors = this.currentAgent!.OutputConnectors!.map(
+            connector =>
+              connector.id === nodeId
+                ? {
+                    ...connector,
+                    configuration: {
+                      ...connector.configuration,
+                      ...updatedConfig,
+                    },
+                  }
+                : connector
+          );
+          this.currentAgent = {
+            ...this.currentAgent!,
+            OutputConnectors: updatedOutputConnectors,
+          };
+        }
       }
 
       this.requestUpdate();
@@ -173,6 +199,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   openAddConnectorDialog(event: CustomEvent) {
     this.selectedAgentIdForConnector = event.detail.agentId;
+    this.selectedInputOutputType = event.detail.type;
     this.showAddConnectorDialog = true;
   }
 
@@ -257,6 +284,7 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
           ?open="${this.showAddConnectorDialog}"
           .groupid="${this.groupId}"
           .selectedAgentId="${this.selectedAgentIdForConnector}"
+          .selectedInputOutputType="${this.selectedInputOutputType}"
           @close="${() => (this.showAddConnectorDialog = false)}"
         ></ps-add-connector-dialog>
 
