@@ -33,8 +33,8 @@ export class PsAgentConnector extends PsOperationsBaseNode {
         }
 
         .name {
-          height: 20px;
-          margin-top: 4px;
+          height: 16px;
+          margin-top: 8px;
           font-size: 14px;
           text-align: center;
           align-items: center;
@@ -104,13 +104,12 @@ export class PsAgentConnector extends PsOperationsBaseNode {
       return html`
         <div class="layout vertical mainContainer">
           ${this.renderImage()}
-          <div class="name">${this.connector.Class.name}</div>
           ${this.connector.configuration['name']
-            ? html`<div class="name instanceName">
+            ? html`<div class="name ">
                 ${this.connector.configuration['name']}
               </div>`
             : nothing}
-
+          <div class="name instanceName">${this.connector.Class.name}</div>
           <md-icon class="typeIconCore">checklist</md-icon>
 
           <md-icon-button class="editButton" @click="${this.editNode}"

@@ -61,8 +61,6 @@ type PSEvidenceWebPageTypes =
   | "costAnalysis"
   | "implementationFeasibility";
 
-type SearchResultItem = PsSearchResultItem[];
-
 type PSEvidenceSearchResults = {
   [K in PSEvidenceWebPageTypes]: SearchResultItem;
 };

@@ -148,6 +148,7 @@ export class PsAddAgentDialog extends YpBaseElement {
         md-filled-select {
           width: 100%;
           margin-bottom: 16px;
+          margin-top: 16px;
         }
       `,
     ];

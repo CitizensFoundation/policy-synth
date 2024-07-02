@@ -21,6 +21,7 @@ export declare class AgentsController {
     startAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
     pauseAgentProcessing: (req: express.Request, res: express.Response) => Promise<void>;
     getAgentCosts(req: express.Request, res: express.Response): Promise<void>;
+    getSingleAgentCosts(req: express.Request, res: express.Response): Promise<void>;
     getAgent: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     fetchAgentWithSubAgents(agentId: number): Promise<{
         Class?: PsAgentClassAttributes | undefined;

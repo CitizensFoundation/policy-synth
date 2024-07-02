@@ -211,6 +211,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         <ps-add-agent-dialog
           ?open="${this.showAddAgentDialog}"
           @close="${() => (this.showAddAgentDialog = false)}"
+          @agent-added="${this.getAgent}"
           .parentAgentId="${this.currentAgent.id}"
           .groupId="${this.groupId}"
         ></ps-add-agent-dialog>
@@ -218,6 +219,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         <ps-add-connector-dialog
           ?open="${this.showAddConnectorDialog}"
           .groupid="${this.groupId}"
+          @connector-added="${this.getAgent}"
           .selectedAgentId="${this.selectedAgentIdForConnector}"
           .selectedInputOutputType="${this.selectedInputOutputType}"
           @close="${() => (this.showAddConnectorDialog = false)}"

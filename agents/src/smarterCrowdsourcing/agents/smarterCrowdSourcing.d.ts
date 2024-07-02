@@ -51,10 +51,7 @@ type AboutThisResult = {
   regions: string[];
 };
 
-interface PsPairWiseVoteResults {
-  wonItemIndex: number | undefined;
-  lostItemIndex: number | undefined;
-}
+
 
 interface PsWorkerData {
   groupId: number;
@@ -280,17 +277,6 @@ interface PsSearchQuery {
   openData: string;
 }
 
-interface PsSearchResultItem extends PsEloRateable {
-  title: string;
-  originalPosition: number;
-  description: string;
-  url: string;
-  date: string;
-  //TODO: Depricated
-  link?: string;
-  //TODO: Depricated
-  position?: number;
-}
 
 interface PsSearchResults {
   pages: {

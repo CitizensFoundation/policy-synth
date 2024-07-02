@@ -18,13 +18,21 @@ export declare class PsYourPrioritiesConnector extends PsBaseConnector {
             description: string;
             imageUrl: string;
             iconName: string;
-            questions: {
+            questions: ({
                 uniqueId: string;
                 text: string;
                 type: string;
                 maxLength: number;
                 required: boolean;
-            }[];
+                subType?: undefined;
+            } | {
+                uniqueId: string;
+                text: string;
+                type: string;
+                subType: string;
+                maxLength: number;
+                required: boolean;
+            })[];
         };
     };
     private userEmail;

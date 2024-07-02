@@ -118,6 +118,25 @@ interface PsExternalApiUsageAttributes extends PsBaseModelClassNoUuid {
   connector_id: number; // or
 }
 
+interface PsPairWiseVoteResults {
+  wonItemIndex: number | undefined;
+  lostItemIndex: number | undefined;
+}
+
+interface PsSearchResultItem extends PsEloRateable {
+  title: string;
+  originalPosition: number;
+  description: string;
+  url: string;
+  date: string;
+  //TODO: Depricated
+  link?: string;
+  //TODO: Depricated
+  position?: number;
+}
+
+type SearchResultItem = PsSearchResultItem[];
+
 interface PsAgentBaseMemoryData {
   startTime?: number;
 }

@@ -4,12 +4,12 @@ import { PolicySynthOperationsAgent } from "../../base/operationsAgent.js";
 import { PsAgent } from "../../dbModels/agent.js";
 
 export abstract class PsBaseConnector extends PolicySynthOperationsAgent {
-  connector: PsAgentConnector;
+  connector: PsAgentConnectorAttributes;
   connectorClass: PsAgentConnectorClass;
   skipAiModels = true;
 
   constructor(
-    connector: PsAgentConnector,
+    connector: PsAgentConnectorAttributes,
     connectorClass: PsAgentConnectorClass,
     agent: PsAgent,
     memory: PsAgentMemoryData | undefined = undefined,

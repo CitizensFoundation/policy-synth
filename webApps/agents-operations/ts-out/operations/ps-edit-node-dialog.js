@@ -102,6 +102,11 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
           justify-content: center;
           height: 55px;
         }
+
+        md-dialog {
+          width: 90%;
+          height: 90%;
+        }
       `,
         ];
     }

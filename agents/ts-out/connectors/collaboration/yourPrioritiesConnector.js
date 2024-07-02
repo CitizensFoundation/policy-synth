@@ -49,7 +49,8 @@ export class PsYourPrioritiesConnector extends PsBaseConnector {
                 {
                     uniqueId: "password",
                     text: "Password",
-                    type: "password",
+                    type: "textField",
+                    subType: "password",
                     maxLength: 200,
                     required: true,
                 },

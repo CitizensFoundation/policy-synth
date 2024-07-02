@@ -23,15 +23,15 @@ export abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
     this.endProgress = 100;
   }
 
-  abstract get processors(): {
+  abstract get processors(): Array<{
     processor: new (
       agent: PsAgent,
-      memory: PsAgentMemoryData,
+      memory: any, //TODO: Fix this to T or something
       startProgress: number,
       endProgress: number
     ) => PolicySynthOperationsAgent;
     weight: number;
-  }[];
+  }>;
 
   async processAllAgents() {
     let totalProgress = 0;

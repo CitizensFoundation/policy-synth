@@ -2,10 +2,11 @@ import { PsAgent } from "../dbModels/agent.js";
 import { PolicySynthOperationsAgent } from "./operationsAgent.js";
 export declare abstract class PolicySynthAgentQueue extends PolicySynthOperationsAgent {
     constructor();
-    abstract get processors(): {
-        processor: new (agent: PsAgent, memory: PsAgentMemoryData, startProgress: number, endProgress: number) => PolicySynthOperationsAgent;
+    abstract get processors(): Array<{
+        processor: new (agent: PsAgent, memory: any, //TODO: Fix this to T or something
+        startProgress: number, endProgress: number) => PolicySynthOperationsAgent;
         weight: number;
-    }[];
+    }>;
     processAllAgents(): Promise<void>;
     abstract get agentQueueName(): string;
     abstract setupMemoryIfNeeded(): Promise<void>;

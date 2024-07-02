@@ -51,11 +51,34 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     docs;
     constructor(connector, connectorClass, agent, memory = undefined, startProgress = 0, endProgress = 100) {
         super(connector, connectorClass, agent, memory, startProgress, endProgress);
-        const credentialsJson = this.getConfig("credentialsJson", "");
-        if (!credentialsJson) {
+        const credentialsConfig = this.getConfig("credentialsJson", "");
+        if (!credentialsConfig) {
             throw new Error("Google Service Account credentials are not set.");
         }
-        const credentials = JSON.parse(credentialsJson);
+        let credentials;
+        if (typeof credentialsConfig === 'string') {
+            try {
+                credentials = JSON.parse(credentialsConfig);
+            }
+            catch (error) {
+                throw new Error("Invalid JSON string for Google Service Account credentials.");
+            }
+        }
+        else if (typeof credentialsConfig === 'object') {
+            credentials = credentialsConfig;
+        }
+        else {
+            throw new Error("Invalid type for Google Service Account credentials. Expected string or object.");
+        }
+        if (!credentials.client_email || !credentials.private_key) {
+            throw new Error("Invalid Google Service Account credentials. Missing client_email or private_key.");
+        }
+        // Create a new JWT client using the credentials
+        this.client = new JWT({
+            email: credentials.client_email,
+            key: credentials.private_key,
+            scopes: ["https://www.googleapis.com/auth/documents"],
+        });
         // Create a new JWT client using the credentials
         this.client = new JWT({
             email: credentials.client_email,
