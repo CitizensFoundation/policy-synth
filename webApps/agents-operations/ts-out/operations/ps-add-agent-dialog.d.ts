@@ -1,3 +1,4 @@
+import { PsAiModelSize } from './aiModelTypes.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/text-button.js';
 import '@material/web/button/filled-button.js';
@@ -14,12 +15,14 @@ export declare class PsAddAgentDialog extends YpBaseElement {
     private selectedAgentClassId;
     private selectedAiModels;
     private agentName;
+    private filteredAiModels;
     private api;
     connectedCallback(): Promise<void>;
     fetchActiveAgentClasses(): Promise<void>;
     fetchActiveAiModels(): Promise<void>;
+    filterAiModels(): void;
     render(): import("lit").TemplateResult<1>;
-    getLocalizedModelLabel(size: string): string;
+    getLocalizedModelLabel(size: PsAiModelSize): string;
     private renderAiModelSelect;
     private _handleNameInput;
     private _handleAgentClassSelection;

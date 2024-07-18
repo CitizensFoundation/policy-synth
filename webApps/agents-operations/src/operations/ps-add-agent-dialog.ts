@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import { PsAiModelSize } from './aiModelTypes.js';
 
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/text-button.js';
@@ -20,12 +21,14 @@ export class PsAddAgentDialog extends YpBaseElement {
   @state() private activeAgentClasses: PsAgentClassAttributes[] = [];
   @state() private activeAiModels: PsAiModelAttributes[] = [];
   @state() private selectedAgentClassId: number | null = null;
-  @state() private selectedAiModels: { [key: string]: number | null } = {
-    small: null,
-    medium: null,
-    large: null
-  };
+  @state() private selectedAiModels: { [key in PsAiModelSize]?: number | null } = {};
   @state() private agentName: string = '';
+
+  @state() private filteredAiModels: { [key in PsAiModelSize]: PsAiModelAttributes[] } = {
+    small: [],
+    medium: [],
+    large: []
+  };
 
   private api = new OpsServerApi();
 
@@ -46,23 +49,41 @@ export class PsAddAgentDialog extends YpBaseElement {
   async fetchActiveAiModels() {
     try {
       this.activeAiModels = await this.api.getActiveAiModels();
+      this.filterAiModels();
     } catch (error) {
       console.error('Error fetching active AI models:', error);
     }
   }
 
+  filterAiModels() {
+    this.filteredAiModels = {
+      small: [],
+      medium: [],
+      large: []
+    };
+
+    this.activeAiModels.forEach(model => {
+      if (model.configuration && 'modelSize' in model.configuration) {
+        const size = model.configuration.modelSize as PsAiModelSize;
+        if (size in this.filteredAiModels) {
+          this.filteredAiModels[size].push(model);
+        }
+      }
+    });
+  }
+
   render() {
     return html`
       <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
-        <div slot="headline">Add New Agent</div>
+        <div slot="headline">${this.t('addNewAgent')}</div>
         <div slot="content">
           <md-filled-text-field
-            label="Agent Name"
+            label="${this.t('agentName')}"
             @input="${this._handleNameInput}"
             value="${this.agentName}"
           ></md-filled-text-field>
           <md-filled-select
-            label="Select Agent Class"
+            label="${this.t('selectAgentClass')}"
             @change="${this._handleAgentClassSelection}"
           >
             ${this.activeAgentClasses?.map(
@@ -76,39 +97,51 @@ export class PsAddAgentDialog extends YpBaseElement {
           <div class="aiModelInfo">
             ${this.t("aiModelAgentCreateInfo")}
           </div>
-          ${['small', 'medium', 'large'].map(size => this.renderAiModelSelect(size))}
+          ${this.renderAiModelSelect('small')}
+          ${this.renderAiModelSelect('medium')}
+          ${this.renderAiModelSelect('large')}
         </div>
         <div slot="actions">
-          <md-text-button @click="${this._handleClose}">Cancel</md-text-button>
-          <md-filled-button @click="${this._handleAddAgent}">Add Agent</md-filled-button>
+          <md-text-button @click="${this._handleClose}">${this.t('cancel')}</md-text-button>
+          <md-filled-button @click="${this._handleAddAgent}">${this.t('addAgent')}</md-filled-button>
         </div>
       </md-dialog>
     `;
   }
 
-  getLocalizedModelLabel(size: string) {
-    if (size==='small') {
-      return this.t("selectSmallAiModel");
-    } else if (size==='medium') {
-      return this.t("selectMediumAiModel");
-    } else if (size==='large') {
-      return this.t("selectLargeAiModel");
+  getLocalizedModelLabel(size: PsAiModelSize) {
+    switch (size) {
+      case 'small':
+        return this.t("selectSmallAiModel");
+      case 'medium':
+        return this.t("selectMediumAiModel");
+      case 'large':
+        return this.t("selectLargeAiModel");
+      default:
+        return this.t("selectAiModel");
     }
   }
 
-  private renderAiModelSelect(size: string) {
+  private renderAiModelSelect(size: PsAiModelSize) {
+    const models = this.filteredAiModels[size];
+    const isDisabled = models.length === 0;
+
     return html`
       <md-filled-select
         .label="${this.getLocalizedModelLabel(size)}"
         @change="${(e: Event) => this._handleAiModelSelection(e, size)}"
+        ?disabled="${isDisabled}"
       >
-        ${this.activeAiModels.map(
-          aiModel => html`
-            <md-select-option value="${aiModel.id}">
-              <div slot="headline">${aiModel.name}</div>
-            </md-select-option>
-          `
-        )}
+        ${isDisabled
+          ? html`<md-select-option disabled>
+              <div slot="headline">${this.t("noModelsAvailable")}</div>
+            </md-select-option>`
+          : models.map(aiModel => html`
+              <md-select-option value="${aiModel.id}">
+                <div slot="headline">${aiModel.name}</div>
+              </md-select-option>
+            `)
+        }
       </md-filled-select>
     `;
   }
@@ -123,7 +156,7 @@ export class PsAddAgentDialog extends YpBaseElement {
     this.selectedAgentClassId = Number(select.value);
   }
 
-  private _handleAiModelSelection(e: Event, size: string) {
+  private _handleAiModelSelection(e: Event, size: PsAiModelSize) {
     const select = e.target as HTMLSelectElement;
     this.selectedAiModels[size] = Number(select.value);
   }
@@ -133,9 +166,12 @@ export class PsAddAgentDialog extends YpBaseElement {
   }
 
   private async _handleAddAgent() {
-    if (!this.agentName || !this.selectedAgentClassId ||
-        !this.selectedAiModels.small || !this.selectedAiModels.medium || !this.selectedAiModels.large) {
-      console.error('Agent name, class, or AI models not selected');
+    const selectedModels = Object.entries(this.selectedAiModels)
+      .filter(([_, value]) => value !== null)
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+    if (!this.agentName || !this.selectedAgentClassId || Object.keys(selectedModels).length === 0) {
+      console.error('Agent name, class, and at least one AI model must be selected');
       return;
     }
 
@@ -143,7 +179,7 @@ export class PsAddAgentDialog extends YpBaseElement {
       const newAgent = await this.api.createAgent(
         this.agentName,
         this.selectedAgentClassId,
-        this.selectedAiModels,
+        selectedModels as { [key: string]: number },
         this.parentAgentId,
         this.groupId
       );

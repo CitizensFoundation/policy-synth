@@ -34,7 +34,7 @@ export declare class PsAiChatElement extends YpBaseElement {
     renderCGImage(): import("lit").TemplateResult<1>;
     renderRoboImage(): import("lit").TemplateResult<1>;
     renderJson(): import("lit").TemplateResult<1>;
-    renderInfo(): typeof nothing | import("lit").TemplateResult<1>;
+    renderInfo(): import("lit").TemplateResult<1> | typeof nothing;
     shortenText(text: string, maxLength: number): string;
     capitalizeFirstLetter(text: string): string;
     stripDomainForFacIcon(url: string): string;

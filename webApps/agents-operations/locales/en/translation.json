@@ -1,4 +1,8 @@
 {
+    "addNewAgent": "Add new agent",
+    "selectAgentClass": "Select agent class",
+    "agentName": "Agent name",
+    "addAgent": "Add agent",
     "selectSmallAiModel": "Select Small AI model",
     "selectMediumAiModel": "Select Medium AI model",
     "selectLargeAiModel": "Select Large AI model",
