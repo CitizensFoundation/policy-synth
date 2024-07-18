@@ -4,7 +4,7 @@ import ioredis from "ioredis";
 import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesAgent } from "../create/createRootCauseSearchQueries.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -202,7 +202,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
             console.log(JSON.stringify(messages, null, 2));
             this.hasPrintedPrompt = true;
         }
-        const analysis = (await this.callModel(PsAiModelType.Text, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, true, true));
         return analysis;
     }
     isUrlInSubProblemMemory(url) {

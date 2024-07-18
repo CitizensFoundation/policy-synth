@@ -4,7 +4,7 @@ import axios from "axios";
 import AWS from "aws-sdk";
 import fs from "fs";
 import path from "path";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
@@ -64,12 +64,12 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
                 let sleepingFor;
                 if (error.message && error.message.indexOf("400") > -1) {
                     if (retryCount > 3) {
-                        imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy, "8. Make it very simple and colorful with no complicated ideas or details."), false));
+                        imagePrompt = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy, "8. Make it very simple and colorful with no complicated ideas or details."), false));
                         this.logger.debug(`New (altered) Image Prompt: ${imagePrompt}`);
                         sleepingFor = 2500 + retryCount * 1500;
                     }
                     else {
-                        imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy), false));
+                        imagePrompt = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy), false));
                         this.logger.debug(`New Image Prompt: ${imagePrompt}`);
                     }
                     sleepingFor = 2500 + retryCount * 1000;
@@ -223,7 +223,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
                     }
                     else {
                         if (process.env.STABILITY_API_KEY) {
-                            imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solution), false));
+                            imagePrompt = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex, solution), false));
                         }
                         else {
                             imagePrompt = this.getDalleImagePrompt(subProblemIndex, solution);

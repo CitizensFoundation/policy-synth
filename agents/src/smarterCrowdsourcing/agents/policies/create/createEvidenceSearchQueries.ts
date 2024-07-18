@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 
 export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAgent {
@@ -182,6 +182,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
         // create search queries for each type
         let searchResults = (await this.callModel(
           PsAiModelType.Text,
+          PsAiModelSize.Medium,
           await this.renderCreatePrompt(
             subProblemIndex,
             policy,
@@ -195,6 +196,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
 
         searchResults = (await this.callModel(
           PsAiModelType.Text,
+          PsAiModelSize.Medium,
           await this.renderRefinePrompt(
             subProblemIndex,
             policy,
@@ -209,6 +211,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
 
         searchResults = (await this.callModel(
           PsAiModelType.Text,
+          PsAiModelSize.Medium,
           await this.renderRankPrompt(
             subProblemIndex,
             policy,

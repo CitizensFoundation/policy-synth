@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { RootCausesSmarterCrowdsourcingAgent } from "../../base/scBaseRootCausesAgent.js";
 export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdsourcingAgent {
     static rootCauseWebPageTypesArray = [
@@ -111,14 +111,14 @@ export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdso
                 this.logger.info(`Creating root cause search queries for result ${searchResultType} search results`);
                 await this.updateRangedProgress(progress, `Creating search queries for ${searchResultType}`);
                 // create search queries for each type
-                let searchResults = await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(searchResultType));
+                let searchResults = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(searchResultType));
                 if (refineSearchQueriesHere) {
                     this.logger.info(`Refine root cause search queries for ${searchResultType} search results`);
-                    searchResults = await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(searchResultType, searchResults));
+                    searchResults = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderRefinePrompt(searchResultType, searchResults));
                 }
                 if (rankeSearchQueriesHere) {
                     this.logger.info(`Ranking root cause search queries for ${searchResultType} search results`);
-                    searchResults = await this.callModel(PsAiModelType.Text, await this.renderRankPrompt(searchResultType, searchResults));
+                    searchResults = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderRankPrompt(searchResultType, searchResults));
                 }
                 this.logger.debug(`Search query type: ${searchResultType} - ${JSON.stringify(searchResults, null, 2)}`);
                 problemStatement.rootCauseSearchQueries[searchResultType] =

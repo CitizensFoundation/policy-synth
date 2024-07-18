@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderReapPrompt(solution) {
@@ -29,7 +29,7 @@ export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
         const leaveOutFirstTopOnes = 3;
         for (let solutionIndex = leaveOutFirstTopOnes; solutionIndex < solutions.length; solutionIndex++) {
             const solution = solutions[solutionIndex];
-            const reapedResults = await this.callModel(PsAiModelType.Text, await this.renderReapPrompt(solution));
+            const reapedResults = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderReapPrompt(solution));
             if (reapedResults.solutionFitsRequirements === false) {
                 this.logger.info(`Reaped solution: ${solution.title}`);
                 solution.reaped = true;

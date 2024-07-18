@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAgent {
     static evidenceWebPageTypesArray = [
@@ -130,11 +130,11 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
             if (!policy.evidenceSearchQueries[searchResultType]) {
                 this.logger.info(`Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
                 // create search queries for each type
-                let searchResults = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
+                let searchResults = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
                 this.logger.info(`Refine evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-                searchResults = (await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                searchResults = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderRefinePrompt(subProblemIndex, policy, searchResultType, searchResults)));
                 this.logger.info(`Ranking evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-                searchResults = (await this.callModel(PsAiModelType.Text, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
+                searchResults = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderRankPrompt(subProblemIndex, policy, searchResultType, searchResults)));
                 this.logger.debug(`Search query type: ${searchResultType} ${JSON.stringify(searchResults, null, 2)}`);
                 policy.evidenceSearchQueries[searchResultType] = searchResults;
             }

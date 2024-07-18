@@ -16,7 +16,7 @@ import {
 } from "../models/index.js";
 import { AgentManagerService } from "../operations/agentManager.js";
 import { Queue } from "bullmq";
-import { QueryTypes, Transaction } from "sequelize";
+import { Identifier, QueryTypes, Transaction } from "sequelize";
 
 let redisClient;
 
@@ -66,8 +66,14 @@ export class AgentsController {
     );
     this.router.get(this.path + "/registry/aiModels", this.getActiveAiModels);
     this.router.post(this.path, this.createAgent);
-    this.router.post(this.path + "/:agentId/outputConnectors", this.createOutputConnector);
-    this.router.post(this.path + "/:agentId/inputConnectors", this.createInputConnector);
+    this.router.post(
+      this.path + "/:agentId/outputConnectors",
+      this.createOutputConnector
+    );
+    this.router.post(
+      this.path + "/:agentId/inputConnectors",
+      this.createInputConnector
+    );
     this.router.put(
       this.path + "/:nodeId/:nodeType/configuration",
       this.updateNodeConfiguration
@@ -111,24 +117,44 @@ export class AgentsController {
   };
 
   createAgent = async (req: express.Request, res: express.Response) => {
-    const { name, agentClassId, aiModelId, parentAgentId } = req.body;
+    const { name, agentClassId, aiModels, parentAgentId } = req.body;
 
-    if (!agentClassId || !aiModelId) {
+    if (
+      !agentClassId ||
+      !aiModels ||
+      typeof aiModels !== "object" ||
+      Object.keys(aiModels).length === 0
+    ) {
       return res
         .status(400)
-        .send("Agent class ID and AI model ID are required");
+        .send("Agent class ID and at least one AI model ID are required");
     }
 
     const transaction = await sequelize.transaction();
 
     try {
       const agentClass = await PsAgentClass.findByPk(agentClassId);
-      const aiModel = await PsAiModel.findByPk(aiModelId);
-
-      if (!agentClass || !aiModel) {
+      if (!agentClass) {
         await transaction.rollback();
-        return res.status(404).send("Agent class or AI model not found");
+        return res.status(404).send("Agent class not found");
       }
+
+      const aiModelPromises = Object.entries(aiModels).map(
+        async ([size, id]) => {
+          if (typeof id !== "number" && typeof id !== "string") {
+            throw new Error(`Invalid AI model ID for size ${size}`);
+          }
+          const model = await PsAiModel.findByPk(id as Identifier);
+          if (!model) {
+            throw new Error(
+              `AI model with id ${id} for size ${size} not found`
+            );
+          }
+          return { size, model };
+        }
+      );
+
+      const foundAiModels = await Promise.all(aiModelPromises);
 
       const newAgent = await PsAgent.create(
         {
@@ -143,7 +169,11 @@ export class AgentsController {
         { transaction }
       );
 
-      await newAgent.addAiModel(aiModel, { transaction });
+      await Promise.all(
+        foundAiModels.map(({ size, model }) =>
+          newAgent.addAiModel(model, { through: { size }, transaction })
+        )
+      );
 
       await transaction.commit();
 
@@ -163,15 +193,25 @@ export class AgentsController {
     }
   };
 
-  createInputConnector = async (req: express.Request, res: express.Response) => {
+  createInputConnector = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     this.createConnector(req, res, "input");
-  }
+  };
 
-  createOutputConnector = async (req: express.Request, res: express.Response) => {
+  createOutputConnector = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
     this.createConnector(req, res, "output");
-  }
+  };
 
-  createConnector = async (req: express.Request, res: express.Response, type: "input" | "output") => {
+  createConnector = async (
+    req: express.Request,
+    res: express.Response,
+    type: "input" | "output"
+  ) => {
     const { agentId } = req.params;
     const { connectorClassId, name } = req.body;
 
@@ -300,7 +340,7 @@ export class AgentsController {
             as: "Connectors",
             where: { available: true },
             through: { attributes: [] },
-          }
+          },
         ],
       });
 
@@ -463,10 +503,12 @@ export class AgentsController {
       const agentCosts = results.map((row: any) => ({
         agentId: row.agent_id,
         level: row.level,
-        cost: parseFloat(row.agent_cost).toFixed(2)
+        cost: parseFloat(row.agent_cost).toFixed(2),
       }));
 
-      const totalCost = agentCosts.reduce((sum, agent) => sum + parseFloat(agent.cost), 0).toFixed(2);
+      const totalCost = agentCosts
+        .reduce((sum, agent) => sum + parseFloat(agent.cost), 0)
+        .toFixed(2);
 
       res.json({ agentCosts, totalCost });
     } catch (error) {
@@ -475,7 +517,10 @@ export class AgentsController {
     }
   }
 
-  public async getSingleAgentCosts(req: express.Request, res: express.Response) {
+  public async getSingleAgentCosts(
+    req: express.Request,
+    res: express.Response
+  ) {
     const agentId = parseInt(req.params.id);
 
     try {
@@ -505,7 +550,6 @@ export class AgentsController {
       res.status(500).send("Internal Server Error");
     }
   }
-
 
   getAgent = async (req: express.Request, res: express.Response) => {
     const groupId = req.params.id;

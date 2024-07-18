@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { CreateInitialSolutionsAgent } from "../create/createSolutions.js";
 
 //TODO: Pentalty for similar ideas in the ranking somehow
@@ -120,6 +120,7 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
 
     return (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Large,
       this.renderRecombinationPrompt(parentA, parentB, subProblemIndex)
     )) as PsSolution;
   }
@@ -150,6 +151,7 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
     try {
       const mutant = (await this.callModel(
         PsAiModelType.Text,
+        PsAiModelSize.Large,
         this.renderMutatePrompt(individual, subProblemIndex, mutateRate)
       )) as PsSolution;
 

@@ -11,7 +11,7 @@ import { PsAgent } from "../dbModels/agent.js";
 import { Op, Transaction } from "sequelize";
 import { PolicySynthBaseAgent } from "./agent.js";
 import { Job, Worker } from "bullmq";
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { sequelize } from "../dbModels/sequelize.js";
 import { TiktokenModel, encoding_for_model } from "tiktoken";
 
@@ -23,12 +23,14 @@ const redis = new ioredis(
 export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   memory!: PsAgentMemoryData;
   agent: PsAgent;
-  models: Map<PsAiModelType, BaseChatModel> = new Map();
+  models: Map<string, BaseChatModel> = new Map();
+  modelsByType: Map<PsAiModelType, BaseChatModel> = new Map();
 
   skipAiModels = false;
 
   //TODO: Find a better way, I think
-  modelIds: Map<PsAiModelType, number> = new Map();
+  modelIds: Map<string, number> = new Map();
+  modelIdsByType: Map<PsAiModelType, number> = new Map();
 
   limitedLLMmaxRetryCount = 3;
   mainLLMmaxRetryCount = 10;
@@ -104,6 +106,8 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
 
     for (const model of aiModels) {
       const modelType = model.configuration.type as PsAiModelType;
+      const modelSize = model.configuration.modelSize as PsAiModelSize;
+      const modelKey = `${modelType}_${modelSize}`;
       const apiKeyConfig = accessConfiguration.find(
         (access) => access.aiModelId === model.id
       );
@@ -122,32 +126,40 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         temperature: this.modelTemperature,
       } as PsAiModelConfig;
 
+      let newModel: BaseChatModel;
+
       switch (model.configuration.provider) {
         case "anthropic":
-          this.models.set(modelType, new ClaudeChat(baseConfig));
+          newModel = new ClaudeChat(baseConfig);
+          this.models.set(modelKey, newModel);
+          this.modelsByType.set(modelType, newModel);
           break;
         case "openai":
-          this.models.set(modelType, new OpenAiChat(baseConfig));
+          newModel = new OpenAiChat(baseConfig);
+          this.models.set(modelKey, newModel);
+          this.modelsByType.set(modelType, newModel);
           break;
         case "google":
-          this.models.set(modelType, new GoogleGeminiChat(baseConfig));
+          const googleModel = new GoogleGeminiChat(baseConfig);
+          this.models.set(modelKey, googleModel);
+          this.modelsByType.set(modelType, googleModel);
           break;
         case "azure":
-          this.models.set(
-            modelType,
-            new AzureOpenAiChat({
-              ...baseConfig,
-              endpoint: model.configuration.endpoint!,
-              deploymentName: model.configuration.deploymentName!,
-            })
-          );
+          const azureModel = new AzureOpenAiChat({
+            ...baseConfig,
+            endpoint: model.configuration.endpoint!,
+            deploymentName: model.configuration.deploymentName!,
+          });
+          this.models.set(modelKey, azureModel);
+          this.modelsByType.set(modelType, azureModel);
           break;
         default:
           this.logger.warn(
             `Unsupported model provider: ${model.configuration.provider}`
           );
       }
-      this.modelIds.set(modelType, model.id);
+      this.modelIds.set(modelKey, model.id);
+      this.modelIdsByType.set(modelType, model.id);
     }
 
     if (this.models.size === 0) {
@@ -157,6 +169,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
 
   async callModel(
     modelType: PsAiModelType,
+    modelSize: PsAiModelSize,
     messages: PsModelMessage[],
     parseJson = true,
     limitedRetries = false,
@@ -166,6 +179,7 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     switch (modelType) {
       case PsAiModelType.Text:
         return await this.callTextModel(
+          modelSize,
           messages,
           parseJson,
           limitedRetries,
@@ -188,15 +202,48 @@ export abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
   }
 
   async callTextModel(
+    modelSize: PsAiModelSize,
     messages: PsModelMessage[],
     parseJson = true,
     limitedRetries = false,
     tokenOutEstimate = 120,
     streamingCallbacks?: Function
   ) {
-    const model = this.models.get(PsAiModelType.Text);
+
+    const getFallbackPriority = (size: PsAiModelSize): PsAiModelSize[] => {
+      switch (size) {
+        case PsAiModelSize.Large:
+          return [PsAiModelSize.Large, PsAiModelSize.Medium, PsAiModelSize.Small];
+        case PsAiModelSize.Medium:
+          return [PsAiModelSize.Medium, PsAiModelSize.Large, PsAiModelSize.Small];
+        case PsAiModelSize.Small:
+          return [PsAiModelSize.Small, PsAiModelSize.Medium, PsAiModelSize.Large];
+        default:
+          return [PsAiModelSize.Medium, PsAiModelSize.Large, PsAiModelSize.Small];
+      }
+    };
+
+    const modelSizePriority = getFallbackPriority(modelSize);
+
+    let model: BaseChatModel | undefined;
+    for (const size of modelSizePriority) {
+      const modelKey = `${PsAiModelType.Text}_${size}`;
+      model = this.models.get(modelKey);
+      if (model) {
+        if (size !== modelSize) {
+          this.logger.warn(`Model not found for ${modelSize}, using ${size}`);
+        }
+        break;
+      }
+    }
+
     if (!model) {
-      throw new Error(`No model available for type ${PsAiModelType.Text}`);
+      model = this.modelsByType.get(PsAiModelType.Text);
+      if (model) {
+        this.logger.warn(`Model not found by size, using default ${PsAiModelType.Text} model`);
+      } else {
+        throw new Error(`No model available for type ${PsAiModelType.Text}`);
+      }
     }
 
     try {

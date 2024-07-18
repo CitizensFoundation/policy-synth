@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 const USE_SHORT_DESCRIPTIONS = false;
 export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
@@ -69,9 +69,9 @@ export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
         return messages;
     }
     async createSubProblems() {
-        let results = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt()));
+        let results = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt()));
         if (this.createSubProblemsRefineEnabled) {
-            results = await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(results));
+            results = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderRefinePrompt(results));
         }
         if (this.memory.subProblems && this.memory.subProblems.length > 0) {
             this.memory.subProblems = [...this.memory.subProblems, ...results];

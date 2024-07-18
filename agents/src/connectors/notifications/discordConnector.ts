@@ -9,7 +9,7 @@ import {
 import { PsAgentConnector } from "../../dbModels/agentConnector.js";
 import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PsAgent } from "../../dbModels/agent.js";
-import { PsAiModelType } from "../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../aiModelTypes.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
 
 export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
@@ -166,7 +166,11 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
       })),
     ] as PsModelMessage[];
 
-    let response = await this.callModel(PsAiModelType.Text, messages);
+    let response = await this.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Medium,
+      messages
+    );
 
     const { modifiedResponse, actionsTriggered } =
       await this.replaceInResponseArray(response);

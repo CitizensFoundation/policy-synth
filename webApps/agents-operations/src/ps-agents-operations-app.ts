@@ -178,6 +178,7 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
     window.psServerApi = new PsServerApi();
     window.appGlobals = window.psAppGlobals = new PsAppGlobals(window.psServerApi);
     window.appGlobals.theme = {} as any;
+    window.appGlobals.setupTranslationSystem();
     window.appUser = new PsAppUser(window.psServerApi);
 
     // Set this.themeDarkMode from localStorage or otherwise to true

@@ -12,13 +12,15 @@ export declare class PsAddAgentDialog extends YpBaseElement {
     private activeAgentClasses;
     private activeAiModels;
     private selectedAgentClassId;
-    private selectedAiModelId;
+    private selectedAiModels;
     private agentName;
     private api;
     connectedCallback(): Promise<void>;
     fetchActiveAgentClasses(): Promise<void>;
     fetchActiveAiModels(): Promise<void>;
     render(): import("lit").TemplateResult<1>;
+    getLocalizedModelLabel(size: string): string;
+    private renderAiModelSelect;
     private _handleNameInput;
     private _handleAgentClassSelection;
     private _handleAiModelSelection;

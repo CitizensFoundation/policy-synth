@@ -13,7 +13,7 @@ import { PsAgentRegistry } from "../dbModels/agentRegistry.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { PsExternalApi } from "../dbModels/externalApis.js";
 import { connectToDatabase } from "../dbModels/sequelize.js";
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 
 await connectToDatabase();
 await initializeModels();
@@ -23,6 +23,7 @@ const user = await User.create({ email: "user@example.com", name: "Example User"
 
 const anthropicSonnetConfig: PsAiModelConfiguration = {
   type: PsAiModelType.Text,
+  modelSize: PsAiModelSize.Medium,
   provider: "anthropic",
   prices: {
     costInTokensPerMillion: 3,
@@ -42,8 +43,9 @@ const anthropicSonnet = await PsAiModel.create({
   configuration: anthropicSonnetConfig,
 });
 
-const openAiGpt4Config: PsAiModelConfiguration = {
+const openAiGpt4oConfig: PsAiModelConfiguration = {
   type: PsAiModelType.Text,
+  modelSize: PsAiModelSize.Medium,
   provider: "openai",
   prices: {
     costInTokensPerMillion: 5,
@@ -56,11 +58,33 @@ const openAiGpt4Config: PsAiModelConfiguration = {
   active: true
 };
 
+const openAiGpt4oMiniConfig: PsAiModelConfiguration = {
+  type: PsAiModelType.Text,
+  modelSize: PsAiModelSize.Small,
+  provider: "openai",
+  prices: {
+    costInTokensPerMillion: 0.15,
+    costOutTokensPerMillion: 0.6,
+    currency: "USD"
+  },
+  maxTokensOut: 16000,
+  defaultTemperature: 0.0,
+  model: "gpt-4o mini",
+  active: true
+};
+
 const openAiGpt4 = await PsAiModel.create({
-  name: "OpenAI GPT-4o",
+  name: "GPT-4o",
   organization_id: 1,
   user_id: user.id,
-  configuration: openAiGpt4Config,
+  configuration: openAiGpt4oConfig,
+});
+
+const openAiGpt4Mini = await PsAiModel.create({
+  name: "GPT-4o Mini",
+  organization_id: 1,
+  user_id: user.id,
+  configuration: openAiGpt4oMiniConfig,
 });
 
 // Create a group with both AI model API keys
@@ -68,14 +92,18 @@ await Group.create({
   name: "Example Group",
   user_id: user.id,
   private_access_configuration: [
-/*    {
+    {
       aiModelId: anthropicSonnet.id,
       apiKey: process.env.ANTHROPIC_CLAUDE_SONNET_API_KEY || "",
-    },*/
+    },
     {
       aiModelId: openAiGpt4.id,
       apiKey: process.env.OPENAI_API_KEY || "",
-    }
+    },
+    {
+      aiModelId: openAiGpt4Mini.id,
+      apiKey: process.env.OPENAI_API_KEY || "",
+    },
   ]
 });
 

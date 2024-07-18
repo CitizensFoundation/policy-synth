@@ -17,10 +17,16 @@ export class OpsServerApi extends BaseChatBotServerApi {
             body: JSON.stringify(updatedConfig),
         }, false);
     }
-    async createAgent(name, agentClassId, aiModelId, parentAgentId, groupId) {
+    async createAgent(name, agentClassId, aiModels, parentAgentId, groupId) {
         return this.fetchWrapper(this.baseUrlPath + this.baseAgentsPath, {
             method: 'POST',
-            body: JSON.stringify({ name, agentClassId, aiModelId, parentAgentId, groupId }),
+            body: JSON.stringify({
+                name,
+                agentClassId,
+                aiModels,
+                parentAgentId,
+                groupId
+            }),
         }, false);
     }
     async getActiveAiModels() {

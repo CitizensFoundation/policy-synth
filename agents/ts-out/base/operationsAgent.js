@@ -5,7 +5,7 @@ import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PolicySynthBaseAgent } from "./agent.js";
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { sequelize } from "../dbModels/sequelize.js";
 import { encoding_for_model } from "tiktoken";
 //TODO: Look to pool redis connections
@@ -14,9 +14,11 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     memory;
     agent;
     models = new Map();
+    modelsByType = new Map();
     skipAiModels = false;
     //TODO: Find a better way, I think
     modelIds = new Map();
+    modelIdsByType = new Map();
     limitedLLMmaxRetryCount = 3;
     mainLLMmaxRetryCount = 10;
     maxModelTokensOut = 4096;
@@ -74,6 +76,8 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         const accessConfiguration = this.agent.Group.private_access_configuration;
         for (const model of aiModels) {
             const modelType = model.configuration.type;
+            const modelSize = model.configuration.modelSize;
+            const modelKey = `${modelType}_${modelSize}`;
             const apiKeyConfig = accessConfiguration.find((access) => access.aiModelId === model.id);
             if (!apiKeyConfig) {
                 this.logger.warn(`API key configuration not found for model ${model.id}`);
@@ -85,36 +89,46 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
                 maxTokensOut: this.maxModelTokensOut,
                 temperature: this.modelTemperature,
             };
+            let newModel;
             switch (model.configuration.provider) {
                 case "anthropic":
-                    this.models.set(modelType, new ClaudeChat(baseConfig));
+                    newModel = new ClaudeChat(baseConfig);
+                    this.models.set(modelKey, newModel);
+                    this.modelsByType.set(modelType, newModel);
                     break;
                 case "openai":
-                    this.models.set(modelType, new OpenAiChat(baseConfig));
+                    newModel = new OpenAiChat(baseConfig);
+                    this.models.set(modelKey, newModel);
+                    this.modelsByType.set(modelType, newModel);
                     break;
                 case "google":
-                    this.models.set(modelType, new GoogleGeminiChat(baseConfig));
+                    const googleModel = new GoogleGeminiChat(baseConfig);
+                    this.models.set(modelKey, googleModel);
+                    this.modelsByType.set(modelType, googleModel);
                     break;
                 case "azure":
-                    this.models.set(modelType, new AzureOpenAiChat({
+                    const azureModel = new AzureOpenAiChat({
                         ...baseConfig,
                         endpoint: model.configuration.endpoint,
                         deploymentName: model.configuration.deploymentName,
-                    }));
+                    });
+                    this.models.set(modelKey, azureModel);
+                    this.modelsByType.set(modelType, azureModel);
                     break;
                 default:
                     this.logger.warn(`Unsupported model provider: ${model.configuration.provider}`);
             }
-            this.modelIds.set(modelType, model.id);
+            this.modelIds.set(modelKey, model.id);
+            this.modelIdsByType.set(modelType, model.id);
         }
         if (this.models.size === 0) {
             throw new Error("No supported AI models found for this agent");
         }
     }
-    async callModel(modelType, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
+    async callModel(modelType, modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
         switch (modelType) {
             case PsAiModelType.Text:
-                return await this.callTextModel(messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+                return await this.callTextModel(modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
             case PsAiModelType.Embedding:
                 return await this.callEmbeddingModel(messages);
             case PsAiModelType.MultiModal:
@@ -129,10 +143,39 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
                 throw new Error(`Unsupported model type: ${modelType}`);
         }
     }
-    async callTextModel(messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
-        const model = this.models.get(PsAiModelType.Text);
+    async callTextModel(modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
+        const getFallbackPriority = (size) => {
+            switch (size) {
+                case PsAiModelSize.Large:
+                    return [PsAiModelSize.Large, PsAiModelSize.Medium, PsAiModelSize.Small];
+                case PsAiModelSize.Medium:
+                    return [PsAiModelSize.Medium, PsAiModelSize.Large, PsAiModelSize.Small];
+                case PsAiModelSize.Small:
+                    return [PsAiModelSize.Small, PsAiModelSize.Medium, PsAiModelSize.Large];
+                default:
+                    return [PsAiModelSize.Medium, PsAiModelSize.Large, PsAiModelSize.Small];
+            }
+        };
+        const modelSizePriority = getFallbackPriority(modelSize);
+        let model;
+        for (const size of modelSizePriority) {
+            const modelKey = `${PsAiModelType.Text}_${size}`;
+            model = this.models.get(modelKey);
+            if (model) {
+                if (size !== modelSize) {
+                    this.logger.warn(`Model not found for ${modelSize}, using ${size}`);
+                }
+                break;
+            }
+        }
         if (!model) {
-            throw new Error(`No model available for type ${PsAiModelType.Text}`);
+            model = this.modelsByType.get(PsAiModelType.Text);
+            if (model) {
+                this.logger.warn(`Model not found by size, using default ${PsAiModelType.Text} model`);
+            }
+            else {
+                throw new Error(`No model available for type ${PsAiModelType.Text}`);
+            }
         }
         try {
             let retryCount = 0;

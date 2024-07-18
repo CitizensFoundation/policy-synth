@@ -3,7 +3,7 @@ import ioredis from "ioredis";
 import fs from "fs/promises";
 import path from "path";
 import fetch from "node-fetch";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 //@ts-ignore
 global.fetch = fetch;
 const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
@@ -113,7 +113,7 @@ export class AnalyseExternalSolutions extends SolutionsEvolutionSmarterCrowdsour
         return messages;
     }
     async compareSolutionToExternal(solutionDescription, requirement) {
-        const result = (await this.callModel(PsAiModelType.Text, await this.renderAnalysisPrompt(solutionDescription, requirement)));
+        const result = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderAnalysisPrompt(solutionDescription, requirement)));
         return result;
     }
     async analyze() {

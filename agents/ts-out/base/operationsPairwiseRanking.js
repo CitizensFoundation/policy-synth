@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PolicySynthOperationsAgent } from "./operationsAgent.js";
 export class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent {
     maxModelTokensOut = 3;
@@ -83,7 +83,7 @@ export class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent 
         let retryCount = 0;
         while (retry && retryCount < maxRetryCount) {
             try {
-                const winningItemText = await this.callModel(PsAiModelType.Text, messages, false);
+                const winningItemText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
                 if (!winningItemText) {
                     throw new Error("No winning item text");
                 }

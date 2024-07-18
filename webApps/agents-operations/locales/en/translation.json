@@ -1,4 +1,8 @@
 {
+    "selectSmallAiModel": "Select Small AI model",
+    "selectMediumAiModel": "Select Medium AI model",
+    "selectLargeAiModel": "Select Large AI model",
+    "aiModelAgentCreateInfo": "Choose at least one AI model but preferably all three",
     "positiveEvidence": "Positive evidence",
     "negativeEvidence": "Negative evidence",
     "economicEvidence": "Economic evidence",

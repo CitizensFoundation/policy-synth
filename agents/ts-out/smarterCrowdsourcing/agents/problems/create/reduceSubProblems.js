@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
     async renderSelectPrompt(problemStatement, subProblemsToConsider) {
@@ -36,7 +36,7 @@ export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
             delete sp.eloRating;
             delete sp.fromUrl;
         });
-        const reducedSubProblems = (await this.callModel(PsAiModelType.Text, await this.renderSelectPrompt(this.problemStatementDescription, subProblemsToConsider)));
+        const reducedSubProblems = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderSelectPrompt(this.problemStatementDescription, subProblemsToConsider)));
         // Go through all the reducedSubProblems and add the eloRating at 0
         reducedSubProblems.forEach((sp) => {
             sp.solutions = {

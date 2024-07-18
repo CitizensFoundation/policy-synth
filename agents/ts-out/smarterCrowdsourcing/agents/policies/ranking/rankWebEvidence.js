@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 export class RankWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     modelTemperature = 0.0;
@@ -54,7 +54,7 @@ export class RankWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Evidence before ranking (${evidenceType}):\n${JSON.stringify(evidenceToRank, null, 2)}`);
-                            let rankedEvidence = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
+                            let rankedEvidence = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderProblemPrompt(subProblemIndex, policy, evidenceToRank, fieldKey));
                             await this.evidenceWebPageVectorStore.updateWebSolutions(id, fieldKey, rankedEvidence, true);
                             this.logger.debug(`${id} - Evidence after ranking (${evidenceType}):\n${JSON.stringify(rankedEvidence, null, 2)}`);
                         }

@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 const DISABLE_LLM_FOR_DEBUG = false;
 export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
@@ -65,7 +65,7 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
         }
         else {
             this.logger.info(`Calling LLM for sub problem ${subProblemIndex}`);
-            let results = await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solutionsForInspiration, alreadyCreatedSolutions), true, false, 860);
+            let results = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex, solutionsForInspiration, alreadyCreatedSolutions), true, false, 860);
             return results;
         }
     }

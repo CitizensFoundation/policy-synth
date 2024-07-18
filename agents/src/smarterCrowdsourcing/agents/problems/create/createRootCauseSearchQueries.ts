@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { RootCausesSmarterCrowdsourcingAgent } from "../../base/scBaseRootCausesAgent.js";
 
 export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdsourcingAgent {
@@ -133,6 +133,7 @@ export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdso
         // create search queries for each type
         let searchResults = await this.callModel(
           PsAiModelType.Text,
+          PsAiModelSize.Medium,
           await this.renderCreatePrompt(searchResultType)
         );
         if (refineSearchQueriesHere) {
@@ -141,6 +142,7 @@ export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdso
           );
           searchResults = await this.callModel(
             PsAiModelType.Text,
+            PsAiModelSize.Medium,
             await this.renderRefinePrompt(searchResultType, searchResults)
           );
         }
@@ -150,6 +152,7 @@ export class CreateRootCausesSearchQueriesAgent extends RootCausesSmarterCrowdso
           );
           searchResults = await this.callModel(
             PsAiModelType.Text,
+            PsAiModelSize.Medium,
             await this.renderRankPrompt(searchResultType, searchResults)
           );
         }

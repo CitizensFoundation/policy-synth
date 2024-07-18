@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 
 export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
@@ -44,6 +44,7 @@ export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
 
     const groupedIndexes: Array<Array<PsSolutionForGroupCheck>> = await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Medium,
       await this.renderGroupPrompt(solutionsToGroup)
     );
 

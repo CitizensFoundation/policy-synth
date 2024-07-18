@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 
 import fetch from "node-fetch";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 //@ts-ignore
 global.fetch = fetch;
 
@@ -147,6 +147,7 @@ export class AnalyseExternalSolutions extends SolutionsEvolutionSmarterCrowdsour
   ) {
     const result = (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Large,
       await this.renderAnalysisPrompt(solutionDescription, requirement)
     )) as PsExternalSolutionAnalysisResults;
 

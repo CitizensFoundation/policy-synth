@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderGroupPrompt(solutionsToGroup) {
@@ -29,7 +29,7 @@ export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
             description: solution.description
         }));
         this.logger.debug(`Solution Components going into LLM ${solutionsToGroup.length}`);
-        const groupedIndexes = await this.callModel(PsAiModelType.Text, await this.renderGroupPrompt(solutionsToGroup));
+        const groupedIndexes = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderGroupPrompt(solutionsToGroup));
         this.logger.debug(`Solution Components coming out of LLM ${JSON.stringify(groupedIndexes, null, 2)}`);
         let groupIndex = 0;
         for (const group of groupedIndexes) {

@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 
 export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
@@ -48,6 +48,7 @@ export class ReduceSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
     });
     const reducedSubProblems = (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Medium,
       await this.renderSelectPrompt(
         this.problemStatementDescription,
         subProblemsToConsider

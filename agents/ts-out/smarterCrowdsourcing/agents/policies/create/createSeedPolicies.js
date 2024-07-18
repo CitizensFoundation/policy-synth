@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
     renderCurrentSolution(solution) {
@@ -111,12 +111,12 @@ export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
     }
     async createSeedPolicyForSolution(populationIndex, subProblemIndex, solution, solutionIndex) {
         try {
-            let policyOptions = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(subProblemIndex, solution), true, false, 1500));
+            let policyOptions = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex, solution), true, false, 1500));
             const refinePolicy = false;
             if (refinePolicy) {
-                policyOptions = (await this.callModel(PsAiModelType.Text, await this.renderRefinePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
+                policyOptions = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderRefinePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
             }
-            const choosenPolicy = (await this.callModel(PsAiModelType.Text, await this.renderChoosePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
+            const choosenPolicy = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderChoosePrompt(subProblemIndex, solution, policyOptions), true, false, 1500));
             choosenPolicy.solutionIndex = `${populationIndex}:${solutionIndex}`;
             return choosenPolicy;
         }

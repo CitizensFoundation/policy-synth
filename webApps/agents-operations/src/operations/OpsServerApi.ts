@@ -30,12 +30,24 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<void>;
   }
 
-  public async createAgent(name: string, agentClassId: number, aiModelId: number, parentAgentId: number, groupId?: number): Promise<PsAgentAttributes> {
+  public async createAgent(
+    name: string,
+    agentClassId: number,
+    aiModels: { [key: string]: number },
+    parentAgentId: number,
+    groupId?: number
+  ): Promise<PsAgentAttributes> {
     return this.fetchWrapper(
       this.baseUrlPath + this.baseAgentsPath,
       {
         method: 'POST',
-        body: JSON.stringify({ name, agentClassId, aiModelId, parentAgentId, groupId }),
+        body: JSON.stringify({
+          name,
+          agentClassId,
+          aiModels,
+          parentAgentId,
+          groupId
+        }),
       },
       false
     ) as Promise<PsAgentAttributes>;

@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 export class CreateProblemStatementImageAgent extends CreateSolutionImagesAgent {
     async renderCreatePrompt(subProblemIndex = 0) {
         const messages = [
@@ -35,7 +35,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     async createProblemStatementImage() {
         let imagePrompt;
         if (process.env.STABILITY_API_KEY) {
-            imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePrompt(), false));
+            imagePrompt = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(), false));
         }
         else {
             imagePrompt = this.getDalleImagePrompt();

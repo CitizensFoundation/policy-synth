@@ -8,7 +8,7 @@ import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWeb
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
 import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -251,6 +251,7 @@ export class GetEvidenceWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAge
 
     const analysis = (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Small,
       messages,
       true,
       true

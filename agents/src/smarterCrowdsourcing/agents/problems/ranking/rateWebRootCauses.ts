@@ -1,6 +1,6 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 export class RateWebRootCausesAgent extends ProblemsSmarterCrowdsourcingAgent {
   rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
@@ -94,6 +94,7 @@ export class RateWebRootCausesAgent extends ProblemsSmarterCrowdsourcingAgent {
               );
               let ratedRootCauses = await this.callModel(
                 PsAiModelType.Text,
+                PsAiModelSize.Medium,
                 await this.renderProblemPrompt(
                   webPage,
                   rootCausesToRank,

@@ -1,5 +1,5 @@
 import { Client, GatewayIntentBits, Partials, ChannelType, } from "discord.js";
-import { PsAiModelType } from "../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../aiModelTypes.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
 export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
     static DISCORD_CONNECTOR_CLASS_BASE_ID = "8f7e6d5c-4b3a-2a1f-9e8d-7c6b5a4d3f2e";
@@ -117,7 +117,7 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
                 message: msg.content,
             })),
         ];
-        let response = await this.callModel(PsAiModelType.Text, messages);
+        let response = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages);
         const { modifiedResponse, actionsTriggered } = await this.replaceInResponseArray(response);
         await this.sendMessage(channelId, modifiedResponse);
     }

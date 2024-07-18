@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 
 export class RateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
@@ -83,6 +83,7 @@ export class RateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
           if (!solution.ratings) {
             const rating = (await this.callModel(
               PsAiModelType.Text,
+              PsAiModelSize.Large,
               await this.renderRatePrompt(subProblemIndex, solution)
             )) as object;
 

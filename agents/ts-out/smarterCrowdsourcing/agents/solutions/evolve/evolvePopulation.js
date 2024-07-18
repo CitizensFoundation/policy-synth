@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { CreateInitialSolutionsAgent } from "../create/createSolutions.js";
 //TODO: Pentalty for similar ideas in the ranking somehow
 //TODO: Track the evolution of the population with a log of parents and mutations, family tree
@@ -81,7 +81,7 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
         ];
     }
     async performRecombination(parentA, parentB, subProblemIndex) {
-        return (await this.callModel(PsAiModelType.Text, this.renderRecombinationPrompt(parentA, parentB, subProblemIndex)));
+        return (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, this.renderRecombinationPrompt(parentA, parentB, subProblemIndex)));
     }
     async recombine(parentA, parentB, subProblemIndex) {
         const offspring = await this.performRecombination(parentA, parentB, subProblemIndex);
@@ -91,7 +91,7 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
         this.logger.debug("Performing mutation");
         this.logger.debug("Before mutation");
         try {
-            const mutant = (await this.callModel(PsAiModelType.Text, this.renderMutatePrompt(individual, subProblemIndex, mutateRate)));
+            const mutant = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, this.renderMutatePrompt(individual, subProblemIndex, mutateRate)));
             this.logger.debug("After mutation");
             return mutant;
         }

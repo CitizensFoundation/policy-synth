@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 
 export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
@@ -154,6 +154,7 @@ export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
     try {
       let policyOptions = (await this.callModel(
         PsAiModelType.Text,
+        PsAiModelSize.Medium,
         await this.renderCreatePrompt(subProblemIndex, solution),
         true,
         false,
@@ -165,6 +166,7 @@ export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
       if (refinePolicy) {
         policyOptions = (await this.callModel(
           PsAiModelType.Text,
+          PsAiModelSize.Medium,
           await this.renderRefinePrompt(
             subProblemIndex,
             solution,
@@ -178,6 +180,7 @@ export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
 
       const choosenPolicy = (await this.callModel(
         PsAiModelType.Text,
+        PsAiModelSize.Medium,
         await this.renderChoosePrompt(subProblemIndex, solution, policyOptions),
         true,
         false,

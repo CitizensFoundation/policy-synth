@@ -1,6 +1,6 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 interface SolutionToRemove {
   titleOfSimilarSolutionToDrop: string;
@@ -70,6 +70,7 @@ export class RemoveDuplicateWebSolutions extends SolutionsEvolutionSmarterCrowds
       // Step 2: Call the LLM for a list of duplicates to remove
       const duplicateSolutionTitlesToRemove = (await this.callModel(
         PsAiModelType.Text,
+        PsAiModelSize.Medium,
         this.renderMessages(randomSolutions),
         true,
         true

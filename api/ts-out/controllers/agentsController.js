@@ -73,20 +73,33 @@ export class AgentsController {
         }
     };
     createAgent = async (req, res) => {
-        const { name, agentClassId, aiModelId, parentAgentId } = req.body;
-        if (!agentClassId || !aiModelId) {
+        const { name, agentClassId, aiModels, parentAgentId } = req.body;
+        if (!agentClassId ||
+            !aiModels ||
+            typeof aiModels !== "object" ||
+            Object.keys(aiModels).length === 0) {
             return res
                 .status(400)
-                .send("Agent class ID and AI model ID are required");
+                .send("Agent class ID and at least one AI model ID are required");
         }
         const transaction = await sequelize.transaction();
         try {
             const agentClass = await PsAgentClass.findByPk(agentClassId);
-            const aiModel = await PsAiModel.findByPk(aiModelId);
-            if (!agentClass || !aiModel) {
+            if (!agentClass) {
                 await transaction.rollback();
-                return res.status(404).send("Agent class or AI model not found");
+                return res.status(404).send("Agent class not found");
             }
+            const aiModelPromises = Object.entries(aiModels).map(async ([size, id]) => {
+                if (typeof id !== "number" && typeof id !== "string") {
+                    throw new Error(`Invalid AI model ID for size ${size}`);
+                }
+                const model = await PsAiModel.findByPk(id);
+                if (!model) {
+                    throw new Error(`AI model with id ${id} for size ${size} not found`);
+                }
+                return { size, model };
+            });
+            const foundAiModels = await Promise.all(aiModelPromises);
             const newAgent = await PsAgent.create({
                 class_id: agentClassId,
                 user_id: 1,
@@ -96,7 +109,7 @@ export class AgentsController {
                     name,
                 },
             }, { transaction });
-            await newAgent.addAiModel(aiModel, { transaction });
+            await Promise.all(foundAiModels.map(({ size, model }) => newAgent.addAiModel(model, { through: { size }, transaction })));
             await transaction.commit();
             // Fetch the created agent with its associations
             const createdAgent = await PsAgent.findByPk(newAgent.id, {
@@ -220,7 +233,7 @@ export class AgentsController {
                         as: "Connectors",
                         where: { available: true },
                         through: { attributes: [] },
-                    }
+                    },
                 ],
             });
             if (!registry) {
@@ -358,9 +371,11 @@ export class AgentsController {
             const agentCosts = results.map((row) => ({
                 agentId: row.agent_id,
                 level: row.level,
-                cost: parseFloat(row.agent_cost).toFixed(2)
+                cost: parseFloat(row.agent_cost).toFixed(2),
             }));
-            const totalCost = agentCosts.reduce((sum, agent) => sum + parseFloat(agent.cost), 0).toFixed(2);
+            const totalCost = agentCosts
+                .reduce((sum, agent) => sum + parseFloat(agent.cost), 0)
+                .toFixed(2);
             res.json({ agentCosts, totalCost });
         }
         catch (error) {

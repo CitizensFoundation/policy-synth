@@ -18,7 +18,7 @@ import { htmlToText } from "html-to-text";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -263,6 +263,7 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
 
     const analysis = (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Small,
       messages,
       true,
       true

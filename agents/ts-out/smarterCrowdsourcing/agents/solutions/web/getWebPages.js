@@ -13,7 +13,7 @@ const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
@@ -175,7 +175,7 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt(this.memory.problemStatement, text, subProblemIndex, entityIndex);
-        const analysis = (await this.callModel(PsAiModelType.Text, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true, true));
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex, entityIndex) {

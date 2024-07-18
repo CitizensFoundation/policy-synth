@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 export class RateWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     modelTemperature = 0.0;
@@ -73,7 +73,7 @@ export class RateWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
                             Array.isArray(webPage[fieldKey]) &&
                             webPage[fieldKey].length > 0) {
                             const evidenceToRank = webPage[fieldKey];
-                            let ratedEvidence = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(subProblemIndex, policy, webPage, evidenceToRank, fieldKey));
+                            let ratedEvidence = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderProblemPrompt(subProblemIndex, policy, webPage, evidenceToRank, fieldKey));
                             await this.evidenceWebPageVectorStore.updateScores(id, ratedEvidence, true);
                             this.logger.debug(`${id} - Evident ratings (${evidenceType}):\n${JSON.stringify(ratedEvidence, null, 2)}`);
                         }

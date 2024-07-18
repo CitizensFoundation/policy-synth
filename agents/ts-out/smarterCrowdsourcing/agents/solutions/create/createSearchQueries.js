@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsWebResearchAgent.js";
 export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
     //TODO: Maybe add a review and refine stage here as well
@@ -65,7 +65,7 @@ export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdso
     async process() {
         this.logger.info("Create Search Queries Agent");
         super.process();
-        this.memory.problemStatement.searchQueries = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(this.problemStatementDescription));
+        this.memory.problemStatement.searchQueries = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderProblemPrompt(this.problemStatementDescription));
         const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
             const problemText = `
@@ -76,13 +76,13 @@ export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdso
           ${this.memory.subProblems[subProblemIndex].whyIsSubProblemImportant}
         `;
             this.memory.subProblems[subProblemIndex].searchQueries =
-                await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(problemText));
+                await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderProblemPrompt(problemText));
             await this.saveMemory();
             console.log(JSON.stringify(this.memory.subProblems[subProblemIndex].searchQueries, null, 2));
             for (let e = 0; e <
                 Math.min(this.memory.subProblems[subProblemIndex].entities.length, this.maxTopEntitiesToSearch); e++) {
                 this.memory.subProblems[subProblemIndex].entities[e].searchQueries =
-                    await this.callModel(PsAiModelType.Text, await this.renderEntityPrompt(problemText, this.memory.subProblems[subProblemIndex].entities[e]));
+                    await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderEntityPrompt(problemText, this.memory.subProblems[subProblemIndex].entities[e]));
                 await this.saveMemory();
                 console.log(JSON.stringify(this.memory.subProblems[subProblemIndex].entities[e].searchQueries, null, 2));
             }

@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 
 export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
@@ -44,6 +44,7 @@ export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
 
       const reapedResults: PsReapingResults = await this.callModel(
         PsAiModelType.Text,
+        PsAiModelSize.Medium,
         await this.renderReapPrompt(solution)
       );
 

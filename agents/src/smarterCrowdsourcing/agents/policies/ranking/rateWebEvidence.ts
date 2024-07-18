@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 export class RateWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
@@ -113,6 +113,7 @@ export class RateWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
 
               let ratedEvidence: PSPolicyRating = await this.callModel(
                 PsAiModelType.Text,
+                PsAiModelSize.Medium,
                 await this.renderProblemPrompt(
                   subProblemIndex,
                   policy,

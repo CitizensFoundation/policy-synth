@@ -5,7 +5,7 @@ import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWeb
 import { EvidenceExamplePrompts } from "./evidenceExamplePrompts.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
 import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
@@ -147,7 +147,7 @@ export class GetEvidenceWebPagesAgent extends SmarterCrowdsourcingGetWebPagesAge
     async getEvidenceAIAnalysis(subProblemIndex, policy, type, text) {
         this.logger.info("Get Evidence AI Analysis");
         const messages = this.renderEvidenceScanningPrompt(subProblemIndex, policy, type, text);
-        const analysis = (await this.callModel(PsAiModelType.Text, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true, true));
         return analysis;
     }
     mergeAnalysisData(data1, data2) {

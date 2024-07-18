@@ -1,6 +1,6 @@
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 import { WebPageVectorStore } from "../../../../vectorstore/webPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 export class RemoveDuplicateWebSolutions extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     allUrls = new Set();
@@ -41,7 +41,7 @@ export class RemoveDuplicateWebSolutions extends SolutionsEvolutionSmarterCrowds
             }
             this.logger.debug(`Random Solutions: ${JSON.stringify(randomSolutions.map((s) => s.title), null, 2)}`);
             // Step 2: Call the LLM for a list of duplicates to remove
-            const duplicateSolutionTitlesToRemove = (await this.callModel(PsAiModelType.Text, this.renderMessages(randomSolutions), true, true));
+            const duplicateSolutionTitlesToRemove = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, this.renderMessages(randomSolutions), true, true));
             this.logger.debug(JSON.stringify(duplicateSolutionTitlesToRemove, null, 2));
             // Step 3: Count duplicates
             const titlesToRemoveCount = new Map();

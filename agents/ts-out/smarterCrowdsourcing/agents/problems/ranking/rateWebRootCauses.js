@@ -1,6 +1,6 @@
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 export class RateWebRootCausesAgent extends ProblemsSmarterCrowdsourcingAgent {
     rootCauseWebPageVectorStore = new RootCauseWebPageVectorStore();
     simplifyRootCauseType(rootCauseType) {
@@ -67,7 +67,7 @@ export class RateWebRootCausesAgent extends ProblemsSmarterCrowdsourcingAgent {
                             webPage[fieldKey].length > 0) {
                             const rootCausesToRank = webPage[fieldKey];
                             this.logger.debug(`${id} - Root causes to rate (${rootCauseType}):\n${JSON.stringify(rootCausesToRank, null, 2)}`);
-                            let ratedRootCauses = await this.callModel(PsAiModelType.Text, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
+                            let ratedRootCauses = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderProblemPrompt(webPage, rootCausesToRank, fieldKey));
                             await this.rootCauseWebPageVectorStore.updateScores(id, ratedRootCauses, true);
                             this.logger.debug(`${id} - Root Causes ratings (${rootCauseType}):\n${JSON.stringify(ratedRootCauses, null, 2)}`);
                         }

@@ -1,13 +1,15 @@
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAgent } from "../dbModels/agent.js";
 import { PolicySynthBaseAgent } from "./agent.js";
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 export declare abstract class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
     memory: PsAgentMemoryData;
     agent: PsAgent;
-    models: Map<PsAiModelType, BaseChatModel>;
+    models: Map<string, BaseChatModel>;
+    modelsByType: Map<PsAiModelType, BaseChatModel>;
     skipAiModels: boolean;
-    modelIds: Map<PsAiModelType, number>;
+    modelIds: Map<string, number>;
+    modelIdsByType: Map<PsAiModelType, number>;
     limitedLLMmaxRetryCount: number;
     mainLLMmaxRetryCount: number;
     maxModelTokensOut: number;
@@ -19,8 +21,8 @@ export declare abstract class PolicySynthOperationsAgent extends PolicySynthBase
     process(): Promise<void>;
     loadAgentMemoryFromRedis(): Promise<void>;
     initializeModels(): Promise<void>;
-    callModel(modelType: PsAiModelType, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
-    callTextModel(messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
+    callModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
+    callTextModel(modelSize: PsAiModelSize, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
     callEmbeddingModel(messages: PsModelMessage[]): Promise<null>;
     callMultiModalModel(messages: PsModelMessage[]): Promise<null>;
     callAudioModel(messages: PsModelMessage[]): Promise<null>;

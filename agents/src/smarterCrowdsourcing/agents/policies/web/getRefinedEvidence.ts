@@ -2,7 +2,7 @@ import { Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { GetEvidenceWebPagesAgent } from "./getEvidenceWebPages.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -171,6 +171,7 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
 
     const analysis = (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Small,
       messages,
       true,
       true

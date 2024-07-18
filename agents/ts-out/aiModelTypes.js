@@ -7,4 +7,10 @@ export var PsAiModelType;
     PsAiModelType["Video"] = "video";
     PsAiModelType["Image"] = "image";
 })(PsAiModelType || (PsAiModelType = {}));
+export var PsAiModelSize;
+(function (PsAiModelSize) {
+    PsAiModelSize["Large"] = "large";
+    PsAiModelSize["Medium"] = "medium";
+    PsAiModelSize["Small"] = "small";
+})(PsAiModelSize || (PsAiModelSize = {}));
 //# sourceMappingURL=aiModelTypes.js.map

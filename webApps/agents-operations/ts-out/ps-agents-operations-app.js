@@ -100,6 +100,7 @@ let PsAgentOperationsWebApp = class PsAgentOperationsWebApp extends YpBaseElemen
         window.psServerApi = new PsServerApi();
         window.appGlobals = window.psAppGlobals = new PsAppGlobals(window.psServerApi);
         window.appGlobals.theme = {};
+        window.appGlobals.setupTranslationSystem();
         window.appUser = new PsAppUser(window.psServerApi);
         // Set this.themeDarkMode from localStorage or otherwise to true
         const savedDarkMode = localStorage.getItem('md3-ps-dark-mode');

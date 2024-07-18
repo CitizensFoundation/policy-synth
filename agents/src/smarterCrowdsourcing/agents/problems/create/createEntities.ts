@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { ProblemsSmarterCrowdsourcingAgent } from "../../base/scBaseProblemsAgent.js";
 
 export class CreateEntitiesAgent extends ProblemsSmarterCrowdsourcingAgent {
@@ -122,12 +122,14 @@ export class CreateEntitiesAgent extends ProblemsSmarterCrowdsourcingAgent {
       async (_, subProblemIndex) => {
         let results = (await this.callModel(
           PsAiModelType.Text,
+          PsAiModelSize.Medium,
           await this.renderCreatePrompt(subProblemIndex)
         )) as PsAffectedEntity[];
 
         if (this.createEntitiesRefinedEnabled) {
           results = (await this.callModel(
             PsAiModelType.Text,
+            PsAiModelSize.Medium,
             await this.renderRefinePrompt(subProblemIndex, results)
           )) as PsAffectedEntity[];
         }

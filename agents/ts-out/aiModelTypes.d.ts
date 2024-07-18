@@ -6,4 +6,9 @@ export declare enum PsAiModelType {
     Video = "video",
     Image = "image"
 }
+export declare enum PsAiModelSize {
+    Large = "large",
+    Medium = "medium",
+    Small = "small"
+}
 //# sourceMappingURL=aiModelTypes.d.ts.map

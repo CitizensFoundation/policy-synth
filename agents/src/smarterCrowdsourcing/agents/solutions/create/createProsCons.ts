@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 
 export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
@@ -142,6 +142,7 @@ export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
               while (!gotFullPoints && retries < maxPointRetries) {
                 let results = (await this.callModel(
                   PsAiModelType.Text,
+                  PsAiModelSize.Medium,
                   await this.renderCreatePrompt(
                     prosOrCons,
                     subProblemIndex,
@@ -155,6 +156,7 @@ export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
                 if (this.createProsConsRefinedEnabled) {
                   results = (await this.callModel(
                     PsAiModelType.Text,
+                    PsAiModelSize.Medium,
                     await this.renderRefinePrompt(
                       prosOrCons,
                       results,

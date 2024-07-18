@@ -14,7 +14,7 @@ const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
 import { WebPageVectorStore } from "../vectorstore/webPage.js";
 import { PolicySynthOperationsAgent } from "../base/operationsAgent.js";
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
@@ -166,7 +166,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt("", text, subProblemIndex, entityIndex);
-        const analysis = (await this.callModel(PsAiModelType.Text, messages, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true));
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex, entityIndex) {

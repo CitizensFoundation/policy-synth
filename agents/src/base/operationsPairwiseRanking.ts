@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PolicySynthOperationsAgent } from "./operationsAgent.js";
 
 export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperationsAgent {
@@ -132,6 +132,7 @@ export abstract class OperationsPairwiseRankingsAgent extends PolicySynthOperati
       try {
         const winningItemText = await this.callModel(
           PsAiModelType.Text,
+          PsAiModelSize.Large,
           messages,
           false
         );

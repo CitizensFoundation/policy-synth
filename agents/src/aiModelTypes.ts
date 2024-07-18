@@ -6,3 +6,9 @@ export enum PsAiModelType {
   Video = "video",
   Image = "image"
 }
+
+export enum PsAiModelSize {
+  Large = "large",
+  Medium = "medium",
+  Small = "small"
+}

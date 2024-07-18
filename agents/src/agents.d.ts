@@ -65,8 +65,10 @@ interface PsBaseModelPriceConfiguration {
   currency: string;
 }
 
+
 interface PsAiModelConfiguration {
   type: import("./aiModelTypes.js").PsAiModelType;
+  modelSize:  import("./aiModelTypes.js").PsAiModelSize;
   model: string;
   provider: string;
   active: boolean;

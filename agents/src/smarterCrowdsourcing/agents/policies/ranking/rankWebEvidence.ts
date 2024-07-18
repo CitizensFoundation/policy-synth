@@ -1,6 +1,6 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import { EvidenceWebPageVectorStore } from "../../../../vectorstore/evidenceWebPage.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 export class RankWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
@@ -91,6 +91,7 @@ export class RankWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
 
               let rankedEvidence = await this.callModel(
                 PsAiModelType.Text,
+                PsAiModelSize.Medium,
                 await this.renderProblemPrompt(
                   subProblemIndex,
                   policy,

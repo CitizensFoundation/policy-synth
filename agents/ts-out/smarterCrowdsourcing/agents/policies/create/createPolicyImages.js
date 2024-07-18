@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { CreateSolutionImagesAgent } from "../../solutions/create/createImages.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 export class CreatePolicyImagesAgent extends CreateSolutionImagesAgent {
     async renderCreatePolicyImagePrompt(subProblemIndex, policy, injectText) {
         const messages = [
@@ -53,7 +53,7 @@ export class CreatePolicyImagesAgent extends CreateSolutionImagesAgent {
                             this.logger.debug(`Using existing image prompt: ${imagePrompt}`);
                         }
                         else {
-                            imagePrompt = (await this.callModel(PsAiModelType.Text, await this.renderCreatePolicyImagePrompt(subProblemIndex, policy), false));
+                            imagePrompt = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePolicyImagePrompt(subProblemIndex, policy), false));
                         }
                         policy.imagePrompt = imagePrompt;
                         this.logger.debug(`subProblemIndex ${subProblemIndex} policyIndex ${policyIndex} lastPopulationIndex ${this.lastPopulationIndex(subProblemIndex)}}`);

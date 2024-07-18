@@ -21,7 +21,11 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
         this.activeAgentClasses = [];
         this.activeAiModels = [];
         this.selectedAgentClassId = null;
-        this.selectedAiModelId = null;
+        this.selectedAiModels = {
+            small: null,
+            medium: null,
+            large: null
+        };
         this.agentName = '';
         this.api = new OpsServerApi();
     }
@@ -66,24 +70,41 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
                 </md-select-option>
               `)}
           </md-filled-select>
-          <md-filled-select
-            label="Select AI Model"
-            @change="${this._handleAiModelSelection}"
-          >
-            ${this.activeAiModels.map(aiModel => html `
-                <md-select-option value="${aiModel.id}">
-                  <div slot="headline">${aiModel.name}</div>
-                </md-select-option>
-              `)}
-          </md-filled-select>
+          <div class="aiModelInfo">
+            ${this.t("aiModelAgentCreateInfo")}
+          </div>
+          ${['small', 'medium', 'large'].map(size => this.renderAiModelSelect(size))}
         </div>
         <div slot="actions">
           <md-text-button @click="${this._handleClose}">Cancel</md-text-button>
-          <md-filled-button @click="${this._handleAddAgent}"
-            >Add Agent</md-filled-button
-          >
+          <md-filled-button @click="${this._handleAddAgent}">Add Agent</md-filled-button>
         </div>
       </md-dialog>
+    `;
+    }
+    getLocalizedModelLabel(size) {
+        if (size === 'small') {
+            return this.t("selectSmallAiModel");
+        }
+        else if (size === 'medium') {
+            return this.t("selectMediumAiModel");
+        }
+        else if (size === 'large') {
+            return this.t("selectLargeAiModel");
+        }
+    }
+    renderAiModelSelect(size) {
+        return html `
+      <md-filled-select
+        .label="${this.getLocalizedModelLabel(size)}"
+        @change="${(e) => this._handleAiModelSelection(e, size)}"
+      >
+        ${this.activeAiModels.map(aiModel => html `
+            <md-select-option value="${aiModel.id}">
+              <div slot="headline">${aiModel.name}</div>
+            </md-select-option>
+          `)}
+      </md-filled-select>
     `;
     }
     _handleNameInput(e) {
@@ -94,23 +115,21 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
         const select = e.target;
         this.selectedAgentClassId = Number(select.value);
     }
-    _handleAiModelSelection(e) {
+    _handleAiModelSelection(e, size) {
         const select = e.target;
-        this.selectedAiModelId = Number(select.value);
+        this.selectedAiModels[size] = Number(select.value);
     }
     _handleClose() {
         this.dispatchEvent(new CustomEvent('close'));
     }
     async _handleAddAgent() {
-        if (!this.agentName ||
-            !this.selectedAgentClassId ||
-            !this.selectedAiModelId) {
-            console.error('Agent name, class, or AI model not selected');
+        if (!this.agentName || !this.selectedAgentClassId ||
+            !this.selectedAiModels.small || !this.selectedAiModels.medium || !this.selectedAiModels.large) {
+            console.error('Agent name, class, or AI models not selected');
             return;
         }
-        debugger;
         try {
-            const newAgent = await this.api.createAgent(this.agentName, this.selectedAgentClassId, this.selectedAiModelId, this.parentAgentId, this.groupId);
+            const newAgent = await this.api.createAgent(this.agentName, this.selectedAgentClassId, this.selectedAiModels, this.parentAgentId, this.groupId);
             this.dispatchEvent(new CustomEvent('agent-added', { detail: { agent: newAgent } }));
             this._handleClose();
         }
@@ -127,6 +146,12 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
           width: 100%;
           margin-bottom: 16px;
           margin-top: 16px;
+        }
+
+        .aiModelInfo {
+          margin-top: 16px;
+          margin-bottom: 8px;
+          font-size: var(--md-sys-typescale-label-medium-size);
         }
       `,
         ];
@@ -152,7 +177,7 @@ __decorate([
 ], PsAddAgentDialog.prototype, "selectedAgentClassId", void 0);
 __decorate([
     state()
-], PsAddAgentDialog.prototype, "selectedAiModelId", void 0);
+], PsAddAgentDialog.prototype, "selectedAiModels", void 0);
 __decorate([
     state()
 ], PsAddAgentDialog.prototype, "agentName", void 0);

@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsEvolutionAgent.js";
 export class RateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     async renderRatePrompt(subProblemIndex, solution) {
@@ -48,7 +48,7 @@ export class RateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
                 const solution = solutions[solutionIndex];
                 this.logger.debug(solution.title);
                 if (!solution.ratings) {
-                    const rating = (await this.callModel(PsAiModelType.Text, await this.renderRatePrompt(subProblemIndex, solution)));
+                    const rating = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderRatePrompt(subProblemIndex, solution)));
                     this.logger.debug(`Rating for: ${solution.title} ${JSON.stringify(rating, null, 2)}`);
                     solution.ratings = rating;
                 }

@@ -4,7 +4,7 @@ import axios from "axios";
 import AWS from "aws-sdk";
 import fs from "fs";
 import path from "path";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
@@ -102,6 +102,7 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
           if (retryCount > 3) {
             imagePrompt = (await this.callModel(
               PsAiModelType.Text,
+              PsAiModelSize.Medium,
               await this.renderCreatePrompt(
                 subProblemIndex,
                 solutionOrPolicy!,
@@ -114,6 +115,7 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
           } else {
             imagePrompt = (await this.callModel(
               PsAiModelType.Text,
+              PsAiModelSize.Medium,
               await this.renderCreatePrompt(subProblemIndex, solutionOrPolicy!),
               false
             )) as string;
@@ -325,6 +327,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
               if (process.env.STABILITY_API_KEY) {
                 imagePrompt = (await this.callModel(
                   PsAiModelType.Text,
+                  PsAiModelSize.Medium,
                   await this.renderCreatePrompt(subProblemIndex, solution),
                   false
                 )) as string;

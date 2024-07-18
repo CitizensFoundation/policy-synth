@@ -5,7 +5,7 @@ import ioredis from "ioredis";
 import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWebPages.js";
 import { RootCauseWebPageVectorStore } from "../../../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesAgent } from "../create/createRootCauseSearchQueries.js";
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 
 const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
@@ -287,6 +287,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
 
     const analysis = (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Medium,
       messages,
       true,
       true

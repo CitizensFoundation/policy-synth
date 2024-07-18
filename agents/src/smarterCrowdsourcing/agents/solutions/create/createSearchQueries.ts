@@ -1,4 +1,4 @@
-import { PsAiModelType } from "../../../../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../../../../aiModelTypes.js";
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "../../base/scBaseSolutionsWebResearchAgent.js";
 
 export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdsourcingAgent {
@@ -82,6 +82,7 @@ export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdso
 
     this.memory.problemStatement.searchQueries = await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Medium,
       await this.renderProblemPrompt(this.problemStatementDescription)
     );
 
@@ -104,6 +105,7 @@ export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdso
         this.memory.subProblems[subProblemIndex].searchQueries =
           await this.callModel(
             PsAiModelType.Text,
+            PsAiModelSize.Medium,
             await this.renderProblemPrompt(problemText)
           );
         await this.saveMemory();
@@ -122,6 +124,7 @@ export class CreateSearchQueriesAgent extends SolutionsWebResearchSmarterCrowdso
           this.memory.subProblems[subProblemIndex].entities[e].searchQueries =
             await this.callModel(
               PsAiModelType.Text,
+              PsAiModelSize.Medium,
               await this.renderEntityPrompt(
                 problemText,
                 this.memory.subProblems[subProblemIndex].entities[e]

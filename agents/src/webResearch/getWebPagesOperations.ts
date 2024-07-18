@@ -20,7 +20,7 @@ import { BaseSmarterCrowdsourcingAgent } from "../smarterCrowdsourcing/agents/ba
 
 import { WebPageVectorStore } from "../vectorstore/webPage.js";
 import { PolicySynthOperationsAgent } from "../base/operationsAgent.js";
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -253,6 +253,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
 
     const analysis = (await this.callModel(
       PsAiModelType.Text,
+      PsAiModelSize.Small,
       messages,
       true,
     )) as PsWebPageAnalysisData;
