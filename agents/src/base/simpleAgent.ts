@@ -154,8 +154,6 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
 
       while (retry && retryCount < maxRetries) {
         try {
-          const tokensIn = this.getNumTokensFromMessages(messages);
-          const estimatedTokensToAdd = tokensIn + tokenOutEstimate;
 
           // TODO: Implement rate limiting
           // await this.checkRateLimits(PsAiModelType.Text, estimatedTokensToAdd);
@@ -168,9 +166,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
           );
 
           if (response) {
-            const tokensOut = this.getNumTokensFromMessages([
-              { role: "assistant", message: response },
-            ]);
+            const {tokensIn, tokensOut, content} = response;
 
             // await this.updateRateLimits(PsAiModelType.Text, tokensOut);
             this.updateMemoryStages(stage, tokensIn, tokensOut, model);
@@ -179,7 +175,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
             if (parseJson) {
               let parsedJson;
               try {
-                parsedJson = this.parseJsonResponse(response.trim());
+                parsedJson = this.parseJsonResponse(content.trim());
               } catch (error) {
                 retryCount++;
                 this.logger.warn(`Retrying callLLM ${retryCount}`);
@@ -199,7 +195,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
 
               return parsedJson;
             } else {
-              return response.trim();
+              return content.trim();
             }
           } else {
             retryCount++;

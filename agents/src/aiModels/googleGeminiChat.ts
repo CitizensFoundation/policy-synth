@@ -1,10 +1,9 @@
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
 import { BaseChatModel } from "./baseChatModel.js";
 
 export class GoogleGeminiChat extends BaseChatModel {
   private client: GoogleGenerativeAI;
-  private model: any;
+  private model: GenerativeModel;
 
   constructor(config: PsAiModelConfig) {
     super(config.modelName || "gemini-pro", config.maxTokensOut || 4096);
@@ -16,15 +15,16 @@ export class GoogleGeminiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
-  ): Promise<any> {
+  ) {
     const history = messages.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.message }],
     }));
 
-    if (streaming) {
+    //TODO: FIX
+    /*if (streaming) {
       const stream = await this.model.generateContentStream({
-        history,
+        request: history,
         generationConfig: {
           maxOutputTokens: this.maxTokensOut,
         },
@@ -36,7 +36,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           streamingCallback(chunkText);
         }
       }
-
+      // Deal with tokenusage here
       return;
     } else {
       const result = await this.model.generateContent({
@@ -46,8 +46,14 @@ export class GoogleGeminiChat extends BaseChatModel {
         },
       });
 
-      return result.response.text();
-    }
+      const content = result.response.text();
+      return {
+        tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
+        tokensOut: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+        content,
+      };
+    }*/
+    return undefined;
   }
 
   async getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {

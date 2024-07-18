@@ -30,7 +30,13 @@ export class OpenAiChat extends BaseChatModel {
                 model: this.modelName,
                 messages: formattedMessages,
             });
-            return response.choices[0]?.message?.content;
+            const content = response.choices[0]?.message?.content;
+            console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
+            return {
+                tokensIn: response.usage.prompt_tokens,
+                tokensOut: response.usage.completion_tokens,
+                content,
+            };
         }
     }
     async getNumTokensFromMessages(messages) {

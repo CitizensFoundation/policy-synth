@@ -144,16 +144,33 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         }
     }
     async callTextModel(modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
+        let selectedModelSize = modelSize;
         const getFallbackPriority = (size) => {
             switch (size) {
                 case PsAiModelSize.Large:
-                    return [PsAiModelSize.Large, PsAiModelSize.Medium, PsAiModelSize.Small];
+                    return [
+                        PsAiModelSize.Large,
+                        PsAiModelSize.Medium,
+                        PsAiModelSize.Small,
+                    ];
                 case PsAiModelSize.Medium:
-                    return [PsAiModelSize.Medium, PsAiModelSize.Large, PsAiModelSize.Small];
+                    return [
+                        PsAiModelSize.Medium,
+                        PsAiModelSize.Large,
+                        PsAiModelSize.Small,
+                    ];
                 case PsAiModelSize.Small:
-                    return [PsAiModelSize.Small, PsAiModelSize.Medium, PsAiModelSize.Large];
+                    return [
+                        PsAiModelSize.Small,
+                        PsAiModelSize.Medium,
+                        PsAiModelSize.Large,
+                    ];
                 default:
-                    return [PsAiModelSize.Medium, PsAiModelSize.Large, PsAiModelSize.Small];
+                    return [
+                        PsAiModelSize.Medium,
+                        PsAiModelSize.Large,
+                        PsAiModelSize.Small,
+                    ];
             }
         };
         const modelSizePriority = getFallbackPriority(modelSize);
@@ -162,6 +179,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             const modelKey = `${PsAiModelType.Text}_${size}`;
             model = this.models.get(modelKey);
             if (model) {
+                selectedModelSize = size;
                 if (size !== modelSize) {
                     this.logger.warn(`Model not found for ${modelSize}, using ${size}`);
                 }
@@ -185,22 +203,19 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
             let retry = true;
             while (retry && retryCount < maxRetries) {
                 try {
-                    const tokensIn = await model.getNumTokensFromMessages(messages);
-                    const estimatedTokensToAdd = tokensIn + tokenOutEstimate;
+                    //const estimatedTokensToAdd = tokensIn + tokenOutEstimate;
                     //TODO: Get Rate limit working again
                     //await this.checkRateLimits(PsAiModelType.Text, estimatedTokensToAdd);
                     //await this.updateRateLimits(PsAiModelType.Text, tokensIn);
-                    const response = await model.generate(messages, !!streamingCallbacks, streamingCallbacks);
-                    if (response) {
-                        const tokensOut = await model.getNumTokensFromMessages([
-                            { role: "assistant", message: response },
-                        ]);
+                    const results = await model.generate(messages, !!streamingCallbacks, streamingCallbacks);
+                    if (results) {
+                        const { tokensIn, tokensOut, content } = results;
                         //await this.updateRateLimits(PsAiModelType.Text, tokensOut);
-                        await this.saveTokenUsage(PsAiModelType.Text, tokensIn, tokensOut);
+                        await this.saveTokenUsage(PsAiModelType.Text, selectedModelSize, tokensIn, tokensOut);
                         if (parseJson) {
                             let parsedJson;
                             try {
-                                parsedJson = this.parseJsonResponse(response.trim());
+                                parsedJson = this.parseJsonResponse(content.trim());
                             }
                             catch (error) {
                                 retryCount++;
@@ -216,7 +231,7 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
                             return parsedJson;
                         }
                         else {
-                            return response.trim();
+                            return content.trim();
                         }
                     }
                     else {
@@ -282,12 +297,16 @@ export class PolicySynthOperationsAgent extends PolicySynthBaseAgent {
         this.logger.warn("Image model call not yet implemented");
         return null;
     }
-    async saveTokenUsage(modelType, tokensIn, tokensOut) {
+    async saveTokenUsage(modelType, modelSize, tokensIn, tokensOut) {
         this.logger.debug(`Saving token usage for model ${modelType} and agent ${this.agent.id} tokensIn: ${tokensIn} tokensOut: ${tokensOut}`);
-        const model = this.models.get(modelType);
-        const modelId = this.modelIds.get(modelType);
+        const modelKey = `${modelType}_${modelSize}`;
+        const model = this.models.get(modelKey);
+        const modelId = this.modelIds.get(modelKey);
         if (!model || !modelId) {
-            throw new Error(`Model of type ${modelType} not initialized`);
+            this.logger.error(`Model of type ${modelType} and size ${modelSize} not initialized`);
+            this.logger.debug("Available models:", Array.from(this.models.keys()));
+            this.logger.debug("Available modelIds:", Array.from(this.modelIds.keys()));
+            throw new Error(`Model of type ${modelType} and size ${modelSize} not initialized`);
         }
         this.logger.debug(`Model: ${model.modelName}`);
         try {

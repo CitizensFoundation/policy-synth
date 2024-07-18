@@ -1,7 +1,7 @@
-
 import OpenAI from "openai";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
+import { resolve } from "path";
 
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
@@ -39,8 +39,15 @@ export class OpenAiChat extends BaseChatModel {
         model: this.modelName,
         messages: formattedMessages,
       });
+      const content = response.choices[0]?.message?.content;
 
-      return response.choices[0]?.message?.content;
+      console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
+
+      return {
+        tokensIn: response.usage!.prompt_tokens,
+        tokensOut: response.usage!.completion_tokens,
+        content,
+      };
     }
   }
 

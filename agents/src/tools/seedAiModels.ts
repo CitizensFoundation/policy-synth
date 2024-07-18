@@ -21,7 +21,7 @@ const anthropicSonnetConfig: PsAiModelConfiguration = {
     costOutTokensPerMillion: 15,
     currency: "USD"
   },
-  maxTokensOut: 4096,
+  maxTokensOut: 8000,
   defaultTemperature: 0.7,
   model: "claude-3-5-sonnet-20240620",
   active: true

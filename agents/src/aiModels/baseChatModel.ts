@@ -14,7 +14,7 @@ export abstract class BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
-  ): Promise<any>;
+  ): Promise<{tokensIn: number, tokensOut: number, content: string} | undefined>;
 
   abstract getNumTokensFromMessages(
     messages: PsModelMessage[]

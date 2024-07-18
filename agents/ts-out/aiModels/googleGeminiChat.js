@@ -13,30 +13,39 @@ export class GoogleGeminiChat extends BaseChatModel {
             role: msg.role,
             parts: [{ text: msg.message }],
         }));
-        if (streaming) {
-            const stream = await this.model.generateContentStream({
-                history,
-                generationConfig: {
-                    maxOutputTokens: this.maxTokensOut,
-                },
-            });
-            for await (const chunk of stream) {
-                const chunkText = chunk.text();
-                if (streamingCallback) {
-                    streamingCallback(chunkText);
-                }
+        //TODO: FIX
+        /*if (streaming) {
+          const stream = await this.model.generateContentStream({
+            request: history,
+            generationConfig: {
+              maxOutputTokens: this.maxTokensOut,
+            },
+          });
+    
+          for await (const chunk of stream) {
+            const chunkText = chunk.text();
+            if (streamingCallback) {
+              streamingCallback(chunkText);
             }
-            return;
-        }
-        else {
-            const result = await this.model.generateContent({
-                history,
-                generationConfig: {
-                    maxOutputTokens: this.maxTokensOut,
-                },
-            });
-            return result.response.text();
-        }
+          }
+          // Deal with tokenusage here
+          return;
+        } else {
+          const result = await this.model.generateContent({
+            history,
+            generationConfig: {
+              maxOutputTokens: this.maxTokensOut,
+            },
+          });
+    
+          const content = result.response.text();
+          return {
+            tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
+            tokensOut: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+            content,
+          };
+        }*/
+        return undefined;
     }
     async getNumTokensFromMessages(messages) {
         const contents = messages.map((msg) => ({

@@ -126,23 +126,19 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
             let retry = true;
             while (retry && retryCount < maxRetries) {
                 try {
-                    const tokensIn = this.getNumTokensFromMessages(messages);
-                    const estimatedTokensToAdd = tokensIn + tokenOutEstimate;
                     // TODO: Implement rate limiting
                     // await this.checkRateLimits(PsAiModelType.Text, estimatedTokensToAdd);
                     // await this.updateRateLimits(PsAiModelType.Text, tokensIn);
                     const response = await model.generate(messages, !!streamingCallbacks, streamingCallbacks);
                     if (response) {
-                        const tokensOut = this.getNumTokensFromMessages([
-                            { role: "assistant", message: response },
-                        ]);
+                        const { tokensIn, tokensOut, content } = response;
                         // await this.updateRateLimits(PsAiModelType.Text, tokensOut);
                         this.updateMemoryStages(stage, tokensIn, tokensOut, model);
                         await this.saveMemory();
                         if (parseJson) {
                             let parsedJson;
                             try {
-                                parsedJson = this.parseJsonResponse(response.trim());
+                                parsedJson = this.parseJsonResponse(content.trim());
                             }
                             catch (error) {
                                 retryCount++;
@@ -158,7 +154,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
                             return parsedJson;
                         }
                         else {
-                            return response.trim();
+                            return content.trim();
                         }
                     }
                     else {

@@ -24,10 +24,12 @@ export class AzureOpenAiChat extends BaseChatModel {
                     }
                 }
             }
+            // Deal with tokenusage here
         }
         else {
             const result = await this.client.getChatCompletions(this.deploymentName, chatMessages, { maxTokens: this.maxTokensOut });
-            return result.choices.map((choice) => choice.message?.content).join("");
+            const content = result.choices.map((choice) => choice.message?.content).join("");
+            return { tokensIn: result.usage?.promptTokens ?? 0, tokensOut: result.usage?.completionTokens ?? 0, content };
         }
     }
     async getNumTokensFromMessages(messages) {

@@ -28,7 +28,7 @@ export declare abstract class PolicySynthOperationsAgent extends PolicySynthBase
     callAudioModel(messages: PsModelMessage[]): Promise<null>;
     callVideoModel(messages: PsModelMessage[]): Promise<null>;
     callImageModel(messages: PsModelMessage[]): Promise<null>;
-    saveTokenUsage(modelType: PsAiModelType, tokensIn: number, tokensOut: number): Promise<void>;
+    saveTokenUsage(modelType: PsAiModelType, modelSize: PsAiModelSize, tokensIn: number, tokensOut: number): Promise<void>;
     formatNumber(number: number, fractions?: number): string;
     updateRangedProgress(progress: number | undefined, message: string): Promise<void>;
     updateProgress(progress: number | undefined, message: string): Promise<void>;
