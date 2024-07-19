@@ -8,6 +8,6 @@ export declare class AzureOpenAiChat extends BaseChatModel {
         tokensOut: number;
         content: string;
     } | undefined>;
-    getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
+    getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }
 //# sourceMappingURL=azureOpenAiChat.d.ts.map

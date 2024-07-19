@@ -8,6 +8,6 @@ export declare abstract class BaseChatModel {
         tokensOut: number;
         content: string;
     } | undefined>;
-    abstract getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
+    abstract getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }
 //# sourceMappingURL=baseChatModel.d.ts.map

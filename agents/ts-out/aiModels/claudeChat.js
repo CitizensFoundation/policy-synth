@@ -53,7 +53,7 @@ export class ClaudeChat extends BaseChatModel {
             };
         }
     }
-    async getNumTokensFromMessages(messages) {
+    async getEstimatedNumTokensFromMessages(messages) {
         //TODO: Get the right encoding
         const encoding = encoding_for_model(
         /*this.modelName*/ "gpt-4o");

@@ -39,7 +39,7 @@ export class OpenAiChat extends BaseChatModel {
             };
         }
     }
-    async getNumTokensFromMessages(messages) {
+    async getEstimatedNumTokensFromMessages(messages) {
         const encoding = encoding_for_model(this.modelName);
         const formattedMessages = messages.map((msg) => ({
             role: msg.role,

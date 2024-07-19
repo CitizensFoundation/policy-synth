@@ -69,7 +69,7 @@ export class ClaudeChat extends BaseChatModel {
     }
   }
 
-  async getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+  async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
     //TODO: Get the right encoding
     const encoding = encoding_for_model(
       /*this.modelName*/ "gpt-4o" as TiktokenModel

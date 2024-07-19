@@ -51,7 +51,7 @@ export class OpenAiChat extends BaseChatModel {
     }
   }
 
-  async getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+  async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
     const encoding = encoding_for_model(this.modelName as TiktokenModel);
     const formattedMessages = messages.map((msg) => ({
       role: msg.role as "system" | "user" | "assistant",

@@ -7,7 +7,7 @@ export declare class ClaudeChat extends BaseChatModel {
         tokensOut: number;
         content: any;
     } | undefined>;
-    getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
+    getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }
 export default ClaudeChat;
 //# sourceMappingURL=claudeChat.d.ts.map

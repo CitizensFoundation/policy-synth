@@ -4,7 +4,7 @@ export declare class GoogleGeminiChat extends BaseChatModel {
     private model;
     constructor(config: PsAiModelConfig);
     generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<undefined>;
-    getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
+    getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }
 export default GoogleGeminiChat;
 //# sourceMappingURL=googleGeminiChat.d.ts.map

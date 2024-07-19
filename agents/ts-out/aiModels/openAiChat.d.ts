@@ -3,7 +3,7 @@ export declare class OpenAiChat extends BaseChatModel {
     private client;
     constructor(config: PsOpenAiModelConfig);
     generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<any>;
-    getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
+    getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }
 export default OpenAiChat;
 //# sourceMappingURL=openAiChat.d.ts.map

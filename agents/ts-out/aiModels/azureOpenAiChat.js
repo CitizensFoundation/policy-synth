@@ -32,7 +32,7 @@ export class AzureOpenAiChat extends BaseChatModel {
             return { tokensIn: result.usage?.promptTokens ?? 0, tokensOut: result.usage?.completionTokens ?? 0, content };
         }
     }
-    async getNumTokensFromMessages(messages) {
+    async getEstimatedNumTokensFromMessages(messages) {
         const encoder = encoding_for_model(this.modelName);
         const chatMessages = messages.map((msg) => ({
             role: msg.role,

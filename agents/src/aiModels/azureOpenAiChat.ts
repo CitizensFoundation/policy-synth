@@ -50,7 +50,7 @@ export class AzureOpenAiChat extends BaseChatModel {
     }
   }
 
-  async getNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+  async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
     const encoder = encoding_for_model(this.modelName as TiktokenModel);
     const chatMessages = messages.map((msg) => ({
       role: msg.role as ChatRole,

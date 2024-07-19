@@ -47,7 +47,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         }*/
         return undefined;
     }
-    async getNumTokensFromMessages(messages) {
+    async getEstimatedNumTokensFromMessages(messages) {
         const contents = messages.map((msg) => ({
             role: msg.role,
             parts: [{ text: msg.message }],
