@@ -6,8 +6,6 @@ import {
   TextChannel,
   ChannelType,
 } from "discord.js";
-import { PsAgentConnector } from "../../dbModels/agentConnector.js";
-import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsAiModelSize, PsAiModelType } from "../../aiModelTypes.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
@@ -49,7 +47,7 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
         },
         ...PsBaseDiscordAgent.getExtraConfigurationQuestions(),
       ],
-    },
+    } as PsAgentConnectorConfiguration,
   };
 
   private client: Client;

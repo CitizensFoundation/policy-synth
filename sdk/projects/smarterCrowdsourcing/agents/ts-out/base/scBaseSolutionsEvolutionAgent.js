@@ -20,10 +20,14 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
                     "solution evaluation",
                     "solution refinement",
                 ],
-                inputJsonInterface: "{}",
-                outputJsonInterface: "{}",
                 questions: this.getConfigurationQuestions(),
-                supportedConnectors: [],
+                requestedAiModelSizes: ["small", "medium", "large"],
+                supportedConnectors: [
+                    "docs",
+                    "sheets",
+                    "collaboration",
+                    "notificationsAndChat",
+                ],
             },
         };
     }

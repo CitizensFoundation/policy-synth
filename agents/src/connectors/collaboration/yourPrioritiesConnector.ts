@@ -43,6 +43,14 @@ export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
           required: false,
         },
         {
+          uniqueId: "groupId",
+          text: "Your Priorities Group Id",
+          type: "textField",
+          subType: "number",
+          maxLength: 7,
+          required: true,
+        },
+        {
           uniqueId: "serverBaseUrl",
           text: "Server Base URL",
           type: "textField",
@@ -65,7 +73,7 @@ export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
           required: true,
         },
       ],
-    },
+    } as PsAgentConnectorConfiguration,
   };
 
   private userEmail: string;

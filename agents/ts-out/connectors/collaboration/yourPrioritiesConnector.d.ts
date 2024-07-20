@@ -11,28 +11,7 @@ export declare class PsYourPrioritiesConnector extends PsBaseCollaborationConnec
         version: number;
         user_id: number;
         available: boolean;
-        configuration: {
-            name: string;
-            classType: string;
-            description: string;
-            imageUrl: string;
-            iconName: string;
-            questions: ({
-                uniqueId: string;
-                text: string;
-                type: string;
-                maxLength: number;
-                required: boolean;
-                subType?: undefined;
-            } | {
-                uniqueId: string;
-                text: string;
-                type: string;
-                subType: string;
-                maxLength: number;
-                required: boolean;
-            })[];
-        };
+        configuration: PsAgentConnectorConfiguration;
     };
     private userEmail;
     private password;

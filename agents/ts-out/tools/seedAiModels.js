@@ -97,9 +97,8 @@ const topLevelAgentClassConfig = {
     imageUrl: "https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/topLevelAgent.png",
     iconName: "coordinator",
     capabilities: ["process coordination", "task management", "result aggregation"],
-    inputJsonInterface: "{}",
-    outputJsonInterface: "{}",
     questions: [],
+    requestedAiModelSizes: ["large", "medium", "small"],
     supportedConnectors: [],
 };
 await PsAgentClass.create({

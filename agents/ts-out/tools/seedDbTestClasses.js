@@ -96,10 +96,9 @@ const topLevelAgentClassConfig = {
     imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png",
     iconName: "coordinator",
     capabilities: ["process coordination", "task management", "result aggregation"],
-    inputJsonInterface: "{}",
-    outputJsonInterface: "{}",
-    questions: [],
+    requestedAiModelSizes: ["large", "medium", "small"],
     supportedConnectors: [],
+    questions: []
 };
 // Fetch the existing Problems Agent Class
 const problemsAgentClassInstance = await PsAgentClass.findByPk(1);

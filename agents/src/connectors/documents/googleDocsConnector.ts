@@ -55,7 +55,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
           required: true,
         },
       ],
-    },
+    } as PsAgentConnectorConfiguration,
   };
 
   private client: JWT;

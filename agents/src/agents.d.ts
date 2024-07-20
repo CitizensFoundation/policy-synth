@@ -183,10 +183,9 @@ interface PsAgentClassAttributesConfiguration {
   imageUrl: string;
   iconName: string;
   capabilities: string[];
-  inputJsonInterface: string;
-  outputJsonInterface: string;
+  requestedAiModelSizes: import("./aiModelTypes.js").PsAiModelSize[];
   questions: YpStructuredQuestionData[];
-  supportedConnectors: PsBaseAgentConnectorClass[];
+  supportedConnectors: import("./connectorTypes.js").PsConnectorClassTypes[];
   evalConfig?: PsAgentEvalConfig;
 }
 
@@ -253,7 +252,7 @@ interface PsAgentAttributes extends PsBaseNodeInstance {
   InputConnectors?: PsAgentConnectorAttributes[];
   OutputConnectors?: PsAgentConnectorAttributes[];
   AiModels?: PsAiModelAttributes[];
-  Evals?: PsAgentEvalAttributes[]; // ADDED
+  Evals?: PsAgentEvalAttributes[];
   configuration: PsAgentBaseConfiguration;
 }
 

@@ -1,5 +1,7 @@
+import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsClassScAgentType } from "./agentTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "./scBaseAgent.js";
+import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 
 export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingAgent {
   private static readonly POLICIES_AGENT_CLASS_BASE_ID =
@@ -26,11 +28,15 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
           "root cause analysis",
           "sub-problem generation",
         ],
-        inputJsonInterface: "{}",
-        outputJsonInterface: "{}",
         questions: this.getConfigurationQuestions(),
-        supportedConnectors: [],
-      },
+        requestedAiModelSizes: ["small", "medium", "large"] as PsAiModelSize[],
+        supportedConnectors: [
+          "docs",
+          "sheets",
+          "collaboration",
+          "notificationsAndChat",
+        ] as PsConnectorClassTypes[],
+      } as PsAgentClassAttributesConfiguration,
     };
   }
 

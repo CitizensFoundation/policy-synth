@@ -20,10 +20,14 @@ export class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingA
                     "root cause analysis",
                     "sub-problem generation",
                 ],
-                inputJsonInterface: "{}",
-                outputJsonInterface: "{}",
                 questions: this.getConfigurationQuestions(),
-                supportedConnectors: [],
+                requestedAiModelSizes: ["small", "medium", "large"],
+                supportedConnectors: [
+                    "docs",
+                    "sheets",
+                    "collaboration",
+                    "notificationsAndChat",
+                ],
             },
         };
     }
