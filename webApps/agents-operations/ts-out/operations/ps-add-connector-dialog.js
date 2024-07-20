@@ -36,9 +36,13 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
             console.error('Error fetching active connector classes:', error);
         }
     }
+    disableScrim(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
     render() {
         return html `
-      <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
+      <md-dialog ?open="${this.open}" @closed="${this._handleClose}" @cancel="${this.disableScrim}">
         <div slot="headline">${this.selectedInputOutputType == "input" ? "Add Input Connector" : "Add Output Connector"}</div>
         <div slot="content">
           <md-filled-text-field

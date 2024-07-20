@@ -33,7 +33,7 @@ export declare class PsAgentOperationsWebApp extends YpBaseElement {
     activeSolutionIndex: number | undefined;
     activePolicyIndex: number | undefined;
     pageIndex: number;
-    currentMemory: PsSmarterCrowdsourcingMemoryData | undefined;
+    currentMemory: any | undefined;
     totalNumberOfVotes: number;
     showAllCosts: boolean;
     lastSnackbarText: string | undefined;

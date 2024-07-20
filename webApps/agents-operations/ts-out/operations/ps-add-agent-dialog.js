@@ -28,6 +28,7 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
             medium: [],
             large: []
         };
+        this.requestedAiModelSizes = [];
         this.api = new OpsServerApi();
     }
     async connectedCallback() {
@@ -52,6 +53,9 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
             console.error('Error fetching active AI models:', error);
         }
     }
+    get hasAnyAiModels() {
+        return Object.values(this.filteredAiModels).some(models => models.length > 0);
+    }
     filterAiModels() {
         this.filteredAiModels = {
             small: [],
@@ -61,7 +65,7 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
         this.activeAiModels.forEach(model => {
             if (model.configuration && 'modelSize' in model.configuration) {
                 const size = model.configuration.modelSize;
-                if (size in this.filteredAiModels) {
+                if (size in this.filteredAiModels && this.requestedAiModelSizes.includes(size)) {
                     this.filteredAiModels[size].push(model);
                 }
             }
@@ -69,7 +73,7 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
     }
     render() {
         return html `
-      <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
+      <md-dialog ?open="${this.open}" @closed="${this._handleClose}" @cancel="${this.disableScrim}">
         <div slot="headline">${this.t('addNewAgent')}</div>
         <div slot="content">
           <md-filled-text-field
@@ -87,12 +91,10 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
                 </md-select-option>
               `)}
           </md-filled-select>
-          <div class="aiModelInfo">
+          <div class="aiModelInfo" ?hidden="${!this.hasAnyAiModels}">
             ${this.t("aiModelAgentCreateInfo")}
           </div>
-          ${this.renderAiModelSelect('small')}
-          ${this.renderAiModelSelect('medium')}
-          ${this.renderAiModelSelect('large')}
+          ${this.requestedAiModelSizes.map(size => this.renderAiModelSelect(size))}
         </div>
         <div slot="actions">
           <md-text-button @click="${this._handleClose}">${this.t('cancel')}</md-text-button>
@@ -141,6 +143,16 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
     _handleAgentClassSelection(e) {
         const select = e.target;
         this.selectedAgentClassId = Number(select.value);
+        // Update requestedAiModelSizes based on the selected agent class
+        const selectedClass = this.activeAgentClasses.find(c => c.id === this.selectedAgentClassId);
+        if (selectedClass && selectedClass.configuration && selectedClass.configuration.requestedAiModelSizes) {
+            this.requestedAiModelSizes = selectedClass.configuration.requestedAiModelSizes;
+        }
+        else {
+            this.requestedAiModelSizes = [];
+        }
+        // Re-filter AI models based on the new requested sizes
+        this.filterAiModels();
     }
     _handleAiModelSelection(e, size) {
         const select = e.target;
@@ -148,6 +160,10 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
     }
     _handleClose() {
         this.dispatchEvent(new CustomEvent('close'));
+    }
+    disableScrim(event) {
+        event.stopPropagation();
+        event.preventDefault();
     }
     async _handleAddAgent() {
         const selectedModels = Object.entries(this.selectedAiModels)
@@ -213,6 +229,9 @@ __decorate([
 __decorate([
     state()
 ], PsAddAgentDialog.prototype, "filteredAiModels", void 0);
+__decorate([
+    state()
+], PsAddAgentDialog.prototype, "requestedAiModelSizes", void 0);
 PsAddAgentDialog = __decorate([
     customElement('ps-add-agent-dialog')
 ], PsAddAgentDialog);

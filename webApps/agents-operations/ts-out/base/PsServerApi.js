@@ -8,12 +8,5 @@ export class PsServerApi extends YpServerApi {
         return (await this.fetchWrapper(this.baseUrlPath +
             `/projects/${id}${forceGetBackupForProject ? `/new` : ``}${tempPassword ? `?trm=${tempPassword}` : ''}`));
     }
-    async getMiddleSolutions(id, subProblemIndex) {
-        return (await this.fetchWrapper(this.baseUrlPath + `/projects/${id}/${subProblemIndex}/middle/solutions`));
-    }
-    async getRawEvidence(id, subProblemIndex, policyTitle) {
-        return (await this.fetchWrapper(this.baseUrlPath +
-            `/projects/${id}/${subProblemIndex}/${policyTitle}/rawEvidence`));
-    }
 }
 //# sourceMappingURL=PsServerApi.js.map

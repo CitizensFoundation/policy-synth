@@ -15,6 +15,7 @@ export declare class PsAddConnectorDialog extends LitElement {
     private api;
     connectedCallback(): Promise<void>;
     fetchActiveConnectorClasses(): Promise<void>;
+    disableScrim(event: CustomEvent): void;
     render(): import("lit").TemplateResult<1>;
     private _handleNameInput;
     private _handleConnectorClassSelection;

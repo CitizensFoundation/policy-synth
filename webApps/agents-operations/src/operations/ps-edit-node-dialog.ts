@@ -12,9 +12,14 @@ export class PsEditNodeDialog extends YpBaseElement {
   @property({ type: Boolean }) open = false;
   @property({ type: Object }) nodeToEditInfo: any;
 
+  disableScrim(event: CustomEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
   render() {
     return html`
-      <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
+      <md-dialog ?open="${this.open}" @closed="${this._handleClose}" @cancel="${this.disableScrim}">
         <div slot="headline">
           ${this.nodeToEditInfo ? this._renderNodeEditHeadline() : ''}
         </div>

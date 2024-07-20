@@ -38,9 +38,14 @@ export class PsAddConnectorDialog extends LitElement {
     }
   }
 
+  disableScrim(event: CustomEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
   render() {
     return html`
-      <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
+      <md-dialog ?open="${this.open}" @closed="${this._handleClose}" @cancel="${this.disableScrim}">
         <div slot="headline">${this.selectedInputOutputType=="input" ? "Add Input Connector" : "Add Output Connector"}</div>
         <div slot="content">
           <md-filled-text-field

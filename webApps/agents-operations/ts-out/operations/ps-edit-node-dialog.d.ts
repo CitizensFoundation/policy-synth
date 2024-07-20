@@ -6,6 +6,7 @@ import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element';
 export declare class PsEditNodeDialog extends YpBaseElement {
     open: boolean;
     nodeToEditInfo: any;
+    disableScrim(event: CustomEvent): void;
     render(): import("lit").TemplateResult<1>;
     _renderNodeEditHeadline(): import("lit").TemplateResult<1>;
     _renderEditForm(): import("lit").TemplateResult<1>;

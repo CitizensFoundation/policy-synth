@@ -1,6 +1,5 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { PsAiModelSize } from './aiModelTypes.js';
 
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/text-button.js';
@@ -11,6 +10,7 @@ import '@material/web/textfield/filled-text-field.js';
 
 import { OpsServerApi } from './OpsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
+import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
 
 @customElement('ps-add-agent-dialog')
 export class PsAddAgentDialog extends YpBaseElement {
@@ -29,6 +29,8 @@ export class PsAddAgentDialog extends YpBaseElement {
     medium: [],
     large: []
   };
+
+  @state() private requestedAiModelSizes: PsAiModelSize[] = [];
 
   private api = new OpsServerApi();
 
@@ -55,6 +57,10 @@ export class PsAddAgentDialog extends YpBaseElement {
     }
   }
 
+  get hasAnyAiModels() {
+    return Object.values(this.filteredAiModels).some(models => models.length > 0);
+  }
+
   filterAiModels() {
     this.filteredAiModels = {
       small: [],
@@ -65,7 +71,7 @@ export class PsAddAgentDialog extends YpBaseElement {
     this.activeAiModels.forEach(model => {
       if (model.configuration && 'modelSize' in model.configuration) {
         const size = model.configuration.modelSize as PsAiModelSize;
-        if (size in this.filteredAiModels) {
+        if (size in this.filteredAiModels && this.requestedAiModelSizes.includes(size)) {
           this.filteredAiModels[size].push(model);
         }
       }
@@ -74,7 +80,7 @@ export class PsAddAgentDialog extends YpBaseElement {
 
   render() {
     return html`
-      <md-dialog ?open="${this.open}" @closed="${this._handleClose}">
+      <md-dialog ?open="${this.open}" @closed="${this._handleClose}" @cancel="${this.disableScrim}">
         <div slot="headline">${this.t('addNewAgent')}</div>
         <div slot="content">
           <md-filled-text-field
@@ -94,12 +100,10 @@ export class PsAddAgentDialog extends YpBaseElement {
               `
             )}
           </md-filled-select>
-          <div class="aiModelInfo">
+          <div class="aiModelInfo" ?hidden="${!this.hasAnyAiModels}">
             ${this.t("aiModelAgentCreateInfo")}
           </div>
-          ${this.renderAiModelSelect('small')}
-          ${this.renderAiModelSelect('medium')}
-          ${this.renderAiModelSelect('large')}
+          ${this.requestedAiModelSizes.map(size => this.renderAiModelSelect(size))}
         </div>
         <div slot="actions">
           <md-text-button @click="${this._handleClose}">${this.t('cancel')}</md-text-button>
@@ -154,6 +158,17 @@ export class PsAddAgentDialog extends YpBaseElement {
   private _handleAgentClassSelection(e: Event) {
     const select = e.target as HTMLSelectElement;
     this.selectedAgentClassId = Number(select.value);
+
+    // Update requestedAiModelSizes based on the selected agent class
+    const selectedClass = this.activeAgentClasses.find(c => c.id === this.selectedAgentClassId);
+    if (selectedClass && selectedClass.configuration && selectedClass.configuration.requestedAiModelSizes) {
+      this.requestedAiModelSizes = selectedClass.configuration.requestedAiModelSizes;
+    } else {
+      this.requestedAiModelSizes = [];
+    }
+
+    // Re-filter AI models based on the new requested sizes
+    this.filterAiModels();
   }
 
   private _handleAiModelSelection(e: Event, size: PsAiModelSize) {
@@ -163,6 +178,11 @@ export class PsAddAgentDialog extends YpBaseElement {
 
   private _handleClose() {
     this.dispatchEvent(new CustomEvent('close'));
+  }
+
+  disableScrim(event: CustomEvent) {
+    event.stopPropagation();
+    event.preventDefault();
   }
 
   private async _handleAddAgent() {
