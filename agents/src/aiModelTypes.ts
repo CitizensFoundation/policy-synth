@@ -12,3 +12,4 @@ export enum PsAiModelSize {
   Medium = "medium",
   Small = "small"
 }
+

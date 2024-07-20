@@ -53,7 +53,7 @@ const openAiGpt4oMiniConfig = {
     },
     maxTokensOut: 16000,
     defaultTemperature: 0.0,
-    model: "gpt-4o mini",
+    model: "gpt-4o-mini",
     active: true
 };
 const openAiGpt4 = await PsAiModel.create({

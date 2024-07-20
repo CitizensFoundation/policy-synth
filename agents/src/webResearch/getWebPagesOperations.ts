@@ -1,7 +1,6 @@
 import { HTTPResponse, Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PsConstants } from "../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 import crypto from "crypto";
@@ -16,10 +15,8 @@ const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 
 import { htmlToText } from "html-to-text";
-import { BaseSmarterCrowdsourcingAgent } from "../smarterCrowdsourcing/agents/base/scBaseAgent.js";
 
-import { WebPageVectorStore } from "../vectorstore/webPage.js";
-import { PolicySynthOperationsAgent } from "../base/operationsAgent.js";
+import { PolicySynthAgent } from "../base/agent.js";
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 
 //@ts-ignore
@@ -27,8 +24,7 @@ puppeteer.use(StealthPlugin());
 
 const onlyCheckWhatNeedsToBeScanned = false;
 
-export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
-  webPageVectorStore = new WebPageVectorStore();
+export class BaseGetWebPagesOperationsAgent extends PolicySynthAgent {
   urlsScanned = new Set<string>();
 
   totalPagesSave = 0;
@@ -86,15 +82,9 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
   }
 
   async getTokenCount(text: string, subProblemIndex: number | undefined) {
-    const emptyMessages = this.renderScanningPrompt(
-      "",
-      "",
-      subProblemIndex
-    );
+    const emptyMessages = this.renderScanningPrompt("", "", subProblemIndex);
 
-    const promptTokenCount = await this.getTokensFromMessages(
-      emptyMessages
-    );
+    const promptTokenCount = await this.getTokensFromMessages(emptyMessages);
 
     const textForTokenCount = this.createHumanMessage(text);
 
@@ -103,62 +93,17 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
     ]);
 
     const totalTokenCount =
-      promptTokenCount +
-      textTokenCount +
-      this.maxModelTokensOut || 4096;
+      promptTokenCount + textTokenCount + this.maxModelTokensOut || 4096;
 
     return { totalTokenCount, promptTokenCount };
   }
 
   getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined) {
-    const promptMessages = this.renderScanningPrompt(
-      "",
-      "",
-      subProblemIndex
-    );
+    const promptMessages = this.renderScanningPrompt("", "", subProblemIndex);
 
     const promptMessagesText = promptMessages.map((m) => m.message).join("\n");
 
     return `${promptMessagesText} ${text}`;
-  }
-
-  mergeAnalysisData(
-    data1:
-      | PsWebPageAnalysisData
-      | PSEvidenceRawWebPageData
-      | PSRootCauseRawWebPageData,
-    data2:
-      | PsWebPageAnalysisData
-      | PSEvidenceRawWebPageData
-      | PSRootCauseRawWebPageData
-  ):
-    | PsWebPageAnalysisData
-    | PSEvidenceRawWebPageData
-    | PSRootCauseRawWebPageData {
-    data1 = data1 as PsWebPageAnalysisData;
-    data2 = data2 as PsWebPageAnalysisData;
-    return {
-      mostRelevantParagraphs: [
-        ...(data1.mostRelevantParagraphs || []),
-        ...(data2.mostRelevantParagraphs || []),
-      ],
-      solutionsIdentifiedInTextContext: [
-        ...(data1.solutionsIdentifiedInTextContext || []),
-        ...(data2.solutionsIdentifiedInTextContext || []),
-      ],
-      relevanceToProblem: data1.relevanceToProblem,
-      tags: [...(data1.tags || []), ...(data2.tags || [])],
-      entities: [...(data1.entities || []), ...(data2.entities || [])],
-      contacts: [...(data1.contacts || []), ...(data2.contacts || [])],
-      summary: data1.summary,
-      url: data1.url,
-      searchType: data1.searchType,
-      subProblemIndex: data1.subProblemIndex,
-      entityIndex: data1.entityIndex,
-      groupId: data1.groupId,
-      communityId: data1.communityId,
-      domainId: data1.domainId,
-    };
   }
 
   isWithinTokenLimit(allText: string, maxChunkTokenCount: number): boolean {
@@ -255,8 +200,8 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
       PsAiModelType.Text,
       PsAiModelSize.Small,
       messages,
-      true,
-    )) as PsWebPageAnalysisData;
+      true
+    )) as any; //TODO: Use <T>
 
     return analysis;
   }
@@ -278,14 +223,14 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
         )}`
       );
 
-      let textAnalysis: PsSolution[];
+      let textAnalysis: any[]; //TODO: Use <T>
 
       if (
-        PsConstants.getSolutionsPagesAnalysisModel.tokenLimit <
+        8000 < //TODO: Get from model config
         totalTokenCount
       ) {
         const maxTokenLengthForChunk =
-          PsConstants.getSolutionsPagesAnalysisModel.tokenLimit -
+          8000 - //TODO: Get from model config
           promptTokenCount -
           128;
 
@@ -308,7 +253,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
             currentText,
             subProblemIndex,
             entityIndex
-          )) as unknown as PsSolution[];
+          )) as unknown as any[]; //TODO: Use <T>
 
           if (nextAnalysis) {
             if (t == 0) {
@@ -334,13 +279,13 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
         textAnalysis = (await this.getAIAnalysis(
           text,
           subProblemIndex
-        )) as unknown as PsSolution[];
+        )) as unknown as any[]; //TODO: Use <T>
         this.logger.debug(
           `Text analysis ${JSON.stringify(textAnalysis, null, 2)}`
         );
       }
 
-      return textAnalysis! as PsWebPageAnalysisData | PsSolution[];
+      return textAnalysis! as any[]; //TODO: Use <T>
     } catch (error) {
       this.logger.error(`Error in getTextAnalysis: ${error}`);
       throw error;
@@ -351,13 +296,11 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any, //TODO: Use <T>
     entityIndex: number | undefined,
-    policy: PSPolicy | undefined = undefined
-  ): Promise<void | PSRefinedRootCause[]> {
+    policy: any | undefined = undefined
+  ): Promise<void | any[]> {
+    //TODO: Use <T>
     this.logger.debug(
       `Processing page text ${text.slice(
         0,
@@ -377,12 +320,12 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
         text,
         subProblemIndex,
         entityIndex
-      )) as PsSolution[];
+      )) as any[]; //TODO: Use <T>
 
       if (textAnalysisItems && textAnalysisItems.length > 0) {
-        const textAnalysis = textAnalysisItems[0] as PsSolution;
+        const textAnalysis = textAnalysisItems[0] as any; //TODO: Use <T>
         textAnalysis.fromUrl = url;
-        textAnalysis.fromSearchType = type as PsWebPageTypes;
+        textAnalysis.fromSearchType = type as any; //TODO: Use <T>
 
         if (
           Array.isArray(textAnalysis.contacts) &&
@@ -392,7 +335,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
             typeof textAnalysis.contacts[0] === "object" &&
             textAnalysis.contacts[0] !== null
           ) {
-            textAnalysis.contacts = textAnalysis.contacts.map((contact) =>
+            textAnalysis.contacts = textAnalysis.contacts.map((contact: any) =>
               JSON.stringify(contact)
             );
           }
@@ -405,9 +348,9 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
         try {
           this.logger.info(`Posting web page for url ${url}`);
           if (subProblemIndex === undefined) {
-           //
+            //
           } else {
-           //
+            //
           }
           this.totalPagesSave += 1;
           this.logger.info(`Total ${this.totalPagesSave} saved pages`);
@@ -442,12 +385,9 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
   async getAndProcessPdf(
     subProblemIndex: number | undefined,
     url: string,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any, //TODO: Use <T>
     entityIndex: number | undefined,
-    policy: PSPolicy | undefined = undefined
+    policy: any | undefined = undefined
   ) {
     return new Promise<void>(async (resolve, reject) => {
       this.logger.info("getAndProcessPdf");
@@ -479,9 +419,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
         let finalText = "";
         let pdfBuffer;
 
-        const directoryPath = `webPagesCache/${
-          `webResearchId${subProblemIndex}`
-        }`;
+        const directoryPath = `webPagesCache/${`webResearchId${subProblemIndex}`}`;
         let fileName;
         if (encodeURIComponent(url).length > 230) {
           this.logger.debug(`URL too long, generating hash for filename`);
@@ -502,10 +440,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
           const cachedPdf = await readFileAsync(fullPath);
           pdfBuffer = gunzipSync(cachedPdf);
         } else {
-          const sleepingForMs =
-            PsConstants.minSleepBeforeBrowserRequest +
-            Math.random() *
-              PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+          const sleepingForMs = 25 + Math.random() * 100; //TODO: get from agent config
 
           this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
 
@@ -528,7 +463,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
         if (pdfBuffer) {
           //this.logger.debug(pdfBuffer.toString().slice(0, 100));
           try {
-            new PdfReader({ debug: false, verbose: false }).parseBuffer(
+            new PdfReader({ debug: false }).parseBuffer(
               pdfBuffer,
               async (err: any, item: any) => {
                 if (err) {
@@ -577,21 +512,16 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any,
     entityIndex: number | undefined,
-    policy: PSPolicy | undefined = undefined
+    policy: any | undefined = undefined
   ) {
     try {
       let finalText, htmlText;
 
       this.logger.debug(`Getting HTML for ${url}`);
 
-      const directoryPath = `webPagesCache/${
-       `webResearchId${subProblemIndex}`
-      }`;
+      const directoryPath = `webPagesCache/${`webResearchId${subProblemIndex}`}`;
 
       const brokenHtmlUrls = ["https://cs.hi.is/python/ord.txt"];
 
@@ -620,10 +550,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
         const cachedData = await readFileAsync(fullPath);
         htmlText = gunzipSync(cachedData).toString();
       } else {
-        const sleepingForMs =
-          PsConstants.minSleepBeforeBrowserRequest +
-          Math.random() *
-            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+        const sleepingForMs = 25 + Math.random() * 100; //TODO: get from agent config
 
         this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
 
@@ -692,29 +619,11 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any, //TODO: Use <T>
     entityIndex: number | undefined
   ) {
     if (onlyCheckWhatNeedsToBeScanned) {
-      const hasPage = await this.webPageVectorStore.webPageExist(
-        1,
-        url,
-        type as PsWebPageTypes,
-        subProblemIndex,
-        entityIndex
-      );
-      if (hasPage) {
-        this.logger.warn(
-          `Already have scanned ${type} / ${subProblemIndex} / ${entityIndex} ${url}`
-        );
-      } else {
-        this.logger.warn(
-          `Need to scan ${type} / ${subProblemIndex} / ${entityIndex} ${url}`
-        );
-      }
+      //TODO: TBD
     } else {
       if (url.toLowerCase().endsWith(".pdf")) {
         await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
@@ -732,15 +641,13 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
     return true;
   }
 
-
-
   getUrlsToFetch(allPages: PsSearchResultItem[]): string[] {
     let outArray: PsSearchResultItem[] = [];
 
     outArray = allPages.slice(
       0,
       Math.floor(
-        allPages.length * PsConstants.maxPercentOfSolutionsWebPagesToGet
+        allPages.length * 0.4 //TODO: Get from agent config
       )
     );
 
@@ -762,21 +669,17 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
     return urlsToGet;
   }
 
-
-
   async getAllPages() {
     const browser = await puppeteer.launch({ headless: true });
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(30); //TODO: Get from agent config
+    browserPage.setDefaultNavigationTimeout(30); //TODO: Get from agent config
 
-    await browserPage.setUserAgent(PsConstants.currentUserAgent);
-
+    //await browserPage.setUserAgent(""); //TODO: Get from agent config
 
     await this.saveMemory();
-
 
     await this.saveMemory();
 
@@ -789,10 +692,10 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthOperationsAgent {
 
     const processPromises = searchQueryTypes.map(async (searchQueryType) => {
       const newPage = await browser.newPage();
-      newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-      newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+      newPage.setDefaultTimeout(30); //TODO: Get from agent config
+      newPage.setDefaultNavigationTimeout(30); //TODO: Get from agent config
 
-      await newPage.setUserAgent(PsConstants.currentUserAgent);
+      //await newPage.setUserAgent(""); //TODO: Get from agent config
 
       //
 

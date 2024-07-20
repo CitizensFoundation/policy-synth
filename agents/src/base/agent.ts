@@ -1,206 +1,191 @@
-import winston from "winston";
-import { jsonrepair } from "jsonrepair";
-import { encoding_for_model } from "tiktoken";
+import { PsAgent } from "../dbModels/agent.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
+import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
+import { PsAiModelManager } from "./agentModelManager.js";
+import { PsProgressTracker } from "./agentProgressTracker.js";
+import { PsConfigManager } from "./agentConfigManager.js";
+import Redis from "ioredis";
 
-export class PolicySynthBaseAgent {
-  logger: winston.Logger;
-  timeStart: number = Date.now();
-  rateLimits: PsModelRateLimitTracking = {};
+export abstract class PolicySynthAgent extends PolicySynthAgentBase {
+  memory!: PsAgentMemoryData;
+  agent: PsAgent;
+  modelManager: PsAiModelManager | undefined;
+  progressTracker: PsProgressTracker;
+  configManager: PsConfigManager;
+  redis: Redis;
 
-  maxModelTokensOut?: number;
-  modelTemperature?: number;
+  skipAiModels = false;
 
-  constructor() {
-    this.logger = winston.createLogger({
-      level: process.env.WORKER_LOG_LEVEL || "debug",
-      format: winston.format.json(),
-      transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          ),
-        }),
-      ],
-    });
-  }
+  startProgress = 0;
+  endProgress = 100;
 
-  protected createSystemMessage(content: string): PsModelMessage {
-    return { role: "system", message: content };
-  }
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.7;
 
-  protected createHumanMessage(content: string): PsModelMessage {
-    return { role: "user", message: content };
-  }
+  constructor(
+    agent: PsAgent,
+    memory: PsAgentMemoryData | undefined = undefined,
+    startProgress: number,
+    endProgress: number
+  ) {
+    super();
+    this.agent = agent;
+    this.logger.debug(JSON.stringify(agent));
 
-  getJsonBlock(text: string) {
-    let startIndex = text.indexOf("```json");
-    let endIndex = text.indexOf("```", startIndex + 6);
-    if (endIndex !== -1) {
-      return text.substring(startIndex + 7, endIndex).trim();
+    if (
+      !this.agent &&
+      (!process.env.PS_AGENT_MAX_MODEL_TOKENS_OUT ||
+        !process.env.PS_AGENT_MODEL_TEMPERATURE ||
+        !process.env.PS_REDIS_MEMORY_KEY ||
+        !process.env.PS_AI_MODEL_PROVIDER ||
+        !process.env.PS_AI_MODEL_NAME ||
+        !process.env.PS_AI_MODEL_TYPE ||
+        !process.env.PS_AI_MODEL_SIZE)
+    ) {
+      throw new Error(
+        "Agent not found and required environment variables not set"
+      );
+    }
+
+    if (!this.skipAiModels) {
+      this.modelManager = new PsAiModelManager(
+        //agent ? agent.AiModels! : undefined,
+        agent.AiModels || [],
+        agent ? agent.Group?.private_access_configuration || [] : []/*this.getAccessConfigFromEnv()*/,
+        this.maxModelTokensOut,
+        this.modelTemperature,
+        agent ? agent.id : -1,
+        agent ? agent.user_id : -1
+      );
+    }
+
+    this.progressTracker = new PsProgressTracker(
+      agent.redisMemoryKey,
+      startProgress,
+      endProgress
+    );
+
+    this.configManager = new PsConfigManager(agent.configuration);
+
+    this.redis = new Redis(
+      process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+    );
+
+    if (memory) {
+      this.memory = memory;
     } else {
-      throw new Error("Unable to find JSON block");
+      this.loadAgentMemoryFromRedis();
     }
   }
 
-  repairJson(text: string): string {
-    try {
-      return jsonrepair(text);
-    } catch (error) {
-      this.logger.error(error);
-      throw new Error("Unable to repair JSON");
+  async process() {
+    if (!this.memory) {
+      this.logger.error("Memory is not initialized");
+      throw new Error("Memory is not initialized");
     }
+
+    await this.progressTracker.updateProgress(
+      undefined,
+      `Agent ${this.agent.Class?.name} Starting`
+    );
+
+    // The main processing logic would go here.
+    // Subclasses would override this method to implement specific agent behaviors.
   }
 
-  parseJsonResponse(response: string): any {
-    response = response.replace("```json", "").trim();
-    if (response.endsWith("```")) {
-      response = response.substring(0, response.length - 3);
-    }
-
+  async loadAgentMemoryFromRedis() {
     try {
-      return JSON.parse(response);
-    } catch (error) {
-      this.logger.warn(`Error parsing JSON ${response}`);
-      try {
-        this.logger.info(`Trying to fix JSON`);
-        const parsedJson = JSON.parse(this.repairJson(response));
-        this.logger.info("Fixed JSON");
-        return parsedJson;
-      } catch (error) {
-        this.logger.warn(`Error parsing fixed JSON`);
-        throw new Error("Unable to parse JSON");
+      const memoryData = await this.redis.get(this.agent.redisMemoryKey);
+      if (memoryData) {
+        this.memory = JSON.parse(memoryData);
+      } else {
+        console.error("No memory data found!");
       }
+    } catch (error) {
+      this.logger.error("Error initializing agent memory");
+      this.logger.error(error);
     }
   }
 
-  async updateRateLimits(
-    model: PsBaseAIModelConstants,
-    tokensToAdd: number
+  async callModel(
+    modelType: PsAiModelType,
+    modelSize: PsAiModelSize,
+    messages: PsModelMessage[],
+    parseJson = true,
+    limitedRetries = false,
+    tokenOutEstimate = 120,
+    streamingCallbacks?: Function
   ) {
-    if (!this.rateLimits[model.name]) {
-      this.rateLimits[model.name] = {
-        requests: [],
-        tokens: [],
-      };
-    }
-
-    this.addRequestTimestamp(model);
-    this.addTokenEntry(model, tokensToAdd);
-  }
-
-  async checkRateLimits(
-    model: PsBaseAIModelConstants,
-    tokensToAdd: number
-  ) {
-    let now = Date.now();
-    const windowSize = 60000; // 60 seconds
-
-    if (!this.rateLimits[model.name]) {
-      this.rateLimits[model.name] = {
-        requests: [],
-        tokens: [],
-      };
-    }
-
-    this.slideWindowForRequests(model);
-    this.slideWindowForTokens(model);
-
-    const limits = this.rateLimits[model.name];
-
-    if (limits.requests.length >= model.limitRPM) {
-      const remainingTimeRequests =
-        60000 - (now - limits.requests[0].timestamp);
-      this.logger.info(
-        `RPM limit reached (${
-          model.limitRPM
-        }), sleeping for ${this.formatNumber(
-          (remainingTimeRequests + 1000) / 1000
-        )} seconds`
-      );
-      await new Promise((resolve) =>
-        setTimeout(resolve, remainingTimeRequests + 1000)
-      );
-    }
-
-    now = Date.now();
-
-    const currentTokensCount = limits.tokens.reduce(
-      (acc, token) => acc + token.count,
-      0
-    );
-
-    if (currentTokensCount + tokensToAdd > model.limitTPM) {
-      const remainingTimeTokens = 60000 - (now - limits.tokens[0].timestamp);
-      this.logger.info(
-        `TPM limit reached (${
-          model.limitTPM
-        }), sleeping for ${this.formatNumber(
-          (remainingTimeTokens + 1000) / 1000
-        )} seconds`
-      );
-      await new Promise((resolve) =>
-        setTimeout(resolve, remainingTimeTokens + 1000)
-      );
-    }
-  }
-
-  formatNumber(number: number, fractions = 0) {
-    return new Intl.NumberFormat("en-US", {
-      maximumFractionDigits: fractions,
-    }).format(number);
-  }
-
-  addRequestTimestamp(model: PsBaseAIModelConstants) {
-    const now = Date.now();
-    this.rateLimits[model.name].requests.push({ timestamp: now });
-  }
-
-  addTokenEntry(model: PsBaseAIModelConstants, tokensToAdd: number) {
-    const now = Date.now();
-    this.rateLimits[model.name].tokens.push({
-      count: tokensToAdd,
-      timestamp: now,
-    });
-  }
-
-  slideWindowForRequests(model: PsBaseAIModelConstants) {
-    const now = Date.now();
-    const windowSize = 60000; // 60 seconds
-    this.rateLimits[model.name].requests = this.rateLimits[model.name].requests.filter(
-      (request) => now - request.timestamp < windowSize
+    return this.modelManager?.callModel(
+      modelType,
+      modelSize,
+      messages,
+      parseJson,
+      limitedRetries,
+      tokenOutEstimate,
+      streamingCallbacks
     );
   }
 
-  slideWindowForTokens(model: PsBaseAIModelConstants) {
-    const now = Date.now();
-    const windowSize = 60000; // 60 seconds
-    this.rateLimits[model.name].tokens = this.rateLimits[model.name].tokens.filter(
-      (token) => now - token.timestamp < windowSize
-    );
+  async updateRangedProgress(progress: number | undefined, message: string) {
+    await this.progressTracker.updateRangedProgress(progress, message);
+  }
+
+  async updateProgress(progress: number | undefined, message: string) {
+    await this.progressTracker.updateProgress(progress, message);
+  }
+
+  getConfig<T>(uniqueId: string, defaultValue: T): T {
+    return this.configManager.getConfig(uniqueId, defaultValue);
+  }
+
+  getConfigOld<T>(uniqueId: string, defaultValue: T): T {
+    return this.configManager.getConfigOld(uniqueId, defaultValue);
+  }
+
+  async saveMemory() {
+    try {
+      await this.redis.set(
+        this.agent.redisMemoryKey,
+        JSON.stringify(this.memory)
+      );
+    } catch (error) {
+      this.logger.error("Error saving agent memory to Redis");
+      this.logger.error(error);
+    }
   }
 
   async getTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
-    //TODO: Get the db model name from the agent
-    const encoding = encoding_for_model("gpt-4o");
-    let totalTokens = 0;
+    return this.modelManager?.getTokensFromMessages(messages) || 0;
+  }
 
-    for (const message of messages) {
-      // Every message follows <im_start>{role/name}\n{content}<im_end>\n
-      totalTokens += 4;
+  formatNumber(number: number, fractions = 0) {
+    return this.progressTracker.formatNumber(number, fractions);
+  }
 
-      for (const [key, value] of Object.entries(message)) {
-        totalTokens += encoding.encode(value).length;
-        if (key === "name") {
-          totalTokens -= 1; // Role is always required and always 1 token
-        }
-      }
-    }
+  // Additional methods that might be needed
 
-    totalTokens += 2; // Every reply is primed with <im_start>assistant
+  async setCompleted(message: string) {
+    await this.progressTracker.setCompleted(message);
+  }
 
-    encoding.free(); // Free up the memory used by the encoder
+  async setError(errorMessage: string) {
+    await this.progressTracker.setError(errorMessage);
+  }
 
-    return totalTokens;
+  getModelUsageEstimates(): PsAgentModelUsageEstimate[] | undefined {
+    return this.configManager.getModelUsageEstimates();
+  }
+
+  getApiUsageEstimates(): PsAgentApiUsageEstimate[] | undefined {
+    return this.configManager.getApiUsageEstimates();
+  }
+
+  getMaxTokensOut(): number | undefined {
+    return this.configManager.getMaxTokensOut();
+  }
+
+  getTemperature(): number | undefined {
+    return this.configManager.getTemperature();
   }
 }

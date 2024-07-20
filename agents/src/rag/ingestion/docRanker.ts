@@ -5,7 +5,7 @@ export class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
   overallTopic: string | undefined;
 
   constructor(
-    memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined,
+    memory: PsSimpleAgentMemoryData | undefined = undefined,
     progressFunction: Function | undefined = undefined
   ) {
     super(memory!);

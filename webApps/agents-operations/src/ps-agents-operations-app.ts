@@ -308,7 +308,7 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
     this.setupTheme();
 
     setTimeout(() => {
-      this.themeDarkMode = true;
+      //this.themeDarkMode = true;
     }, 1000);
   }
 

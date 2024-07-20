@@ -61,7 +61,7 @@ const openAiGpt4oMiniConfig: PsAiModelConfiguration = {
   },
   maxTokensOut: 16000,
   defaultTemperature: 0.0,
-  model: "gpt-4o mini",
+  model: "gpt-4o-mini",
   active: true
 };
 

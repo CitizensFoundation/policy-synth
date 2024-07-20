@@ -65,6 +65,9 @@ interface PsBaseModelPriceConfiguration {
   currency: string;
 }
 
+interface PsEloRateable {
+  eloRating?: number;
+}
 
 interface PsAiModelConfiguration {
   type: import("./aiModelTypes.js").PsAiModelType;

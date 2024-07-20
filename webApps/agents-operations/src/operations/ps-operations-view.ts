@@ -655,15 +655,15 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
         }
 
         .agentContainer {
-          color: var(--md-sys-color-on-primary-container);
-          background-color: var(--md-sys-color-primary-container);
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface-container-lowest);
           border-radius: 16px;
           padding: 0;
         }
 
         .agentContainerRunning {
-          color: var(--md-sys-color-on-tertiary-container);
-          background-color: var(--md-sys-color-tertiary-container);
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface-container-high);
           border-radius: 16px;
           padding: 0;
         }

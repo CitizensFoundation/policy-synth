@@ -8,7 +8,7 @@ import {
   PsExternalApiUsage,
   PsAiModel
 } from '../models/index.js';
-import { PolicySynthOperationsAgent } from '@policysynth/agents/base/operationsAgent.js';
+import { PolicySynthAgent } from '@policysynth/agents/base/agent.js';
 
 export class AgentManagerService {
   private redisClient!: Redis;

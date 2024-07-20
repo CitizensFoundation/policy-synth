@@ -1,6 +1,5 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PsConstants } from "../constants.js";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
 import crypto from "crypto";
@@ -12,13 +11,11 @@ const gzip = promisify(createGzip);
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
-import { WebPageVectorStore } from "../vectorstore/webPage.js";
 import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
 export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
-    webPageVectorStore = new WebPageVectorStore();
     urlsScanned = new Set();
     totalPagesSave = 0;
     maxModelTokensOut = 4096;
@@ -79,32 +76,44 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
         const promptMessagesText = promptMessages.map((m) => m.message).join("\n");
         return `${promptMessagesText} ${text}`;
     }
-    mergeAnalysisData(data1, data2) {
-        data1 = data1;
-        data2 = data2;
-        return {
-            mostRelevantParagraphs: [
-                ...(data1.mostRelevantParagraphs || []),
-                ...(data2.mostRelevantParagraphs || []),
-            ],
-            solutionsIdentifiedInTextContext: [
-                ...(data1.solutionsIdentifiedInTextContext || []),
-                ...(data2.solutionsIdentifiedInTextContext || []),
-            ],
-            relevanceToProblem: data1.relevanceToProblem,
-            tags: [...(data1.tags || []), ...(data2.tags || [])],
-            entities: [...(data1.entities || []), ...(data2.entities || [])],
-            contacts: [...(data1.contacts || []), ...(data2.contacts || [])],
-            summary: data1.summary,
-            url: data1.url,
-            searchType: data1.searchType,
-            subProblemIndex: data1.subProblemIndex,
-            entityIndex: data1.entityIndex,
-            groupId: data1.groupId,
-            communityId: data1.communityId,
-            domainId: data1.domainId,
-        };
-    }
+    /*mergeAnalysisData(
+      data1:
+        | PsWebPageAnalysisData
+        | PSEvidenceRawWebPageData
+        | PSRootCauseRawWebPageData,
+      data2:
+        | PsWebPageAnalysisData
+        | PSEvidenceRawWebPageData
+        | PSRootCauseRawWebPageData
+    ):
+      | PsWebPageAnalysisData
+      | PSEvidenceRawWebPageData
+      | PSRootCauseRawWebPageData {
+      data1 = data1 as PsWebPageAnalysisData;
+      data2 = data2 as PsWebPageAnalysisData;
+      return {
+        mostRelevantParagraphs: [
+          ...(data1.mostRelevantParagraphs || []),
+          ...(data2.mostRelevantParagraphs || []),
+        ],
+        solutionsIdentifiedInTextContext: [
+          ...(data1.solutionsIdentifiedInTextContext || []),
+          ...(data2.solutionsIdentifiedInTextContext || []),
+        ],
+        relevanceToProblem: data1.relevanceToProblem,
+        tags: [...(data1.tags || []), ...(data2.tags || [])],
+        entities: [...(data1.entities || []), ...(data2.entities || [])],
+        contacts: [...(data1.contacts || []), ...(data2.contacts || [])],
+        summary: data1.summary,
+        url: data1.url,
+        searchType: data1.searchType,
+        subProblemIndex: data1.subProblemIndex,
+        entityIndex: data1.entityIndex,
+        groupId: data1.groupId,
+        communityId: data1.communityId,
+        domainId: data1.domainId,
+      };
+    }*/
     isWithinTokenLimit(allText, maxChunkTokenCount) {
         const words = allText.split(/\s+/);
         const estimatedTokenCount = words.length * 1.35;
@@ -165,17 +174,17 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt("", text, subProblemIndex, entityIndex);
-        const analysis = (await this.callLLM("web-get-pages", messages, true));
+        const analysis = (await this.callLLM("web-get-pages", messages, true)); //TODO: Use <T>
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex, entityIndex) {
         try {
             const { totalTokenCount, promptTokenCount } = await this.getTokenCount(text, subProblemIndex);
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
-            let textAnalysis;
-            if (PsConstants.getSolutionsPagesAnalysisModel.tokenLimit <
+            let textAnalysis; //TODO: Use <T>
+            if (8000 < //TODO: Get from agent model config
                 totalTokenCount) {
-                const maxTokenLengthForChunk = PsConstants.getSolutionsPagesAnalysisModel.tokenLimit -
+                const maxTokenLengthForChunk = 8000 - //TODO: Get from agent model config
                     promptTokenCount -
                     128;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
@@ -183,7 +192,7 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
                 for (let t = 0; t < splitText.length; t++) {
                     const currentText = splitText[t];
-                    let nextAnalysis = (await this.getAIAnalysis(currentText, subProblemIndex, entityIndex));
+                    let nextAnalysis = (await this.getAIAnalysis(currentText, subProblemIndex, entityIndex)); //TODO: Use <T>
                     if (nextAnalysis) {
                         if (t == 0) {
                             textAnalysis = nextAnalysis;
@@ -199,17 +208,18 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
                 }
             }
             else {
-                textAnalysis = (await this.getAIAnalysis(text, subProblemIndex));
+                textAnalysis = (await this.getAIAnalysis(text, subProblemIndex)); //TODO: Use <T>
                 this.logger.debug(`Text analysis ${JSON.stringify(textAnalysis, null, 2)}`);
             }
-            return textAnalysis;
+            return textAnalysis; //TODO: Use <T>
         }
         catch (error) {
             this.logger.error(`Error in getTextAnalysis: ${error}`);
             throw error;
         }
     }
-    async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
+    async processPageText(text, subProblemIndex, url, type, //TODO: Use <T>
+    entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
         if (this.urlsScanned.has(url)) {
             this.logger.warn(`Already scanned ${url}, skipping`);
@@ -219,11 +229,11 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
             this.urlsScanned.add(url);
         }
         try {
-            const textAnalysisItems = (await this.getTextAnalysis(text, subProblemIndex, entityIndex));
+            const textAnalysisItems = (await this.getTextAnalysis(text, subProblemIndex, entityIndex)); //TODO: Use <T>
             if (textAnalysisItems && textAnalysisItems.length > 0) {
-                const textAnalysis = textAnalysisItems[0];
+                const textAnalysis = textAnalysisItems[0]; //TODO: Use <T>
                 textAnalysis.fromUrl = url;
-                textAnalysis.fromSearchType = type;
+                textAnalysis.fromSearchType = type; //TODO: Use <T>
                 if (Array.isArray(textAnalysis.contacts) &&
                     textAnalysis.contacts.length > 0) {
                     if (typeof textAnalysis.contacts[0] === "object" &&
@@ -270,7 +280,8 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
     //TODO: Use arxiv API as seperate datasource, use other for non arxiv papers
     // https://github.com/hwchase17/langchain/blob/master/langchain/document_loaders/arxiv.py
     // https://info.arxiv.org/help/api/basics.html
-    async getAndProcessPdf(subProblemIndex, url, type, entityIndex, policy = undefined) {
+    async getAndProcessPdf(subProblemIndex, url, type, //TODO: Use <T>
+    entityIndex, policy = undefined) {
         return new Promise(async (resolve, reject) => {
             this.logger.info("getAndProcessPdf");
             //TODO: Get PdfReader working with those (or use another library)
@@ -317,9 +328,9 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
                     pdfBuffer = gunzipSync(cachedPdf);
                 }
                 else {
-                    const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
+                    const sleepingForMs = 50 +
                         Math.random() *
-                            PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                            100; //TODO: Read from agent config
                     this.logger.info(`Fetching PDF ${url} in ${sleepingForMs} ms`);
                     await new Promise((r) => setTimeout(r, sleepingForMs));
                     const axiosResponse = await axios.get(url, {
@@ -336,7 +347,7 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
                 if (pdfBuffer) {
                     //this.logger.debug(pdfBuffer.toString().slice(0, 100));
                     try {
-                        new PdfReader({ debug: false, verbose: false }).parseBuffer(pdfBuffer, async (err, item) => {
+                        new PdfReader({ debug: false }).parseBuffer(pdfBuffer, async (err, item) => {
                             if (err) {
                                 this.logger.error(`Error parsing PDF ${url}`);
                                 this.logger.error(err);
@@ -375,7 +386,8 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
             }
         });
     }
-    async getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex, policy = undefined) {
+    async getAndProcessHtml(subProblemIndex, url, browserPage, type, //TODO: Use <T>
+    entityIndex, policy = undefined) {
         try {
             let finalText, htmlText;
             this.logger.debug(`Getting HTML for ${url}`);
@@ -404,9 +416,9 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
                 htmlText = gunzipSync(cachedData).toString();
             }
             else {
-                const sleepingForMs = PsConstants.minSleepBeforeBrowserRequest +
+                const sleepingForMs = 50 +
                     Math.random() *
-                        PsConstants.maxAdditionalRandomSleepBeforeBrowserRequest;
+                        100; //TODO: Read from agent config
                 this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
                 await new Promise((r) => setTimeout(r, sleepingForMs));
                 const response = await browserPage.goto(url, {
@@ -459,15 +471,10 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
             this.logger.error(e.stack || e);
         }
     }
-    async getAndProcessPage(subProblemIndex, url, browserPage, type, entityIndex) {
+    async getAndProcessPage(subProblemIndex, url, browserPage, type, //TODO: Use <T>
+    entityIndex) {
         if (onlyCheckWhatNeedsToBeScanned) {
-            const hasPage = await this.webPageVectorStore.webPageExist(this.memory.groupId, url, type, subProblemIndex, entityIndex);
-            if (hasPage) {
-                this.logger.warn(`Already have scanned ${type} / ${subProblemIndex} / ${entityIndex} ${url}`);
-            }
-            else {
-                this.logger.warn(`Need to scan ${type} / ${subProblemIndex} / ${entityIndex} ${url}`);
-            }
+            //TBD
         }
         else {
             if (url.toLowerCase().endsWith(".pdf")) {
@@ -481,7 +488,8 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
     }
     getUrlsToFetch(allPages) {
         let outArray = [];
-        outArray = allPages.slice(0, Math.floor(allPages.length * PsConstants.maxPercentOfSolutionsWebPagesToGet));
+        outArray = allPages.slice(0, Math.floor(allPages.length * 0.3 //TODO: Get from agent config
+        ));
         // Map to URLs and remove duplicates
         const urlsToGet = Array.from(outArray
             .map((p) => p.url)
@@ -493,10 +501,9 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(PsConstants.currentUserAgent);
-        await this.saveMemory();
+        browserPage.setDefaultTimeout(30);
+        browserPage.setDefaultNavigationTimeout(30); //TODO: Get from agent config
+        //await browserPage.setUserAgent(""); //TODO: Get from agent config
         await this.saveMemory();
         const searchQueryTypes = [
             "general",
@@ -506,9 +513,9 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
         ];
         const processPromises = searchQueryTypes.map(async (searchQueryType) => {
             const newPage = await browser.newPage();
-            newPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-            newPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-            await newPage.setUserAgent(PsConstants.currentUserAgent);
+            newPage.setDefaultTimeout(30);
+            newPage.setDefaultNavigationTimeout(30); //TODO: Get from agent config
+            //await newPage.setUserAgent(""); //TODO: Get from agent config
             //
             await newPage.close();
             this.logger.info(`Closed page for ${searchQueryType} search results`);

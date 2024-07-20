@@ -1,0 +1,1 @@
+{"version":3,"file":"rankEntities.d.ts","sourceRoot":"","sources":["../../../src/problems/ranking/rankEntities.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,qCAAqC,EAAE,MAAM,+BAA+B,CAAC;AAEtF,qBAAa,iBAAkB,SAAQ,qCAAqC;IACpE,gBAAgB,CACpB,eAAe,EAAE,MAAM,EACvB,UAAU,EAAE,MAAM,EAAE,GACnB,OAAO,CAAC,qBAAqB,CAAC;IAyD3B,OAAO;CAgCd"}

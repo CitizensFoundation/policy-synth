@@ -1,5 +1,5 @@
-import { PolicySynthOperationsAgent } from "../../base/operationsAgent.js";
-export class PsBaseConnector extends PolicySynthOperationsAgent {
+import { PolicySynthAgent } from "../../base/agent.js";
+export class PsBaseConnector extends PolicySynthAgent {
     connector;
     connectorClass;
     skipAiModels = true;

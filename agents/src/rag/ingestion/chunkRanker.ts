@@ -7,7 +7,7 @@ export class IngestionChunkRanker extends SimplePairwiseRankingsAgent {
   modelTemperature = 0.0;
 
   constructor(
-    memory: PsSmarterCrowdsourcingMemoryData | undefined = undefined,
+    memory: PsSimpleAgentMemoryData | undefined = undefined,
     progressFunction: Function | undefined = undefined
   ) {
     super(memory!);

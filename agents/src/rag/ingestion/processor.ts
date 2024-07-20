@@ -7,7 +7,6 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
 import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
-import { PsConstants } from "../../constants.js";
 import { DocumentCleanupAgent } from "./docCleanup.js";
 import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -77,12 +76,12 @@ export abstract class IngestionAgentAgent extends BaseIngestionAgent {
         this.logger.debug("Launching browser");
 
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultTimeout(30); //TODO: Set from agent config
         browserPage.setDefaultNavigationTimeout(
-          PsConstants.webPageNavTimeout
+          30  //TODO: Set from agent config
         );
 
-        await browserPage.setUserAgent(PsConstants.currentUserAgent);
+        //await browserPage.setUserAgent("");  //TODO: Set from agent config
 
         await this.downloadAndCache(
           this.dataLayout.documentUrls,

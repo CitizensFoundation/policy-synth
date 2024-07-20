@@ -1,9 +1,9 @@
 import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PsAgentConnector } from "../../dbModels/agentConnector.js";
-import { PolicySynthOperationsAgent } from "../../base/operationsAgent.js";
+import { PolicySynthAgent } from "../../base/agent.js";
 import { PsAgent } from "../../dbModels/agent.js";
 
-export abstract class PsBaseConnector extends PolicySynthOperationsAgent {
+export abstract class PsBaseConnector extends PolicySynthAgent {
   connector: PsAgentConnectorAttributes;
   connectorClass: PsAgentConnectorClass;
   skipAiModels = true;

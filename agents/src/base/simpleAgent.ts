@@ -3,7 +3,7 @@ import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
-import { PolicySynthBaseAgent } from "./agent.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
 import ioredis from "ioredis";
 import tiktoken from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
@@ -12,13 +12,16 @@ const redis = new ioredis(
   process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
 );
 
-export class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
+export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
   declare memory?: PsSimpleAgentMemoryData;
   timeStart: number = Date.now();
   rateLimits: PsModelRateLimitTracking = {};
   models: Map<PsAiModelType, BaseChatModel> = new Map();
   private tokenizer: tiktoken.Tiktoken | null = null;
   needsAiModel = true;
+
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.7;
 
   constructor(memory: PsSimpleAgentMemoryData | undefined = undefined) {
     super();

@@ -1,8 +1,8 @@
 import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
-import { PolicySynthBaseAgent } from "../base/agent.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
-export class BaseSearchWebAgent extends PolicySynthBaseAgent {
+export class BaseSearchWebAgent extends PolicySynthAgentBase {
   seenUrls!: Map<string, Set<string>>;
 
   async callSearchApi(query: string): Promise<PsSearchResultItem[]> {

@@ -1,148 +1,121 @@
-import winston from "winston";
-import { jsonrepair } from "jsonrepair";
-import { encoding_for_model } from "tiktoken";
-export class PolicySynthBaseAgent {
-    logger;
-    timeStart = Date.now();
-    rateLimits = {};
-    maxModelTokensOut;
-    modelTemperature;
-    constructor() {
-        this.logger = winston.createLogger({
-            level: process.env.WORKER_LOG_LEVEL || "debug",
-            format: winston.format.json(),
-            transports: [
-                new winston.transports.Console({
-                    format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
-                }),
-            ],
-        });
-    }
-    createSystemMessage(content) {
-        return { role: "system", message: content };
-    }
-    createHumanMessage(content) {
-        return { role: "user", message: content };
-    }
-    getJsonBlock(text) {
-        let startIndex = text.indexOf("```json");
-        let endIndex = text.indexOf("```", startIndex + 6);
-        if (endIndex !== -1) {
-            return text.substring(startIndex + 7, endIndex).trim();
+import { PolicySynthAgentBase } from "./agentBase.js";
+import { PsAiModelManager } from "./agentModelManager.js";
+import { PsProgressTracker } from "./agentProgressTracker.js";
+import { PsConfigManager } from "./agentConfigManager.js";
+import Redis from "ioredis";
+export class PolicySynthAgent extends PolicySynthAgentBase {
+    memory;
+    agent;
+    modelManager;
+    progressTracker;
+    configManager;
+    redis;
+    skipAiModels = false;
+    startProgress = 0;
+    endProgress = 100;
+    maxModelTokensOut = 4096;
+    modelTemperature = 0.7;
+    constructor(agent, memory = undefined, startProgress, endProgress) {
+        super();
+        this.agent = agent;
+        this.logger.debug(JSON.stringify(agent));
+        if (!this.agent &&
+            (!process.env.PS_AGENT_MAX_MODEL_TOKENS_OUT ||
+                !process.env.PS_AGENT_MODEL_TEMPERATURE ||
+                !process.env.PS_REDIS_MEMORY_KEY ||
+                !process.env.PS_AI_MODEL_PROVIDER ||
+                !process.env.PS_AI_MODEL_NAME ||
+                !process.env.PS_AI_MODEL_TYPE ||
+                !process.env.PS_AI_MODEL_SIZE)) {
+            throw new Error("Agent not found and required environment variables not set");
+        }
+        if (!this.skipAiModels) {
+            this.modelManager = new PsAiModelManager(
+            //agent ? agent.AiModels! : undefined,
+            agent.AiModels || [], agent ? agent.Group?.private_access_configuration || [] : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, agent ? agent.id : -1, agent ? agent.user_id : -1);
+        }
+        this.progressTracker = new PsProgressTracker(agent.redisMemoryKey, startProgress, endProgress);
+        this.configManager = new PsConfigManager(agent.configuration);
+        this.redis = new Redis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+        if (memory) {
+            this.memory = memory;
         }
         else {
-            throw new Error("Unable to find JSON block");
+            this.loadAgentMemoryFromRedis();
         }
     }
-    repairJson(text) {
+    async process() {
+        if (!this.memory) {
+            this.logger.error("Memory is not initialized");
+            throw new Error("Memory is not initialized");
+        }
+        await this.progressTracker.updateProgress(undefined, `Agent ${this.agent.Class?.name} Starting`);
+        // The main processing logic would go here.
+        // Subclasses would override this method to implement specific agent behaviors.
+    }
+    async loadAgentMemoryFromRedis() {
         try {
-            return jsonrepair(text);
+            const memoryData = await this.redis.get(this.agent.redisMemoryKey);
+            if (memoryData) {
+                this.memory = JSON.parse(memoryData);
+            }
+            else {
+                console.error("No memory data found!");
+            }
         }
         catch (error) {
+            this.logger.error("Error initializing agent memory");
             this.logger.error(error);
-            throw new Error("Unable to repair JSON");
         }
     }
-    parseJsonResponse(response) {
-        response = response.replace("```json", "").trim();
-        if (response.endsWith("```")) {
-            response = response.substring(0, response.length - 3);
-        }
+    async callModel(modelType, modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
+        return this.modelManager?.callModel(modelType, modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+    }
+    async updateRangedProgress(progress, message) {
+        await this.progressTracker.updateRangedProgress(progress, message);
+    }
+    async updateProgress(progress, message) {
+        await this.progressTracker.updateProgress(progress, message);
+    }
+    getConfig(uniqueId, defaultValue) {
+        return this.configManager.getConfig(uniqueId, defaultValue);
+    }
+    getConfigOld(uniqueId, defaultValue) {
+        return this.configManager.getConfigOld(uniqueId, defaultValue);
+    }
+    async saveMemory() {
         try {
-            return JSON.parse(response);
+            await this.redis.set(this.agent.redisMemoryKey, JSON.stringify(this.memory));
         }
         catch (error) {
-            this.logger.warn(`Error parsing JSON ${response}`);
-            try {
-                this.logger.info(`Trying to fix JSON`);
-                const parsedJson = JSON.parse(this.repairJson(response));
-                this.logger.info("Fixed JSON");
-                return parsedJson;
-            }
-            catch (error) {
-                this.logger.warn(`Error parsing fixed JSON`);
-                throw new Error("Unable to parse JSON");
-            }
+            this.logger.error("Error saving agent memory to Redis");
+            this.logger.error(error);
         }
-    }
-    async updateRateLimits(model, tokensToAdd) {
-        if (!this.rateLimits[model.name]) {
-            this.rateLimits[model.name] = {
-                requests: [],
-                tokens: [],
-            };
-        }
-        this.addRequestTimestamp(model);
-        this.addTokenEntry(model, tokensToAdd);
-    }
-    async checkRateLimits(model, tokensToAdd) {
-        let now = Date.now();
-        const windowSize = 60000; // 60 seconds
-        if (!this.rateLimits[model.name]) {
-            this.rateLimits[model.name] = {
-                requests: [],
-                tokens: [],
-            };
-        }
-        this.slideWindowForRequests(model);
-        this.slideWindowForTokens(model);
-        const limits = this.rateLimits[model.name];
-        if (limits.requests.length >= model.limitRPM) {
-            const remainingTimeRequests = 60000 - (now - limits.requests[0].timestamp);
-            this.logger.info(`RPM limit reached (${model.limitRPM}), sleeping for ${this.formatNumber((remainingTimeRequests + 1000) / 1000)} seconds`);
-            await new Promise((resolve) => setTimeout(resolve, remainingTimeRequests + 1000));
-        }
-        now = Date.now();
-        const currentTokensCount = limits.tokens.reduce((acc, token) => acc + token.count, 0);
-        if (currentTokensCount + tokensToAdd > model.limitTPM) {
-            const remainingTimeTokens = 60000 - (now - limits.tokens[0].timestamp);
-            this.logger.info(`TPM limit reached (${model.limitTPM}), sleeping for ${this.formatNumber((remainingTimeTokens + 1000) / 1000)} seconds`);
-            await new Promise((resolve) => setTimeout(resolve, remainingTimeTokens + 1000));
-        }
-    }
-    formatNumber(number, fractions = 0) {
-        return new Intl.NumberFormat("en-US", {
-            maximumFractionDigits: fractions,
-        }).format(number);
-    }
-    addRequestTimestamp(model) {
-        const now = Date.now();
-        this.rateLimits[model.name].requests.push({ timestamp: now });
-    }
-    addTokenEntry(model, tokensToAdd) {
-        const now = Date.now();
-        this.rateLimits[model.name].tokens.push({
-            count: tokensToAdd,
-            timestamp: now,
-        });
-    }
-    slideWindowForRequests(model) {
-        const now = Date.now();
-        const windowSize = 60000; // 60 seconds
-        this.rateLimits[model.name].requests = this.rateLimits[model.name].requests.filter((request) => now - request.timestamp < windowSize);
-    }
-    slideWindowForTokens(model) {
-        const now = Date.now();
-        const windowSize = 60000; // 60 seconds
-        this.rateLimits[model.name].tokens = this.rateLimits[model.name].tokens.filter((token) => now - token.timestamp < windowSize);
     }
     async getTokensFromMessages(messages) {
-        //TODO: Get the db model name from the agent
-        const encoding = encoding_for_model("gpt-4o");
-        let totalTokens = 0;
-        for (const message of messages) {
-            // Every message follows <im_start>{role/name}\n{content}<im_end>\n
-            totalTokens += 4;
-            for (const [key, value] of Object.entries(message)) {
-                totalTokens += encoding.encode(value).length;
-                if (key === "name") {
-                    totalTokens -= 1; // Role is always required and always 1 token
-                }
-            }
-        }
-        totalTokens += 2; // Every reply is primed with <im_start>assistant
-        encoding.free(); // Free up the memory used by the encoder
-        return totalTokens;
+        return this.modelManager?.getTokensFromMessages(messages) || 0;
+    }
+    formatNumber(number, fractions = 0) {
+        return this.progressTracker.formatNumber(number, fractions);
+    }
+    // Additional methods that might be needed
+    async setCompleted(message) {
+        await this.progressTracker.setCompleted(message);
+    }
+    async setError(errorMessage) {
+        await this.progressTracker.setError(errorMessage);
+    }
+    getModelUsageEstimates() {
+        return this.configManager.getModelUsageEstimates();
+    }
+    getApiUsageEstimates() {
+        return this.configManager.getApiUsageEstimates();
+    }
+    getMaxTokensOut() {
+        return this.configManager.getMaxTokensOut();
+    }
+    getTemperature() {
+        return this.configManager.getTemperature();
     }
 }
 //# sourceMappingURL=agent.js.map

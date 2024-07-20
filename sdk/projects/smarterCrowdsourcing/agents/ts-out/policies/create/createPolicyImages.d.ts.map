@@ -1,0 +1,1 @@
+{"version":3,"file":"createPolicyImages.d.ts","sourceRoot":"","sources":["../../../src/policies/create/createPolicyImages.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,yBAAyB,EAAE,MAAM,wCAAwC,CAAC;AAGnF,qBAAa,uBAAwB,SAAQ,yBAAyB;IAC9D,6BAA6B,CACjC,eAAe,EAAE,MAAM,EACvB,MAAM,EAAE,QAAQ,EAChB,UAAU,CAAC,EAAE,MAAM;IA2Cf,kBAAkB;IAyHlB,OAAO;CAYd"}

@@ -1,21 +1,20 @@
 //TODO: Make agentRegistry secure with access control through communities/domains
 //TODO: Make the angentRegistry support many instances of the agent classes running (counters?)
 
-import { PolicySynthOperationsAgent } from "./operationsAgent.js";
+import { PolicySynthAgent } from "./agent.js";
 import { PsAgentRegistry } from "../dbModels/agentRegistry.js";
 import { PsAgentClass } from "../dbModels/agentClass.js";
 import { PsAgentConnectorClass } from "../dbModels/agentConnectorClass.js";
 import { PsAgent, initializeModels } from "../dbModels/index.js";
 import { connectToDatabase } from "../dbModels/sequelize.js";
-import { PoliciesAgentQueue } from "../smarterCrowdsourcing/agents/policies/policies.js";
-import { PolicySynthAgentQueue } from "./operationsAgentQueue.js";
+import { PolicySynthAgentQueue } from "./agentQueue.js";
 
 interface AgentQueueConstructor {
   new (...args: any[]): PolicySynthAgentQueue;
   getAgentClass(): PsAgentClassCreationAttributes;
 }
 
-export abstract class PsBaseAgentRunner extends PolicySynthOperationsAgent {
+export abstract class PsBaseAgentRunner extends PolicySynthAgent {
   protected agentsToRun: PolicySynthAgentQueue[] = [];
   protected agentRegistry: PsAgentRegistry | null = null;
   protected registeredAgentClasses: PsAgentClass[] = [];

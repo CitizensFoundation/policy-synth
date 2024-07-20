@@ -1,8 +1,6 @@
 import { OpenAI } from "openai";
 import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-import { PsConstants } from "@policysynth/agents/constants.js";
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 //@ts-ignore
@@ -250,16 +248,13 @@ export class PsBaseChatBot {
                 tokensIn: 0,
                 tokensOut: 0,
             },
-        };
+        }; //TODO: Set a type here
     }
     getEmptyMemory() {
         return {
             redisKey: this.redisKey,
             currentStage: "chatbot-conversation",
-            stages: {
-                ...PolicySynthScAgentBase.emptyDefaultStages,
-                ...this.emptyChatBotStagesData,
-            },
+            stages: {},
             timeStart: Date.now(),
             chatLog: [],
             groupId: 1,
@@ -328,11 +323,11 @@ export class PsBaseChatBot {
     }
     getTokenCosts(estimateTokens, type) {
         if (type == "in") {
-            return (PsConstants.analyseExternalSolutionsModel.inTokenCostUSD *
+            return (3 / 1000000 * //TODO: Get this from model
                 estimateTokens);
         }
         else {
-            return (PsConstants.analyseExternalSolutionsModel.outTokenCostUSD *
+            return (15 / 1000000 * //TODO: Get this from model
                 estimateTokens);
         }
     }

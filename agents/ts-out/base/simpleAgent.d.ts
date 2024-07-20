@@ -1,13 +1,15 @@
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
-import { PolicySynthBaseAgent } from "./agent.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsAiModelType } from "../aiModelTypes.js";
-export declare class PolicySynthSimpleAgentBase extends PolicySynthBaseAgent {
+export declare class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
     memory?: PsSimpleAgentMemoryData;
     timeStart: number;
     rateLimits: PsModelRateLimitTracking;
     models: Map<PsAiModelType, BaseChatModel>;
     private tokenizer;
     needsAiModel: boolean;
+    maxModelTokensOut: number;
+    modelTemperature: number;
     constructor(memory?: PsSimpleAgentMemoryData | undefined);
     private initializeTokenizer;
     private getTokenizer;

@@ -13,7 +13,7 @@
     "src/api.d.ts"
   ],
   "dependencies": {
-    "@policysynth/agents": "^1.2.12",
+    "@policysynth/agents": "^1.3.2",
     "axios": "^1.7.2",
     "bullmq": "^5.8.3",
     "colors": "^1.4.0",
@@ -22,10 +22,8 @@
     "express-session": "^1.18.0",
     "ioredis": "^5.4.1",
     "jsonrepair": "^3.8.0",
-    "langchain": "^0.2.5",
-    "pg": "^8.12.0",
     "pg-hstore": "^2.3.4",
-    "pgvector": "^0.1.8",
+    "pgvector": "^0.2.0",
     "ps": "^1.0.0",
     "redis": "^4.6.14",
     "sequelize": "^6.37.3",
@@ -34,7 +32,7 @@
     "uuid": "^10.0.0",
     "weaviate-ts-client": "^2.2.0",
     "winston": "^3.13.0",
-    "ws": "^8.17.0"
+    "ws": "^8.18.0"
   },
   "scripts": {
     "prepublishOnly": "npm pack && node repack",
@@ -56,9 +54,9 @@
     "@types/pg": "^8.11.6",
     "@types/redis": "^4.0.11",
     "@types/sequelize": "^4.28.20",
-    "@types/uuid": "^9.0.8",
+    "@types/uuid": "^10.0.0",
     "@types/validator": "^13.11.10",
-    "@types/ws": "^8.5.10",
+    "@types/ws": "^8.5.11",
     "nodemon": "^3.1.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"

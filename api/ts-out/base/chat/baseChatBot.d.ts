@@ -1,4 +1,3 @@
-/// <reference types="node" resolution-mode="require"/>
 import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
@@ -37,7 +36,7 @@ export declare class PsBaseChatBot {
     startBroadcastingLiveCosts(): void;
     broadCastLiveCosts(): void;
     stopBroadcastingLiveCosts(): void;
-    get emptyChatBotStagesData(): Record<PSChatBotMemoryStageTypes, PsScStagesData>;
+    get emptyChatBotStagesData(): Record<PSChatBotMemoryStageTypes, any>;
     getEmptyMemory(): PsChatBotMemoryData;
     sendToClient(sender: string, message: string, type?: string): void;
     streamWebSocketResponses(stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>): Promise<void>;

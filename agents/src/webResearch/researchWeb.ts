@@ -1,7 +1,7 @@
 import { BaseSearchWebAgent } from "./searchWeb.js";
 
 export class ResearchWeb extends BaseSearchWebAgent {
-  constructor(memory: PsSmarterCrowdsourcingMemoryData) {
+  constructor(memory: PsSimpleAgentMemoryData) {
     super();
   }
 

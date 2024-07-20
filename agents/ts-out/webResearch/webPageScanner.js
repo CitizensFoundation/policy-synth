@@ -1,5 +1,4 @@
 import puppeteer from "puppeteer-extra";
-import { PsConstants } from "../constants.js";
 import { BaseGetWebPagesAgent } from "./getWebPages.js";
 export class WebPageScanner extends BaseGetWebPagesAgent {
     jsonSchemaForResults;
@@ -32,7 +31,7 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt("", text, subProblemIndex, entityIndex);
         console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
-        const analysis = await this.callLLM("web-get-pages", messages, true);
+        const analysis = await this.callLLM("web-get-pages", messages, true); //TODO: Use <T>
         console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
         return analysis;
     }
@@ -41,10 +40,11 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
         const promptMessagesText = promptMessages.map((m) => m.message).join("\n");
         return `${promptMessagesText} ${text}`;
     }
-    async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
+    async processPageText(text, subProblemIndex, url, type, //TODO: Use <T>
+    entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
         try {
-            const textAnalysis = await this.getTextAnalysis(text);
+            const textAnalysis = await this.getTextAnalysis(text); //TODO: Use <T>;
             if (textAnalysis) {
                 textAnalysis.url = url;
                 this.collectedWebPages.push(textAnalysis);
@@ -59,7 +59,8 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
             this.logger.error(e.stack || e);
         }
     }
-    async getAndProcessPage(subProblemIndex, url, browserPage, type, entityIndex) {
+    async getAndProcessPage(subProblemIndex, url, browserPage, type, //TODO: Use <T>;,
+    entityIndex) {
         if (url.toLowerCase().endsWith(".pdf")) {
             await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
         }
@@ -77,9 +78,9 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
         const browser = await puppeteer.launch({ headless: true });
         this.logger.debug("Launching browser");
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-        browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-        await browserPage.setUserAgent(PsConstants.currentUserAgent);
+        browserPage.setDefaultTimeout(30); //TODO: Get from agent config
+        browserPage.setDefaultNavigationTimeout(30); //TODO: Get from agent config
+        //await browserPage.setUserAgent(""); //TODO: Get from agent config
         for (let i = 0; i < listOfUrls.length; i++) {
             if (this.progressFunction) {
                 this.progressFunction(`${i + 1}/${listOfUrls.length}`);

@@ -1,7 +1,6 @@
 import { HTTPResponse, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 
-import { PsConstants } from "../constants.js";
 import { BaseGetWebPagesAgent } from "./getWebPages.js";
 
 export class WebPageScanner extends BaseGetWebPagesAgent {
@@ -63,7 +62,7 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
       "web-get-pages",
       messages,
       true
-    ) as PsWebPageAnalysisData;
+    ) as any; //TODO: Use <T>
 
     console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
     return analysis;
@@ -81,13 +80,10 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any, //TODO: Use <T>
     entityIndex: number | undefined,
-    policy: PSPolicy | undefined = undefined
-  ): Promise<void | PSRefinedRootCause[]> {
+    policy: any | undefined = undefined
+  ): Promise<void | any[]> { //TODO: Use <T>
     this.logger.debug(
       `Processing page text ${text.slice(
         0,
@@ -96,7 +92,7 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
     );
 
     try {
-      const textAnalysis = await this.getTextAnalysis(text) as PsWebPageAnalysisData;
+      const textAnalysis = await this.getTextAnalysis(text) as any; //TODO: Use <T>;
 
       if (textAnalysis) {
         textAnalysis.url = url;
@@ -118,10 +114,7 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any, //TODO: Use <T>;,
     entityIndex: number | undefined
   ) {
     if (url.toLowerCase().endsWith(".pdf")) {
@@ -156,10 +149,10 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(30); //TODO: Get from agent config
+    browserPage.setDefaultNavigationTimeout(30); //TODO: Get from agent config
 
-    await browserPage.setUserAgent(PsConstants.currentUserAgent);
+    //await browserPage.setUserAgent(""); //TODO: Get from agent config
 
     for (let i = 0; i < listOfUrls.length; i++) {
       if (this.progressFunction) {
