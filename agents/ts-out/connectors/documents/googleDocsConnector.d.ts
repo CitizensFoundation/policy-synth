@@ -1,5 +1,3 @@
-import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
-import { PsAgentConnector } from "../../dbModels/agentConnector.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
 export declare class PsGoogleDocsConnector extends PsBaseDocumentConnector {
@@ -8,7 +6,7 @@ export declare class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     static getConnectorClass: PsConnectorClassCreationAttributes;
     private client;
     private docs;
-    constructor(connector: PsAgentConnector, connectorClass: PsAgentConnectorClass, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
+    constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
     getDocument(): Promise<string>;
     updateDocument(doc: string): Promise<void>;
     private getData;

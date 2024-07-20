@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Partials, ChannelType, } from "discord.js";
 import { PsAiModelSize, PsAiModelType } from "../../aiModelTypes.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
+import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
     static DISCORD_CONNECTOR_CLASS_BASE_ID = "8f7e6d5c-4b3a-2a1f-9e8d-7c6b5a4d3f2e";
     static DISCORD_CONNECTOR_VERSION = 1;
@@ -12,6 +13,7 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
         available: true,
         configuration: {
             name: "Discord Bot",
+            classType: PsConnectorClassTypes.NotificationsAndChat,
             description: "Connector for Discord Market Research Bot",
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/7336a9fb-7512-4c31-ae77-0bb7c5a99b97.png",
             iconName: "discord",

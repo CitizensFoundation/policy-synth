@@ -278,6 +278,7 @@ interface PsAgentRegistryAttributes extends PsBaseModelClass {
 
 interface PsAgentConnectorConfiguration {
   name: string;
+  classType: import("./connectorTypes.js").PsConnectorClassTypes;
   description: string;
   imageUrl: string;
   iconName: string;

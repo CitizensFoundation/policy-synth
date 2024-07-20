@@ -3,9 +3,10 @@ import qs from "qs";
 import { PsAgentConnector } from "../../dbModels/agentConnector";
 import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass";
 import { PsAgent } from "../../dbModels/agent";
-import { PsBaseConnector } from "../base/baseConnector.js";
+import { PsBaseCollaborationConnector } from "../base/baseCollaborationConnector.js";
+import { PsConnectorClassTypes } from "../../connectorTypes.js";
 
-export class PsYourPrioritiesConnector extends PsBaseConnector {
+export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
   private static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
     "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
 
@@ -21,6 +22,7 @@ export class PsYourPrioritiesConnector extends PsBaseConnector {
     available: true,
     configuration: {
       name: "Your Priorities",
+      classType: PsConnectorClassTypes.Collaboration as string,
       description: "Connector for Your Priorities",
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
@@ -73,8 +75,8 @@ export class PsYourPrioritiesConnector extends PsBaseConnector {
   private user?: YpUserData;
 
   constructor(
-    connector: PsAgentConnector,
-    connectorClass: PsAgentConnectorClass,
+    connector: PsAgentConnectorAttributes,
+    connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,
     memory: PsAgentMemoryData | undefined = undefined,
     startProgress: number = 0,
@@ -91,7 +93,7 @@ export class PsYourPrioritiesConnector extends PsBaseConnector {
     }
   }
 
-  private async login(): Promise<void> {
+  async login(): Promise<void> {
     if (!this.user) {
       console.log("Logging in to Your Priorities...");
       const loginData = {
@@ -128,7 +130,7 @@ export class PsYourPrioritiesConnector extends PsBaseConnector {
     }
   }
 
-  private async vote(postId: number, value: number): Promise<void> {
+  async vote(postId: number, value: number): Promise<void> {
     console.log("Voting on post...");
     const votingData = {
       post_id: postId,
@@ -188,7 +190,7 @@ export class PsYourPrioritiesConnector extends PsBaseConnector {
     }
   }
 
-  private async generateImageWithAi(groupId: number, prompt: string): Promise<number> {
+  async generateImageWithAi(groupId: number, prompt: string): Promise<number> {
     await this.login();
 
     try {

@@ -4,6 +4,7 @@ import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PsAgentConnector } from "../../dbModels/agentConnector.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
+import { PsConnectorClassTypes } from "../../connectorTypes.js";
 
 export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
   private static readonly GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID =
@@ -19,6 +20,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     available: true,
     configuration: {
       name: "Google Docs",
+      classType: PsConnectorClassTypes.Document as string,
       description: "Connector for Google Docs",
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png",
@@ -60,8 +62,8 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
   private docs: docs_v1.Docs;
 
   constructor(
-    connector: PsAgentConnector,
-    connectorClass: PsAgentConnectorClass,
+    connector: PsAgentConnectorAttributes,
+    connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,
     memory: PsAgentMemoryData | undefined = undefined,
     startProgress: number = 0,

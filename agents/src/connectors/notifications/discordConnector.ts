@@ -11,6 +11,7 @@ import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsAiModelSize, PsAiModelType } from "../../aiModelTypes.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
+import { PsConnectorClassTypes } from "../../connectorTypes.js";
 
 export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
   private static readonly DISCORD_CONNECTOR_CLASS_BASE_ID =
@@ -26,6 +27,7 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
     available: true,
     configuration: {
       name: "Discord Bot",
+      classType: PsConnectorClassTypes.NotificationsAndChat as string,
       description: "Connector for Discord Market Research Bot",
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/7336a9fb-7512-4c31-ae77-0bb7c5a99b97.png",
@@ -61,8 +63,8 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
   private readonly listenDuration: number = 3600000; // 1 hour in milliseconds
 
   constructor(
-    connector: PsAgentConnector,
-    connectorClass: PsAgentConnectorClass,
+    connector: PsAgentConnectorAttributes,
+    connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,
     memory: PsAgentMemoryData | undefined = undefined,
     systemPrompt: string,

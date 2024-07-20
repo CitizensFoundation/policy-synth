@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import { JWT } from "google-auth-library";
 import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
+import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     static GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID = "3a7b2c1d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
     static GOOGLE_DOCS_CONNECTOR_VERSION = 1;
@@ -12,6 +13,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
         available: true,
         configuration: {
             name: "Google Docs",
+            classType: PsConnectorClassTypes.Document,
             description: "Connector for Google Docs",
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png",
             iconName: "docs",

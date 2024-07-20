@@ -1,8 +1,6 @@
-import { PsAgentConnector } from "../../dbModels/agentConnector";
-import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass";
 import { PsAgent } from "../../dbModels/agent";
-import { PsBaseConnector } from "../base/baseConnector.js";
-export declare class PsYourPrioritiesConnector extends PsBaseConnector {
+import { PsBaseCollaborationConnector } from "../base/baseCollaborationConnector.js";
+export declare class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
     private static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID;
     private static readonly YOUR_PRIORITIES_CONNECTOR_VERSION;
     static getConnectorClass: {
@@ -15,6 +13,7 @@ export declare class PsYourPrioritiesConnector extends PsBaseConnector {
         available: boolean;
         configuration: {
             name: string;
+            classType: string;
             description: string;
             imageUrl: string;
             iconName: string;
@@ -40,11 +39,11 @@ export declare class PsYourPrioritiesConnector extends PsBaseConnector {
     private serverBaseUrl;
     private sessionCookie?;
     private user?;
-    constructor(connector: PsAgentConnector, connectorClass: PsAgentConnectorClass, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
-    private login;
-    private vote;
+    constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
+    login(): Promise<void>;
+    vote(postId: number, value: number): Promise<void>;
     post(groupId: number, postData: any, imagePrompt: string): Promise<YpPostData>;
-    private generateImageWithAi;
+    generateImageWithAi(groupId: number, prompt: string): Promise<number>;
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
 }
 //# sourceMappingURL=yourPrioritiesConnector.d.ts.map

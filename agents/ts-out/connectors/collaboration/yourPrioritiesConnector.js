@@ -1,7 +1,8 @@
 import axios from "axios";
 import qs from "qs";
-import { PsBaseConnector } from "../base/baseConnector.js";
-export class PsYourPrioritiesConnector extends PsBaseConnector {
+import { PsBaseCollaborationConnector } from "../base/baseCollaborationConnector.js";
+import { PsConnectorClassTypes } from "../../connectorTypes.js";
+export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
     static YOUR_PRIORITIES_CONNECTOR_VERSION = 1;
     static getConnectorClass = {
@@ -14,6 +15,7 @@ export class PsYourPrioritiesConnector extends PsBaseConnector {
         available: true,
         configuration: {
             name: "Your Priorities",
+            classType: PsConnectorClassTypes.Collaboration,
             description: "Connector for Your Priorities",
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
             iconName: "yourPriorities",

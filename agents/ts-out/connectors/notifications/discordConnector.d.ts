@@ -1,5 +1,3 @@
-import { PsAgentConnector } from "../../dbModels/agentConnector.js";
-import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
 export declare class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
@@ -14,7 +12,7 @@ export declare class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
     private channelTimeouts;
     private readonly maxMessages;
     private readonly listenDuration;
-    constructor(connector: PsAgentConnector, connectorClass: PsAgentConnectorClass, agent: PsAgent, memory: PsAgentMemoryData | undefined, systemPrompt: string, actions: {
+    constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: PsAgentMemoryData | undefined, systemPrompt: string, actions: {
         [key: string]: () => Promise<void>;
     }, startProgress?: number, endProgress?: number);
     login(): Promise<void>;

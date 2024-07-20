@@ -1,11 +1,10 @@
-import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
 import { PolicySynthAgent } from "../../base/agent.js";
 import { PsAgent } from "../../dbModels/agent.js";
 export declare abstract class PsBaseConnector extends PolicySynthAgent {
     connector: PsAgentConnectorAttributes;
-    connectorClass: PsAgentConnectorClass;
+    connectorClass: PsAgentConnectorClassAttributes;
     skipAiModels: boolean;
-    constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClass, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
+    constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
     static getConfigurationQuestions(): YpStructuredQuestionData[];
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
     get name(): string;
