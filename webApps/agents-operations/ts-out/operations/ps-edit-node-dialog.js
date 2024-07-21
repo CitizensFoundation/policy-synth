@@ -21,6 +21,7 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
         this.open = false;
         this.activeAiModels = [];
         this.selectedAiModels = {};
+        this.currentModels = {};
         this.api = new OpsServerApi();
     }
     async connectedCallback() {
@@ -35,13 +36,32 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
             console.error('Error fetching active AI models:', error);
         }
     }
+    updated(changedProperties) {
+        if (changedProperties.has('nodeToEditInfo')) {
+            this.initializeCurrentModels();
+        }
+    }
+    initializeCurrentModels() {
+        if (this.nodeToEditInfo && this.nodeToEditInfo.AiModels) {
+            this.currentModels = this._getCurrentModels();
+        }
+    }
+    _getCurrentModels() {
+        const currentModels = {};
+        this.nodeToEditInfo.AiModels?.forEach((model) => {
+            if (model.configuration && 'modelSize' in model.configuration) {
+                currentModels[model.configuration.modelSize] = model;
+            }
+        });
+        return currentModels;
+    }
     disableScrim(event) {
         event.stopPropagation();
         event.preventDefault();
     }
     render() {
         return html `
- <md-dialog
+      <md-dialog
         ?open="${this.open}"
         @closed="${this._handleClose}"
         @cancel="${this.disableScrim}"
@@ -53,8 +73,12 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
           ${this.nodeToEditInfo ? this._renderEditForm() : ''}
         </div>
         <div slot="actions">
-          <md-text-button @click="${this._handleClose}">${this.t('cancel')}</md-text-button>
-          <md-filled-button @click="${this._handleSave}">${this.t('save')}</md-filled-button>
+          <md-text-button @click="${this._handleClose}"
+            >${this.t('cancel')}</md-text-button
+          >
+          <md-filled-button @click="${this._handleSave}"
+            >${this.t('save')}</md-filled-button
+          >
         </div>
       </md-dialog>
     `;
@@ -99,20 +123,12 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
         return html `
       <ps-ai-model-selector
         .activeAiModels="${this.activeAiModels}"
-        .requestedAiModelSizes="${this.nodeToEditInfo.Class.configuration.requestedAiModelSizes}"
-        .currentModels="${this._getCurrentModels()}"
+        .requestedAiModelSizes="${this.nodeToEditInfo.Class.configuration
+            .requestedAiModelSizes}"
+        .currentModels="${this.currentModels}"
         @ai-models-changed="${this._handleAiModelsChanged}"
       ></ps-ai-model-selector>
     `;
-    }
-    _getCurrentModels() {
-        const currentModels = {};
-        this.nodeToEditInfo.AiModels?.forEach((model) => {
-            if (model.configuration && 'modelSize' in model.configuration) {
-                currentModels[model.configuration.modelSize] = model;
-            }
-        });
-        return currentModels;
     }
     _getInitialAnswers() {
         return Object.entries(this.nodeToEditInfo.configuration).map(([key, value]) => ({
@@ -124,7 +140,7 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
         this.dispatchEvent(new CustomEvent('close'));
     }
     _handleAiModelsChanged(e) {
-        this.selectedAiModels = e.detail.selectedAiModels;
+        this.selectedAiModels = e.detail.selectedAiModelIds;
     }
     _handleSave() {
         const updatedConfig = {};
@@ -138,7 +154,8 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
             }
         });
         let aiModelUpdates;
-        if (this.nodeToEditInfo.Class.configuration.type === 'agent') {
+        debugger;
+        if (this.nodeToEditInfo.Class.configuration.requestedAiModelSizes) {
             aiModelUpdates = Object.entries(this.selectedAiModels).map(([size, modelId]) => {
                 return {
                     size: size,
@@ -150,7 +167,9 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
             detail: {
                 updatedConfig,
                 aiModelUpdates,
-                connectorType: this.nodeToEditInfo.Class.configuration.type === 'input' ? 'input' : 'output',
+                connectorType: this.nodeToEditInfo.Class.configuration.type === 'input'
+                    ? 'input'
+                    : 'output',
             },
         }));
         this._handleClose();
@@ -195,6 +214,9 @@ __decorate([
 __decorate([
     state()
 ], PsEditNodeDialog.prototype, "selectedAiModels", void 0);
+__decorate([
+    state()
+], PsEditNodeDialog.prototype, "currentModels", void 0);
 PsEditNodeDialog = __decorate([
     customElement('ps-edit-node-dialog')
 ], PsEditNodeDialog);

@@ -16,7 +16,7 @@ export class PsAiModelSelector extends YpBaseElement {
     [key in PsAiModelSize]?: PsAiModelAttributes;
   } = {};
 
-  @state() private selectedAiModels: {
+  @state() private selectedAiModelIds: {
     [key in PsAiModelSize]?: number | null;
   } = {};
   @state() private filteredAiModels: {
@@ -34,8 +34,15 @@ export class PsAiModelSelector extends YpBaseElement {
     ) {
       this.filterAiModels();
     }
-    if (changedProperties.has('currentModels')) {
+    if (
+      changedProperties.has('currentModels') &&
+      Object.keys(this.selectedAiModelIds).length === 0
+    ) {
       this.initializeSelectedModels();
+    }
+
+    if (changedProperties.has('currentModels')) {
+      //console.error('currentModels changed', JSON.stringify(this.currentModels, null, 2));
     }
   }
 
@@ -60,10 +67,12 @@ export class PsAiModelSelector extends YpBaseElement {
   }
 
   initializeSelectedModels() {
-    this.selectedAiModels = {};
     Object.entries(this.currentModels).forEach(([size, model]) => {
-      this.selectedAiModels[size as PsAiModelSize] = model.id;
+      if (this.selectedAiModelIds[size as PsAiModelSize] === undefined) {
+        this.selectedAiModelIds[size as PsAiModelSize] = model.id;
+      }
     });
+    this.requestUpdate();
   }
 
   render() {
@@ -105,11 +114,9 @@ export class PsAiModelSelector extends YpBaseElement {
         </md-filled-select>
         ${currentModel
           ? html`
-              <md-outlined-icon-button
-                @click="${() => this._handleRemoveModel(size)}"
-              >
+              <md-icon-button @click="${() => this._handleRemoveModel(size)}">
                 <md-icon>delete</md-icon>
-              </md-outlined-icon-button>
+              </md-icon-button>
             `
           : ''}
       </div>
@@ -131,19 +138,24 @@ export class PsAiModelSelector extends YpBaseElement {
 
   private _handleAiModelSelection(e: Event, size: PsAiModelSize) {
     const select = e.target as HTMLSelectElement;
-    this.selectedAiModels[size] = Number(select.value);
+    this.selectedAiModelIds[size] = Number(select.value);
     this._emitChangeEvent();
+    this.requestUpdate();
   }
 
   private _handleRemoveModel(size: PsAiModelSize) {
-    this.selectedAiModels[size] = null;
+    this.currentModels[size] = null;
+    this.selectedAiModelIds[size] = null;
+    this.currentModels = { ...this.currentModels };
+    this.selectedAiModelIds = { ...this.selectedAiModelIds };
     this._emitChangeEvent();
+    this.requestUpdate();
   }
 
   private _emitChangeEvent() {
     this.dispatchEvent(
       new CustomEvent('ai-models-changed', {
-        detail: { selectedAiModels: this.selectedAiModels },
+        detail: { selectedAiModelIds: this.selectedAiModelIds },
         bubbles: true,
         composed: true,
       })
@@ -170,7 +182,7 @@ export class PsAiModelSelector extends YpBaseElement {
           margin-right: 8px;
         }
 
-        md-outlined-icon-button {
+        md-outlined-icon-button-not-used {
           --md-sys-color-on-surface-variant: var(--md-sys-color-error);
         }
       `,

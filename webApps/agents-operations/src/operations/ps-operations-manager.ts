@@ -146,6 +146,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
       await this.api.updateNodeConfiguration(nodeType, nodeId, updatedConfig);
 
+      debugger;
+
       // Handle AI model updates for agents
       if (nodeType === 'agent' && aiModelUpdates) {
         const currentAiModels = await this.api.getAgentAiModels(nodeId);

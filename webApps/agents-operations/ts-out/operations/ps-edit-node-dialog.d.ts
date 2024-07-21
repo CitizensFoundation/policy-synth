@@ -11,19 +11,22 @@ export declare class PsEditNodeDialog extends YpBaseElement {
     nodeToEditInfo: any;
     private activeAiModels;
     private selectedAiModels;
+    private currentModels;
     private api;
     connectedCallback(): Promise<void>;
     fetchActiveAiModels(): Promise<void>;
-    disableScrim(event: CustomEvent): void;
-    render(): import("lit").TemplateResult<1>;
-    _renderNodeEditHeadline(): import("lit").TemplateResult<1>;
-    _renderEditForm(): import("lit").TemplateResult<1>;
-    _renderAiModelSelector(): import("lit").TemplateResult<1> | "";
+    updated(changedProperties: Map<string, any>): void;
+    initializeCurrentModels(): void;
     _getCurrentModels(): {
         large?: PsAiModelAttributes;
         medium?: PsAiModelAttributes;
         small?: PsAiModelAttributes;
     };
+    disableScrim(event: CustomEvent): void;
+    render(): import("lit").TemplateResult<1>;
+    _renderNodeEditHeadline(): import("lit").TemplateResult<1>;
+    _renderEditForm(): import("lit").TemplateResult<1>;
+    _renderAiModelSelector(): import("lit").TemplateResult<1> | "";
     _getInitialAnswers(): {
         uniqueId: string;
         value: unknown;

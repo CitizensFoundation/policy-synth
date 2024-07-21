@@ -5,6 +5,8 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
   maxModelTokensOut = 3;
   modelTemperature = 0.0;
 
+  defaultModelSize = PsAiModelSize.Medium;
+
   prompts: Record<number, number[][]> = {};
   allItems: Record<number, (PsEloRateable[] | string[]) | undefined> = {};
   INITIAL_ELO_RATING: number = 1000;
@@ -132,7 +134,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
       try {
         const winningItemText = await this.callModel(
           PsAiModelType.Text,
-          PsAiModelSize.Large,
+          this.defaultModelSize,
           messages,
           false
         );

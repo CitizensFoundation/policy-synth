@@ -10,7 +10,7 @@ export declare class PsAiModelSelector extends YpBaseElement {
     currentModels: {
         [key in PsAiModelSize]?: PsAiModelAttributes;
     };
-    private selectedAiModels;
+    private selectedAiModelIds;
     private filteredAiModels;
     updated(changedProperties: Map<string, any>): void;
     filterAiModels(): void;
