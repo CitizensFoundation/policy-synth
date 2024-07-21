@@ -1,73 +1,56 @@
 # Policy Agents API Documentation
 
-- [agentMemory](src/src/agentMemory.md)
-- [baseAgent](src/src/baseAgent.md)
-- [baseAgentProcessor](src/src/baseAgentProcessor.md)
-- [basePairwiseRanking](src/src/basePairwiseRanking.md)
-- [baseProblemSolvingAgent](src/src/baseProblemSolvingAgent.md)
+- [aiModelTypes](src/src/aiModelTypes.md)
+- aiModels
+  - [azureOpenAiChat](src/aiModels/azureOpenAiChat.md)
+  - [baseChatModel](src/aiModels/baseChatModel.md)
+  - [claudeChat](src/aiModels/claudeChat.md)
+  - [googleGeminiChat](src/aiModels/googleGeminiChat.md)
+  - [openAiChat](src/aiModels/openAiChat.md)
+- base
+  - [agent](src/base/agent.md)
+  - [agentBase](src/base/agentBase.md)
+  - [agentConfigManager](src/base/agentConfigManager.md)
+  - [agentModelManager](src/base/agentModelManager.md)
+  - [agentPairwiseRanking](src/base/agentPairwiseRanking.md)
+  - [agentProgressTracker](src/base/agentProgressTracker.md)
+  - [agentQueue](src/base/agentQueue.md)
+  - [agentRateLimiter](src/base/agentRateLimiter.md)
+  - [agentRunner](src/base/agentRunner.md)
+  - [simpleAgent](src/base/simpleAgent.md)
+  - [simplePairwiseRanking](src/base/simplePairwiseRanking.md)
+- [connectorTypes](src/src/connectorTypes.md)
+- connectors
+  - base
+    - [baseCollaborationConnector](src/connectors/base/baseCollaborationConnector.md)
+    - [baseConnector](src/connectors/base/baseConnector.md)
+    - [baseDocumentConnector](src/connectors/base/baseDocumentConnector.md)
+    - [baseNotificationsConnector](src/connectors/base/baseNotificationsConnector.md)
+    - [connectorFactory](src/connectors/base/connectorFactory.md)
+  - collaboration
+    - [yourPrioritiesConnector](src/connectors/collaboration/yourPrioritiesConnector.md)
+  - documents
+    - [googleDocsConnector](src/connectors/documents/googleDocsConnector.md)
+  - notifications
+    - [discordConnector](src/connectors/notifications/discordConnector.md)
 - [constants](src/src/constants.md)
-- models
-  - [azureOpenAiChat](src/models/azureOpenAiChat.md)
-  - [baseChatModel](src/models/baseChatModel.md)
-  - [claudeOpusChat](src/models/claudeOpusChat.md)
-  - [googleGeminiChat](src/models/googleGeminiChat.md)
-  - [openAiChat](src/models/openAiChat.md)
-- policies
-  - create
-    - [createEvidenceSearchQueries](src/policies/create/createEvidenceSearchQueries.md)
-    - [createPolicyImages](src/policies/create/createPolicyImages.md)
-    - [createSeedPolicies](src/policies/create/createSeedPolicies.md)
-  - [policies](src/policies/policies.md)
-  - ranking
-    - [rankWebEvidence](src/policies/ranking/rankWebEvidence.md)
-    - [rateWebEvidence](src/policies/ranking/rateWebEvidence.md)
-  - tools
-    - [countEvidence](src/policies/tools/countEvidence.md)
-    - [destroyQueue](src/policies/tools/destroyQueue.md)
-    - [runPolicyStage](src/policies/tools/runPolicyStage.md)
-  - web
-    - [evidenceExamplePrompts](src/policies/web/evidenceExamplePrompts.md)
-    - [getEvidenceWebPages](src/policies/web/getEvidenceWebPages.md)
-    - [getMetaDataForTopWebEvidence](src/policies/web/getMetaDataForTopWebEvidence.md)
-    - [getRefinedEvidence](src/policies/web/getRefinedEvidence.md)
-    - [searchWebForEvidence](src/policies/web/searchWebForEvidence.md)
-- problems
-  - create
-    - [createEntities](src/problems/create/createEntities.md)
-    - [createProblemStatementImage](src/problems/create/createProblemStatementImage.md)
-    - [createRootCauseSearchQueries](src/problems/create/createRootCauseSearchQueries.md)
-    - [createSearchQueries](src/problems/create/createSearchQueries.md)
-    - [createSubProblemImages](src/problems/create/createSubProblemImages.md)
-    - [createSubProblems](src/problems/create/createSubProblems.md)
-    - [reduceSubProblems](src/problems/create/reduceSubProblems.md)
-  - [problems](src/problems/problems.md)
-  - ranking
-    - [rankEntities](src/problems/ranking/rankEntities.md)
-    - [rankRootCausesSearchQueries](src/problems/ranking/rankRootCausesSearchQueries.md)
-    - [rankRootCausesSearchResults](src/problems/ranking/rankRootCausesSearchResults.md)
-    - [rankSearchQueries](src/problems/ranking/rankSearchQueries.md)
-    - [rankSubProblems](src/problems/ranking/rankSubProblems.md)
-    - [rankWebRootCauses](src/problems/ranking/rankWebRootCauses.md)
-    - [rateWebRootCauses](src/problems/ranking/rateWebRootCauses.md)
-  - tools
-    - [createNewCustomProject](src/problems/tools/createNewCustomProject.md)
-    - [dedupSubProblems](src/problems/tools/dedupSubProblems.md)
-    - [destroyQueue](src/problems/tools/destroyQueue.md)
-    - [exportSubProblems](src/problems/tools/exportSubProblems.md)
-    - [importSubProblems](src/problems/tools/importSubProblems.md)
-    - [runProblemStage](src/problems/tools/runProblemStage.md)
-    - [setAlignmentStatements](src/problems/tools/setAlignmentStatements.md)
-    - [subProblemRootCausesReport](src/problems/tools/subProblemRootCausesReport.md)
-    - [trimSubProblems](src/problems/tools/trimSubProblems.md)
-  - web
-    - [getMetaDataForTopWebRootCauses](src/problems/web/getMetaDataForTopWebRootCauses.md)
-    - [getRefinedRootCauses](src/problems/web/getRefinedRootCauses.md)
-    - [getRootCausesWebPages](src/problems/web/getRootCausesWebPages.md)
-    - old
-      - [getRefinedRootCauses](src/problems/web/old/getRefinedRootCauses.md)
-    - [rootCauseExamplePrompts](src/problems/web/rootCauseExamplePrompts.md)
-    - [rootCauseTypeTypeDef](src/problems/web/rootCauseTypeTypeDef.md)
-    - [searchWebForRootCauses](src/problems/web/searchWebForRootCauses.md)
+- dbModels
+  - [agent](src/dbModels/agent.md)
+  - [agentAuditLog](src/dbModels/agentAuditLog.md)
+  - [agentClass](src/dbModels/agentClass.md)
+  - [agentConnector](src/dbModels/agentConnector.md)
+  - [agentConnectorClass](src/dbModels/agentConnectorClass.md)
+  - [agentEval](src/dbModels/agentEval.md)
+  - [agentRegistry](src/dbModels/agentRegistry.md)
+  - [aiModel](src/dbModels/aiModel.md)
+  - [externalApiUsage](src/dbModels/externalApiUsage.md)
+  - [externalApis](src/dbModels/externalApis.md)
+  - [modelUsage](src/dbModels/modelUsage.md)
+  - [privateAccessStore](src/dbModels/privateAccessStore.md)
+  - [sequelize](src/dbModels/sequelize.md)
+  - [ypGroup](src/dbModels/ypGroup.md)
+  - [ypOrganization](src/dbModels/ypOrganization.md)
+  - [ypUser](src/dbModels/ypUser.md)
 - [queue](src/src/queue.md)
 - rag
   - ingestion
@@ -81,7 +64,6 @@
     - [docCleanup](src/rag/ingestion/docCleanup.md)
     - [docRanker](src/rag/ingestion/docRanker.md)
     - [docTreeSplitter](src/rag/ingestion/docTreeSplitter.md)
-    - [ingestionConstants](src/rag/ingestion/ingestionConstants.md)
     - [processor](src/rag/ingestion/processor.md)
   - vectorstore
     - [ragChunk](src/rag/vectorstore/ragChunk.md)
@@ -91,55 +73,10 @@
       - [createRagDocument](src/rag/vectorstore/tools/createRagDocument.md)
       - [destroyRagChunk](src/rag/vectorstore/tools/destroyRagChunk.md)
       - [destroyRagDocument](src/rag/vectorstore/tools/destroyRagDocument.md)
-- solutions
-  - create
-    - [createImages](src/solutions/create/createImages.md)
-    - [createProsCons](src/solutions/create/createProsCons.md)
-    - [createSolutions](src/solutions/create/createSolutions.md)
-  - evolve
-    - [evolvePopulation](src/solutions/evolve/evolvePopulation.md)
-    - [reapPopulation](src/solutions/evolve/reapPopulation.md)
-  - group
-    - [groupSolutions](src/solutions/group/groupSolutions.md)
-  - ranking
-    - [rankProsCons](src/solutions/ranking/rankProsCons.md)
-    - [rankSearchResults](src/solutions/ranking/rankSearchResults.md)
-    - [rankSolutions](src/solutions/ranking/rankSolutions.md)
-    - [rankWebSolutions](src/solutions/ranking/rankWebSolutions.md)
-    - [rateSolutions](src/solutions/ranking/rateSolutions.md)
-  - [solutions](src/solutions/solutions.md)
-  - tools
-    - [analyseExternalSolutions](src/solutions/tools/analyseExternalSolutions.md)
-    - [deleteSolutionImage](src/solutions/tools/deleteSolutionImage.md)
-    - [destroyQueue](src/solutions/tools/destroyQueue.md)
-    - old
-      - [exportProsCons](src/solutions/tools/old/exportProsCons.md)
-      - [exportSearchQueries](src/solutions/tools/old/exportSearchQueries.md)
-      - [exportSolutions](src/solutions/tools/old/exportSolutions.md)
-      - [printMemory](src/solutions/tools/old/printMemory.md)
-      - [testPuppeteer](src/solutions/tools/old/testPuppeteer.md)
-    - oneOff
-      - [dedupSearchResults](src/solutions/tools/oneOff/dedupSearchResults.md)
-      - [replacePopulation](src/solutions/tools/oneOff/replacePopulation.md)
-      - [testJsonRepair](src/solutions/tools/oneOff/testJsonRepair.md)
-    - [removeDuplicateWebSolutions](src/solutions/tools/removeDuplicateWebSolutions.md)
-    - [runEvolutionStep](src/solutions/tools/runEvolutionStep.md)
-    - [runSolutionStage](src/solutions/tools/runSolutionStage.md)
-  - web
-    - [bingSearchApi](src/solutions/web/bingSearchApi.md)
-    - [getWebPages](src/solutions/web/getWebPages.md)
-    - [googleSearchApi](src/solutions/web/googleSearchApi.md)
-    - [searchWeb](src/solutions/web/searchWeb.md)
 - tools
-  - [addCustomSearchUrls](src/tools/addCustomSearchUrls.md)
-  - [addSubProblem](src/tools/addSubProblem.md)
-  - [deleteSubProblemImages](src/tools/deleteSubProblemImages.md)
   - [generateDocumentation](src/tools/generateDocumentation.md)
-  - [loadProject](src/tools/loadProject.md)
-  - [modifySubProblemEloScors](src/tools/modifySubProblemEloScors.md)
-  - [saveProject](src/tools/saveProject.md)
-  - [updateSubProblems](src/tools/updateSubProblems.md)
-  - [uploadProjectToS3](src/tools/uploadProjectToS3.md)
+  - [seedAiModels](src/tools/seedAiModels.md)
+  - [seedDbTestClasses](src/tools/seedDbTestClasses.md)
 - validations
   - [agentOrchestrator](src/validations/agentOrchestrator.md)
   - [baseValidationAgent](src/validations/baseValidationAgent.md)
@@ -147,29 +84,14 @@
   - [parallelAgent](src/validations/parallelAgent.md)
   - test
     - [testValidationChain](src/validations/test/testValidationChain.md)
-- vectorstore
-  - base
-    - [baseVectorStoreClient](src/vectorstore/base/baseVectorStoreClient.md)
-  - [evidenceWebPage](src/vectorstore/evidenceWebPage.md)
-  - [rootCauseWebPage](src/vectorstore/rootCauseWebPage.md)
-  - utils
-    - [createEvidenceWebPageClass](src/vectorstore/utils/createEvidenceWebPageClass.md)
-    - [createRootCauseWebPageClass](src/vectorstore/utils/createRootCauseWebPageClass.md)
-    - [createWebPageClass](src/vectorstore/utils/createWebPageClass.md)
-    - [deleteEvidenceWebPageClass](src/vectorstore/utils/deleteEvidenceWebPageClass.md)
-    - [deleteRouteCausesPageClass](src/vectorstore/utils/deleteRouteCausesPageClass.md)
-    - [deleteWebPageClass](src/vectorstore/utils/deleteWebPageClass.md)
-    - [showCounts](src/vectorstore/utils/showCounts.md)
-    - [showSchema](src/vectorstore/utils/showSchema.md)
-    - [testEvidenceWebPage](src/vectorstore/utils/testEvidenceWebPage.md)
-    - [testRootCausesWebPage](src/vectorstore/utils/testRootCausesWebPage.md)
-    - [testWebPage](src/vectorstore/utils/testWebPage.md)
-    - [updateEvidenceWebPageSchema](src/vectorstore/utils/updateEvidenceWebPageSchema.md)
-    - [updateWebPageSchema](src/vectorstore/utils/updateWebPageSchema.md)
-  - [webPage](src/vectorstore/webPage.md)
 - webResearch
+  - [bingSearchApi](src/webResearch/bingSearchApi.md)
+  - [getWebPages](src/webResearch/getWebPages.md)
+  - [getWebPagesOperations](src/webResearch/getWebPagesOperations.md)
+  - [googleSearchApi](src/webResearch/googleSearchApi.md)
   - [researchWeb](src/webResearch/researchWeb.md)
   - [searchQueriesGenerator](src/webResearch/searchQueriesGenerator.md)
   - [searchQueriesRanker](src/webResearch/searchQueriesRanker.md)
   - [searchResultsRanker](src/webResearch/searchResultsRanker.md)
+  - [searchWeb](src/webResearch/searchWeb.md)
   - [webPageScanner](src/webResearch/webPageScanner.md)

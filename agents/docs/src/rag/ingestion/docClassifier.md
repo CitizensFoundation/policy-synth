@@ -1,47 +1,113 @@
 # DocumentClassifierAgent
 
-This class extends `BaseIngestionAgent` to provide functionality for classifying documents based on provided metadata and data layout. It utilizes system and user messages to interact with a language model for classification.
+The `DocumentClassifierAgent` class extends the `BaseIngestionAgent` and is responsible for classifying documents into primary and secondary categories based on their content.
 
 ## Properties
 
-| Name          | Type   | Description               |
-|---------------|--------|---------------------------|
-| systemMessage | (schema: string, about: string) => SystemMessage | Method that returns a system message formatted with classification instructions and project details. |
-| userMessage   | (title: string, description: string, url: string) => HumanMessage | Method that returns a user message formatted with document details for classification. |
+| Name           | Type     | Description                                                                 |
+|----------------|----------|-----------------------------------------------------------------------------|
+| systemMessage  | Function | Generates a system message for the classification agent.                    |
+| userMessage    | Function | Generates a user message containing the document details for classification.|
 
 ## Methods
 
-| Name                  | Parameters                                      | Return Type | Description                 |
-|-----------------------|-------------------------------------------------|-------------|-----------------------------|
-| classify              | metadata: PsRagDocumentSource, dataLayout: PsIngestionDataLayout | Promise<void> | Classifies a single document using the language model and updates the metadata with classification results. |
-| classifyAllDocuments  | documentSources: PsRagDocumentSource[], dataLayout: PsIngestionDataLayout | Promise<void> | Iterates over an array of document sources and classifies each document, logging the classification results. |
+| Name                | Parameters                                                                 | Return Type | Description                                                                                       |
+|---------------------|----------------------------------------------------------------------------|-------------|---------------------------------------------------------------------------------------------------|
+| systemMessage       | schema: string, about: string                                              | string      | Creates a system message with instructions and available categories for the classification agent. |
+| userMessage         | title: string, description: string, url: string                            | string      | Creates a user message with the document details to be classified.                                |
+| classify            | metadata: PsRagDocumentSource, dataLayout: PsIngestionDataLayout           | Promise<void> | Classifies a single document and updates its primary and secondary categories.                    |
+| classifyAllDocuments| documentSources: PsRagDocumentSource[], dataLayout: PsIngestionDataLayout  | Promise<void> | Classifies all documents in the provided list and updates their categories.                       |
 
 ## Example
 
 ```typescript
 import { DocumentClassifierAgent } from '@policysynth/agents/rag/ingestion/docClassifier.js';
-import { PsRagDocumentSource, PsIngestionDataLayout } from '@policysynth/agents/rag/ingestion/types.js';
 
-const classifier = new DocumentClassifierAgent();
+const agent = new DocumentClassifierAgent();
 
-const documentSource: PsRagDocumentSource = {
-  title: "Example Document",
-  fullDescriptionOfAllContents: "Detailed description of the document contents.",
-  url: "http://example.com/document",
-  primaryCategory: "",
-  secondaryCategory: ""
+const metadata = {
+  title: "Sample Document",
+  fullDescriptionOfAllContents: "This is a sample document for classification.",
+  url: "http://example.com/sample-document"
 };
 
-const dataLayout: PsIngestionDataLayout = {
-  categories: ["Technology", "Health", "Finance"],
-  aboutProject: "Project to classify documents into relevant categories."
+const dataLayout = {
+  categories: ["Category1", "Category2", "Category3"],
+  aboutProject: "This project is about classifying documents into predefined categories."
 };
 
-async function runClassification() {
-  await classifier.classify(documentSource, dataLayout);
-  console.log(`Primary Category: ${documentSource.primaryCategory}`);
-  console.log(`Secondary Category: ${documentSource.secondaryCategory}`);
-}
+agent.classify(metadata, dataLayout).then(() => {
+  console.log(`Primary Category: ${metadata.primaryCategory}`);
+  console.log(`Secondary Category: ${metadata.secondaryCategory}`);
+});
+```
 
-runClassification();
+## Detailed Method Descriptions
+
+### systemMessage
+
+```typescript
+systemMessage = (schema: string, about: string) => string
+```
+
+Generates a system message for the classification agent with instructions and available categories.
+
+- **Parameters:**
+  - `schema` (string): The available categories in JSON format.
+  - `about` (string): Information about the project.
+
+- **Returns:**
+  - `string`: The generated system message.
+
+### userMessage
+
+```typescript
+userMessage = (title: string, description: string, url: string) => string
+```
+
+Generates a user message containing the document details for classification.
+
+- **Parameters:**
+  - `title` (string): The title of the document.
+  - `description` (string): The full description of the document.
+  - `url` (string): The URL of the document.
+
+- **Returns:**
+  - `string`: The generated user message.
+
+### classify
+
+```typescript
+async classify(
+  metadata: PsRagDocumentSource,
+  dataLayout: PsIngestionDataLayout
+): Promise<void>
+```
+
+Classifies a single document and updates its primary and secondary categories.
+
+- **Parameters:**
+  - `metadata` (PsRagDocumentSource): The metadata of the document to be classified.
+  - `dataLayout` (PsIngestionDataLayout): The data layout containing available categories and project information.
+
+- **Returns:**
+  - `Promise<void>`: A promise that resolves when the classification is complete.
+
+### classifyAllDocuments
+
+```typescript
+async classifyAllDocuments(
+  documentSources: PsRagDocumentSource[],
+  dataLayout: PsIngestionDataLayout
+): Promise<void>
+```
+
+Classifies all documents in the provided list and updates their categories.
+
+- **Parameters:**
+  - `documentSources` (PsRagDocumentSource[]): The list of document sources to be classified.
+  - `dataLayout` (PsIngestionDataLayout): The data layout containing available categories and project information.
+
+- **Returns:**
+  - `Promise<void>`: A promise that resolves when all classifications are complete.
 ```

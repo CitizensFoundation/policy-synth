@@ -1,30 +1,52 @@
 # PsAgentOrchestrator
 
-This class orchestrates the execution of validation agents, processing an input through a chain of agents until a validation failure occurs or all agents have been executed.
+The `PsAgentOrchestrator` class is responsible for orchestrating the execution of a series of validation agents. It takes an initial agent and an input string, and it processes the input through the chain of agents until a final validation result is obtained.
 
 ## Methods
 
-| Name    | Parameters                                      | Return Type                  | Description |
-|---------|-------------------------------------------------|------------------------------|-------------|
-| execute | initialAgent: PsValidationAgent, input: string | Promise<PsValidationAgentResult> | Executes the chain of validation agents starting with the initial agent, processing the given input, and returns the result of the validation process. |
+### `execute`
 
-## Example
+Executes the chain of validation agents starting from the initial agent.
+
+| Name          | Parameters                                      | Return Type                  | Description                                                                 |
+|---------------|-------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
+| `execute`     | `initialAgent: PsValidationAgent, input: string`| `Promise<PsValidationAgentResult>` | Executes the chain of validation agents and returns the final validation result. |
+
+#### Parameters
+
+- `initialAgent` (`PsValidationAgent`): The initial validation agent to start the execution chain.
+- `input` (`string`): The input string to be validated by the agents.
+
+#### Returns
+
+- `Promise<PsValidationAgentResult>`: A promise that resolves to the final validation result.
+
+#### Example
 
 ```typescript
-// Example usage of PsAgentOrchestrator
 import { PsAgentOrchestrator } from '@policysynth/agents/validations/agentOrchestrator.js';
-import { PsValidationAgent, PsValidationAgentResult } from './path/to/validationAgentTypes';
+import { PsValidationAgent, PsValidationAgentResult } from '@policysynth/agents/types.js';
+
+class ExampleAgent implements PsValidationAgent {
+  name: string = 'ExampleAgent';
+
+  async execute(input: string): Promise<PsValidationAgentResult> {
+    // Example validation logic
+    if (input === 'valid') {
+      return { isValid: true };
+    } else {
+      return { isValid: false, validationErrors: ['Invalid input'] };
+    }
+  }
+}
 
 const orchestrator = new PsAgentOrchestrator();
+const initialAgent = new ExampleAgent();
+const input = 'valid';
 
-// Assuming `initialAgent` is an instance of PsValidationAgent
-// and `inputString` is the string to be validated
-orchestrator.execute(initialAgent, inputString)
-  .then((result: PsValidationAgentResult) => {
-    if (result.isValid) {
-      console.log('Validation passed');
-    } else {
-      console.error('Validation failed', result.validationErrors);
-    }
-  });
+orchestrator.execute(initialAgent, input).then(result => {
+  console.log(result);
+});
 ```
+
+In this example, the `PsAgentOrchestrator` is used to execute a chain of validation agents starting with `ExampleAgent`. The input string is validated, and the final result is logged to the console.

@@ -1,18 +1,17 @@
 # PsRagChunkVectorStore
 
-This class provides methods to interact with the RAG (Retrieval-Augmented Generation) chunk vector store, specifically allowing operations like deleting the storage scheme.
+The `PsRagChunkVectorStore` class is responsible for managing the vector store for RAG (Retrieval-Augmented Generation) chunks. This class provides methods to interact with the underlying vector store, including creating, deleting, and managing the schema.
 
 ## Methods
 
-| Name         | Parameters | Return Type | Description                           |
-|--------------|------------|-------------|---------------------------------------|
-| deleteScheme | None       | Promise<void> | Asynchronously deletes the storage scheme for the RAG chunks. |
+| Name         | Parameters        | Return Type | Description                                      |
+|--------------|-------------------|-------------|--------------------------------------------------|
+| deleteScheme | None              | Promise<void> | Deletes the schema from the vector store.        |
 
 ## Example
 
 ```typescript
-// Example usage of PsRagChunkVectorStore to delete a scheme
-import { PsRagChunkVectorStore } from '@policysynth/agents/rag/vectorstore/ragChunk.js';
+import { PsRagChunkVectorStore } from "../ragChunk.js";
 
 async function run() {
     const store = new PsRagChunkVectorStore();
@@ -22,3 +21,5 @@ async function run() {
 
 run();
 ```
+
+In this example, an instance of `PsRagChunkVectorStore` is created, and the `deleteScheme` method is called to delete the schema from the vector store. After the schema is deleted, the process exits with a status code of 0.

@@ -1,42 +1,83 @@
 # IngestionDocumentRanker
 
-This class is responsible for ranking documents based on user-defined rules and topics, extending the functionality of `BasePairwiseRankingsProcessor`.
+The `IngestionDocumentRanker` class extends the `SimplePairwiseRankingsAgent` to rank documents based on user-defined ranking rules and an overall topic. It uses pairwise comparisons to determine the relevance of documents.
 
 ## Properties
 
-| Name          | Type                      | Description               |
-|---------------|---------------------------|---------------------------|
-| rankingRules  | string \| undefined       | User-defined rules for ranking documents. |
-| overallTopic  | string \| undefined       | The overall topic of the documents to be ranked. |
+| Name             | Type                          | Description                                      |
+|------------------|-------------------------------|--------------------------------------------------|
+| rankingRules     | `string \| undefined`         | The rules provided by the user for ranking.      |
+| overallTopic     | `string \| undefined`         | The overall topic for the document ranking.      |
+| progressFunction | `Function \| undefined`       | Function to track the progress of the ranking.   |
+
+## Constructor
+
+### `constructor(memory: PsSimpleAgentMemoryData | undefined = undefined, progressFunction: Function | undefined = undefined)`
+
+Initializes a new instance of the `IngestionDocumentRanker` class.
+
+#### Parameters
+
+- `memory`: `PsSimpleAgentMemoryData | undefined` - Optional memory data for the agent.
+- `progressFunction`: `Function | undefined` - Optional function to track the progress of the ranking.
 
 ## Methods
 
-| Name             | Parameters                                                                 | Return Type                             | Description |
-|------------------|----------------------------------------------------------------------------|-----------------------------------------|-------------|
-| voteOnPromptPair | index: number, promptPair: number[]                                        | Promise<PsPairWiseVoteResults>     | Processes a pair of prompts and votes on their relevance based on the ranking rules and overall topic. |
-| rankDocuments    | docsToRank: PsRagDocumentSource[], rankingRules: string, overallTopic: string, eloRatingKey: string | Promise<PsRagDocumentSource[]> | Ranks a list of documents based on the specified rules and topic, and returns them ordered by relevance. |
+### `async voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>`
+
+Compares two document chunks based on the user's ranking rules and returns the result of the comparison.
+
+#### Parameters
+
+- `index`: `number` - The index of the current ranking session.
+- `promptPair`: `number[]` - An array containing the indices of the two document chunks to compare.
+
+#### Returns
+
+- `Promise<PsPairWiseVoteResults>` - The result of the pairwise vote.
+
+### `async rankDocuments(docsToRank: PsRagDocumentSource[], rankingRules: string, overallTopic: string, eloRatingKey: string)`
+
+Ranks a list of documents based on the provided ranking rules and overall topic.
+
+#### Parameters
+
+- `docsToRank`: `PsRagDocumentSource[]` - The list of documents to rank.
+- `rankingRules`: `string` - The rules provided by the user for ranking.
+- `overallTopic`: `string` - The overall topic for the document ranking.
+- `eloRatingKey`: `string` - The key used for ELO rating.
+
+#### Returns
+
+- `Promise<PsRagDocumentSource[]>` - The ordered list of ranked documents.
 
 ## Example
 
 ```typescript
 import { IngestionDocumentRanker } from '@policysynth/agents/rag/ingestion/docRanker.js';
-import { PsRagDocumentSource, PsSmarterCrowdsourcingMemoryData } from '@policysynth/agents/rag/ingestion/types';
 
-const ranker = new IngestionDocumentRanker();
+const memory = undefined; // or provide a PsSimpleAgentMemoryData object
+const progressFunction = (progress: number) => {
+  console.log(`Progress: ${progress}%`);
+};
 
-const documents: PsRagDocumentSource[] = [
-  { fullDescriptionOfAllContents: "Document content 1" },
-  { fullDescriptionOfAllContents: "Document content 2" }
+const ranker = new IngestionDocumentRanker(memory, progressFunction);
+
+const docsToRank = [
+  // Array of PsRagDocumentSource objects
 ];
 
-const rankingRules = "Relevance to the current market trends";
-const overallTopic = "Technology";
-const eloRatingKey = "tech-docs-ranking";
+const rankingRules = "Relevance to AI research";
+const overallTopic = "Artificial Intelligence";
+const eloRatingKey = "relevanceEloRating";
 
-async function rankDocuments() {
-  const rankedDocuments = await ranker.rankDocuments(documents, rankingRules, overallTopic, eloRatingKey);
-  console.log(rankedDocuments);
-}
-
-rankDocuments();
+ranker.rankDocuments(docsToRank, rankingRules, overallTopic, eloRatingKey)
+  .then((rankedDocs) => {
+    console.log("Ranked Documents:", rankedDocs);
+  })
+  .catch((error) => {
+    console.error("Error ranking documents:", error);
+  });
 ```
+
+This example demonstrates how to use the `IngestionDocumentRanker` class to rank a list of documents based on user-defined ranking rules and an overall topic. The progress of the ranking process is tracked using the `progressFunction`.

@@ -1,34 +1,32 @@
 # BaseIngestionAgent
 
-The `BaseIngestionAgent` class is an abstract class that extends `PolicySynthScAgentBase`. It provides various methods and properties to handle data ingestion, processing, and interaction with the OpenAI language model.
+The `BaseIngestionAgent` class is an abstract class that extends the `PolicySynthSimpleAgentBase`. It provides various methods and properties to handle data ingestion, processing, and splitting for further analysis or storage.
 
 ## Properties
 
-| Name                     | Type    | Description                                                                 |
-|--------------------------|---------|-----------------------------------------------------------------------------|
-| minChunkTokenLength      | number  | Minimum token length for a chunk of data. Default is 1000.                  |
-| maxChunkTokenLength      | number  | Maximum token length for a chunk of data. Default is 3500.                  |
-| maxFileProcessTokenLength| number  | Maximum token length for processing a file. Default is 110000.              |
-| roughFastWordTokenRatio  | number  | Ratio used to estimate token length from word count. Default is 1.25.       |
-| chat                     | ChatOpenAI | Instance of the ChatOpenAI class for interacting with the OpenAI model.    |
+| Name                      | Type    | Description                                                                 |
+|---------------------------|---------|-----------------------------------------------------------------------------|
+| minChunkTokenLength       | number  | Minimum token length for a chunk. Default is 1000.                          |
+| maxChunkTokenLength       | number  | Maximum token length for a chunk. Default is 3500.                          |
+| maxFileProcessTokenLength | number  | Maximum token length for processing a file. Default is 110000.              |
+| roughFastWordTokenRatio   | number  | Rough ratio of words to tokens. Default is 1.25.                            |
+| maxModelTokensOut         | number  | Maximum tokens output by the model. Default is 4096.                        |
+| modelTemperature          | number  | Temperature setting for the model. Default is 0.0.                          |
 
 ## Methods
 
-| Name                          | Parameters                                                                 | Return Type   | Description                                                                 |
-|-------------------------------|----------------------------------------------------------------------------|---------------|-----------------------------------------------------------------------------|
-| constructor                   | -                                                                          | -             | Initializes the `BaseIngestionAgent` and sets up the `ChatOpenAI` instance. |
-| resetLlmTemperature           | -                                                                          | void          | Resets the temperature of the language model to the default value.          |
-| randomizeLlmTemperature       | -                                                                          | void          | Randomizes the temperature of the language model within a specified range.  |
-| logShortLines                 | text: string, maxLength: number = 50                                       | void          | Logs the first 100 characters of each line of the given text.               |
-| splitDataForProcessing        | data: string, maxTokenLength: number = this.maxFileProcessTokenLength      | string[]      | Splits the data into chunks for processing, ensuring natural breaks.        |
-| parseJsonFromLlmResponse      | data: string                                                               | any           | Parses JSON content from a language model response.                         |
-| splitDataForProcessingWorksBigChunks | data: string, maxTokenLength: number = this.maxFileProcessTokenLength | string[]      | Splits data into large chunks, ensuring natural breaks and list integrity.  |
-| getEstimateTokenLength        | data: string                                                               | number        | Estimates the token length of the given data.                               |
-| computeHash                   | data: Buffer \| string                                                     | string        | Computes the SHA-256 hash of the given data.                                |
-| getFirstMessages              | systemMessage: SystemMessage, userMessage: BaseMessage                     | BaseMessage[] | Returns an array of the first messages, including system and user messages. |
-| getFileName                   | url: string, isJsonData: boolean                                           | string        | Generates a file name based on the URL and whether the data is JSON.        |
-| getExternalUrlsFromJson       | jsonData: any                                                              | string[]      | Extracts external URLs from the given JSON data.                            |
-| generateFileId                | url: string                                                                | string        | Generates a unique file ID based on the URL using MD5 hash.                 |
+| Name                          | Parameters                                                                 | Return Type | Description                                                                                       |
+|-------------------------------|----------------------------------------------------------------------------|-------------|---------------------------------------------------------------------------------------------------|
+| logShortLines                 | text: string, maxLength: number = 50                                       | void        | Logs the first 100 characters of each line of the provided text.                                  |
+| splitDataForProcessing        | data: string, maxTokenLength: number = this.maxFileProcessTokenLength      | string[]    | Splits the data into chunks for processing, ensuring natural breaks and avoiding mid-sentence splits. |
+| parseJsonFromLlmResponse      | data: string                                                               | any         | Parses JSON content from a response string.                                                       |
+| splitDataForProcessingWorksBigChunks | data: string, maxTokenLength: number = this.maxFileProcessTokenLength | string[]    | Splits the data into larger chunks for processing, ensuring natural breaks and avoiding mid-sentence splits. |
+| getEstimateTokenLength        | data: string                                                               | number      | Estimates the token length of the provided data.                                                  |
+| computeHash                   | data: Buffer \| string                                                     | string      | Computes the SHA-256 hash of the provided data.                                                   |
+| getFirstMessages              | systemMessage: PsModelMessage, userMessage: PsModelMessage                 | PsModelMessage[] | Returns an array containing the system and user messages.                                         |
+| getFileName                   | url: string, isJsonData: boolean                                           | string      | Generates a file name based on the URL and whether the data is JSON.                              |
+| getExternalUrlsFromJson       | jsonData: any                                                              | string[]    | Extracts external URLs from the provided JSON data.                                               |
+| generateFileId                | url: string                                                                | string      | Generates a file ID based on the URL using MD5 hash.                                              |
 
 ## Example
 
@@ -40,7 +38,9 @@ class MyIngestionAgent extends BaseIngestionAgent {
 }
 
 const agent = new MyIngestionAgent();
-agent.logShortLines("This is a test text to log short lines.");
-const chunks = agent.splitDataForProcessing("Some large text data...");
+const data = "Some large text data...";
+const chunks = agent.splitDataForProcessing(data);
 console.log(chunks);
 ```
+
+This example demonstrates how to extend the `BaseIngestionAgent` class and use its `splitDataForProcessing` method to split large text data into manageable chunks.
