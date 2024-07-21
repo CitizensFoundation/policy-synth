@@ -219,8 +219,15 @@ export class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
                 required: true,
             },
             {
-                uniqueId: "marketResearchChannelName",
-                text: "Market Research Channel Name",
+                uniqueId: "competitorChannelName",
+                text: "Competitor Channel Name",
+                type: "textField",
+                maxLength: 200,
+                required: true,
+            },
+            {
+                uniqueId: "customerChannelName",
+                text: "Customer Channel Name",
                 type: "textField",
                 maxLength: 200,
                 required: true,
