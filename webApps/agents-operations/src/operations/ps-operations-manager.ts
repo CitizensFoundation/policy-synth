@@ -23,6 +23,7 @@ import './ps-add-connector-dialog.js';
 import { PsOperationsView } from './ps-operations-view.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
+import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
 
 @customElement('ps-operations-manager')
 export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
@@ -64,6 +65,8 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   @property({ type: Number })
   groupId: number | undefined = 1; // TODO: No default here
+
+  private activeAiModels: PsAiModelAttributes[] = [];
 
   api: OpsServerApi;
 
@@ -118,8 +121,17 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     }
   }
 
+  // Add this method to fetch and set active AI models
+  async fetchActiveAiModels() {
+    try {
+      this.activeAiModels = await this.api.getActiveAiModels();
+    } catch (error) {
+      console.error('Error fetching active AI models:', error);
+    }
+  }
+
   async handleEditDialogSave(event: CustomEvent) {
-    const updatedConfig = event.detail.updatedConfig;
+    const { updatedConfig, aiModelUpdates } = event.detail;
     const isInputConnector = event.detail.connectorType === "input";
 
     if (!this.nodeToEditInfo) return;
@@ -134,6 +146,24 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
       await this.api.updateNodeConfiguration(nodeType, nodeId, updatedConfig);
 
+      // Handle AI model updates for agents
+      if (nodeType === 'agent' && aiModelUpdates) {
+        const currentAiModels = await this.api.getAgentAiModels(nodeId);
+
+        for (const update of aiModelUpdates) {
+          const currentModel = currentAiModels.find(m => m.configuration.modelSize === update.size);
+
+          if (currentModel && update.modelId === null) {
+            await this.api.removeAgentAiModel(nodeId, currentModel.id);
+          } else if (update.modelId !== null && currentModel?.id !== update.modelId) {
+            if (currentModel) {
+              await this.api.removeAgentAiModel(nodeId, currentModel.id);
+            }
+            await this.api.addAgentAiModel(nodeId, update.modelId, update.size);
+          }
+        }
+      }
+
       // Update the local state
       if (nodeType === 'agent') {
         this.currentAgent = {
@@ -143,10 +173,30 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
             ...updatedConfig,
           },
         };
+
+        // Update AI models in local state
+        if (aiModelUpdates) {
+          const updatedAiModels = this.currentAgent!.AiModels!.filter(model =>
+            !aiModelUpdates.some((update: { size: PsAiModelSize; modelId: number | null }) => update.size === model.configuration.modelSize)
+          );
+
+          for (const update of aiModelUpdates) {
+            if (update.modelId !== null) {
+              const newModel = this.activeAiModels.find(m => m.id === update.modelId);
+              if (newModel) {
+                updatedAiModels.push(newModel);
+              }
+            }
+          }
+
+          this.currentAgent = {
+            ...this.currentAgent!,
+            AiModels: updatedAiModels,
+          };
+        }
       } else {
-        // Determine if the connector is an input or output connector
+        // Update connector (unchanged from your original code)
         if (isInputConnector) {
-          // Update the connector in the currentAgent's InputConnectors array
           const updatedInputConnectors = this.currentAgent!.InputConnectors!.map(
             connector =>
               connector.id === nodeId
@@ -164,7 +214,6 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
             InputConnectors: updatedInputConnectors,
           };
         } else {
-          // Update the connector in the currentAgent's OutputConnectors array
           const updatedOutputConnectors = this.currentAgent!.OutputConnectors!.map(
             connector =>
               connector.id === nodeId

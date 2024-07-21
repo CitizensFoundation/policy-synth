@@ -5,9 +5,9 @@ export declare class PolicySynthAgentBase {
     constructor();
     protected createSystemMessage(content: string): PsModelMessage;
     protected createHumanMessage(content: string): PsModelMessage;
-    getJsonBlock(text: string): string;
+    getJsonBlock(text: string): string | null;
     repairJson(text: string): string;
-    parseJsonResponse(response: string): any;
+    parseJsonResponse<T = any>(response: string): T;
     formatNumber(number: number, fractions?: number): string;
     getTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }

@@ -27,11 +27,13 @@ export declare class PsOperationsManager extends PsBaseWithRunningAgentObserver 
     selectedInputOutputType: string | null;
     agentElement: PsOperationsView;
     groupId: number | undefined;
+    private activeAiModels;
     api: OpsServerApi;
     constructor();
     getAgent(): Promise<void>;
     connectedCallback(): Promise<void>;
     fetchAgentCosts(): Promise<void>;
+    fetchActiveAiModels(): Promise<void>;
     handleEditDialogSave(event: CustomEvent): Promise<void>;
     openEditNodeDialog(event: CustomEvent): void;
     openAddConnectorDialog(event: CustomEvent): void;

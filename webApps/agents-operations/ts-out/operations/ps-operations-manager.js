@@ -32,6 +32,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.selectedAgentIdForConnector = null;
         this.selectedInputOutputType = null;
         this.groupId = 1; // TODO: No default here
+        this.activeAiModels = [];
         this.api = new OpsServerApi();
         this.getAgent();
     }
@@ -68,8 +69,17 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             }
         }
     }
+    // Add this method to fetch and set active AI models
+    async fetchActiveAiModels() {
+        try {
+            this.activeAiModels = await this.api.getActiveAiModels();
+        }
+        catch (error) {
+            console.error('Error fetching active AI models:', error);
+        }
+    }
     async handleEditDialogSave(event) {
-        const updatedConfig = event.detail.updatedConfig;
+        const { updatedConfig, aiModelUpdates } = event.detail;
         const isInputConnector = event.detail.connectorType === "input";
         if (!this.nodeToEditInfo)
             return;
@@ -80,6 +90,22 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                 : 'connector';
             const nodeId = this.nodeToEditInfo.id;
             await this.api.updateNodeConfiguration(nodeType, nodeId, updatedConfig);
+            // Handle AI model updates for agents
+            if (nodeType === 'agent' && aiModelUpdates) {
+                const currentAiModels = await this.api.getAgentAiModels(nodeId);
+                for (const update of aiModelUpdates) {
+                    const currentModel = currentAiModels.find(m => m.configuration.modelSize === update.size);
+                    if (currentModel && update.modelId === null) {
+                        await this.api.removeAgentAiModel(nodeId, currentModel.id);
+                    }
+                    else if (update.modelId !== null && currentModel?.id !== update.modelId) {
+                        if (currentModel) {
+                            await this.api.removeAgentAiModel(nodeId, currentModel.id);
+                        }
+                        await this.api.addAgentAiModel(nodeId, update.modelId, update.size);
+                    }
+                }
+            }
             // Update the local state
             if (nodeType === 'agent') {
                 this.currentAgent = {
@@ -89,11 +115,26 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                         ...updatedConfig,
                     },
                 };
+                // Update AI models in local state
+                if (aiModelUpdates) {
+                    const updatedAiModels = this.currentAgent.AiModels.filter(model => !aiModelUpdates.some((update) => update.size === model.configuration.modelSize));
+                    for (const update of aiModelUpdates) {
+                        if (update.modelId !== null) {
+                            const newModel = this.activeAiModels.find(m => m.id === update.modelId);
+                            if (newModel) {
+                                updatedAiModels.push(newModel);
+                            }
+                        }
+                    }
+                    this.currentAgent = {
+                        ...this.currentAgent,
+                        AiModels: updatedAiModels,
+                    };
+                }
             }
             else {
-                // Determine if the connector is an input or output connector
+                // Update connector (unchanged from your original code)
                 if (isInputConnector) {
-                    // Update the connector in the currentAgent's InputConnectors array
                     const updatedInputConnectors = this.currentAgent.InputConnectors.map(connector => connector.id === nodeId
                         ? {
                             ...connector,
@@ -109,7 +150,6 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
                     };
                 }
                 else {
-                    // Update the connector in the currentAgent's OutputConnectors array
                     const updatedOutputConnectors = this.currentAgent.OutputConnectors.map(connector => connector.id === nodeId
                         ? {
                             ...connector,

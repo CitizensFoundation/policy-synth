@@ -165,18 +165,31 @@ export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
     }
   }
 
-  async post(groupId: number, postData: any, imagePrompt: string): Promise<YpPostData> {
+  async post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string): Promise<YpPostData> {
     await this.login();
 
-    const imageId = await this.generateImageWithAi(groupId, imagePrompt);
-    postData.uploadedHeaderImageId = imageId.toString();
+    // Create formData dynamically
+    const formData: any = {
+      name: name,
+      structuredAnswersJson: JSON.stringify(structuredAnswersData),
+      postBaseId: "123",
+      postValCode: "123",
+      postConf: "0.0",
+      userLocale: "en",
+      screenWidth: "0",
+      location: "",
+      coverMediaType: "image",
+    };
 
-    console.log("Posting data:", postData);
+    const imageId = await this.generateImageWithAi(groupId, imagePrompt);
+    formData.uploadedHeaderImageId = imageId.toString();
+
+    console.log("Posting data:", formData);
 
     try {
       const postResponse = await axios.post(
         `${this.serverBaseUrl}/posts/${groupId}`,
-        qs.stringify(postData),
+        qs.stringify(formData),
         {
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -187,7 +200,8 @@ export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
 
       const responseData = postResponse.data;
 
-      if (postData.eloRating && postData.eloRating < 1000) {
+      const eloRating = structuredAnswersData.find(item => item.uniqueId === "ID9")?.value;
+      if (eloRating && Number(eloRating) < 1000) {
         await this.vote(responseData.id, -1);
       }
 

@@ -21,7 +21,7 @@ export declare class PsYourPrioritiesConnector extends PsBaseCollaborationConnec
     constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
     login(): Promise<void>;
     vote(postId: number, value: number): Promise<void>;
-    post(groupId: number, postData: any, imagePrompt: string): Promise<YpPostData>;
+    post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string): Promise<YpPostData>;
     generateImageWithAi(groupId: number, prompt: string): Promise<number>;
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
 }

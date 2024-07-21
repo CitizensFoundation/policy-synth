@@ -1,13 +1,17 @@
-import { BaseChatBotServerApi } from "../chatBot/BaseChatBotApi";
+import { BaseChatBotServerApi } from '../chatBot/BaseChatBotApi';
+import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
 export declare class OpsServerApi extends BaseChatBotServerApi {
     baseAgentsPath: string;
     constructor(urlPath?: string);
     getAgent(groupId: number): Promise<PsAgentAttributes>;
+    removeAgentAiModel(agentId: number, modelId: number): Promise<void>;
+    addAgentAiModel(agentId: number, modelId: number, size: PsAiModelSize): Promise<void>;
     getCrt(groupId: number): Promise<LtpCurrentRealityTreeData>;
     updateAgentConfiguration(agentId: number, updatedConfig: Partial<PsAgentAttributes['configuration']>): Promise<void>;
     createAgent(name: string, agentClassId: number, aiModels: {
         [key: string]: number;
     }, parentAgentId: number, groupId?: number): Promise<PsAgentAttributes>;
+    getAgentAiModels(agentId: number): Promise<PsAiModelAttributes[]>;
     getActiveAiModels(): Promise<PsAiModelAttributes[]>;
     getActiveAgentClasses(): Promise<PsAgentClassAttributes[]>;
     getActiveConnectorClasses(): Promise<PsAgentConnectorClassAttributes[]>;

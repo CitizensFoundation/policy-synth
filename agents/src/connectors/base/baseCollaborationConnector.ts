@@ -3,7 +3,7 @@ export abstract class PsBaseCollaborationConnector extends PsBaseConnector {
 
   // Abstract methods that collaboration connectors should implement
   abstract login(): Promise<void>;
-  abstract post(groupId: number, postData: any, imagePrompt?: string): Promise<any>;
+  abstract post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string): Promise<YpPostData>;
   abstract vote(itemId: number, value: number): Promise<void>;
 
   // Optional method for image generation, if supported by the collaboration platform

@@ -7,6 +7,9 @@ export declare class AgentsController {
     private agentManager;
     constructor(wsClients: Map<string, WebSocket>);
     initializeRoutes(): void;
+    getAgentAiModels: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
+    removeAgentAiModel: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
+    addAgentAiModel: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     updateNodeConfiguration: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     createAgent: (req: express.Request, res: express.Response) => Promise<express.Response<any, Record<string, any>> | undefined>;
     createInputConnector: (req: express.Request, res: express.Response) => Promise<void>;

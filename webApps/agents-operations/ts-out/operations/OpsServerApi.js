@@ -1,4 +1,4 @@
-import { BaseChatBotServerApi } from "../chatBot/BaseChatBotApi";
+import { BaseChatBotServerApi } from '../chatBot/BaseChatBotApi';
 export class OpsServerApi extends BaseChatBotServerApi {
     constructor(urlPath = '/api') {
         super();
@@ -7,6 +7,17 @@ export class OpsServerApi extends BaseChatBotServerApi {
     }
     async getAgent(groupId) {
         return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
+    }
+    async removeAgentAiModel(agentId, modelId) {
+        return this.fetchWrapper(`${this.baseUrlPath}/agents/${agentId}/ai-models/${modelId}`, {
+            method: 'DELETE',
+        });
+    }
+    async addAgentAiModel(agentId, modelId, size) {
+        return this.fetchWrapper(`${this.baseUrlPath}/agents/${agentId}/ai-models`, {
+            method: 'POST',
+            body: JSON.stringify({ modelId, size }),
+        });
     }
     async getCrt(groupId) {
         return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`, {}, false));
@@ -25,9 +36,12 @@ export class OpsServerApi extends BaseChatBotServerApi {
                 agentClassId,
                 aiModels,
                 parentAgentId,
-                groupId
+                groupId,
             }),
         }, false);
+    }
+    async getAgentAiModels(agentId) {
+        return this.fetchWrapper(`${this.baseUrlPath}/agents/${agentId}/ai-models`);
     }
     async getActiveAiModels() {
         return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}registry/aiModels`, {
@@ -55,7 +69,7 @@ export class OpsServerApi extends BaseChatBotServerApi {
             method: 'PUT',
             body: JSON.stringify({
                 nodeId,
-                childrenIds
+                childrenIds,
             }),
         }, false);
     }
@@ -83,14 +97,14 @@ export class OpsServerApi extends BaseChatBotServerApi {
             body: JSON.stringify({
                 parentNodeId,
                 causes,
-                type
+                type,
             }),
         }, false);
     }
     async getAgentCosts(agentId) {
-        const response = await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/costs`, {
+        const response = (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${agentId}/costs`, {
             method: 'GET',
-        }, false);
+        }, false));
         return parseFloat(response.totalCost);
     }
     sendGetRefinedCauseQuery(crtTreeId, crtNodeId, chatLog, wsClientId, effect, causes, validationErrors) {
@@ -106,7 +120,14 @@ export class OpsServerApi extends BaseChatBotServerApi {
         });
         return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/getRefinedCauses`, {
             method: 'POST',
-            body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog, effect, causes, validationErrors }),
+            body: JSON.stringify({
+                wsClientId,
+                crtNodeId,
+                chatLog: simplifiedChatLog,
+                effect,
+                causes,
+                validationErrors,
+            }),
         }, false);
     }
     runValidationChain(crtTreeId, crtNodeId, chatLog, wsClientId, effect, causes) {
@@ -120,7 +141,8 @@ export class OpsServerApi extends BaseChatBotServerApi {
                     : chatMessage.message,
             };
         });
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/runValidationChain`, {
+        return this.fetchWrapper(this.baseUrlPath +
+            `${this.baseAgentsPath}${crtTreeId}/runValidationChain`, {
             method: 'POST',
             body: JSON.stringify({
                 wsClientId,
@@ -151,7 +173,8 @@ export class OpsServerApi extends BaseChatBotServerApi {
         }, false);
     }
     async updateNodeConfiguration(nodeType, nodeId, updatedConfig) {
-        return this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${nodeId}/${nodeType}/configuration`, {
+        return this.fetchWrapper(this.baseUrlPath +
+            `${this.baseAgentsPath}${nodeId}/${nodeType}/configuration`, {
             method: 'PUT',
             body: JSON.stringify(updatedConfig),
         }, false);

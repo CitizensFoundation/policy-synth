@@ -1,4 +1,4 @@
-import { LitElement, html, css } from 'lit';
+import { html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import '@material/web/dialog/dialog.js';
@@ -7,6 +7,8 @@ import '@material/web/button/filled-button.js';
 import '@material/web/select/filled-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/textfield/filled-text-field.js';
+
+import './ps-ai-model-selector.js';
 
 import { OpsServerApi } from './OpsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
@@ -23,12 +25,6 @@ export class PsAddAgentDialog extends YpBaseElement {
   @state() private selectedAgentClassId: number | null = null;
   @state() private selectedAiModels: { [key in PsAiModelSize]?: number | null } = {};
   @state() private agentName: string = '';
-
-  @state() private filteredAiModels: { [key in PsAiModelSize]: PsAiModelAttributes[] } = {
-    small: [],
-    medium: [],
-    large: []
-  };
 
   @state() private requestedAiModelSizes: PsAiModelSize[] = [];
 
@@ -51,31 +47,9 @@ export class PsAddAgentDialog extends YpBaseElement {
   async fetchActiveAiModels() {
     try {
       this.activeAiModels = await this.api.getActiveAiModels();
-      this.filterAiModels();
     } catch (error) {
       console.error('Error fetching active AI models:', error);
     }
-  }
-
-  get hasAnyAiModels() {
-    return Object.values(this.filteredAiModels).some(models => models.length > 0);
-  }
-
-  filterAiModels() {
-    this.filteredAiModels = {
-      small: [],
-      medium: [],
-      large: []
-    };
-
-    this.activeAiModels.forEach(model => {
-      if (model.configuration && 'modelSize' in model.configuration) {
-        const size = model.configuration.modelSize as PsAiModelSize;
-        if (size in this.filteredAiModels && this.requestedAiModelSizes.includes(size)) {
-          this.filteredAiModels[size].push(model);
-        }
-      }
-    });
   }
 
   render() {
@@ -100,53 +74,20 @@ export class PsAddAgentDialog extends YpBaseElement {
               `
             )}
           </md-filled-select>
-          <div class="aiModelInfo" ?hidden="${!this.hasAnyAiModels}">
+          <div class="aiModelInfo" ?hidden="${!this.requestedAiModelSizes.length}">
             ${this.t("aiModelAgentCreateInfo")}
           </div>
-          ${this.requestedAiModelSizes.map(size => this.renderAiModelSelect(size))}
+          <ps-ai-model-selector
+            .activeAiModels="${this.activeAiModels}"
+            .requestedAiModelSizes="${this.requestedAiModelSizes}"
+            @ai-models-changed="${this._handleAiModelsChanged}"
+          ></ps-ai-model-selector>
         </div>
         <div slot="actions">
           <md-text-button @click="${this._handleClose}">${this.t('cancel')}</md-text-button>
           <md-filled-button @click="${this._handleAddAgent}">${this.t('addAgent')}</md-filled-button>
         </div>
       </md-dialog>
-    `;
-  }
-
-  getLocalizedModelLabel(size: PsAiModelSize) {
-    switch (size) {
-      case 'small':
-        return this.t("selectSmallAiModel");
-      case 'medium':
-        return this.t("selectMediumAiModel");
-      case 'large':
-        return this.t("selectLargeAiModel");
-      default:
-        return this.t("selectAiModel");
-    }
-  }
-
-  private renderAiModelSelect(size: PsAiModelSize) {
-    const models = this.filteredAiModels[size];
-    const isDisabled = models.length === 0;
-
-    return html`
-      <md-filled-select
-        .label="${this.getLocalizedModelLabel(size)}"
-        @change="${(e: Event) => this._handleAiModelSelection(e, size)}"
-        ?disabled="${isDisabled}"
-      >
-        ${isDisabled
-          ? html`<md-select-option disabled>
-              <div slot="headline">${this.t("noModelsAvailable")}</div>
-            </md-select-option>`
-          : models.map(aiModel => html`
-              <md-select-option value="${aiModel.id}">
-                <div slot="headline">${aiModel.name}</div>
-              </md-select-option>
-            `)
-        }
-      </md-filled-select>
     `;
   }
 
@@ -159,21 +100,16 @@ export class PsAddAgentDialog extends YpBaseElement {
     const select = e.target as HTMLSelectElement;
     this.selectedAgentClassId = Number(select.value);
 
-    // Update requestedAiModelSizes based on the selected agent class
     const selectedClass = this.activeAgentClasses.find(c => c.id === this.selectedAgentClassId);
     if (selectedClass && selectedClass.configuration && selectedClass.configuration.requestedAiModelSizes) {
       this.requestedAiModelSizes = selectedClass.configuration.requestedAiModelSizes;
     } else {
       this.requestedAiModelSizes = [];
     }
-
-    // Re-filter AI models based on the new requested sizes
-    this.filterAiModels();
   }
 
-  private _handleAiModelSelection(e: Event, size: PsAiModelSize) {
-    const select = e.target as HTMLSelectElement;
-    this.selectedAiModels[size] = Number(select.value);
+  private _handleAiModelsChanged(e: CustomEvent) {
+    this.selectedAiModels = e.detail.selectedAiModels;
   }
 
   private _handleClose() {

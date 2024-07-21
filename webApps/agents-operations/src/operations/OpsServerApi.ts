@@ -1,6 +1,5 @@
-import { YpServerApi } from "@yrpri/webapp/common/YpServerApi";
-import { PsOperationsBaseNode } from "./ps-operations-base-node";
-import { BaseChatBotServerApi } from "../chatBot/BaseChatBotApi";
+import { BaseChatBotServerApi } from '../chatBot/BaseChatBotApi';
+import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
 
 export class OpsServerApi extends BaseChatBotServerApi {
   baseAgentsPath = '/agents/';
@@ -10,11 +9,45 @@ export class OpsServerApi extends BaseChatBotServerApi {
   }
 
   public async getAgent(groupId: number): Promise<PsAgentAttributes> {
-    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as PsAgentAttributes;
+    return (await this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,
+      {},
+      false
+    )) as unknown as PsAgentAttributes;
+  }
+
+  public async removeAgentAiModel(
+    agentId: number,
+    modelId: number
+  ): Promise<void> {
+    return this.fetchWrapper(
+      `${this.baseUrlPath}/agents/${agentId}/ai-models/${modelId}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  }
+
+  public async addAgentAiModel(
+    agentId: number,
+    modelId: number,
+    size: PsAiModelSize
+  ): Promise<void> {
+    return this.fetchWrapper(
+      `${this.baseUrlPath}/agents/${agentId}/ai-models`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ modelId, size }),
+      }
+    );
   }
 
   public async getCrt(groupId: number): Promise<LtpCurrentRealityTreeData> {
-    return (await this.fetchWrapper(this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,{}, false)) as unknown as LtpCurrentRealityTreeData;
+    return (await this.fetchWrapper(
+      this.baseUrlPath + `${this.baseAgentsPath}${groupId}`,
+      {},
+      false
+    )) as unknown as LtpCurrentRealityTreeData;
   }
   public async updateAgentConfiguration(
     agentId: number,
@@ -46,11 +79,19 @@ export class OpsServerApi extends BaseChatBotServerApi {
           agentClassId,
           aiModels,
           parentAgentId,
-          groupId
+          groupId,
         }),
       },
       false
     ) as Promise<PsAgentAttributes>;
+  }
+
+  public async getAgentAiModels(
+    agentId: number
+  ): Promise<PsAiModelAttributes[]> {
+    return this.fetchWrapper(
+      `${this.baseUrlPath}/agents/${agentId}/ai-models`
+    ) as Promise<PsAiModelAttributes[]>;
   }
 
   public async getActiveAiModels(): Promise<PsAiModelAttributes[]> {
@@ -73,7 +114,9 @@ export class OpsServerApi extends BaseChatBotServerApi {
     ) as Promise<PsAgentClassAttributes[]>;
   }
 
-  public async getActiveConnectorClasses(): Promise<PsAgentConnectorClassAttributes[]> {
+  public async getActiveConnectorClasses(): Promise<
+    PsAgentConnectorClassAttributes[]
+  > {
     return this.fetchWrapper(
       this.baseUrlPath + `${this.baseAgentsPath}registry/connectorClasses`,
       {
@@ -107,13 +150,12 @@ export class OpsServerApi extends BaseChatBotServerApi {
         method: 'PUT',
         body: JSON.stringify({
           nodeId,
-          childrenIds
+          childrenIds,
         }),
       },
       false
     ) as Promise<void>;
   }
-
 
   public reviewConfiguration(
     wsClientId: string,
@@ -163,7 +205,7 @@ export class OpsServerApi extends BaseChatBotServerApi {
         body: JSON.stringify({
           parentNodeId,
           causes,
-          type
+          type,
         }),
       },
       false
@@ -171,13 +213,13 @@ export class OpsServerApi extends BaseChatBotServerApi {
   }
 
   public async getAgentCosts(agentId: number): Promise<number> {
-    const response = await this.fetchWrapper(
+    const response = (await this.fetchWrapper(
       this.baseUrlPath + `${this.baseAgentsPath}${agentId}/costs`,
       {
         method: 'GET',
       },
       false
-    ) as { totalCost: string };
+    )) as { totalCost: string };
     return parseFloat(response.totalCost);
   }
 
@@ -191,7 +233,10 @@ export class OpsServerApi extends BaseChatBotServerApi {
     validationErrors?: string[]
   ): Promise<LtpChatBotCrtMessage> {
     // Filter out all chatMessages with type==thinking
-    chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming');
+    chatLog = chatLog.filter(
+      chatMessage =>
+        chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming'
+    );
 
     const simplifiedChatLog = chatLog.map(chatMessage => {
       return {
@@ -206,7 +251,14 @@ export class OpsServerApi extends BaseChatBotServerApi {
       this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/getRefinedCauses`,
       {
         method: 'POST',
-        body: JSON.stringify({ wsClientId, crtNodeId, chatLog: simplifiedChatLog, effect, causes, validationErrors }),
+        body: JSON.stringify({
+          wsClientId,
+          crtNodeId,
+          chatLog: simplifiedChatLog,
+          effect,
+          causes,
+          validationErrors,
+        }),
       },
       false
     ) as Promise<LtpChatBotCrtMessage>;
@@ -221,7 +273,10 @@ export class OpsServerApi extends BaseChatBotServerApi {
     causes: string[]
   ): Promise<LtpChatBotCrtMessage> {
     // Filter out all chatMessages with type==thinking
-    chatLog = chatLog.filter(chatMessage => chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming');
+    chatLog = chatLog.filter(
+      chatMessage =>
+        chatMessage.type != 'thinking' && chatMessage.type != 'noStreaming'
+    );
 
     const simplifiedChatLog = chatLog.map(chatMessage => {
       return {
@@ -233,7 +288,8 @@ export class OpsServerApi extends BaseChatBotServerApi {
     });
 
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseAgentsPath}${crtTreeId}/runValidationChain`,
+      this.baseUrlPath +
+        `${this.baseAgentsPath}${crtTreeId}/runValidationChain`,
       {
         method: 'POST',
         body: JSON.stringify({
@@ -286,10 +342,14 @@ export class OpsServerApi extends BaseChatBotServerApi {
   public async updateNodeConfiguration(
     nodeType: 'agent' | 'connector',
     nodeId: number,
-    updatedConfig: Partial<PsAgentAttributes['configuration'] | PsAgentConnectorAttributes['configuration']>
+    updatedConfig: Partial<
+      | PsAgentAttributes['configuration']
+      | PsAgentConnectorAttributes['configuration']
+    >
   ): Promise<void> {
     return this.fetchWrapper(
-      this.baseUrlPath + `${this.baseAgentsPath}${nodeId}/${nodeType}/configuration`,
+      this.baseUrlPath +
+        `${this.baseAgentsPath}${nodeId}/${nodeType}/configuration`,
       {
         method: 'PUT',
         body: JSON.stringify(updatedConfig),
@@ -309,13 +369,10 @@ export class OpsServerApi extends BaseChatBotServerApi {
   }
 
   async controlAgent(agentId: number, action: 'start' | 'pause' | 'stop') {
-    return this.fetchWrapper(
-      `/api/agents/${agentId}/control`,
-      {
-        method: 'POST',
-        body: JSON.stringify({ action: action }),
-      }
-    );
+    return this.fetchWrapper(`/api/agents/${agentId}/control`, {
+      method: 'POST',
+      body: JSON.stringify({ action: action }),
+    });
   }
 
   async startAgent(agentId: number) {
@@ -330,10 +387,7 @@ export class OpsServerApi extends BaseChatBotServerApi {
     return this.controlAgent(agentId, 'stop');
   }
 
-  public deleteNode(
-    treeId: string | number,
-    nodeId: string
-  ): Promise<void> {
+  public deleteNode(treeId: string | number, nodeId: string): Promise<void> {
     return this.fetchWrapper(
       this.baseUrlPath + `${this.baseAgentsPath}${treeId}`,
       {

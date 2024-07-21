@@ -135,20 +135,33 @@ export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
             throw new Error("Voting failed.");
         }
     }
-    async post(groupId, postData, imagePrompt) {
+    async post(groupId, name, structuredAnswersData, imagePrompt) {
         await this.login();
+        // Create formData dynamically
+        const formData = {
+            name: name,
+            structuredAnswersJson: JSON.stringify(structuredAnswersData),
+            postBaseId: "123",
+            postValCode: "123",
+            postConf: "0.0",
+            userLocale: "en",
+            screenWidth: "0",
+            location: "",
+            coverMediaType: "image",
+        };
         const imageId = await this.generateImageWithAi(groupId, imagePrompt);
-        postData.uploadedHeaderImageId = imageId.toString();
-        console.log("Posting data:", postData);
+        formData.uploadedHeaderImageId = imageId.toString();
+        console.log("Posting data:", formData);
         try {
-            const postResponse = await axios.post(`${this.serverBaseUrl}/posts/${groupId}`, qs.stringify(postData), {
+            const postResponse = await axios.post(`${this.serverBaseUrl}/posts/${groupId}`, qs.stringify(formData), {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                     Cookie: this.sessionCookie,
                 },
             });
             const responseData = postResponse.data;
-            if (postData.eloRating && postData.eloRating < 1000) {
+            const eloRating = structuredAnswersData.find(item => item.uniqueId === "ID9")?.value;
+            if (eloRating && Number(eloRating) < 1000) {
                 await this.vote(responseData.id, -1);
             }
             return responseData;

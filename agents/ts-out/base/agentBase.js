@@ -28,7 +28,7 @@ export class PolicySynthAgentBase {
             return text.substring(startIndex + 7, endIndex).trim();
         }
         else {
-            throw new Error("Unable to find JSON block");
+            return null;
         }
     }
     repairJson(text) {
@@ -41,24 +41,35 @@ export class PolicySynthAgentBase {
         }
     }
     parseJsonResponse(response) {
-        response = response.replace("```json", "").trim();
-        if (response.endsWith("```")) {
-            response = response.substring(0, response.length - 3);
+        this.logger.debug(`Attempting to parse JSON: ${response}`);
+        if (this.getJsonBlock(response)) {
+            response = this.getJsonBlock(response);
+            this.logger.debug('Extracted JSON from code block');
+        }
+        else {
+            response = response.replace("```json", "").trim();
+            if (response.endsWith("```")) {
+                response = response.substring(0, response.length - 3);
+            }
+            this.logger.debug('Cleaned JSON string');
         }
         try {
-            return JSON.parse(response);
+            const parsed = JSON.parse(response);
+            this.logger.info('Successfully parsed JSON');
+            return parsed;
         }
         catch (error) {
-            this.logger.warn(`Error parsing JSON ${response}`);
+            this.logger.warn(`Error parsing JSON: ${error.message}`);
             try {
-                this.logger.info(`Trying to fix JSON`);
-                const parsedJson = JSON.parse(this.repairJson(response));
-                this.logger.info("Fixed JSON");
-                return parsedJson;
+                this.logger.info('Attempting to repair JSON');
+                const repairedJson = this.repairJson(response);
+                const parsed = JSON.parse(repairedJson);
+                this.logger.info('Successfully parsed repaired JSON');
+                return parsed;
             }
-            catch (error) {
-                this.logger.warn(`Error parsing fixed JSON`);
-                throw new Error("Unable to parse JSON");
+            catch (repairError) {
+                this.logger.error(`Failed to repair JSON: ${repairError.message}`);
+                throw new Error(`Unable to parse JSON: ${repairError.message}\nOriginal JSON: ${response}`);
             }
         }
     }

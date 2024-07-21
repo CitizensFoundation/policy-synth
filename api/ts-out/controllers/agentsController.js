@@ -42,7 +42,74 @@ export class AgentsController {
         this.router.post(this.path + "/:agentId/outputConnectors", this.createOutputConnector);
         this.router.post(this.path + "/:agentId/inputConnectors", this.createInputConnector);
         this.router.put(this.path + "/:nodeId/:nodeType/configuration", this.updateNodeConfiguration);
+        this.router.get(this.path + "/:id/ai-models", this.getAgentAiModels);
+        this.router.delete(this.path + "/:agentId/ai-models/:modelId", this.removeAgentAiModel);
+        this.router.post(this.path + "/:agentId/ai-models", this.addAgentAiModel);
     }
+    getAgentAiModels = async (req, res) => {
+        const agentId = parseInt(req.params.id);
+        try {
+            const agent = await PsAgent.findByPk(agentId, {
+                include: [{ model: PsAiModel, as: "AiModels" }],
+            });
+            if (!agent) {
+                return res.status(404).send("Agent not found");
+            }
+            res.json(agent.AiModels);
+        }
+        catch (error) {
+            console.error("Error fetching agent AI models:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    };
+    removeAgentAiModel = async (req, res) => {
+        const agentId = parseInt(req.params.agentId);
+        const modelId = parseInt(req.params.modelId);
+        try {
+            const agent = await PsAgent.findByPk(agentId);
+            if (!agent) {
+                return res.status(404).send("Agent not found");
+            }
+            const aiModel = await PsAiModel.findByPk(modelId);
+            if (!aiModel) {
+                return res.status(404).send("AI model not found");
+            }
+            const removed = await agent.removeAiModel(aiModel);
+            if (removed) {
+                res.json({ message: "AI model removed successfully" });
+            }
+            else {
+                res.status(404).send("AI model not found for this agent");
+            }
+        }
+        catch (error) {
+            console.error("Error removing agent AI model:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    };
+    addAgentAiModel = async (req, res) => {
+        const agentId = parseInt(req.params.agentId);
+        const { modelId, size } = req.body;
+        if (!modelId || !size) {
+            return res.status(400).send("Model ID and size are required");
+        }
+        try {
+            const agent = await PsAgent.findByPk(agentId);
+            if (!agent) {
+                return res.status(404).send("Agent not found");
+            }
+            const aiModel = await PsAiModel.findByPk(modelId);
+            if (!aiModel) {
+                return res.status(404).send("AI model not found");
+            }
+            await agent.addAiModel(aiModel, { through: { size: size } });
+            res.status(201).json({ message: "AI model added successfully" });
+        }
+        catch (error) {
+            console.error("Error adding agent AI model:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    };
     updateNodeConfiguration = async (req, res) => {
         const agentId = parseInt(req.params.agentId);
         const nodeType = req.params.nodeType;
@@ -526,6 +593,7 @@ export class AgentsController {
                             ],
                         },
                         { model: PsAgentClass, as: "Class" },
+                        { model: PsAiModel, as: "AiModels" },
                     ],
                 },
                 {
@@ -582,6 +650,7 @@ export class AgentsController {
                         { model: PsAgentConnector, as: "InputConnectors" },
                         { model: PsAgentConnector, as: "OutputConnectors" },
                         { model: PsAgentClass, as: "Class" },
+                        { model: PsAiModel, as: "AiModels" },
                     ],
                 },
                 { model: PsAgentConnector, as: "InputConnectors" },

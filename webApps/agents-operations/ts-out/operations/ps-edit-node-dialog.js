@@ -5,16 +5,35 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/button/text-button.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/select/filled-select.js';
+import '@material/web/select/select-option.js';
 import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
+import './ps-ai-model-selector.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element';
+import { OpsServerApi } from './OpsServerApi.js';
 let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
     constructor() {
         super(...arguments);
         this.open = false;
+        this.activeAiModels = [];
+        this.selectedAiModels = {};
+        this.api = new OpsServerApi();
+    }
+    async connectedCallback() {
+        super.connectedCallback();
+        await this.fetchActiveAiModels();
+    }
+    async fetchActiveAiModels() {
+        try {
+            this.activeAiModels = await this.api.getActiveAiModels();
+        }
+        catch (error) {
+            console.error('Error fetching active AI models:', error);
+        }
     }
     disableScrim(event) {
         event.stopPropagation();
@@ -22,16 +41,20 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
     }
     render() {
         return html `
-      <md-dialog ?open="${this.open}" @closed="${this._handleClose}" @cancel="${this.disableScrim}">
+ <md-dialog
+        ?open="${this.open}"
+        @closed="${this._handleClose}"
+        @cancel="${this.disableScrim}"
+      >
         <div slot="headline">
           ${this.nodeToEditInfo ? this._renderNodeEditHeadline() : ''}
         </div>
-        <div slot="content">
+        <div slot="content" class="dialog-content">
           ${this.nodeToEditInfo ? this._renderEditForm() : ''}
         </div>
         <div slot="actions">
-          <md-text-button @click="${this._handleClose}">Cancel</md-text-button>
-          <md-filled-button @click="${this._handleSave}">Save</md-filled-button>
+          <md-text-button @click="${this._handleClose}">${this.t('cancel')}</md-text-button>
+          <md-filled-button @click="${this._handleSave}">${this.t('save')}</md-filled-button>
         </div>
       </md-dialog>
     `;
@@ -65,8 +88,31 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
             >
             </yp-structured-question-edit>
           `)}
+        ${this._renderAiModelSelector()}
       </div>
     `;
+    }
+    _renderAiModelSelector() {
+        if (!this.nodeToEditInfo.Class.configuration.requestedAiModelSizes) {
+            return '';
+        }
+        return html `
+      <ps-ai-model-selector
+        .activeAiModels="${this.activeAiModels}"
+        .requestedAiModelSizes="${this.nodeToEditInfo.Class.configuration.requestedAiModelSizes}"
+        .currentModels="${this._getCurrentModels()}"
+        @ai-models-changed="${this._handleAiModelsChanged}"
+      ></ps-ai-model-selector>
+    `;
+    }
+    _getCurrentModels() {
+        const currentModels = {};
+        this.nodeToEditInfo.AiModels?.forEach((model) => {
+            if (model.configuration && 'modelSize' in model.configuration) {
+                currentModels[model.configuration.modelSize] = model;
+            }
+        });
+        return currentModels;
     }
     _getInitialAnswers() {
         return Object.entries(this.nodeToEditInfo.configuration).map(([key, value]) => ({
@@ -76,6 +122,9 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
     }
     _handleClose() {
         this.dispatchEvent(new CustomEvent('close'));
+    }
+    _handleAiModelsChanged(e) {
+        this.selectedAiModels = e.detail.selectedAiModels;
     }
     _handleSave() {
         const updatedConfig = {};
@@ -88,7 +137,22 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
                 }
             }
         });
-        this.dispatchEvent(new CustomEvent('save', { detail: { updatedConfig } }));
+        let aiModelUpdates;
+        if (this.nodeToEditInfo.Class.configuration.type === 'agent') {
+            aiModelUpdates = Object.entries(this.selectedAiModels).map(([size, modelId]) => {
+                return {
+                    size: size,
+                    modelId: modelId,
+                };
+            });
+        }
+        this.dispatchEvent(new CustomEvent('save', {
+            detail: {
+                updatedConfig,
+                aiModelUpdates,
+                connectorType: this.nodeToEditInfo.Class.configuration.type === 'input' ? 'input' : 'output',
+            },
+        }));
         this._handleClose();
     }
     static get styles() {
@@ -111,6 +175,10 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
           width: 90%;
           height: 90%;
         }
+
+        #surveyContainer {
+          margin-bottom: 48px;
+        }
       `,
         ];
     }
@@ -121,6 +189,12 @@ __decorate([
 __decorate([
     property({ type: Object })
 ], PsEditNodeDialog.prototype, "nodeToEditInfo", void 0);
+__decorate([
+    state()
+], PsEditNodeDialog.prototype, "activeAiModels", void 0);
+__decorate([
+    state()
+], PsEditNodeDialog.prototype, "selectedAiModels", void 0);
 PsEditNodeDialog = __decorate([
     customElement('ps-edit-node-dialog')
 ], PsEditNodeDialog);
