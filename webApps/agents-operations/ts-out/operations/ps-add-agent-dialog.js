@@ -22,7 +22,7 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
         this.activeAgentClasses = [];
         this.activeAiModels = [];
         this.selectedAgentClassId = null;
-        this.selectedAiModels = {};
+        this.selectedAiModelIds = {};
         this.agentName = '';
         this.requestedAiModelSizes = [];
         this.api = new OpsServerApi();
@@ -100,7 +100,7 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
         }
     }
     _handleAiModelsChanged(e) {
-        this.selectedAiModels = e.detail.selectedAiModels;
+        this.selectedAiModelIds = e.detail.selectedAiModelIds;
     }
     _handleClose() {
         this.dispatchEvent(new CustomEvent('close'));
@@ -110,7 +110,8 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
         event.preventDefault();
     }
     async _handleAddAgent() {
-        const selectedModels = Object.entries(this.selectedAiModels)
+        debugger;
+        const selectedModels = Object.entries(this.selectedAiModelIds)
             .filter(([_, value]) => value !== null)
             .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
         if (!this.agentName || !this.selectedAgentClassId || Object.keys(selectedModels).length === 0) {
@@ -166,7 +167,7 @@ __decorate([
 ], PsAddAgentDialog.prototype, "selectedAgentClassId", void 0);
 __decorate([
     state()
-], PsAddAgentDialog.prototype, "selectedAiModels", void 0);
+], PsAddAgentDialog.prototype, "selectedAiModelIds", void 0);
 __decorate([
     state()
 ], PsAddAgentDialog.prototype, "agentName", void 0);

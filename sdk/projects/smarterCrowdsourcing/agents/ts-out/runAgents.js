@@ -12,7 +12,9 @@ import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "./base/scBaseSoluti
 import { SolutionsWebResearchSmarterCrowdsourcingAgent } from "./base/scBaseSolutionsWebResearchAgent.js";
 import { PsGoogleDocsConnector } from "@policysynth/agents/connectors/documents/googleDocsConnector.js";
 import { PsYourPrioritiesConnector } from "@policysynth/agents/connectors/collaboration/yourPrioritiesConnector.js";
-import { PsBaseDiscordAgent } from "@policysynth/agents/connectors/notifications/discordConnector.js";
+import { PsAllOurIdeasConnector } from "@policysynth/agents/connectors/collaboration/allOurIdeasConnector.js";
+import { PsBaseDiscordConnector } from "@policysynth/agents/connectors/notifications/discordConnector.js";
+import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/googleSheetsConnector.js";
 export class SmarterCrowdsourcingAgentRunner extends PsBaseAgentRunner {
     agentClasses;
     connectorClasses;
@@ -34,8 +36,10 @@ export class SmarterCrowdsourcingAgentRunner extends PsBaseAgentRunner {
         ];
         this.connectorClasses = [
             PsGoogleDocsConnector.getConnectorClass,
+            PsGoogleSheetsConnector.getConnectorClass,
             PsYourPrioritiesConnector.getConnectorClass,
-            PsBaseDiscordAgent.getConnectorClass,
+            PsBaseDiscordConnector.getConnectorClass,
+            PsAllOurIdeasConnector.getConnectorClass,
         ];
     }
     async setupAgents() {

@@ -3,7 +3,7 @@ export var PsConnectorClassTypes;
     PsConnectorClassTypes["Document"] = "docs";
     PsConnectorClassTypes["Spreadsheet"] = "sheets";
     PsConnectorClassTypes["NotificationsAndChat"] = "notificationsAndChat";
-    PsConnectorClassTypes["Collaboration"] = "collaboration";
-    PsConnectorClassTypes["PairwiseVoting"] = "pairwiseVoting";
+    PsConnectorClassTypes["IdeasCollaboration"] = "ideasCollaboration";
+    PsConnectorClassTypes["VotingCollaboration"] = "votingCollaboration";
 })(PsConnectorClassTypes || (PsConnectorClassTypes = {}));
 //# sourceMappingURL=connectorTypes.js.map

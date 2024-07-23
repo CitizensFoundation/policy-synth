@@ -129,6 +129,7 @@ let PsAiModelSelector = class PsAiModelSelector extends YpBaseElement {
         this.requestUpdate();
     }
     _emitChangeEvent() {
+        debugger;
         this.dispatchEvent(new CustomEvent('ai-models-changed', {
             detail: { selectedAiModelIds: this.selectedAiModelIds },
             bubbles: true,

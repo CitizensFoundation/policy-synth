@@ -13,8 +13,8 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
                 type: "textDescription",
                 text: "Advanced Configuration Settings",
             },
-            ...this.getExtraCommonConfigurationQuestions(),
             ...this.getExtraConfigurationQuestions(),
+            ...this.getExtraCommonConfigurationQuestions(),
         ];
     }
     // Implement in subclass
@@ -160,6 +160,15 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
     static getExtraCommonConfigurationQuestions() {
         return [
             {
+                uniqueId: "maxTopWebPagesToGet",
+                type: "textField",
+                subType: "number",
+                value: 5,
+                maxLength: 2,
+                required: true,
+                text: "Maximum top web pages to get",
+            },
+            {
                 uniqueId: "generateInLanguage",
                 type: "textField",
                 value: "",
@@ -265,15 +274,6 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
                 maxLength: 2,
                 required: true,
                 text: "Maximum DALL-E retry count",
-            },
-            {
-                uniqueId: "maxTopWebPagesToGet",
-                type: "textField",
-                subType: "number",
-                value: 5,
-                maxLength: 2,
-                required: true,
-                text: "Maximum top web pages to get",
             },
             {
                 uniqueId: "maxBingSearchResults",

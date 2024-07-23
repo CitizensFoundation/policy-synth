@@ -1,6 +1,6 @@
 import { PsAgent } from "../../dbModels/agent";
-import { PsBaseCollaborationConnector } from "../base/baseCollaborationConnector.js";
-export declare class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
+import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
+export declare class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     private static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID;
     private static readonly YOUR_PRIORITIES_CONNECTOR_VERSION;
     static getConnectorClass: {

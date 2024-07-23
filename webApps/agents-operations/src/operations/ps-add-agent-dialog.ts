@@ -23,7 +23,7 @@ export class PsAddAgentDialog extends YpBaseElement {
   @state() private activeAgentClasses: PsAgentClassAttributes[] = [];
   @state() private activeAiModels: PsAiModelAttributes[] = [];
   @state() private selectedAgentClassId: number | null = null;
-  @state() private selectedAiModels: { [key in PsAiModelSize]?: number | null } = {};
+  @state() private selectedAiModelIds: { [key in PsAiModelSize]?: number | null } = {};
   @state() private agentName: string = '';
 
   @state() private requestedAiModelSizes: PsAiModelSize[] = [];
@@ -109,7 +109,7 @@ export class PsAddAgentDialog extends YpBaseElement {
   }
 
   private _handleAiModelsChanged(e: CustomEvent) {
-    this.selectedAiModels = e.detail.selectedAiModels;
+    this.selectedAiModelIds = e.detail.selectedAiModelIds;
   }
 
   private _handleClose() {
@@ -122,7 +122,8 @@ export class PsAddAgentDialog extends YpBaseElement {
   }
 
   private async _handleAddAgent() {
-    const selectedModels = Object.entries(this.selectedAiModels)
+    debugger;
+    const selectedModels = Object.entries(this.selectedAiModelIds)
       .filter(([_, value]) => value !== null)
       .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 

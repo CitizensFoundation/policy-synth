@@ -3,10 +3,10 @@ import qs from "qs";
 import { PsAgentConnector } from "../../dbModels/agentConnector";
 import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass";
 import { PsAgent } from "../../dbModels/agent";
-import { PsBaseCollaborationConnector } from "../base/baseCollaborationConnector.js";
+import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 
-export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
+export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
   private static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
     "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
 
@@ -22,7 +22,7 @@ export class PsYourPrioritiesConnector extends PsBaseCollaborationConnector {
     available: true,
     configuration: {
       name: "Your Priorities",
-      classType: PsConnectorClassTypes.Collaboration as string,
+      classType: PsConnectorClassTypes.IdeasCollaboration as string,
       description: "Connector for Your Priorities",
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",

@@ -1,6 +1,6 @@
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
-export declare class PsBaseDiscordAgent extends PsBaseNotificationsConnector {
+export declare class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
     private static readonly DISCORD_CONNECTOR_CLASS_BASE_ID;
     private static readonly DISCORD_CONNECTOR_VERSION;
     static getConnectorClass: PsConnectorClassCreationAttributes;

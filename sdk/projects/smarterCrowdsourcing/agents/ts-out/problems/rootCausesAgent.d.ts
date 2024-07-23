@@ -5,9 +5,11 @@ import { RankRootCausesSearchQueriesAgent } from "./ranking/rankRootCausesSearch
 import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
 export declare class RootCausesAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
+    private sheetsConnector;
     process(): Promise<void>;
     get agentQueueName(): "smarter_crowdsourcing_root_causes";
     setupMemoryIfNeeded(): Promise<void>;
+    private initializeConnectors;
     get processors(): ({
         processor: typeof CreateRootCausesSearchQueriesAgent;
         weight: number;
@@ -21,5 +23,6 @@ export declare class RootCausesAgentQueue extends PolicySynthAgentQueue {
         processor: typeof GetRootCausesWebPagesAgent;
         weight: number;
     })[];
+    exportSubproblemsToSheet(): Promise<void>;
 }
 //# sourceMappingURL=rootCausesAgent.d.ts.map

@@ -1,6 +1,6 @@
-# PsBaseDiscordAgent
+# PsBaseDiscordConnector
 
-The `PsBaseDiscordAgent` class is a connector for integrating a Discord bot with the PolicySynth platform. It extends the `PsBaseNotificationsConnector` class and provides functionalities for handling Discord messages, sending notifications, and managing conversations.
+The `PsBaseDiscordConnector` class is a connector for integrating a Discord bot with the PolicySynth platform. It extends the `PsBaseNotificationsConnector` class and provides functionalities for handling Discord messages, sending notifications, and managing conversations.
 
 ## Properties
 
@@ -37,7 +37,7 @@ The `PsBaseDiscordAgent` class is a connector for integrating a Discord bot with
 ## Example
 
 ```typescript
-import { PsBaseDiscordAgent } from '@policysynth/agents/connectors/notifications/discordConnector.js';
+import { PsBaseDiscordConnector } from '@policysynth/agents/connectors/notifications/discordConnector.js';
 
 const connector = /* PsAgentConnectorAttributes */;
 const connectorClass = /* PsAgentConnectorClassAttributes */;
@@ -50,7 +50,7 @@ const actions = {
   },
 };
 
-const discordAgent = new PsBaseDiscordAgent(
+const discordAgent = new PsBaseDiscordConnector(
   connector,
   connectorClass,
   agent,
@@ -64,4 +64,4 @@ discordAgent.login().then(() => {
 });
 ```
 
-This example demonstrates how to initialize and run the `PsBaseDiscordAgent` with a custom system prompt and actions. The bot logs in and starts listening for messages in the specified Discord channel.
+This example demonstrates how to initialize and run the `PsBaseDiscordConnector` with a custom system prompt and actions. The bot logs in and starts listening for messages in the specified Discord channel.

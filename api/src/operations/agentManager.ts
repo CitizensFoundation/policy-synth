@@ -1,182 +1,310 @@
-import { Queue } from 'bullmq';
-import { Redis } from 'ioredis';
+import { Identifier, QueryTypes, Transaction } from "sequelize";
 import {
   PsAgent,
   PsAgentConnector,
   PsAgentClass,
-  PsModelUsage,
+  User,
+  Group,
   PsExternalApiUsage,
-  PsAiModel
-} from '../models/index.js';
-import { PolicySynthAgent } from '@policysynth/agents/base/agent.js';
+  PsModelUsage,
+  PsAiModel,
+  PsAgentConnectorClass,
+  sequelize,
+} from "../models/index.js";
 
-export class AgentManagerService {
-  private redisClient!: Redis;
-  private queues: Map<string, Queue>;
+export class AgentManager {
+  async getAgent(groupId: string) {
+    if (!groupId) {
+      throw new Error("Group ID is required");
+    }
 
-  constructor() {
-    this.initializeRedis();
-    this.queues = new Map();
-  }
-
-  private initializeRedis() {
-    this.redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-      tls: process.env.REDIS_URL ? { rejectUnauthorized: false } : undefined
+    const group = await Group.findByPk(groupId, {
+      attributes: ["id", "user_id", "configuration", "name"],
     });
 
-    this.redisClient.on('error', (err) => console.error('Redis Client Error', err));
+    if (!group) {
+      throw new Error("Group not found");
+    }
+
+    const groupData = group.toJSON();
+    const configuration = groupData.configuration;
+    let topLevelAgentId = configuration?.agents?.topLevelAgentId;
+
+    let topLevelAgent: PsAgent | null = null;
+    if (topLevelAgentId) {
+      topLevelAgent = await PsAgent.findByPk(topLevelAgentId);
+    }
+
+    if (!topLevelAgent) {
+      topLevelAgent = await this.createTopLevelAgent(group);
+    }
+
+    return this.fetchAgentWithSubAgents(topLevelAgent.id);
   }
 
-  private getQueue(queueName: string): Queue {
-    if (!this.queues.has(queueName)) {
-      const newQueue = new Queue(queueName, {
-        connection: this.redisClient,
+  async createAgent(
+    name: string,
+    agentClassId: number,
+    aiModels: Record<string, number | string>,
+    parentAgentId?: number
+  ) {
+    if (
+      !agentClassId ||
+      !aiModels ||
+      typeof aiModels !== "object" ||
+      Object.keys(aiModels).length === 0
+    ) {
+      throw new Error(
+        "Agent class ID and at least one AI model ID are required"
+      );
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      const agentClass = await PsAgentClass.findByPk(agentClassId);
+      if (!agentClass) {
+        await transaction.rollback();
+        throw new Error("Agent class not found");
+      }
+
+      const aiModelPromises = Object.entries(aiModels).map(
+        async ([size, id]) => {
+          if (typeof id !== "number" && typeof id !== "string") {
+            throw new Error(`Invalid AI model ID for size ${size}`);
+          }
+          const model = await PsAiModel.findByPk(id as Identifier);
+          if (!model) {
+            throw new Error(
+              `AI model with id ${id} for size ${size} not found`
+            );
+          }
+          return { size, model };
+        }
+      );
+
+      const foundAiModels = await Promise.all(aiModelPromises);
+
+      const newAgent = await PsAgent.create(
+        {
+          class_id: agentClassId,
+          user_id: 1, // TODO: Make this dynamic
+          group_id: 1, // TODO: Make this dynamic
+          parent_agent_id: parentAgentId,
+          configuration: {
+            name,
+          },
+        },
+        { transaction }
+      );
+
+      await Promise.all(
+        foundAiModels.map(({ size, model }) =>
+          newAgent.addAiModel(model, { through: { size }, transaction })
+        )
+      );
+
+      await transaction.commit();
+
+      // Fetch the created agent with its associations
+      return await PsAgent.findByPk(newAgent.id, {
+        include: [
+          { model: PsAgentClass, as: "Class" },
+          { model: PsAiModel, as: "AiModels" },
+        ],
       });
-      this.queues.set(queueName, newQueue);
-    }
-    return this.queues.get(queueName)!;
-  }
-
-  async createAgent(agentData: any): Promise<PsAgent> {
-    const agent = await PsAgent.create(agentData);
-    await this.setupAgentMemory(agent.id);
-    return agent;
-  }
-
-  async getAgent(agentId: number): Promise<PsAgent | null> {
-    return PsAgent.findByPk(agentId, {
-      include: [
-        { model: PsAgentClass, as: 'Class' },
-        { model: PsAgentConnector, as: 'Connectors' },
-        { model: PsModelUsage, as: 'ModelUsage' },
-        { model: PsExternalApiUsage, as: 'ExternalApiUsage' },
-        { model: PsAiModel, as: 'AiModels' },
-      ],
-    });
-  }
-
-  async updateAgent(agentId: number, updateData: any): Promise<PsAgent | null> {
-    const agent = await PsAgent.findByPk(agentId);
-    if (!agent) return null;
-
-    await agent.update(updateData);
-    return agent;
-  }
-
-  async deleteAgent(agentId: number): Promise<boolean> {
-    const agent = await PsAgent.findByPk(agentId);
-    if (!agent) return false;
-
-    await this.deleteAgentMemory(agentId);
-    await agent.destroy();
-    return true;
-  }
-
-  async startAgentProcessing(agentId: number): Promise<boolean> {
-    const agent = await PsAgent.findByPk(agentId, {
-      include: [{ model: PsAgentClass, as: 'Class' }],
-    });
-    if (!agent || !agent.Class) return false;
-
-    const queueName = agent.Class.configuration.queueName;
-    const queue = this.getQueue(queueName);
-    await queue.add('control-message', {
-      type: 'start-processing',
-      agentId: agent.id,
-    });
-    await this.updateAgentStatus(agent.id, 'running');
-    return true;
-  }
-
-  async pauseAgentProcessing(agentId: number): Promise<boolean> {
-    const agent = await PsAgent.findByPk(agentId, {
-      include: [{ model: PsAgentClass, as: 'Class' }],
-    });
-    if (!agent || !agent.Class) return false;
-
-    const queueName = agent.Class.configuration.queueName;
-    const queue = this.getQueue(queueName);
-    await queue.add('control-message', {
-      type: 'pause-processing',
-      agentId: agent.id,
-    });
-    await this.updateAgentStatus(agent.id, 'paused');
-    return true;
-  }
-
-  async createTask(agentId: number, taskData: any): Promise<string> {
-    const agent = await PsAgent.findByPk(agentId, {
-      include: [{ model: PsAgentClass, as: 'Class' }],
-    });
-    if (!agent || !agent.Class) throw new Error('Agent or Agent Class not found');
-
-    const queueName = agent.Class.configuration.queueName;
-    const queue = this.getQueue(queueName);
-    const job = await queue.add('agent-task', {
-      agentId,
-      ...taskData,
-    });
-    return job.id!;
-  }
-
-  async getAgentStatus(agentId: number): Promise<PsAgentStatus | null> {
-    const agent = await PsAgent.findByPk(agentId, {
-      include: [{ model: PsAgentClass, as: 'Class' }],
-    });
-
-    if (agent) {
-      const memoryData = await this.redisClient.get(agent.redisMemoryKey);
-      if (memoryData) {
-        const parsedMemory: PsAgentMemoryData = JSON.parse(memoryData);
-        return parsedMemory.status;
-      } else {
-        return null;
-      }
-    } else {
-      return null;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
   }
 
-  async updateAgentStatus(
+  async updateAgentConfiguration(
     agentId: number,
-    state: PsAgentStatus['state'],
-    progress?: number,
-    message?: string,
-    details?: Record<string, any>
-  ): Promise<boolean> {
-    const memoryKey = `agent:${agentId}:memory`;
-    const memoryData = await this.redisClient.get(memoryKey);
-    if (memoryData) {
-      const parsedMemory: PsAgentMemoryData = JSON.parse(memoryData);
-      parsedMemory.status.state = state;
-      parsedMemory.status.lastUpdated = Date.now();
-      if (progress !== undefined) parsedMemory.status.progress = progress;
-      if (message) parsedMemory.status.messages.push(message);
-      if (details) parsedMemory.status.details = { ...parsedMemory.status.details, ...details };
-      await this.redisClient.set(memoryKey, JSON.stringify(parsedMemory));
-      return true;
-    }
-    return false;
-  }
+    updatedConfig: Partial<YpPsAgentConfiguration>
+  ): Promise<void> {
+    const agent = await PsAgent.findByPk(agentId);
 
-  private async setupAgentMemory(agentId: number): Promise<void> {
-    const memoryData: PsAgentMemoryData = {
-      startTime: Date.now(),
-      agentId: agentId,
-      status: {
-        state: 'running',
-        progress: 0,
-        messages: [],
-        lastUpdated: Date.now()
-      }
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+
+    // Merge the updated configuration with the existing one
+    agent.configuration = {
+      ...agent.configuration,
+      ...updatedConfig,
     };
 
-    const memoryKey = `agent:${agentId}:memory`;
-    await this.redisClient.set(memoryKey, JSON.stringify(memoryData));
+    await agent.save();
   }
 
-  private async deleteAgentMemory(agentId: number): Promise<void> {
-    const memoryKey = `agent:${agentId}:memory`;
-    await this.redisClient.del(memoryKey);
+  async removeAgentAiModel(agentId: number, modelId: number) {
+    const agent = await PsAgent.findByPk(agentId);
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+
+    const aiModel = await PsAiModel.findByPk(modelId);
+    if (!aiModel) {
+      throw new Error("AI model not found");
+    }
+
+    const removed = await agent.removeAiModel(aiModel);
+    if (!removed) {
+      throw new Error("AI model not found for this agent");
+    }
+  }
+
+  async getAgentAiModels(agentId: number) {
+    const agent = await PsAgent.findByPk(agentId, {
+      include: [{ model: PsAiModel, as: "AiModels" }],
+    });
+
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+
+    return agent.AiModels;
+  }
+
+  async addAgentAiModel(agentId: number, modelId: number, size: string) {
+    const agent = await PsAgent.findByPk(agentId);
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+
+    const aiModel = await PsAiModel.findByPk(modelId);
+    if (!aiModel) {
+      throw new Error("AI model not found");
+    }
+
+    await agent.addAiModel(aiModel, {
+      through: { size: size },
+    });
+  }
+
+  private async createTopLevelAgent(group: Group) {
+    const defaultAgentClassUuid = process.env.CLASS_ID_FOR_TOP_LEVEL_AGENT;
+    if (!defaultAgentClassUuid) {
+      throw new Error("Default agent class UUID is not configured");
+    }
+
+    const agentClass = await PsAgentClass.findOne({
+      where: { class_base_id: defaultAgentClassUuid },
+    });
+    if (!agentClass) {
+      throw new Error("Default agent class not found");
+    }
+
+    const transaction = await sequelize.transaction();
+
+    try {
+      const topLevelAgent = await PsAgent.create(
+        {
+          class_id: agentClass.id,
+          user_id: group.user_id,
+          group_id: group.id,
+          configuration: {
+            name: `${group.name} Top-Level Agent`,
+          },
+        },
+        { transaction }
+      );
+
+      const [updateCount] = await sequelize.query(
+        `UPDATE groups
+         SET configuration = jsonb_set(
+           COALESCE(configuration, '{}')::jsonb,
+           '{agents,topLevelAgentId}',
+           :topLevelAgentId::jsonb
+         )
+         WHERE id = :groupId`,
+        {
+          replacements: {
+            topLevelAgentId: JSON.stringify(topLevelAgent.id),
+            groupId: group.id,
+          },
+          type: QueryTypes.UPDATE,
+          transaction,
+        }
+      );
+
+      if (updateCount === 0) {
+        throw new Error(`Failed to update configuration for group ${group.id}`);
+      }
+
+      await transaction.commit();
+      return topLevelAgent;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  private async fetchAgentWithSubAgents(agentId: number) {
+    const agent = await PsAgent.findByPk(agentId, {
+      include: [
+        {
+          model: PsAgent,
+          as: "SubAgents",
+          include: [
+            {
+              model: PsAgentConnector,
+              as: "InputConnectors",
+              include: [
+                {
+                  model: PsAgentConnectorClass,
+                  as: "Class",
+                },
+              ],
+            },
+            {
+              model: PsAgentConnector,
+              as: "OutputConnectors",
+              include: [
+                {
+                  model: PsAgentConnectorClass,
+                  as: "Class",
+                },
+              ],
+            },
+            { model: PsAgentClass, as: "Class" },
+            { model: PsAiModel, as: "AiModels" },
+          ],
+        },
+        {
+          model: PsAgentConnector,
+          as: "InputConnectors",
+          include: [
+            {
+              model: PsAgentConnectorClass,
+              as: "Class",
+            },
+          ],
+        },
+        {
+          model: PsAgentConnector,
+          as: "OutputConnectors",
+          include: [
+            {
+              model: PsAgentConnectorClass,
+              as: "Class",
+            },
+          ],
+        },
+        { model: PsAgentClass, as: "Class" },
+        { model: User, as: "User" },
+        { model: Group, as: "Group" },
+        { model: PsExternalApiUsage, as: "ExternalApiUsage" },
+        { model: PsModelUsage, as: "ModelUsage" },
+        { model: PsAiModel, as: "AiModels" },
+      ],
+    });
+
+    if (!agent) {
+      throw new Error("Agent not found");
+    }
+
+    return agent.toJSON();
   }
 }

@@ -10,5 +10,6 @@ export declare abstract class PsBaseConnector extends PolicySynthAgent {
     get name(): string;
     get description(): string;
     getConfig<T>(uniqueId: string, defaultValue: T): T;
+    protected retryOperation<T>(operation: () => Promise<T>, maxRetries?: number, delay?: number): Promise<T>;
 }
 //# sourceMappingURL=baseConnector.d.ts.map

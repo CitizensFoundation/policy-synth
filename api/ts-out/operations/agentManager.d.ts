@@ -1,20 +1,12 @@
-import { PsAgent } from '../models/index.js';
-export declare class AgentManagerService {
-    private redisClient;
-    private queues;
-    constructor();
-    private initializeRedis;
-    private getQueue;
-    createAgent(agentData: any): Promise<PsAgent>;
-    getAgent(agentId: number): Promise<PsAgent | null>;
-    updateAgent(agentId: number, updateData: any): Promise<PsAgent | null>;
-    deleteAgent(agentId: number): Promise<boolean>;
-    startAgentProcessing(agentId: number): Promise<boolean>;
-    pauseAgentProcessing(agentId: number): Promise<boolean>;
-    createTask(agentId: number, taskData: any): Promise<string>;
-    getAgentStatus(agentId: number): Promise<PsAgentStatus | null>;
-    updateAgentStatus(agentId: number, state: PsAgentStatus['state'], progress?: number, message?: string, details?: Record<string, any>): Promise<boolean>;
-    private setupAgentMemory;
-    private deleteAgentMemory;
+import { PsAgent } from "../models/index.js";
+export declare class AgentManager {
+    getAgent(groupId: string): Promise<PsAgentAttributes>;
+    createAgent(name: string, agentClassId: number, aiModels: Record<string, number | string>, parentAgentId?: number): Promise<PsAgent | null>;
+    updateAgentConfiguration(agentId: number, updatedConfig: Partial<YpPsAgentConfiguration>): Promise<void>;
+    removeAgentAiModel(agentId: number, modelId: number): Promise<void>;
+    getAgentAiModels(agentId: number): Promise<PsAiModelAttributes[] | undefined>;
+    addAgentAiModel(agentId: number, modelId: number, size: string): Promise<void>;
+    private createTopLevelAgent;
+    private fetchAgentWithSubAgents;
 }
 //# sourceMappingURL=agentManager.d.ts.map

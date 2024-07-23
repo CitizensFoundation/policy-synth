@@ -13,7 +13,7 @@ export declare class PsAddAgentDialog extends YpBaseElement {
     private activeAgentClasses;
     private activeAiModels;
     private selectedAgentClassId;
-    private selectedAiModels;
+    private selectedAiModelIds;
     private agentName;
     private requestedAiModelSizes;
     private api;
