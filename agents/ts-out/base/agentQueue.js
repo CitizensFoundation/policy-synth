@@ -27,7 +27,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                 this.status = JSON.parse(statusDataString);
             }
             else {
-                throw Error("No memory data found!");
+                console.error("No memory data found!");
             }
         }
         catch (error) {
@@ -39,12 +39,15 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
     async saveAgentStatusToRedis() {
         if (this.status) {
             await this.redis.set(this.agent.redisStatusKey, JSON.stringify(this.status));
+            this.logger.debug("Saved status to Redis for:" + this.agent.redisStatusKey);
+            this.logger.debug(`Status: ${JSON.stringify(this.status, null, 2)}`);
         }
         else {
             this.logger.error("Agent status not initialized");
         }
     }
     async setupStatusIfNeeded() {
+        this.logger.info("Setting up agent status");
         await this.loadAgentStatusFromRedis();
         if (!this.status) {
             this.status = {
@@ -53,6 +56,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                 messages: [],
                 lastUpdated: Date.now(),
             };
+            this.logger.debug("Initialized agent status");
             await this.saveAgentStatusToRedis();
         }
     }
@@ -138,8 +142,8 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                     if (loadedAgent) {
                         this.agent = loadedAgent;
                         await this.loadAgentMemoryFromRedis();
-                        await this.loadAgentStatusFromRedis();
                         await this.setupMemoryIfNeeded();
+                        await this.loadAgentStatusFromRedis();
                         await this.setupStatusIfNeeded();
                         switch (data.action) {
                             case "start":
@@ -195,6 +199,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
     async startAgent() {
         this.logger.info(`Starting agent ${this.agent.id}`);
         try {
+            await this.updateAgentStatus("running");
             await this.processAllAgents();
         }
         catch (error) {

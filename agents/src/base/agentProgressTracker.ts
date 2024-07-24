@@ -19,6 +19,7 @@ export class PsProgressTracker extends PolicySynthAgentBase {
     this.redisStatusKey = redisStatusKey;
     this.startProgress = startProgress;
     this.endProgress = endProgress;
+    this.logger.debug(`Progress range: ${startProgress} - ${endProgress} Redis key: ${redisStatusKey}`);
   }
 
   public async loadStatusFromRedis(): Promise<void> {
@@ -26,25 +27,22 @@ export class PsProgressTracker extends PolicySynthAgentBase {
       const statusDataString = await this.redis.get(this.redisStatusKey);
       if (statusDataString) {
         this.status = JSON.parse(statusDataString);
+        this.logger.debug(`Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`);
       } else {
-        this.logger.error("No memory data found!");
+        this.logger.error("No status data found!");
       }
     } catch (error) {
-      this.logger.error("Error initializing agent memory");
+      this.logger.error("Error initializing agent status");
       this.logger.error(error);
     }
   }
 
   public async updateRangedProgress(progress: number | undefined, message: string): Promise<void> {
+    await this.loadStatusFromRedis();
+
     if (!this.status) {
-      this.status = {
-        state: "running",
-        progress: this.startProgress,
-        messages: [],
-        lastUpdated: Date.now(),
-      };
-    } else {
-      this.loadStatusFromRedis();
+      this.logger.error("Agent status not initialized");
+      return;
     }
 
     // Calculate the progress within the range
@@ -65,15 +63,11 @@ export class PsProgressTracker extends PolicySynthAgentBase {
   }
 
   public async updateProgress(progress: number | undefined, message: string): Promise<void> {
+    await this.loadStatusFromRedis();
+
     if (!this.status) {
-      this.status = {
-        state: "running",
-        progress: this.startProgress,
-        messages: [],
-        lastUpdated: Date.now(),
-      };
-    } else {
-      this.loadStatusFromRedis();
+      this.logger.error("Agent status not initialized");
+      return;
     }
 
     if (progress !== undefined) {
@@ -109,17 +103,9 @@ export class PsProgressTracker extends PolicySynthAgentBase {
   }
 
   public async setCompleted(message: string): Promise<void> {
-    if (!this.status) {
-      this.status = {
-        state: "completed",
-        progress: 100,
-        messages: [],
-        lastUpdated: Date.now(),
-      };
-    } else {
-      this.status.state = "completed";
-      this.status.progress = 100;
-    }
+    await this.loadStatusFromRedis();
+    this.status.state = "completed";
+    this.status.progress = 100;
 
     this.status.messages.push(message);
     this.status.lastUpdated = Date.now();

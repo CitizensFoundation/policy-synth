@@ -130,56 +130,63 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
     let retry = true;
     let retryCount = 0;
 
-    while (retry && retryCount < maxRetryCount) {
-      try {
-        const winningItemText = await this.callModel(
-          PsAiModelType.Text,
-          this.defaultModelSize,
-          messages,
-          false
-        );
+    try {
+      while (retry && retryCount < maxRetryCount) {
+        try {
+          const winningItemText = await this.callModel(
+            PsAiModelType.Text,
+            this.defaultModelSize,
+            messages,
+            false
+          );
 
-        if (!winningItemText) {
-          throw new Error("No winning item text");
-        } else if (
-          ["One", "Con One", "Pro One"].indexOf(winningItemText.trim()) > -1
-        ) {
-          this.logger.debug("One is the winner");
-          wonItemIndex = itemOneIndex;
-          lostItemIndex = itemTwoIndex;
-        } else if (
-          ["Two", "Con Two", "Pro Two"].indexOf(winningItemText.trim()) > -1
-        ) {
-          this.logger.debug("Two is the winner");
-          wonItemIndex = itemTwoIndex;
-          lostItemIndex = itemOneIndex;
-        } else if (
-          ["Neither", "None", "Both"].indexOf(winningItemText.trim()) > -1
-        ) {
-          wonItemIndex = -1;
-          lostItemIndex = -1;
-        } else {
-          this.logger.error(
-            `Invalid winning item text ${winningItemText} for prompt ${JSON.stringify(
-              messages
-            )}`
-          );
-          wonItemIndex = -1;
-          lostItemIndex = -1;
-        }
-        retry = false;
-      } catch (error) {
-        this.logger.error("Error getting results from LLM");
-        this.logger.error(error);
-        if (retryCount < maxRetryCount) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, 4500 + retryCount * 5000)
-          );
-          retryCount++;
-        } else {
-          throw error;
+          if (!winningItemText) {
+            throw new Error("No winning item text");
+          } else if (
+            ["One", "Con One", "Pro One"].indexOf(winningItemText.trim()) > -1
+          ) {
+            this.logger.debug("One is the winner");
+            wonItemIndex = itemOneIndex;
+            lostItemIndex = itemTwoIndex;
+          } else if (
+            ["Two", "Con Two", "Pro Two"].indexOf(winningItemText.trim()) > -1
+          ) {
+            this.logger.debug("Two is the winner");
+            wonItemIndex = itemTwoIndex;
+            lostItemIndex = itemOneIndex;
+          } else if (
+            ["Neither", "None", "Both"].indexOf(winningItemText.trim()) > -1
+          ) {
+            wonItemIndex = -1;
+            lostItemIndex = -1;
+          } else {
+            this.logger.error(
+              `Invalid winning item text ${winningItemText} for prompt ${JSON.stringify(
+                messages
+              )}`
+            );
+            wonItemIndex = -1;
+            lostItemIndex = -1;
+          }
+          retry = false;
+        } catch (error) {
+          this.logger.error("Error getting results from LLM");
+          this.logger.error(error);
+          if (retryCount < maxRetryCount) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, 4500 + retryCount * 5000)
+            );
+            retryCount++;
+          } else {
+            throw error;
+          }
         }
       }
+
+      this.scheduleMemorySave();
+      this.checkLastMemorySaveError();
+    } catch (error) {
+      throw error;
     }
 
     return {

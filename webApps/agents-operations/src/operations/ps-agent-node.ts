@@ -80,10 +80,9 @@ export class PsAgentNode extends PsOperationsBaseNode {
   }
 
   startStatusUpdates() {
-    this.updateAgentStatus();
     this.statusInterval = window.setInterval(
       () => this.updateAgentStatus(),
-      5000
+      1000
     );
   }
 

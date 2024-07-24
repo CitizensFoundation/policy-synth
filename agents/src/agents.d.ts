@@ -154,7 +154,6 @@ interface PsAgentStatus {
   details?: Record<string, any>;
 }
 
-
 interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
   groupId: number;
   lastSavedAt?: number;

@@ -50,8 +50,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         this.menuOpen = false;
     }
     startStatusUpdates() {
-        this.updateAgentStatus();
-        this.statusInterval = window.setInterval(() => this.updateAgentStatus(), 5000);
+        this.statusInterval = window.setInterval(() => this.updateAgentStatus(), 1000);
     }
     stopStatusUpdates() {
         if (this.statusInterval) {

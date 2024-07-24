@@ -6,7 +6,7 @@ import Redis from "ioredis";
 export class AgentExecutionStoppedError extends Error {
     constructor(message) {
         super(message);
-        this.name = 'AgentExecutionStoppedError';
+        this.name = "AgentExecutionStoppedError";
     }
 }
 export class PolicySynthAgent extends PolicySynthAgentBase {
@@ -24,6 +24,8 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     modelTemperature = 0.7;
     pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours
     pauseTimeout = 1000;
+    memorySaveTimer = null;
+    memorySaveError = null;
     constructor(agent, memory = undefined, startProgress, endProgress) {
         super();
         this.agent = agent;
@@ -45,7 +47,9 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
                 ? agent.Group?.private_access_configuration || []
                 : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, agent ? agent.id : -1, agent ? agent.user_id : -1);
         }
-        this.progressTracker = new PsProgressTracker(agent.redisMemoryKey, startProgress, endProgress);
+        else {
+            this.progressTracker = new PsProgressTracker(agent.redisStatusKey, startProgress, endProgress);
+        }
         this.configManager = new PsConfigManager(agent.configuration);
         this.redis = new Redis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
         if (memory) {
@@ -60,7 +64,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
             this.logger.error("Memory is not initialized");
             throw new Error("Memory is not initialized");
         }
-        await this.progressTracker.updateProgress(undefined, `Agent ${this.agent.Class?.name} Starting`);
+        await this.progressTracker?.updateProgress(undefined, `Agent ${this.agent.Class?.name} Starting`);
         // The main processing logic would go here.
         // Subclasses would override this method to implement specific agent behaviors.
     }
@@ -84,10 +88,10 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         return this.modelManager?.callModel(modelType, modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
     }
     async updateRangedProgress(progress, message) {
-        await this.progressTracker.updateRangedProgress(progress, message);
+        await this.progressTracker?.updateRangedProgress(progress, message);
     }
     async updateProgress(progress, message) {
-        await this.progressTracker.updateProgress(progress, message);
+        await this.progressTracker?.updateProgress(progress, message);
     }
     getConfig(uniqueId, defaultValue) {
         return this.configManager.getConfig(uniqueId, defaultValue);
@@ -99,6 +103,9 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         try {
             const statusDataString = await this.redis.get(this.agent.redisStatusKey);
             if (statusDataString) {
+                /*this.logger.debug(
+                  `Loading status from Redis: ${statusDataString} from key: ${this.agent.redisStatusKey}`
+                );*/
                 return JSON.parse(statusDataString);
             }
             else {
@@ -116,7 +123,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
             console.warn("Agent status not initialized");
         }
         else {
-            this.logger.debug(JSON.stringify(status, null, 2));
+            //this.logger.debug(JSON.stringify(status, null, 2));
             if (status.state === "stopped") {
                 throw new AgentExecutionStoppedError("Agent execution stopped");
             }
@@ -140,9 +147,37 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
             }
         }
     }
+    scheduleMemorySave() {
+        if (!this.memorySaveTimer) {
+            this.memorySaveTimer = setTimeout(async () => {
+                try {
+                    await this.saveMemory();
+                    this.memorySaveError = null;
+                }
+                catch (error) {
+                    this.memorySaveError =
+                        error instanceof Error ? error : new Error(String(error));
+                }
+                finally {
+                    if (this.memorySaveTimer) {
+                        clearTimeout(this.memorySaveTimer);
+                        this.memorySaveTimer = null;
+                    }
+                }
+            }, 1000);
+        }
+    }
+    checkLastMemorySaveError() {
+        if (this.memorySaveError) {
+            const error = this.memorySaveError;
+            this.memorySaveError = null; // Clear the error after throwing
+            throw error;
+        }
+    }
     async saveMemory() {
         try {
             await this.redis.set(this.agent.redisMemoryKey, JSON.stringify(this.memory));
+            //this.logger.debug(`Saving memory to Redis: ${util.inspect(this.memory)}`);
             if (!this.skipCheckForProgress) {
                 await this.checkProgressForPauseOrStop();
             }
@@ -160,15 +195,12 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     async getTokensFromMessages(messages) {
         return this.modelManager?.getTokensFromMessages(messages) || 0;
     }
-    formatNumber(number, fractions = 0) {
-        return this.progressTracker.formatNumber(number, fractions);
-    }
     // Additional methods that might be needed
     async setCompleted(message) {
-        await this.progressTracker.setCompleted(message);
+        await this.progressTracker?.setCompleted(message);
     }
     async setError(errorMessage) {
-        await this.progressTracker.setError(errorMessage);
+        await this.progressTracker?.setError(errorMessage);
     }
     getModelUsageEstimates() {
         return this.configManager.getModelUsageEstimates();

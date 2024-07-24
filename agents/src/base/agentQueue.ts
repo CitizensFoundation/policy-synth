@@ -33,7 +33,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
       if (statusDataString) {
         this.status = JSON.parse(statusDataString);
       } else {
-        throw Error("No memory data found!");
+        console.error("No memory data found!");
       }
     } catch (error) {
       this.logger.error("Error initializing agent memory");
@@ -49,12 +49,15 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
         this.agent.redisStatusKey,
         JSON.stringify(this.status)
       );
+      this.logger.debug("Saved status to Redis for:"+this.agent.redisStatusKey);
+      this.logger.debug(`Status: ${JSON.stringify(this.status, null, 2)}`);
     } else {
       this.logger.error("Agent status not initialized");
     }
   }
 
   async setupStatusIfNeeded() {
+    this.logger.info("Setting up agent status");
     await this.loadAgentStatusFromRedis();
     if (!this.status) {
       this.status = {
@@ -63,6 +66,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
         messages: [],
         lastUpdated: Date.now(),
       };
+      this.logger.debug("Initialized agent status");
       await this.saveAgentStatusToRedis();
     }
   }
@@ -173,8 +177,8 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
             if (loadedAgent) {
               this.agent = loadedAgent;
               await this.loadAgentMemoryFromRedis();
-              await this.loadAgentStatusFromRedis();
               await this.setupMemoryIfNeeded();
+              await this.loadAgentStatusFromRedis();
               await this.setupStatusIfNeeded();
 
               switch (data.action) {
@@ -255,6 +259,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
   private async startAgent() {
     this.logger.info(`Starting agent ${this.agent.id}`);
     try {
+      await this.updateAgentStatus("running");
       await this.processAllAgents();
     } catch (error) {
       throw error;

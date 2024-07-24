@@ -12,7 +12,7 @@ export declare abstract class PolicySynthAgent extends PolicySynthAgentBase {
     memory: PsAgentMemoryData;
     agent: PsAgent;
     modelManager: PsAiModelManager | undefined;
-    progressTracker: PsProgressTracker;
+    progressTracker: PsProgressTracker | undefined;
     configManager: PsConfigManager;
     redis: Redis;
     skipAiModels: boolean;
@@ -23,6 +23,8 @@ export declare abstract class PolicySynthAgent extends PolicySynthAgentBase {
     modelTemperature: number;
     pauseCheckInterval: number;
     pauseTimeout: number;
+    private memorySaveTimer;
+    private memorySaveError;
     constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number);
     process(): Promise<void>;
     loadAgentMemoryFromRedis(): Promise<PsAgentMemoryData>;
@@ -33,9 +35,10 @@ export declare abstract class PolicySynthAgent extends PolicySynthAgentBase {
     getConfigOld<T>(uniqueId: string, defaultValue: T): T;
     loadStatusFromRedis(): Promise<PsAgentStatus | undefined>;
     checkProgressForPauseOrStop(): Promise<void>;
+    scheduleMemorySave(): void;
+    checkLastMemorySaveError(): void;
     saveMemory(): Promise<void>;
     getTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
-    formatNumber(number: number, fractions?: number): string;
     setCompleted(message: string): Promise<void>;
     setError(errorMessage: string): Promise<void>;
     getModelUsageEstimates(): PsAgentModelUsageEstimate[] | undefined;

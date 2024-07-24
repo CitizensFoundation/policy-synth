@@ -5,12 +5,12 @@ import { PsAiModelManager } from "./agentModelManager.js";
 import { PsProgressTracker } from "./agentProgressTracker.js";
 import { PsConfigManager } from "./agentConfigManager.js";
 import Redis from "ioredis";
-import util from 'util';
+import util from "util";
 
 export class AgentExecutionStoppedError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'AgentExecutionStoppedError';
+    this.name = "AgentExecutionStoppedError";
   }
 }
 
@@ -18,7 +18,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   memory!: PsAgentMemoryData;
   agent: PsAgent;
   modelManager: PsAiModelManager | undefined;
-  progressTracker: PsProgressTracker;
+  progressTracker: PsProgressTracker | undefined;
   configManager: PsConfigManager;
   redis: Redis;
 
@@ -33,6 +33,9 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
   pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours
   pauseTimeout = 1000;
+
+  private memorySaveTimer: NodeJS.Timeout | null = null;
+  private memorySaveError: Error | null = null;
 
   constructor(
     agent: PsAgent,
@@ -71,13 +74,13 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
         agent ? agent.id : -1,
         agent ? agent.user_id : -1
       );
+    } else {
+      this.progressTracker = new PsProgressTracker(
+        agent.redisStatusKey,
+        startProgress,
+        endProgress
+      );
     }
-
-    this.progressTracker = new PsProgressTracker(
-      agent.redisMemoryKey,
-      startProgress,
-      endProgress
-    );
 
     this.configManager = new PsConfigManager(agent.configuration);
 
@@ -98,7 +101,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
       throw new Error("Memory is not initialized");
     }
 
-    await this.progressTracker.updateProgress(
+    await this.progressTracker?.updateProgress(
       undefined,
       `Agent ${this.agent.Class?.name} Starting`
     );
@@ -144,11 +147,11 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   }
 
   async updateRangedProgress(progress: number | undefined, message: string) {
-    await this.progressTracker.updateRangedProgress(progress, message);
+    await this.progressTracker?.updateRangedProgress(progress, message);
   }
 
   async updateProgress(progress: number | undefined, message: string) {
-    await this.progressTracker.updateProgress(progress, message);
+    await this.progressTracker?.updateProgress(progress, message);
   }
 
   getConfig<T>(uniqueId: string, defaultValue: T): T {
@@ -163,6 +166,9 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     try {
       const statusDataString = await this.redis.get(this.agent.redisStatusKey);
       if (statusDataString) {
+        /*this.logger.debug(
+          `Loading status from Redis: ${statusDataString} from key: ${this.agent.redisStatusKey}`
+        );*/
         return JSON.parse(statusDataString);
       } else {
         this.logger.error("No memory data found!");
@@ -178,7 +184,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     if (!status) {
       console.warn("Agent status not initialized");
     } else {
-      this.logger.debug(JSON.stringify(status, null, 2));
+      //this.logger.debug(JSON.stringify(status, null, 2));
       if (status.state === "stopped") {
         throw new AgentExecutionStoppedError("Agent execution stopped");
       }
@@ -192,12 +198,16 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
           status = await this.loadStatusFromRedis();
 
           if (Date.now() - startPauseTime > this.pauseTimeout) {
-            throw new AgentExecutionStoppedError("Agent execution timed out while paused");
+            throw new AgentExecutionStoppedError(
+              "Agent execution timed out while paused"
+            );
           }
 
           if (status) {
             if (status.state === "stopped") {
-              throw new AgentExecutionStoppedError("Agent execution stopped while paused");
+              throw new AgentExecutionStoppedError(
+                "Agent execution stopped while paused"
+              );
             }
 
             if (status.state === "running") {
@@ -209,12 +219,41 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     }
   }
 
+  scheduleMemorySave(): void {
+    if (!this.memorySaveTimer) {
+      this.memorySaveTimer = setTimeout(async () => {
+        try {
+          await this.saveMemory();
+          this.memorySaveError = null;
+        } catch (error) {
+          this.memorySaveError =
+            error instanceof Error ? error : new Error(String(error));
+        } finally {
+          if (this.memorySaveTimer) {
+            clearTimeout(this.memorySaveTimer);
+            this.memorySaveTimer = null;
+          }
+        }
+      }, 1000);
+    }
+  }
+
+  checkLastMemorySaveError(): void {
+    if (this.memorySaveError) {
+      const error = this.memorySaveError;
+      this.memorySaveError = null; // Clear the error after throwing
+      throw error;
+    }
+  }
+
   async saveMemory() {
     try {
       await this.redis.set(
         this.agent.redisMemoryKey,
         JSON.stringify(this.memory)
       );
+
+      //this.logger.debug(`Saving memory to Redis: ${util.inspect(this.memory)}`);
 
       if (!this.skipCheckForProgress) {
         await this.checkProgressForPauseOrStop();
@@ -233,18 +272,14 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     return this.modelManager?.getTokensFromMessages(messages) || 0;
   }
 
-  formatNumber(number: number, fractions = 0) {
-    return this.progressTracker.formatNumber(number, fractions);
-  }
-
   // Additional methods that might be needed
 
   async setCompleted(message: string) {
-    await this.progressTracker.setCompleted(message);
+    await this.progressTracker?.setCompleted(message);
   }
 
   async setError(errorMessage: string) {
-    await this.progressTracker.setError(errorMessage);
+    await this.progressTracker?.setError(errorMessage);
   }
 
   getModelUsageEstimates(): PsAgentModelUsageEstimate[] | undefined {
