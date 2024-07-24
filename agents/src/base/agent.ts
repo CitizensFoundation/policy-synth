@@ -5,6 +5,14 @@ import { PsAiModelManager } from "./agentModelManager.js";
 import { PsProgressTracker } from "./agentProgressTracker.js";
 import { PsConfigManager } from "./agentConfigManager.js";
 import Redis from "ioredis";
+import util from 'util';
+
+export class AgentExecutionStoppedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AgentExecutionStoppedError';
+  }
+}
 
 export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   memory!: PsAgentMemoryData;
@@ -15,12 +23,16 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   redis: Redis;
 
   skipAiModels = false;
+  skipCheckForProgress = false;
 
   startProgress = 0;
   endProgress = 100;
 
   maxModelTokensOut = 4096;
   modelTemperature = 0.7;
+
+  pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours
+  pauseTimeout = 1000;
 
   constructor(
     agent: PsAgent,
@@ -51,7 +63,9 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
       this.modelManager = new PsAiModelManager(
         //agent ? agent.AiModels! : undefined,
         agent.AiModels || [],
-        agent ? agent.Group?.private_access_configuration || [] : []/*this.getAccessConfigFromEnv()*/,
+        agent
+          ? agent.Group?.private_access_configuration || []
+          : [] /*this.getAccessConfigFromEnv()*/,
         this.maxModelTokensOut,
         this.modelTemperature,
         agent ? agent.id : -1,
@@ -93,18 +107,20 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     // Subclasses would override this method to implement specific agent behaviors.
   }
 
-  async loadAgentMemoryFromRedis() {
+  async loadAgentMemoryFromRedis(): Promise<PsAgentMemoryData> {
     try {
       const memoryData = await this.redis.get(this.agent.redisMemoryKey);
       if (memoryData) {
         this.memory = JSON.parse(memoryData);
       } else {
-        console.error("No memory data found!");
+        throw Error("No memory data found!");
       }
     } catch (error) {
       this.logger.error("Error initializing agent memory");
       this.logger.error(error);
     }
+
+    return this.memory;
   }
 
   async callModel(
@@ -143,15 +159,73 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     return this.configManager.getConfigOld(uniqueId, defaultValue);
   }
 
+  public async loadStatusFromRedis(): Promise<PsAgentStatus | undefined> {
+    try {
+      const statusDataString = await this.redis.get(this.agent.redisStatusKey);
+      if (statusDataString) {
+        return JSON.parse(statusDataString);
+      } else {
+        this.logger.error("No memory data found!");
+      }
+    } catch (error) {
+      this.logger.error("Error initializing agent memory");
+      this.logger.error(error);
+    }
+  }
+
+  async checkProgressForPauseOrStop(): Promise<void> {
+    let status = await this.loadStatusFromRedis();
+    if (!status) {
+      console.warn("Agent status not initialized");
+    } else {
+      this.logger.debug(JSON.stringify(status, null, 2));
+      if (status.state === "stopped") {
+        throw new AgentExecutionStoppedError("Agent execution stopped");
+      }
+
+      if (status.state === "paused") {
+        const startPauseTime = Date.now();
+        while (status && status.state === "paused") {
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.pauseCheckInterval)
+          );
+          status = await this.loadStatusFromRedis();
+
+          if (Date.now() - startPauseTime > this.pauseTimeout) {
+            throw new AgentExecutionStoppedError("Agent execution timed out while paused");
+          }
+
+          if (status) {
+            if (status.state === "stopped") {
+              throw new AgentExecutionStoppedError("Agent execution stopped while paused");
+            }
+
+            if (status.state === "running") {
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
   async saveMemory() {
     try {
       await this.redis.set(
         this.agent.redisMemoryKey,
         JSON.stringify(this.memory)
       );
+
+      if (!this.skipCheckForProgress) {
+        await this.checkProgressForPauseOrStop();
+      }
     } catch (error) {
-      this.logger.error("Error saving agent memory to Redis");
-      this.logger.error(error);
+      if (error instanceof AgentExecutionStoppedError) {
+        throw error;
+      } else {
+        this.logger.error("Error saving agent memory to Redis");
+        this.logger.error(error);
+      }
     }
   }
 

@@ -1,22 +1,9 @@
 import { QueryTypes } from "sequelize";
-import { sequelize } from "../models/index.js";
-import express from "express";
-
-interface AgentCost {
-  agentCosts: object;
-  totalCost: string;
-}
-
+import { sequelize } from "../dbModels/index.js";
 export class AgentCostManager {
-  public async getAgentCosts(
-    req: express.Request,
-    res: express.Response
-  ): Promise<AgentCost> {
-    const agentId = parseInt(req.params.id);
-
-    try {
-      const results = await sequelize.query(
-        `
+    async getAgentCosts(agentId) {
+        try {
+            const results = await sequelize.query(`
         WITH RECURSIVE agent_hierarchy AS (
           SELECT id, parent_agent_id, 0 as level
           FROM ps_agents
@@ -39,38 +26,27 @@ export class AgentCostManager {
         LEFT JOIN ps_model_usage mu ON mu.model_id = am.id AND mu.agent_id = ah.id
         GROUP BY ah.id, ah.level
         ORDER BY ah.level, ah.id
-        `,
-        {
-          replacements: { agentId },
-          type: QueryTypes.SELECT,
+        `, {
+                replacements: { agentId },
+                type: QueryTypes.SELECT,
+            });
+            const agentCosts = results.map((row) => ({
+                agentId: row.agent_id,
+                level: row.level,
+                cost: parseFloat(row.agent_cost).toFixed(2),
+            }));
+            const totalCost = agentCosts
+                .reduce((sum, agent) => sum + parseFloat(agent.cost), 0)
+                .toFixed(2);
+            return { agentCosts, totalCost };
         }
-      );
-
-      const agentCosts = results.map((row: any) => ({
-        agentId: row.agent_id,
-        level: row.level,
-        cost: parseFloat(row.agent_cost).toFixed(2),
-      }));
-
-      const totalCost = agentCosts
-        .reduce((sum, agent) => sum + parseFloat(agent.cost), 0)
-        .toFixed(2);
-
-      return { agentCosts, totalCost } as AgentCost;
-    } catch (error) {
-      throw Error("Error calculating agent costs: " + error);
+        catch (error) {
+            throw Error("Error calculating agent costs: " + error);
+        }
     }
-  }
-
-  public async getSingleAgentCosts(
-    req: express.Request,
-    res: express.Response
-  ): Promise<string> {
-    const agentId = parseInt(req.params.id);
-
-    try {
-      const results = await sequelize.query(
-        `
+    async getSingleAgentCosts(agentId) {
+        try {
+            const results = await sequelize.query(`
         SELECT
           COALESCE(SUM(
             (COALESCE(mu.token_in_count, 0) * COALESCE(CAST(am.configuration#>>'{prices,costInTokensPerMillion}' AS FLOAT), 0) +
@@ -81,16 +57,15 @@ export class AgentCostManager {
         LEFT JOIN ps_ai_models am ON am_join.ai_model_id = am.id
         LEFT JOIN ps_model_usage mu ON mu.model_id = am.id AND mu.agent_id = a.id
         WHERE a.id = :agentId
-      `,
-        {
-          replacements: { agentId },
-          type: QueryTypes.SELECT,
+      `, {
+                replacements: { agentId },
+                type: QueryTypes.SELECT,
+            });
+            return results[0].total_cost;
         }
-      );
-
-      return (results[0] as { total_cost: string }).total_cost;
-    } catch (error) {
-      throw "Error calculating agent costs: " + error;
+        catch (error) {
+            throw "Error calculating agent costs: " + error;
+        }
     }
-  }
 }
+//# sourceMappingURL=agentCostsManager.js.map

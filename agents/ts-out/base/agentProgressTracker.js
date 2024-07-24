@@ -2,31 +2,22 @@ import Redis from "ioredis";
 import { PolicySynthAgentBase } from "./agentBase.js";
 export class PsProgressTracker extends PolicySynthAgentBase {
     redis;
-    redisMemoryKey;
-    memory;
+    redisStatusKey;
+    status;
     startProgress;
     endProgress;
-    constructor(redisMemoryKey, startProgress, endProgress, redisUrl = process.env.REDIS_MEMORY_URL || "redis://localhost:6379") {
+    constructor(redisStatusKey, startProgress, endProgress, redisUrl = process.env.REDIS_MEMORY_URL || "redis://localhost:6379") {
         super();
         this.redis = new Redis(redisUrl);
-        this.redisMemoryKey = redisMemoryKey;
+        this.redisStatusKey = redisStatusKey;
         this.startProgress = startProgress;
         this.endProgress = endProgress;
-        this.memory = {
-            agentId: 0, // This will be set when memory is loaded
-            status: {
-                state: "running",
-                progress: startProgress,
-                messages: [],
-                lastUpdated: Date.now(),
-            },
-        };
     }
-    async loadMemoryFromRedis() {
+    async loadStatusFromRedis() {
         try {
-            const memoryData = await this.redis.get(this.redisMemoryKey);
-            if (memoryData) {
-                this.memory = JSON.parse(memoryData);
+            const statusDataString = await this.redis.get(this.redisStatusKey);
+            if (statusDataString) {
+                this.status = JSON.parse(statusDataString);
             }
             else {
                 this.logger.error("No memory data found!");
@@ -38,45 +29,51 @@ export class PsProgressTracker extends PolicySynthAgentBase {
         }
     }
     async updateRangedProgress(progress, message) {
-        if (!this.memory.status) {
-            this.memory.status = {
+        if (!this.status) {
+            this.status = {
                 state: "running",
                 progress: this.startProgress,
                 messages: [],
                 lastUpdated: Date.now(),
             };
         }
+        else {
+            this.loadStatusFromRedis();
+        }
         // Calculate the progress within the range
         if (progress !== undefined) {
             const rangeSize = this.endProgress - this.startProgress;
             const scaledProgress = this.startProgress + (progress / 100) * rangeSize;
-            this.memory.status.progress = Math.min(Math.max(scaledProgress, this.startProgress), this.endProgress);
+            this.status.progress = Math.min(Math.max(scaledProgress, this.startProgress), this.endProgress);
         }
-        this.memory.status.messages.push(message);
-        this.memory.status.lastUpdated = Date.now();
+        this.status.messages.push(message);
+        this.status.lastUpdated = Date.now();
         // Save updated memory to Redis
-        await this.saveMemory();
+        await this.saveRedisStatus();
     }
     async updateProgress(progress, message) {
-        if (!this.memory.status) {
-            this.memory.status = {
+        if (!this.status) {
+            this.status = {
                 state: "running",
-                progress: 0,
+                progress: this.startProgress,
                 messages: [],
                 lastUpdated: Date.now(),
             };
         }
-        if (progress !== undefined) {
-            this.memory.status.progress = progress;
+        else {
+            this.loadStatusFromRedis();
         }
-        this.memory.status.messages.push(message);
-        this.memory.status.lastUpdated = Date.now();
+        if (progress !== undefined) {
+            this.status.progress = progress;
+        }
+        this.status.messages.push(message);
+        this.status.lastUpdated = Date.now();
         // Save updated memory to Redis
-        await this.saveMemory();
+        await this.saveRedisStatus();
     }
-    async saveMemory() {
+    async saveRedisStatus() {
         try {
-            await this.redis.set(this.redisMemoryKey, JSON.stringify(this.memory));
+            await this.redis.set(this.redisStatusKey, JSON.stringify(this.status));
         }
         catch (error) {
             this.logger.error("Error saving agent memory to Redis");
@@ -84,20 +81,17 @@ export class PsProgressTracker extends PolicySynthAgentBase {
         }
     }
     getProgress() {
-        return this.memory.status?.progress || 0;
+        return this.status?.progress || 0;
     }
     getMessages() {
-        return this.memory.status?.messages || [];
+        return this.status?.messages || [];
     }
     getState() {
-        return this.memory.status?.state || "unknown";
-    }
-    setAgentId(agentId) {
-        this.memory.agentId = agentId;
+        return this.status?.state || "unknown";
     }
     async setCompleted(message) {
-        if (!this.memory.status) {
-            this.memory.status = {
+        if (!this.status) {
+            this.status = {
                 state: "completed",
                 progress: 100,
                 messages: [],
@@ -105,16 +99,16 @@ export class PsProgressTracker extends PolicySynthAgentBase {
             };
         }
         else {
-            this.memory.status.state = "completed";
-            this.memory.status.progress = 100;
+            this.status.state = "completed";
+            this.status.progress = 100;
         }
-        this.memory.status.messages.push(message);
-        this.memory.status.lastUpdated = Date.now();
-        await this.saveMemory();
+        this.status.messages.push(message);
+        this.status.lastUpdated = Date.now();
+        await this.saveRedisStatus();
     }
     async setError(errorMessage) {
-        if (!this.memory.status) {
-            this.memory.status = {
+        if (!this.status) {
+            this.status = {
                 state: "error",
                 progress: 0,
                 messages: [],
@@ -122,11 +116,11 @@ export class PsProgressTracker extends PolicySynthAgentBase {
             };
         }
         else {
-            this.memory.status.state = "error";
+            this.status.state = "error";
         }
-        this.memory.status.messages.push(errorMessage);
-        this.memory.status.lastUpdated = Date.now();
-        await this.saveMemory();
+        this.status.messages.push(errorMessage);
+        this.status.lastUpdated = Date.now();
+        await this.saveRedisStatus();
     }
     formatNumber(number, fractions = 0) {
         return new Intl.NumberFormat("en-US", {

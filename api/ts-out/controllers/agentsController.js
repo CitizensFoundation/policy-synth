@@ -1,26 +1,10 @@
 import express from "express";
-import { createClient } from "redis";
-import { PsAiModel, } from "../models/index.js";
-import { AgentQueueManager } from "../operations/agentQueueManager.js";
-import { AgentCostManager } from "../operations/agentCostsManager.js";
-import { AgentManager } from "../operations/agentManager.js";
-import { AgentConnectorManager } from "../operations/agentConnectorManager.js";
-import { AgentRegistryManager } from "../operations/agentRegistryManager.js";
-let redisClient;
-// TODO: Share this do not start on each controller
-if (process.env.REDIS_URL) {
-    redisClient = createClient({
-        url: process.env.REDIS_URL,
-        socket: {
-            tls: true,
-        },
-    });
-}
-else {
-    redisClient = createClient({
-        url: "redis://localhost:6379",
-    });
-}
+import { AgentQueueManager } from "@policysynth/agents/operations/agentQueueManager.js";
+import { AgentCostManager } from "@policysynth/agents/operations/agentCostsManager.js";
+import { AgentManager } from "@policysynth/agents/operations/agentManager.js";
+import { AgentConnectorManager } from "@policysynth/agents/operations/agentConnectorManager.js";
+import { AgentRegistryManager } from "@policysynth/agents/operations/agentRegistryManager.js";
+import { PsAiModel } from "@policysynth/agents/dbModels/aiModel.js";
 export class AgentsController {
     path = "/api/agents";
     router = express.Router();
@@ -278,7 +262,8 @@ export class AgentsController {
     };
     getAgentCosts = async (req, res) => {
         try {
-            const totalCosts = await this.agentCostManager.getAgentCosts(req, res);
+            const agentId = parseInt(req.params.id);
+            const totalCosts = await this.agentCostManager.getAgentCosts(agentId);
             res.json(totalCosts);
         }
         catch (error) {

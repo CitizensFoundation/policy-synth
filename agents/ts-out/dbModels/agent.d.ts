@@ -46,6 +46,7 @@ export declare class PsAgent extends Model<PsAgentAttributes, PsAgentCreationAtt
     removeAiModel: (model: PsAiModel) => Promise<boolean>;
     removeAiModels: (models: PsAiModel[]) => Promise<void>;
     get redisMemoryKey(): string;
+    get redisStatusKey(): string;
 }
 export {};
 //# sourceMappingURL=agent.d.ts.map

@@ -147,7 +147,7 @@ interface PsAgentBaseMemoryData {
 }
 
 interface PsAgentStatus {
-  state: "running" | "paused" | "error" | "completed";
+  state: "running" | "paused" | "stopped" | "error" | "completed";
   progress: number;
   messages: string[];
   lastUpdated: number;
@@ -166,7 +166,6 @@ interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
 
 interface PsAgentMemoryData extends PsAgentBaseMemoryData {
   agentId: number;
-  status: PsAgentStatus;
   connectors?: PsConnectorsConfig;
 }
 

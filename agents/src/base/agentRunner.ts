@@ -199,11 +199,10 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgent {
 
   async run() {
     try {
-      await this.setupAndRunAgents();
       this.setupGracefulShutdown();
+      await this.setupAndRunAgents();
     } catch (error) {
-      this.logger.error("Error setting up agents:", error);
-      process.exit(1);
+      this.logger.error("Error running agents:", error);
     }
   }
 

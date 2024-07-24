@@ -4,7 +4,7 @@ import {
   PsAgentConnector,
   PsAgentConnectorClass,
   sequelize,
-} from "../models/index.js";
+} from "../dbModels/index.js";
 
 export class AgentConnectorManager {
   public async createConnector(

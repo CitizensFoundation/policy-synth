@@ -10,7 +10,7 @@ import {
   PsAiModel,
   PsAgentConnectorClass,
   sequelize,
-} from "../models/index.js";
+} from "../dbModels/index.js";
 
 export class AgentManager {
   async getAgent(groupId: string) {

@@ -2,7 +2,7 @@ import {
   PsAgentRegistry,
   PsAgentClass,
   PsAgentConnectorClass,
-} from "../models/index.js";
+} from "../dbModels/index.js";
 
 export class AgentRegistryManager {
   async getActiveAgentClasses(): Promise<PsAgentClassAttributes[]> {

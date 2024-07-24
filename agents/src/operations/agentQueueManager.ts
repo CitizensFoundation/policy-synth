@@ -1,9 +1,6 @@
 import { Queue } from "bullmq";
 import { Redis } from "ioredis";
-import {
-  PsAgent,
-  PsAgentClass,
-} from "../models/index.js";
+import { PsAgent, PsAgentClass } from "../dbModels/index.js";
 
 export class AgentQueueManager {
   private redisClient!: Redis;
@@ -64,6 +61,7 @@ export class AgentQueueManager {
     const agent = await PsAgent.findByPk(agentId, {
       include: [{ model: PsAgentClass, as: "Class" }],
     });
+
     if (!agent || !agent.Class) return false;
 
     const queueName = agent.Class.configuration.queueName;
@@ -98,10 +96,10 @@ export class AgentQueueManager {
     });
 
     if (agent) {
-      const memoryData = await this.redisClient.get(agent.redisMemoryKey);
-      if (memoryData) {
-        const parsedMemory: PsAgentMemoryData = JSON.parse(memoryData);
-        return parsedMemory.status;
+      const statusDataString = await this.redisClient.get(agent.redisStatusKey);
+      if (statusDataString) {
+        const statusData: PsAgentStatus = JSON.parse(statusDataString);
+        return statusData;
       } else {
         return null;
       }
@@ -117,43 +115,33 @@ export class AgentQueueManager {
     message?: string,
     details?: Record<string, any>
   ): Promise<boolean> {
-    const memoryKey = `agent:${agentId}:memory`;
-    const memoryData = await this.redisClient.get(memoryKey);
-    if (memoryData) {
-      const parsedMemory: PsAgentMemoryData = JSON.parse(memoryData);
-      parsedMemory.status.state = state;
-      parsedMemory.status.lastUpdated = Date.now();
-      if (progress !== undefined) parsedMemory.status.progress = progress;
-      if (message) parsedMemory.status.messages.push(message);
-      if (details)
-        parsedMemory.status.details = {
-          ...parsedMemory.status.details,
-          ...details,
-        };
-      await this.redisClient.set(memoryKey, JSON.stringify(parsedMemory));
-      return true;
+    const agent = await PsAgent.findByPk(agentId, {
+      include: [{ model: PsAgentClass, as: "Class" }],
+    });
+
+    if (agent) {
+      const statusDataString = await this.redisClient.get(agent.redisStatusKey);
+      if (statusDataString) {
+        const statusData: PsAgentStatus = JSON.parse(statusDataString);
+        statusData.state = state;
+        statusData.lastUpdated = Date.now();
+        if (progress !== undefined) statusData.progress = progress;
+        if (message) statusData.messages.push(message);
+        if (details)
+          statusData.details = {
+            ...statusData.details,
+            ...details,
+          };
+        await this.redisClient.set(
+          agent.redisStatusKey,
+          JSON.stringify(statusData)
+        );
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
     }
-    return false;
-  }
-
-  private async setupAgentMemory(agentId: number): Promise<void> {
-    const memoryData: PsAgentMemoryData = {
-      startTime: Date.now(),
-      agentId: agentId,
-      status: {
-        state: "running",
-        progress: 0,
-        messages: [],
-        lastUpdated: Date.now(),
-      },
-    };
-
-    const memoryKey = `agent:${agentId}:memory`;
-    await this.redisClient.set(memoryKey, JSON.stringify(memoryData));
-  }
-
-  private async deleteAgentMemory(agentId: number): Promise<void> {
-    const memoryKey = `agent:${agentId}:memory`;
-    await this.redisClient.del(memoryKey);
   }
 }

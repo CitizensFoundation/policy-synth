@@ -10,7 +10,7 @@ import { MdMenu } from '@material/web/menu/menu.js';
 export declare class PsAgentNode extends PsOperationsBaseNode {
     agent: PsAgentAttributes;
     agentId: number;
-    isWorking: boolean;
+    private agentState;
     private latestMessage;
     private progress;
     private menuOpen;
@@ -28,13 +28,13 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     startStatusUpdates(): void;
     stopStatusUpdates(): void;
     updateAgentStatus(): Promise<void>;
-    static get styles(): (any[] | import("lit").CSSResult)[];
     startAgent(): Promise<void>;
     pauseAgent(): Promise<void>;
     stopAgent(): Promise<void>;
     editNode(): void;
-    clickPlayPause(): void;
+    renderActionButtons(): import("lit").TemplateResult<1>;
     renderProgress(): import("lit").TemplateResult<1>;
-    render(): import("lit").TemplateResult<1> | typeof nothing;
+    render(): typeof nothing | import("lit").TemplateResult<1>;
+    static get styles(): (any[] | import("lit").CSSResult)[];
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

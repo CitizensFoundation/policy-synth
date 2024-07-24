@@ -67,6 +67,10 @@ export class PsAgent
   get redisMemoryKey() {
     return `ps:agent:memory:${this.id}:${this.uuid}`;
   }
+
+  get redisStatusKey() {
+    return `ps:agent:status:${this.id}:${this.uuid}`;
+  }
 }
 
 PsAgent.init(

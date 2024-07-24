@@ -54,8 +54,13 @@ export class SmarterCrowdsourcingAgentRunner extends PsBaseAgentRunner {
   }
 
   static async runAgentManager() {
-    const agentRunner = new SmarterCrowdsourcingAgentRunner();
-    await agentRunner.run();
+    try {
+      const agentRunner = new SmarterCrowdsourcingAgentRunner();
+      await agentRunner.run();
+    } catch (error) {
+      console.error("Error running Smarter Crowdsourcing Agent Manager:", error);
+      throw error;
+    }
   }
 }
 

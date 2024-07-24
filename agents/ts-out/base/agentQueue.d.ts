@@ -1,7 +1,12 @@
 import { PsAgent } from "../dbModels/agent.js";
 import { PolicySynthAgent } from "./agent.js";
 export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
+    status: PsAgentStatus;
+    skipCheckForProgress: boolean;
     constructor();
+    loadAgentStatusFromRedis(): Promise<PsAgentStatus>;
+    saveAgentStatusToRedis(): Promise<void>;
+    setupStatusIfNeeded(): Promise<void>;
     abstract get processors(): Array<{
         processor: new (agent: PsAgent, memory: any, //TODO: Fix this to T or something
         startProgress: number, endProgress: number) => PolicySynthAgent;
