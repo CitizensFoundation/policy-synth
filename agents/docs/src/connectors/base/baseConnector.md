@@ -1,31 +1,31 @@
 # PsBaseConnector
 
-The `PsBaseConnector` class is an abstract class that extends the `PolicySynthAgent` class. It serves as a base class for creating connectors in the PolicySynth system.
+The `PsBaseConnector` class is an abstract class that extends the `PolicySynthAgent` class. It provides a base implementation for connectors in the PolicySynth system, handling common configuration and utility methods.
 
 ## Properties
 
 | Name            | Type                              | Description                                      |
 |-----------------|-----------------------------------|--------------------------------------------------|
-| connector       | PsAgentConnectorAttributes        | The connector attributes.                        |
-| connectorClass  | PsAgentConnectorClassAttributes   | The connector class attributes.                  |
+| connector       | PsAgentConnectorAttributes        | The connector instance associated with this class. |
+| connectorClass  | PsAgentConnectorClassAttributes   | The class attributes of the connector.           |
 | skipAiModels    | boolean                           | Flag to skip AI models, default is `true`.       |
 
 ## Constructor
 
 ### PsBaseConnector
 
-Constructs a new instance of the `PsBaseConnector` class.
+Creates an instance of `PsBaseConnector`.
 
 #### Parameters
 
 | Name          | Type                              | Description                                      |
 |---------------|-----------------------------------|--------------------------------------------------|
-| connector     | PsAgentConnectorAttributes        | The connector attributes.                        |
-| connectorClass| PsAgentConnectorClassAttributes   | The connector class attributes.                  |
-| agent         | PsAgent                           | The agent instance.                              |
-| memory        | PsAgentMemoryData \| undefined    | The memory data, optional.                       |
-| startProgress | number                            | The start progress, default is `0`.              |
-| endProgress   | number                            | The end progress, default is `100`.              |
+| connector     | PsAgentConnectorAttributes        | The connector instance associated with this class. |
+| connectorClass| PsAgentConnectorClassAttributes   | The class attributes of the connector.           |
+| agent         | PsAgent                           | The agent instance associated with this connector. |
+| memory        | PsAgentMemoryData \| undefined    | Optional memory data for the agent.              |
+| startProgress | number                            | Optional start progress value, default is `0`.   |
+| endProgress   | number                            | Optional end progress value, default is `100`.   |
 
 ## Methods
 
@@ -37,54 +37,78 @@ Returns the configuration questions for the connector.
 
 | Type                        | Description                                      |
 |-----------------------------|--------------------------------------------------|
-| YpStructuredQuestionData[]  | Array of structured question data.               |
+| YpStructuredQuestionData[]  | Array of structured question data for configuration. |
 
 ### getExtraConfigurationQuestions
 
-Returns extra configuration questions for the connector. This method can be overridden by subclasses to provide additional questions.
+Returns additional configuration questions for the connector. This method can be overridden by subclasses to provide extra questions.
 
 #### Returns
 
 | Type                        | Description                                      |
 |-----------------------------|--------------------------------------------------|
-| YpStructuredQuestionData[]  | Array of extra structured question data.         |
+| YpStructuredQuestionData[]  | Array of extra structured question data for configuration. |
 
 ### name
 
-Getter for the name configuration.
+Getter for the name of the connector.
 
 #### Returns
 
 | Type    | Description                                      |
 |---------|--------------------------------------------------|
-| string  | The name configuration value.                    |
+| string  | The name of the connector.                       |
 
 ### description
 
-Getter for the description configuration.
+Getter for the description of the connector.
 
 #### Returns
 
 | Type    | Description                                      |
 |---------|--------------------------------------------------|
-| string  | The description configuration value.             |
+| string  | The description of the connector.                |
 
 ### getConfig
 
-Retrieves a configuration value based on the unique ID.
+Retrieves the configuration value for a given unique ID.
 
 #### Parameters
 
 | Name          | Type    | Description                                      |
 |---------------|---------|--------------------------------------------------|
 | uniqueId      | string  | The unique ID of the configuration.              |
-| defaultValue  | T       | The default value to return if not found.        |
+| defaultValue  | T       | The default value to return if the configuration is not found. |
 
 #### Returns
 
-| Type  | Description                                      |
-|-------|--------------------------------------------------|
-| T     | The configuration value or the default value.    |
+| Type    | Description                                      |
+|---------|--------------------------------------------------|
+| T       | The configuration value for the given unique ID. |
+
+### retryOperation
+
+Retries a given operation a specified number of times with a delay between attempts.
+
+#### Parameters
+
+| Name        | Type          | Description                                      |
+|-------------|---------------|--------------------------------------------------|
+| operation   | () => Promise<T> | The operation to retry.                        |
+| maxRetries  | number        | Optional maximum number of retries, default is `3`. |
+| delay       | number        | Optional delay between retries in milliseconds, default is `1000`. |
+
+#### Returns
+
+| Type    | Description                                      |
+|---------|--------------------------------------------------|
+| Promise<T> | The result of the operation if successful.    |
+
+#### Throws
+
+| Type    | Description                                      |
+|---------|--------------------------------------------------|
+| Error   | If the maximum number of retries is reached.     |
 
 ## Example
 
@@ -184,6 +208,23 @@ export abstract class PsBaseConnector extends PolicySynthAgent {
       this.logger.error(`Configuration answer not found for ${uniqueId}`);
       return defaultValue;
     }
+  }
+
+  // Common utility methods can be implemented here
+  protected async retryOperation<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 3,
+    delay: number = 1000
+  ): Promise<T> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        if (attempt === maxRetries) throw error;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+    throw new Error("Max retries reached");
   }
 }
 ```

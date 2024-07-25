@@ -1,4 +1,3 @@
-import { QueryTypes } from "sequelize";
 import { PsAgent, PsAgentConnector, PsAgentClass, User, Group, PsExternalApiUsage, PsModelUsage, PsAiModel, PsAgentConnectorClass, sequelize, } from "../dbModels/index.js";
 export class AgentManager {
     async getAgent(groupId) {
@@ -141,23 +140,17 @@ export class AgentManager {
                     name: `${group.name} Top-Level Agent`,
                 },
             }, { transaction });
-            const [updateCount] = await sequelize.query(`UPDATE groups
-         SET configuration = jsonb_set(
-           COALESCE(configuration, '{}')::jsonb,
-           '{agents,topLevelAgentId}',
-           :topLevelAgentId::jsonb
-         )
-         WHERE id = :groupId`, {
-                replacements: {
-                    topLevelAgentId: JSON.stringify(topLevelAgent.id),
-                    groupId: group.id,
-                },
-                type: QueryTypes.UPDATE,
-                transaction,
-            });
-            if (updateCount === 0) {
-                throw new Error(`Failed to update configuration for group ${group.id}`);
+            // Ensure the 'agents' object exists in the configuration
+            if (!group.configuration.agents) {
+                //@ts-ignore //TODO: Get this working with types
+                group.set('configuration.agents', {});
             }
+            // Set the topLevelAgentId
+            group.set(
+            //@ts-ignore //TODO: Get this working with types
+            'configuration.agents.topLevelAgentId', topLevelAgent.id);
+            // Save the changes
+            await group.save({ transaction });
             await transaction.commit();
             return topLevelAgent;
         }

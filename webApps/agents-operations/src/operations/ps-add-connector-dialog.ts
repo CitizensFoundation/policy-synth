@@ -8,7 +8,7 @@ import '@material/web/select/filled-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/textfield/filled-text-field.js';
 
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 
 @customElement('ps-add-connector-dialog')
 export class PsAddConnectorDialog extends LitElement {
@@ -23,7 +23,7 @@ export class PsAddConnectorDialog extends LitElement {
   @state() private selectedConnectorClassId: number | null = null;
   @state() private connectorName: string = '';
 
-  private api = new OpsServerApi();
+  private api = new PsServerApi();
 
   async connectedCallback() {
     super.connectedCallback();

@@ -1,6 +1,6 @@
 # PsBaseDiscordConnector
 
-The `PsBaseDiscordConnector` class is a connector for integrating a Discord bot with the PolicySynth platform. It extends the `PsBaseNotificationsConnector` class and provides functionalities for handling Discord messages, sending notifications, and managing conversations.
+The `PsBaseDiscordConnector` class is a connector for integrating with Discord, specifically designed for market research bots. It extends the `PsBaseNotificationsConnector` class and provides functionalities to interact with Discord channels, handle messages, and respond to users.
 
 ## Properties
 
@@ -8,10 +8,10 @@ The `PsBaseDiscordConnector` class is a connector for integrating a Discord bot 
 |---------------------|-------------------------------------------|-----------------------------------------------------------------------------|
 | DISCORD_CONNECTOR_CLASS_BASE_ID | `string`                                  | Static constant for the Discord connector class base ID.                    |
 | DISCORD_CONNECTOR_VERSION       | `number`                                  | Static constant for the Discord connector version.                          |
-| getConnectorClass               | `PsConnectorClassCreationAttributes`      | Static property for the connector class attributes.                         |
+| getConnectorClass               | `PsConnectorClassCreationAttributes`      | Static property to get the connector class attributes.                      |
 | client                          | `Client`                                  | Instance of the Discord client.                                             |
 | token                           | `string`                                  | Discord bot token.                                                          |
-| channelName                     | `string`                                  | Name of the Discord channel to connect to.                                  |
+| channelName                     | `string`                                  | Name of the Discord channel to interact with.                               |
 | systemPrompt                    | `string`                                  | System prompt for the bot.                                                  |
 | actions                         | `{ [key: string]: () => Promise<void> }`  | Actions that the bot can perform.                                           |
 | channelTimeouts                 | `{ [id: string]: NodeJS.Timeout }`        | Timeouts for channels to stop listening after inactivity.                   |
@@ -22,7 +22,7 @@ The `PsBaseDiscordConnector` class is a connector for integrating a Discord bot 
 
 | Name                        | Parameters                                                                 | Return Type         | Description                                                                 |
 |-----------------------------|----------------------------------------------------------------------------|---------------------|-----------------------------------------------------------------------------|
-| constructor                 | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: PsAgentMemoryData | undefined, systemPrompt: string, actions: { [key: string]: () => Promise<void> }, startProgress: number, endProgress: number` | `void`              | Constructor for initializing the Discord agent.                              |
+| constructor                 | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: PsAgentMemoryData | undefined, systemPrompt: string, actions: { [key: string]: () => Promise<void> }, startProgress: number, endProgress: number` | `void`              | Constructor to initialize the Discord connector.                             |
 | login                       | `()`                                                                       | `Promise<void>`     | Logs in the Discord bot.                                                    |
 | replaceInResponseArray      | `response: string`                                                         | `Promise<{ modifiedResponse: string; actionsTriggered: string[] }>` | Replaces actions in the response array and triggers them.                   |
 | respondToUser               | `channelId: string, conversation: DiscordConversation`                     | `Promise<void>`     | Responds to a user in a Discord channel.                                    |
@@ -39,29 +39,23 @@ The `PsBaseDiscordConnector` class is a connector for integrating a Discord bot 
 ```typescript
 import { PsBaseDiscordConnector } from '@policysynth/agents/connectors/notifications/discordConnector.js';
 
-const connector = /* PsAgentConnectorAttributes */;
-const connectorClass = /* PsAgentConnectorClassAttributes */;
-const agent = /* PsAgent */;
-const memory = /* PsAgentMemoryData | undefined */;
-const systemPrompt = "Hello! How can I assist you today?";
-const actions = {
-  greet: async () => {
-    console.log("Greeting action triggered!");
-  },
-};
-
-const discordAgent = new PsBaseDiscordConnector(
-  connector,
-  connectorClass,
+const connector = new PsBaseDiscordConnector(
+  connectorAttributes,
+  connectorClassAttributes,
   agent,
   memory,
-  systemPrompt,
-  actions
+  "System prompt for the bot",
+  {
+    action1: async () => { /* action implementation */ },
+    action2: async () => { /* action implementation */ },
+  }
 );
 
-discordAgent.login().then(() => {
-  console.log("Discord bot is running!");
+connector.login().then(() => {
+  console.log("Bot logged in and ready!");
+}).catch((error) => {
+  console.error("Error logging in:", error);
 });
 ```
 
-This example demonstrates how to initialize and run the `PsBaseDiscordConnector` with a custom system prompt and actions. The bot logs in and starts listening for messages in the specified Discord channel.
+This example demonstrates how to create an instance of the `PsBaseDiscordConnector` class, configure it with necessary attributes, and log in the bot to start interacting with Discord channels.

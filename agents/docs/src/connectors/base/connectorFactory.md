@@ -1,6 +1,6 @@
 # PsConnectorFactory
 
-The `PsConnectorFactory` class is responsible for creating and managing different types of connectors for agents. It supports document connectors, notifications and chat connectors, and collaboration connectors.
+The `PsConnectorFactory` class is responsible for creating various types of connectors based on the provided configuration. It supports different types of connectors such as document connectors, sheet connectors, notifications connectors, ideas collaboration connectors, and voting collaboration connectors.
 
 ## Properties
 
@@ -8,13 +8,15 @@ This class does not have any properties.
 
 ## Methods
 
-| Name                      | Parameters                                                                 | Return Type                  | Description                                                                 |
-|---------------------------|----------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
-| `createConnector`         | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseConnectorTypes \| null` | Creates a connector based on the provided connector class type.             |
-| `createDocumentConnector` | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseDocumentConnector \| null` | Creates a document connector based on the provided connector class name.    |
-| `createNotificationsConnector` | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseNotificationsConnector \| null` | Creates a notifications connector based on the provided connector class name. |
-| `createCollaborationConnector` | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseCollaborationConnector \| null` | Creates a collaboration connector based on the provided connector class name. |
-| `getConnector`            | `agent: PsAgent, memory: any, connectorType: PsConnectorClassTypes, isInput: boolean = true` | `PsBaseConnectorTypes \| null` | Retrieves a connector of the specified type for the given agent.            |
+| Name                             | Parameters                                                                 | Return Type                  | Description                                                                 |
+|----------------------------------|----------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
+| `createConnector`                | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseConnectorTypes \| null` | Creates a connector based on the provided class type.                      |
+| `createDocumentConnector`        | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseDocumentConnector \| null` | Creates a document connector based on the provided configuration.          |
+| `createSheetConnector`           | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseSheetConnector \| null` | Creates a sheet connector based on the provided configuration.             |
+| `createNotificationsConnector`   | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseNotificationsConnector \| null` | Creates a notifications connector based on the provided configuration.     |
+| `createIdeasCollaborationConnector` | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseIdeasCollaborationConnector \| null` | Creates an ideas collaboration connector based on the provided configuration. |
+| `createVotingCollaborationConnector` | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any` | `PsBaseVotingCollaborationConnector \| null` | Creates a voting collaboration connector based on the provided configuration. |
+| `getConnector`                   | `agent: PsAgent, memory: any, connectorType: PsConnectorClassTypes, isInput: boolean = true` | `PsBaseConnectorTypes \| null` | Retrieves a connector of the specified type from the agent's connectors.    |
 
 ## Example
 
@@ -25,22 +27,15 @@ import { PsConnectorFactory } from "./connectorFactory.js";
 
 // Example usage of PsConnectorFactory
 const agent = new PsAgent();
-const memory = {};
+const memory = {}; // Some memory object
+const connectorType = PsConnectorClassTypes.Document;
 
-const documentConnector = PsConnectorFactory.getConnector(agent, memory, PsConnectorClassTypes.Document);
-const notificationsConnector = PsConnectorFactory.getConnector(agent, memory, PsConnectorClassTypes.NotificationsAndChat);
-const collaborationConnector = PsConnectorFactory.getConnector(agent, memory, PsConnectorClassTypes.Collaboration);
+const documentConnector = PsConnectorFactory.getConnector(agent, memory, connectorType);
 
 if (documentConnector) {
-  // Use the document connector
-}
-
-if (notificationsConnector) {
-  // Use the notifications connector
-}
-
-if (collaborationConnector) {
-  // Use the collaboration connector
+  console.log("Document connector created successfully.");
+} else {
+  console.log("Failed to create document connector.");
 }
 ```
 
@@ -48,65 +43,91 @@ if (collaborationConnector) {
 
 ### `createConnector`
 
-Creates a connector based on the provided connector class type.
+Creates a connector based on the provided class type.
 
 **Parameters:**
 - `connector: PsAgentConnectorAttributes`: The connector attributes.
 - `connectorClass: PsAgentConnectorClassAttributes`: The connector class attributes.
 - `agent: PsAgent`: The agent instance.
-- `memory: any`: The memory instance.
+- `memory: any`: The memory object.
 
 **Returns:**
-- `PsBaseConnectorTypes | null`: The created connector or null if the connector type is unsupported.
+- `PsBaseConnectorTypes | null`: The created connector or null if the type is unsupported.
 
 ### `createDocumentConnector`
 
-Creates a document connector based on the provided connector class name.
+Creates a document connector based on the provided configuration.
 
 **Parameters:**
 - `connector: PsAgentConnectorAttributes`: The connector attributes.
 - `connectorClass: PsAgentConnectorClassAttributes`: The connector class attributes.
 - `agent: PsAgent`: The agent instance.
-- `memory: any`: The memory instance.
+- `memory: any`: The memory object.
 
 **Returns:**
-- `PsBaseDocumentConnector | null`: The created document connector or null if the connector name is unsupported.
+- `PsBaseDocumentConnector | null`: The created document connector or null if the type is unsupported.
+
+### `createSheetConnector`
+
+Creates a sheet connector based on the provided configuration.
+
+**Parameters:**
+- `connector: PsAgentConnectorAttributes`: The connector attributes.
+- `connectorClass: PsAgentConnectorClassAttributes`: The connector class attributes.
+- `agent: PsAgent`: The agent instance.
+- `memory: any`: The memory object.
+
+**Returns:**
+- `PsBaseSheetConnector | null`: The created sheet connector or null if the type is unsupported.
 
 ### `createNotificationsConnector`
 
-Creates a notifications connector based on the provided connector class name.
+Creates a notifications connector based on the provided configuration.
 
 **Parameters:**
 - `connector: PsAgentConnectorAttributes`: The connector attributes.
 - `connectorClass: PsAgentConnectorClassAttributes`: The connector class attributes.
 - `agent: PsAgent`: The agent instance.
-- `memory: any`: The memory instance.
+- `memory: any`: The memory object.
 
 **Returns:**
-- `PsBaseNotificationsConnector | null`: The created notifications connector or null if the connector name is unsupported.
+- `PsBaseNotificationsConnector | null`: The created notifications connector or null if the type is unsupported.
 
-### `createCollaborationConnector`
+### `createIdeasCollaborationConnector`
 
-Creates a collaboration connector based on the provided connector class name.
+Creates an ideas collaboration connector based on the provided configuration.
 
 **Parameters:**
 - `connector: PsAgentConnectorAttributes`: The connector attributes.
 - `connectorClass: PsAgentConnectorClassAttributes`: The connector class attributes.
 - `agent: PsAgent`: The agent instance.
-- `memory: any`: The memory instance.
+- `memory: any`: The memory object.
 
 **Returns:**
-- `PsBaseCollaborationConnector | null`: The created collaboration connector or null if the connector name is unsupported.
+- `PsBaseIdeasCollaborationConnector | null`: The created ideas collaboration connector or null if the type is unsupported.
+
+### `createVotingCollaborationConnector`
+
+Creates a voting collaboration connector based on the provided configuration.
+
+**Parameters:**
+- `connector: PsAgentConnectorAttributes`: The connector attributes.
+- `connectorClass: PsAgentConnectorClassAttributes`: The connector class attributes.
+- `agent: PsAgent`: The agent instance.
+- `memory: any`: The memory object.
+
+**Returns:**
+- `PsBaseVotingCollaborationConnector | null`: The created voting collaboration connector or null if the type is unsupported.
 
 ### `getConnector`
 
-Retrieves a connector of the specified type for the given agent.
+Retrieves a connector of the specified type from the agent's connectors.
 
 **Parameters:**
 - `agent: PsAgent`: The agent instance.
-- `memory: any`: The memory instance.
+- `memory: any`: The memory object.
 - `connectorType: PsConnectorClassTypes`: The type of connector to retrieve.
 - `isInput: boolean = true`: Whether to retrieve an input connector (default is true).
 
 **Returns:**
-- `PsBaseConnectorTypes | null`: The retrieved connector or null if no matching connector is found.
+- `PsBaseConnectorTypes | null`: The retrieved connector or null if not found.

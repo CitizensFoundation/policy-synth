@@ -1,161 +1,109 @@
 # PsProgressTracker
 
-The `PsProgressTracker` class is designed to track the progress of an agent and store its state in a Redis database. It extends the `PolicySynthAgentBase` class and provides methods to load, update, and save the agent's memory.
+The `PsProgressTracker` class is designed to track and manage the progress of an agent using Redis for state persistence. It extends the `PolicySynthAgentBase` class and provides methods to load, update, and save the agent's status.
 
 ## Properties
 
-| Name            | Type                | Description                                      |
-|-----------------|---------------------|--------------------------------------------------|
-| redis           | Redis               | Instance of the Redis client.                    |
-| redisMemoryKey  | string              | Key used to store the agent's memory in Redis.   |
-| memory          | PsAgentMemoryData   | Object to store the agent's memory data.         |
-| startProgress   | number              | Initial progress value.                          |
-| endProgress     | number              | Final progress value.                            |
+| Name            | Type         | Description                                      |
+|-----------------|--------------|--------------------------------------------------|
+| redis           | Redis        | Instance of the Redis client.                    |
+| redisStatusKey  | string       | Key used to store and retrieve status in Redis.  |
+| status          | PsAgentStatus| Current status of the agent.                     |
+| startProgress   | number       | Starting progress value.                         |
+| endProgress     | number       | Ending progress value.                           |
 
 ## Constructor
 
-```typescript
-constructor(
-  redisMemoryKey: string,
-  startProgress: number,
-  endProgress: number,
-  redisUrl: string = process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
-)
-```
+### `constructor(redisStatusKey: string, startProgress: number, endProgress: number, redisUrl: string = process.env.REDIS_MEMORY_URL || "redis://localhost:6379")`
 
-### Parameters
+Initializes a new instance of the `PsProgressTracker` class.
 
-- `redisMemoryKey` (string): Key used to store the agent's memory in Redis.
-- `startProgress` (number): Initial progress value.
-- `endProgress` (number): Final progress value.
+#### Parameters
+
+- `redisStatusKey` (string): Key used to store and retrieve status in Redis.
+- `startProgress` (number): Starting progress value.
+- `endProgress` (number): Ending progress value.
 - `redisUrl` (string, optional): URL of the Redis server. Defaults to `process.env.REDIS_MEMORY_URL` or `"redis://localhost:6379"`.
 
 ## Methods
 
-### loadMemoryFromRedis
+### `public async loadStatusFromRedis(): Promise<void>`
 
-```typescript
-public async loadMemoryFromRedis(): Promise<void>
-```
+Loads the agent's status from Redis.
 
-Loads the agent's memory from Redis.
-
-### updateRangedProgress
-
-```typescript
-public async updateRangedProgress(progress: number | undefined, message: string): Promise<void>
-```
+### `public async updateRangedProgress(progress: number | undefined, message: string): Promise<void>`
 
 Updates the agent's progress within a specified range and adds a message.
 
-### Parameters
+#### Parameters
 
 - `progress` (number | undefined): Progress value to update.
-- `message` (string): Message to add to the memory.
+- `message` (string): Message to add to the status.
 
-### updateProgress
-
-```typescript
-public async updateProgress(progress: number | undefined, message: string): Promise<void>
-```
+### `public async updateProgress(progress: number | undefined, message: string): Promise<void>`
 
 Updates the agent's progress and adds a message.
 
-### Parameters
+#### Parameters
 
 - `progress` (number | undefined): Progress value to update.
-- `message` (string): Message to add to the memory.
+- `message` (string): Message to add to the status.
 
-### saveMemory
+### `private async saveRedisStatus(): Promise<void>`
 
-```typescript
-private async saveMemory(): Promise<void>
-```
+Saves the current status to Redis.
 
-Saves the agent's memory to Redis.
-
-### getProgress
-
-```typescript
-public getProgress(): number
-```
+### `public getProgress(): number`
 
 Returns the current progress value.
 
-### getMessages
-
-```typescript
-public getMessages(): string[]
-```
+### `public getMessages(): string[]`
 
 Returns the list of messages.
 
-### getState
-
-```typescript
-public getState(): string
-```
+### `public getState(): string`
 
 Returns the current state of the agent.
 
-### setAgentId
-
-```typescript
-public setAgentId(agentId: number): void
-```
-
-Sets the agent's ID.
-
-### Parameters
-
-- `agentId` (number): ID of the agent.
-
-### setCompleted
-
-```typescript
-public async setCompleted(message: string): Promise<void>
-```
+### `public async setCompleted(message: string): Promise<void>`
 
 Sets the agent's state to "completed" and updates the progress to 100%.
 
-### Parameters
+#### Parameters
 
-- `message` (string): Message to add to the memory.
+- `message` (string): Message to add to the status.
 
-### setError
-
-```typescript
-public async setError(errorMessage: string): Promise<void>
-```
+### `public async setError(errorMessage: string): Promise<void>`
 
 Sets the agent's state to "error" and adds an error message.
 
-### Parameters
+#### Parameters
 
-- `errorMessage` (string): Error message to add to the memory.
+- `errorMessage` (string): Error message to add to the status.
 
-### formatNumber
-
-```typescript
-public formatNumber(number: number, fractions = 0): string
-```
+### `public formatNumber(number: number, fractions = 0): string`
 
 Formats a number with a specified number of fraction digits.
 
-### Parameters
+#### Parameters
 
 - `number` (number): Number to format.
 - `fractions` (number, optional): Number of fraction digits. Defaults to 0.
+
+#### Returns
+
+- `string`: Formatted number.
 
 ## Example
 
 ```typescript
 import { PsProgressTracker } from '@policysynth/agents/base/agentProgressTracker.js';
 
-const tracker = new PsProgressTracker("agent:memory:key", 0, 100);
+const progressTracker = new PsProgressTracker("agentStatusKey", 0, 100);
 
-await tracker.loadMemoryFromRedis();
-await tracker.updateProgress(50, "Halfway there!");
-console.log(tracker.getProgress()); // 50
-console.log(tracker.getMessages()); // ["Halfway there!"]
+(async () => {
+  await progressTracker.updateProgress(50, "Halfway there!");
+  console.log(progressTracker.getProgress()); // 50
+  console.log(progressTracker.getMessages()); // ["Halfway there!"]
+})();
 ```

@@ -25,14 +25,20 @@
     - [baseCollaborationConnector](src/connectors/base/baseCollaborationConnector.md)
     - [baseConnector](src/connectors/base/baseConnector.md)
     - [baseDocumentConnector](src/connectors/base/baseDocumentConnector.md)
+    - [baseIdeasCollaborationConnector](src/connectors/base/baseIdeasCollaborationConnector.md)
     - [baseNotificationsConnector](src/connectors/base/baseNotificationsConnector.md)
+    - [baseSheetConnector](src/connectors/base/baseSheetConnector.md)
+    - [baseVotingCollaborationConnector](src/connectors/base/baseVotingCollaborationConnector.md)
     - [connectorFactory](src/connectors/base/connectorFactory.md)
   - collaboration
+    - [allOurIdeasConnector](src/connectors/collaboration/allOurIdeasConnector.md)
     - [yourPrioritiesConnector](src/connectors/collaboration/yourPrioritiesConnector.md)
   - documents
     - [googleDocsConnector](src/connectors/documents/googleDocsConnector.md)
   - notifications
     - [discordConnector](src/connectors/notifications/discordConnector.md)
+  - sheets
+    - [googleSheetsConnector](src/connectors/sheets/googleSheetsConnector.md)
 - [constants](src/src/constants.md)
 - dbModels
   - [agent](src/dbModels/agent.md)
@@ -51,6 +57,12 @@
   - [ypGroup](src/dbModels/ypGroup.md)
   - [ypOrganization](src/dbModels/ypOrganization.md)
   - [ypUser](src/dbModels/ypUser.md)
+- operations
+  - [agentConnectorManager](src/operations/agentConnectorManager.md)
+  - [agentCostsManager](src/operations/agentCostsManager.md)
+  - [agentManager](src/operations/agentManager.md)
+  - [agentQueueManager](src/operations/agentQueueManager.md)
+  - [agentRegistryManager](src/operations/agentRegistryManager.md)
 - [queue](src/src/queue.md)
 - rag
   - ingestion

@@ -6,20 +6,20 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { PsOperationsView } from './ps-operations-view.js';
 import { MdMenu } from '@material/web/menu/menu.js';
 import { YpCodeBase } from '@yrpri/webapp/common/YpCodeBaseclass.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 
-export class OpsStreamingAIResponse extends YpCodeBase {
+export class PsStreamingAIResponse extends YpCodeBase {
   wsClientId!: string;
 
   targetContainer: HTMLElement | HTMLInputElement | undefined;
 
   caller: YpBaseElement;
 
-  api: OpsServerApi;
+  api: PsServerApi;
 
   ws!: WebSocket;
 
@@ -31,7 +31,7 @@ export class OpsStreamingAIResponse extends YpCodeBase {
   ) {
     super();
     this.caller = caller;
-    this.api = new OpsServerApi();
+    this.api = new PsServerApi();
     this.targetContainer = targetContainer;
   }
 

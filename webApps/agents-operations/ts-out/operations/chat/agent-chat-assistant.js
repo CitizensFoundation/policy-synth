@@ -17,7 +17,7 @@ import '@material/web/icon/icon.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@yrpri/webapp/common/yp-image.js';
 import './agent-ai-chat-element.js';
-import { OpsServerApi } from '../OpsServerApi.js';
+import { PsServerApi } from '../PsServerApi.js';
 import { PsChatAssistant } from '../../chatBot/ps-chat-assistant.js';
 const PROMPT_DEBUG = true;
 let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
@@ -26,7 +26,7 @@ let LtpChatAssistant = class LtpChatAssistant extends PsChatAssistant {
         this.defaultInfoMessage = "I'm your Current Reality Tree assistant. I'm here to help to identify direct causes of: ";
         this.lastChainCompletedAsValid = false;
         this.defaultDevWsPort = 8000;
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     connectedCallback() {
         super.connectedCallback();

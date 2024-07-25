@@ -13,7 +13,7 @@ import '@material/web/select/filled-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/textfield/filled-text-field.js';
 import './ps-ai-model-selector.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
     constructor() {
@@ -25,7 +25,7 @@ let PsAddAgentDialog = class PsAddAgentDialog extends YpBaseElement {
         this.selectedAiModelIds = {};
         this.agentName = '';
         this.requestedAiModelSizes = [];
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     async connectedCallback() {
         super.connectedCallback();

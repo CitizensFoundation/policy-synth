@@ -1,6 +1,24 @@
 //TODO: Sync this automatically with @yrpri look into circular issues
 //Make sure doesnt conflict with yrpri
 
+interface YpGroupPrivateAccessConfiguration {
+  aiModelId?: number;
+  externalApiId?: number;
+  projectId?: string;
+  apiKey: string;
+}
+
+// tablename "organizations"
+interface YpOrganizationsData {
+  id: number;
+  user_id: number;
+  name: string;
+  type: string;
+  created_at: Date;
+  updated_at: Date;
+  configuration: any;
+}
+
 interface YpLanguageData {
   englishName: string;
   nativeName: string;
@@ -308,11 +326,11 @@ interface YpGroupConfiguration extends YpCollectionConfiguration {
     media: Array<YpSimpleGroupMediaData>;
   },
   useNewVersion?: boolean;
-  agents?: YpAgentsConfiguration;
+  agents?: YpPsAgentConfiguration;
 }
 
 interface YpPsAgentConfiguration {
-  topLevelAgentId: number;
+  topLevelAgentId?: number;
 }
 
 interface YpSimpleGroupMediaData {
@@ -567,6 +585,8 @@ interface YpGroupData extends YpCollectionData {
   GroupHeaderImages?: Array<YpImageData>;
   GroupLogoImages?: Array<YpImageData>;
   CommunityLink?: YpCommunityData;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface YpBaseMedia {
@@ -746,6 +766,8 @@ interface YpUserData {
   notifications_settings?: AcNotificationSettingsData;
   default_locale?: string;
   hasRegistrationAnswers?: boolean;
+  created_at: Date;
+  updated_at: Date;
 }
 
 declare interface IronListInterface extends HTMLElement {

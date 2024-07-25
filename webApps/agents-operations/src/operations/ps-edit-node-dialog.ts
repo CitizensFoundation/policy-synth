@@ -11,7 +11,7 @@ import './ps-ai-model-selector.js';
 
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element';
 import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 
 @customElement('ps-edit-node-dialog')
 export class PsEditNodeDialog extends YpBaseElement {
@@ -26,7 +26,7 @@ export class PsEditNodeDialog extends YpBaseElement {
     [key in PsAiModelSize]?: PsAiModelAttributes;
   } = {};
 
-  private api = new OpsServerApi();
+  private api = new PsServerApi();
 
   async connectedCallback() {
     super.connectedCallback();

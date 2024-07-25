@@ -11,7 +11,7 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/progress/linear-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
     constructor() {
@@ -19,7 +19,7 @@ let PsAgentNode = class PsAgentNode extends PsOperationsBaseNode {
         this.agentState = 'stopped';
         this.latestMessage = '';
         this.menuOpen = false;
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     firstUpdated() {
         if (this.agentMenu && this.menuAnchor) {

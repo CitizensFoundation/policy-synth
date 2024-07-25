@@ -33,6 +33,7 @@
   "include": [
     "**/*.ts",
     "./node_modules/@policysynth/agents/*.d.ts",
+    "./node_modules/@policysynth/agents/streamingLLms.d.ts",
     "./node_modules/@yrpri/webapp/*.d.ts",
     "src/flexbox-literals/literals.ts"
   ],

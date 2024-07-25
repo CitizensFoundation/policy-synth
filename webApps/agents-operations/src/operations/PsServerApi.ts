@@ -1,7 +1,7 @@
 import { BaseChatBotServerApi } from '../chatBot/BaseChatBotApi';
 import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
 
-export class OpsServerApi extends BaseChatBotServerApi {
+export class PsServerApi extends BaseChatBotServerApi {
   baseAgentsPath = '/agents/';
   constructor(urlPath: string = '/api') {
     super();

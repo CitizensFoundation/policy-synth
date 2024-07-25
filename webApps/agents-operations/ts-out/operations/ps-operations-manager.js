@@ -14,8 +14,8 @@ import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/button/filled-tonal-button.js';
 import './ps-operations-view.js';
-import './OpsServerApi.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import './PsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import './ps-edit-node-dialog.js';
 import './ps-add-agent-dialog.js';
 import './ps-add-connector-dialog.js';
@@ -33,7 +33,7 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         this.selectedInputOutputType = null;
         this.groupId = 1; // TODO: No default here
         this.activeAiModels = [];
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
         this.getAgent();
     }
     async getAgent() {

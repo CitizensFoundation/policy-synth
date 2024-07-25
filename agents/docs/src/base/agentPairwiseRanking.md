@@ -8,6 +8,7 @@ The `PairwiseRankingAgent` is an abstract class that extends the `PolicySynthAge
 |-----------------------------|-------------------------------------|-----------------------------------------------------------------------------|
 | `maxModelTokensOut`         | `number`                            | Maximum number of tokens for the model output.                              |
 | `modelTemperature`          | `number`                            | Temperature setting for the model.                                          |
+| `defaultModelSize`          | `PsAiModelSize`                     | Default size of the AI model.                                               |
 | `prompts`                   | `Record<number, number[][]>`        | Record of prompts for each sub-problem.                                     |
 | `allItems`                  | `Record<number, (PsEloRateable[] \| string[]) \| undefined>` | Record of all items for each sub-problem.                                   |
 | `INITIAL_ELO_RATING`        | `number`                            | Initial Elo rating for items.                                               |
@@ -24,14 +25,14 @@ The `PairwiseRankingAgent` is an abstract class that extends the `PolicySynthAge
 
 ## Methods
 
-| Name                    | Parameters                                                                 | Return Type                | Description                                                                 |
-|-------------------------|----------------------------------------------------------------------------|----------------------------|-----------------------------------------------------------------------------|
-| `fisherYatesShuffle`    | `array: any[]`                                                             | `any[]`                    | Shuffles an array using the Fisher-Yates algorithm.                         |
-| `setupRankingPrompts`   | `subProblemIndex: number, allItems: PsEloRateable[] \| string[], maxPrompts: number \| undefined = undefined, updateFunction: Function \| undefined = undefined` | `void`                     | Sets up ranking prompts for a sub-problem.                                   |
-| `voteOnPromptPair`      | `subProblemIndex: number, promptPair: number[], additionalData?: any`      | `Promise<PsPairWiseVoteResults>` | Abstract method to vote on a prompt pair.                                   |
-| `getResultsFromLLM`     | `subProblemIndex: number, messages: PsModelMessage[], itemOneIndex: number, itemTwoIndex: number` | `Promise<{ subProblemIndex: number, wonItemIndex: number, lostItemIndex: number }>` | Gets results from the LLM for a prompt pair.                                |
-| `getUpdatedKFactor`     | `numComparisons: number`                                                   | `number`                   | Calculates the updated K-factor based on the number of comparisons.         |
-| `performPairwiseRanking`| `subProblemIndex: number, additionalData?: any`                            | `Promise<void>`            | Performs pairwise ranking for a sub-problem.                                |
+| Name                   | Parameters                                                                 | Return Type                | Description                                                                 |
+|------------------------|----------------------------------------------------------------------------|----------------------------|-----------------------------------------------------------------------------|
+| `fisherYatesShuffle`   | `array: any[]`                                                             | `any[]`                    | Shuffles an array using the Fisher-Yates algorithm.                         |
+| `setupRankingPrompts`  | `subProblemIndex: number, allItems: PsEloRateable[] \| string[], maxPrompts: number \| undefined = undefined, updateFunction: Function \| undefined = undefined` | `void`                     | Sets up ranking prompts for a sub-problem.                                   |
+| `voteOnPromptPair`     | `subProblemIndex: number, promptPair: number[], additionalData?: any`      | `Promise<PsPairWiseVoteResults>` | Abstract method to vote on a prompt pair.                                   |
+| `getResultsFromLLM`    | `subProblemIndex: number, messages: PsModelMessage[], itemOneIndex: number, itemTwoIndex: number` | `Promise<{ subProblemIndex: number, wonItemIndex: number, lostItemIndex: number }>` | Gets results from the LLM for a prompt pair.                                |
+| `getUpdatedKFactor`    | `numComparisons: number`                                                   | `number`                   | Calculates the updated K-factor based on the number of comparisons.         |
+| `performPairwiseRanking` | `subProblemIndex: number, additionalData?: any`                          | `Promise<void>`            | Performs pairwise ranking for a sub-problem.                                |
 | `getOrderedListOfItems` | `subProblemIndex: number, setEloRatings: boolean = false, customEloRatingKey: string \| undefined = undefined` | `any[]`                    | Retrieves an ordered list of items based on their Elo ratings.              |
 
 ## Example
@@ -39,16 +40,17 @@ The `PairwiseRankingAgent` is an abstract class that extends the `PolicySynthAge
 ```typescript
 import { PairwiseRankingAgent } from '@policysynth/agents/base/agentPairwiseRanking.js';
 
-class CustomPairwiseRankingAgent extends PairwiseRankingAgent {
+class MyPairwiseRankingAgent extends PairwiseRankingAgent {
   async voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<PsPairWiseVoteResults> {
-    // Custom implementation for voting on a prompt pair
-    const wonItemIndex = promptPair[0]; // Example logic
-    const lostItemIndex = promptPair[1]; // Example logic
-    return { wonItemIndex, lostItemIndex };
+    // Implement your voting logic here
+    return {
+      wonItemIndex: promptPair[0],
+      lostItemIndex: promptPair[1]
+    };
   }
 }
 
-const agent = new CustomPairwiseRankingAgent();
+const agent = new MyPairwiseRankingAgent();
 agent.setupRankingPrompts(0, ["Item1", "Item2", "Item3"]);
 agent.performPairwiseRanking(0).then(() => {
   const orderedItems = agent.getOrderedListOfItems(0);

@@ -14,7 +14,7 @@ interface DiscordConversation {
 
 interface PsConnectorsConfig {
   discord?: {
-    liveDiscordChannelConversations: Record<id, DiscordConversation>;
-    archivedDiscordChannelConversations: Record<id, DiscordConversation>;
+    liveDiscordChannelConversations: Record<any, DiscordConversation>;
+    archivedDiscordChannelConversations: Record<any, DiscordConversation>;
   };
 }

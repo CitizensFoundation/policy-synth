@@ -13,7 +13,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import './ps-agent-node.js';
 import './ps-connector-node.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { AgentShape, AgentsShapeView } from './ps-agent-shape.js';
 import { ConnectorShape } from './ps-connector-shape.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
@@ -26,7 +26,7 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         this.lastClientX = 0;
         this.lastClientY = 0;
         this.jointNamespace = {};
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     async connectedCallback() {
         super.connectedCallback();

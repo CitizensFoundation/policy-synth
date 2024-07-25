@@ -14,7 +14,7 @@ import '@material/web/textfield/filled-text-field';
 import '@material/web/progress/circular-progress';
 import { jsonrepair } from 'jsonrepair';
 import '@yrpri/webapp/common/yp-image';
-import { OpsServerApi } from '../OpsServerApi.js';
+import { PsServerApi } from '../PsServerApi.js';
 import { PsAiChatElement } from '../../chatBot/ps-ai-chat-element.js';
 let LtpAiChatElement = class LtpAiChatElement extends PsAiChatElement {
     constructor() {
@@ -47,7 +47,7 @@ let LtpAiChatElement = class LtpAiChatElement extends PsAiChatElement {
                 }
             }
         };
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     static get styles() {
         return [

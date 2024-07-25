@@ -10,7 +10,7 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import './ps-agent-node.js';
 import './ps-connector-node.js';
 
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import { AgentShape, AgentsShapeView } from './ps-agent-shape.js';
 import { ConnectorShape } from './ps-connector-shape.js';
@@ -32,11 +32,11 @@ export class PsOperationsView extends PsBaseWithRunningAgentObserver {
   private lastClientY = 0;
   private debounce: number | undefined;
 
-  api: OpsServerApi;
+  api: PsServerApi;
 
   constructor() {
     super();
-    this.api = new OpsServerApi();
+    this.api = new PsServerApi();
   }
 
   override async connectedCallback() {

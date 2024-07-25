@@ -14,7 +14,7 @@ import '@material/web/select/select-option.js';
 import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
 import './ps-ai-model-selector.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
     constructor() {
         super(...arguments);
@@ -22,7 +22,7 @@ let PsEditNodeDialog = class PsEditNodeDialog extends YpBaseElement {
         this.activeAiModels = [];
         this.selectedAiModels = {};
         this.currentModels = {};
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     async connectedCallback() {
         super.connectedCallback();

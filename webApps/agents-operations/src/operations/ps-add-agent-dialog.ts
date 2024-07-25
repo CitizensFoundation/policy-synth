@@ -10,7 +10,7 @@ import '@material/web/textfield/filled-text-field.js';
 
 import './ps-ai-model-selector.js';
 
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
 
@@ -28,7 +28,7 @@ export class PsAddAgentDialog extends YpBaseElement {
 
   @state() private requestedAiModelSizes: PsAiModelSize[] = [];
 
-  private api = new OpsServerApi();
+  private api = new PsServerApi();
 
   async connectedCallback() {
     super.connectedCallback();

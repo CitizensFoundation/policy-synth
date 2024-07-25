@@ -1,6 +1,6 @@
 import { dia, shapes, util, V } from '@joint/core';
-import { OpsServerApi } from './OpsServerApi';
-const api = new OpsServerApi();
+import { PsServerApi } from './PsServerApi';
+const api = new PsServerApi();
 export class AgentsShapeView extends dia.ElementView {
     constructor() {
         super(...arguments);

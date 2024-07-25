@@ -12,7 +12,7 @@ import '@material/web/button/filled-button.js';
 import '@material/web/select/filled-select.js';
 import '@material/web/select/select-option.js';
 import '@material/web/textfield/filled-text-field.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
     constructor() {
         super(...arguments);
@@ -22,7 +22,7 @@ let PsAddConnectorDialog = class PsAddConnectorDialog extends LitElement {
         this.activeConnectorClasses = [];
         this.selectedConnectorClassId = null;
         this.connectorName = '';
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     async connectedCallback() {
         super.connectedCallback();

@@ -13,8 +13,8 @@ import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field
 import { MdTabs } from '@material/web/tabs/tabs.js';
 
 import './ps-operations-view.js';
-import './OpsServerApi.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import './PsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 
 import './ps-edit-node-dialog.js';
 import './ps-add-agent-dialog.js';
@@ -68,11 +68,11 @@ export class PsOperationsManager extends PsBaseWithRunningAgentObserver {
 
   private activeAiModels: PsAiModelAttributes[] = [];
 
-  api: OpsServerApi;
+  api: PsServerApi;
 
   constructor() {
     super();
-    this.api = new OpsServerApi();
+    this.api = new PsServerApi();
     this.getAgent();
   }
 

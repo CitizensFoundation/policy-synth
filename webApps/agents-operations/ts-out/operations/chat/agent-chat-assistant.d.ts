@@ -10,7 +10,7 @@ import '@material/web/iconbutton/outlined-icon-button.js';
 import '@yrpri/webapp/common/yp-image.js';
 import { LtpAiChatElement } from './agent-ai-chat-element.js';
 import './agent-ai-chat-element.js';
-import { OpsServerApi } from '../OpsServerApi.js';
+import { PsServerApi } from '../PsServerApi.js';
 import { PsChatAssistant } from '../../chatBot/ps-chat-assistant.js';
 export declare class LtpChatAssistant extends PsChatAssistant {
     crtData: LtpCurrentRealityTreeData;
@@ -20,7 +20,7 @@ export declare class LtpChatAssistant extends PsChatAssistant {
     chatElements?: LtpAiChatElement[];
     lastCausesToValidate: string[] | undefined;
     lastValidatedCauses: string[] | undefined;
-    api: OpsServerApi;
+    api: PsServerApi;
     heartbeatInterval: number | undefined;
     defaultDevWsPort: number;
     constructor();

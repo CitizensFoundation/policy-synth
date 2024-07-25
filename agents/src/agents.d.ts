@@ -158,7 +158,7 @@ interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
   groupId: number;
   lastSavedAt?: number;
   currentStage?: any;
-  stages?: Record<any, PsSimpleStagesData>;
+  stages?: Record<any, any>;
   currentStageError?: string | undefined;
   totalCost?: number;
 }
@@ -231,10 +231,7 @@ interface PsBaseNodeInstance extends PsBaseModelClass {
   configuration: PsBaseNodeConfiguration;
 }
 
-enum PsAgentsNodeType {
-  Agent = "agent",
-  Connector = "connector",
-}
+type PsAgentsNodeType = "agent" | "connector";
 
 interface PsAgentConnectorsBaseConfiguration extends PsBaseNodeConfiguration {
   name: string;
@@ -251,7 +248,7 @@ interface PsAgentAttributes extends PsBaseNodeInstance {
   OutputConnectors?: PsAgentConnectorAttributes[];
   AiModels?: PsAiModelAttributes[];
   Evals?: PsAgentEvalAttributes[];
-  configuration: PsAgentBaseConfiguration;
+  configuration: any; //TODO: Define the configuration
 }
 
 // tablename "ps_agent_connectors"
@@ -263,7 +260,7 @@ interface PsAgentConnectorAttributes extends PsBaseNodeInstance {
 }
 
 interface PsAgentRegistryConfiguration {
-  supportedAgents: PsBaseAgentClass[];
+  supportedAgents: import("./dbModels/agentClass.js").PsAgentClass[];
 }
 
 // tablename "ps_agent_registries"
@@ -291,12 +288,7 @@ interface PsAgentConnectorClassAttributes extends PsBaseModelClass {
   configuration: PsAgentConnectorConfiguration;
 }
 
-enum PsAgentConnectorPermissionTypes {
-  Read = "read",
-  Write = "write",
-  ReadWrite = "readWrite",
-  Admin = "admin",
-}
+type PsAgentConnectorPermissionTypes = "read" | "write" | "readWrite" | "admin";
 
 interface PsAgentAuditLogDetails {
   description: string;
@@ -316,43 +308,6 @@ interface PsAgentStartJobData {
   action: "start" | "pause" | "stop";
 }
 
-interface YpGroupPrivateAccessConfiguration {
-  aiModelId?: number;
-  externalApiId?: number;
-  projectId?: string;
-  apiKey: string;
-}
-
-// tablename "groups"
-interface YpGroupData {
-  id: number;
-  name: string;
-  user_id: number;
-  private_access_configuration: YpGroupPrivateAccessConfiguration[];
-  configuration: YpGroupConfiguration;
-  created_at: Date;
-  updated_at: Date;
-}
-
-// tablename "users"
-interface YpUserData {
-  id: number;
-  name: string;
-  email: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-// tablename "organizations"
-interface YpOrganizationsData {
-  id: number;
-  user_id: number;
-  name: string;
-  type: string;
-  created_at: Date;
-  updated_at: Date;
-  configuration: any;
-}
 
 interface PsModelRateLimitTracking {
   [modelName: string]: {
@@ -367,7 +322,7 @@ type PsAgentClassCreationAttributes = Omit<
 >;
 
 type PsConnectorClassCreationAttributes = Omit<
-  PsConnectorClassAttributes,
+  any,
   "id" | "uuid" | "created_at" | "updated_at"
 >;
 

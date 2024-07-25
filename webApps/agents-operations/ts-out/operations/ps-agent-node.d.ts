@@ -4,7 +4,7 @@ import '@material/web/progress/circular-progress.js';
 import '@material/web/progress/linear-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
 import { MdMenu } from '@material/web/menu/menu.js';
 export declare class PsAgentNode extends PsOperationsBaseNode {
@@ -16,7 +16,7 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     private menuOpen;
     menuAnchor: HTMLElement;
     agentMenu: MdMenu;
-    api: OpsServerApi;
+    api: PsServerApi;
     private statusInterval;
     constructor();
     firstUpdated(): void;
