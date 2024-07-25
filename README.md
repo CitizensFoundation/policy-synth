@@ -5,7 +5,7 @@
 Policy Synth is a Typescript class library for creating multi-scale AI agent logic flows, API's and state of the art, realtime, AI focused web applications.
 
 ## Paper at ACM Collective Intelligence 2024
-[Paper: Using Artificial Intelligence to Accelerate Collective Intelligence: Policy Synth and Smarter Crowdsourcing](https://drive.google.com/file/d/1VaCgDcGdYaRkLgdr6C-6BQFdoGyqWQ1U/view?usp=sharing) 
+[Paper: Using Artificial Intelligence to Accelerate Collective Intelligence: Policy Synth and Smarter Crowdsourcing](https://arxiv.org/abs/2407.13960) 
 
 [ACM CI 2024 Program](https://ci2024.weebly.com/program.html)
 
