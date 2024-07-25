@@ -34,7 +34,7 @@ export declare class PsAgentNode extends PsOperationsBaseNode {
     editNode(): void;
     renderActionButtons(): import("lit").TemplateResult<1>;
     renderProgress(): import("lit").TemplateResult<1>;
-    render(): typeof nothing | import("lit").TemplateResult<1>;
+    render(): import("lit").TemplateResult<1> | typeof nothing;
     static get styles(): (any[] | import("lit").CSSResult)[];
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map
