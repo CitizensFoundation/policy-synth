@@ -1,9 +1,9 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 
-export class SearchQueriesGenerator extends PolicySynthAgentBase {
+export class SearchQueriesGenerator extends PolicySynthScAgentBase {
   systemPrompt: string;
   userPrompt: string;
   override memory: PsEngineerMemoryData;

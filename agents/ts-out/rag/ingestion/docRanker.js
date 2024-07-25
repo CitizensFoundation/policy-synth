@@ -1,12 +1,9 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
+import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
+export class IngestionDocumentRanker extends SimplePairwiseRankingsAgent {
     rankingRules;
     overallTopic;
     constructor(memory = undefined, progressFunction = undefined) {
-        super(undefined, memory);
+        super(memory);
         this.progressFunction = progressFunction;
     }
     async voteOnPromptPair(index, promptPair) {
@@ -15,7 +12,7 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert trained to documents based on their relevance to the users ranking rules.
 
         Instructions:
@@ -25,7 +22,7 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         User Ranking Rules:
         ${this.rankingRules}
 
@@ -43,17 +40,11 @@ export class IngestionDocumentRanker extends BasePairwiseRankingsProcessor {
         The Most Relevant Document Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "ingestion-agent", PsIngestionConstants.ingestionMainModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "ingestion-agent", messages, itemOneIndex, itemTwoIndex);
     }
     async rankDocuments(docsToRank, rankingRules, overallTopic, eloRatingKey) {
         this.rankingRules = rankingRules;
         this.overallTopic = overallTopic;
-        this.chat = new ChatOpenAI({
-            temperature: PsIngestionConstants.ingestionRankingModel.temperature,
-            maxTokens: PsIngestionConstants.ingestionRankingModel.maxOutputTokens,
-            modelName: PsIngestionConstants.ingestionRankingModel.name,
-            verbose: PsIngestionConstants.ingestionRankingModel.verbose,
-        });
         this.setupRankingPrompts(-1, docsToRank, docsToRank.length * 10, this.progressFunction);
         await this.performPairwiseRanking(-1);
         return this.getOrderedListOfItems(-1, true, eloRatingKey);

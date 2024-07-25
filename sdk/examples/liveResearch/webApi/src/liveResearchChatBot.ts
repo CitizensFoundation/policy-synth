@@ -44,7 +44,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       this.sendAgentStart("Generate search queries");
       const searchQueriesGenerator =
         new SearchQueriesGenerator(
-          this.memory as PsBaseMemoryData,
+          this.memory as PsSmarterCrowdsourcingMemoryData,
           this.numberOfQueriesToGenerate,
           question
         );
@@ -58,7 +58,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Rank search queries
       this.sendAgentStart("Pairwise Ranking Search Queries");
       const searchQueriesRanker = new SearchQueriesRanker(
-        this.memory as PsBaseMemoryData,
+        this.memory as PsSmarterCrowdsourcingMemoryData,
         this.sendAgentUpdate.bind(this)
       );
 
@@ -76,7 +76,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Search the web
       this.sendAgentStart("Searching the Web...");
       const webSearch = new ResearchWeb(
-        this.memory as PsBaseMemoryData
+        this.memory as PsSmarterCrowdsourcingMemoryData
       );
       const searchResults = await webSearch.search(queriesToSearch);
       this.sendAgentCompleted(`Found ${searchResults.length} Web Pages`);
@@ -84,7 +84,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       // Rank search results
       this.sendAgentStart("Pairwise Ranking Search Results");
       const searchResultsRanker = new SearchResultsRanker(
-        this.memory as PsBaseMemoryData,
+        this.memory as PsSmarterCrowdsourcingMemoryData,
         this.sendAgentUpdate.bind(this)
       );
       const rankedSearchResults = await searchResultsRanker.rankSearchResults(
@@ -103,7 +103,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
       this.sendAgentStart("Scan and Research Web pages");
 
       const webPageResearch = new WebPageScanner(
-        this.memory as PsBaseMemoryData
+        this.memory as PsSmarterCrowdsourcingMemoryData
       );
       const webScan = await webPageResearch.scan(
         searchResultsToScan.map((i) => i.url),

@@ -1,12 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class Group extends Model {
-    id;
-    name;
-    user_id;
-    created_at;
-    updated_at;
-    configuration;
 }
 Group.init({
     id: {

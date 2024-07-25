@@ -19,7 +19,7 @@ import { MdFilledTonalButton } from '@material/web/button/filled-tonal-button.js
 import { MdOutlinedTextField } from '@material/web/textfield/outlined-text-field.js';
 
 import './agent-ai-chat-element.js';
-import { OpsServerApi } from '../OpsServerApi.js';
+import { PsServerApi } from '../PsServerApi.js';
 import { PsChatAssistant } from '../../chatBot/ps-chat-assistant.js';
 
 const PROMPT_DEBUG = true;
@@ -48,14 +48,14 @@ export class LtpChatAssistant extends PsChatAssistant {
   @property({ type: Array })
   lastValidatedCauses: string[] | undefined;
 
-  api: OpsServerApi;
+  api: PsServerApi;
   heartbeatInterval: number | undefined;
 
   defaultDevWsPort = 8000;
 
   constructor() {
     super();
-    this.api = new OpsServerApi();
+    this.api = new PsServerApi();
   }
 
   override connectedCallback() {

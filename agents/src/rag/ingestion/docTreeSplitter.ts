@@ -1,6 +1,3 @@
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-
 import { BaseIngestionAgent } from "./baseAgent.js";
 
 interface Chunk {
@@ -17,7 +14,7 @@ export class DocumentTreeSplitAgent extends BaseIngestionAgent {
   maxChunkLinesLength = 15;
 
   strategySystemMessage =
-    new SystemMessage(`You are an expert document split strategy generator.
+    this.createSystemMessage(`You are an expert document split strategy generator.
 
 Instructions:
 - Your job is to analyze the text document and outline a strategy how best to split this document up into chapters.
@@ -48,7 +45,7 @@ Output:
 `);
 
   strategyUserMessage = (data: string) =>
-    new HumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
+    this.createHumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
     ${data}
 </DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
 
@@ -56,7 +53,7 @@ YOUR THOUGHTFUL STRATEGY:
 `);
 
   strategyWithReviewUserMessage = (data: string, lastAttempt: string, reviewComments: string) =>
-    new HumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
+    this.createHumanMessage(`<DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
     ${data}
   </DOCUMENT_TO_ANALYZE_FOR_SPLIT_STRATEGY>
 
@@ -73,7 +70,7 @@ YOUR THOUGHTFUL STRATEGY:
   `);
 
   reviewStrategySystemMessage =
-    new SystemMessage(`You are an expert document split strategy evaluator.
+    this.createSystemMessage(`You are an expert document split strategy evaluator.
 
 Instructions:
 - Your job is to evaluate a split strategy for a document.
@@ -94,7 +91,7 @@ Output:
 `);
 
   reviewStrategyUserMessage = (data: string, splitStrategy: string) =>
-    new HumanMessage(`<DOCUMENT_FOR_SPLIT_STRATEGY>
+    this.createHumanMessage(`<DOCUMENT_FOR_SPLIT_STRATEGY>
     ${data}
 </DOCUMENT_FOR_SPLIT_STRATEGY>
 
@@ -148,7 +145,6 @@ YOUR EVALUATION: `);
     }
     const chunkingStrategy = (await this.callLLM(
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.strategySystemMessage,
         review
@@ -172,7 +168,6 @@ YOUR EVALUATION: `);
 
     const chunkingStrategyReview = (await this.callLLM(
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.reviewStrategySystemMessage,
         this.reviewStrategyUserMessage(data, chunkingStrategy)
@@ -215,7 +210,8 @@ YOUR EVALUATION: `);
       `Splitting document into chunks...(isSubChunk: ${isSubChunk}) (totalLinesInChunk: ${totalLinesInChunk})`
     );
     if (!isSubChunk) {
-      this.resetLlmTemperature();
+      //TODO: Look if we want to bring this back
+      //this.resetLlmTemperature();
     }
     let retryCount = 0;
     let validated = false;

@@ -1,5 +1,5 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
-export declare abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgentBase {
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
+export declare abstract class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentBase {
     numberOfQueriesToGenerate: number;
     percentOfQueriesToSearch: number;
     percentOfResultsToScan: number;

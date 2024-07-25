@@ -1,34 +1,14 @@
 import path from "path";
 import crypto, { createHash } from "crypto";
-import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 
-import { PolicySynthAgentBase } from "../../baseAgent.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-
-export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
+export abstract class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
   minChunkTokenLength: number = 1000;
   maxChunkTokenLength: number = 3500;
   maxFileProcessTokenLength: number = 110000;
   roughFastWordTokenRatio: number = 1.25;
-
-  constructor() {
-    super();
-    this.chat = new ChatOpenAI({
-      temperature: PsIngestionConstants.ingestionMainModel.temperature,
-      maxTokens: PsIngestionConstants.ingestionMainModel.maxOutputTokens,
-      modelName: PsIngestionConstants.ingestionMainModel.name,
-      verbose: PsIngestionConstants.ingestionMainModel.verbose,
-    });
-  }
-
-  resetLlmTemperature() {
-    this.chat!.temperature = PsIngestionConstants.ingestionMainModel.temperature;
-  }
-
-  randomizeLlmTemperature() {
-    this.chat!.temperature = Math.random() * (0.55 - 0.01) + 0.01;
-  }
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.0;
 
   logShortLines(text: string, maxLength = 50) {
     // Split the text into lines
@@ -173,8 +153,8 @@ export abstract class BaseIngestionAgent extends PolicySynthAgentBase {
     return createHash("sha256").update(data).digest("hex");
   }
 
-  getFirstMessages(systemMessage: SystemMessage, userMessage: BaseMessage) {
-    return [systemMessage, userMessage] as BaseMessage[];
+  getFirstMessages(systemMessage: PsModelMessage, userMessage: PsModelMessage) {
+    return [systemMessage, userMessage] as PsModelMessage[];
   }
 
   getFileName(url: string, isJsonData: boolean): string {

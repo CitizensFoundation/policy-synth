@@ -13,7 +13,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import './ps-agent-node.js';
 import './ps-connector-node.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { AgentShape, AgentsShapeView } from './ps-agent-shape.js';
 import { ConnectorShape } from './ps-connector-shape.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
@@ -26,7 +26,7 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         this.lastClientX = 0;
         this.lastClientY = 0;
         this.jointNamespace = {};
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     async connectedCallback() {
         super.connectedCallback();
@@ -431,23 +431,21 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
                 const el = this.createAgentElement(subAgent);
                 this.elements[this.getUniqueAgentId(subAgent)] = el;
                 renderedNodes.add(this.getUniqueAgentId(subAgent));
-                if (subAgent.Connectors && subAgent.Connectors.length > 0) {
-                    subAgent.Connectors.forEach(connector => {
-                        const el = this.createConnectorElement(connector, subAgent);
-                        this.elements[this.getUniqueConnectorId(connector)] = el;
-                        renderedNodes.add(this.getUniqueConnectorId(connector));
-                    });
-                }
+                // Collect all subAgent.InputConnectors and subAgent.OutputConnectors into const connectors
+                const connectors = [...subAgent.InputConnectors, ...subAgent.OutputConnectors];
+                connectors.forEach(connector => {
+                    const el = this.createConnectorElement(connector, subAgent);
+                    this.elements[this.getUniqueConnectorId(connector)] = el;
+                    renderedNodes.add(this.getUniqueConnectorId(connector));
+                });
             });
         }
-        if (this.currentAgent.Connectors &&
-            this.currentAgent.Connectors.length > 0) {
-            this.currentAgent.Connectors.forEach(connector => {
-                const el = this.createConnectorElement(connector, this.currentAgent);
-                this.elements[this.getUniqueConnectorId(connector)] = el;
-                renderedNodes.add(this.getUniqueConnectorId(connector));
-            });
-        }
+        const connectors = [...this.currentAgent.InputConnectors, ...this.currentAgent.OutputConnectors];
+        connectors.forEach(connector => {
+            const el = this.createConnectorElement(connector, this.currentAgent);
+            this.elements[this.getUniqueConnectorId(connector)] = el;
+            renderedNodes.add(this.getUniqueConnectorId(connector));
+        });
         setTimeout(() => {
             this.applyDirectedGraphLayout();
             this.updatePaperSize();
@@ -539,15 +537,15 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         }
 
         .agentContainer {
-          color: var(--md-sys-color-on-primary-container);
-          background-color: var(--md-sys-color-primary-container);
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface-container-high);
           border-radius: 16px;
           padding: 0;
         }
 
         .agentContainerRunning {
-          color: var(--md-sys-color-on-tertiary-container);
-          background-color: var(--md-sys-color-tertiary-container);
+          color: var(--md-sys-color-on-surface);
+          background-color: var(--md-sys-color-surface-container-lowest);
           border-radius: 16px;
           padding: 0;
         }
@@ -701,6 +699,11 @@ let PsOperationsView = class PsOperationsView extends PsBaseWithRunningAgentObse
         <div class="flex"></div>
 
         ${this.renderHeader()}
+
+        <md-filled-tonal-button @click="${() => this.fire('add-agent')}">
+          <md-icon slot="icon">add</md-icon>
+          ${this.t('Add Agent')}
+        </md-filled-tonal-button>
 
         <div class="flex"></div>
 

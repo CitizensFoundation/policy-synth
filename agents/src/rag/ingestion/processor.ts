@@ -6,8 +6,7 @@ import { HTTPResponse, Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
-import { PolicySynthAgentBase } from "../../baseAgent.js";
-import { PsConstants } from "../../constants.js";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 import { DocumentCleanupAgent } from "./docCleanup.js";
 import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -22,7 +21,7 @@ import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 import { isArray } from "util";
 
-export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
+export abstract class IngestionAgentAgent extends BaseIngestionAgent {
   dataLayoutPath: string;
   cachedFiles: string[] = [];
   fileMetadataPath: string = "./src/ingestion/cache/fileMetadata.json";
@@ -77,12 +76,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         this.logger.debug("Launching browser");
 
         const browserPage = await browser.newPage();
-        browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
+        browserPage.setDefaultTimeout(30); //TODO: Set from agent config
         browserPage.setDefaultNavigationTimeout(
-          PsConstants.webPageNavTimeout
+          30  //TODO: Set from agent config
         );
 
-        await browserPage.setUserAgent(PsConstants.currentUserAgent);
+        //await browserPage.setUserAgent("");  //TODO: Set from agent config
 
         await this.downloadAndCache(
           this.dataLayout.documentUrls,

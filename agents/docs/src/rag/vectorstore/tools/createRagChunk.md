@@ -1,18 +1,21 @@
 # PsRagChunkVectorStore
 
-This class is responsible for managing RAG (Retrieval-Augmented Generation) chunk vectors in a storage system.
+The `PsRagChunkVectorStore` class is responsible for managing the vector store for RAG (Retrieval-Augmented Generation) chunks. This class provides methods to add schemas and manage the vector store effectively.
 
 ## Methods
 
-| Name       | Parameters        | Return Type | Description                 |
-|------------|-------------------|-------------|-----------------------------|
-| addSchema  | -                 | Promise<void> | Initializes or updates the schema in the database for storing RAG chunks. |
+### addSchema
+
+```typescript
+async addSchema(): Promise<void>
+```
+
+Adds the schema to the vector store. This method is asynchronous and returns a promise that resolves when the schema has been added.
 
 ## Example
 
 ```typescript
-// Example usage of PsRagChunkVectorStore
-import { PsRagChunkVectorStore } from '@policysynth/agents/rag/vectorstore/tools/ragChunk.js';
+import { PsRagChunkVectorStore } from "../ragChunk.js";
 
 async function run() {
     const store = new PsRagChunkVectorStore();
@@ -22,3 +25,5 @@ async function run() {
 
 run();
 ```
+
+In this example, an instance of `PsRagChunkVectorStore` is created, and the `addSchema` method is called to add the schema to the vector store. The process exits once the schema has been added.

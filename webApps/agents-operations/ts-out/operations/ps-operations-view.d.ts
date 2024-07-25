@@ -6,7 +6,7 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import './ps-agent-node.js';
 import './ps-connector-node.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 export declare class PsOperationsView extends PsBaseWithRunningAgentObserver {
     currentAgent: PsAgentAttributes;
@@ -18,7 +18,7 @@ export declare class PsOperationsView extends PsBaseWithRunningAgentObserver {
     private lastClientX;
     private lastClientY;
     private debounce;
-    api: OpsServerApi;
+    api: PsServerApi;
     constructor();
     connectedCallback(): Promise<void>;
     private zoom;

@@ -1,17 +1,17 @@
 # PsRagDocumentVectorStore
 
-This class provides methods to interact with the RAG document vector storage, including operations to delete the storage scheme.
+The `PsRagDocumentVectorStore` class is responsible for managing the vector store for RAG (Retrieval-Augmented Generation) documents. This class provides methods to interact with the vector store, including deleting the schema.
 
 ## Methods
 
-| Name         | Parameters | Return Type | Description                           |
-|--------------|------------|-------------|---------------------------------------|
-| deleteScheme | none       | Promise<void> | Asynchronously deletes the storage scheme. |
+| Name         | Parameters | Return Type | Description                          |
+|--------------|-------------|-------------|--------------------------------------|
+| deleteScheme | None        | Promise<void> | Deletes the schema from the vector store. |
 
 ## Example
 
 ```typescript
-import { PsRagDocumentVectorStore } from '@policysynth/agents/rag/vectorstore/tools/destroyRagDocument.js';
+import { PsRagDocumentVectorStore } from "../ragDocument.js";
 
 async function run() {
     const store = new PsRagDocumentVectorStore();
@@ -21,3 +21,5 @@ async function run() {
 
 run();
 ```
+
+In this example, an instance of `PsRagDocumentVectorStore` is created, and the `deleteScheme` method is called to delete the schema from the vector store. After the schema is deleted, the process exits with a status code of 0.

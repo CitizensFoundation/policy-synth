@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export declare class IngestionContentParser {
     parsePdf(pdfBuffer: Buffer): Promise<string>;
     parseHtml(htmlText: string): string;

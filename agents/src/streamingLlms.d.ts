@@ -27,7 +27,7 @@ interface PsAiChatWsMessage {
   data?: string | number | object;
   rawMessage?: string;
   refinedCausesSuggestions?: string[];
-  debug?: CrtDebugData;
+  debug?: any;
   hidden?: boolean;
 }
 
@@ -36,7 +36,7 @@ interface PsSimpleChatLog {
   message: string;
 }
 
-interface PsModelChatItem {
+interface PsModelMessage {
   role: string;
   message: string;
 }

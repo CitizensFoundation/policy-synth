@@ -1,151 +1,369 @@
 import express from "express";
 import { createClient } from "redis";
 import WebSocket from "ws";
-import {
-  PsAgent,
-  PsAgentConnector,
-  PsAgentClass,
-  User,
-  Group,
-  PsApiCost,
-  PsModelCost,
-  PsAiModel,
-  PsAgentConnectorClass,
-} from "../models/index.js";
-
-let redisClient;
-
-// TODO: Share this do not start on each controller
-if (process.env.REDIS_URL) {
-  redisClient = createClient({
-    url: process.env.REDIS_URL,
-    socket: {
-      tls: true,
-    },
-  });
-} else {
-  redisClient = createClient({
-    url: "redis://localhost:6379",
-  });
-}
+import { AgentQueueManager } from "@policysynth/agents/operations/agentQueueManager.js";
+import { AgentCostManager } from "@policysynth/agents/operations/agentCostsManager.js";
+import { AgentManager } from "@policysynth/agents/operations/agentManager.js";
+import { AgentConnectorManager } from "@policysynth/agents/operations/agentConnectorManager.js";
+import { AgentRegistryManager } from "@policysynth/agents/operations/agentRegistryManager.js";
+import { PsAiModel } from "@policysynth/agents/dbModels/aiModel.js";
 
 export class AgentsController {
   public path = "/api/agents";
   public router = express.Router();
   public wsClients = new Map<string, WebSocket>();
+  private agentQueueManager: AgentQueueManager;
+  private agentCostManager: AgentCostManager;
+  private agentManager: AgentManager;
+  private agentConnectorManager: AgentConnectorManager;
+  private agentRegistryManager: AgentRegistryManager;
 
   constructor(wsClients: Map<string, WebSocket>) {
     this.wsClients = wsClients;
+    this.agentQueueManager = new AgentQueueManager();
+    this.agentCostManager = new AgentCostManager();
+    this.agentManager = new AgentManager();
+    this.agentConnectorManager = new AgentConnectorManager();
+    this.agentRegistryManager = new AgentRegistryManager();
+
     this.initializeRoutes();
   }
 
   public initializeRoutes() {
     this.router.get(this.path + "/:id", this.getAgent);
+    this.router.put(
+      this.path + "/:agentId/:nodeType/:nodeId/configuration",
+      this.updateNodeConfiguration
+    );
+
+    this.router.post(this.path + "/:id/control", this.controlAgent);
+    this.router.get(this.path + "/:id/status", this.getAgentStatus);
+    this.router.get(this.path + "/:id/costs", this.getAgentCosts);
+    this.router.get(
+      this.path + "/registry/agentClasses",
+      this.getActiveAgentClasses
+    );
+    this.router.get(
+      this.path + "/registry/connectorClasses",
+      this.getActiveConnectorClasses
+    );
+    this.router.get(this.path + "/registry/aiModels", this.getActiveAiModels);
+    this.router.post(this.path, this.createAgent);
+    this.router.post(
+      this.path + "/:agentId/outputConnectors",
+      this.createOutputConnector
+    );
+    this.router.post(
+      this.path + "/:agentId/inputConnectors",
+      this.createInputConnector
+    );
+    this.router.put(
+      this.path + "/:nodeId/:nodeType/configuration",
+      this.updateNodeConfiguration
+    );
+
+    this.router.get(this.path + "/:id/ai-models", this.getAgentAiModels);
+    this.router.delete(
+      this.path + "/:agentId/ai-models/:modelId",
+      this.removeAgentAiModel
+    );
+    this.router.post(this.path + "/:agentId/ai-models", this.addAgentAiModel);
   }
 
   getAgent = async (req: express.Request, res: express.Response) => {
-    const agentId = req.params.id;
-
     try {
-      const agent = await this.fetchAgentWithSubAgents(agentId);
+      const agent = await this.agentManager.getAgent(req.params.id);
       res.json(agent);
     } catch (error) {
-      console.error("Error fetching agent:", error);
+      console.error("Error in getAgent:", error);
       res.status(500).send("Internal Server Error");
     }
   };
 
-  async fetchAgentWithSubAgents(agentId: string) {
-    console.log("Fetching agent with ID:", agentId); // Debug logging
-    const agent = await PsAgent.findByPk(agentId, {
-      include: [
-        {
-          model: PsAgent,
-          as: "SubAgents",
-          include: [
-            {
-              model: PsAgentConnector,
-              as: "Connectors",
-              include: [
-                {
-                  model: PsAgentConnectorClass,
-                  as: "Class",
-                },
-              ],
-            },
-            { model: PsAgentClass, as: "Class" },
-          ],
-        },
-        {
-          model: PsAgentConnector,
-          as: "Connectors",
-          include: [
-            {
-              model: PsAgentConnectorClass,
-              as: "Class",
-            },
-          ],
-        },
-        { model: PsAgentClass, as: "Class" },
-        { model: User, as: "User" },
-        { model: Group, as: "Group" },
-        { model: PsApiCost, as: "ApiCosts" },
-        { model: PsModelCost, as: "ModelCosts" },
-        { model: PsAiModel, as: "AiModels" },
-      ],
-    });
+  getAgentAiModels = async (req: express.Request, res: express.Response) => {
+    try {
+      const aiModels = await this.agentManager.getAgentAiModels(
+        parseInt(req.params.id)
+      );
+      res.json(aiModels);
+    } catch (error) {
+      console.error("Error fetching agent AI models:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
 
-    if (!agent) {
-      throw new Error("Agent not found");
+  removeAgentAiModel = async (req: express.Request, res: express.Response) => {
+    try {
+      await this.agentManager.removeAgentAiModel(
+        parseInt(req.params.agentId),
+        parseInt(req.params.modelId)
+      );
+      res.json({ message: "AI model removed successfully" });
+    } catch (error) {
+      console.error("Error removing agent AI model:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  addAgentAiModel = async (req: express.Request, res: express.Response) => {
+    try {
+      const { modelId, size } = req.body;
+      await this.agentManager.addAgentAiModel(
+        parseInt(req.params.agentId),
+        modelId,
+        size
+      );
+      res.status(201).json({ message: "AI model added successfully" });
+    } catch (error) {
+      console.error("Error adding agent AI model:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  updateNodeConfiguration = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const nodeType = req.params.nodeType as "agent" | "connector";
+    const nodeId = parseInt(req.params.nodeId);
+    const updatedConfig = req.body;
+
+    try {
+      if (nodeType === "agent") {
+        await this.agentManager.updateAgentConfiguration(nodeId, updatedConfig);
+      } else if (nodeType === "connector") {
+        await this.agentConnectorManager.updateConnectorConfiguration(
+          nodeId,
+          updatedConfig
+        );
+      } else {
+        return res.status(400).send("Invalid node type");
+      }
+
+      res.json({ message: `${nodeType} configuration updated successfully` });
+    } catch (error) {
+      console.error(`Error updating ${nodeType} configuration:`, error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  createInputConnector = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    this.createConnector(req, res, "input");
+  };
+
+  createOutputConnector = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    this.createConnector(req, res, "output");
+  };
+
+  createConnector = async (
+    req: express.Request,
+    res: express.Response,
+    type: "input" | "output"
+  ) => {
+    const { agentId } = req.params;
+    const { connectorClassId, name } = req.body;
+
+    if (!agentId || !connectorClassId || !name || !type) {
+      return res
+        .status(400)
+        .send(
+          "Agent ID, connector class ID, name, and type (input/output) are required"
+        );
     }
 
-    console.log("Agent found:", agent.toJSON()); // Debug logging
-
-    //const subAgents = await this.fetchNestedSubAgents(agent.id);
-
-    //console.log("Sub-agents fetched:", subAgents); // Debug logging
-
-    return {
-      ...agent.toJSON(),
-      //  SubAgents: subAgents,
-    };
-  }
-
-  async fetchNestedSubAgents(parentAgentId: number): Promise<any[]> {
-    if (!parentAgentId) {
-      return [];
+    try {
+      const createdConnector = await this.agentConnectorManager.createConnector(
+        parseInt(agentId),
+        connectorClassId,
+        name,
+        type
+      );
+      res.status(201).json(createdConnector);
+    } catch (error) {
+      console.error(`Error creating ${type} connector:`, error);
+      res.status(500).send("Internal Server Error");
     }
+  };
 
-    console.log("Fetching sub-agents for parent ID:", parentAgentId); // Debug logging
+  getActiveAiModels = async (req: express.Request, res: express.Response) => {
+    try {
+      const activeAiModels = await PsAiModel.findAll({
+        where: { "configuration.active": true },
+      });
 
-    const subAgents = await PsAgent.findAll({
-      where: { parent_agent_id: parentAgentId },
-      include: [
-        {
-          model: PsAgent,
-          as: "SubAgents",
-          include: [{ model: PsAgentConnector, as: "Connectors" }],
-        },
-        { model: PsAgentConnector, as: "Connectors" },
-        { model: PsAgentClass, as: "Class" },
-        { model: User, as: "User" },
-        { model: Group, as: "Group" },
-        { model: PsApiCost, as: "ApiCosts" },
-        { model: PsModelCost, as: "ModelCosts" },
-        { model: PsAiModel, as: "AiModels" },
-      ],
-    });
+      res.json(activeAiModels);
+    } catch (error) {
+      console.error("Error fetching active AI models:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
 
-    console.log("Sub-agents found:", subAgents); // Debug logging
+  getActiveAgentClasses = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      const activeAgentClasses =
+        await this.agentRegistryManager.getActiveAgentClasses();
+      res.json(activeAgentClasses);
+    } catch (error) {
+      console.error("Error fetching active agent classes:", error);
+      if (error instanceof Error) {
+        res.status(500).send(`Internal Server Error: ${error.message}`);
+      } else {
+        res.status(500).send("Internal Server Error");
+      }
+    }
+  };
 
-    return Promise.all(
-      subAgents.map(async (subAgent) => {
-        const nestedSubAgents = await this.fetchNestedSubAgents(subAgent.id);
-        return {
-          ...subAgent.toJSON(),
-          SubAgents: nestedSubAgents,
-        };
-      })
-    );
-  }
+  getActiveConnectorClasses = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    try {
+      const activeConnectorClasses =
+        await this.agentRegistryManager.getActiveConnectorClasses();
+      res.json(activeConnectorClasses);
+    } catch (error) {
+      console.error("Error fetching active connector classes:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  createAgent = async (req: express.Request, res: express.Response) => {
+    const { name, agentClassId, aiModels, parentAgentId } = req.body;
+
+    try {
+      const createdAgent = await this.agentManager.createAgent(
+        name,
+        agentClassId,
+        aiModels,
+        parentAgentId
+      );
+      res.status(201).json(createdAgent);
+    } catch (error) {
+      console.error("Error creating agent:", error);
+      if (error instanceof Error) {
+        res.status(400).send(error.message);
+      } else {
+        res.status(500).send("Internal Server Error");
+      }
+    }
+  };
+
+  controlAgent = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.id);
+    const action = req.body.action;
+
+    try {
+      const message = await this.agentQueueManager.controlAgent(
+        agentId,
+        action
+      );
+      res.json({ message });
+    } catch (error) {
+      console.error(`Error ${action}ing agent:`, error);
+      if (error instanceof Error) {
+        res.status(500).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: "An unexpected error occurred" });
+      }
+    }
+  };
+
+  getAgentStatus = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.id);
+
+    try {
+      const status = await this.agentQueueManager.getAgentStatus(agentId);
+      if (status) {
+        res.json(status);
+      } else {
+        res.status(404).send("Agent status not found");
+      }
+    } catch (error) {
+      console.error("Error getting agent status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  updateAgentStatus = async (req: express.Request, res: express.Response) => {
+    const agentId = parseInt(req.params.id);
+    const { state, details } = req.body;
+
+    try {
+      const success = await this.agentQueueManager.updateAgentStatus(
+        agentId,
+        state,
+        details
+      );
+      if (success) {
+        res.json({ message: "Agent status updated successfully" });
+      } else {
+        res.status(404).send("Agent not found");
+      }
+    } catch (error) {
+      console.error("Error updating agent status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  startAgentProcessing = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const agentId = parseInt(req.params.id);
+
+    try {
+      const success = await this.agentQueueManager.startAgentProcessing(
+        agentId
+      );
+      if (success) {
+        res.json({ message: "Agent processing started successfully" });
+      } else {
+        res.status(404).send("Agent not found");
+      }
+    } catch (error) {
+      console.error("Error starting agent processing:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  pauseAgentProcessing = async (
+    req: express.Request,
+    res: express.Response
+  ) => {
+    const agentId = parseInt(req.params.id);
+
+    try {
+      const success = await this.agentQueueManager.pauseAgentProcessing(
+        agentId
+      );
+      if (success) {
+        res.json({ message: "Agent processing paused successfully" });
+      } else {
+        res.status(404).send("Agent not found");
+      }
+    } catch (error) {
+      console.error("Error pausing agent processing:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
+
+  getAgentCosts = async (req: express.Request, res: express.Response) => {
+    try {
+      const agentId = parseInt(req.params.id);
+      const totalCosts = await this.agentCostManager.getAgentCosts(agentId);
+      res.json(totalCosts);
+    } catch (error) {
+      console.error("Error calculating agent costs:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  };
 }

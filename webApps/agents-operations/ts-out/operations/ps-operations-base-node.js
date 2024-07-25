@@ -10,12 +10,12 @@ import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 let PsOperationsBaseNode = class PsOperationsBaseNode extends PsBaseWithRunningAgentObserver {
     constructor() {
         super();
-        this.api = new OpsServerApi();
+        this.api = new PsServerApi();
     }
     static get styles() {
         return [
@@ -73,10 +73,6 @@ let PsOperationsBaseNode = class PsOperationsBaseNode extends PsBaseWithRunningA
             nodeId: this.nodeId,
             element: this,
         });
-    }
-    toggleMenu() {
-        const menu = this.shadowRoot?.getElementById('menu');
-        menu.open = !menu.open;
     }
 };
 __decorate([

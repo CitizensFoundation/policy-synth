@@ -13,7 +13,7 @@ import '@material/web/textfield/filled-text-field';
 import '@material/web/progress/circular-progress';
 import { jsonrepair } from 'jsonrepair';
 import '@yrpri/webapp/common/yp-image';
-import { OpsServerApi } from '../OpsServerApi.js';
+import { PsServerApi } from '../PsServerApi.js';
 import { MdCheckbox } from '@material/web/checkbox/checkbox';
 import { PsAiChatElement } from '../../chatBot/ps-ai-chat-element.js';
 
@@ -37,11 +37,11 @@ export class LtpAiChatElement extends PsAiChatElement {
   @property({ type: Boolean })
   isCreatingCauses: boolean;
 
-  api: OpsServerApi;
+  api: PsServerApi;
 
   constructor() {
     super();
-    this.api = new OpsServerApi();
+    this.api = new PsServerApi();
   }
 
   handleJsonLoadingEnd = (event: any) => {

@@ -7,7 +7,7 @@ import '@material/web/menu/menu.js';
 import { Menu } from '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
 
@@ -22,11 +22,11 @@ export abstract class PsOperationsBaseNode extends PsBaseWithRunningAgentObserve
   @property({ type: Number })
   posY: number;
 
-  api: OpsServerApi;
+  api: PsServerApi;
 
   constructor() {
     super();
-    this.api = new OpsServerApi();
+    this.api = new PsServerApi();
   }
 
 
@@ -88,11 +88,4 @@ export abstract class PsOperationsBaseNode extends PsBaseWithRunningAgentObserve
       element: this,
     });
   }
-
-
-  toggleMenu() {
-    const menu = this.shadowRoot?.getElementById('menu') as Menu;
-    menu.open = !menu.open;
-  }
-
 }

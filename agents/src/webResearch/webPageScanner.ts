@@ -1,40 +1,27 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { HTTPResponse, Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
-import { PdfReader } from "pdfreader";
-import axios from "axios";
 
-import { createGzip, gunzipSync, gzipSync } from "zlib";
-import { promisify } from "util";
-import { writeFile, readFile, existsSync } from "fs";
-import { htmlToText } from "html-to-text";
-import { GetWebPagesProcessor } from "../solutions/web/getWebPages.js";
-import { PsConstants } from "../constants.js";
+import { BaseGetWebPagesAgent } from "./getWebPages.js";
 
-const gzip = promisify(createGzip);
-const writeFileAsync = promisify(writeFile);
-const readFileAsync = promisify(readFile);
-
-export class WebPageScanner extends GetWebPagesProcessor {
+export class WebPageScanner extends BaseGetWebPagesAgent {
   jsonSchemaForResults: string | undefined;
   systemPromptOverride: string | undefined;
   collectedWebPages: any[] = [];
 
   progressFunction: Function | undefined;
 
-  constructor(memory: PsBaseMemoryData) {
-    super(undefined as any, memory);
+  constructor(memory: PsSimpleAgentMemoryData) {
+    super(memory);
   }
 
   renderScanningPrompt(
-    problemStatement: PsProblemStatement,
+    problemStatement: string,
     text: string,
     subProblemIndex?: number,
     entityIndex?: number
   ) {
     return [
-      new SystemMessage(
+      this.createSystemMessage(
         this.systemPromptOverride ||
           `Your are an AI expert in researching website data:
 
@@ -45,7 +32,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
           ${this.jsonSchemaForResults}
         `
       ),
-      new HumanMessage(
+      this.createHumanMessage(
         `
         Text Context:
         ${text}
@@ -54,17 +41,6 @@ export class WebPageScanner extends GetWebPagesProcessor {
         `
       ),
     ];
-  }
-
-  async getTokenCount(text: string, subProblemIndex: number | undefined) {
-    const words = text.split(" ");
-    const tokenCount = words.length*1.25
-    const promptTokenCount = { totalCount: 500, countPerMessage: [] };
-    const totalTokenCount =
-      tokenCount + 500 +
-      PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
-
-    return { totalTokenCount, promptTokenCount };
   }
 
   async getAIAnalysis(
@@ -84,11 +60,9 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     const analysis = await this.callLLM(
       "web-get-pages",
-      PsConstants.getSolutionsPagesAnalysisModel,
       messages,
-      true,
       true
-    ) as PsWebPageAnalysisData;
+    ) as any; //TODO: Use <T>
 
     console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
     return analysis;
@@ -97,7 +71,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
   getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined) {
     const promptMessages = this.renderScanningPrompt("" as any, "", -1);
 
-    const promptMessagesText = promptMessages.map((m) => m.text).join("\n");
+    const promptMessagesText = promptMessages.map((m) => m.message).join("\n");
 
     return `${promptMessagesText} ${text}`;
   }
@@ -106,13 +80,10 @@ export class WebPageScanner extends GetWebPagesProcessor {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any, //TODO: Use <T>
     entityIndex: number | undefined,
-    policy: PSPolicy | undefined = undefined
-  ): Promise<void | PSRefinedRootCause[]> {
+    policy: any | undefined = undefined
+  ): Promise<void | any[]> { //TODO: Use <T>
     this.logger.debug(
       `Processing page text ${text.slice(
         0,
@@ -121,7 +92,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     );
 
     try {
-      const textAnalysis = await this.getTextAnalysis(text) as PsWebPageAnalysisData;
+      const textAnalysis = await this.getTextAnalysis(text) as any; //TODO: Use <T>;
 
       if (textAnalysis) {
         textAnalysis.url = url;
@@ -143,10 +114,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: any, //TODO: Use <T>;,
     entityIndex: number | undefined
   ) {
     if (url.toLowerCase().endsWith(".pdf")) {
@@ -173,14 +141,6 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.systemPromptOverride = scanSystemPrompt;
     this.progressFunction = progressFunction;
 
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.getSolutionsPagesAnalysisModel.temperature,
-      maxTokens: PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens,
-      modelName: PsConstants.getSolutionsPagesAnalysisModel.name,
-      verbose: PsConstants.getSolutionsPagesAnalysisModel.verbose,
-    });
-
-
     this.logger.info("Web Pages Scanner");
 
     this.totalPagesSave = 0;
@@ -189,10 +149,10 @@ export class WebPageScanner extends GetWebPagesProcessor {
     this.logger.debug("Launching browser");
 
     const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    browserPage.setDefaultTimeout(30); //TODO: Get from agent config
+    browserPage.setDefaultNavigationTimeout(30); //TODO: Get from agent config
 
-    await browserPage.setUserAgent(PsConstants.currentUserAgent);
+    //await browserPage.setUserAgent(""); //TODO: Get from agent config
 
     for (let i = 0; i < listOfUrls.length; i++) {
       if (this.progressFunction) {
@@ -211,7 +171,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
 
     this.logger.info("Browser closed");
     this.logger.info(`Saved ${this.totalPagesSave} pages`);
-    this.logger.info("Get Web Pages Processor Complete");
+    this.logger.info("Get Web Pages Agent Complete");
 
     return this.collectedWebPages;
   }

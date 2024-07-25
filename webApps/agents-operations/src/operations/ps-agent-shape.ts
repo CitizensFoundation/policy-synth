@@ -1,4 +1,7 @@
 import { dia, shapes, util, V } from '@joint/core';
+import { PsServerApi } from './PsServerApi';
+
+const api = new PsServerApi();
 
 export class AgentsShapeView extends dia.ElementView {
   render() {
@@ -10,7 +13,7 @@ export class AgentsShapeView extends dia.ElementView {
     const nodeType = this.model.attributes.nodeType as PsAgentsNodeType;
 
     let foreignObjectWidth = 200;
-    let foreignObjectHeight = 230;
+    let foreignObjectHeight = 300;
 
     if (nodeType === 'connector') {
       foreignObjectWidth = 140;
@@ -54,9 +57,23 @@ export class AgentsShapeView extends dia.ElementView {
       foreignObject.getBoundingClientRect();
     }, 0); // A timeout of 0 ms defers the execution until the browser has finished other processing
 
+    // Add event listener for position changes
+    this.listenTo(this.model, 'change:position', this.updateNodePosition);
+
     this.update();
     return this;
   }
+
+  updateNodePosition = util.debounce(() => {
+    const nodeType = this.model.attributes.nodeType;
+    const nodeId = nodeType === 'agent' ? this.model.attributes.agentId : this.model.attributes.connectorId;
+    const position = this.model.position();
+
+    api.updateNodeConfiguration(nodeType, nodeId, {
+      graphPosX: position.x,
+      graphPosY: position.y
+    });
+  }, 500);
 }
 
 export class AgentShape extends shapes.standard.Rectangle {

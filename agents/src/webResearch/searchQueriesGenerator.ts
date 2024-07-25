@@ -1,14 +1,13 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "../baseAgent.js";
-import { PsConstants } from "../constants.js";
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 
-export class SearchQueriesGenerator extends PolicySynthAgentBase {
+export class SearchQueriesGenerator extends PolicySynthSimpleAgentBase {
   systemPrompt: string;
   userPrompt: string;
+  maxModelTokensOut = 4096;
+  modelTemperature = 0.75;
 
   constructor(
-    memory: PsBaseMemoryData,
+    memory: PsSimpleAgentMemoryData,
     numberOfQueriesToGenerate: number,
     question: string,
     overRideSystemPrompt?: string,
@@ -24,26 +23,18 @@ export class SearchQueriesGenerator extends PolicySynthAgentBase {
         [searchQuery1, searchQuery2, ...]
     `;
     this.userPrompt = overRideUserPrompt || `Research Question: ${question}`;
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createSearchQueriesModel.temperature,
-      maxTokens: PsConstants.createSearchQueriesModel.maxOutputTokens,
-      modelName: PsConstants.createSearchQueriesModel.name,
-      verbose: PsConstants.createSearchQueriesModel.verbose,
-    });
   }
 
   async renderMessages() {
     return [
-      new SystemMessage(this.systemPrompt),
-      new HumanMessage(this.userPrompt),
+      this.createSystemMessage(this.systemPrompt),
+      this.createHumanMessage(this.userPrompt),
     ];
   }
 
   async generateSearchQueries(): Promise<string[]> {
     return await this.callLLM(
       "create-search-queries",
-      PsConstants.createSearchQueriesModel,
       await this.renderMessages()
     );
   }

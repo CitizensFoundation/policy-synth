@@ -38,8 +38,6 @@ import './ps-home.js';
 
 import './operations/ps-operations-manager.js';
 
-import { PsConstants } from './constants.js';
-
 import { TextField } from '@material/web/textfield/internal/text-field.js';
 import { Dialog } from '@material/web/dialog/internal/dialog.js';
 import '@material/web/dialog/dialog.js';
@@ -86,7 +84,7 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
   pageIndex = PagesTypes.AgentsView;
 
   @property({ type: Object })
-  currentMemory: PsBaseMemoryData | undefined;
+  currentMemory: any | undefined;
 
   @property({ type: Number })
   totalNumberOfVotes = 0;
@@ -113,10 +111,10 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
   tempPassword: string | undefined;
 
   @property({ type: String })
-  localStorageThemeColorKey = 'md3-agents-ops-theme-color-v21';
+  localStorageThemeColorKey = 'md3-agents-ops-theme-color-v28';
 
   @property({ type: String })
-  themeColor = '#2781ca';
+  themeColor = '#1051ca';
 
   @property({ type: String })
   themePrimaryColor = '#000000';
@@ -178,6 +176,7 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
     window.psServerApi = new PsServerApi();
     window.appGlobals = window.psAppGlobals = new PsAppGlobals(window.psServerApi);
     window.appGlobals.theme = {} as any;
+    window.appGlobals.setupTranslationSystem();
     window.appUser = new PsAppUser(window.psServerApi);
 
     // Set this.themeDarkMode from localStorage or otherwise to true
@@ -307,7 +306,7 @@ export class PsAgentOperationsWebApp extends YpBaseElement {
     this.setupTheme();
 
     setTimeout(() => {
-     //this.themeDarkMode = true;
+      //this.themeDarkMode = true;
     }, 1000);
   }
 

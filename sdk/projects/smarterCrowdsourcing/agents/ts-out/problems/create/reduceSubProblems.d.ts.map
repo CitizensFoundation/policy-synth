@@ -1,0 +1,1 @@
+{"version":3,"file":"reduceSubProblems.d.ts","sourceRoot":"","sources":["../../../src/problems/create/reduceSubProblems.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,iCAAiC,EAAE,MAAM,mCAAmC,CAAC;AAEtF,qBAAa,sBAAuB,SAAQ,iCAAiC;IACrE,kBAAkB,CACtB,gBAAgB,EAAE,MAAM,EACxB,qBAAqB,EAAE,YAAY,EAAE,GACpC,OAAO,CAAC,cAAc,EAAE,CAAC;IAgCtB,iBAAiB,CAAC,qBAAqB,EAAE,YAAY,EAAE;IA6CvD,OAAO;CAWd"}

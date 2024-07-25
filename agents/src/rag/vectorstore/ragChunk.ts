@@ -1,15 +1,14 @@
 import weaviate from "weaviate-ts-client";
 import { WeaviateClient } from "weaviate-ts-client";
-import { PolicySynthAgentBase } from "../../baseAgent.js";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 
-import { PsConstants } from "../../constants.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export class PsRagChunkVectorStore extends PolicySynthAgentBase {
+export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
   static allFieldsToExtract =
     "title chunkIndex chapterIndex mainExternalUrlFound  \
          shortSummary fullSummary \

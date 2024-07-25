@@ -4,10 +4,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-import { css, html, nothing } from 'lit';
+import { css, html } from 'lit';
 import { property, customElement, query } from 'lit/decorators.js';
-import { cache } from 'lit/directives/cache.js';
-import { resolveMarkdown } from '../chatBot/litMarkdown.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/linear-progress.js';
 import '@material/web/tabs/tabs.js';
@@ -15,40 +13,36 @@ import '@material/web/tabs/primary-tab.js';
 import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
 import '@material/web/button/filled-tonal-button.js';
-import '@material/web/dialog/dialog.js';
-import '@material/web/button/text-button.js';
-import '@material/web/checkbox/checkbox.js';
-import '@material/web/menu/menu.js';
-import '@material/web/menu/menu-item.js';
-import '@material/web/button/filled-button.js';
 import './ps-operations-view.js';
-import './OpsServerApi.js';
-import { OpsServerApi } from './OpsServerApi.js';
-import './chat/agent-chat-assistant.js';
-import { OpsStreamingAIResponse } from './OpsStreamingAIResponse.js';
-import '@yrpri/webapp/yp-survey/yp-structured-question-edit.js';
+import './PsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
+import './ps-edit-node-dialog.js';
+import './ps-add-agent-dialog.js';
+import './ps-add-connector-dialog.js';
 import { PsBaseWithRunningAgentObserver } from '../base/PsBaseWithRunningAgent.js';
-const TESTING = false;
-const nodeTypes = ['agent', 'connector'];
 let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAgentObserver {
     constructor() {
         super();
         this.currentAgentId = 1;
         this.isFetchingAgent = false;
-        this.allCausesExceptCurrentToEdit = [];
-        this.showDeleteConfirmation = false;
         this.activeTabIndex = 0;
-        this.isReviewingAgent = false;
-        this.isCreatingAgent = false;
-        this.wsMessageListener = undefined;
-        this.api = new OpsServerApi();
-        //this.setupTestData();
+        this.showEditNodeDialog = false;
+        this.showAddAgentDialog = false;
+        this.showAddConnectorDialog = false;
+        this.selectedAgentIdForConnector = null;
+        this.selectedInputOutputType = null;
+        this.groupId = 1; // TODO: No default here
+        this.activeAiModels = [];
+        this.api = new PsServerApi();
         this.getAgent();
     }
     async getAgent() {
         this.isFetchingAgent = true;
         try {
-            const agent = await this.api.getAgent(this.currentAgentId);
+            if (!this.groupId) {
+                throw new Error('Current group ID is not set');
+            }
+            const agent = await this.api.getAgent(this.groupId);
             this.currentAgent = agent;
         }
         catch (error) {
@@ -58,944 +52,240 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
             this.isFetchingAgent = false;
         }
     }
-    setupTestData() {
-        // Hard-coded data
-        const titleQuestion = {
-            uniqueId: 'name',
-            text: 'Name',
-            type: 'textField',
-            maxLength: 200,
-            required: false,
-        };
-        const googleDocsQuestions = [
-            titleQuestion,
-            {
-                uniqueId: 'googleDocsId',
-                text: 'Document ID',
-                type: 'textField',
-                maxLength: 200,
-                required: false,
-            },
-            {
-                uniqueId: 'googleServiceAccount',
-                text: 'ServiceAccount JSON',
-                type: 'textArea',
-                rows: 10,
-                required: false,
-            },
-        ];
-        const discordQuestions = [
-            titleQuestion,
-            {
-                uniqueId: 'discordBotToken',
-                text: 'Bot Token',
-                type: 'textField',
-                maxLength: 200,
-                required: false,
-            },
-            {
-                uniqueId: 'discordChannelName',
-                text: 'Discord Channel Name',
-                type: 'textField',
-                maxLength: 200,
-                required: false,
-            },
-        ];
-        const yourPrioritiesQuestions = [
-            titleQuestion,
-            {
-                uniqueId: 'user_id',
-                text: 'User ID',
-                type: 'textField',
-                maxLength: 200,
-                required: false,
-            },
-            {
-                uniqueId: 'userKey',
-                text: 'User Key',
-                type: 'textField',
-                maxLength: 200,
-                required: false,
-            },
-            {
-                uniqueId: 'group_id',
-                text: 'Group ID',
-                type: 'textField',
-                maxLength: 200,
-                required: false,
-            },
-        ];
-        const rootCausesQuestions = [
-            titleQuestion,
-            {
-                uniqueId: 'problemStatement',
-                text: 'Problem Statement',
-                type: 'textArea',
-                rows: 5,
-                maxLength: 2500,
-                required: false,
-            },
-            {
-                uniqueId: 'rankingInstructions',
-                text: 'Ranking Instructions',
-                type: 'textArea',
-                rows: 3,
-                maxLength: 1000,
-                required: false,
-            },
-            {
-                uniqueId: 'howManySearchQueries',
-                text: 'How many search queries',
-                type: 'textField',
-                maxLength: 200,
-                subType: 'number',
-                required: false,
-            },
-            {
-                uniqueId: 'percentToUseSearchQueries',
-                text: '% of top search queries to use',
-                type: 'textField',
-                maxLength: 200,
-                subType: 'number',
-                required: false,
-            },
-            {
-                uniqueId: 'percentToUseSearchResults',
-                text: '% of top search results to use',
-                type: 'textField',
-                maxLength: 200,
-                subType: 'number',
-                required: false,
-            },
-        ];
-        const googleDocsConnectorClass = {
-            id: 1,
-            name: 'Google Docs',
-            uuid: '1',
-            version: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            user_id: 1,
-            available: true,
-            configuration: {
-                description: 'Connector for Google Docs',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png',
-                iconName: 'docs',
-                questions: googleDocsQuestions,
-            },
-        };
-        const discordMarketResearchBotConnectorClass = {
-            id: 2,
-            name: 'Discord Bot',
-            uuid: '1',
-            version: 1,
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            available: true,
-            configuration: {
-                description: 'Connector for Discord Market Research Bot',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/7336a9fb-7512-4c31-ae77-0bb7c5a99b97.png',
-                iconName: 'discord',
-                questions: discordQuestions,
-            },
-        };
-        const yourPrioritiesConnectorClass = {
-            id: 3,
-            name: 'Your Priorities',
-            uuid: '1',
-            version: 1,
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            available: true,
-            configuration: {
-                description: 'Connector for Your Priorities',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png',
-                iconName: 'yourPriorities',
-                questions: yourPrioritiesQuestions,
-            },
-        };
-        const allOurIdeasConnectorClass = {
-            id: 4,
-            name: 'All Our Ideas',
-            uuid: '1',
-            version: 1,
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            available: true,
-            configuration: {
-                description: 'Connector for All Our Ideas',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/30582554-20a7-4de5-87a4-4540dc2030b4.png',
-                iconName: 'allOurIdeas',
-                questions: [],
-            },
-        };
-        const googleSheetsConnectorClass = {
-            id: 5,
-            name: 'Google Sheets',
-            uuid: '1',
-            version: 1,
-            user_id: 1,
-            available: true,
-            created_at: new Date(),
-            updated_at: new Date(),
-            configuration: {
-                description: 'Connector for All ',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/1187aee2-39e8-48b2-afa2-0aba91c0ced0.png',
-                iconName: 'googleSheets',
-                questions: [],
-            },
-        };
-        const smarterCrowdsourcingAgentClass = {
-            id: 1,
-            version: 1,
-            name: 'Smarter Crowdsourcing Agent',
-            uuid: '1',
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            available: true,
-            configuration: {
-                description: 'An agent for running the Smarter Crowdsourcing process',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
-                iconName: 'smarter_crowdsourcing',
-                assistantSystemInstructions: 'Explain the process',
-                capabilities: ['research', 'analysis'],
-                inputJsonInterface: '{}',
-                outputJsonInterface: '{}',
-                questions: rootCausesQuestions,
-                supportedConnectors: [
-                    googleDocsConnectorClass,
-                    discordMarketResearchBotConnectorClass,
-                ],
-            },
-        };
-        const rootCausesSubAgentClass = {
-            id: 2,
-            version: 1,
-            uuid: '1',
-            user_id: 1,
-            available: true,
-            created_at: new Date(),
-            updated_at: new Date(),
-            name: 'Root Causes Research',
-            configuration: {
-                description: 'Root causes research sub-agent',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/08d596cf-290e-4a1b-abff-74a305e3dbbb.png',
-                iconName: 'root_causes_research',
-                assistantSystemInstructions: 'Conduct root causes research',
-                capabilities: ['research', 'analysis'],
-                inputJsonInterface: '{}',
-                outputJsonInterface: '{}',
-                questions: rootCausesQuestions,
-                supportedConnectors: [
-                    googleDocsConnectorClass,
-                    discordMarketResearchBotConnectorClass,
-                ],
-            },
-        };
-        const solutionsSubAgentClass = {
-            id: 3,
-            version: 1,
-            uuid: '1',
-            user_id: 1,
-            available: true,
-            created_at: new Date(),
-            updated_at: new Date(),
-            name: 'Solutions Search',
-            configuration: {
-                description: 'Sub-agent for solutions search',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/6d4368ce-ecaf-41ab-abb3-65ceadbdb2a6.png',
-                iconName: 'solutions_search',
-                assistantSystemInstructions: 'Conduct solutions search',
-                capabilities: ['research', 'analysis'],
-                inputJsonInterface: '{}',
-                outputJsonInterface: '{}',
-                questions: rootCausesQuestions,
-                supportedConnectors: [
-                    googleDocsConnectorClass,
-                    discordMarketResearchBotConnectorClass,
-                ],
-            },
-        };
-        const policyGenerationSubAgentClass = {
-            id: 4,
-            uuid: '1',
-            user_id: 1,
-            available: true,
-            version: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            name: 'Generate Policies',
-            configuration: {
-                description: 'Sub-agent for generating policies',
-                imageUrl: 'https://aoi-storage-production.citizens.is/ypGenAi/community/1/b70ab7b3-7235-46b6-a3af-1a16eccee784.png',
-                iconName: 'generate_policies',
-                assistantSystemInstructions: 'Generate policies',
-                capabilities: ['research', 'analysis', 'policyGeneration'],
-                inputJsonInterface: '{}',
-                outputJsonInterface: '{}',
-                questions: rootCausesQuestions,
-                supportedConnectors: [
-                    googleDocsConnectorClass,
-                    discordMarketResearchBotConnectorClass,
-                ],
-            },
-        };
-        const connectorGoogleDocsForRootCauses = {
-            id: 1,
-            class_id: 1,
-            user_id: 1,
-            group_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                name: 'Root Causes Summary',
-                googleDocsId: '1sdfjkl3j4klj3',
-                googleServiceAccount: '...',
-                graphPosX: -5,
-                graphPosY: 370,
-                permissionNeeded: 'read',
-            },
-            Class: googleDocsConnectorClass,
-        };
-        const connectorGoogleSheetsForRootCauses = {
-            id: 2,
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            class_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            user_id: 1,
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            //costs: [],
-            configuration: {
-                name: 'Root Causes Rows',
-                googleDocsId: '1sdfjkl3j4klj3',
-                googleServiceAccount: '...',
-                graphPosX: 230,
-                graphPosY: 540,
-                permissionNeeded: 'read',
-            },
-            Class: googleSheetsConnectorClass,
-        };
-        const connectorGoogleSheetsForSolutions = {
-            id: 3,
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            class_id: 1,
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            //costs: [],
-            configuration: {
-                name: 'Solutions Rows',
-                googleDocsId: '1sdfjkl3j4klj3',
-                googleServiceAccount: '...',
-                graphPosX: 230,
-                graphPosY: 540 + 800,
-                permissionNeeded: 'read',
-            },
-            Class: googleSheetsConnectorClass,
-        };
-        const connectorGoogleSheetsForPolicies = {
-            id: 4,
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            class_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            user_id: 1,
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            configuration: {
-                name: 'Policies Rows',
-                googleDocsId: '1sdfjkl3j4klj3',
-                googleServiceAccount: '...',
-                graphPosX: 230,
-                graphPosY: 1050 + 1050,
-                permissionNeeded: 'read',
-            },
-            Class: googleSheetsConnectorClass,
-        };
-        const connectorDiscordRootCauses = {
-            id: 5,
-            class_id: 2,
-            user_id: 1,
-            group_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                name: 'Causes Notifications',
-                discordBotToken: 'dasdsadsdsa',
-                discordChannelName: 'root-causes-agent',
-                graphPosX: 480,
-                graphPosY: 300,
-                permissionNeeded: 'readWrite',
-            },
-            Class: discordMarketResearchBotConnectorClass,
-        };
-        const connectorDiscordSolutions = {
-            id: 6,
-            class_id: 2,
-            user_id: 1,
-            group_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                permissionNeeded: 'readWrite',
-                name: 'Solutions Notifications',
-                discordBotToken: 'dasdsadsdsa',
-                discordChannelName: 'solutions-agent',
-                graphPosX: 480,
-                graphPosY: 300 + 800,
-            },
-            Class: discordMarketResearchBotConnectorClass,
-        };
-        const connectorDiscordPolicies = {
-            id: 7,
-            class_id: 2,
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                permissionNeeded: 'readWrite',
-                name: 'Notifications & Remote Control',
-                discordBotToken: 'dasdsadsdsa',
-                discordChannelName: 'policies-agent',
-                graphPosX: 480,
-                graphPosY: 800 + 1050,
-            },
-            Class: discordMarketResearchBotConnectorClass,
-        };
-        const connectorYourPrioritiesSolutions = {
-            id: 8,
-            class_id: 2,
-            user_id: 1,
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            created_at: new Date(),
-            updated_at: new Date(),
-            ModelCosts: [],
-            configuration: {
-                permissionNeeded: 'readWrite',
-                name: 'Human Solutions',
-                user_id: 'planxbot@hugsmidi.is',
-                userKey: '12345',
-                group_id: '31298',
-                graphPosX: -5,
-                graphPosY: 230 + 800,
-            },
-            Class: yourPrioritiesConnectorClass,
-        };
-        const connectorYourPrioritiesPolicies = {
-            id: 9,
-            class_id: 2,
-            user_id: 1,
-            group_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                name: 'Policy Ideas Deliberation',
-                user_id: 'planxbot@hugsmidi.is',
-                userKey: '12345',
-                group_id: '31299',
-                graphPosX: -10,
-                graphPosY: 750 + 1050,
-                permissionNeeded: 'readWrite',
-            },
-            Class: yourPrioritiesConnectorClass,
-        };
-        const connectorAllOurIdeasRootCauses = {
-            id: 10,
-            class_id: 2,
-            created_at: new Date(),
-            updated_at: new Date(),
-            user_id: 1,
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                permissionNeeded: 'readWrite',
-                name: 'Rank Root Causes',
-                user_id: 'planxbot@hugsmidi.is',
-                userKey: '12345',
-                group_id: '31299',
-                graphPosX: 230,
-                graphPosY: 780,
-            },
-            Class: allOurIdeasConnectorClass,
-        };
-        const connectorAllOurIdeasSolutions = {
-            id: 11,
-            class_id: 2,
-            user_id: 1,
-            group_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                permissionNeeded: 'readWrite',
-                name: 'Rank Solutions',
-                user_id: 'planxbot@hugsmidi.is',
-                userKey: '12345',
-                group_id: '31299',
-                graphPosX: 230,
-                graphPosY: 780 + 800,
-            },
-            Class: allOurIdeasConnectorClass,
-        };
-        const connectorAllOurIdeasPolicies = {
-            id: 12,
-            class_id: 2,
-            user_id: 1,
-            group_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                permissionNeeded: 'readWrite',
-                name: 'Rank Policies',
-                user_id: 'planxbot@hugsmidi.is',
-                userKey: '12345',
-                group_id: '31299',
-                graphPosX: 230,
-                graphPosY: 1280 + 1050,
-            },
-            Class: allOurIdeasConnectorClass,
-        };
-        const subAgent1 = {
-            id: 2,
-            class_id: 2,
-            user_id: 1,
-            group_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                name: 'Unlocking Literacy',
-                howManySearchQueries: 10,
-                percentToUseSearchQueries: 50,
-                percentToUseSearchResults: 50,
-                graphPosX: 200,
-                graphPosY: 250,
-            },
-            Class: rootCausesSubAgentClass,
-            parent_agent_id: 1,
-            parentAgent: undefined,
-            SubAgents: undefined,
-            Connectors: [
-                connectorGoogleDocsForRootCauses,
-                connectorDiscordRootCauses,
-                connectorAllOurIdeasRootCauses,
-                connectorGoogleSheetsForRootCauses,
-            ],
-        };
-        const subAgent2 = {
-            id: 3,
-            class_id: 3,
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                name: 'Unlocking Literacy',
-                howManySearchQueries: 10,
-                percentToUseSearchQueries: 50,
-                percentToUseSearchResults: 50,
-                graphPosX: 200,
-                graphPosY: 250 + 800,
-            },
-            Class: solutionsSubAgentClass,
-            parent_agent_id: 1,
-            parentAgent: undefined,
-            SubAgents: undefined,
-            Connectors: [
-                connectorGoogleSheetsForSolutions,
-                connectorDiscordSolutions,
-                connectorYourPrioritiesSolutions,
-                connectorAllOurIdeasSolutions,
-            ],
-        };
-        const subAgent3 = {
-            id: 4,
-            class_id: 4,
-            user_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                name: 'Smarter Crowdsourcing',
-                graphPosX: 200,
-                graphPosY: 760 + 1050,
-            },
-            Class: policyGenerationSubAgentClass,
-            parent_agent_id: 1,
-            parentAgent: undefined,
-            SubAgents: undefined,
-            Connectors: [
-                connectorYourPrioritiesPolicies,
-                connectorDiscordPolicies,
-                connectorGoogleSheetsForPolicies,
-                connectorAllOurIdeasPolicies,
-            ],
-        };
-        const smarterCrowdsourcingAgent = {
-            id: 1,
-            class_id: 1,
-            created_at: new Date(),
-            updated_at: new Date(),
-            user_id: 1,
-            group_id: 1,
-            User: {}, // populate with relevant YpUserData
-            Group: {}, // populate with relevant YpGroupData
-            uuid: '1',
-            ApiCosts: [],
-            ModelCosts: [],
-            configuration: {
-                graphPosX: 0,
-                graphPosY: 0,
-                name: 'Smarter Crowdsourcing',
-            },
-            Class: smarterCrowdsourcingAgentClass,
-            parent_agent_id: undefined,
-            parentAgent: undefined,
-            SubAgents: [subAgent1, subAgent2, subAgent3],
-            Connectors: undefined,
-        };
-        this.currentAgent = smarterCrowdsourcingAgent;
-        window.psAppGlobals.addToAgentsRegistry(smarterCrowdsourcingAgent);
-        window.psAppGlobals.addToAgentsRegistry(subAgent1);
-        window.psAppGlobals.addToAgentsRegistry(subAgent2);
-        window.psAppGlobals.addToAgentsRegistry(subAgent3);
-        window.psAppGlobals.addToConnectorsRegistry(connectorGoogleDocsForRootCauses);
-        window.psAppGlobals.addToConnectorsRegistry(connectorDiscordRootCauses);
-        window.psAppGlobals.addToConnectorsRegistry(connectorDiscordSolutions);
-        window.psAppGlobals.addToConnectorsRegistry(connectorYourPrioritiesSolutions);
-        window.psAppGlobals.addToConnectorsRegistry(connectorGoogleSheetsForRootCauses);
-        window.psAppGlobals.addToConnectorsRegistry(connectorGoogleSheetsForSolutions);
-        window.psAppGlobals.addToConnectorsRegistry(connectorGoogleSheetsForPolicies);
-        window.psAppGlobals.addToConnectorsRegistry(connectorAllOurIdeasRootCauses);
-        window.psAppGlobals.addToConnectorsRegistry(connectorAllOurIdeasSolutions);
-        window.psAppGlobals.addToConnectorsRegistry(connectorAllOurIdeasPolicies);
-        window.psAppGlobals.addToConnectorsRegistry(connectorYourPrioritiesPolicies);
-        window.psAppGlobals.addToConnectorsRegistry(connectorDiscordPolicies);
-        window.psAppGlobals.addToConnectorsRegistry(connectorGoogleSheetsForPolicies);
-        window.psAppGlobals.addToConnectorsRegistry(connectorGoogleSheetsForSolutions);
-        window.psAppGlobals.addToConnectorsRegistry(connectorGoogleSheetsForRootCauses);
-        window.psAppGlobals.addToConnectorsRegistry(connectorDiscordSolutions);
-        window.psAppGlobals.addToConnectorsRegistry(connectorYourPrioritiesPolicies);
-        window.psAppGlobals.addToConnectorsRegistry(connectorYourPrioritiesSolutions);
-    }
     async connectedCallback() {
         super.connectedCallback();
-        this.addEventListener('open-add-cause-dialog', this.openAddCauseDialog);
-        this.addEventListener('close-add-cause-dialog', this.closeAddCauseDialog);
-        if (this.currentAgentId) {
-            this.fetchCurrentAgent();
-        }
         this.addEventListener('edit-node', this.openEditNodeDialog);
+        this.addEventListener('add-connector', this.openAddConnectorDialog);
+        this.addEventListener('get-costs', this.fetchAgentCosts);
+        this.addEventListener('add-agent', this.openAddAgentDialog);
+    }
+    async fetchAgentCosts() {
+        if (this.currentAgentId) {
+            try {
+                this.totalCosts = await this.api.getAgentCosts(this.currentAgentId);
+            }
+            catch (error) {
+                console.error('Error fetching agent costs:', error);
+            }
+        }
+    }
+    // Add this method to fetch and set active AI models
+    async fetchActiveAiModels() {
+        try {
+            this.activeAiModels = await this.api.getActiveAiModels();
+        }
+        catch (error) {
+            console.error('Error fetching active AI models:', error);
+        }
+    }
+    async handleEditDialogSave(event) {
+        const { updatedConfig, aiModelUpdates } = event.detail;
+        const isInputConnector = event.detail.connectorType === "input";
+        if (!this.nodeToEditInfo)
+            return;
+        try {
+            const nodeType = 'Class' in this.nodeToEditInfo &&
+                this.nodeToEditInfo.Class.name.toLowerCase().includes('agent')
+                ? 'agent'
+                : 'connector';
+            const nodeId = this.nodeToEditInfo.id;
+            await this.api.updateNodeConfiguration(nodeType, nodeId, updatedConfig);
+            debugger;
+            // Handle AI model updates for agents
+            if (nodeType === 'agent' && aiModelUpdates) {
+                const currentAiModels = await this.api.getAgentAiModels(nodeId);
+                for (const update of aiModelUpdates) {
+                    const currentModel = currentAiModels.find(m => m.configuration.modelSize === update.size);
+                    if (currentModel && update.modelId === null) {
+                        await this.api.removeAgentAiModel(nodeId, currentModel.id);
+                    }
+                    else if (update.modelId !== null && currentModel?.id !== update.modelId) {
+                        if (currentModel) {
+                            await this.api.removeAgentAiModel(nodeId, currentModel.id);
+                        }
+                        await this.api.addAgentAiModel(nodeId, update.modelId, update.size);
+                    }
+                }
+            }
+            // Update the local state
+            if (nodeType === 'agent') {
+                this.currentAgent = {
+                    ...this.currentAgent,
+                    configuration: {
+                        ...this.currentAgent.configuration,
+                        ...updatedConfig,
+                    },
+                };
+                // Update AI models in local state
+                if (aiModelUpdates) {
+                    const updatedAiModels = this.currentAgent.AiModels.filter(model => !aiModelUpdates.some((update) => update.size === model.configuration.modelSize));
+                    for (const update of aiModelUpdates) {
+                        if (update.modelId !== null) {
+                            const newModel = this.activeAiModels.find(m => m.id === update.modelId);
+                            if (newModel) {
+                                updatedAiModels.push(newModel);
+                            }
+                        }
+                    }
+                    this.currentAgent = {
+                        ...this.currentAgent,
+                        AiModels: updatedAiModels,
+                    };
+                }
+            }
+            else {
+                // Update connector (unchanged from your original code)
+                if (isInputConnector) {
+                    const updatedInputConnectors = this.currentAgent.InputConnectors.map(connector => connector.id === nodeId
+                        ? {
+                            ...connector,
+                            configuration: {
+                                ...connector.configuration,
+                                ...updatedConfig,
+                            },
+                        }
+                        : connector);
+                    this.currentAgent = {
+                        ...this.currentAgent,
+                        InputConnectors: updatedInputConnectors,
+                    };
+                }
+                else {
+                    const updatedOutputConnectors = this.currentAgent.OutputConnectors.map(connector => connector.id === nodeId
+                        ? {
+                            ...connector,
+                            configuration: {
+                                ...connector.configuration,
+                                ...updatedConfig,
+                            },
+                        }
+                        : connector);
+                    this.currentAgent = {
+                        ...this.currentAgent,
+                        OutputConnectors: updatedOutputConnectors,
+                    };
+                }
+            }
+            this.requestUpdate();
+            this.showEditNodeDialog = false;
+        }
+        catch (error) {
+            console.error('Failed to update node configuration:', error);
+            // You might want to show an error message to the user here
+        }
     }
     openEditNodeDialog(event) {
         this.nodeToEditInfo = event.detail.element;
-        this.currentlySelectedCauseIdToAddAsChild = undefined;
-        /*this.nodeToEdit = this.findNodeRecursively(
-          this.currentAgent?.SubAgents || [],
-          this.nodeToEditInfo!.nodeId
-        );
-        if (!this.nodeToEdit) {
-          console.error(`Could not find node ${this.nodeToEditInfo!.nodeId}`);
-          console.error(JSON.stringify(this.currentAgent, null, 2));
-          return;
-        }
-    
-        const childrenIds = (this.nodeToEdit.children || []).map(
-          (child) => child.id
-        );
-        childrenIds.push(this.nodeToEdit.id);
-    
-        this.allCausesExceptCurrentToEdit =
-          this.agentElement!.getAllCausesExcept(childrenIds);*/
-        this.$$('#editNodeDialog').show();
+        this.showEditNodeDialog = true;
     }
-    saveAnswers() {
-        for (let a = 0; a < this.nodeToEditInfo.Class.configuration.questions.length; a++) {
-            const questionElement = this.$$('#structuredQuestion_' + a);
-            if (questionElement) {
-                const answer = questionElement.getAnswer();
-                //TODO: See if we can solve the below without any without adding much complexity
-                if (answer && questionElement.question.uniqueId) {
-                    this.nodeToEditInfo.configuration[questionElement.question.uniqueId] = answer.value;
-                }
-            }
+    openAddConnectorDialog(event) {
+        this.selectedAgentIdForConnector = event.detail.agentId;
+        this.selectedInputOutputType = event.detail.type;
+        this.showAddConnectorDialog = true;
+    }
+    openAddAgentDialog(event) {
+        this.showAddAgentDialog = true;
+    }
+    tabChanged() {
+        this.activeTabIndex = this.$$('#tabBar').activeTabIndex;
+    }
+    toggleDarkMode() {
+        this.fire('yp-theme-dark-mode', !this.themeDarkMode);
+        window.psAppGlobals.activity('Agent - toggle darkmode');
+        if (this.themeDarkMode) {
+            window.psAppGlobals.activity('Settings - dark mode');
+            localStorage.setItem('md3-ps-dark-mode', 'true');
+        }
+        else {
+            window.psAppGlobals.activity('Settings - light mode');
+            localStorage.removeItem('md3-ps-dark-mode');
         }
     }
-    closeEditNodeDialog() {
-        this.$$('#editNodeDialog').close();
-        this.nodeToEdit = undefined;
-        this.nodeToEditInfo = undefined;
+    randomizeTheme() {
+        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+        this.fire('yp-theme-color', `#${randomColor}`);
     }
-    addChildChanged() {
-        const effectIdSelect = this.$$('#addEffectToNodeId');
-        this.currentlySelectedCauseIdToAddAsChild = effectIdSelect.value;
-    }
-    async handleSaveEditNode() {
-        this.saveAnswers();
-        this.closeEditNodeDialog();
-        if (this.currentAgentId) {
-            try {
-                await this.api.updateNode(this.currentAgentId, this.nodeToEdit);
-                this.closeEditNodeDialog();
-                //TODO: Do this with less brute force, actually update the element
-                this.currentAgent = { ...this.currentAgent };
-            }
-            catch (error) {
-                console.error('Error updating node:', error);
-            }
-        }
-    }
-    handleDeleteNode() {
-        this.showDeleteConfirmation = true;
-    }
-    removeNodeRecursively(nodes, nodeId) {
-        const index = nodes.findIndex(node => node.id === nodeId);
-        if (index !== -1) {
-            nodes.splice(index, 1);
-            return;
-        }
-        nodes.forEach(node => {
-            if (node.children) {
-                //this.removeNodeRecursively(node.SubAgents, nodeId);
-            }
-        });
-    }
-    async confirmDeleteNode() {
-        if (this.nodeToEdit && this.currentAgentId) {
-            try {
-                await this.api.deleteNode(this.currentAgentId, this.nodeToEdit.id);
-                // Remove the node from the agent object
-                // this.removeNodeRecursively(this.currentAgent?.SubAgents || [], this.nodeToEdit.id);
-                this.closeEditNodeDialog();
-                this.currentAgent = { ...this.currentAgent };
-            }
-            catch (error) {
-                console.error('Error deleting node:', error);
-            }
-            finally {
-                this.closeDeleteConfirmationDialog();
-            }
-        }
-    }
-    createDirectCauses() {
-        if (this.nodeToEditInfo) {
-            //this.nodeToEditInfo.element.createDirectCauses();
-        }
-        this.closeEditNodeDialog();
-    }
-    closeDeleteConfirmationDialog() {
-        this.showDeleteConfirmation = false;
-    }
-    renderDeleteConfirmationDialog() {
+    renderThemeToggle() {
         return html `
-      <md-dialog
-        id="deleteConfirmationDialog"
-        ?open="${this.showDeleteConfirmation}"
-        @closed="${() => (this.showDeleteConfirmation = false)}"
-      >
-        <div slot="headline">Confirm Deletion</div>
-        <div slot="content">Are you sure you want to delete this node?</div>
-        <div slot="actions">
-          <md-text-button @click="${this.closeDeleteConfirmationDialog}">
-            Cancel
-          </md-text-button>
-          <md-text-button @click="${this.confirmDeleteNode}">
-            Delete
-          </md-text-button>
-        </div>
-      </md-dialog>
-    `;
-    }
-    _saveNodeEditState(event) { }
-    renderNodeEditHeadline() {
-        return html `
-      <div class="layout horizontal">
-        <div>
-          <img
-            src="${this.nodeToEditInfo.Class.configuration.imageUrl}"
-            class="nodeEditHeadlineImage"
-          />
-        </div>
-        <div class="nodeEditHeadlineTitle">
-          ${this.nodeToEditInfo.Class.name}
-        </div>
+      <div class="layout horizontal center-center themeToggle">
+        ${!this.themeDarkMode
+            ? html `
+              <md-outlined-icon-button
+                class="darkModeButton"
+                @click="${this.toggleDarkMode}"
+                ><md-icon>dark_mode</md-icon></md-outlined-icon-button
+              >
+            `
+            : html `
+              <md-outlined-icon-button
+                class="darkModeButton"
+                @click="${this.toggleDarkMode}"
+                ><md-icon>light_mode</md-icon></md-outlined-icon-button
+              >
+            `}
+
+        <md-outlined-icon-button
+          class="darkModeButton"
+          @click="${this.randomizeTheme}"
+          ><md-icon>shuffle</md-icon></md-outlined-icon-button
+        >
       </div>
     `;
     }
-    renderEditNodeDialog() {
-        let initiallyLoadedAnswers = [];
-        if (this.nodeToEditInfo) {
-            // Convert this.nodeToEditInfo.configuration object to array with { "uniqueId": key, "value": value }
-            initiallyLoadedAnswers = Object.entries(this.nodeToEditInfo.configuration).map(([key, value]) => ({
-                uniqueId: key,
-                value: value,
-            }));
+    renderTotalCosts() {
+        return html `${this.t('Costs')}
+    ${this.totalCosts !== undefined ? `($${this.totalCosts.toFixed(2)})` : ''}`;
+    }
+    render() {
+        if (this.isFetchingAgent) {
+            return html `<md-linear-progress indeterminate></md-linear-progress>`;
         }
-        return html `
-      <md-dialog
-        id="editNodeDialog"
-        style="width: 800px; max-height: 90vh;"
-        @closed="${this.closeEditNodeDialog}"
-      >
-        <div slot="headline">
-          ${this.nodeToEditInfo ? this.renderNodeEditHeadline() : ''}
-        </div>
-        <div
-          slot="content"
-          id="editNodeForm"
-          style="max-height: 90vh;height: 500px;"
-          class="layout vertical"
-        >
-          ${this.nodeToEditInfo
-            ? html `
-                <div id="surveyContainer">
-                  ${this.nodeToEditInfo.Class.configuration.questions.map((question, index) => html `
-                      <yp-structured-question-edit
-                        index="${index}"
-                        id="structuredQuestion_${question.uniqueId
-                ? index
-                : `noId_${index}`}"
-                        .structuredAnswers="${initiallyLoadedAnswers}"
-                        @changed="${this._saveNodeEditState}"
-                        .question="${question}"
-                      >
-                      </yp-structured-question-edit>
-                    `)}
-                </div>
-              `
-            : nothing}
-        </div>
-        <div slot="actions">
-          <md-text-button
-            hidden
-            @click="${this.handleDeleteNode}"
-            class="deleteButton"
-          >
-            Delete
-          </md-text-button>
-          <div class="flex"></div>
-          <md-text-button @click="${this.closeEditNodeDialog}" value="cancel">
-            Cancel
-          </md-text-button>
-          <md-text-button @click="${this.handleSaveEditNode}" value="ok">
-            Save
-          </md-text-button>
-        </div>
-      </md-dialog>
-    `;
-    }
-    updatePath() {
-        const dontDoIt = false;
-        if (!dontDoIt) {
-            if (this.currentAgent && this.currentAgent.id) {
-                window.history.pushState({}, '', `/agent/${this.currentAgent.id}`);
-            }
-            else {
-                console.error('Could not fetch current tree: ' + this.currentAgentId);
-            }
+        else {
+            return html `
+        <ps-edit-node-dialog
+          ?open="${this.showEditNodeDialog}"
+          .nodeToEditInfo="${this.nodeToEditInfo}"
+          @save="${this.handleEditDialogSave}"
+          @close="${() => (this.showEditNodeDialog = false)}"
+        ></ps-edit-node-dialog>
+
+        <ps-add-agent-dialog
+          ?open="${this.showAddAgentDialog}"
+          @close="${() => (this.showAddAgentDialog = false)}"
+          @agent-added="${this.getAgent}"
+          .parentAgentId="${this.currentAgent.id}"
+          .groupId="${this.groupId}"
+        ></ps-add-agent-dialog>
+
+        <ps-add-connector-dialog
+          ?open="${this.showAddConnectorDialog}"
+          .groupid="${this.groupId}"
+          @connector-added="${this.getAgent}"
+          .selectedAgentId="${this.selectedAgentIdForConnector}"
+          .selectedInputOutputType="${this.selectedInputOutputType}"
+          @close="${() => (this.showAddConnectorDialog = false)}"
+        ></ps-add-connector-dialog>
+
+        <md-tabs id="tabBar" @change="${this.tabChanged}">
+          <md-primary-tab id="configure-tab" aria-controls="configure-panel">
+            <md-icon slot="icon">support_agent</md-icon>
+            ${this.t('Agents Operations')}
+          </md-primary-tab>
+          <md-primary-tab id="crt-tab" aria-controls="crt-panel">
+            <md-icon slot="icon">checklist</md-icon>
+            ${this.t('Audit Log')}
+          </md-primary-tab>
+          <md-primary-tab id="crt-tab" aria-controls="crt-panel">
+            <md-icon slot="icon">account_balance</md-icon>
+            ${this.renderTotalCosts()}
+          </md-primary-tab>
+        </md-tabs>
+        <ps-operations-view
+          .currentAgent="${this.currentAgent}"
+        ></ps-operations-view>
+        ${this.renderThemeToggle()}
+      `;
         }
-    }
-    async fetchCurrentAgent() {
-        this.isFetchingAgent = true;
-        //this.currentAgent = undefined; //  await this.api.getAgent(this.currentAgentId as number);
-        this.isFetchingAgent = false;
-        if (false && this.currentAgent) {
-            this.updatePath();
-            await this.updateComplete;
-            this.$$('#context').value =
-                this.currentAgent.Class.configuration.description;
-            this.$$('#undesirableEffects').value = '';
-            this.activeTabIndex = 1;
-            this.$$('#tabBar').activeTabIndex = 1;
-        }
-    }
-    updated(changedProperties) {
-        super.updated(changedProperties);
-    }
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        this.removeEventListener('open-add-cause-dialog', this.openAddCauseDialog);
-        this.removeEventListener('close-add-cause-dialog', this.closeAddCauseDialog);
-    }
-    camelCaseToHumanReadable(str) {
-        // Split the string at each uppercase letter and join with space
-        const words = str.replace(/([A-Z])/g, ' $1').trim();
-        // Capitalize the first letter of the resulting string
-        return words.charAt(0).toUpperCase() + words.slice(1);
     }
     static get styles() {
         return [
@@ -1004,7 +294,10 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
         md-tabs {
           margin-bottom: 64px;
         }
-
+        md-filled-select {
+          width: 100%;
+          margin-bottom: 16px;
+        }
         .nodeEditHeadlineImage {
           max-width: 100px;
           margin-right: 16px;
@@ -1148,295 +441,13 @@ let PsOperationsManager = class PsOperationsManager extends PsBaseWithRunningAge
       `,
         ];
     }
-    tabChanged() {
-        this.activeTabIndex = this.$$('#tabBar').activeTabIndex;
-    }
-    clearForNew() {
-        this.currentAgent = undefined;
-        this.currentAgentId = undefined;
-        this.AIConfigReview = undefined;
-        this.$$('#context').value = '';
-        this.$$('#undesirableEffects').value = '';
-        //window.history.pushState({}, '', `/agent`);
-    }
-    get agentInputData() {
-        return {
-            description: this.$$('#description')?.value ?? '',
-            context: this.$$('#context').value ?? '',
-            undesirableEffects: this.$$('#undesirableEffects').value.split('\n') ?? [],
-            nodes: [],
-        }; //LtpCurrentRealityAgentData;
-    }
-    async reviewAgentConfiguration() {
-        this.isReviewingAgent = true;
-        if (this.currentStreaminReponse) {
-            this.currentStreaminReponse.close();
-        }
-        if (this.wsMessageListener) {
-            this.removeEventListener('wsMessage', this.wsMessageListener);
-        }
-        this.AIConfigReview = undefined;
-        this.currentStreaminReponse = new OpsStreamingAIResponse(this);
-        try {
-            const wsClientId = await this.currentStreaminReponse.connect();
-            this.AIConfigReview = '';
-            console.log('Connected with clientId:', wsClientId);
-            this.wsMessageListener = (event) => {
-                const { data } = event.detail;
-                if (data.type === 'part' && data.text) {
-                    this.AIConfigReview += data.text;
-                }
-                else if (data.type === 'end') {
-                    this.removeListener('wsMessage', this.wsMessageListener);
-                    this.wsMessageListener = undefined;
-                    this.currentStreaminReponse = undefined;
-                    this.isReviewingAgent = false;
-                }
-            };
-            this.addEventListener('wsMessage', this.wsMessageListener);
-            await this.api.reviewConfiguration(wsClientId, this.agentInputData);
-            // Proceed with your logic
-        }
-        catch (error) {
-            console.error('WebSocket connection failed:', error);
-            this.removeListener('wsMessage', this.wsMessageListener);
-        }
-    }
-    async createAgent() {
-        this.isCreatingAgent = true;
-        const agentSeed = this.agentInputData;
-        if (TESTING && this.$$('#context').value == '') {
-            agentSeed.context =
-                'We are a software company with a product we have as as service';
-            agentSeed.undesirableEffects = ['End users are unhappy with the service'];
-        }
-        //this.currentAgent = await this.api.createAgent(agentSeed);
-        this.updatePath();
-        this.isCreatingAgent = false;
-        this.activeTabIndex = 1;
-        this.$$('#tabBar').activeTabIndex = 1;
-    }
-    toggleDarkMode() {
-        this.fire('yp-theme-dark-mode', !this.themeDarkMode);
-        window.psAppGlobals.activity('Agent - toggle darkmode');
-        if (this.themeDarkMode) {
-            window.psAppGlobals.activity('Settings - dark mode');
-            localStorage.setItem('md3-ps-dark-mode', 'true');
-        }
-        else {
-            window.psAppGlobals.activity('Settings - light mode');
-            localStorage.removeItem('md3-ps-dark-mode');
-        }
-    }
-    randomizeTheme() {
-        // Create a random hex color
-        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-        // Set the theme color
-        this.fire('yp-theme-color', `#${randomColor}`);
-    }
-    renderAIConfigReview() {
-        return html `
-      <div class="aiConfigReview" id="aiConfigReview">
-        ${this.AIConfigReview
-            ? html `
-              ${resolveMarkdown(this.AIConfigReview, {
-                includeImages: true,
-                includeCodeBlockClassNames: true,
-            })}
-            `
-            : nothing}
-      </div>
-    `;
-    }
-    renderReviewAndSubmit() {
-        return html `
-      <md-outlined-button
-        @click="${this.reviewAgentConfiguration}"
-        ?hidden="${!this.AIConfigReview || this.currentAgent != undefined}"
-        >${this.t('Review CRT again')}<md-icon slot="icon"
-          >rate_review</md-icon
-        ></md-outlined-button
-      >
-      <md-filled-button
-        @click="${this.reviewAgentConfiguration}"
-        ?hidden="${this.AIConfigReview != undefined ||
-            this.currentAgent != undefined}"
-        ?disabled="${this.isReviewingAgent}"
-        >${this.t('Review CRT')}<md-icon slot="icon"
-          >rate_review</md-icon
-        ></md-filled-button
-      >
-    `;
-    }
-    renderThemeToggle() {
-        return html `<div class="layout horizontal center-center themeToggle">
-      ${!this.themeDarkMode
-            ? html `
-            <md-outlined-icon-button
-              class="darkModeButton"
-              @click="${this.toggleDarkMode}"
-              ><md-icon>dark_mode</md-icon></md-outlined-icon-button
-            >
-          `
-            : html `
-            <md-outlined-icon-button
-              class="darkModeButton"
-              @click="${this.toggleDarkMode}"
-              ><md-icon>light_mode</md-icon></md-outlined-icon-button
-            >
-          `}
-
-      <md-outlined-icon-button
-        class="darkModeButton"
-        @click="${this.randomizeTheme}"
-        ><md-icon>shuffle</md-icon></md-outlined-icon-button
-      >
-    </div> `;
-    }
-    renderConfiguration() {
-        return html `
-      <div class="layout vertical center-center topDiv">
-        ${this.renderThemeToggle()}
-
-        <div class="formContainer">
-          <div>
-            <md-outlined-text-field
-              type="textarea"
-              label="Context"
-              id="context"
-            ></md-outlined-text-field>
-          </div>
-
-          <div>
-            <md-outlined-text-field
-              type="textarea"
-              label="Undesirable Effects"
-              id="undesirableEffects"
-            ></md-outlined-text-field>
-          </div>
-
-          <div class="layout horizontal center-center">
-            <md-outlined-button
-              @click="${this.clearForNew}"
-              ?hidden="${!this.currentAgent}"
-              >${this.t('Create New Agent')}<md-icon slot="icon"
-                >rate_review</md-icon
-              ></md-outlined-button
-            >
-
-            ${this.renderReviewAndSubmit()}
-
-            <md-filled-button
-              @click="${this.createAgent}"
-              ?hidden="${!this.AIConfigReview ||
-            this.currentAgent != undefined}"
-              ?disabled="${this.isReviewingAgent}"
-              >${this.t('Create CRT')}<md-icon slot="icon"
-                >send</md-icon
-              ></md-filled-button
-            >
-          </div>
-
-          ${this.isReviewingAgent && !this.AIConfigReview
-            ? html `<md-linear-progress indeterminate></md-linear-progress>`
-            : nothing}
-          ${this.AIConfigReview ? this.renderAIConfigReview() : nothing}
-        </div>
-      </div>
-    `;
-    }
-    /*findNodeRecursively = (
-      nodes: LtpCurrentRealityAgentDataNode[],
-      nodeId: string
-    ): LtpCurrentRealityAgentDataNode | undefined => {
-      for (const node of nodes) {
-        if (node.id === nodeId) {
-          return node;
-        }
-        if (node.children) {
-          const foundNode = this.findNodeRecursively(node.children, nodeId);
-          if (foundNode) {
-            return foundNode;
-          }
-        }
-      }
-      return undefined;
-    };*/
-    openAddCauseDialog(event) {
-        console.error(`openAddCauseDialog ${event.detail.parentNodeId}`);
-        const parentNodeId = event.detail.parentNodeId;
-        // Get the node from the tree recursively
-        // Find the node recursively
-        /* const node = this.findNodeRecursively(this.currentAgent?.nodes || [], parentNodeId);
-        if (!node) {
-          console.error(`Could not find node ${parentNodeId}`);
-          console.error(JSON.stringify(this.currentAgent, null, 2));
-          return;
-        }
-        this.nodeToAddCauseTo = node;
-        (this.$$("#addCauseDialog") as MdDialog).show();*/
-    }
-    closeAddCauseDialog() {
-        this.$$('#addCauseDialog').close();
-        this.nodeToAddCauseTo = undefined;
-    }
-    renderAddCauseDialog() {
-        return html `
-      <md-dialog
-        id="addCauseDialog"
-        style="max-width: 800px;max-height: 90vh;"
-        @closed="${this.closeAddCauseDialog}"
-      >
-        <div slot="headline">${ /*this.nodeToAddCauseTo?.description*/''}</div>
-        <div slot="content" class="chatContainer">
-          ${this.nodeToAddCauseTo
-            ? html `
-                <ltp-chat-assistant
-                  .nodeToAddCauseTo="${this.nodeToAddCauseTo}"
-                  method="dialog"
-                  .textInputLabel="${this.t('Enter sufficent direct causes to the effect')}"
-                  .agentData="${this.currentAgent}"
-                  @close="${this.closeAddCauseDialog}"
-                >
-                </ltp-chat-assistant>
-              `
-            : nothing}
-        </div>
-      </md-dialog>
-    `;
-    }
-    render() {
-        if (this.isFetchingAgent) {
-            return html `<md-linear-progress indeterminate></md-linear-progress>`;
-        }
-        else {
-            return cache(html `
-        ${this.renderAddCauseDialog()} ${this.renderEditNodeDialog()}
-        ${this.renderDeleteConfirmationDialog()}
-        <md-tabs id="tabBar" @change="${this.tabChanged}">
-          <md-primary-tab id="configure-tab" aria-controls="configure-panel">
-            <md-icon slot="icon">support_agent</md-icon>
-            ${this.t('Agents Operations')}
-          </md-primary-tab>
-          <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
-            <md-icon slot="icon">checklist</md-icon>
-            ${this.t('Audit Log')}
-          </md-primary-tab>
-          <md-primary-tab id="crt-tab" aria-controls="crt-panel" +>
-            <md-icon slot="icon">account_balance</md-icon>
-            ${this.t('Costs')}
-          </md-primary-tab>
-        </md-tabs>
-        <ps-operations-view
-          .currentAgent="${this.currentAgent}"
-        ></ps-operations-view>
-      `);
-        }
-    }
 };
 __decorate([
     property({ type: Number })
 ], PsOperationsManager.prototype, "currentAgentId", void 0);
+__decorate([
+    property({ type: Number })
+], PsOperationsManager.prototype, "totalCosts", void 0);
 __decorate([
     property({ type: Object })
 ], PsOperationsManager.prototype, "currentAgent", void 0);
@@ -1447,35 +458,29 @@ __decorate([
     property({ type: Object })
 ], PsOperationsManager.prototype, "nodeToEditInfo", void 0);
 __decorate([
-    property({ type: Object })
-], PsOperationsManager.prototype, "nodeToEdit", void 0);
-__decorate([
-    property({ type: Array })
-], PsOperationsManager.prototype, "allCausesExceptCurrentToEdit", void 0);
-__decorate([
-    property({ type: Boolean })
-], PsOperationsManager.prototype, "showDeleteConfirmation", void 0);
-__decorate([
     property({ type: Number })
 ], PsOperationsManager.prototype, "activeTabIndex", void 0);
 __decorate([
-    property({ type: String })
-], PsOperationsManager.prototype, "currentlySelectedCauseIdToAddAsChild", void 0);
-__decorate([
-    property({ type: String })
-], PsOperationsManager.prototype, "AIConfigReview", void 0);
+    property({ type: Boolean })
+], PsOperationsManager.prototype, "showEditNodeDialog", void 0);
 __decorate([
     property({ type: Boolean })
-], PsOperationsManager.prototype, "isReviewingAgent", void 0);
+], PsOperationsManager.prototype, "showAddAgentDialog", void 0);
 __decorate([
     property({ type: Boolean })
-], PsOperationsManager.prototype, "isCreatingAgent", void 0);
+], PsOperationsManager.prototype, "showAddConnectorDialog", void 0);
+__decorate([
+    property({ type: Number })
+], PsOperationsManager.prototype, "selectedAgentIdForConnector", void 0);
+__decorate([
+    property({ type: String })
+], PsOperationsManager.prototype, "selectedInputOutputType", void 0);
 __decorate([
     query('ps-operations-view')
 ], PsOperationsManager.prototype, "agentElement", void 0);
 __decorate([
-    property({ type: Object })
-], PsOperationsManager.prototype, "nodeToAddCauseTo", void 0);
+    property({ type: Number })
+], PsOperationsManager.prototype, "groupId", void 0);
 PsOperationsManager = __decorate([
     customElement('ps-operations-manager')
 ], PsOperationsManager);

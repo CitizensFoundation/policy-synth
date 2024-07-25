@@ -1,11 +1,10 @@
 import weaviate from "weaviate-ts-client";
-import { PolicySynthAgentBase } from "../../baseAgent.js";
-import { PsConstants } from "../../constants.js";
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
+export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
     static allFieldsToExtract = "title url lastModified size \
        description shortDescription fullDescriptionOfAllContents \
       compressedFullDescriptionOfAllContents \
@@ -168,7 +167,7 @@ export class PsRagDocumentVectorStore extends PolicySynthAgentBase {
                 .get()
                 .withClassName("RagDocument")
                 .withNearText({ concepts: [query] })
-                .withLimit(PsConstants.limits.webPageVectorResultsForNewSolutions)
+                .withLimit(20) //TODO: Get from agent config
                 /*.withWhere({
                   operator: "And",
                   operands: where,

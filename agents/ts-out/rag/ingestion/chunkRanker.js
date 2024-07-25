@@ -1,12 +1,11 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BasePairwiseRankingsProcessor } from "../../basePairwiseRanking.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
+import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
+export class IngestionChunkRanker extends SimplePairwiseRankingsAgent {
     rankingRules;
     documentSummary;
+    maxModelTokensOut = 3;
+    modelTemperature = 0.0;
     constructor(memory = undefined, progressFunction = undefined) {
-        super(undefined, memory);
+        super(memory);
         this.progressFunction = progressFunction;
     }
     async voteOnPromptPair(index, promptPair) {
@@ -15,7 +14,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            new SystemMessage(`
+            this.createSystemMessage(`
         You are an AI expert trained to rank chunks of documents based on their relevance to the users ranking rules.
 
         Instructions:
@@ -25,7 +24,7 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
         5. Let's think step by step.
         `),
-            new HumanMessage(`
+            this.createHumanMessage(`
         User Ranking Rules:
         ${this.rankingRules}
 
@@ -43,17 +42,13 @@ export class IngestionChunkRanker extends BasePairwiseRankingsProcessor {
         The Most Relevant Document Chunk Is:
        `),
         ];
-        return await this.getResultsFromLLM(index, "ingestion-agent", PsIngestionConstants.ingestionMainModel, messages, itemOneIndex, itemTwoIndex);
+        return await this.getResultsFromLLM(index, "ingestion-agent", messages, itemOneIndex, itemTwoIndex);
     }
     async rankDocumentChunks(chunksToRank, rankingRules, documentSummary, eloRatingKey) {
         this.rankingRules = rankingRules;
         this.documentSummary = documentSummary;
-        this.chat = new ChatOpenAI({
-            temperature: PsIngestionConstants.ingestionRankingModel.temperature,
-            maxTokens: PsIngestionConstants.ingestionRankingModel.maxOutputTokens,
-            modelName: PsIngestionConstants.ingestionRankingModel.name,
-            verbose: PsIngestionConstants.ingestionRankingModel.verbose,
-        });
+        this.maxModelTokensOut = 3;
+        this.modelTemperature = 0.0;
         this.setupRankingPrompts(-1, chunksToRank, chunksToRank.length * 10, this.progressFunction);
         await this.performPairwiseRanking(-1);
         return this.getOrderedListOfItems(-1, true, eloRatingKey);

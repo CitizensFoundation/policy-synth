@@ -8,6 +8,7 @@ export class IngestionContentParser {
     async parsePdf(pdfBuffer) {
         return new Promise((resolve, reject) => {
             let text = '';
+            //@ts-ignore //TODO: CHECK
             new PdfReader().parseBuffer(pdfBuffer, (err, item) => {
                 if (err) {
                     reject(err);

@@ -1,9 +1,9 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { promises as fs } from "fs";
 import { OpenAI } from "openai";
 import { StageOneRanker } from "./stageOneRanker.js";
 
-export class StepOneAnalyzer extends PolicySynthAgentBase {
+export class StepOneAnalyzer extends PolicySynthScAgentBase {
   openaiClient = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });

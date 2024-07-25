@@ -1,10 +1,11 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthAgentBase } from "../baseAgent.js";
-export declare class SearchQueriesGenerator extends PolicySynthAgentBase {
+import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
+export declare class SearchQueriesGenerator extends PolicySynthSimpleAgentBase {
     systemPrompt: string;
     userPrompt: string;
-    constructor(memory: PsBaseMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string);
-    renderMessages(): Promise<(HumanMessage | SystemMessage)[]>;
+    maxModelTokensOut: number;
+    modelTemperature: number;
+    constructor(memory: PsSimpleAgentMemoryData, numberOfQueriesToGenerate: number, question: string, overRideSystemPrompt?: string, overRideUserPrompt?: string);
+    renderMessages(): Promise<PsModelMessage[]>;
     generateSearchQueries(): Promise<string[]>;
 }
 //# sourceMappingURL=searchQueriesGenerator.d.ts.map

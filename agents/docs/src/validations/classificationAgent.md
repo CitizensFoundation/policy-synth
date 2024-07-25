@@ -1,41 +1,95 @@
 # PsClassificationAgent
 
-`PsClassificationAgent` extends `PsBaseValidationAgent` to handle classification-based routing of validation agents.
+The `PsClassificationAgent` class extends the `PsBaseValidationAgent` and is responsible for classifying input and routing it to the appropriate validation agent based on the classification result.
 
 ## Properties
 
-| Name     | Type                             | Description                                   |
-|----------|----------------------------------|-----------------------------------------------|
-| routes   | Map<string, PsValidationAgent>   | Stores classification routes to validation agents. |
+| Name   | Type                              | Description                                      |
+|--------|-----------------------------------|--------------------------------------------------|
+| routes | Map<string, PsValidationAgent>    | A map that holds classification routes to agents.|
+
+## Constructor
+
+### PsClassificationAgent
+
+Creates an instance of `PsClassificationAgent`.
+
+```typescript
+constructor(
+  name: string,
+  options: PsBaseValidationAgentOptions = {}
+)
+```
+
+| Parameter | Type                          | Description                                      |
+|-----------|-------------------------------|--------------------------------------------------|
+| name      | string                        | The name of the classification agent.            |
+| options   | PsBaseValidationAgentOptions  | Optional configuration options for the agent.    |
 
 ## Methods
 
-| Name            | Parameters                              | Return Type                     | Description |
-|-----------------|----------------------------------------|---------------------------------|-------------|
-| constructor     | name: string, options: PsBaseValidationAgentOptions | void                            | Initializes a new instance of `PsClassificationAgent` with a name and optional settings. |
-| addRoute        | classification: string, agent: PsValidationAgent | void                            | Adds a route to the agent map for a specific classification. |
-| performExecute  | -                                      | Promise<PsValidationAgentResult> | Executes the validation logic, determines the classification, and routes to the appropriate agent. |
-| afterExecute    | result: PsValidationAgentResult        | Promise<void>                   | Handles post-execution logic, potentially sending results over a WebSocket if configured. |
+### addRoute
+
+Adds a route for a specific classification to a validation agent.
+
+```typescript
+addRoute(classification: string, agent: PsValidationAgent): void
+```
+
+| Parameter      | Type                | Description                                      |
+|----------------|---------------------|--------------------------------------------------|
+| classification | string              | The classification string to route.              |
+| agent          | PsValidationAgent   | The validation agent to route to.                |
+
+### performExecute
+
+Executes the classification and routes to the appropriate validation agent.
+
+```typescript
+protected async performExecute(): Promise<PsValidationAgentResult>
+```
+
+| Return Type                | Description                                      |
+|----------------------------|--------------------------------------------------|
+| Promise<PsValidationAgentResult> | The result of the validation execution.         |
+
+### afterExecute
+
+Handles actions after the execution of the validation, such as sending messages via WebSocket.
+
+```typescript
+protected afterExecute(result: PsValidationAgentResult): Promise<void>
+```
+
+| Parameter | Type                        | Description                                      |
+|-----------|-----------------------------|--------------------------------------------------|
+| result    | PsValidationAgentResult     | The result of the validation execution.          |
+
+| Return Type                | Description                                      |
+|----------------------------|--------------------------------------------------|
+| Promise<void>              | A promise that resolves when the action is complete. |
 
 ## Example
 
 ```typescript
-import { PsClassificationAgent, PsValidationAgent, PsBaseValidationAgentOptions, PsValidationAgentResult } from '@policysynth/agents/validations/classificationAgent.js';
+import { PsClassificationAgent } from '@policysynth/agents/validations/classificationAgent.js';
+import { PsValidationAgent } from '@policysynth/agents/validations/baseValidationAgent.js';
 
-// Example initialization and usage
-const options: PsBaseValidationAgentOptions = {
-  webSocket: new WebSocket('ws://example.com'),
-  disableStreaming: false
+const classificationAgent = new PsClassificationAgent('ExampleClassificationAgent');
+
+const exampleValidationAgent: PsValidationAgent = {
+  name: 'ExampleValidationAgent',
+  async execute(input: string): Promise<PsValidationAgentResult> {
+    // Example validation logic
+    return { isValid: true };
+  }
 };
 
-const classificationAgent = new PsClassificationAgent("ExampleAgent", options);
+classificationAgent.addRoute('exampleClassification', exampleValidationAgent);
 
-// Adding routes
-classificationAgent.addRoute("error", new PsValidationAgent("ErrorAgent"));
-classificationAgent.addRoute("success", new PsValidationAgent("SuccessAgent"));
-
-// Execute the agent
 classificationAgent.performExecute().then(result => {
-  console.log("Validation Result:", result);
+  console.log(result);
 });
 ```
+
+This example demonstrates how to create an instance of `PsClassificationAgent`, add a route to a validation agent, and execute the classification agent.

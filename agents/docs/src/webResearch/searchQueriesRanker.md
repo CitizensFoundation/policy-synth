@@ -1,41 +1,82 @@
 # SearchQueriesRanker
 
-This class extends `BasePairwiseRankingsProcessor` to rank search queries based on their relevance to a given research question using a language model.
+The `SearchQueriesRanker` class extends the `SimplePairwiseRankingsAgent` to rank search queries based on their relevance to a given research question. It uses pairwise comparisons to determine the most relevant search queries.
 
 ## Properties
 
-| Name            | Type                  | Description                                       |
-|-----------------|-----------------------|---------------------------------------------------|
-| searchQuestion  | string \| undefined   | The current research question for ranking queries |
+| Name             | Type                        | Description                                                                 |
+|------------------|-----------------------------|-----------------------------------------------------------------------------|
+| searchQuestion   | string \| undefined         | The research question to which the search queries are being ranked against. |
+| progressFunction | Function \| undefined       | A function to track the progress of the ranking process.                    |
+
+## Constructor
+
+### `constructor(memory: PsSimpleAgentMemoryData, progressFunction: Function | undefined = undefined)`
+
+Creates an instance of the `SearchQueriesRanker` class.
+
+#### Parameters
+
+- `memory`: `PsSimpleAgentMemoryData` - The memory data for the agent.
+- `progressFunction`: `Function | undefined` - An optional function to track the progress of the ranking process.
 
 ## Methods
 
-| Name              | Parameters                                             | Return Type                        | Description                                                                 |
-|-------------------|--------------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| constructor       | memory: PsBaseMemoryData, progressFunction?: Function  | void                               | Initializes a new instance of the SearchQueriesRanker with optional progress function. |
-| voteOnPromptPair  | index: number, promptPair: number[]                    | Promise<PsPairWiseVoteResults>| Processes a pair of prompts and returns the ranking results.                |
-| rankSearchQueries | queriesToRank: string[], searchQuestion: string, maxPrompts: number = 120 | Promise<string[]> | Ranks a list of search queries based on their relevance to the specified research question. |
+### `async voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>`
+
+Compares two search queries and determines which one is more relevant to the research question.
+
+#### Parameters
+
+- `index`: `number` - The index of the current ranking process.
+- `promptPair`: `number[]` - An array containing the indices of the two search queries to compare.
+
+#### Returns
+
+- `Promise<PsPairWiseVoteResults>` - The result of the pairwise vote, indicating which search query is more relevant.
+
+### `async rankSearchQueries(queriesToRank: string[], searchQuestion: string, maxPrompts = 120)`
+
+Ranks a list of search queries based on their relevance to a given research question.
+
+#### Parameters
+
+- `queriesToRank`: `string[]` - An array of search queries to rank.
+- `searchQuestion`: `string` - The research question to which the search queries are being ranked against.
+- `maxPrompts`: `number` - The maximum number of prompts to use for the ranking process (default is 120).
+
+#### Returns
+
+- `Promise<string[]>` - An ordered list of search queries ranked by their relevance to the research question.
 
 ## Example
 
 ```typescript
 import { SearchQueriesRanker } from '@policysynth/agents/webResearch/searchQueriesRanker.js';
-import { PsBaseMemoryData } from '@policysynth/agents/memoryDataTypes.js';
-import { PsConstants } from '../constants.js';
 
-const memoryData: PsBaseMemoryData = {
-  // example memory data
+const memory: PsSimpleAgentMemoryData = {
+  groupId: 1,
+  status: {
+    state: "running",
+    progress: 0,
+    messages: [],
+    lastUpdated: Date.now(),
+  },
 };
 
-const ranker = new SearchQueriesRanker(memoryData);
+const searchQueriesRanker = new SearchQueriesRanker(memory);
 
-const queries = ["query one", "query two", "query three"];
-const researchQuestion = "What is the impact of AI on society?";
+const queriesToRank = [
+  "How to improve search engine optimization?",
+  "Best practices for SEO in 2023",
+  "SEO tips and tricks",
+];
 
-async function rankQueries() {
-  const rankedQueries = await ranker.rankSearchQueries(queries, researchQuestion);
-  console.log(rankedQueries);
-}
+const searchQuestion = "What are the latest trends in SEO?";
 
-rankQueries();
+searchQueriesRanker.rankSearchQueries(queriesToRank, searchQuestion).then((rankedQueries) => {
+  console.log("Ranked Queries:", rankedQueries);
+});
 ```
+
+This example demonstrates how to create an instance of the `SearchQueriesRanker` class, provide it with a list of search queries and a research question, and then rank the search queries based on their relevance to the research question.

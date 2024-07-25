@@ -4,7 +4,6 @@ import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
 
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 
 //TODO: Use tiktoken
@@ -283,8 +282,8 @@ export class PsBaseChatBot {
         tokensOutCost: 0,
         tokensIn: 0,
         tokensOut: 0,
-      } as PsInnovationStagesData,
-    } as Record<PSChatBotMemoryStageTypes, PsInnovationStagesData>;
+      } as any,
+    } as Record<PSChatBotMemoryStageTypes, any>; //TODO: Set a type here
   }
 
   getEmptyMemory() {
@@ -292,8 +291,6 @@ export class PsBaseChatBot {
       redisKey: this.redisKey,
       currentStage: "chatbot-conversation",
       stages: {
-        ...PolicySynthAgentBase.emptyDefaultStages,
-        ...this.emptyChatBotStagesData,
       },
       timeStart: Date.now(),
       chatLog: [],
@@ -376,12 +373,12 @@ export class PsBaseChatBot {
   getTokenCosts(estimateTokens: number, type: "in" | "out") {
     if (type == "in") {
       return (
-        PsConstants.analyseExternalSolutionsModel.inTokenCostUSD *
+        3/1000000 * //TODO: Get this from model
         estimateTokens
       );
     } else {
       return (
-        PsConstants.analyseExternalSolutionsModel.outTokenCostUSD *
+        15/1000000 * //TODO: Get this from model
         estimateTokens
       );
     }

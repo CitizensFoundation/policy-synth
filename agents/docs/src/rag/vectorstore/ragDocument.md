@@ -1,32 +1,37 @@
 # PsRagDocumentVectorStore
 
-This class is responsible for managing document vectors in a Weaviate vector store, including operations like adding, updating, deleting, and querying document schemas and data.
+The `PsRagDocumentVectorStore` class is responsible for managing the interaction with a Weaviate vector store for storing and retrieving RAG (Retrieval-Augmented Generation) documents. It extends the `PolicySynthSimpleAgentBase` class and provides methods for schema management, document posting, updating, retrieval, and searching.
 
 ## Properties
 
-| Name                            | Type    | Description                                           |
-|---------------------------------|---------|-------------------------------------------------------|
-| roughFastWordTokenRatio         | number  | The ratio used to estimate token length from words.   |
-| maxChunkTokenLength             | number  | The maximum token length for a chunk.                 |
-| minQualityEloRatingForChunk     | number  | The minimum quality Elo rating for a chunk.           |
+| Name                          | Type                | Description                                                                 |
+|-------------------------------|---------------------|-----------------------------------------------------------------------------|
+| `allFieldsToExtract`          | `string`            | Static property defining the fields to extract from the Weaviate schema.     |
+| `urlField`                    | `string`            | Static property defining the URL field in the schema.                        |
+| `weaviateKey`                 | `string`            | Static property holding the Weaviate API key.                                |
+| `client`                      | `WeaviateClient`    | Static property holding the Weaviate client instance.                        |
+| `roughFastWordTokenRatio`     | `number`            | Property defining the rough word-to-token ratio.                             |
+| `maxChunkTokenLength`         | `number`            | Property defining the maximum token length for a chunk.                      |
+| `minQualityEloRatingForChunk` | `number`            | Property defining the minimum quality ELO rating for a chunk.                |
 
 ## Methods
 
-| Name                        | Parameters                                  | Return Type                  | Description                                      |
-|-----------------------------|---------------------------------------------|------------------------------|--------------------------------------------------|
-| getEstimateTokenLength      | data: string                                | number                       | Estimates the token length of the provided data. |
-| addSchema                   |                                             | Promise<void>                | Adds a schema to the Weaviate client.            |
-| showScheme                  |                                             | Promise<void>                | Shows the current schema in the Weaviate client. |
-| deleteScheme                |                                             | Promise<void>                | Deletes a schema from the Weaviate client.       |
-| testQuery                   |                                             | Promise<any>                 | Tests a query against the Weaviate client.       |
-| retry                       | fn: () => Promise<T>, retries: number, delay: number | Promise<T> | Retries a function based on the specified parameters. |
-| postDocument                | document: PsRagDocumentSource              | Promise<string \| undefined> | Posts a document to the Weaviate client.         |
-| updateDocument              | id: string, documentData: PsRagDocumentSource, quiet: boolean | Promise<any> | Updates a document in the Weaviate client.       |
-| getDocument                 | id: string                                  | Promise<PsRagDocumentSource> | Retrieves a document by ID from the Weaviate client. |
-| searchDocuments             | query: string                               | Promise<PsRagDocumentSourceGraphQlResponse> | Searches documents based on a query.            |
-| searchDocumentsByUrl        | docUrl: string                              | Promise<PsRagDocumentSourceGraphQlResponse \| null \| undefined> | Searches documents by URL. |
-| mergeUniqueById             | arr1: [], arr2: []                          | Promise<any[]>               | Merges two arrays and filters out duplicates.    |
-| searchChunksWithReferences  | query: string                               | Promise<PsRagChunk[]>        | Searches for document chunks with references based on a query. |
+| Name                    | Parameters                                                                 | Return Type                              | Description                                                                                       |
+|-------------------------|---------------------------------------------------------------------------|------------------------------------------|---------------------------------------------------------------------------------------------------|
+| `getWeaviateKey`        | -                                                                         | `string`                                 | Static method to retrieve the Weaviate API key from environment variables.                        |
+| `getEstimateTokenLength`| `data: string`                                                            | `number`                                 | Method to estimate the token length of a given string.                                            |
+| `addSchema`             | -                                                                         | `Promise<void>`                          | Method to add a schema to the Weaviate instance.                                                  |
+| `showScheme`            | -                                                                         | `Promise<void>`                          | Method to display the current schema in the Weaviate instance.                                    |
+| `deleteScheme`          | -                                                                         | `Promise<void>`                          | Method to delete the schema from the Weaviate instance.                                           |
+| `testQuery`             | -                                                                         | `Promise<any>`                           | Method to perform a test query on the Weaviate instance.                                          |
+| `retry`                 | `fn: () => Promise<T>, retries = 10, delay = 5000`                         | `Promise<T>`                             | Method to retry a given function a specified number of times with a delay between attempts.       |
+| `postDocument`          | `document: PsRagDocumentSource`                                           | `Promise<string | undefined>`            | Method to post a document to the Weaviate instance.                                               |
+| `updateDocument`        | `id: string, documentData: PsRagDocumentSource, quiet = false`             | `Promise<any>`                           | Method to update a document in the Weaviate instance.                                             |
+| `getDocument`           | `id: string`                                                              | `Promise<PsRagDocumentSource>`           | Method to retrieve a document from the Weaviate instance by its ID.                               |
+| `searchDocuments`       | `query: string`                                                           | `Promise<PsRagDocumentSourceGraphQlResponse>` | Method to search for documents in the Weaviate instance based on a query.                         |
+| `searchDocumentsByUrl`  | `docUrl: string`                                                          | `Promise<PsRagDocumentSourceGraphQlResponse | null | undefined>` | Method to search for documents in the Weaviate instance based on a URL.                           |
+| `mergeUniqueById`       | `arr1: [], arr2: []`                                                      | `Promise<any[]>`                         | Method to merge two arrays of objects, ensuring uniqueness by ID.                                 |
+| `searchChunksWithReferences` | `query: string`                                                      | `Promise<PsRagChunk[]>`                  | Method to search for document chunks with references in the Weaviate instance based on a query.   |
 
 ## Example
 
@@ -35,23 +40,38 @@ import { PsRagDocumentVectorStore } from '@policysynth/agents/rag/vectorstore/ra
 
 const vectorStore = new PsRagDocumentVectorStore();
 
-// Example usage to add a schema
-vectorStore.addSchema().then(() => {
-  console.log('Schema added successfully.');
-}).catch(err => {
-  console.error('Failed to add schema:', err);
-});
+// Add schema to Weaviate
+await vectorStore.addSchema();
 
-// Example usage to post a document
+// Show current schema
+await vectorStore.showScheme();
+
+// Delete schema from Weaviate
+await vectorStore.deleteScheme();
+
+// Post a document to Weaviate
 const document = {
-  title: "Example Document",
+  title: "Sample Document",
   url: "http://example.com",
-  description: "A sample document for demonstration purposes."
+  lastModified: "2023-10-01",
+  size: 12345,
+  description: "This is a sample document.",
+  shortDescription: "Sample document",
+  fullDescriptionOfAllContents: "Full content of the sample document.",
+  compressedFullDescriptionOfAllContents: "Compressed content of the sample document.",
+  contentType: "text/html",
+  allReferencesWithUrls: ["http://example.com/ref1", "http://example.com/ref2"],
+  allOtherReferences: ["Reference 1", "Reference 2"],
+  allImageUrls: ["http://example.com/image1.jpg", "http://example.com/image2.jpg"],
+  documentMetaData: { author: "John Doe", category: "Sample" }
 };
 
-vectorStore.postDocument(document).then(id => {
-  console.log('Document posted with ID:', id);
-}).catch(err => {
-  console.error('Failed to post document:', err);
-});
+const documentId = await vectorStore.postDocument(document);
+console.log(`Document posted with ID: ${documentId}`);
+
+// Search for documents
+const searchResults = await vectorStore.searchDocuments("sample query");
+console.log(searchResults);
 ```
+
+This example demonstrates how to use the `PsRagDocumentVectorStore` class to interact with a Weaviate vector store, including adding a schema, posting a document, and searching for documents.

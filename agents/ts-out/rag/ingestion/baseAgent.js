@@ -1,28 +1,13 @@
 import path from "path";
 import crypto, { createHash } from "crypto";
-import { ChatOpenAI } from "@langchain/openai";
-import { PolicySynthAgentBase } from "../../baseAgent.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-export class BaseIngestionAgent extends PolicySynthAgentBase {
+import { PolicySynthSimpleAgentBase } from "../../base/simpleAgent.js";
+export class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
     minChunkTokenLength = 1000;
     maxChunkTokenLength = 3500;
     maxFileProcessTokenLength = 110000;
     roughFastWordTokenRatio = 1.25;
-    constructor() {
-        super();
-        this.chat = new ChatOpenAI({
-            temperature: PsIngestionConstants.ingestionMainModel.temperature,
-            maxTokens: PsIngestionConstants.ingestionMainModel.maxOutputTokens,
-            modelName: PsIngestionConstants.ingestionMainModel.name,
-            verbose: PsIngestionConstants.ingestionMainModel.verbose,
-        });
-    }
-    resetLlmTemperature() {
-        this.chat.temperature = PsIngestionConstants.ingestionMainModel.temperature;
-    }
-    randomizeLlmTemperature() {
-        this.chat.temperature = Math.random() * (0.55 - 0.01) + 0.01;
-    }
+    maxModelTokensOut = 4096;
+    modelTemperature = 0.0;
     logShortLines(text, maxLength = 50) {
         // Split the text into lines
         // then only console.log the first 100 characters of each line

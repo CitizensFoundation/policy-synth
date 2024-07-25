@@ -1,6 +1,6 @@
-import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { Project } from "ts-morph";
-export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgentBase {
+export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentBase {
     memory: PsEngineerMemoryData;
     otherFilesToKeepInContextContent: string | undefined | null;
     documentationFilesInContextContent: string | undefined | null;

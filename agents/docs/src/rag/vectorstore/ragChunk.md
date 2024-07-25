@@ -1,30 +1,31 @@
 # PsRagChunkVectorStore
 
-This class manages the storage and retrieval of document chunks in a vector database using Weaviate. It extends the functionality of the `PolicySynthAgentBase` class.
+The `PsRagChunkVectorStore` class is a specialized class for managing and interacting with a Weaviate vector store for RAG (Retrieval-Augmented Generation) document chunks. It extends the `PolicySynthSimpleAgentBase` class and provides methods for schema management, data insertion, querying, and updating.
 
 ## Properties
 
-| Name                | Type            | Description                                           |
-|---------------------|-----------------|-------------------------------------------------------|
-| allFieldsToExtract  | string          | A string listing all the fields to extract from queries. |
-| weaviateKey         | string          | The API key used for authenticating with the Weaviate client. |
-| client              | WeaviateClient  | An instance of WeaviateClient configured for interaction with the Weaviate server. |
+| Name                    | Type             | Description                                                                 |
+|-------------------------|------------------|-----------------------------------------------------------------------------|
+| allFieldsToExtract      | `string`         | A static string containing all the fields to extract from the Weaviate schema. |
+| weaviateKey             | `string`         | A static string containing the Weaviate API key.                             |
+| client                  | `WeaviateClient` | A static instance of the Weaviate client.                                    |
 
 ## Methods
 
-| Name                      | Parameters                                                                 | Return Type                  | Description                                                                 |
-|---------------------------|----------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
-| addSchema                 | -                                                                          | Promise<void>                | Reads a JSON schema from a file and adds it to the Weaviate schema.         |
-| showScheme                | -                                                                          | Promise<void>                | Fetches and displays the current schema from Weaviate.                      |
-| deleteScheme              | -                                                                          | Promise<void>                | Deletes the 'RagDocumentChunk' class from the Weaviate schema.              |
-| testQuery                 | -                                                                          | Promise<any>                 | Executes a test query to fetch document chunks based on a concept.          |
-| retry                     | fn: () => Promise<T>, retries: number = 10, delay: number = 5000           | Promise<T>                   | Retries a given function a specified number of times with a delay.          |
-| postChunk                 | chunkData: PsRagChunk                                                      | Promise<string \| undefined> | Posts a chunk to Weaviate and returns the ID of the created object.         |
-| addCrossReference         | sourceId: string, propertyName: string, targetId: string, targetClassName: string | Promise<any>                 | Adds a cross-reference between two objects in Weaviate.                     |
-| updateChunk               | id: string, chunkData: PsRagChunk, quiet: boolean = false                  | Promise<any>                 | Updates a chunk in Weaviate with new data.                                  |
-| getChunk                  | id: string                                                                 | Promise<PsRagChunk>          | Retrieves a chunk from Weaviate by ID.                                      |
-| searchChunks              | query: string                                                              | Promise<PsRagChunkGraphQlResponse> | Searches for chunks in Weaviate that match a given query.                   |
-| searchChunksWithReferences| query: string, minRelevanceEloRating: number = 900, minSubstanceEloRating: number = 900 | Promise<PsRagChunkGraphQlResponse> | Searches for chunks and their references based on a query and minimum ratings. |
+| Name                        | Parameters                                                                 | Return Type                  | Description                                                                                       |
+|-----------------------------|----------------------------------------------------------------------------|------------------------------|---------------------------------------------------------------------------------------------------|
+| getWeaviateKey              | None                                                                       | `string`                     | Retrieves the Weaviate API key from environment variables.                                         |
+| addSchema                   | None                                                                       | `Promise<void>`              | Adds a schema to the Weaviate instance.                                                           |
+| showScheme                  | None                                                                       | `Promise<void>`              | Displays the current schema in the Weaviate instance.                                             |
+| deleteScheme                | None                                                                       | `Promise<void>`              | Deletes the schema from the Weaviate instance.                                                    |
+| testQuery                   | None                                                                       | `Promise<any>`               | Executes a test query against the Weaviate instance.                                              |
+| retry                       | `fn: () => Promise<T>, retries = 10, delay = 5000`                          | `Promise<T>`                 | Retries a function multiple times with a delay between attempts.                                  |
+| postChunk                   | `chunkData: PsRagChunk`                                                    | `Promise<string | undefined>` | Posts a chunk of data to the Weaviate instance.                                                   |
+| addCrossReference           | `sourceId: string, propertyName: string, targetId: string, targetClassName: string` | `Promise<any>`               | Adds a cross-reference between two objects in the Weaviate instance.                              |
+| updateChunk                 | `id: string, chunkData: PsRagChunk, quiet = false`                         | `Promise<any>`               | Updates a chunk of data in the Weaviate instance.                                                 |
+| getChunk                    | `id: string`                                                               | `Promise<PsRagChunk>`        | Retrieves a chunk of data from the Weaviate instance by its ID.                                   |
+| searchChunks                | `query: string`                                                            | `Promise<PsRagChunkGraphQlResponse>` | Searches for chunks in the Weaviate instance based on a query.                                    |
+| searchChunksWithReferences  | `query: string, minRelevanceEloRating = 900, minSubstanceEloRating = 900`  | `Promise<PsRagChunkGraphQlResponse>` | Searches for chunks in the Weaviate instance based on a query, including references and filters.  |
 
 ## Example
 
@@ -33,33 +34,67 @@ import { PsRagChunkVectorStore } from '@policysynth/agents/rag/vectorstore/ragCh
 
 const vectorStore = new PsRagChunkVectorStore();
 
-// Example usage to add schema
-vectorStore.addSchema().then(() => {
-  console.log('Schema added successfully');
-}).catch(err => {
-  console.error('Failed to add schema:', err);
-});
+// Add schema
+await vectorStore.addSchema();
 
-// Example usage to post a chunk
+// Show schema
+await vectorStore.showScheme();
+
+// Delete schema
+await vectorStore.deleteScheme();
+
+// Test query
+const testQueryResult = await vectorStore.testQuery();
+console.log(testQueryResult);
+
+// Post a chunk
 const chunkData = {
   title: "Example Chunk",
   chunkIndex: 1,
   chapterIndex: 1,
   mainExternalUrlFound: "http://example.com",
   shortSummary: "This is a short summary.",
-  fullSummary: "This is a detailed full summary.",
+  fullSummary: "This is a full summary.",
   relevanceEloRating: 1000,
   qualityEloRating: 1000,
   substanceEloRating: 1000,
-  uncompressedContent: "Full uncompressed content of the chunk.",
-  compressedContent: "Compressed content of the chunk.",
+  uncompressedContent: "This is the uncompressed content.",
+  compressedContent: "This is the compressed content.",
   metaDataFields: ["field1", "field2"],
-  metaData: { field1: "data1", field2: "data2" }
+  metaData: { field1: "value1", field2: "value2" },
+  category1EloRating: 1000,
+  category2EloRating: 1000,
+  category3EloRating: 1000,
+  category4EloRating: 1000,
+  category5EloRating: 1000,
+  category6EloRating: 1000,
+  category7EloRating: 1000,
+  category8EloRating: 1000,
+  category9EloRating: 1000,
+  category10EloRating: 1000,
+  _additional: { id: "1", distance: 0.1, certainty: 0.9 }
 };
 
-vectorStore.postChunk(chunkData).then(id => {
-  console.log('Chunk posted with ID:', id);
-}).catch(err => {
-  console.error('Failed to post chunk:', err);
-});
+const chunkId = await vectorStore.postChunk(chunkData);
+console.log(`Posted chunk with ID: ${chunkId}`);
+
+// Add cross-reference
+await vectorStore.addCrossReference("sourceId", "propertyName", "targetId", "targetClassName");
+
+// Update a chunk
+await vectorStore.updateChunk("chunkId", chunkData);
+
+// Get a chunk
+const retrievedChunk = await vectorStore.getChunk("chunkId");
+console.log(retrievedChunk);
+
+// Search chunks
+const searchResults = await vectorStore.searchChunks("example query");
+console.log(searchResults);
+
+// Search chunks with references
+const searchResultsWithReferences = await vectorStore.searchChunksWithReferences("example query");
+console.log(searchResultsWithReferences);
 ```
+
+This documentation provides a comprehensive overview of the `PsRagChunkVectorStore` class, including its properties, methods, and an example of how to use it.

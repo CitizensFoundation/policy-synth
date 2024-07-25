@@ -1,23 +1,40 @@
 import { nothing } from 'lit';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
+import '@material/web/progress/linear-progress.js';
 import '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
-import { OpsServerApi } from './OpsServerApi.js';
+import { PsServerApi } from './PsServerApi.js';
 import { PsOperationsBaseNode } from './ps-operations-base-node.js';
-export declare abstract class PsAgentNode extends PsOperationsBaseNode {
+import { MdMenu } from '@material/web/menu/menu.js';
+export declare class PsAgentNode extends PsOperationsBaseNode {
     agent: PsAgentAttributes;
     agentId: number;
-    isWorking: boolean;
-    api: OpsServerApi;
+    private agentState;
+    private latestMessage;
+    private progress;
+    private menuOpen;
+    menuAnchor: HTMLElement;
+    agentMenu: MdMenu;
+    api: PsServerApi;
+    private statusInterval;
     constructor();
+    firstUpdated(): void;
     connectedCallback(): void;
-    static get styles(): (any[] | import("lit").CSSResult)[];
-    createDirectCauses(): Promise<void>;
+    disconnectedCallback(): void;
+    toggleMenu(e: Event): void;
+    addInputConnector(): void;
+    addOutputConnector(): void;
+    startStatusUpdates(): void;
+    stopStatusUpdates(): void;
+    updateAgentStatus(): Promise<void>;
+    startAgent(): Promise<void>;
+    pauseAgent(): Promise<void>;
+    stopAgent(): Promise<void>;
     editNode(): void;
-    toggleMenu(): void;
-    renderImage(): import("lit").TemplateResult<1>;
-    clickPlayPause(): void;
+    renderActionButtons(): import("lit").TemplateResult<1>;
+    renderProgress(): import("lit").TemplateResult<1>;
     render(): typeof nothing | import("lit").TemplateResult<1>;
+    static get styles(): (any[] | import("lit").CSSResult)[];
 }
 //# sourceMappingURL=ps-agent-node.d.ts.map

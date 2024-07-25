@@ -1,6 +1,4 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 
 export class DocumentCleanupAgent extends BaseIngestionAgent {
   maxCleanupTokenLength: number = 4000;
@@ -14,7 +12,7 @@ export class DocumentCleanupAgent extends BaseIngestionAgent {
     "No additional content in cleaned text.";
 
   hallucinationValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything in the cleaned text that is not in the original text.
@@ -24,7 +22,7 @@ Instructions:
 `);
 
   correctnessValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Identify anything that is not the same in the original text as in the cleaned text except for items that have been cleaned away.
@@ -34,7 +32,7 @@ Instructions:
 `);
 
   completionValidationSystemMessage =
-    new SystemMessage(`You are an detailed oriented text comparison agent.
+    this.createSystemMessage(`You are an detailed oriented text comparison agent.
 
 Instructions:
 - Make sure that all main content in the original text is present in the cleaned text, that no main content is missing.
@@ -47,14 +45,14 @@ Instructions:
 `);
 
   validationUserMessage = (original: string, cleaned: string) =>
-    new HumanMessage(`<ORIGINAL_TEXT>${original}</ORIGINAL_TEXT>
+    this.createHumanMessage(`<ORIGINAL_TEXT>${original}</ORIGINAL_TEXT>
 
 <CLEANED_TEXT>${cleaned}</CLEANED_TEXT>
 
 Think step by step and output your analysis here:
 `);
   systemMessage =
-    new SystemMessage(`You are an expert document cleaner. Your job is to help cleanup documents coming from various sources. PDFs, etc.
+    this.createSystemMessage(`You are an expert document cleaner. Your job is to help cleanup documents coming from various sources. PDFs, etc.
 
 Instruction:
 - We own all copyright to the materials we are cleaning for our RAG chatbot.
@@ -71,7 +69,7 @@ Instruction:
 `);
 
   userMessage = (data: string, validationTextResults: string | undefined) =>
-    new HumanMessage(`${
+    this.createHumanMessage(`${
       validationTextResults
         ? `Note: You have already tried once to cleanup this document, and you got those validation errors:\n${validationTextResults}\n\n`
         : ``
@@ -81,7 +79,7 @@ ${data}
 `);
 
   referencesCheckSystemMessage =
-    new SystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
+    this.createSystemMessage(`Please analyze this document if it contains paragraphs, sentences or only a list of references or urls or references with urls.
 
   If the documents contains only references without text explainations or URLs output, only: ONLY_REFERENCES_OR_URLS
 
@@ -89,15 +87,13 @@ ${data}
 `);
 
   referencesCheckUserMessage = (data: string) =>
-    new HumanMessage(`Document to analyze:
+    this.createHumanMessage(`Document to analyze:
 ${data}
 
 Your one word analysis:
 `);
 
   async clean(data: string): Promise<string> {
-    this.resetLlmTemperature();
-
     const splitPartsForCleanup = this.splitDataForProcessing(
       data,
       this.maxCleanupTokenLength
@@ -129,7 +125,6 @@ Your one word analysis:
       while (!validated && retryCount < this.maxCleanupRetries) {
         const referenceAnalysis = (await this.callLLM(
           "ingestion-agent",
-          PsIngestionConstants.ingestionMainModel,
           this.getFirstMessages(
             this.systemMessage,
             this.userMessage(part, validationTextResults)
@@ -146,7 +141,6 @@ Your one word analysis:
         } else {
           cleanedPart = (await this.callLLM(
             "ingestion-agent",
-            PsIngestionConstants.ingestionMainModel,
             this.getFirstMessages(
               this.systemMessage,
               this.userMessage(part, validationTextResults)
@@ -164,10 +158,6 @@ Your one word analysis:
           if (!validated) {
             console.warn(`\nValidation failed ${retryCount}\n`);
             validationTextResults = validationResults.validationTextResults;
-          }
-
-          if (retryCount > 2) {
-            this.randomizeLlmTemperature();
           }
         }
       }
@@ -211,7 +201,6 @@ Your one word analysis:
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.completionValidationSystemMessage,
           this.validationUserMessage(original, cleaned)
@@ -220,7 +209,6 @@ Your one word analysis:
       ),
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.correctnessValidationSystemMessage,
           this.validationUserMessage(original, cleaned)
@@ -229,7 +217,6 @@ Your one word analysis:
       ),
       this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(
           this.hallucinationValidationSystemMessage,
           this.validationUserMessage(original, cleaned)

@@ -1,4 +1,12 @@
 {
+    "addNewAgent": "Add new agent",
+    "selectAgentClass": "Select agent class",
+    "agentName": "Agent name",
+    "addAgent": "Add agent",
+    "selectSmallAiModel": "Select Small AI model",
+    "selectMediumAiModel": "Select Medium AI model",
+    "selectLargeAiModel": "Select Large AI model",
+    "aiModelAgentCreateInfo": "Choose requested AI models",
     "positiveEvidence": "Positive evidence",
     "negativeEvidence": "Negative evidence",
     "economicEvidence": "Economic evidence",

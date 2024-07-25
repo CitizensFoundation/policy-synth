@@ -1,17 +1,14 @@
 
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BasePairwiseRankingsProcessor } from "../basePairwiseRanking.js";
-import { PsConstants } from "../constants.js";
+import { SimplePairwiseRankingsAgent } from "../base/simplePairwiseRanking.js";
 
-export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
+export class SearchResultsRanker extends SimplePairwiseRankingsAgent {
   searchQuestion: string | undefined;
 
   constructor(
-    memory: PsBaseMemoryData,
+    memory: PsSimpleAgentMemoryData,
     progressFunction: Function | undefined = undefined
   ) {
-    super(undefined as any, memory);
+    super(memory);
     this.progressFunction = progressFunction;
   }
 
@@ -33,7 +30,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
 
     const messages = [
-      new SystemMessage(
+      this.createSystemMessage(
         `
         You are an AI expert trained to rank search results based on their relevance to the user research question.
 
@@ -45,7 +42,7 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
         5. Let's think step by step.
         `
       ),
-      new HumanMessage(
+      this.createHumanMessage(
         `
         Research question: ${this.searchQuestion}
 
@@ -69,7 +66,6 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     return await this.getResultsFromLLM(
       index,
       "rank-search-results",
-      PsConstants.searchResultsRankingsModel,
       messages,
       itemOneIndex,
       itemTwoIndex
@@ -82,13 +78,6 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     maxPrompts = 150
   ) {
     this.searchQuestion = searchQuestion;
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.searchQueryRankingsModel.temperature,
-      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: PsConstants.searchQueryRankingsModel.name,
-      verbose: PsConstants.searchQueryRankingsModel.verbose,
-    });
 
     this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
     await this.performPairwiseRanking(-1);

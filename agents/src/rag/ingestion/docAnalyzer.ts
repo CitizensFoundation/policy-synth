@@ -1,5 +1,3 @@
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BaseIngestionAgent } from "./baseAgent.js";
 
 interface RefineInput {
@@ -17,7 +15,7 @@ interface RefineInput {
 export class DocumentAnalyzerAgent extends BaseIngestionAgent {
   maxAnalyzeTokenLength = 8000;
 
-  systemMessage = new SystemMessage(`You are an expert document analyzer.
+  systemMessage = this.createSystemMessage(`You are an expert document analyzer.
 
   Instructions:
   - You will analyze the document.
@@ -38,14 +36,14 @@ export class DocumentAnalyzerAgent extends BaseIngestionAgent {
   }`);
 
   userMessage = (data: string) =>
-    new HumanMessage(`Document to analyze:
+    this.createHumanMessage(`Document to analyze:
 ${data}
 
 Your JSON analysis:
 `);
 
   finalReviewSystemMessage =
-    new SystemMessage(`You are an expert document analyze refiner.
+    this.createSystemMessage(`You are an expert document analyze refiner.
 Instructions:
 - You will recieve a document analysis in JSON format.
 - Refine description and shortDescription with all the data from the fullDescriptionOfAllContents.
@@ -59,7 +57,7 @@ Instructions:
 `);
 
   finalReviewUserMessage = (analysis: LlmDocumentAnalysisReponse) =>
-    new HumanMessage(`Document analysis to review:
+    this.createHumanMessage(`Document analysis to review:
 ${JSON.stringify(analysis, null, 2)}
 
 Your refined JSON analysis:
@@ -86,7 +84,6 @@ Your refined JSON analysis:
       const chunkData = dataChunks[i];
       const documentAnalysis = (await this.callLLM(
         "ingestion-agent",
-        PsIngestionConstants.ingestionMainModel,
         this.getFirstMessages(this.systemMessage, this.userMessage(chunkData))
       )) as LlmDocumentAnalysisReponse;
 
@@ -155,7 +152,6 @@ Your refined JSON analysis:
 
     const refinedMetadata = (await this.callLLM(
       "ingestion-agent",
-      PsIngestionConstants.ingestionMainModel,
       this.getFirstMessages(
         this.finalReviewSystemMessage,
         this.finalReviewUserMessage(refineInput as LlmDocumentAnalysisReponse)

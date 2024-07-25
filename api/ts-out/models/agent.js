@@ -1,25 +1,6 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "./sequelize.js";
 export class PsAgent extends Model {
-    id;
-    uuid;
-    user_id;
-    created_at;
-    updated_at;
-    class_id;
-    group_id;
-    configuration;
-    parent_agent_id;
-    // Associations
-    Class;
-    User;
-    Group;
-    ApiCosts;
-    ModelCosts;
-    ParentAgent;
-    SubAgents;
-    Connectors;
-    AiModels;
 }
 PsAgent.init({
     id: {
@@ -68,6 +49,7 @@ PsAgent.init({
     indexes: [
         {
             fields: ["uuid"],
+            unique: true
         },
         {
             fields: ["user_id"],
@@ -99,13 +81,13 @@ PsAgent.associate = (models) => {
         foreignKey: "group_id",
         as: "Group",
     });
-    PsAgent.hasMany(models.PsApiCost, {
+    PsAgent.hasMany(models.PsExternalApiUsage, {
         foreignKey: "agent_id",
-        as: "ApiCosts",
+        as: "ExternalApiUsage",
     });
-    PsAgent.hasMany(models.PsModelCost, {
+    PsAgent.hasMany(models.PsModelUsage, {
         foreignKey: "agent_id",
-        as: "ModelCosts",
+        as: "ModelUsage",
     });
     PsAgent.belongsTo(models.PsAiModel, {
         foreignKey: "parent_agent_id",

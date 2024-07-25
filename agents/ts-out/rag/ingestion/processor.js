@@ -3,7 +3,6 @@ import path from "path";
 import crypto from "crypto";
 import fetch from "node-fetch";
 import puppeteer from "puppeteer-extra";
-import { PsConstants } from "../../constants.js";
 import { DocumentCleanupAgent } from "./docCleanup.js";
 import { DocumentTreeSplitAgent } from "./docTreeSplitter.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
@@ -16,7 +15,7 @@ import { IngestionDocumentRanker } from "./docRanker.js";
 import { DocumentClassifierAgent } from "./docClassifier.js";
 import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
-export class IngestionAgentProcessor extends BaseIngestionAgent {
+export class IngestionAgentAgent extends BaseIngestionAgent {
     dataLayoutPath;
     cachedFiles = [];
     fileMetadataPath = "./src/ingestion/cache/fileMetadata.json";
@@ -58,9 +57,10 @@ export class IngestionAgentProcessor extends BaseIngestionAgent {
             try {
                 this.logger.debug("Launching browser");
                 const browserPage = await browser.newPage();
-                browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-                browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
-                await browserPage.setUserAgent(PsConstants.currentUserAgent);
+                browserPage.setDefaultTimeout(30); //TODO: Set from agent config
+                browserPage.setDefaultNavigationTimeout(30 //TODO: Set from agent config
+                );
+                //await browserPage.setUserAgent("");  //TODO: Set from agent config
                 await this.downloadAndCache(this.dataLayout.documentUrls, false, browserPage);
                 await this.saveFileMetadata();
                 const disableJsonUrls = true;
