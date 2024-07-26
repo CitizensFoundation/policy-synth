@@ -4,7 +4,7 @@ import { htmlToText } from "html-to-text";
 import ioredis from "ioredis";
 import { PdfReader } from "pdfreader";
 import axios from "axios";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 async function getAndProcessPdf(subProblemIndex, url, browserPage, type) {
     return new Promise(async (resolve, reject) => {
         console.log("getAndProcessPdf");

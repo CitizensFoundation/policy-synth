@@ -11,7 +11,7 @@ import { PsExternalApiUsage } from "../dbModels/externalApiUsage.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 //TODO: Look to pool redis connections
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 export class PolicySynthAgentQueue extends PolicySynthAgent {
     status;
     skipCheckForProgress = true;
@@ -27,7 +27,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                 this.status = JSON.parse(statusDataString);
             }
             else {
-                console.error("No memory data found!");
+                console.error(`No status data found for agent ${this.agent.id} ${this.agent.redisStatusKey}`);
             }
         }
         catch (error) {
@@ -50,6 +50,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
         this.logger.info("Setting up agent status");
         await this.loadAgentStatusFromRedis();
         if (!this.status) {
+            this.logger.error(`No status found for agent ${this.agent.id} reseting`);
             this.status = {
                 state: "running",
                 progress: 0,
@@ -140,6 +141,8 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                         ],
                     });
                     if (loadedAgent) {
+                        this.logger.debug(`Agent group config: ${loadedAgent.group_id}`);
+                        this.logger.debug(`Agent group config: ${loadedAgent.Group?.configuration}`);
                         this.agent = loadedAgent;
                         await this.loadAgentMemoryFromRedis();
                         await this.setupMemoryIfNeeded();
@@ -183,6 +186,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
             });
             worker.on("error", (err) => {
                 this.logger.error(`An error occurred in the worker for agent ${this.agentQueueName}`, err);
+                this.updateAgentStatus("error", err.message);
             });
             worker.on("active", (job) => {
                 this.logger.info(`Job ${job.id} has started processing for agent ${this.agentQueueName}`);
@@ -214,11 +218,12 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
         this.logger.info(`Pausing agent ${this.agent.id}`);
         await this.updateAgentStatus("paused");
     }
-    async updateAgentStatus(state) {
+    async updateAgentStatus(state, message) {
         //TODO: Look into moving status into the agent db object so we can update with transactions
         await this.loadStatusFromRedis();
         if (this.agent && this.status) {
             this.status.state = state;
+            this.status.messages.push(message || `Agent ${this.agent.id} is now ${state}`);
             this.logger.info(`Agent ${this.agent.id} is now ${state}`);
             await this.saveAgentStatusToRedis();
         }

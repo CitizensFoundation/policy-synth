@@ -9,7 +9,7 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 global.fetch = fetch;
 
 const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+  process.env.REDIS_AGENT_URL || "redis://localhost:6379"
 );
 
 const externalSolutionsElectionViolence = [

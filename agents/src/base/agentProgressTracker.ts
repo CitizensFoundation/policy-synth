@@ -12,7 +12,7 @@ export class PsProgressTracker extends PolicySynthAgentBase {
     redisStatusKey: string,
     startProgress: number,
     endProgress: number,
-    redisUrl: string = process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+    redisUrl: string = process.env.REDIS_AGENT_URL || "redis://localhost:6379"
   ) {
     super();
     this.redis = new Redis(redisUrl);
@@ -27,7 +27,7 @@ export class PsProgressTracker extends PolicySynthAgentBase {
       const statusDataString = await this.redis.get(this.redisStatusKey);
       if (statusDataString) {
         this.status = JSON.parse(statusDataString);
-        this.logger.debug(`Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`);
+        //this.logger.debug(`Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`);
       } else {
         this.logger.error("No status data found!");
       }
@@ -44,6 +44,8 @@ export class PsProgressTracker extends PolicySynthAgentBase {
       this.logger.error("Agent status not initialized");
       return;
     }
+
+    //this.logger.debug(`Updating progress: ${progress} message: ${message}`);
 
     // Calculate the progress within the range
     if (progress !== undefined) {
@@ -70,6 +72,8 @@ export class PsProgressTracker extends PolicySynthAgentBase {
       return;
     }
 
+    //this.logger.debug(`Updating progress: ${progress} message: ${message}`);
+
     if (progress !== undefined) {
       this.status.progress = progress;
     }
@@ -77,12 +81,13 @@ export class PsProgressTracker extends PolicySynthAgentBase {
     this.status.messages.push(message);
     this.status.lastUpdated = Date.now();
 
-    // Save updated memory to Redis
+    // Save updated status to Redis
     await this.saveRedisStatus();
   }
 
   private async saveRedisStatus(): Promise<void> {
     try {
+      //this.logger.debug(`Saving agent memory to Redis: ${JSON.stringify(this.status)}`);
       await this.redis.set(this.redisStatusKey, JSON.stringify(this.status));
     } catch (error) {
       this.logger.error("Error saving agent memory to Redis");

@@ -27,9 +27,9 @@ export class PolicySynthApiApp {
     this.port = port || parseInt(process.env.PORT || "8000");
     this.ws = new WebSocketServer({ server: this.httpServer });
 
-    if (process.env.REDIS_URL) {
+    if (process.env.REDIS_AGENT_URL) {
       this.redisClient = createClient({
-        url: process.env.REDIS_URL,
+        url: process.env.REDIS_AGENT_URL,
         socket: {
           tls: true,
         },

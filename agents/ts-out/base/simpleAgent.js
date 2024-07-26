@@ -6,7 +6,7 @@ import { PolicySynthAgentBase } from "./agentBase.js";
 import ioredis from "ioredis";
 import tiktoken from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
     timeStart = Date.now();
     rateLimits = {};

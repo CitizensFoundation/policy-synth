@@ -18,9 +18,9 @@ export class AgentsManager {
         this.initializeRedisClient();
     }
     async initializeRedisClient() {
-        if (process.env.REDIS_URL) {
+        if (process.env.REDIS_AGENT_URL) {
             this.redisClient = createClient({
-                url: process.env.REDIS_URL,
+                url: process.env.REDIS_AGENT_URL,
                 socket: {
                     tls: true,
                 },

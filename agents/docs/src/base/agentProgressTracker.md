@@ -14,7 +14,7 @@ The `PsProgressTracker` class is designed to track and manage the progress of an
 
 ## Constructor
 
-### `constructor(redisStatusKey: string, startProgress: number, endProgress: number, redisUrl: string = process.env.REDIS_MEMORY_URL || "redis://localhost:6379")`
+### `constructor(redisStatusKey: string, startProgress: number, endProgress: number, redisUrl: string = process.env.REDIS_AGENT_URL || "redis://localhost:6379")`
 
 Initializes a new instance of the `PsProgressTracker` class.
 
@@ -23,7 +23,7 @@ Initializes a new instance of the `PsProgressTracker` class.
 - `redisStatusKey` (string): Key used to store and retrieve status in Redis.
 - `startProgress` (number): Starting progress value.
 - `endProgress` (number): Ending progress value.
-- `redisUrl` (string, optional): URL of the Redis server. Defaults to `process.env.REDIS_MEMORY_URL` or `"redis://localhost:6379"`.
+- `redisUrl` (string, optional): URL of the Redis server. Defaults to `process.env.REDIS_AGENT_URL` or `"redis://localhost:6379"`.
 
 ## Methods
 

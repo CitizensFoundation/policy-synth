@@ -5,17 +5,27 @@ export class AgentQueueManager {
     redisClient;
     queues;
     constructor() {
+        console.log("AgentQueueManager: Initializing");
         this.initializeRedis();
         this.queues = new Map();
     }
     initializeRedis() {
-        this.redisClient = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
-            tls: process.env.REDIS_URL ? { rejectUnauthorized: false } : undefined,
+        const redisUrl = process.env.REDIS_AGENT_URL || "redis://localhost:6379";
+        console.log("AgentQueueManager: Initializing Redis connection: " + redisUrl);
+        this.redisClient = new Redis(redisUrl, {
+            tls: process.env.REDIS_AGENT_URL ? { rejectUnauthorized: false } : undefined,
         });
-        this.redisClient.on("error", (err) => console.error("Redis Client Error", err));
+        this.redisClient.on("error", (err) => {
+            console.error("Redis Client Error", err);
+        });
+        this.redisClient.on("connect", () => {
+            console.log("AgentQueueManager: Successfully connected to Redis");
+        });
     }
     getQueue(queueName) {
+        console.log(`AgentQueueManager: Getting queue for ${queueName}`);
         if (!this.queues.has(queueName)) {
+            console.log(`AgentQueueManager: Creating new queue for ${queueName}`);
             const newQueue = new Queue(queueName, {
                 connection: this.redisClient,
             });
@@ -24,32 +34,43 @@ export class AgentQueueManager {
         return this.queues.get(queueName);
     }
     async controlAgent(agentId, action) {
+        console.log(`AgentQueueManager: Controlling agent ${agentId} with action ${action}`);
         const agent = await PsAgent.findByPk(agentId, {
             include: [{ model: PsAgentClass, as: "Class" }],
         });
         if (!agent || !agent.Class) {
+            console.error(`AgentQueueManager: Agent or Agent Class not found for agent ${agentId}`);
             throw new Error("Agent or Agent Class not found");
         }
         const queueName = agent.Class.configuration.queueName;
         if (!queueName) {
+            console.error(`AgentQueueManager: Queue name not defined for agent class ${agent.Class.id}`);
             throw new Error("Queue name not defined for this agent class");
         }
         const queue = this.getQueue(queueName);
+        console.log(`AgentQueueManager: Adding ${action} job to queue ${queueName} for agent ${agentId}`);
         await queue.add(`${action}Agent`, { agentId, action });
-        return `${action.charAt(0).toUpperCase() + action.slice(1)} request for agent ${agentId} queued in ${queueName}`;
+        const message = `${action.charAt(0).toUpperCase() + action.slice(1)} request for agent ${agentId} queued in ${queueName}`;
+        console.log(`AgentQueueManager: ${message}`);
+        return message;
     }
     async startAgentProcessing(agentId) {
+        console.log(`AgentQueueManager: Starting agent processing for agent ${agentId}`);
         const agent = await PsAgent.findByPk(agentId, {
             include: [{ model: PsAgentClass, as: "Class" }],
         });
-        if (!agent || !agent.Class)
+        if (!agent || !agent.Class) {
+            console.error(`AgentQueueManager: Agent or Agent Class not found for agent ${agentId}`);
             return false;
+        }
         const queueName = agent.Class.configuration.queueName;
         const queue = this.getQueue(queueName);
+        console.log(`AgentQueueManager: Adding start-processing job to queue ${queueName} for agent ${agentId}`);
         await queue.add("control-message", {
             type: "start-processing",
             agentId: agent.id,
         });
+        console.log(`AgentQueueManager: Updating agent ${agentId} status to running`);
         await this.updateAgentStatus(agent.id, "running");
         return true;
     }

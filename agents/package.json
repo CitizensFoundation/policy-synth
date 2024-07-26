@@ -1,6 +1,6 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.3.17",
+  "version": "1.3.20",
   "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
   "repository": {
     "type": "git",
@@ -50,6 +50,7 @@
     "@google/generative-ai": "^0.15.0",
     "@types/lodash": "^4.17.7",
     "@types/qs": "^6.9.15",
+    "@types/redis": "^4.0.11",
     "aws-sdk": "^2.1659.0",
     "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
@@ -87,6 +88,7 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qs": "^6.12.3",
+    "redis": "^4.6.15",
     "sequelize": "^6.37.3",
     "tiktoken": "^1.0.15",
     "weaviate-ts-client": "^2.2.0",

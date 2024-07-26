@@ -1,5 +1,5 @@
 import ioredis from "ioredis";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 const main = async () => {
     const projectId = process.argv[2];
     const newLength = process.argv[3];
@@ -14,7 +14,7 @@ const main = async () => {
         newSubProblems[4] = currentProject.subProblems[18];
         newSubProblems[5] = currentProject.subProblems[19];
         newSubProblems[6] = currentProject.subProblems[26];
-    
+
         currentProject.subProblems = newSubProblems;*/
         currentProject.subProblems[0].displayDescription = "Extended graduation times and low completion rates for higher education are exacerbated by the issues within the Menntasjóður námsmanna law (nr. 60/2020).";
         currentProject.subProblems[1].displayDescription = "The new Menntasjóður námsmanna law (nr. 60/2020) replaced G-loans, and types, with H-loans, offering a 30% principal reduction for timely completion.";

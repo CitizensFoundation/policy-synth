@@ -13,7 +13,7 @@ import { PsAiModel } from "../dbModels/aiModel.js";
 
 //TODO: Look to pool redis connections
 const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+  process.env.REDIS_AGENT_URL || "redis://localhost:6379"
 );
 
 export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
@@ -33,7 +33,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
       if (statusDataString) {
         this.status = JSON.parse(statusDataString);
       } else {
-        console.error("No memory data found!");
+        console.error(`No status data found for agent ${this.agent.id} ${this.agent.redisStatusKey}`);
       }
     } catch (error) {
       this.logger.error("Error initializing agent memory");
@@ -60,6 +60,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     this.logger.info("Setting up agent status");
     await this.loadAgentStatusFromRedis();
     if (!this.status) {
+      this.logger.error(`No status found for agent ${this.agent.id} reseting`);
       this.status = {
         state: "running",
         progress: 0,
@@ -175,6 +176,8 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
             });
 
             if (loadedAgent) {
+              this.logger.debug(`Agent group config: ${loadedAgent.group_id}`);
+              this.logger.debug(`Agent group config: ${loadedAgent.Group?.configuration}`);
               this.agent = loadedAgent;
               await this.loadAgentMemoryFromRedis();
               await this.setupMemoryIfNeeded();
@@ -234,6 +237,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
           `An error occurred in the worker for agent ${this.agentQueueName}`,
           err
         );
+        this.updateAgentStatus("error", err.message);
       });
 
       worker.on("active", (job: Job) => {
@@ -276,11 +280,12 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     await this.updateAgentStatus("paused");
   }
 
-  private async updateAgentStatus(state: "running" | "stopped" | "paused") {
+  private async updateAgentStatus(state: "running" | "stopped" | "paused" | "error", message?: string) {
     //TODO: Look into moving status into the agent db object so we can update with transactions
     await this.loadStatusFromRedis();
     if (this.agent && this.status) {
       this.status.state = state;
+      this.status.messages.push(message || `Agent ${this.agent.id} is now ${state}`);
       this.logger.info(`Agent ${this.agent.id} is now ${state}`);
       await this.saveAgentStatusToRedis();
     } else {

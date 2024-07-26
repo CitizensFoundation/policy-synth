@@ -22,7 +22,7 @@ export class AgentManager {
         }
         return this.fetchAgentWithSubAgents(topLevelAgent.id);
     }
-    async createAgent(name, agentClassId, aiModels, parentAgentId) {
+    async createAgent(name, agentClassId, aiModels, groupId, userId, parentAgentId) {
         if (!agentClassId ||
             !aiModels ||
             typeof aiModels !== "object" ||
@@ -49,8 +49,8 @@ export class AgentManager {
             const foundAiModels = await Promise.all(aiModelPromises);
             const newAgent = await PsAgent.create({
                 class_id: agentClassId,
-                user_id: 1, // TODO: Make this dynamic
-                group_id: 1, // TODO: Make this dynamic
+                user_id: userId,
+                group_id: groupId,
                 parent_agent_id: parentAgentId,
                 configuration: {
                     name,

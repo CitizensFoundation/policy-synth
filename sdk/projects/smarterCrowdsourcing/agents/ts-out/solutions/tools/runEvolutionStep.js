@@ -1,7 +1,7 @@
 import { Queue, QueueEvents } from "bullmq";
 import ioredis from "ioredis";
 const myQueue = new Queue("agent-solutions");
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 const queueEvents = new QueueEvents("agent-solutions");
 const projectId = process.argv[2];
 if (projectId) {

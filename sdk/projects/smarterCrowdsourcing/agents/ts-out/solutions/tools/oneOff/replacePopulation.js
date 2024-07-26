@@ -1,6 +1,6 @@
 import ioredis from 'ioredis';
 import fs from 'fs/promises';
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || 'redis://localhost:6379');
+const redis = new ioredis(process.env.REDIS_AGENT_URL || 'redis://localhost:6379');
 const populationIndex = 18;
 const replacePopulation = async () => {
     console.log('Fetching memory 1 from Redis...');

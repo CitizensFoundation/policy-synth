@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import IORedis from "ioredis";
 
 const redis = new IORedis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+  process.env.REDIS_AGENT_URL || "redis://localhost:6379"
 );
 
 const importSubProblems = async (projectId: string, filePath: string) => {

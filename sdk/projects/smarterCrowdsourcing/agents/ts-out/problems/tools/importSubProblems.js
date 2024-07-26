@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import IORedis from "ioredis";
-const redis = new IORedis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new IORedis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 const importSubProblems = async (projectId, filePath) => {
     const redisKey = `st_mem:${projectId}:id`;
     // Read the current memory data from Redis

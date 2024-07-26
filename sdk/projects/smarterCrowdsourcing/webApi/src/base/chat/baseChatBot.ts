@@ -12,7 +12,7 @@ const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 
 //@ts-ignore
 const redis = new ioredis.default(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+  process.env.REDIS_AGENT_URL || "redis://localhost:6379"
 );
 
 export class PsBaseChatBot {

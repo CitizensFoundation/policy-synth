@@ -5,7 +5,7 @@ import { SmarterCrowdsourcingGetWebPagesAgent } from "../../solutions/web/getWeb
 import { RootCauseWebPageVectorStore } from "../../vectorstore/rootCauseWebPage.js";
 import { CreateRootCausesSearchQueriesAgent } from "../create/createRootCauseSearchQueries.js";
 import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = true;

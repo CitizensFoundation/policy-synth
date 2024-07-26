@@ -4,7 +4,7 @@ import ioredis from "ioredis";
 const myQueue = new Queue("agent-solutions");
 
 const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+  process.env.REDIS_AGENT_URL || "redis://localhost:6379"
 );
 
 const queueEvents = new QueueEvents("agent-solutions");

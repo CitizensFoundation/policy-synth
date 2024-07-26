@@ -6,9 +6,9 @@ import { getConfigurationReview } from "../ltp/crtConfigReview.js";
 import { runValidationChain } from "../ltp/crtValidationChain.js";
 import { BaseController } from "./baseController.js";
 let redisClient;
-if (process.env.REDIS_URL) {
+if (process.env.REDIS_AGENT_URL) {
     redisClient = createClient({
-        url: process.env.REDIS_URL,
+        url: process.env.REDIS_AGENT_URL,
         socket: {
             tls: true,
         },

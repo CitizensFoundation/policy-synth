@@ -55,6 +55,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         (access) => access.aiModelId === model.id
       );
 
+      this.logger.debug(`Initializing model ${model.id}`);
+      this.logger.debug(`Initializing model ${modelType}`);
+      this.logger.debug(`Initializing model ${modelKey}`);
+      this.logger.debug(`Initializing model ${modelSize}`);
+            this.logger.debug(`Access configuration: ${JSON.stringify(accessConfiguration)}`);
+
       if (!apiKeyConfig) {
         this.logger.warn(`API key configuration not found for model ${model.id}`);
         continue;

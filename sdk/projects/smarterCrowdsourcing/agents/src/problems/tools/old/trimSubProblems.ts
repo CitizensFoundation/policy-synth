@@ -2,7 +2,7 @@ import { Queue } from "bullmq";
 import ioredis from "ioredis";
 ​
 const redis = new ioredis(
-  process.env.REDIS_MEMORY_URL || "redis://localhost:6379"
+  process.env.REDIS_AGENT_URL || "redis://localhost:6379"
 );
 ​
 const main = async () => {

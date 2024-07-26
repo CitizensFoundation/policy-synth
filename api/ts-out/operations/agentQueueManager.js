@@ -9,8 +9,8 @@ export class AgentQueueManager {
         this.queues = new Map();
     }
     initializeRedis() {
-        this.redisClient = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
-            tls: process.env.REDIS_URL ? { rejectUnauthorized: false } : undefined,
+        this.redisClient = new Redis(process.env.REDIS_AGENT_URL || "redis://localhost:6379", {
+            tls: process.env.REDIS_AGENT_URL ? { rejectUnauthorized: false } : undefined,
         });
         this.redisClient.on("error", (err) => console.error("Redis Client Error", err));
     }

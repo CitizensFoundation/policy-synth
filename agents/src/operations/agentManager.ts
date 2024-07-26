@@ -46,6 +46,8 @@ export class AgentManager {
     name: string,
     agentClassId: number,
     aiModels: Record<string, number | string>,
+    groupId: number,
+    userId: number,
     parentAgentId?: number
   ) {
     if (
@@ -88,8 +90,8 @@ export class AgentManager {
       const newAgent = await PsAgent.create(
         {
           class_id: agentClassId,
-          user_id: 1, // TODO: Make this dynamic
-          group_id: 1, // TODO: Make this dynamic
+          user_id: userId,
+          group_id: groupId,
           parent_agent_id: parentAgentId,
           configuration: {
             name,

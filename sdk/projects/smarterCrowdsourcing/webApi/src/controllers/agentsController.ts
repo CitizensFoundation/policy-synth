@@ -17,9 +17,9 @@ import { AgentManagerService } from "../operations/agentManager.js";
 let redisClient;
 
 // TODO: Share this do not start on each controller
-if (process.env.REDIS_URL) {
+if (process.env.REDIS_AGENT_URL) {
   redisClient = createClient({
-    url: process.env.REDIS_URL,
+    url: process.env.REDIS_AGENT_URL,
     socket: {
       tls: true,
     },

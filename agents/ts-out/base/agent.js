@@ -47,11 +47,10 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
                 ? agent.Group?.private_access_configuration || []
                 : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, agent ? agent.id : -1, agent ? agent.user_id : -1);
         }
-        else {
-            this.progressTracker = new PsProgressTracker(agent.redisStatusKey, startProgress, endProgress);
-        }
+        this.progressTracker = new PsProgressTracker(agent ? agent.redisStatusKey : "agent:status:-1", //TODO: Look into this fallback
+        startProgress, endProgress);
         this.configManager = new PsConfigManager(agent.configuration);
-        this.redis = new Redis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+        this.redis = new Redis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
         if (memory) {
             this.memory = memory;
         }
@@ -88,7 +87,12 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         return this.modelManager?.callModel(modelType, modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
     }
     async updateRangedProgress(progress, message) {
-        await this.progressTracker?.updateRangedProgress(progress, message);
+        if (this.progressTracker) {
+            await this.progressTracker.updateRangedProgress(progress, message);
+        }
+        else {
+            this.logger.error("Progress tracker not initialized");
+        }
     }
     async updateProgress(progress, message) {
         await this.progressTracker?.updateProgress(progress, message);

@@ -1,7 +1,7 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import { WebPageVectorStore } from "../webPage.js";
 import ioredis from "ioredis";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 class ShowCounts extends BaseSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
     foundIds = new Set();

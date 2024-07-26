@@ -1,7 +1,7 @@
 import { BaseSmarterCrowdsourcingAgent } from "../../base/scBaseAgent.js";
 import ioredis from "ioredis";
 import { EvidenceWebPageVectorStore } from "../../vectorstore/evidenceWebPage.js";
-const redis = new ioredis(process.env.REDIS_MEMORY_URL || "redis://localhost:6379");
+const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 export class CountWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
     evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
     async countAll(policy, subProblemIndex) {
