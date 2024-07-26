@@ -1,5 +1,3 @@
-import { PsAgentConnectorClass } from "../../dbModels/agentConnectorClass.js";
-import { PsAgentConnector } from "../../dbModels/agentConnector.js";
 import { PolicySynthAgent } from "../../base/agent.js";
 import { PsAgent } from "../../dbModels/agent.js";
 

@@ -181,6 +181,7 @@ interface PsAgentClassAttributesConfiguration {
   imageUrl: string;
   iconName: string;
   capabilities: string[];
+  defaultStructuredQuestions?: YpStructuredQuestionData[];
   requestedAiModelSizes: import("./aiModelTypes.js").PsAiModelSize[];
   questions: YpStructuredQuestionData[];
   supportedConnectors: import("./connectorTypes.js").PsConnectorClassTypes[];
@@ -218,6 +219,7 @@ interface PsBaseNodeConfiguration {
   maxTokensOut?: number;
   temperature?: number;
   answers?: YpStructuredAnswer[];
+  name: string;
 }
 
 interface PsBaseNodeInstance extends PsBaseModelClass {

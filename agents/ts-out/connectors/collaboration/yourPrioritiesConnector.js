@@ -4,7 +4,55 @@ import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaboratio
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
-    static YOUR_PRIORITIES_CONNECTOR_VERSION = 1;
+    static YOUR_PRIORITIES_CONNECTOR_VERSION = 2;
+    static baseQuestions = [
+        {
+            uniqueId: "name",
+            text: "Name",
+            type: "textField",
+            maxLength: 200,
+            required: true,
+        },
+        {
+            uniqueId: "description",
+            text: "Description",
+            type: "textArea",
+            maxLength: 500,
+            required: false,
+        },
+        {
+            uniqueId: "groupId",
+            text: "Your Priorities Group Id",
+            type: "textField",
+            subType: "number",
+            maxLength: 7,
+            required: true,
+        },
+    ];
+    static loginQuestions = [
+        {
+            uniqueId: "serverBaseUrl",
+            text: "Server Base URL",
+            type: "textField",
+            maxLength: 200,
+            required: true,
+        },
+        {
+            uniqueId: "userEmail",
+            text: "User Email",
+            type: "textField",
+            maxLength: 200,
+            required: true,
+        },
+        {
+            uniqueId: "password",
+            text: "Password",
+            type: "textField",
+            subType: "password",
+            maxLength: 200,
+            required: true,
+        },
+    ];
     static getConnectorClass = {
         created_at: new Date(),
         updated_at: new Date(),
@@ -19,52 +67,9 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             description: "Connector for Your Priorities",
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
             iconName: "yourPriorities",
-            questions: [
-                {
-                    uniqueId: "name",
-                    text: "Name",
-                    type: "textField",
-                    maxLength: 200,
-                    required: true,
-                },
-                {
-                    uniqueId: "description",
-                    text: "Description",
-                    type: "textArea",
-                    maxLength: 500,
-                    required: false,
-                },
-                {
-                    uniqueId: "groupId",
-                    text: "Your Priorities Group Id",
-                    type: "textField",
-                    subType: "number",
-                    maxLength: 7,
-                    required: true,
-                },
-                {
-                    uniqueId: "serverBaseUrl",
-                    text: "Server Base URL",
-                    type: "textField",
-                    maxLength: 200,
-                    required: true,
-                },
-                {
-                    uniqueId: "userEmail",
-                    text: "User Email",
-                    type: "textField",
-                    maxLength: 200,
-                    required: true,
-                },
-                {
-                    uniqueId: "password",
-                    text: "Password",
-                    type: "textField",
-                    subType: "password",
-                    maxLength: 200,
-                    required: true,
-                },
-            ],
+            questions: process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY
+                ? this.baseQuestions
+                : [...this.baseQuestions, ...this.loginQuestions],
         },
     };
     userEmail;
@@ -81,37 +86,55 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             throw new Error("Required configuration values are not set.");
         }
     }
+    // req.headers["x-api-key"] ===
     async login() {
-        if (!this.user) {
-            console.log("Logging in to Your Priorities...");
-            const loginData = {
-                username: this.userEmail,
-                password: this.password,
-                email: this.userEmail,
-                identifier: this.userEmail,
-            };
-            try {
-                const response = await axios.post(`${this.serverBaseUrl}/users/login`, loginData, {
-                    withCredentials: true,
-                });
-                if (response) {
-                    this.user = response.data;
-                    const setCookieHeader = response.headers["set-cookie"];
-                    if (setCookieHeader) {
-                        this.sessionCookie = setCookieHeader.join("; ");
+        if (!process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY) {
+            if (!this.user) {
+                console.log("Logging in to Your Priorities...");
+                const loginData = {
+                    username: this.userEmail,
+                    password: this.password,
+                    email: this.userEmail,
+                    identifier: this.userEmail,
+                };
+                try {
+                    const response = await axios.post(`${this.serverBaseUrl}/users/login`, loginData, {
+                        withCredentials: true,
+                    });
+                    if (response) {
+                        this.user = response.data;
+                        const setCookieHeader = response.headers["set-cookie"];
+                        if (setCookieHeader) {
+                            this.sessionCookie = setCookieHeader.join("; ");
+                        }
+                        else {
+                            throw new Error("Login failed, no session cookie received.");
+                        }
                     }
                     else {
-                        throw new Error("Login failed, no session cookie received.");
+                        throw new Error("Login failed, no response received.");
                     }
                 }
-                else {
-                    throw new Error("Login failed, no response received.");
+                catch (error) {
+                    console.error("Error during login:", error);
+                    throw new Error("Login failed.");
                 }
             }
-            catch (error) {
-                console.error("Error during login:", error);
-                throw new Error("Login failed.");
-            }
+        }
+        else {
+            this.logger.info("Using Fabric Group API Key for Your Priorities login.");
+        }
+    }
+    getHeaders() {
+        if (process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY) {
+            return {
+                "x-api-key": process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY,
+            };
+        }
+        else {
+            return {
+                Cookie: this.sessionCookie,
+            };
         }
     }
     async vote(postId, value) {
@@ -122,9 +145,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         };
         try {
             const response = await axios.post(`${this.serverBaseUrl}/posts/${postId}/endorse`, votingData, {
-                headers: {
-                    Cookie: this.sessionCookie,
-                },
+                headers: this.getHeaders(),
             });
             if (!response) {
                 throw new Error("Voting Failed");
@@ -154,8 +175,10 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             console.log("Posting data:", formData);
             const postResponse = await axios.post(`${this.serverBaseUrl}/posts/${groupId}`, qs.stringify(formData), {
                 headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    Cookie: this.sessionCookie,
+                    ...this.getHeaders(),
+                    ...{
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
                 },
             });
             const responseData = postResponse.data;
@@ -174,18 +197,14 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                 imageType: "logo",
                 prompt: prompt,
             }, {
-                headers: {
-                    Cookie: this.sessionCookie,
-                },
+                headers: this.getHeaders(),
             });
             const { jobId } = startResponse.data;
             let isGenerating = true;
             let pollResponse;
             while (isGenerating) {
                 pollResponse = await axios.get(`${this.serverBaseUrl}/groups/${groupId}/${jobId}/poll_for_generating_ai_image`, {
-                    headers: {
-                        Cookie: this.sessionCookie,
-                    },
+                    headers: this.getHeaders(),
                 });
                 console.log("Poll response:", pollResponse.data);
                 if (pollResponse.data.data.imageId) {
@@ -204,29 +223,34 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         }
     }
     static getExtraConfigurationQuestions() {
-        return [
-            {
-                uniqueId: "serverBaseUrl",
-                text: "Server Base URL",
-                type: "textField",
-                maxLength: 200,
-                required: true,
-            },
-            {
-                uniqueId: "userEmail",
-                text: "User Email",
-                type: "textField",
-                maxLength: 200,
-                required: true,
-            },
-            {
-                uniqueId: "password",
-                text: "Password",
-                type: "password",
-                maxLength: 200,
-                required: true,
-            },
-        ];
+        if (process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY) {
+            return [];
+        }
+        else {
+            return [
+                {
+                    uniqueId: "serverBaseUrl",
+                    text: "Server Base URL",
+                    type: "textField",
+                    maxLength: 200,
+                    required: true,
+                },
+                {
+                    uniqueId: "userEmail",
+                    text: "User Email",
+                    type: "textField",
+                    maxLength: 200,
+                    required: true,
+                },
+                {
+                    uniqueId: "password",
+                    text: "Password",
+                    type: "password",
+                    maxLength: 200,
+                    required: true,
+                },
+            ];
+        }
     }
 }
 //# sourceMappingURL=yourPrioritiesConnector.js.map
