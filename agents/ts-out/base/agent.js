@@ -69,6 +69,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     }
     async loadAgentMemoryFromRedis() {
         try {
+            this.logger.debug(`Loading memory from Redis: ${this.agent.redisMemoryKey}`);
             const memoryData = await this.redis.get(this.agent.redisMemoryKey);
             if (memoryData) {
                 this.memory = JSON.parse(memoryData);

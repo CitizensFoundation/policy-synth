@@ -20,6 +20,7 @@ export class AgentQueueManager {
             tls: redisUrl.startsWith("rediss://")
                 ? { rejectUnauthorized: false }
                 : undefined,
+            maxRetriesPerRequest: null
         };
         this.redisClient = new Redis(redisUrl, options);
         this.redisClient.on("error", (err) => {
@@ -40,7 +41,7 @@ export class AgentQueueManager {
         if (!this.queues.has(queueName)) {
             console.log(`AgentQueueManager: Creating new queue for ${queueName}`);
             const newQueue = new Queue(queueName, {
-                connection: this.redisClient
+                connection: this.redisClient,
             });
             newQueue.on("error", (error) => {
                 console.log(`Error in queue ${queueName}:`, error);

@@ -138,8 +138,8 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
         );
         await processorInstance.process();
 
-        totalProgress = endProgress;
-        await this.updateProgress(totalProgress, `${Agent.name} completed`);
+        //totalProgress = endProgress;
+        //await this.updateProgress(totalProgress, `${Agent.name} completed`);
       } catch (error) {
         throw error;
       }
@@ -210,8 +210,23 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
                   ],
                 },
                 { model: PsAgentClass, as: "Class" },
-                { model: User, as: "User" },
-                { model: Group, as: "Group" },
+                {
+                  model: User,
+                  as: "User",
+                  attributes: ["id", "email", "name"],
+                },
+                {
+                  model: Group,
+                  as: "Group",
+                  //TODO: Don't have private_access_configuration as a part of the group, find a more secure solution so Group.find will never expose the keys accidentally
+                  attributes: [
+                    "id",
+                    "user_id",
+                    "configuration",
+                    "name",
+                    "private_access_configuration",
+                  ],
+                },
                 { model: PsExternalApiUsage, as: "ExternalApiUsage" },
                 { model: PsModelUsage, as: "ModelUsage" },
                 { model: PsAiModel, as: "AiModels" },
@@ -356,6 +371,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     state: "running" | "stopped" | "paused" | "error",
     message?: string
   ) {
+    this.logger.debug(`Changing agent status to ${state} with message ${message}`);
     //TODO: Look into moving status into the agent db object so we can update with transactions
     await this.loadStatusFromRedis();
     if (this.agent && this.status) {

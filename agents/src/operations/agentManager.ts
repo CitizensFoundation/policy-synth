@@ -216,13 +216,14 @@ export class AgentManager {
       // Ensure the 'agents' object exists in the configuration
       if (!group.configuration.agents) {
         //@ts-ignore //TODO: Get this working with types
-        group.set('configuration.agents', {});
+        group.set("configuration.agents", {});
       }
 
       // Set the topLevelAgentId
       group.set(
         //@ts-ignore //TODO: Get this working with types
-        'configuration.agents.topLevelAgentId', topLevelAgent.id
+        "configuration.agents.topLevelAgentId",
+        topLevelAgent.id
       );
 
       // Save the changes
@@ -288,8 +289,12 @@ export class AgentManager {
           ],
         },
         { model: PsAgentClass, as: "Class" },
-        { model: User, as: "User" },
-        { model: Group, as: "Group" },
+        { model: User, as: "User", attributes: ["id", "email", "name"] },
+        {
+          model: Group,
+          as: "Group",
+          attributes: ["id", "user_id", "configuration", "name"],
+        },
         { model: PsExternalApiUsage, as: "ExternalApiUsage" },
         { model: PsModelUsage, as: "ModelUsage" },
         { model: PsAiModel, as: "AiModels" },
