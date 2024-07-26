@@ -112,6 +112,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
   async loadAgentMemoryFromRedis(): Promise<PsAgentMemoryData> {
     try {
+      this.logger.debug(`Loading memory from Redis: ${this.agent.redisMemoryKey}`);
       const memoryData = await this.redis.get(this.agent.redisMemoryKey);
       if (memoryData) {
         this.memory = JSON.parse(memoryData);

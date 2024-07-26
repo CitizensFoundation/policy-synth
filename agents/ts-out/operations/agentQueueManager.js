@@ -1,4 +1,4 @@
-import { Queue } from "bullmq";
+import { Queue, QueueEvents } from "bullmq";
 import { Redis } from "ioredis";
 import { PsAgent, PsAgentClass } from "../dbModels/index.js";
 export class AgentQueueManager {
@@ -10,16 +10,29 @@ export class AgentQueueManager {
         this.queues = new Map();
     }
     initializeRedis() {
-        const redisUrl = process.env.REDIS_AGENT_URL || "redis://localhost:6379";
+        let redisUrl = process.env.REDIS_AGENT_URL || "redis://localhost:6379";
+        // Handle the 'redis://h:' case
+        if (redisUrl.startsWith("redis://h:")) {
+            redisUrl = redisUrl.replace("redis://h:", "redis://:");
+        }
         console.log("AgentQueueManager: Initializing Redis connection: " + redisUrl);
-        this.redisClient = new Redis(redisUrl, {
-            tls: process.env.REDIS_AGENT_URL ? { rejectUnauthorized: false } : undefined,
-        });
+        const options = {
+            tls: redisUrl.startsWith("rediss://")
+                ? { rejectUnauthorized: false }
+                : undefined,
+        };
+        this.redisClient = new Redis(redisUrl, options);
         this.redisClient.on("error", (err) => {
             console.error("Redis Client Error", err);
         });
         this.redisClient.on("connect", () => {
             console.log("AgentQueueManager: Successfully connected to Redis");
+        });
+        this.redisClient.on("reconnecting", () => {
+            console.log("AgentQueueManager: Redis client is reconnecting");
+        });
+        this.redisClient.on("ready", () => {
+            console.log("AgentQueueManager: Redis client is ready");
         });
     }
     getQueue(queueName) {
@@ -27,7 +40,42 @@ export class AgentQueueManager {
         if (!this.queues.has(queueName)) {
             console.log(`AgentQueueManager: Creating new queue for ${queueName}`);
             const newQueue = new Queue(queueName, {
+                connection: this.redisClient
+            });
+            newQueue.on("error", (error) => {
+                console.log(`Error in queue ${queueName}:`, error);
+            });
+            newQueue.on("waiting", (jobId) => {
+                console.log(`Job ${jobId} is waiting in queue ${queueName}`);
+            });
+            // Create QueueEvents instance for global events
+            const queueEvents = new QueueEvents(queueName, {
                 connection: this.redisClient,
+            });
+            // Add event listeners for debugging
+            queueEvents.on('waiting', ({ jobId }) => {
+                console.log(`Job ${jobId} is waiting in queue ${queueName}`);
+            });
+            queueEvents.on('active', ({ jobId, prev }) => {
+                console.log(`Job ${jobId} is active in queue ${queueName} (prev state: ${prev})`);
+            });
+            queueEvents.on('completed', ({ jobId, returnvalue }) => {
+                console.log(`Job ${jobId} completed in queue ${queueName}. Result:`, returnvalue);
+            });
+            queueEvents.on('failed', ({ jobId, failedReason }) => {
+                console.log(`Job ${jobId} failed in queue ${queueName}. Reason:`, failedReason);
+            });
+            queueEvents.on('progress', ({ jobId, data }) => {
+                console.log(`Job ${jobId} reported progress in queue ${queueName}:`, data);
+            });
+            queueEvents.on('removed', ({ jobId }) => {
+                console.log(`Job ${jobId} was removed from queue ${queueName}`);
+            });
+            queueEvents.on('drained', () => {
+                console.log(`Queue ${queueName} was drained`);
+            });
+            queueEvents.on('error', (error) => {
+                console.log(`Error in queue ${queueName}:`, error);
             });
             this.queues.set(queueName, newQueue);
         }

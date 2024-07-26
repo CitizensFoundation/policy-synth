@@ -1,6 +1,6 @@
-import ioredis from "ioredis";
+import { Redis } from "ioredis";
 import { PsAgent } from "../dbModels/agent.js";
-import { Worker } from "bullmq";
+import { QueueEvents, Worker } from "bullmq";
 import { PolicySynthAgent } from "./agent.js";
 import { PsAgentConnector } from "../dbModels/agentConnector.js";
 import { PsAgentConnectorClass } from "../dbModels/agentConnectorClass.js";
@@ -10,15 +10,42 @@ import { Group } from "../dbModels/ypGroup.js";
 import { PsExternalApiUsage } from "../dbModels/externalApiUsage.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
-//TODO: Look to pool redis connections
-const redis = new ioredis(process.env.REDIS_AGENT_URL || "redis://localhost:6379");
 export class PolicySynthAgentQueue extends PolicySynthAgent {
     status;
+    redisClient;
     skipCheckForProgress = true;
     constructor() {
         super({}, undefined, 0, 100);
         this.startProgress = 0;
         this.endProgress = 100;
+        this.initializeRedis();
+    }
+    initializeRedis() {
+        let redisUrl = process.env.REDIS_AGENT_URL || "redis://localhost:6379";
+        // Handle the 'redis://h:' case
+        if (redisUrl.startsWith("redis://h:")) {
+            redisUrl = redisUrl.replace("redis://h:", "redis://:");
+        }
+        console.log("AgentQueueManager: Initializing Redis connection: " + redisUrl);
+        const options = {
+            maxRetriesPerRequest: null,
+            tls: redisUrl.startsWith("rediss://")
+                ? { rejectUnauthorized: false }
+                : undefined,
+        };
+        this.redisClient = new Redis(redisUrl, options);
+        this.redisClient.on("error", (err) => {
+            console.error("Redis Client Error", err);
+        });
+        this.redisClient.on("connect", () => {
+            console.log("AgentQueueManager: Successfully connected to Redis");
+        });
+        this.redisClient.on("reconnecting", () => {
+            console.log("AgentQueueManager: Redis client is reconnecting");
+        });
+        this.redisClient.on("ready", () => {
+            console.log("AgentQueueManager: Redis client is ready");
+        });
     }
     async loadAgentStatusFromRedis() {
         try {
@@ -80,8 +107,10 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
     }
     async setupAgentQueue() {
         if (this.agentQueueName) {
+            console.log(`Setting up worker for agentQueue ${this.agentQueueName}`);
             const worker = new Worker(this.agentQueueName, async (job) => {
                 try {
+                    console.log(`Processing job ${job.id} for agentQueue ${this.agentQueueName}`);
                     const data = job.data;
                     const loadedAgent = await PsAgent.findByPk(data.agentId, {
                         include: [
@@ -170,11 +199,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                     throw error;
                 }
             }, {
-                connection: {
-                    host: redis.options.host,
-                    port: redis.options.port,
-                    maxRetriesPerRequest: null,
-                },
+                connection: this.redisClient,
                 concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
                 maxStalledCount: 0,
             });
@@ -193,6 +218,25 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
             });
             worker.on("stalled", (jobId) => {
                 this.logger.warn(`Job ${jobId} has been stalled for agent ${this.agentQueueName}`);
+            });
+            // QueueEvents for global monitoring
+            const queueEvents = new QueueEvents(this.agentQueueName, {
+                connection: {
+                    host: this.redisClient.options.host,
+                    port: this.redisClient.options.port,
+                },
+            });
+            queueEvents.on("waiting", ({ jobId }) => {
+                this.logger.debug(`Job ${jobId} is waiting in queue ${this.agentQueueName}`);
+            });
+            queueEvents.on("progress", ({ jobId, data }) => {
+                this.logger.debug(`Job ${jobId} reported progress in queue ${this.agentQueueName}:`, data);
+            });
+            queueEvents.on("drained", () => {
+                this.logger.debug(`Queue ${this.agentQueueName} was drained`);
+            });
+            queueEvents.on("removed", ({ jobId }) => {
+                this.logger.debug(`Job ${jobId} was removed from queue ${this.agentQueueName}`);
             });
             this.logger.info(`Worker set up successfully for agent ${this.agentQueueName}`);
         }

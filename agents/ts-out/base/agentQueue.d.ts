@@ -1,9 +1,12 @@
+import { Redis } from "ioredis";
 import { PsAgent } from "../dbModels/agent.js";
 import { PolicySynthAgent } from "./agent.js";
 export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     status: PsAgentStatus;
+    redisClient: Redis;
     skipCheckForProgress: boolean;
     constructor();
+    initializeRedis(): void;
     loadAgentStatusFromRedis(): Promise<PsAgentStatus>;
     saveAgentStatusToRedis(): Promise<void>;
     setupStatusIfNeeded(): Promise<void>;

@@ -13,9 +13,9 @@
     "src/api.d.ts"
   ],
   "dependencies": {
-    "@policysynth/agents": "^1.3.9",
+    "@policysynth/agents": "^1.3.22",
     "axios": "^1.7.2",
-    "bullmq": "^5.8.3",
+    "bullmq": "^5.10.4",
     "colors": "^1.4.0",
     "connect-redis": "^7.1.1",
     "express": "^4.19.2",
