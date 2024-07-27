@@ -82,15 +82,15 @@ PsAgentConnectorClass.associate = (models) => {
         as: "Owner",
     });
     PsAgentConnectorClass.belongsToMany(models.User, {
-        through: "ConnectorClassUsers",
-        foreignKey: "connector_class_id",
+        through: "AgentConnectorClassUsers",
+        foreignKey: "agent_connector_class_id",
         otherKey: "user_id",
         as: "Users",
         timestamps: false,
     });
     PsAgentConnectorClass.belongsToMany(models.User, {
-        through: "ConnectorClassAdmins",
-        foreignKey: "connector_class_id",
+        through: "AgentConnectorClassAdmins",
+        foreignKey: "agent_connector_class_id",
         otherKey: "user_id",
         as: "Admins",
         timestamps: false,
