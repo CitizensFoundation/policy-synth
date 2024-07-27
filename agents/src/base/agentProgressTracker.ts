@@ -2,11 +2,11 @@ import Redis from "ioredis";
 import { PolicySynthAgentBase } from "./agentBase.js";
 
 export class PsProgressTracker extends PolicySynthAgentBase {
-  private redis: Redis;
-  private redisStatusKey: string;
-  private status!: PsAgentStatus;
-  private startProgress: number;
-  private endProgress: number;
+  redis: Redis;
+  redisStatusKey: string;
+  status!: PsAgentStatus;
+  startProgress: number;
+  endProgress: number;
 
   constructor(
     redisStatusKey: string,
@@ -85,7 +85,7 @@ export class PsProgressTracker extends PolicySynthAgentBase {
     await this.saveRedisStatus();
   }
 
-  private async saveRedisStatus(): Promise<void> {
+  async saveRedisStatus(): Promise<void> {
     try {
       //this.logger.debug(`Saving agent memory to Redis: ${JSON.stringify(this.status)}`);
       await this.redis.set(this.redisStatusKey, JSON.stringify(this.status));

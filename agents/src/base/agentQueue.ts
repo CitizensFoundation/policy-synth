@@ -347,7 +347,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     }
   }
 
-  private async startAgent() {
+  async startAgent() {
     this.logger.info(`Starting agent ${this.agent.id}`);
     try {
       await this.updateAgentStatus("running");
@@ -357,17 +357,17 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     }
   }
 
-  private async stopAgent() {
+  async stopAgent() {
     this.logger.info(`Stopping agent ${this.agent.id}`);
     await this.updateAgentStatus("stopped");
   }
 
-  private async pauseAgent() {
+  async pauseAgent() {
     this.logger.info(`Pausing agent ${this.agent.id}`);
     await this.updateAgentStatus("paused");
   }
 
-  private async updateAgentStatus(
+  async updateAgentStatus(
     state: "running" | "stopped" | "paused" | "error",
     message?: string
   ) {

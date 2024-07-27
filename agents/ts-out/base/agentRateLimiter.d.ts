@@ -1,11 +1,11 @@
 import { PolicySynthAgentBase } from "./agentBase.js";
 export declare class PsRateLimitManager extends PolicySynthAgentBase {
-    private rateLimits;
+    rateLimits: PsModelRateLimitTracking;
     updateRateLimits(model: any, tokensToAdd: number): Promise<void>;
     checkRateLimits(model: any, tokensToAdd: number): Promise<void>;
-    private addRequestTimestamp;
-    private addTokenEntry;
-    private slideWindowForRequests;
-    private slideWindowForTokens;
+    addRequestTimestamp(model: any): void;
+    addTokenEntry(model: any, tokensToAdd: number): void;
+    slideWindowForRequests(model: any): void;
+    slideWindowForTokens(model: any): void;
 }
 //# sourceMappingURL=agentRateLimiter.d.ts.map

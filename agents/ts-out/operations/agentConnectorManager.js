@@ -1,4 +1,5 @@
 import { PsAgent, PsAgentClass, PsAgentConnector, PsAgentConnectorClass, sequelize, } from "../dbModels/index.js";
+import { PsYourPrioritiesConnector } from "../connectors/collaboration/yourPrioritiesConnector.js";
 export class AgentConnectorManager {
     async createConnector(agentId, connectorClassId, name, type) {
         const transaction = await sequelize.transaction();
@@ -31,20 +32,19 @@ export class AgentConnectorManager {
             //TODO: Make this more modular, a bit hardcoded
             if (agentClass &&
                 connectorClass.class_base_id ===
-                    "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e" &&
+                    PsYourPrioritiesConnector.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID &&
                 process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY &&
                 agentClass.configuration.defaultStructuredQuestions &&
                 agent.configuration.answers &&
                 agent.configuration.answers.length > 0) {
-                console.log(`Creating group for agent ${agent.id}`);
+                console.log(`Creating Your Priorities group for agent ${agent.id}`);
                 try {
-                    await this.createGroupAndUpdateAgent(agent, agentClass);
+                    await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass);
                 }
                 catch (error) {
                     console.error("Error creating group:", error);
                 }
             }
-            // Fetch the created connector with its associations
             return await PsAgentConnector.findByPk(newConnector.id, {
                 include: [
                     { model: PsAgentConnectorClass, as: "Class" },
@@ -61,9 +61,9 @@ export class AgentConnectorManager {
             throw error;
         }
     }
-    async createGroupAndUpdateAgent(agent, agentClass) {
+    async createYourPrioritiesGroupAndUpdateAgent(agent, agentClass) {
         try {
-            const group = await this.createGroup(agent.group_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions);
+            const group = (await this.createGroup(agent.group_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions));
             if (!group) {
                 throw new Error("Group creation failed");
             }
@@ -72,7 +72,7 @@ export class AgentConnectorManager {
                 throw new Error("Answer with uniqueId 'groupId' not found");
             }
             agent.configuration.answers[answerIndex].value = group.id;
-            agent.changed('configuration', true);
+            agent.changed("configuration", true);
             await agent.save();
             return group;
         }

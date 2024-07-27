@@ -1,36 +1,117 @@
-import { PsAgentRegistry, PsAgentClass, PsAgentConnectorClass, } from "../dbModels/index.js";
+import { PsAgentRegistry, PsAgentClass, PsAgentConnectorClass, User, } from "../dbModels/index.js";
+import { fn, col, Op, Sequelize } from "sequelize";
 export class AgentRegistryManager {
-    async getActiveAgentClasses() {
-        const registry = await PsAgentRegistry.findOne({
+    async getActiveAgentClasses(userId) {
+        const agents = await PsAgentClass.findAll({
+            attributes: [
+                "id",
+                "uuid",
+                "class_base_id",
+                "user_id",
+                "created_at",
+                "updated_at",
+                "name",
+                "version",
+                "configuration",
+                "available",
+                [fn("MAX", col("version")), "max_version"],
+            ],
             include: [
                 {
-                    model: PsAgentClass,
-                    as: "Agents",
-                    where: { available: true },
+                    model: PsAgentRegistry,
+                    as: "Registry",
+                    attributes: [],
+                    required: true,
+                },
+                {
+                    model: User,
+                    as: "Users",
+                    attributes: [],
+                    required: false,
+                    through: { attributes: [] },
+                },
+                {
+                    model: User,
+                    as: "Admins",
+                    attributes: [],
+                    required: false,
                     through: { attributes: [] },
                 },
             ],
+            where: {
+                available: true,
+                [Op.or]: [
+                    {
+                        "configuration.hasPublicAccess": true
+                    },
+                    { "$Users.id$": userId },
+                    { "$Admins.id$": userId },
+                ],
+            },
+            group: ["class_base_id", "PsAgentClass.id"],
+            having: Sequelize.where(col("version"), Op.eq, fn("MAX", col("version"))),
+            order: [
+                ["class_base_id", "ASC"],
+                ["version", "DESC"],
+            ],
         });
-        if (!registry) {
-            throw new Error("Agent registry not found");
-        }
-        return registry.Agents;
+        return agents;
     }
-    async getActiveConnectorClasses() {
-        const registry = await PsAgentRegistry.findOne({
+    async getActiveConnectorClasses(userId) {
+        const connectors = await PsAgentConnectorClass.findAll({
+            attributes: [
+                "id",
+                "uuid",
+                "class_base_id",
+                "user_id",
+                "created_at",
+                "updated_at",
+                "name",
+                "version",
+                "configuration",
+                "available",
+                [fn("MAX", col("version")), "max_version"],
+            ],
             include: [
                 {
-                    model: PsAgentConnectorClass,
-                    as: "Connectors",
-                    where: { available: true },
+                    model: PsAgentRegistry,
+                    as: "Registry",
+                    attributes: [],
+                    required: true,
+                },
+                {
+                    model: User,
+                    as: "Users",
+                    attributes: [],
+                    required: false,
+                    through: { attributes: [] },
+                },
+                {
+                    model: User,
+                    as: "Admins",
+                    attributes: [],
+                    required: false,
                     through: { attributes: [] },
                 },
             ],
+            where: {
+                available: true,
+                [Op.or]: [
+                    {
+                        "configuration.hasPublicAccess": true
+                    },
+                    { "$Users.id$": userId },
+                    { "$Admins.id$": userId },
+                ],
+            },
+            group: ["class_base_id", "PsAgentConnectorClass.id"],
+            having: Sequelize.where(col("version"), Op.eq, fn("MAX", col("version"))),
+            order: [
+                ["class_base_id", "ASC"],
+                ["version", "DESC"],
+            ],
         });
-        if (!registry) {
-            throw new Error("Agent registry not found");
-        }
-        return registry.Connectors;
+        return connectors;
     }
 }
 //# sourceMappingURL=agentRegistryManager.js.map

@@ -5,10 +5,10 @@ import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaboratio
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
-  private static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
+  static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
     "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
 
-  private static readonly YOUR_PRIORITIES_CONNECTOR_VERSION = 2;
+  static readonly YOUR_PRIORITIES_CONNECTOR_VERSION = 2;
 
   static baseQuestions = [
     {
@@ -81,11 +81,11 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     } as PsAgentConnectorConfiguration,
   };
 
-  private userEmail: string;
-  private password: string;
-  private serverBaseUrl: string;
-  private sessionCookie?: string;
-  private user?: YpUserData;
+  userEmail: string;
+  password: string;
+  serverBaseUrl: string;
+  sessionCookie?: string;
+  user?: YpUserData;
 
   constructor(
     connector: PsAgentConnectorAttributes,

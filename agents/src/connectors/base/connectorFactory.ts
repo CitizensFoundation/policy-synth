@@ -76,7 +76,7 @@ export class PsConnectorFactory {
     }
   }
 
-  private static createDocumentConnector(
+  static createDocumentConnector(
     connector: PsAgentConnectorAttributes,
     connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,
@@ -105,7 +105,7 @@ export class PsConnectorFactory {
     }
   }
 
-  private static createSheetConnector(
+  static createSheetConnector(
     connector: PsAgentConnectorAttributes,
     connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,
@@ -133,7 +133,7 @@ export class PsConnectorFactory {
         return null;
     }
   }
-  private static createNotificationsConnector(
+  static createNotificationsConnector(
     connector: PsAgentConnectorAttributes,
     connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,
@@ -159,7 +159,7 @@ export class PsConnectorFactory {
     }
   }
 
-  private static createIdeasCollaborationConnector(
+  static createIdeasCollaborationConnector(
     connector: PsAgentConnectorAttributes,
     connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,
@@ -183,7 +183,7 @@ export class PsConnectorFactory {
     }
   }
 
-  private static createVotingCollaborationConnector(
+  static createVotingCollaborationConnector(
     connector: PsAgentConnectorAttributes,
     connectorClass: PsAgentConnectorClassAttributes,
     agent: PsAgent,

@@ -81,7 +81,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgent {
     });
   }
 
-  private async registerAgent(agentQueue: PolicySynthAgentQueue) {
+  async registerAgent(agentQueue: PolicySynthAgentQueue) {
     if (!this.agentRegistry) {
       throw new Error("Agent registry not initialized");
     }
@@ -111,7 +111,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgent {
     this.logger.info(`Registered agent: ${agentClassInfo.name}`);
   }
 
-  private async registerConnectors() {
+  async registerConnectors() {
     if (!this.agentRegistry) {
       throw new Error("Agent registry not initialized");
     }
@@ -136,7 +136,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgent {
     }
   }
 
-  private async getOrCreateAgentRegistry(): Promise<PsAgentRegistry> {
+  async getOrCreateAgentRegistry(): Promise<PsAgentRegistry> {
     const [registry, created] = await PsAgentRegistry.findOrCreate({
       where: {},
       defaults: {

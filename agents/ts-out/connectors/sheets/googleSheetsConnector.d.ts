@@ -1,11 +1,13 @@
+import { sheets_v4 } from "googleapis";
+import { JWT } from "google-auth-library";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseSheetConnector } from "../base/baseSheetConnector.js";
 export declare class PsGoogleSheetsConnector extends PsBaseSheetConnector {
-    private static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID;
-    private static readonly GOOGLE_SHEETS_CONNECTOR_VERSION;
+    static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID = "4b8c3d2e-5f6a-1a8b-9c0d-1ecf3afb536d";
+    static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 1;
     static getConnectorClass: PsConnectorClassCreationAttributes;
-    private client;
-    private sheets;
+    client: JWT;
+    sheets: sheets_v4.Sheets;
     constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
     getSheet(): Promise<string[][]>;
     updateSheet(data: string[][]): Promise<void>;

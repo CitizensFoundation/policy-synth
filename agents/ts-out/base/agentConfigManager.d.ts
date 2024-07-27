@@ -1,6 +1,6 @@
 import { PolicySynthAgentBase } from "./agentBase.js";
 export declare class PsConfigManager extends PolicySynthAgentBase {
-    private configuration;
+    configuration: PsBaseNodeConfiguration;
     constructor(configuration: PsBaseNodeConfiguration);
     getConfig<T>(uniqueId: string, defaultValue: T): T;
     getConfigOld<T>(uniqueId: string, defaultValue: T): T;

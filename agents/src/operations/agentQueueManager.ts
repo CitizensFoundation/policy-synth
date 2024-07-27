@@ -3,8 +3,8 @@ import { Redis, RedisOptions } from "ioredis";
 import { PsAgent, PsAgentClass } from "../dbModels/index.js";
 
 export class AgentQueueManager {
-  private redisClient!: Redis;
-  private queues: Map<string, Queue>;
+  redisClient!: Redis;
+  queues: Map<string, Queue>;
 
   constructor() {
     console.log("AgentQueueManager: Initializing");
@@ -12,7 +12,7 @@ export class AgentQueueManager {
     this.queues = new Map();
   }
 
-  private initializeRedis() {
+  initializeRedis() {
     let redisUrl = process.env.REDIS_AGENT_URL || "redis://localhost:6379";
 
     // Handle the 'redis://h:' case
@@ -50,7 +50,7 @@ export class AgentQueueManager {
     });
   }
 
-  private getQueue(queueName: string): Queue {
+  getQueue(queueName: string): Queue {
     console.log(`AgentQueueManager: Getting queue for ${queueName}`);
     if (!this.queues.has(queueName)) {
       console.log(`AgentQueueManager: Creating new queue for ${queueName}`);

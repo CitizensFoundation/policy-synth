@@ -185,7 +185,7 @@ export class AgentManager {
     });
   }
 
-  private async createTopLevelAgent(group: Group) {
+  async createTopLevelAgent(group: Group) {
     const defaultAgentClassUuid = process.env.CLASS_ID_FOR_TOP_LEVEL_AGENT;
     if (!defaultAgentClassUuid) {
       throw new Error("Default agent class UUID is not configured");
@@ -237,7 +237,7 @@ export class AgentManager {
     }
   }
 
-  private async fetchAgentWithSubAgents(agentId: number) {
+  async fetchAgentWithSubAgents(agentId: number) {
     const agent = await PsAgent.findByPk(agentId, {
       include: [
         {

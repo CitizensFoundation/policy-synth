@@ -1,9 +1,11 @@
+import { Queue } from "bullmq";
+import { Redis } from "ioredis";
 export declare class AgentQueueManager {
-    private redisClient;
-    private queues;
+    redisClient: Redis;
+    queues: Map<string, Queue>;
     constructor();
-    private initializeRedis;
-    private getQueue;
+    initializeRedis(): void;
+    getQueue(queueName: string): Queue;
     controlAgent(agentId: number, action: string): Promise<string>;
     startAgentProcessing(agentId: number): Promise<boolean>;
     pauseAgentProcessing(agentId: number): Promise<boolean>;

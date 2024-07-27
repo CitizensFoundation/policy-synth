@@ -12,10 +12,10 @@ import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 
 export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
-  private static readonly DISCORD_CONNECTOR_CLASS_BASE_ID =
+  static readonly DISCORD_CONNECTOR_CLASS_BASE_ID =
     "8f7e6d5c-4b3a-2a1f-9e8d-7c6b5a4d3f2e";
 
-  private static readonly DISCORD_CONNECTOR_VERSION = 1;
+  static readonly DISCORD_CONNECTOR_VERSION = 1;
 
   static getConnectorClass: PsConnectorClassCreationAttributes = {
     class_base_id: this.DISCORD_CONNECTOR_CLASS_BASE_ID,
@@ -50,15 +50,15 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
     } as PsAgentConnectorConfiguration,
   };
 
-  private client: Client;
-  private token: string;
+  client: Client;
+  token: string;
   channelName: string;
   systemPrompt: string;
-  private actions: { [key: string]: () => Promise<void> };
+  actions: { [key: string]: () => Promise<void> };
 
-  private channelTimeouts: { [id: string]: NodeJS.Timeout } = {};
-  private readonly maxMessages: number = 10;
-  private readonly listenDuration: number = 3600000; // 1 hour in milliseconds
+  channelTimeouts: { [id: string]: NodeJS.Timeout } = {};
+  readonly maxMessages: number = 10;
+  readonly listenDuration: number = 3600000; // 1 hour in milliseconds
 
   constructor(
     connector: PsAgentConnectorAttributes,
@@ -190,7 +190,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
     }
   }
 
-  private async handleMessage(message: Message): Promise<void> {
+  async handleMessage(message: Message): Promise<void> {
     const channelId = message.channel.id;
     const isDM = message.channel.type === ChannelType.DM;
 
@@ -238,7 +238,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
     await this.saveMemory();
   }
 
-  private setChannelTimeout(channelId: string): void {
+  setChannelTimeout(channelId: string): void {
     if (this.channelTimeouts[channelId]) {
       clearTimeout(this.channelTimeouts[channelId]);
     }
@@ -251,7 +251,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
     }, this.listenDuration);
   }
 
-  private archiveConversation(channelId: string): void {
+  archiveConversation(channelId: string): void {
     const conversation =
       this.memory.connectors!.discord!.liveDiscordChannelConversations[
         channelId

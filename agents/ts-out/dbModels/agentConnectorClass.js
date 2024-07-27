@@ -75,4 +75,30 @@ PsAgentConnectorClass.init({
     timestamps: true,
     underscored: true,
 });
+PsAgentConnectorClass.associate = (models) => {
+    // Define associations
+    PsAgentConnectorClass.belongsTo(models.User, {
+        foreignKey: "user_id",
+        as: "Owner",
+    });
+    PsAgentConnectorClass.belongsToMany(models.User, {
+        through: "ConnectorClassUsers",
+        foreignKey: "connector_class_id",
+        otherKey: "user_id",
+        as: "Users",
+        timestamps: false,
+    });
+    PsAgentConnectorClass.belongsToMany(models.User, {
+        through: "ConnectorClassAdmins",
+        foreignKey: "connector_class_id",
+        otherKey: "user_id",
+        as: "Admins",
+        timestamps: false,
+    });
+    // You may want to add other associations here, such as with PsAgentConnector
+    PsAgentConnectorClass.hasMany(models.PsAgentConnector, {
+        foreignKey: "class_id",
+        as: "Connectors",
+    });
+};
 //# sourceMappingURL=agentConnectorClass.js.map

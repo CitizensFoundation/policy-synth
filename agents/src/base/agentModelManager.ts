@@ -11,13 +11,13 @@ import { TiktokenModel, encoding_for_model } from "tiktoken";
 import { PolicySynthAgentBase } from "./agentBase.js";
 
 export class PsAiModelManager extends PolicySynthAgentBase {
-  private models: Map<string, BaseChatModel> = new Map();
-  private modelsByType: Map<PsAiModelType, BaseChatModel> = new Map();
-  private modelIds: Map<string, number> = new Map();
-  private modelIdsByType: Map<PsAiModelType, number> = new Map();
-  private rateLimits: PsModelRateLimitTracking = {};
-  private userId: number;
-  private agentId: number;
+  models: Map<string, BaseChatModel> = new Map();
+  modelsByType: Map<PsAiModelType, BaseChatModel> = new Map();
+  modelIds: Map<string, number> = new Map();
+  modelIdsByType: Map<PsAiModelType, number> = new Map();
+  rateLimits: PsModelRateLimitTracking = {};
+  userId: number;
+  agentId: number;
 
   maxModelTokensOut: number;
   modelTemperature: number;
@@ -41,7 +41,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     this.initializeModels(aiModels, accessConfiguration);
   }
 
-  private initializeModels(aiModels: PsAiModelAttributes[], accessConfiguration: YpGroupPrivateAccessConfiguration[]) {
+  initializeModels(aiModels: PsAiModelAttributes[], accessConfiguration: YpGroupPrivateAccessConfiguration[]) {
     if (!aiModels || aiModels.length === 0) {
       this.logger.info(`No AI models found for agent ${this.agentId}`);
       return;

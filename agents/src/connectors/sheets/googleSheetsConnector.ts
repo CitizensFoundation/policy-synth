@@ -7,10 +7,10 @@ import { PsConnectorClassTypes } from "../../connectorTypes.js";
 import { PsBaseSheetConnector } from "../base/baseSheetConnector.js";
 
 export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
-  private static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID =
+  static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID =
     "4b8c3d2e-5f6a-1a8b-9c0d-1ecf3afb536d";
 
-  private static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 1;
+  static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 1;
 
   static getConnectorClass: PsConnectorClassCreationAttributes = {
     class_base_id: this.GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID,
@@ -58,8 +58,8 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     } as PsAgentConnectorConfiguration,
   };
 
-  private client: JWT;
-  private sheets: sheets_v4.Sheets;
+  client: JWT;
+  sheets: sheets_v4.Sheets;
 
   constructor(
     connector: PsAgentConnectorAttributes,

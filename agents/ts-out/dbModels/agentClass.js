@@ -69,4 +69,30 @@ PsAgentClass.init({
     timestamps: true,
     underscored: true,
 });
+PsAgentClass.associate = (models) => {
+    // Define associations
+    PsAgentClass.belongsTo(models.User, {
+        foreignKey: "user_id",
+        as: "Owner",
+    });
+    PsAgentClass.belongsToMany(models.User, {
+        through: "AgentClassUsers",
+        foreignKey: "agent_class_id",
+        otherKey: "user_id",
+        as: "Users",
+        timestamps: false,
+    });
+    PsAgentClass.belongsToMany(models.User, {
+        through: "AgentClassAdmins",
+        foreignKey: "agent_class_id",
+        otherKey: "user_id",
+        as: "Admins",
+        timestamps: false,
+    });
+    // You may want to add other associations here, such as with PsAgent
+    PsAgentClass.hasMany(models.PsAgent, {
+        foreignKey: "class_id",
+        as: "Agents",
+    });
+};
 //# sourceMappingURL=agentClass.js.map

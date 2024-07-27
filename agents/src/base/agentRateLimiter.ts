@@ -1,7 +1,7 @@
 import { PolicySynthAgentBase } from "./agentBase.js";
 
 export class PsRateLimitManager extends PolicySynthAgentBase{
-  private rateLimits: PsModelRateLimitTracking = {};
+  rateLimits: PsModelRateLimitTracking = {};
 
   //TODO: Update this with new logic
   async updateRateLimits(model: any, tokensToAdd: number) {
@@ -64,12 +64,12 @@ export class PsRateLimitManager extends PolicySynthAgentBase{
     }
   }
 
-  private addRequestTimestamp(model: any) {
+  addRequestTimestamp(model: any) {
     const now = Date.now();
     this.rateLimits[model.name].requests.push({ timestamp: now });
   }
 
-  private addTokenEntry(model: any, tokensToAdd: number) {
+  addTokenEntry(model: any, tokensToAdd: number) {
     const now = Date.now();
     this.rateLimits[model.name].tokens.push({
       count: tokensToAdd,
@@ -77,7 +77,7 @@ export class PsRateLimitManager extends PolicySynthAgentBase{
     });
   }
 
-  private slideWindowForRequests(model: any) {
+  slideWindowForRequests(model: any) {
     const now = Date.now();
     const windowSize = 60000; // 60 seconds
     this.rateLimits[model.name].requests = this.rateLimits[model.name].requests.filter(
@@ -85,7 +85,7 @@ export class PsRateLimitManager extends PolicySynthAgentBase{
     );
   }
 
-  private slideWindowForTokens(model: any) {
+  slideWindowForTokens(model: any) {
     const now = Date.now();
     const windowSize = 60000; // 60 seconds
     this.rateLimits[model.name].tokens = this.rateLimits[model.name].tokens.filter(

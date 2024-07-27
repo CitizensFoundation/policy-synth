@@ -176,6 +176,8 @@ interface PsModelTokenUsage {
 }
 
 interface PsAgentClassAttributesConfiguration {
+  category: import("./agentTypes.js").PsAgentClassTypes;
+  subCategory: string;
   description: string;
   queueName: string;
   imageUrl: string;
@@ -186,6 +188,7 @@ interface PsAgentClassAttributesConfiguration {
   questions: YpStructuredQuestionData[];
   supportedConnectors: import("./connectorTypes.js").PsConnectorClassTypes[];
   evalConfig?: PsAgentEvalConfig;
+  hasPublicAccess: boolean;
 }
 
 // tablename "ps_agent_classes"

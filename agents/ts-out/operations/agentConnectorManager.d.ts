@@ -1,7 +1,7 @@
 import { PsAgent, PsAgentClass, PsAgentConnector } from "../dbModels/index.js";
 export declare class AgentConnectorManager {
     createConnector(agentId: number, connectorClassId: number, name: string, type: "input" | "output"): Promise<PsAgentConnector | null>;
-    createGroupAndUpdateAgent(agent: PsAgent, agentClass: PsAgentClass): Promise<YpGroupData>;
+    createYourPrioritiesGroupAndUpdateAgent(agent: PsAgent, agentClass: PsAgentClass): Promise<YpGroupData>;
     getHeaders(): {
         [key: string]: string;
     };

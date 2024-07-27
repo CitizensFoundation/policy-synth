@@ -1,5 +1,5 @@
 export declare class AgentRegistryManager {
-    getActiveAgentClasses(): Promise<PsAgentClassAttributes[]>;
-    getActiveConnectorClasses(): Promise<PsAgentConnectorClassAttributes[]>;
+    getActiveAgentClasses(userId: number): Promise<PsAgentClassAttributes[]>;
+    getActiveConnectorClasses(userId: number): Promise<PsAgentConnectorClassAttributes[]>;
 }
 //# sourceMappingURL=agentRegistryManager.d.ts.map

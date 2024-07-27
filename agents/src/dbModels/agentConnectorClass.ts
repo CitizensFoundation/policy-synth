@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
+import { User } from "./ypUser.js";
 
 interface PsAgentConnectorClassCreationAttributes
   extends Optional<
@@ -21,6 +22,25 @@ export class PsAgentConnectorClass
   declare version: number;
   declare available: boolean;
   declare configuration: PsAgentConnectorConfiguration;
+
+  // Associations
+  declare Users?: User[];
+  declare Admins?: User[];
+
+  // Association methods
+  declare addUser: (user: User, obj?: any | undefined) => Promise<void>;
+  declare addUsers: (users: User[]) => Promise<void>;
+  declare getUsers: () => Promise<User[]>;
+  declare setUsers: (users: User[]) => Promise<void>;
+  declare removeUser: (user: User) => Promise<void>;
+  declare removeUsers: (users: User[]) => Promise<void>;
+
+  declare addAdmin: (user: User, obj?: any | undefined) => Promise<void>;
+  declare addAdmins: (users: User[]) => Promise<void>;
+  declare getAdmins: () => Promise<User[]>;
+  declare setAdmins: (users: User[]) => Promise<void>;
+  declare removeAdmin: (user: User) => Promise<void>;
+  declare removeAdmins: (users: User[]) => Promise<void>;
 }
 
 PsAgentConnectorClass.init(
@@ -99,3 +119,33 @@ PsAgentConnectorClass.init(
     underscored: true,
   }
 );
+
+(PsAgentConnectorClass as any).associate = (models: any) => {
+  // Define associations
+  PsAgentConnectorClass.belongsTo(models.User, {
+    foreignKey: "user_id",
+    as: "Owner",
+  });
+
+  PsAgentConnectorClass.belongsToMany(models.User, {
+    through: "ConnectorClassUsers",
+    foreignKey: "connector_class_id",
+    otherKey: "user_id",
+    as: "Users",
+    timestamps: false,
+  });
+
+  PsAgentConnectorClass.belongsToMany(models.User, {
+    through: "ConnectorClassAdmins",
+    foreignKey: "connector_class_id",
+    otherKey: "user_id",
+    as: "Admins",
+    timestamps: false,
+  });
+
+  // You may want to add other associations here, such as with PsAgentConnector
+  PsAgentConnectorClass.hasMany(models.PsAgentConnector, {
+    foreignKey: "class_id",
+    as: "Connectors",
+  });
+};

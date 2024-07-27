@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
+import { User } from "./ypUser.js";
 
 interface PsAgentClassAttributesCreation
   extends Optional<
@@ -21,6 +22,25 @@ export class PsAgentClass
   declare version: number;
   declare configuration: PsAgentClassAttributesConfiguration;
   declare available: boolean;
+
+  // Associations
+ declare Users?: User[];
+ declare Admins?: User[];
+
+ // Association methods
+ declare addUser: (user: User, obj?: any | undefined) => Promise<void>;
+ declare addUsers: (users: User[]) => Promise<void>;
+ declare getUsers: () => Promise<User[]>;
+ declare setUsers: (users: User[]) => Promise<void>;
+ declare removeUser: (user: User) => Promise<void>;
+ declare removeUsers: (users: User[]) => Promise<void>;
+
+ declare addAdmin: (user: User, obj?: any | undefined) => Promise<void>;
+ declare addAdmins: (users: User[]) => Promise<void>;
+ declare getAdmins: () => Promise<User[]>;
+ declare setAdmins: (users: User[]) => Promise<void>;
+ declare removeAdmin: (user: User) => Promise<void>;
+ declare removeAdmins: (users: User[]) => Promise<void>;
 }
 
 PsAgentClass.init(
@@ -93,3 +113,33 @@ PsAgentClass.init(
     underscored: true,
   }
 );
+
+(PsAgentClass as any).associate = (models: any) => {
+  // Define associations
+  PsAgentClass.belongsTo(models.User, {
+    foreignKey: "user_id",
+    as: "Owner",
+  });
+
+  PsAgentClass.belongsToMany(models.User, {
+    through: "AgentClassUsers",
+    foreignKey: "agent_class_id",
+    otherKey: "user_id",
+    as: "Users",
+    timestamps: false,
+  });
+
+  PsAgentClass.belongsToMany(models.User, {
+    through: "AgentClassAdmins",
+    foreignKey: "agent_class_id",
+    otherKey: "user_id",
+    as: "Admins",
+    timestamps: false,
+  });
+
+  // You may want to add other associations here, such as with PsAgent
+  PsAgentClass.hasMany(models.PsAgent, {
+    foreignKey: "class_id",
+    as: "Agents",
+  });
+};

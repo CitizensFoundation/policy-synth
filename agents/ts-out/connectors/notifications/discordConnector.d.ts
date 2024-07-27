@@ -1,17 +1,22 @@
+import { Client, Message } from "discord.js";
 import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseNotificationsConnector } from "../base/baseNotificationsConnector.js";
 export declare class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
-    private static readonly DISCORD_CONNECTOR_CLASS_BASE_ID;
-    private static readonly DISCORD_CONNECTOR_VERSION;
+    static readonly DISCORD_CONNECTOR_CLASS_BASE_ID = "8f7e6d5c-4b3a-2a1f-9e8d-7c6b5a4d3f2e";
+    static readonly DISCORD_CONNECTOR_VERSION = 1;
     static getConnectorClass: PsConnectorClassCreationAttributes;
-    private client;
-    private token;
+    client: Client;
+    token: string;
     channelName: string;
     systemPrompt: string;
-    private actions;
-    private channelTimeouts;
-    private readonly maxMessages;
-    private readonly listenDuration;
+    actions: {
+        [key: string]: () => Promise<void>;
+    };
+    channelTimeouts: {
+        [id: string]: NodeJS.Timeout;
+    };
+    readonly maxMessages: number;
+    readonly listenDuration: number;
     constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: PsAgentMemoryData | undefined, systemPrompt: string, actions: {
         [key: string]: () => Promise<void>;
     }, startProgress?: number, endProgress?: number);
@@ -22,9 +27,9 @@ export declare class PsBaseDiscordConnector extends PsBaseNotificationsConnector
     }>;
     respondToUser(channelId: string, conversation: DiscordConversation): Promise<void>;
     sendMessage(channelId: string, message: string): Promise<void>;
-    private handleMessage;
-    private setChannelTimeout;
-    private archiveConversation;
+    handleMessage(message: Message): Promise<void>;
+    setChannelTimeout(channelId: string): void;
+    archiveConversation(channelId: string): void;
     getMessages(channelId: string): Promise<string[]>;
     sendNotification(channelId: string, message: string): Promise<void>;
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];

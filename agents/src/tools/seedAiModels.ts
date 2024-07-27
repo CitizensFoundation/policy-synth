@@ -6,6 +6,7 @@ import { PsAgentClass } from "../dbModels/agentClass.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { connectToDatabase } from "../dbModels/sequelize.js";
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
+import { PsAgentClassTypes } from "../agentTypes.js";
 
 await connectToDatabase();
 await initializeModels();
@@ -104,6 +105,9 @@ await Group.create({
 
 // Create Top-Level Agent Class
 const topLevelAgentClassConfig: PsAgentClassAttributesConfiguration = {
+  category: PsAgentClassTypes.PolicySynthTopLevel,
+  subCategory: "group",
+  hasPublicAccess: true,
   description: "A top-level agent that coordinates other agents",
   queueName: "noqueue",
   imageUrl: "https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/topLevelAgent.png",

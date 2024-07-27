@@ -1,15 +1,16 @@
+import Redis from "ioredis";
 import { PolicySynthAgentBase } from "./agentBase.js";
 export declare class PsProgressTracker extends PolicySynthAgentBase {
-    private redis;
-    private redisStatusKey;
-    private status;
-    private startProgress;
-    private endProgress;
+    redis: Redis;
+    redisStatusKey: string;
+    status: PsAgentStatus;
+    startProgress: number;
+    endProgress: number;
     constructor(redisStatusKey: string, startProgress: number, endProgress: number, redisUrl?: string);
     loadStatusFromRedis(): Promise<void>;
     updateRangedProgress(progress: number | undefined, message: string): Promise<void>;
     updateProgress(progress: number | undefined, message: string): Promise<void>;
-    private saveRedisStatus;
+    saveRedisStatus(): Promise<void>;
     getProgress(): number;
     getMessages(): string[];
     getState(): string;

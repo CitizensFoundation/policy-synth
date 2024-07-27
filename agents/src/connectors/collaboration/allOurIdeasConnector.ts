@@ -4,10 +4,10 @@ import { PsConnectorClassTypes } from "../../connectorTypes.js";
 import { PsBaseVotingCollaborationConnector } from "../base/baseVotingCollaborationConnector.js";
 
 export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
-  private static readonly ALL_OUR_IDEAS_CONNECTOR_CLASS_BASE_ID =
+  static readonly ALL_OUR_IDEAS_CONNECTOR_CLASS_BASE_ID =
     "aafcfd1a-3f6a-7b9c-3d0e-1f2a1b4c5d6e";
 
-  private static readonly ALL_OUR_IDEAS_CONNECTOR_VERSION = 1;
+  static readonly ALL_OUR_IDEAS_CONNECTOR_VERSION = 1;
 
   static getConnectorClass = {
     created_at: new Date(),
@@ -73,11 +73,11 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
     } as PsAgentConnectorConfiguration,
   };
 
-  private userEmail: string;
-  private password: string;
-  private serverBaseUrl: string;
-  private sessionCookie?: string;
-  private user?: YpUserData;
+  userEmail: string;
+  password: string;
+  serverBaseUrl: string;
+  sessionCookie?: string;
+  user?: YpUserData;
 
   constructor(
     connector: PsAgentConnectorAttributes,

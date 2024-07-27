@@ -19,9 +19,9 @@ export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     abstract get agentQueueName(): string;
     abstract setupMemoryIfNeeded(): Promise<void>;
     setupAgentQueue(): Promise<void>;
-    private startAgent;
-    private stopAgent;
-    private pauseAgent;
-    private updateAgentStatus;
+    startAgent(): Promise<void>;
+    stopAgent(): Promise<void>;
+    pauseAgent(): Promise<void>;
+    updateAgentStatus(state: "running" | "stopped" | "paused" | "error", message?: string): Promise<void>;
 }
 //# sourceMappingURL=agentQueue.d.ts.map

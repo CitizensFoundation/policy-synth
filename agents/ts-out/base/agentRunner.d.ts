@@ -14,9 +14,9 @@ export declare abstract class PsBaseAgentRunner extends PolicySynthAgent {
     abstract setupAgents(): Promise<void>;
     setupAndRunAgents(): Promise<void>;
     inspectDynamicMethods(obj: any, className: string): void;
-    private registerAgent;
-    private registerConnectors;
-    private getOrCreateAgentRegistry;
+    registerAgent(agentQueue: PolicySynthAgentQueue): Promise<void>;
+    registerConnectors(): Promise<void>;
+    getOrCreateAgentRegistry(): Promise<PsAgentRegistry>;
     protected createAgentClassesIfNeeded(): Promise<void>;
     protected createConnectorClassesIfNeeded(): Promise<void>;
     run(): Promise<void>;

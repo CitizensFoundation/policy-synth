@@ -1,14 +1,4 @@
 .env
-currentMemory.json
-currentProject1.json
-currentProject2.json
-currentProject3.json
-currentProject4.json
-currentProject5.json
-currentProject6.json
-currentProject7.json
-currentProject8.json
-currentProject9.json
 memoryBackups/
 projectImages/
 node_modules/
