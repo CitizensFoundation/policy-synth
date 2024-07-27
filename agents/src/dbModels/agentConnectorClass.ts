@@ -145,7 +145,7 @@ PsAgentConnectorClass.init(
 
   PsAgentConnectorClass.belongsToMany(models.PsAgentRegistry, {
     through: "AgentRegistryConnectors",
-    as: "Registries",
+    as: "Registry",
     foreignKey: "ps_agent_connector_class_id",
     otherKey: "ps_agent_registry_id",
     timestamps: true,

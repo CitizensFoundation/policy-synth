@@ -139,7 +139,7 @@ PsAgentClass.init(
 
   PsAgentClass.belongsToMany(models.PsAgentRegistry, {
     through: "AgentRegistryAgents",
-    as: "Registries",
+    as: "Registry",
     foreignKey: "ps_agent_class_id",
     otherKey: "ps_agent_registry_id",
     timestamps: true,
