@@ -6,6 +6,7 @@ import {
   PsAgentConnectorClass,
   sequelize,
 } from "../dbModels/index.js";
+
 import { PsYourPrioritiesConnector } from "../connectors/collaboration/yourPrioritiesConnector.js";
 
 export class AgentConnectorManager {

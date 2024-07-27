@@ -5,17 +5,16 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
     static ALL_OUR_IDEAS_CONNECTOR_CLASS_BASE_ID = "aafcfd1a-3f6a-7b9c-3d0e-1f2a1b4c5d6e";
     static ALL_OUR_IDEAS_CONNECTOR_VERSION = 1;
     static getConnectorClass = {
-        created_at: new Date(),
-        updated_at: new Date(),
         class_base_id: this.ALL_OUR_IDEAS_CONNECTOR_CLASS_BASE_ID,
         name: "All Our Ideas",
         version: this.ALL_OUR_IDEAS_CONNECTOR_VERSION,
         user_id: 1,
         available: true,
         configuration: {
-            name: "",
+            name: "All Our Ideas",
             classType: PsConnectorClassTypes.VotingCollaboration,
             description: "Connector for All Our Ideas",
+            hasPublicAccess: true,
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/30582554-20a7-4de5-87a4-4540dc2030b4.png",
             iconName: "allOurIdeas",
             questions: [

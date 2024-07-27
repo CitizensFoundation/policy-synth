@@ -176,7 +176,7 @@ interface PsModelTokenUsage {
 }
 
 interface PsAgentClassAttributesConfiguration {
-  category: import("./agentTypes.js").PsAgentClassTypes;
+  category: import("./agentCategories.js").PsAgentClassTypes;
   subCategory: string;
   description: string;
   queueName: string;
@@ -282,6 +282,7 @@ interface PsAgentConnectorConfiguration {
   imageUrl: string;
   iconName: string;
   questions: YpStructuredQuestionData[];
+  hasPublicAccess: boolean;
 }
 
 // tablename "ps_agent_connector_classes"
@@ -291,6 +292,8 @@ interface PsAgentConnectorClassAttributes extends PsBaseModelClass {
   version: number;
   available: boolean;
   configuration: PsAgentConnectorConfiguration;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 type PsAgentConnectorPermissionTypes = "read" | "write" | "readWrite" | "admin";
@@ -326,8 +329,8 @@ type PsAgentClassCreationAttributes = Omit<
   "id" | "uuid" | "created_at" | "updated_at"
 >;
 
-type PsConnectorClassCreationAttributes = Omit<
-  any,
+type PsAgentConnectorClassCreationAttributes = Omit<
+  PsAgentConnectorClassAttributes,
   "id" | "uuid" | "created_at" | "updated_at"
 >;
 

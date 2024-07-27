@@ -1,4 +1,4 @@
-export declare enum PsAgentClassTypes {
+export declare enum PsAgentClassCategories {
     Accounting = "accounting",
     AdminAssistant = "adminAssistant",
     AdvertisingCreation = "advertisingCreation",
@@ -56,4 +56,4 @@ export declare enum PsAgentClassTypes {
     WebDevelopment = "webDevelopment",
     WorkflowOptimization = "workflowOptimization"
 }
-//# sourceMappingURL=agentTypes.d.ts.map
+//# sourceMappingURL=agentCategories.d.ts.map

@@ -12,7 +12,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
 
   static readonly GOOGLE_DOCS_CONNECTOR_VERSION = 1;
 
-  static getConnectorClass: PsConnectorClassCreationAttributes = {
+  static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID,
     name: "Google Docs",
     version: this.GOOGLE_DOCS_CONNECTOR_VERSION,
@@ -20,8 +20,9 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     available: true,
     configuration: {
       name: "Google Docs",
-      classType: PsConnectorClassTypes.Document as string,
+      classType: PsConnectorClassTypes.Document,
       description: "Connector for Google Docs",
+      hasPublicAccess: true,
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png",
       iconName: "docs",
@@ -55,7 +56,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
           required: true,
         },
       ],
-    } as PsAgentConnectorConfiguration,
+    },
   };
 
   client: JWT;

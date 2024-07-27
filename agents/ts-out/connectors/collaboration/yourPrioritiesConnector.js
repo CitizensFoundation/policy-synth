@@ -54,8 +54,6 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         },
     ];
     static getConnectorClass = {
-        created_at: new Date(),
-        updated_at: new Date(),
         class_base_id: this.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID,
         name: "Your Priorities",
         version: this.YOUR_PRIORITIES_CONNECTOR_VERSION,
@@ -64,6 +62,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         configuration: {
             name: "Your Priorities",
             classType: PsConnectorClassTypes.IdeasCollaboration,
+            hasPublicAccess: true,
             description: "Connector for Your Priorities",
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
             iconName: "yourPriorities",

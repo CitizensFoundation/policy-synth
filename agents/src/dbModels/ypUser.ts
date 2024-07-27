@@ -62,3 +62,19 @@ User.init(
     underscored: true,
   }
 );
+
+(User as any).associate = (models: any) => {
+  User.belongsToMany(models.PsAgentClass, {
+    through: "AgentClassUsers",
+    foreignKey: "user_id",
+    otherKey: "agent_class_id",
+    as: "AgentClassesAsUser",
+  });
+
+  User.belongsToMany(models.PsAgentClass, {
+    through: "AgentClassAdmins",
+    foreignKey: "user_id",
+    otherKey: "agent_class_id",
+    as: "AgentClassesAsAdmin",
+  });
+};

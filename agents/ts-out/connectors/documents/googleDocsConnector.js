@@ -15,6 +15,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             name: "Google Docs",
             classType: PsConnectorClassTypes.Document,
             description: "Connector for Google Docs",
+            hasPublicAccess: true,
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png",
             iconName: "docs",
             questions: [

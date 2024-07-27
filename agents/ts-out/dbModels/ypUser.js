@@ -38,4 +38,18 @@ User.init({
     timestamps: false,
     underscored: true,
 });
+User.associate = (models) => {
+    User.belongsToMany(models.PsAgentClass, {
+        through: "AgentClassUsers",
+        foreignKey: "user_id",
+        otherKey: "agent_class_id",
+        as: "AgentClassesAsUser",
+    });
+    User.belongsToMany(models.PsAgentClass, {
+        through: "AgentClassAdmins",
+        foreignKey: "user_id",
+        otherKey: "agent_class_id",
+        as: "AgentClassesAsAdmin",
+    });
+};
 //# sourceMappingURL=ypUser.js.map

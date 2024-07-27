@@ -15,6 +15,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
             name: "Google Sheets",
             classType: PsConnectorClassTypes.Document,
             description: "Connector for Google Sheets",
+            hasPublicAccess: true,
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/1187aee2-39e8-48b2-afa2-0aba91c0ced0.png",
             iconName: "sheets",
             questions: [

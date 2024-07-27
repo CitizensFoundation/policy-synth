@@ -21,7 +21,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgent {
   protected registeredConnectorClasses: PsAgentConnectorClass[] = [];
 
   protected abstract agentClasses: PsAgentClassCreationAttributes[];
-  protected abstract connectorClasses: PsConnectorClassCreationAttributes[];
+  protected abstract connectorClasses: PsAgentConnectorClassCreationAttributes[];
 
   constructor() {
     super({} as any, undefined, 0, 100);

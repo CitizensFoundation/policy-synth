@@ -15,6 +15,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
             name: "Discord Bot",
             classType: PsConnectorClassTypes.NotificationsAndChat,
             description: "Connector for Discord Market Research Bot",
+            hasPublicAccess: true,
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/7336a9fb-7512-4c31-ae77-0bb7c5a99b97.png",
             iconName: "discord",
             questions: [

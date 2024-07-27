@@ -9,18 +9,17 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
 
   static readonly ALL_OUR_IDEAS_CONNECTOR_VERSION = 1;
 
-  static getConnectorClass = {
-    created_at: new Date(),
-    updated_at: new Date(),
+  static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.ALL_OUR_IDEAS_CONNECTOR_CLASS_BASE_ID,
     name: "All Our Ideas",
     version: this.ALL_OUR_IDEAS_CONNECTOR_VERSION,
     user_id: 1,
     available: true,
     configuration: {
-      name: "",
-      classType: PsConnectorClassTypes.VotingCollaboration as string,
+      name: "All Our Ideas",
+      classType: PsConnectorClassTypes.VotingCollaboration,
       description: "Connector for All Our Ideas",
+      hasPublicAccess: true,
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/30582554-20a7-4de5-87a4-4540dc2030b4.png",
       iconName: "allOurIdeas",
@@ -70,7 +69,7 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
           required: true,
         },
       ],
-    } as PsAgentConnectorConfiguration,
+    } ,
   };
 
   userEmail: string;

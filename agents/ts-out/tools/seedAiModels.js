@@ -5,7 +5,7 @@ import { PsAgentClass } from "../dbModels/agentClass.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { connectToDatabase } from "../dbModels/sequelize.js";
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
-import { PsAgentClassTypes } from "../agentTypes.js";
+import { PsAgentClassCategories } from "../agentCategories.js";
 await connectToDatabase();
 await initializeModels();
 const user = await User.create({ email: "example@example.com", name: "Example User" });
@@ -93,7 +93,7 @@ await Group.create({
 });
 // Create Top-Level Agent Class
 const topLevelAgentClassConfig = {
-    category: PsAgentClassTypes.PolicySynthTopLevel,
+    category: PsAgentClassCategories.PolicySynthTopLevel,
     subCategory: "group",
     hasPublicAccess: true,
     description: "A top-level agent that coordinates other agents",

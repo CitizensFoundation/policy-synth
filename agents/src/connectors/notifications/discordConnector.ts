@@ -17,7 +17,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
 
   static readonly DISCORD_CONNECTOR_VERSION = 1;
 
-  static getConnectorClass: PsConnectorClassCreationAttributes = {
+  static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.DISCORD_CONNECTOR_CLASS_BASE_ID,
     name: "Discord Bot",
     version: this.DISCORD_CONNECTOR_VERSION,
@@ -25,8 +25,9 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
     available: true,
     configuration: {
       name: "Discord Bot",
-      classType: PsConnectorClassTypes.NotificationsAndChat as string,
+      classType: PsConnectorClassTypes.NotificationsAndChat,
       description: "Connector for Discord Market Research Bot",
+      hasPublicAccess: true,
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/7336a9fb-7512-4c31-ae77-0bb7c5a99b97.png",
       iconName: "discord",
@@ -47,7 +48,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
         },
         ...PsBaseDiscordConnector.getExtraConfigurationQuestions(),
       ],
-    } as PsAgentConnectorConfiguration,
+    },
   };
 
   client: Client;

@@ -143,7 +143,14 @@ PsAgentConnectorClass.init(
     timestamps: false,
   });
 
-  // You may want to add other associations here, such as with PsAgentConnector
+  PsAgentConnectorClass.belongsToMany(models.PsAgentRegistry, {
+    through: "AgentRegistryConnectors",
+    as: "Registries",
+    foreignKey: "ps_agent_connector_class_id",
+    otherKey: "ps_agent_registry_id",
+    timestamps: true,
+  });
+
   PsAgentConnectorClass.hasMany(models.PsAgentConnector, {
     foreignKey: "class_id",
     as: "Connectors",

@@ -60,9 +60,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     },
   ] as YpStructuredQuestionData[];
 
-  static getConnectorClass = {
-    created_at: new Date(),
-    updated_at: new Date(),
+  static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID,
     name: "Your Priorities",
     version: this.YOUR_PRIORITIES_CONNECTOR_VERSION,
@@ -70,7 +68,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     available: true,
     configuration: {
       name: "Your Priorities",
-      classType: PsConnectorClassTypes.IdeasCollaboration as string,
+      classType: PsConnectorClassTypes.IdeasCollaboration,
+      hasPublicAccess: true,
       description: "Connector for Your Priorities",
       imageUrl:
         "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
@@ -78,7 +77,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       questions: process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY
         ? this.baseQuestions
         : [...this.baseQuestions, ...this.loginQuestions],
-    } as PsAgentConnectorConfiguration,
+    },
   };
 
   userEmail: string;

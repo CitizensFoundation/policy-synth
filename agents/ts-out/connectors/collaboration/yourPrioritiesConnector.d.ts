@@ -5,16 +5,7 @@ export declare class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationC
     static readonly YOUR_PRIORITIES_CONNECTOR_VERSION = 2;
     static baseQuestions: YpStructuredQuestionData[];
     static loginQuestions: YpStructuredQuestionData[];
-    static getConnectorClass: {
-        created_at: Date;
-        updated_at: Date;
-        class_base_id: string;
-        name: string;
-        version: number;
-        user_id: number;
-        available: boolean;
-        configuration: PsAgentConnectorConfiguration;
-    };
+    static getConnectorClass: PsAgentConnectorClassCreationAttributes;
     userEmail: string;
     password: string;
     serverBaseUrl: string;
