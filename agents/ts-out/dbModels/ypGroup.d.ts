@@ -5,6 +5,7 @@ export declare class Group extends Model<YpGroupData, YpGroupDataCreationAttribu
     id: number;
     name: string;
     user_id: number;
+    community_id: number;
     created_at: Date;
     updated_at: Date;
     private_access_configuration: YpGroupPrivateAccessConfiguration[];

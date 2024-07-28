@@ -133,6 +133,7 @@ export class AgentConnectorManager {
 
       const newGroup = (await this.createGroup(
         agentGroup.community_id!,
+        agent.user_id,
         agent.configuration.name,
         agent.configuration.name,
         agentClass.configuration.defaultStructuredQuestions!
@@ -186,6 +187,7 @@ export class AgentConnectorManager {
 
   async createGroup(
     communityId: number,
+    userId: number,
     name: string,
     description: string,
     structuredQuestions: any[]
@@ -271,7 +273,7 @@ export class AgentConnectorManager {
 
     try {
       const response = await fetch(
-        `${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api/groups/${communityId}`,
+        `${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api/groups/${communityId}?agentFabricUserId=${userId}`,
         {
           method: "POST",
           headers: {

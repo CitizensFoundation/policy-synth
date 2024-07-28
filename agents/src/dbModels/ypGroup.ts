@@ -11,6 +11,7 @@ export class Group
   declare id: number;
   declare name: string;
   declare user_id: number;
+  declare community_id: number;
   declare created_at: Date;
   declare updated_at: Date;
   declare private_access_configuration: YpGroupPrivateAccessConfiguration[];
@@ -29,6 +30,10 @@ Group.init(
       allowNull: false,
     },
     user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    community_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },

@@ -18,6 +18,10 @@ module.exports = {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      community_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,

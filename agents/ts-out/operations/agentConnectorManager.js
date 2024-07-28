@@ -80,7 +80,7 @@ export class AgentConnectorManager {
             if (!agentGroup) {
                 throw new Error("Group not found");
             }
-            const newGroup = (await this.createGroup(agentGroup.community_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions));
+            const newGroup = (await this.createGroup(agentGroup.community_id, agent.user_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions));
             if (!newGroup) {
                 throw new Error("Group creation failed");
             }
@@ -120,7 +120,7 @@ export class AgentConnectorManager {
             return {};
         }
     }
-    async createGroup(communityId, name, description, structuredQuestions) {
+    async createGroup(communityId, userId, name, description, structuredQuestions) {
         const groupData = {
             name: name,
             description: description,
@@ -196,7 +196,7 @@ export class AgentConnectorManager {
             .map(([key, value]) => encodeURIComponent(key) + "=" + encodeURIComponent(value))
             .join("&");
         try {
-            const response = await fetch(`${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api/groups/${communityId}`, {
+            const response = await fetch(`${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api/groups/${communityId}?agentFabricUserId=${userId}`, {
                 method: "POST",
                 headers: {
                     ...this.getHeaders(),
