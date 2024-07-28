@@ -21,6 +21,8 @@ export declare class PsAgentClass extends Model<PsAgentClassAttributes, PsAgentC
     setUsers: (users: User[]) => Promise<void>;
     removeUser: (user: User) => Promise<void>;
     removeUsers: (users: User[]) => Promise<void>;
+    hasUser: (user: User) => Promise<boolean>;
+    hasAdmin: (user: User) => Promise<boolean>;
     addAdmin: (user: User, obj?: any | undefined) => Promise<void>;
     addAdmins: (users: User[]) => Promise<void>;
     getAdmins: () => Promise<User[]>;

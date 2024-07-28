@@ -14,57 +14,50 @@ export class AgentRegistryManager {
                 "version",
                 "configuration",
                 "available",
-                [fn("MAX", col("version")), "max_version"],
             ],
             include: [
-                {
-                    model: PsAgentRegistry,
-                    as: "Registry",
-                    attributes: [],
-                    through: { attributes: [] },
-                },
                 {
                     model: User,
                     as: "Users",
                     attributes: [],
                     through: { attributes: [] },
+                    required: false,
                 },
                 {
                     model: User,
                     as: "Admins",
                     attributes: [],
                     through: { attributes: [] },
+                    required: false,
                 },
             ],
             where: {
                 available: true,
                 [Op.or]: [
-                    {
-                        "configuration.hasPublicAccess": true
-                    },
+                    Sequelize.literal(`(configuration->>'hasPublicAccess')::boolean = true`),
                     { "$Users.id$": userId },
                     { "$Admins.id$": userId },
                 ],
             },
-            group: [
-                "PsAgentClass.id",
-                "PsAgentClass.uuid",
-                "PsAgentClass.class_base_id",
-                "PsAgentClass.user_id",
-                "PsAgentClass.created_at",
-                "PsAgentClass.updated_at",
-                "PsAgentClass.name",
-                "PsAgentClass.version",
-                "PsAgentClass.configuration",
-                "PsAgentClass.available"
-            ],
-            having: Sequelize.where(col("version"), Op.eq, fn("MAX", col("version"))),
             order: [
                 ["class_base_id", "ASC"],
                 ["version", "DESC"],
             ],
         });
-        return agents;
+        //console.log("Fetched agents:", JSON.stringify(agents, null, 2));
+        // Filter to keep only the latest version of each agent
+        const latestAgents = agents.reduce((acc, current) => {
+            const existingAgent = acc.find((agent) => agent.class_base_id === current.class_base_id);
+            if (!existingAgent || existingAgent.version < current.version) {
+                return [
+                    ...acc.filter((agent) => agent.class_base_id !== current.class_base_id),
+                    current,
+                ];
+            }
+            return acc;
+        }, []);
+        //console.log("Latest agents:", JSON.stringify(latestAgents, null, 2));
+        return latestAgents;
     }
     async getActiveConnectorClasses(userId) {
         const connectors = await PsAgentConnectorClass.findAll({
@@ -105,7 +98,7 @@ export class AgentRegistryManager {
                 available: true,
                 [Op.or]: [
                     {
-                        "configuration.hasPublicAccess": true
+                        "configuration.hasPublicAccess": true,
                     },
                     { "$Users.id$": userId },
                     { "$Admins.id$": userId },
@@ -121,7 +114,7 @@ export class AgentRegistryManager {
                 "PsAgentConnectorClass.name",
                 "PsAgentConnectorClass.version",
                 "PsAgentConnectorClass.configuration",
-                "PsAgentConnectorClass.available"
+                "PsAgentConnectorClass.available",
             ],
             having: Sequelize.where(col("version"), Op.eq, fn("MAX", col("version"))),
             order: [

@@ -1,19 +1,22 @@
-import { PsAgent, PsAgentClass, PsAgentConnector, PsAgentConnectorClass, sequelize, } from "../dbModels/index.js";
+import { Group, PsAgent, PsAgentClass, PsAgentConnector, PsAgentConnectorClass, sequelize, } from "../dbModels/index.js";
 import { PsYourPrioritiesConnector } from "../connectors/collaboration/yourPrioritiesConnector.js";
 export class AgentConnectorManager {
-    async createConnector(agentId, connectorClassId, name, type) {
+    async createConnector(agentId, connectorClassId, userId, name, type) {
         const transaction = await sequelize.transaction();
         try {
             const agent = (await PsAgent.findByPk(agentId));
-            const connectorClass = await PsAgentConnectorClass.findByPk(connectorClassId);
-            const agentClass = await PsAgentClass.findByPk(agent.class_id);
-            if (!agent || !connectorClass) {
+            const connectorClass = await PsAgentConnectorClass.findByPk(connectorClassId, { attributes: ["id", "configuration", "class_base_id"] });
+            const agentClass = (await PsAgentClass.findByPk(agent.class_id, {
+                attributes: ["id", "configuration", "class_base_id"],
+            }));
+            if (!agent || !connectorClass || !agentClass) {
                 await transaction.rollback();
                 throw new Error("Agent or connector class not found");
             }
+            console.log(`Creating connector for agent ${agentClass.id} version ${agentClass.version} ${JSON.stringify(agentClass.configuration, null, 2)}`);
             const newConnector = await PsAgentConnector.create({
                 class_id: connectorClassId,
-                user_id: 1, //TODO: Make dynamic
+                user_id: userId,
                 group_id: agent.group_id,
                 configuration: {
                     name: name,
@@ -34,9 +37,8 @@ export class AgentConnectorManager {
                 connectorClass.class_base_id ===
                     PsYourPrioritiesConnector.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID &&
                 process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY &&
-                agentClass.configuration.defaultStructuredQuestions &&
-                agent.configuration.answers &&
-                agent.configuration.answers.length > 0) {
+                process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH &&
+                agentClass.configuration.defaultStructuredQuestions) {
                 console.log(`Creating Your Priorities group for agent ${agent.id}`);
                 try {
                     await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass);
@@ -44,6 +46,15 @@ export class AgentConnectorManager {
                 catch (error) {
                     console.error("Error creating group:", error);
                 }
+            }
+            else {
+                // FUll debug fdor all teh parameters being checked above
+                console.log("agentClass", agentClass);
+                console.log("connectorClass.class_base_id", connectorClass.class_base_id);
+                console.log("PsYourPrioritiesConnector.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID", PsYourPrioritiesConnector.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID);
+                console.log("process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY", process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY);
+                console.log("agentClass.configuration.defaultStructuredQuestions", agentClass.configuration.defaultStructuredQuestions);
+                console.log("agent.configuration.answers", agent.configuration.answers);
             }
             return await PsAgentConnector.findByPk(newConnector.id, {
                 include: [
@@ -63,18 +74,36 @@ export class AgentConnectorManager {
     }
     async createYourPrioritiesGroupAndUpdateAgent(agent, agentClass) {
         try {
-            const group = (await this.createGroup(agent.group_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions));
-            if (!group) {
+            const agentGroup = (await Group.findByPk(agent.group_id, {
+                attributes: ["community_id"],
+            }));
+            if (!agentGroup) {
+                throw new Error("Group not found");
+            }
+            const newGroup = (await this.createGroup(agentGroup.community_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions));
+            if (!newGroup) {
                 throw new Error("Group creation failed");
             }
-            const answerIndex = agent.configuration.answers.findIndex((answer) => answer.uniqueId === "groupId");
-            if (answerIndex === undefined || answerIndex === -1) {
-                throw new Error("Answer with uniqueId 'groupId' not found");
+            // Initialize answers array if it doesn't exist
+            if (!agent.configuration.answers) {
+                agent.configuration.answers = [];
             }
-            agent.configuration.answers[answerIndex].value = group.id;
+            const groupIdAnswer = {
+                uniqueId: "groupId",
+                value: newGroup.id,
+            };
+            const answerIndex = agent.configuration.answers.findIndex((answer) => answer.uniqueId === "groupId");
+            if (answerIndex === -1) {
+                // Add new answer if it doesn't exist
+                agent.configuration.answers.push(groupIdAnswer);
+            }
+            else {
+                // Update existing answer
+                agent.configuration.answers[answerIndex] = groupIdAnswer;
+            }
             agent.changed("configuration", true);
             await agent.save();
-            return group;
+            return newGroup;
         }
         catch (error) {
             console.error("Error creating group and updating agent:", error);
@@ -167,7 +196,7 @@ export class AgentConnectorManager {
             .map(([key, value]) => encodeURIComponent(key) + "=" + encodeURIComponent(value))
             .join("&");
         try {
-            const response = await fetch(`/api/groups/${communityId}`, {
+            const response = await fetch(`${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api/groups/${communityId}`, {
                 method: "POST",
                 headers: {
                     ...this.getHeaders(),

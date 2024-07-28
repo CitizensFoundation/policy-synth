@@ -35,6 +35,9 @@ export class PsAgentClass
  declare removeUser: (user: User) => Promise<void>;
  declare removeUsers: (users: User[]) => Promise<void>;
 
+ declare hasUser: (user: User) => Promise<boolean>;
+ declare hasAdmin: (user: User) => Promise<boolean>;
+
  declare addAdmin: (user: User, obj?: any | undefined) => Promise<void>;
  declare addAdmins: (users: User[]) => Promise<void>;
  declare getAdmins: () => Promise<User[]>;
