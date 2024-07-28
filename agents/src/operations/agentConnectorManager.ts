@@ -76,7 +76,7 @@ export class AgentConnectorManager {
       ) {
         console.log(`Creating Your Priorities group for agent ${agent.id}`);
         try {
-          await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass);
+          await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, newConnector);
         } catch (error) {
           console.error("Error creating group:", error);
         }
@@ -120,7 +120,8 @@ export class AgentConnectorManager {
 
   async createYourPrioritiesGroupAndUpdateAgent(
     agent: PsAgent,
-    agentClass: PsAgentClass
+    agentClass: PsAgentClass,
+    agentConnector: PsAgentConnector
   ) {
     try {
       const agentGroup = (await Group.findByPk(agent.group_id, {
@@ -144,8 +145,8 @@ export class AgentConnectorManager {
       }
 
       // Initialize answers array if it doesn't exist
-      if (!agent.configuration.answers) {
-        agent.configuration.answers = [];
+      /*if (!agentConnector.configuration.answers) {
+        agentConnector.configuration.answers = [];
       }
 
       const groupIdAnswer: YpStructuredAnswer = {
@@ -153,20 +154,23 @@ export class AgentConnectorManager {
         value: newGroup.id,
       };
 
-      const answerIndex = agent.configuration.answers.findIndex(
+      const answerIndex = agentConnector.configuration.answers.findIndex(
         (answer) => answer.uniqueId === "groupId"
       );
 
       if (answerIndex === -1) {
         // Add new answer if it doesn't exist
-        agent.configuration.answers.push(groupIdAnswer);
+        agentConnector.configuration.answers.push(groupIdAnswer);
       } else {
         // Update existing answer
-        agent.configuration.answers[answerIndex] = groupIdAnswer;
-      }
+        agentConnector.configuration.answers[answerIndex] = groupIdAnswer;
+      }*/
+      //TODO: Fix this after fixing how answers are stored, all round
+      //@ts-ignore
+      agentConnector.configuration["groupId"] = newGroup.id;
 
-      agent.changed("configuration", true);
-      await agent.save();
+      agentConnector.changed("configuration", true);
+      await agentConnector.save();
 
       return newGroup;
     } catch (error) {

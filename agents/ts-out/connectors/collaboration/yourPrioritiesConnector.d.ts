@@ -11,6 +11,7 @@ export declare class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationC
     serverBaseUrl: string;
     sessionCookie?: string;
     user?: YpUserData;
+    agentFabricUserId?: number;
     constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
     login(): Promise<void>;
     getHeaders(): {

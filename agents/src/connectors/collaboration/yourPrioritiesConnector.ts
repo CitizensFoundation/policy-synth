@@ -85,6 +85,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
   serverBaseUrl: string;
   sessionCookie?: string;
   user?: YpUserData;
+  agentFabricUserId?: number;
 
   constructor(
     connector: PsAgentConnectorAttributes,
@@ -100,9 +101,25 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     this.password = this.getConfig("password", "");
     this.serverBaseUrl = this.getConfig("serverBaseUrl", "");
 
-    if (!this.userEmail || !this.password || !this.serverBaseUrl) {
-      throw new Error("Required configuration values are not set.");
+    const groupId = this.getConfig("groupId", "");
+
+    if (process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH) {
+      this.serverBaseUrl = `${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api`;
+      this.agentFabricUserId = agent.user_id;
     }
+
+    if (
+      !process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY &&
+      (!this.userEmail || !this.password || !this.serverBaseUrl)
+    ) {
+      throw new Error("Required configuration values are not set.");
+    } else if (!groupId || !this.serverBaseUrl) {
+      throw new Error("Group ID and serverBaseUrl is required.");
+    }
+
+    console.log(
+      `Your Priorities Connector created with group ID: ${groupId} serverBaseUrl: ${this.serverBaseUrl}`
+    );
   }
 
   // req.headers["x-api-key"] ===
@@ -170,7 +187,11 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
     try {
       const response = await axios.post(
-        `${this.serverBaseUrl}/posts/${postId}/endorse`,
+        `${this.serverBaseUrl}/posts/${postId}/endorse${
+          this.agentFabricUserId
+            ? `?agentFabricUserId=${this.agentFabricUserId}`
+            : ""
+        }`,
         votingData,
         {
           headers: this.getHeaders(),
@@ -213,7 +234,11 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       console.log("Posting data:", formData);
 
       const postResponse = await axios.post(
-        `${this.serverBaseUrl}/posts/${groupId}`,
+        `${this.serverBaseUrl}/posts/${groupId}${
+          this.agentFabricUserId
+            ? `?agentFabricUserId=${this.agentFabricUserId}`
+            : ""
+        }`,
         qs.stringify(formData),
         {
           headers: {

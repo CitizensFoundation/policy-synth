@@ -41,7 +41,7 @@ export class AgentConnectorManager {
                 agentClass.configuration.defaultStructuredQuestions) {
                 console.log(`Creating Your Priorities group for agent ${agent.id}`);
                 try {
-                    await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass);
+                    await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, newConnector);
                 }
                 catch (error) {
                     console.error("Error creating group:", error);
@@ -72,7 +72,7 @@ export class AgentConnectorManager {
             throw error;
         }
     }
-    async createYourPrioritiesGroupAndUpdateAgent(agent, agentClass) {
+    async createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, agentConnector) {
         try {
             const agentGroup = (await Group.findByPk(agent.group_id, {
                 attributes: ["community_id"],
@@ -85,24 +85,31 @@ export class AgentConnectorManager {
                 throw new Error("Group creation failed");
             }
             // Initialize answers array if it doesn't exist
-            if (!agent.configuration.answers) {
-                agent.configuration.answers = [];
+            /*if (!agentConnector.configuration.answers) {
+              agentConnector.configuration.answers = [];
             }
-            const groupIdAnswer = {
-                uniqueId: "groupId",
-                value: newGroup.id,
+      
+            const groupIdAnswer: YpStructuredAnswer = {
+              uniqueId: "groupId",
+              value: newGroup.id,
             };
-            const answerIndex = agent.configuration.answers.findIndex((answer) => answer.uniqueId === "groupId");
+      
+            const answerIndex = agentConnector.configuration.answers.findIndex(
+              (answer) => answer.uniqueId === "groupId"
+            );
+      
             if (answerIndex === -1) {
-                // Add new answer if it doesn't exist
-                agent.configuration.answers.push(groupIdAnswer);
-            }
-            else {
-                // Update existing answer
-                agent.configuration.answers[answerIndex] = groupIdAnswer;
-            }
-            agent.changed("configuration", true);
-            await agent.save();
+              // Add new answer if it doesn't exist
+              agentConnector.configuration.answers.push(groupIdAnswer);
+            } else {
+              // Update existing answer
+              agentConnector.configuration.answers[answerIndex] = groupIdAnswer;
+            }*/
+            //TODO: Fix this after fixing how answers are stored, all round
+            //@ts-ignore
+            agentConnector.configuration["groupId"] = newGroup.id;
+            agentConnector.changed("configuration", true);
+            await agentConnector.save();
             return newGroup;
         }
         catch (error) {
