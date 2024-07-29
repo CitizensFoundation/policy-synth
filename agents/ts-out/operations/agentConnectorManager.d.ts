@@ -5,7 +5,7 @@ export declare class AgentConnectorManager {
     getHeaders(): {
         [key: string]: string;
     };
-    createGroup(communityId: number, userId: number, name: string, description: string, structuredQuestions: any[]): Promise<unknown>;
+    createGroup(currentGroupId: number, communityId: number, userId: number, name: string, description: string, structuredQuestions: any[]): Promise<unknown>;
     updateConnectorConfiguration(connectorId: number, updatedConfig: Partial<PsAgentConnectorConfiguration>): Promise<void>;
 }
 //# sourceMappingURL=agentConnectorManager.d.ts.map

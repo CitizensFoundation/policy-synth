@@ -4,7 +4,7 @@ import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaboratio
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
-    static YOUR_PRIORITIES_CONNECTOR_VERSION = 3;
+    static YOUR_PRIORITIES_CONNECTOR_VERSION = 4;
     static baseQuestions = [
         {
             uniqueId: "name",

@@ -76,7 +76,11 @@ export class AgentConnectorManager {
       ) {
         console.log(`Creating Your Priorities group for agent ${agent.id}`);
         try {
-          await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, newConnector);
+          await this.createYourPrioritiesGroupAndUpdateAgent(
+            agent,
+            agentClass,
+            newConnector
+          );
         } catch (error) {
           console.error("Error creating group:", error);
         }
@@ -125,7 +129,7 @@ export class AgentConnectorManager {
   ) {
     try {
       const agentGroup = (await Group.findByPk(agent.group_id, {
-        attributes: ["community_id"],
+        attributes: ["community_id","id"],
       })) as YpGroupData;
 
       if (!agentGroup) {
@@ -133,6 +137,7 @@ export class AgentConnectorManager {
       }
 
       const newGroup = (await this.createGroup(
+        agentGroup.id,
         agentGroup.community_id!,
         agent.user_id,
         agent.configuration.name,
@@ -190,6 +195,7 @@ export class AgentConnectorManager {
   }
 
   async createGroup(
+    currentGroupId: number,
     communityId: number,
     userId: number,
     name: string,
@@ -277,7 +283,7 @@ export class AgentConnectorManager {
 
     try {
       const response = await fetch(
-        `${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api/groups/${communityId}?agentFabricUserId=${userId}`,
+        `${process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH}/api/groups/${communityId}?agentFabricUserId=${userId}&agentFabricGroupId=${currentGroupId}`,
         {
           method: "POST",
           headers: {
