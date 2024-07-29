@@ -1,12 +1,12 @@
 # AgentManager
 
-The `AgentManager` class provides methods to manage agents, including creating, updating, and retrieving agents and their configurations. It interacts with various database models such as `PsAgent`, `PsAgentClass`, `PsAiModel`, and others.
+The `AgentManager` class provides methods to manage agents, including creating, updating, and fetching agents and their configurations. It interacts with various database models such as `PsAgent`, `PsAgentClass`, `PsAiModel`, and others.
 
 ## Methods
 
 ### getAgent
 
-Retrieves an agent by its group ID. If the top-level agent does not exist, it creates one.
+Fetches an agent by group ID. If the top-level agent does not exist, it creates one.
 
 ```typescript
 async getAgent(groupId: string): Promise<PsAgent>
@@ -16,20 +16,22 @@ async getAgent(groupId: string): Promise<PsAgent>
   - `groupId` (string): The ID of the group.
 
 - **Returns:** 
-  - `Promise<PsAgent>`: The agent with its sub-agents and connectors.
+  - `Promise<PsAgent>`: The top-level agent with its sub-agents.
 
 - **Throws:**
   - `Error`: If the group ID is not provided or the group is not found.
 
 ### createAgent
 
-Creates a new agent with the specified class and AI models.
+Creates a new agent with the specified parameters.
 
 ```typescript
 async createAgent(
   name: string,
   agentClassId: number,
   aiModels: Record<string, number | string>,
+  groupId: number,
+  userId: number,
   parentAgentId?: number
 ): Promise<PsAgent>
 ```
@@ -38,13 +40,15 @@ async createAgent(
   - `name` (string): The name of the agent.
   - `agentClassId` (number): The ID of the agent class.
   - `aiModels` (Record<string, number | string>): A record of AI model sizes and their IDs.
+  - `groupId` (number): The ID of the group.
+  - `userId` (number): The ID of the user.
   - `parentAgentId` (number, optional): The ID of the parent agent.
 
 - **Returns:** 
   - `Promise<PsAgent>`: The created agent with its associations.
 
 - **Throws:**
-  - `Error`: If the agent class ID or AI models are invalid or not found.
+  - `Error`: If the agent class ID or AI models are not provided or invalid.
 
 ### updateAgentConfiguration
 
@@ -87,7 +91,7 @@ async removeAgentAiModel(agentId: number, modelId: number): Promise<void>
 
 ### getAgentAiModels
 
-Retrieves the AI models associated with an agent.
+Fetches the AI models associated with an agent.
 
 ```typescript
 async getAgentAiModels(agentId: number): Promise<PsAiModel[]>
@@ -97,7 +101,7 @@ async getAgentAiModels(agentId: number): Promise<PsAiModel[]>
   - `agentId` (number): The ID of the agent.
 
 - **Returns:** 
-  - `Promise<PsAiModel[]>`: The list of AI models associated with the agent.
+  - `Promise<PsAiModel[]>`: The AI models associated with the agent.
 
 - **Throws:**
   - `Error`: If the agent is not found.
@@ -126,7 +130,7 @@ async addAgentAiModel(agentId: number, modelId: number, size: string): Promise<v
 Creates a top-level agent for a group.
 
 ```typescript
-private async createTopLevelAgent(group: Group): Promise<PsAgent>
+async createTopLevelAgent(group: Group): Promise<PsAgent>
 ```
 
 - **Parameters:**
@@ -140,10 +144,10 @@ private async createTopLevelAgent(group: Group): Promise<PsAgent>
 
 ### fetchAgentWithSubAgents
 
-Fetches an agent along with its sub-agents and connectors.
+Fetches an agent along with its sub-agents and their connectors.
 
 ```typescript
-private async fetchAgentWithSubAgents(agentId: number): Promise<PsAgent>
+async fetchAgentWithSubAgents(agentId: number): Promise<PsAgent>
 ```
 
 - **Parameters:**
@@ -168,29 +172,9 @@ agentManager.getAgent('group-id-123')
   .catch(error => console.error(error));
 
 // Example usage: Create a new agent
-agentManager.createAgent('New Agent', 1, { small: 1, large: 2 })
+agentManager.createAgent('New Agent', 1, { small: 1, large: 2 }, 1, 1)
   .then(agent => console.log(agent))
-  .catch(error => console.error(error));
-
-// Example usage: Update agent configuration
-agentManager.updateAgentConfiguration(1, { topLevelAgentId: 2 })
-  .then(() => console.log('Configuration updated'))
-  .catch(error => console.error(error));
-
-// Example usage: Remove an AI model from an agent
-agentManager.removeAgentAiModel(1, 2)
-  .then(() => console.log('AI model removed'))
-  .catch(error => console.error(error));
-
-// Example usage: Get AI models of an agent
-agentManager.getAgentAiModels(1)
-  .then(models => console.log(models))
-  .catch(error => console.error(error));
-
-// Example usage: Add an AI model to an agent
-agentManager.addAgentAiModel(1, 2, 'medium')
-  .then(() => console.log('AI model added'))
   .catch(error => console.error(error));
 ```
 
-This documentation provides a comprehensive overview of the `AgentManager` class, its methods, and example usage.
+This documentation provides a detailed overview of the `AgentManager` class, its methods, and example usage.

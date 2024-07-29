@@ -1,5 +1,6 @@
 # Policy Agents API Documentation
 
+- [agentCategories](src/src/agentCategories.md)
 - [aiModelTypes](src/src/aiModelTypes.md)
 - aiModels
   - [azureOpenAiChat](src/aiModels/azureOpenAiChat.md)
@@ -86,6 +87,7 @@
       - [destroyRagChunk](src/rag/vectorstore/tools/destroyRagChunk.md)
       - [destroyRagDocument](src/rag/vectorstore/tools/destroyRagDocument.md)
 - tools
+  - [addUserToAgentClass](src/tools/addUserToAgentClass.md)
   - [generateDocumentation](src/tools/generateDocumentation.md)
   - [seedAiModels](src/tools/seedAiModels.md)
   - [seedDbTestClasses](src/tools/seedDbTestClasses.md)

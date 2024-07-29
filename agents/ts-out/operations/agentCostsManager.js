@@ -1,6 +1,52 @@
 import { QueryTypes } from "sequelize";
 import { sequelize } from "../dbModels/index.js";
 export class AgentCostManager {
+    async getDetailedAgentCosts(agentId) {
+        try {
+            const results = await sequelize.query(`
+        WITH RECURSIVE agent_hierarchy AS (
+          SELECT id, parent_agent_id, name
+          FROM ps_agents
+          WHERE id = :agentId
+          UNION ALL
+          SELECT a.id, a.parent_agent_id, a.name
+          FROM ps_agents a
+          JOIN agent_hierarchy ah ON a.parent_agent_id = ah.id
+        )
+        SELECT
+          mu.created_at,
+          ah.name as agent_name,
+          am.name as ai_model_name,
+          mu.token_in_count,
+          mu.token_out_count,
+          (mu.token_in_count * CAST(am.configuration#>>'{prices,costInTokensPerMillion}' AS FLOAT) / 1000000.0) as cost_in,
+          (mu.token_out_count * CAST(am.configuration#>>'{prices,costOutTokensPerMillion}' AS FLOAT) / 1000000.0) as cost_out,
+          ((mu.token_in_count * CAST(am.configuration#>>'{prices,costInTokensPerMillion}' AS FLOAT) +
+            mu.token_out_count * CAST(am.configuration#>>'{prices,costOutTokensPerMillion}' AS FLOAT)) / 1000000.0) as total_cost
+        FROM agent_hierarchy ah
+        JOIN "AgentModels" am_join ON ah.id = am_join.agent_id
+        JOIN ps_ai_models am ON am_join.ai_model_id = am.id
+        JOIN ps_model_usage mu ON mu.model_id = am.id AND mu.agent_id = ah.id
+        ORDER BY mu.created_at DESC
+      `, {
+                replacements: { agentId },
+                type: QueryTypes.SELECT,
+            });
+            return results.map((row) => ({
+                createdAt: row.created_at,
+                agentName: row.agent_name,
+                aiModelName: row.ai_model_name,
+                tokenInCount: parseInt(row.token_in_count),
+                tokenOutCount: parseInt(row.token_out_count),
+                costIn: parseFloat(row.cost_in),
+                costOut: parseFloat(row.cost_out),
+                totalCost: parseFloat(row.total_cost)
+            }));
+        }
+        catch (error) {
+            throw new Error("Error calculating detailed agent costs: " + error);
+        }
+    }
     async getAgentCosts(agentId) {
         try {
             const results = await sequelize.query(`

@@ -1,6 +1,6 @@
 # Group
 
-The `Group` class represents a group entity in the database. It extends the Sequelize `Model` class and implements the `YpGroupData` interface.
+The `Group` class represents a group within the system, extending the Sequelize `Model` class. It implements the `YpGroupData` interface and includes properties and methods for managing group data.
 
 ## Properties
 
@@ -9,23 +9,15 @@ The `Group` class represents a group entity in the database. It extends the Sequ
 | id                          | number                              | The unique identifier for the group.             |
 | name                        | string                              | The name of the group.                           |
 | user_id                     | number                              | The ID of the user who created the group.        |
+| community_id                | number                              | The ID of the community to which the group belongs. |
 | created_at                  | Date                                | The date and time when the group was created.    |
-| updated_at                  | Date                                | The date and time when the group was last updated.|
-| private_access_configuration| YpGroupPrivateAccessConfiguration[]| The private access configuration for the group.  |
-| configuration               | YpGroupConfiguration                | The configuration settings for the group.        |
+| updated_at                  | Date                                | The date and time when the group was last updated. |
+| private_access_configuration| YpGroupPrivateAccessConfiguration[] | Configuration for private access to the group.   |
+| configuration               | YpGroupConfiguration                | Configuration settings for the group.            |
 
 ## Methods
 
-The `Group` class inherits methods from the Sequelize `Model` class. These methods include, but are not limited to:
-
-| Name       | Parameters        | Return Type | Description                 |
-|------------|-------------------|-------------|-----------------------------|
-| init       | attributes: object, options: object | void        | Initializes the model with attributes and options. |
-| findAll    | options?: object  | Promise<Array<Group>> | Finds all instances that match the options. |
-| findOne    | options?: object  | Promise<Group \| null> | Finds one instance that matches the options. |
-| create     | values: object, options?: object | Promise<Group> | Creates a new instance with the given values. |
-| update     | values: object, options?: object | Promise<[number, Group[]]> | Updates instances that match the options. |
-| destroy    | options?: object  | Promise<number> | Deletes instances that match the options. |
+The `Group` class inherits methods from the Sequelize `Model` class for interacting with the database, such as `create`, `update`, `destroy`, and `find`.
 
 ## Example
 
@@ -37,23 +29,72 @@ async function createGroup() {
   const newGroup = await Group.create({
     name: "New Group",
     user_id: 1,
-    configuration: {
-      theme: {
-        primaryColor: "#0000FF",
-      },
-      hideAllTabs: true,
-    },
-    private_access_configuration: [
-      {
-        apiKey: "exampleApiKey",
-      },
-    ],
+    community_id: 1,
+    private_access_configuration: [],
+    configuration: {}
   });
 
-  console.log("Group created:", newGroup);
+  console.log(newGroup);
 }
 
 createGroup();
 ```
 
-This example demonstrates how to create a new group using the `Group` model. The `create` method is used to insert a new record into the database with the specified attributes.
+## Sequelize Initialization
+
+The `Group` model is initialized with the following schema:
+
+```typescript
+Group.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    community_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    updated_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    configuration: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+    },
+    private_access_configuration: {
+      type: DataTypes.JSONB,
+      allowNull: false,
+    },
+  },
+  {
+    sequelize,
+    tableName: "groups",
+    indexes: [
+      {
+        fields: ["user_id"],
+      },
+    ],
+    timestamps: true,
+    underscored: true,
+  }
+);
+```
+
+This schema defines the structure of the `groups` table in the database, including the data types and constraints for each column. The model also includes an index on the `user_id` field for optimized queries.

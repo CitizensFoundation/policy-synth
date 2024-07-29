@@ -4,20 +4,20 @@ The `PsRateLimitManager` class is responsible for managing rate limits for diffe
 
 ## Properties
 
-| Name       | Type                    | Description                        |
-|------------|-------------------------|------------------------------------|
-| rateLimits | PsModelRateLimitTracking | Tracks rate limits for different models. |
+| Name       | Type                    | Description                                      |
+|------------|-------------------------|--------------------------------------------------|
+| rateLimits | PsModelRateLimitTracking | Tracks the rate limits for different models.     |
 
 ## Methods
 
-| Name             | Parameters                          | Return Type | Description                                                                 |
-|------------------|-------------------------------------|-------------|-----------------------------------------------------------------------------|
-| updateRateLimits | model: any, tokensToAdd: number     | Promise<void> | Updates the rate limits for a given model by adding request timestamps and token entries. |
-| checkRateLimits  | model: any, tokensToAdd: number     | Promise<void> | Checks the rate limits for a given model and enforces limits by sleeping if necessary. |
-| addRequestTimestamp | model: any                      | void        | Adds a timestamp for a request to the rate limits of a given model.         |
-| addTokenEntry    | model: any, tokensToAdd: number     | void        | Adds a token entry to the rate limits of a given model.                     |
-| slideWindowForRequests | model: any                    | void        | Slides the window for requests to remove old entries outside the time window. |
-| slideWindowForTokens | model: any                      | void        | Slides the window for tokens to remove old entries outside the time window. |
+| Name              | Parameters                                      | Return Type | Description                                                                 |
+|-------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| updateRateLimits  | model: any, tokensToAdd: number                 | Promise<void> | Updates the rate limits for a given model by adding request timestamps and token entries. |
+| checkRateLimits   | model: any, tokensToAdd: number                 | Promise<void> | Checks the rate limits for a given model and enforces limits by sleeping if necessary. |
+| addRequestTimestamp | model: any                                    | void        | Adds a request timestamp for a given model.                                 |
+| addTokenEntry     | model: any, tokensToAdd: number                 | void        | Adds a token entry for a given model.                                       |
+| slideWindowForRequests | model: any                                 | void        | Slides the window for requests to remove old entries outside the time window. |
+| slideWindowForTokens | model: any                                   | void        | Slides the window for tokens to remove old entries outside the time window. |
 
 ## Example
 
@@ -30,7 +30,7 @@ const rateLimitManager = new PsRateLimitManager();
 const model = {
   name: 'exampleModel',
   limitRPM: 60, // Requests per minute
-  limitTPM: 1000, // Tokens per minute
+  limitTPM: 1000 // Tokens per minute
 };
 
 // Update rate limits
@@ -42,7 +42,7 @@ await rateLimitManager.checkRateLimits(model, 50);
 
 ## Detailed Method Descriptions
 
-### `updateRateLimits`
+### updateRateLimits
 
 ```typescript
 async updateRateLimits(model: any, tokensToAdd: number): Promise<void>
@@ -54,7 +54,7 @@ Updates the rate limits for a given model by adding request timestamps and token
   - `model`: The model object containing rate limit information.
   - `tokensToAdd`: The number of tokens to add to the rate limit tracking.
 
-### `checkRateLimits`
+### checkRateLimits
 
 ```typescript
 async checkRateLimits(model: any, tokensToAdd: number): Promise<void>
@@ -66,33 +66,33 @@ Checks the rate limits for a given model and enforces limits by sleeping if nece
   - `model`: The model object containing rate limit information.
   - `tokensToAdd`: The number of tokens to add to the rate limit tracking.
 
-### `addRequestTimestamp`
+### addRequestTimestamp
 
 ```typescript
-private addRequestTimestamp(model: any): void
+addRequestTimestamp(model: any): void
 ```
 
-Adds a timestamp for a request to the rate limits of a given model.
+Adds a request timestamp for a given model.
 
 - **Parameters:**
   - `model`: The model object containing rate limit information.
 
-### `addTokenEntry`
+### addTokenEntry
 
 ```typescript
-private addTokenEntry(model: any, tokensToAdd: number): void
+addTokenEntry(model: any, tokensToAdd: number): void
 ```
 
-Adds a token entry to the rate limits of a given model.
+Adds a token entry for a given model.
 
 - **Parameters:**
   - `model`: The model object containing rate limit information.
   - `tokensToAdd`: The number of tokens to add to the rate limit tracking.
 
-### `slideWindowForRequests`
+### slideWindowForRequests
 
 ```typescript
-private slideWindowForRequests(model: any): void
+slideWindowForRequests(model: any): void
 ```
 
 Slides the window for requests to remove old entries outside the time window.
@@ -100,14 +100,13 @@ Slides the window for requests to remove old entries outside the time window.
 - **Parameters:**
   - `model`: The model object containing rate limit information.
 
-### `slideWindowForTokens`
+### slideWindowForTokens
 
 ```typescript
-private slideWindowForTokens(model: any): void
+slideWindowForTokens(model: any): void
 ```
 
 Slides the window for tokens to remove old entries outside the time window.
 
 - **Parameters:**
   - `model`: The model object containing rate limit information.
-```

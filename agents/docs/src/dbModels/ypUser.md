@@ -1,6 +1,6 @@
-# User Class
+# User
 
-The `User` class represents a user in the system and extends the Sequelize `Model` class. It implements the `YpUserData` interface, which defines the attributes of a user.
+The `User` class represents a user in the system. It includes properties such as `id`, `name`, `email`, `created_at`, and `updated_at`. This class is implemented using Sequelize, an ORM for Node.js.
 
 ## Properties
 
@@ -12,34 +12,13 @@ The `User` class represents a user in the system and extends the Sequelize `Mode
 | created_at  | Date   | The date and time when the user was created. |
 | updated_at  | Date   | The date and time when the user was last updated. |
 
-## Example
+## Methods
+
+### init
+
+Initializes the `User` model with its attributes and options.
 
 ```typescript
-import { DataTypes, Model, Optional } from "sequelize";
-import { sequelize } from "./sequelize.js";
-
-interface YpUserDataAttributes {
-  id: number;
-  name: string;
-  email: string;
-}
-
-interface YpUserDataCreationAttributes
-  extends Optional<YpUserData, "id" | "created_at" | "updated_at"> {}
-
-export class User
-  extends Model<YpUserData, YpUserDataCreationAttributes>
-  implements YpUserData
-{
-  declare id: number;
-  declare name: string;
-  declare email: string;
-
-  // timestamps!
-  declare created_at: Date;
-  declare updated_at: Date;
-}
-
 User.init(
   {
     id: {
@@ -81,4 +60,41 @@ User.init(
 );
 ```
 
-This example demonstrates how to define and initialize the `User` class using Sequelize. The class includes properties for the user's ID, name, email, creation date, and last update date. The `init` method is used to configure the model, including setting up the table name, indexes, and other options.
+### associate
+
+Defines the associations for the `User` model. A user can belong to many `PsAgentClass` models through the `AgentClassUsers` and `AgentClassAdmins` join tables.
+
+```typescript
+(User as any).associate = (models: any) => {
+  User.belongsToMany(models.PsAgentClass, {
+    through: "AgentClassUsers",
+    foreignKey: "user_id",
+    otherKey: "agent_class_id",
+    as: "AgentClassesAsUser",
+  });
+
+  User.belongsToMany(models.PsAgentClass, {
+    through: "AgentClassAdmins",
+    foreignKey: "user_id",
+    otherKey: "agent_class_id",
+    as: "AgentClassesAsAdmin",
+  });
+};
+```
+
+## Example
+
+```typescript
+import { User } from '@policysynth/agents/dbModels/ypUser.js';
+
+// Example usage of User model
+const newUser = User.build({
+  name: "John Doe",
+  email: "john.doe@example.com",
+});
+
+await newUser.save();
+console.log("User created:", newUser);
+```
+
+This example demonstrates how to create a new user instance and save it to the database using the `User` model.

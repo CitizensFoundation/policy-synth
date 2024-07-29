@@ -1,21 +1,21 @@
 # PsGoogleDocsConnector
 
-The `PsGoogleDocsConnector` class is a connector for Google Docs, allowing interaction with Google Docs documents through the Google Docs API. It extends the `PsBaseDocumentConnector` class and provides methods to get and update Google Docs documents.
+The `PsGoogleDocsConnector` class is a connector for Google Docs, allowing interaction with Google Docs through the Google Docs API. It extends the `PsBaseDocumentConnector` class and provides methods to get and update documents.
 
 ## Properties
 
-| Name        | Type                | Description                                                                 |
-|-------------|---------------------|-----------------------------------------------------------------------------|
-| client      | JWT                 | The JWT client used for authentication with Google APIs.                    |
-| docs        | docs_v1.Docs        | The Google Docs API instance.                                               |
+| Name          | Type                | Description                                      |
+|---------------|---------------------|--------------------------------------------------|
+| client        | JWT                 | JWT client for authentication with Google APIs.  |
+| docs          | docs_v1.Docs        | Google Docs API instance.                        |
 
 ## Static Properties
 
-| Name                                | Type                              | Description                                                                 |
-|-------------------------------------|-----------------------------------|-----------------------------------------------------------------------------|
-| GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID | string                            | The base ID for the Google Docs connector class.                            |
-| GOOGLE_DOCS_CONNECTOR_VERSION       | number                            | The version of the Google Docs connector class.                             |
-| getConnectorClass                   | PsConnectorClassCreationAttributes | The configuration for the Google Docs connector class.                      |
+| Name                                | Type                                      | Description                                      |
+|-------------------------------------|-------------------------------------------|--------------------------------------------------|
+| GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID | string                                    | Base ID for the Google Docs connector class.     |
+| GOOGLE_DOCS_CONNECTOR_VERSION       | number                                    | Version of the Google Docs connector class.      |
+| getConnectorClass                   | PsAgentConnectorClassCreationAttributes   | Configuration for the Google Docs connector class.|
 
 ## Constructor
 
@@ -32,12 +32,14 @@ constructor(
 
 ### Parameters
 
-- `connector`: `PsAgentConnectorAttributes` - The attributes of the agent connector.
-- `connectorClass`: `PsAgentConnectorClassAttributes` - The attributes of the agent connector class.
-- `agent`: `PsAgent` - The agent instance.
-- `memory`: `PsAgentMemoryData | undefined` - The memory data for the agent (optional).
-- `startProgress`: `number` - The starting progress value (default is 0).
-- `endProgress`: `number` - The ending progress value (default is 100).
+| Name           | Type                                | Description                                                                 |
+|----------------|-------------------------------------|-----------------------------------------------------------------------------|
+| connector      | PsAgentConnectorAttributes          | Attributes of the agent connector.                                          |
+| connectorClass | PsAgentConnectorClassAttributes     | Attributes of the agent connector class.                                    |
+| agent          | PsAgent                             | The agent associated with this connector.                                   |
+| memory         | PsAgentMemoryData \| undefined      | Memory data for the agent.                                                  |
+| startProgress  | number                              | Initial progress value. Default is 0.                                       |
+| endProgress    | number                              | Final progress value. Default is 100.                                       |
 
 ## Methods
 
@@ -47,11 +49,7 @@ constructor(
 async getDocument(): Promise<string>
 ```
 
-Fetches the content of the Google Docs document specified in the configuration.
-
-### Returns
-
-- `Promise<string>` - The content of the Google Docs document as a string.
+Fetches the content of the Google Doc specified by the `googleDocsId` configuration.
 
 ### updateDocument
 
@@ -59,47 +57,23 @@ Fetches the content of the Google Docs document specified in the configuration.
 async updateDocument(doc: string): Promise<void>
 ```
 
-Updates the content of the Google Docs document specified in the configuration.
-
-### Parameters
-
-- `doc`: `string` - The new content to be updated in the Google Docs document.
-
-### Returns
-
-- `Promise<void>`
+Updates the content of the Google Doc specified by the `googleDocsId` configuration.
 
 ### getData
 
 ```typescript
-private async getData(documentId: string): Promise<docs_v1.Schema$Document>
+async getData(documentId: string): Promise<docs_v1.Schema$Document>
 ```
 
-Fetches the data of the Google Docs document by its ID.
-
-### Parameters
-
-- `documentId`: `string` - The ID of the Google Docs document.
-
-### Returns
-
-- `Promise<docs_v1.Schema$Document>` - The data of the Google Docs document.
+Fetches the data of the Google Doc specified by the `documentId`.
 
 ### extractText
 
 ```typescript
-private extractText(content: docs_v1.Schema$StructuralElement[]): string
+extractText(content: docs_v1.Schema$StructuralElement[]): string
 ```
 
-Extracts text content from the structural elements of a Google Docs document.
-
-### Parameters
-
-- `content`: `docs_v1.Schema$StructuralElement[]` - The structural elements of the Google Docs document.
-
-### Returns
-
-- `string` - The extracted text content.
+Extracts text from the structural elements of a Google Doc.
 
 ### getExtraConfigurationQuestions
 
@@ -107,11 +81,7 @@ Extracts text content from the structural elements of a Google Docs document.
 static getExtraConfigurationQuestions(): YpStructuredQuestionData[]
 ```
 
-Provides additional configuration questions for the Google Docs connector.
-
-### Returns
-
-- `YpStructuredQuestionData[]` - An array of structured question data for additional configuration.
+Returns additional configuration questions required for the Google Docs connector.
 
 ## Example
 
@@ -127,22 +97,17 @@ const connectorClassAttributes = {
 };
 
 const agent = {
-  // ...agent instance
-};
-
-const memory = {
-  // ...memory data
+  // ...agent attributes
 };
 
 const googleDocsConnector = new PsGoogleDocsConnector(
   connectorAttributes,
   connectorClassAttributes,
-  agent,
-  memory
+  agent
 );
 
-googleDocsConnector.getDocument().then((content) => {
-  console.log("Document Content:", content);
+googleDocsConnector.getDocument().then((docContent) => {
+  console.log("Document Content:", docContent);
 });
 
 googleDocsConnector.updateDocument("New content for the document").then(() => {
@@ -150,4 +115,4 @@ googleDocsConnector.updateDocument("New content for the document").then(() => {
 });
 ```
 
-This example demonstrates how to create an instance of `PsGoogleDocsConnector`, fetch the content of a Google Docs document, and update the document with new content.
+This documentation provides an overview of the `PsGoogleDocsConnector` class, its properties, methods, and an example of how to use it.
