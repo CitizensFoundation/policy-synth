@@ -1,26 +1,10 @@
 import { QueryTypes } from "sequelize";
 import { sequelize } from "../dbModels/index.js";
 
-interface AgentCost {
-  agentCosts: object;
-  totalCost: string;
-}
-
-interface DetailedAgentCost {
-  createdAt: Date;
-  agentName: string;
-  aiModelName: string;
-  tokenInCount: number;
-  tokenOutCount: number;
-  costIn: number;
-  costOut: number;
-  totalCost: number;
-}
-
 export class AgentCostManager {
   public async getDetailedAgentCosts(
     agentId: number
-  ): Promise<DetailedAgentCost[]> {
+  ): Promise<PsDetailedAgentCostResults[]> {
     try {
       const results = await sequelize.query(
         `
@@ -72,7 +56,7 @@ export class AgentCostManager {
 
   public async getAgentCosts(
     agentId: number
-  ): Promise<AgentCost> {
+  ): Promise<PsAgentCostResults> {
 
     try {
       const results = await sequelize.query(
@@ -116,7 +100,7 @@ export class AgentCostManager {
         .reduce((sum, agent) => sum + parseFloat(agent.cost), 0)
         .toFixed(2);
 
-      return { agentCosts, totalCost } as AgentCost;
+      return { agentCosts, totalCost } as PsAgentCostResults;
     } catch (error) {
       throw Error("Error calculating agent costs: " + error);
     }

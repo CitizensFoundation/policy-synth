@@ -334,6 +334,22 @@ type PsAgentConnectorClassCreationAttributes = Omit<
   "id" | "uuid" | "created_at" | "updated_at"
 >;
 
+interface PsAgentCostResults {
+  agentCosts: object;
+  totalCost: string;
+}
+
+interface PsDetailedAgentCostResults {
+  createdAt: Date;
+  agentName: string;
+  aiModelName: string;
+  tokenInCount: number;
+  tokenOutCount: number;
+  costIn: number;
+  costOut: number;
+  totalCost: number;
+}
+
 /* Examples of structured questions for agent classes (for AI programmers)
 
 "googleDocsQuestions": [
