@@ -1,7 +1,7 @@
 # Policy Agents API Documentation
 
-- [agentCategories](src/agentCategories.md)
-- [aiModelTypes](src/aiModelTypes.md)
+- [agentCategories](src/src/agentCategories.md)
+- [aiModelTypes](src/src/aiModelTypes.md)
 - aiModels
   - [azureOpenAiChat](src/aiModels/azureOpenAiChat.md)
   - [baseChatModel](src/aiModels/baseChatModel.md)
@@ -20,7 +20,7 @@
   - [agentRunner](src/base/agentRunner.md)
   - [simpleAgent](src/base/simpleAgent.md)
   - [simplePairwiseRanking](src/base/simplePairwiseRanking.md)
-- [connectorTypes](src/connectorTypes.md)
+- [connectorTypes](src/src/connectorTypes.md)
 - connectors
   - base
     - [baseCollaborationConnector](src/connectors/base/baseCollaborationConnector.md)
@@ -40,7 +40,7 @@
     - [discordConnector](src/connectors/notifications/discordConnector.md)
   - sheets
     - [googleSheetsConnector](src/connectors/sheets/googleSheetsConnector.md)
-- [constants](src/constants.md)
+- [constants](src/src/constants.md)
 - dbModels
   - [agent](src/dbModels/agent.md)
   - [agentAuditLog](src/dbModels/agentAuditLog.md)
@@ -64,7 +64,7 @@
   - [agentManager](src/operations/agentManager.md)
   - [agentQueueManager](src/operations/agentQueueManager.md)
   - [agentRegistryManager](src/operations/agentRegistryManager.md)
-- [queue](src/queue.md)
+- [queue](src/src/queue.md)
 - rag
   - ingestion
     - [baseAgent](src/rag/ingestion/baseAgent.md)

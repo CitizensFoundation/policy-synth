@@ -2,7 +2,7 @@ import { PsClassScAgentType } from "./agentTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "./scBaseAgent.js";
 export class SolutionsWebResearchSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingAgent {
     static SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_BASE_ID = "c155d8f1-5efa-cb1d-8526-7d48a341f163";
-    static SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_VERSION = 1;
+    static SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_VERSION = 2;
     static getAgentClass() {
         return {
             class_base_id: this.SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_BASE_ID,

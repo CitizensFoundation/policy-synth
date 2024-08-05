@@ -41,9 +41,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
             throw new Error("Agent not found and required environment variables not set");
         }
         if (!this.skipAiModels) {
-            this.modelManager = new PsAiModelManager(
-            //agent ? agent.AiModels! : undefined,
-            agent.AiModels || [], agent
+            this.modelManager = new PsAiModelManager(agent.AiModels || [], agent
                 ? agent.Group?.private_access_configuration || []
                 : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, agent ? agent.id : -1, agent ? agent.user_id : -1);
         }

@@ -7,7 +7,7 @@ export abstract class RootCausesSmarterCrowdsourcingAgent extends BaseSmarterCro
   private static readonly ROOT_CAUSES_AGENT_CLASS_BASE_ID =
     "9c917a3e-9864-4e5c-abfc-19f638ac5bd5";
 
-  private static readonly ROOT_CAUSES_AGENT_CLASS_VERSION = 1;
+  private static readonly ROOT_CAUSES_AGENT_CLASS_VERSION = 2;
 
   static getAgentClass(): PsAgentClassCreationAttributes {
     return {

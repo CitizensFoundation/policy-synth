@@ -176,7 +176,7 @@ interface PsModelTokenUsage {
 }
 
 interface PsAgentClassAttributesConfiguration {
-  category: import("./agentCategories.js").PsAgentClassTypes;
+  category: import("./agentCategories.js").PsAgentClassCategories;
   subCategory: string;
   description: string;
   queueName: string;
@@ -292,8 +292,8 @@ interface PsAgentConnectorClassAttributes extends PsBaseModelClass {
   version: number;
   available: boolean;
   configuration: PsAgentConnectorConfiguration;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 type PsAgentConnectorPermissionTypes = "read" | "write" | "readWrite" | "admin";

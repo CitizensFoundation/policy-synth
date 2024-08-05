@@ -18,7 +18,7 @@ import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/g
 
 export class SmarterCrowdsourcingAgentRunner extends PsBaseAgentRunner {
   protected agentClasses: PsAgentClassCreationAttributes[];
-  protected connectorClasses: PsConnectorClassCreationAttributes[];
+  protected connectorClasses: PsAgentConnectorClassCreationAttributes[];
 
   constructor() {
     super();

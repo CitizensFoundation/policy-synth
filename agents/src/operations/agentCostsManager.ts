@@ -9,17 +9,18 @@ export class AgentCostManager {
       const results = await sequelize.query(
         `
         WITH RECURSIVE agent_hierarchy AS (
-          SELECT id, parent_agent_id, name
+          SELECT id, parent_agent_id, configuration->>'name' as agent_name
           FROM ps_agents
           WHERE id = :agentId
           UNION ALL
-          SELECT a.id, a.parent_agent_id, a.name
+          SELECT a.id, a.parent_agent_id, a.configuration->>'name' as agent_name
           FROM ps_agents a
           JOIN agent_hierarchy ah ON a.parent_agent_id = ah.id
         )
         SELECT
           mu.created_at,
-          ah.name as agent_name,
+          ah.id as agent_id,
+          ah.agent_name,
           am.name as ai_model_name,
           mu.token_in_count,
           mu.token_out_count,
@@ -41,7 +42,8 @@ export class AgentCostManager {
 
       return results.map((row: any) => ({
         createdAt: row.created_at,
-        agentName: row.agent_name,
+        agentId: row.agent_id,
+        agentName: row.agent_name,  // Now including the agent name
         aiModelName: row.ai_model_name,
         tokenInCount: parseInt(row.token_in_count),
         tokenOutCount: parseInt(row.token_out_count),

@@ -64,7 +64,6 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
     if (!this.skipAiModels) {
       this.modelManager = new PsAiModelManager(
-        //agent ? agent.AiModels! : undefined,
         agent.AiModels || [],
         agent
           ? agent.Group?.private_access_configuration || []

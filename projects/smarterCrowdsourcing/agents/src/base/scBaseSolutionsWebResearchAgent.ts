@@ -7,7 +7,7 @@ export abstract class SolutionsWebResearchSmarterCrowdsourcingAgent extends Base
   private static readonly SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_BASE_ID =
     "c155d8f1-5efa-cb1d-8526-7d48a341f163";
 
-  private static readonly SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_VERSION = 1;
+  private static readonly SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_VERSION = 2;
 
   static getAgentClass(): PsAgentClassCreationAttributes {
     return {

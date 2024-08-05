@@ -109,7 +109,7 @@ function generateMarkdownFromTree(tree, depth = 0, basePath = 'src/') {
         }
         else if (item.type === 'file') {
             // Prepend 'src/' to the basePath for files at the root, and adjust for subdirectories
-            const relativePath = `src/${basePath}${item.path}`;
+            const relativePath = `src/${basePath}${item.path}`.replace(/^src\/src\//, 'src/');
             markdown += `${indent}- [${item.name.replace('.md', '')}](${relativePath})\n`;
         }
     });

@@ -176,7 +176,7 @@ export class AgentConnectorManager {
             customBackURL: "",
             customBackName: "",
             optionalSortOrder: "",
-            hideAllTabs: "1",
+            hideAllTabs: "0",
             actAsLinkToCommunityId: "",
             maxDaysBackForRecommendations: "",
             customUserNamePrompt: "",

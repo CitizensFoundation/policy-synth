@@ -4,18 +4,28 @@
   "author": "Citizens Foundation & GovLab",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/sdk/projects/ecasEric"
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/projects/smarterCrowdsouring"
   },
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@policysynth/agents": "^1.3.9",
+    "@policysynth/agents": "^1.3.27",
     "@yrpri/webapp": "^9.0.44",
     "discord.js": "^14.15.2",
     "google-auth-library": "^9.10.0",
     "googleapis": "^126.0.1",
     "mammoth": "^1.7.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "metascraper": "^5.45.19",
+    "metascraper-author": "^5.45.10",
+    "metascraper-clearbit": "^5.45.10",
+    "metascraper-date": "^5.45.19",
+    "metascraper-description": "^5.45.10",
+    "metascraper-image": "^5.45.10",
+    "metascraper-logo": "^5.45.10",
+    "metascraper-publisher": "^5.45.10",
+    "metascraper-title": "^5.45.10",
+    "metascraper-url": "^5.45.10"
   },
   "scripts": {
     "start": "nodemon -e ts ts-out/server.js",

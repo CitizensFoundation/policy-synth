@@ -7,7 +7,7 @@ export abstract class PoliciesSmarterCrowdsourcingAgent extends BaseSmarterCrowd
   private static readonly POLICIES_AGENT_CLASS_BASE_ID =
     "c7e6f3d2-9a1b-4d8e-b6f4-1c2d3e4f5a6b";
 
-  private static readonly POLICIES_AGENT_CLASS_VERSION = 1;
+  private static readonly POLICIES_AGENT_CLASS_VERSION = 2;
 
   static getAgentClass(): PsAgentClassCreationAttributes {
     return {
