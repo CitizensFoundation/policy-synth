@@ -5,4 +5,7 @@ export abstract class PsBaseSheetConnector extends PsBaseConnector {
   abstract updateSheet(data: string[][]): Promise<void>;
   abstract getRange(range: string): Promise<string[][]>;
   abstract updateRange(range: string, data: string[][]): Promise<void>;
+  abstract createNewSheet(sheetName: string): Promise<void>;
+  abstract formatCells(range: string, format: any): Promise<void>;
+
 }

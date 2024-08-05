@@ -10,7 +10,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
   static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID =
     "4b8c3d2e-5f6a-1a8b-9c0d-1ecf3afb536d";
 
-  static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 2;
+  static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 3;
 
   static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID,
@@ -124,6 +124,68 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
         range: 'A1:ZZ',  // This will get all cells in the first sheet
       });
       return response.data.values || [];
+    } catch (error) {
+      console.error("Error:", error);
+      throw error;
+    }
+  }
+
+  async createNewSheet(sheetName: string): Promise<void> {
+    const spreadsheetId: string = this.getConfig("googleSheetsId", "");
+    if (!spreadsheetId) {
+      throw new Error("Google Sheets ID is not set.");
+    }
+
+    try {
+      await this.sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              addSheet: {
+                properties: {
+                  title: sheetName,
+                },
+              },
+            },
+          ],
+        },
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      throw error;
+    }
+  }
+
+  async formatCells(range: string, format: sheets_v4.Schema$CellFormat): Promise<void> {
+    const spreadsheetId: string = this.getConfig("googleSheetsId", "");
+    if (!spreadsheetId) {
+      throw new Error("Google Sheets ID is not set.");
+    }
+
+    try {
+      await this.sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              repeatCell: {
+                range: {
+                  sheetId: 0,  // Assumes first sheet, adjust if needed
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                  startColumnIndex: 0,
+                  endColumnIndex: 5,
+                },
+                cell: {
+                  userEnteredFormat: format,
+                },
+                fields: "userEnteredFormat",
+              },
+            },
+          ],
+        },
+      });
     } catch (error) {
       console.error("Error:", error);
       throw error;

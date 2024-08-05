@@ -1,0 +1,5 @@
+.env
+startWithEnv.sh
+node_modules/
+webPagesCache/
+.DS_Store

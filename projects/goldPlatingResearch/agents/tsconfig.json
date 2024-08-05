@@ -1,0 +1,21 @@
+{
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "lib": ["es2018"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "ts-out",
+    "baseUrl": ".",
+  },
+  "include": [
+    "node_modules/@policysynth/agents/**/*.d.ts",
+    "node_modules/@policysynth/api/**/*.d.ts",
+    "**/*.ts",
+  ]
+}
