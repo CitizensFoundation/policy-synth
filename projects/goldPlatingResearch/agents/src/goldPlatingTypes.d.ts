@@ -24,6 +24,7 @@ interface GoldPlatingResearch {
   description?: string;
   reasonForGoldPlating?: string;
   recommendation?: string;
+  supportTextExplanation?: string;
 }
 
 interface LawArticle extends BaseArticle {
@@ -70,6 +71,7 @@ interface GoldplatingResearchItem {
 
 interface GoldPlatingMemoryData extends PsAgentMemoryData {
   researchItems: GoldplatingResearchItem[];
+  scannedPages?: { [url: string]: string };
 }
 
 // Here is our overall Agent Process

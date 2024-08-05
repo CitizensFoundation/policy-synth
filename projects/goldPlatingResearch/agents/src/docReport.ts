@@ -49,14 +49,13 @@ export class GoogleDocsReportAgent extends PolicySynthAgent {
     if (researchItem.nationalLaw) {
       articles.push(...researchItem.nationalLaw.law.articles
         .filter(article => article.research?.possibleGoldplating)
-        .map(article => ({ ...article, source: 'law', eloRating: article.eloRating || 0 })));
-    }
+        .map(article => ({ ...article, source: 'law' as const, eloRating: article.eloRating || 0 })));
+         }
 
     if (researchItem.nationalRegulation) {
       articles.push(...researchItem.nationalRegulation.articles
         .filter(article => article.research?.possibleGoldplating)
-        .map(article => ({ ...article, source: 'regulation', eloRating: article.eloRating || 0 })));
-    }
+        .map(article => ({ ...article, source: 'regulation' as const, eloRating: article.eloRating || 0 }))); }
 
     return articles.sort((a, b) => b.eloRating - a.eloRating);
   }

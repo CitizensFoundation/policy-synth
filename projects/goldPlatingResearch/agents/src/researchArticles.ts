@@ -120,7 +120,16 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
       possibleGoldplating: false,
       description: "",
       reasonForGoldPlating: "",
-      recommendation: ""
+      recommendation: "",
+      results: {
+        detailedRules: "",
+        expandedScope: "",
+        exemptionsNotUtilized: "",
+        stricterNationalLaws: "",
+        disproportionatePenalties: "",
+        earlierImplementation: "",
+        conclusion: ""
+      }
     };
 
     if (result.conclusion && result.conclusion.toLowerCase().includes("gold plating was found")) {

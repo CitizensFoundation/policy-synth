@@ -34,7 +34,10 @@ export class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
 
   async setupMemoryIfNeeded(): Promise<void> {
     if (!this.memory) {
-      this.memory = { researchItems: [] } as GoldPlatingMemoryData;
+      this.memory = {
+        agentId: this.agent.id, // Add this line
+        researchItems: []
+      } as GoldPlatingMemoryData;
     }
   }
 
