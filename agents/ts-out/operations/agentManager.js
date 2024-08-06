@@ -23,32 +23,45 @@ export class AgentManager {
         return this.fetchAgentWithSubAgents(topLevelAgent.id);
     }
     async getSubAgentMemoryKey(groupId, agentId) {
+        console.log(`Searching for agent with id ${agentId} in group ${groupId}`);
         // Get the top-level agent for the group
         const topLevelAgent = await this.getAgent(groupId);
         if (!topLevelAgent) {
+            console.error("Top-level agent not found for the given group");
             throw new Error("Top-level agent not found for the given group");
         }
+        console.log("Top-level agent found:", topLevelAgent.id);
         // Helper function to recursively search for the agent
         const findAgent = (agent) => {
+            console.log(`Checking agent: ${agent.id}`);
             if (agent.id === agentId) {
+                console.log(`Found matching agent: ${agent.id}`);
                 return agent;
             }
-            if (agent.SubAgents) {
+            if (agent.SubAgents && agent.SubAgents.length > 0) {
+                console.log(`Checking ${agent.SubAgents.length} sub-agents of agent ${agent.id}`);
                 for (const subAgent of agent.SubAgents) {
                     const found = findAgent(subAgent);
                     if (found)
                         return found;
                 }
             }
+            else {
+                console.log(`Agent ${agent.id} has no sub-agents`);
+            }
             return null;
         };
         // Search for the agent with the given agentId
         const foundAgent = findAgent(topLevelAgent);
         if (!foundAgent) {
+            console.error(`Agent with id ${agentId} not found in the group`);
             throw new Error(`Agent with id ${agentId} not found in the group`);
         }
+        console.log(`Found agent: ${foundAgent.id}`);
         // Return the redisMemoryKey if it exists, otherwise return null
-        return foundAgent.configuration?.redisMemoryKey || null;
+        const memoryKey = `ps:agent:memory:${foundAgent.id}:${foundAgent.uuid}`;
+        console.log(`Memory key for agent ${foundAgent.id}: ${memoryKey}`);
+        return memoryKey;
     }
     async createAgent(name, agentClassId, aiModels, groupId, userId, parentAgentId) {
         if (!agentClassId ||
