@@ -103,7 +103,11 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
         article.text
       );
 
+      JSON.stringify(goldPlatingResult, null, 2);
+
       article.research = this.processGoldPlatingResult(goldPlatingResult);
+
+      await this.saveMemory();
     }
   }
 
@@ -162,7 +166,7 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
 
   private processGoldPlatingResult(result: any): GoldPlatingResearch {
     const research: GoldPlatingResearch = {
-      possibleGoldplating: false,
+      possibleGoldPlating: false,
       description: "",
       reasonForGoldPlating: "",
       recommendation: "",
@@ -181,7 +185,7 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
       result.conclusion &&
       result.conclusion.toLowerCase().includes("gold plating was found")
     ) {
-      research.possibleGoldplating = true;
+      research.possibleGoldPlating = true;
       research.description = result.conclusion;
       research.reasonForGoldPlating = this.extractReasonForGoldPlating(
         result.analysis

@@ -101,7 +101,10 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
     type: any,
     entityIndex: number | undefined
   ) {
-    if (url.toLowerCase().endsWith(".pdf")) {
+    if (
+      url.toLowerCase().endsWith(".pdf") ||
+      url.indexOf("files.reglugerd.is") > -1
+    ) {
       await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
     } else {
       await this.getAndProcessHtml(

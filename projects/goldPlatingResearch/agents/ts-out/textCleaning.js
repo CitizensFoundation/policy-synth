@@ -1,6 +1,7 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 export class TextCleaningAgent extends PolicySynthAgent {
+    modelsize = PsAiModelSize.Small;
     maxCleanupTokenLength = 4000;
     maxCleanupRetries = 15;
     completionValidationSuccessMessage = "All content present in cleaned text.";
@@ -74,13 +75,11 @@ Instructions:
 - Clean up the document and only output actual unchanged contents.
 - Do not output any initial acknowledgments, table of contents, page numbers, or any other conversion artifacts.
 - Remove all repeated titles as those may come from page headers or footers.
-- If the text starts with a numbered index like 1. or 4. do not remove it in your cleanup.
+- If the law articles start with a numbered index like 1. or 4. do not remove it in your cleanup.
 - Do not add anything to the document.
 - Remove all lists of references and replace with empty text.
 - Remove all lists of URLs with the exception of single URLs that are inline in actual text.
-- Combine very short paragraphs into longer paragraphs.
-- Split long paragraphs into smaller, more readable paragraphs.
-- Do not change the content, just remove unwanted artifacts and reformat paragraphs in the cleanup.`;
+- Do not change the content, just remove unwanted artifacts and reformat paragraphs if needed.`;
     }
     getCleaningUserPrompt(text, previousValidationResults) {
         return `${previousValidationResults ? `Note: You have already tried to clean up this document, and you got these validation errors:\n${previousValidationResults}\n\n` : ''}

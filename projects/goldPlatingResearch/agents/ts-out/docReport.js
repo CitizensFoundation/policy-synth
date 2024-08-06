@@ -21,7 +21,7 @@ export class GoogleDocsReportAgent extends PolicySynthAgent {
         let articles = [];
         if (researchItem.nationalLaw) {
             articles.push(...researchItem.nationalLaw.law.articles
-                .filter((article) => article.research?.possibleGoldplating)
+                .filter((article) => article.research?.possibleGoldPlating)
                 .map((article) => ({
                 ...article,
                 source: "law",
@@ -31,7 +31,7 @@ export class GoogleDocsReportAgent extends PolicySynthAgent {
         if (researchItem.nationalRegulation) {
             researchItem.nationalRegulation.forEach(regulation => {
                 articles.push(...regulation.articles
-                    .filter((article) => article.research?.possibleGoldplating)
+                    .filter((article) => article.research?.possibleGoldPlating)
                     .map((article) => ({
                     ...article,
                     source: "regulation",

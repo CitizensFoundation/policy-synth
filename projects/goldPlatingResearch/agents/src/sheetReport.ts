@@ -49,7 +49,7 @@ export class XlsReportAgent extends PolicySynthAgent {
     if (researchItem.nationalLaw) {
       articles.push(
         ...researchItem.nationalLaw.law.articles
-          .filter((article) => article.research?.possibleGoldplating)
+          .filter((article) => article.research?.possibleGoldPlating)
           .map((article) => ({
             ...article,
             source: "law" as const,
@@ -62,7 +62,7 @@ export class XlsReportAgent extends PolicySynthAgent {
       researchItem.nationalRegulation.forEach(regulation => {
         articles.push(
           ...regulation.articles
-            .filter((article) => article.research?.possibleGoldplating)
+            .filter((article) => article.research?.possibleGoldPlating)
             .map((article) => ({
               ...article,
               source: "regulation" as const,

@@ -41,7 +41,7 @@ export class OpenAiChat extends BaseChatModel {
       });
       const content = response.choices[0]?.message?.content;
 
-      console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
+      //console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
 
       return {
         tokensIn: response.usage!.prompt_tokens,

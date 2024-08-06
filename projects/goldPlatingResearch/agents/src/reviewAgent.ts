@@ -1,6 +1,9 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import {
+  PsAiModelType,
+  PsAiModelSize,
+} from "@policysynth/agents/aiModelTypes.js";
 
 export class SupportTextReviewAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -23,8 +26,14 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     await this.updateRangedProgress(100, "Support text review completed");
   }
 
-  private async reviewNationalLawSupportText(researchItem: GoldplatingResearchItem): Promise<void> {
-    if (!researchItem.nationalLaw || !researchItem.nationalLaw.supportArticleText) return;
+  private async reviewNationalLawSupportText(
+    researchItem: GoldplatingResearchItem
+  ): Promise<void> {
+    if (
+      !researchItem.nationalLaw ||
+      !researchItem.nationalLaw.supportArticleText
+    )
+      return;
 
     const articles = researchItem.nationalLaw.law.articles;
     const totalArticles = articles.length;
@@ -32,25 +41,45 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     for (let i = 0; i < totalArticles; i++) {
       const article = articles[i];
       const progress = (i / totalArticles) * 50; // 0% to 50% of total progress
-      await this.updateRangedProgress(progress, `Reviewing support text for national law article ${article.number}`);
+      await this.updateRangedProgress(
+        progress,
+        `Reviewing support text for national law article ${article.number}`
+      );
 
-      if (article.research?.possibleGoldplating) {
-        const supportArticleId = researchItem.supportArticleTextArticleIdMapping[parseInt(article.number)];
-        const supportArticle = researchItem.nationalLaw.supportArticleText.articles.find(a => a.number === supportArticleId.toString());
+      if (article.research?.possibleGoldPlating) {
+        const supportArticleId =
+          researchItem.supportArticleTextArticleIdMapping[
+            parseInt(article.number)
+          ] || parseInt(article.number);
+        if (supportArticleId) {
+          const supportArticle =
+            researchItem.nationalLaw.supportArticleText.articles.find(
+              (a) => a.number === supportArticleId.toString()
+            );
 
-        if (supportArticle) {
-          const explanation = await this.analyzeSupportText(article, supportArticle);
-          article.research.supportTextExplanation = explanation;
+          if (supportArticle) {
+            const explanation = await this.analyzeSupportText(
+              article,
+              supportArticle
+            );
+            article.research.supportTextExplanation = explanation;
+          }
+        } else {
+          this.logger.error(
+            `No support text found for article ${article.number} in national law`
+          );
         }
       }
     }
   }
 
-  private async reviewNationalRegulationSupportText(researchItem: GoldplatingResearchItem): Promise<void> {
+  private async reviewNationalRegulationSupportText(
+    researchItem: GoldplatingResearchItem
+  ): Promise<void> {
     if (!researchItem.nationalRegulation) return;
 
     let totalArticles = 0;
-    researchItem.nationalRegulation.forEach(regulation => {
+    researchItem.nationalRegulation.forEach((regulation) => {
       totalArticles += regulation.articles.length;
     });
 
@@ -58,9 +87,12 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     for (const regulation of researchItem.nationalRegulation) {
       for (const article of regulation.articles) {
         const progress = 50 + (processedArticles / totalArticles) * 50; // 50% to 100% of total progress
-        await this.updateRangedProgress(progress, `Reviewing support text for national regulation article ${article.number}`);
+        await this.updateRangedProgress(
+          progress,
+          `Reviewing support text for national regulation article ${article.number}`
+        );
 
-        if (article.research?.possibleGoldplating) {
+        if (article.research?.possibleGoldPlating) {
           // For regulations, we don't have separate support text, so we'll use the article's own text as context
           const explanation = await this.analyzeSupportText(article, article);
           article.research.supportTextExplanation = explanation;
@@ -71,16 +103,23 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     }
   }
 
-  private async analyzeSupportText(article: LawArticle | RegulationArticle, supportArticle: LawArticle | RegulationArticle): Promise<string> {
-    const systemMessage = this.createSystemMessage(this.getSupportTextAnalysisSystemPrompt());
-    const userMessage = this.createHumanMessage(this.getSupportTextAnalysisUserPrompt(article, supportArticle));
+  private async analyzeSupportText(
+    article: LawArticle | RegulationArticle,
+    supportArticle: LawArticle | RegulationArticle
+  ): Promise<string> {
+    const systemMessage = this.createSystemMessage(
+      this.getSupportTextAnalysisSystemPrompt()
+    );
+    const userMessage = this.createHumanMessage(
+      this.getSupportTextAnalysisUserPrompt(article, supportArticle)
+    );
 
-    const result = await this.callModel(
+    const result = (await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Large,
       [systemMessage, userMessage],
       false
-    ) as string;
+    )) as string;
 
     return result;
   }
@@ -97,7 +136,10 @@ Your analysis should focus on:
 Provide a concise but comprehensive explanation based on the support text. If the support text does not provide relevant information, state that clearly.`;
   }
 
-  private getSupportTextAnalysisUserPrompt(article: LawArticle | RegulationArticle, supportArticle: LawArticle | RegulationArticle): string {
+  private getSupportTextAnalysisUserPrompt(
+    article: LawArticle | RegulationArticle,
+    supportArticle: LawArticle | RegulationArticle
+  ): string {
     return `Article with potential gold-plating:
 Number: ${article.number}
 Text: ${article.text}

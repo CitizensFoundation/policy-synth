@@ -30,7 +30,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
             }
         }
         // Validate and deduplicate articles
-        const validatedArticles = await this.validateAndDeduplicateArticles(allExtractedArticles);
+        const validatedArticles = allExtractedArticles; //TODO: Look into this await this.validateAndDeduplicateArticles(allExtractedArticles);
         return validatedArticles;
     }
     async extractArticleBatch(text, type, startNumber, endNumber) {
@@ -63,17 +63,16 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
 
 Instructions:
 - Carefully analyze the provided text and identify articles numbered from ${startNumber} to ${endNumber}.
-- Extract the article number, full text, and a brief description for each article within this range.
+- Extract the article number, full text for each article within this range.
 - If an article number in this range is not found, skip it and move to the next number.
 - Ensure that the extracted information is accurate and complete.
 - Return the extracted articles as a JSON array, where each object represents an article with the following structure:
   {
     "number": "string",
-    "text": "string",
-    "description": "string"
+    "text": "string"
   }
-- If you cannot extract any articles in this range or the text is not a ${type}, return an empty array.
-
+- If you cannot extract any articles in this range, return an empty array.
+${type === 'law' ? `- Articles always start with "<number>. gr." for example: "7. gr."` : ``}
 Remember, accuracy and completeness are crucial. Do not add, remove, or modify any content from the original articles.`;
     }
     getExtractionUserPrompt(text) {
@@ -100,6 +99,9 @@ Respond with a JSON array of extracted articles:`;
                 if (isValid) {
                     validatedArticles.push(article);
                     seenNumbers.add(article.number);
+                }
+                else {
+                    this.logger.warn(`Article ${article.number} failed validation, skipping`);
                 }
             }
         }

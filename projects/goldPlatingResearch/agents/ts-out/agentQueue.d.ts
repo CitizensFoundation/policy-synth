@@ -12,4 +12,4 @@ export declare class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
     forceMemoryRestart: boolean;
     setupMemoryIfNeeded(): Promise<void>;
 }
-//# sourceMappingURL=agentQeueu.d.ts.map
+//# sourceMappingURL=agentQueue.d.ts.map

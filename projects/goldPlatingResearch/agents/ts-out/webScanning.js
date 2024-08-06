@@ -54,7 +54,8 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
         this.logger.info("Web Pages Scanner Complete");
     }
     async getAndProcessPage(subProblemIndex, url, browserPage, type, entityIndex) {
-        if (url.toLowerCase().endsWith(".pdf")) {
+        if (url.toLowerCase().endsWith(".pdf") ||
+            url.indexOf("files.reglugerd.is") > -1) {
             await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
         }
         else {

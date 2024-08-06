@@ -48,13 +48,16 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
       0,
       10
     );
+
     await webScanningAgent.processItem(researchItem);
 
+    await this.saveMemory();
     this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 2. Clean and process National laws and regulations
     await this.cleanAndProcessNationalLawsAndRegulations(researchItem);
 
+    await this.saveMemory();
     this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 3. Compare and search for gold-plating
@@ -66,6 +69,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
     );
     await goldPlatingSearchAgent.processItem(researchItem);
 
+    await this.saveMemory();
     this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 4. Review support text for possible gold-plating
@@ -76,6 +80,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
       70
     );
 
+    await this.saveMemory();
     await supportTextReviewAgent.processItem(researchItem);
 
     this.logger.debug(JSON.stringify(this.memory, null, 2));
@@ -90,6 +95,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
 
     await foundGoldPlatingRankingAgent.processItem(researchItem);
 
+    await this.saveMemory();
     this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 6. Generate reports
@@ -102,6 +108,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
 
     this.logger.debug(JSON.stringify(this.memory, null, 2));
 
+    await this.saveMemory();
     await googleDocsReportAgent.processItem(researchItem);
 
     const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);

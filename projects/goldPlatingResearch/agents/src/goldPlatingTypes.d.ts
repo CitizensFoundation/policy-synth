@@ -20,7 +20,7 @@ interface ResearchResults {
 
 interface GoldPlatingResearch {
   results: ResearchResults;
-  possibleGoldplating?: boolean;
+  possibleGoldPlating?: boolean;
   description?: string;
   reasonForGoldPlating?: string;
   recommendation?: string;
@@ -88,7 +88,7 @@ interface GoldPlatingMemoryData extends PsAgentMemoryData {
 // 5. Loop through each regulation article, one at the time, and compare it the whole EU law to search for goldplating and save into the correct GoldPlatingResearch under the right article
 // 6. Loop through each law article, one at the time, and compare it to the whole EU regulation to search for goldplating and save into the correct GoldPlatingResearch under the right article
 // 7. Loop through each regulation article, one at the time, and compare it to the whole EU regulation to search for goldplating and save into the correct GoldPlatingResearch under the right article
-// 8. Now loop through laws and regulations again and for each GoldPlatingResearch that has a possibleGoldplating lookup the supportText for the article to look for explainations
+// 8. Now loop through laws and regulations again and for each GoldPlatingResearch that has a possibleGoldPlating lookup the supportText for the article to look for explainations
 // 9. Now pairwise rank all the GoldPlatingResearch found and give the articles a elo rating
 
 // Use supportArticleTextArticleIdMapping as the supportingArticleText comes from the original law proposal so the numbers might not match up to the fully release law

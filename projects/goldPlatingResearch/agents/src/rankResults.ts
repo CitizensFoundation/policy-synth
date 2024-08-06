@@ -43,7 +43,7 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     if (researchItem.nationalLaw) {
       rankableArticles.push(
         ...researchItem.nationalLaw.law.articles
-          .filter((article) => article.research?.possibleGoldplating)
+          .filter((article) => article.research?.possibleGoldPlating)
           .map((article) => ({ ...article, source: "law" as const }))
       );
     }
@@ -52,7 +52,7 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
       researchItem.nationalRegulation.forEach((regulation) => {
         rankableArticles.push(
           ...regulation.articles
-            .filter((article) => article.research?.possibleGoldplating)
+            .filter((article) => article.research?.possibleGoldPlating)
             .map((article) => ({ ...article, source: "regulation" as const }))
         );
       });

@@ -27,25 +27,31 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         // 1. Download laws and regulations
         const webScanningAgent = new WebScanningAgent(this.agent, this.memory, 0, 10);
         await webScanningAgent.processItem(researchItem);
+        await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 2. Clean and process National laws and regulations
         await this.cleanAndProcessNationalLawsAndRegulations(researchItem);
+        await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 3. Compare and search for gold-plating
         const goldPlatingSearchAgent = new GoldPlatingSearchAgent(this.agent, this.memory, 40, 60);
         await goldPlatingSearchAgent.processItem(researchItem);
+        await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 4. Review support text for possible gold-plating
         const supportTextReviewAgent = new SupportTextReviewAgent(this.agent, this.memory, 60, 70);
+        await this.saveMemory();
         await supportTextReviewAgent.processItem(researchItem);
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 5. Rank found gold-plating
         const foundGoldPlatingRankingAgent = new FoundGoldPlatingRankingAgent(this.agent, this.memory, 70, 80);
         await foundGoldPlatingRankingAgent.processItem(researchItem);
+        await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 6. Generate reports
         const googleDocsReportAgent = new GoogleDocsReportAgent(this.agent, this.memory, 80, 90);
         this.logger.debug(JSON.stringify(this.memory, null, 2));
+        await this.saveMemory();
         await googleDocsReportAgent.processItem(researchItem);
         const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
         await xlsReportAgent.processItem(researchItem);

@@ -51,7 +51,9 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
             const progress = 50 + (i / totalArticles) * 25; // 50% to 75% of total progress
             await this.updateRangedProgress(progress, `Analyzing national law article ${article.number} against EU regulation`);
             const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalLaw.law.fullText, researchItem.euRegulation.fullText, article.text);
+            JSON.stringify(goldPlatingResult, null, 2);
             article.research = this.processGoldPlatingResult(goldPlatingResult);
+            await this.saveMemory();
         }
     }
     async compareNationalRegulationToEURegulation(researchItem) {
@@ -80,7 +82,7 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
     }
     processGoldPlatingResult(result) {
         const research = {
-            possibleGoldplating: false,
+            possibleGoldPlating: false,
             description: "",
             reasonForGoldPlating: "",
             recommendation: "",
@@ -96,7 +98,7 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
         };
         if (result.conclusion &&
             result.conclusion.toLowerCase().includes("gold plating was found")) {
-            research.possibleGoldplating = true;
+            research.possibleGoldPlating = true;
             research.description = result.conclusion;
             research.reasonForGoldPlating = this.extractReasonForGoldPlating(result.analysis);
             research.recommendation =
