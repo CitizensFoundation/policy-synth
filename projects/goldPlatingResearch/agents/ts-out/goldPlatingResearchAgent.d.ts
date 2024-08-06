@@ -1,17 +1,10 @@
-import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
-export declare class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+export declare class GoldPlatingResearchAgent extends PolicySynthAgent {
     memory: GoldPlatingMemoryData;
     private static readonly GOLDPLATING_AGENT_CLASS_BASE_ID;
     private static readonly GOLDPLATING_AGENT_CLASS_VERSION;
-    get agentQueueName(): string;
-    get processors(): {
-        processor: typeof GoldPlatingResearchAgent;
-        weight: number;
-    }[];
-    getTestResearchItem(): GoldplatingResearchItem;
-    getTestResearchItemTwo(): GoldplatingResearchItem;
-    forceMemoryRestart: boolean;
-    setupMemoryIfNeeded(): Promise<void>;
+    constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
     process(): Promise<void>;
     private processResearchItem;
     private cleanAndProcessNationalLawsAndRegulations;

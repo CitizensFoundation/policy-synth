@@ -45,6 +45,9 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
                 ? agent.Group?.private_access_configuration || []
                 : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, agent ? agent.id : -1, agent ? agent.user_id : -1);
         }
+        if (agent && !agent.redisStatusKey) {
+            this.logger.error("Agent status key not set", agent);
+        }
         this.progressTracker = new PsProgressTracker(agent ? agent.redisStatusKey : "agent:status:-1", //TODO: Look into this fallback
         startProgress, endProgress);
         this.configManager = new PsConfigManager(agent.configuration);

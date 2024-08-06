@@ -3,7 +3,6 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
-
 import { WebScanningAgent } from "./webScanning.js";
 import { TextCleaningAgent } from "./textCleaning.js";
 import { ArticleExtractionAgent } from "./extractArticles.js";
@@ -12,170 +11,22 @@ import { SupportTextReviewAgent } from "./reviewAgent.js";
 import { FoundGoldPlatingRankingAgent } from "./rankResults.js";
 import { GoogleDocsReportAgent } from "./docReport.js";
 import { XlsReportAgent } from "./sheetReport.js";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 
-export class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
+export class GoldPlatingResearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
   private static readonly GOLDPLATING_AGENT_CLASS_BASE_ID =
     "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
-  private static readonly GOLDPLATING_AGENT_CLASS_VERSION = 2;
-
-  get agentQueueName(): string {
-    return "GOLDPLATING_RESEARCH";
-  }
-
-  get processors() {
-    return [
-      {
-        processor: GoldPlatingResearchAgent,
-        weight: 100,
-      },
-    ];
-  }
-
-  getTestResearchItem(): GoldplatingResearchItem {
-    return {
-      name: "Lög um fjarskipti",
-      nationalLaw: {
-        law: {
-          url: "https://www.althingi.is/lagas/nuna/2022070.html",
-          fullText: "",
-          articles: [],
-        },
-        supportArticleText: {
-          url: "https://www.althingi.is/altext/154/s/1573.html",
-          fullText: "",
-          articles: [],
-        },
-      },
-      supportArticleTextArticleIdMapping: {
-        1: 1,
-      },
-      nationalRegulation: [
-        {
-          url: "https://files.reglugerd.is/pdf/1227-2019/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/0034-2020/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/0480-2021/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/0945-2023/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/0845-2022/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/1350-2022/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/1100-2022/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/1588-2022/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/1589-2022/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/0555-2023/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/0556-2023/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://island.is/reglugerdir/nr/0422-2023",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/0944-2019/current",
-          fullText: "",
-          articles: [],
-        },
-      ],
-      euDirective: {
-        url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32018L1972",
-        fullText: "",
-      },
-    };
-  }
-
-  getTestResearchItemTwo(): GoldplatingResearchItem {
-    return {
-      name: "Lög um öryggi net- og upplýsingakerfa mikilvægra innviða",
-      nationalLaw: {
-        law: {
-          url: "https://www.althingi.is/lagas/nuna/2019078.html",
-          fullText: "",
-          articles: [],
-        },
-        supportArticleText: {
-          url: "https://www.althingi.is/altext/149/s/0557.html",
-          fullText: "",
-          articles: [],
-        },
-      },
-      supportArticleTextArticleIdMapping: {
-        1: 1,
-      },
-      nationalRegulation: [
-        {
-          url: "https://files.reglugerd.is/pdf/0866-2020/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/1720-2023/current",
-          fullText: "",
-          articles: [],
-        },
-        {
-          url: "https://files.reglugerd.is/pdf/1255-2020/current",
-          fullText: "",
-          articles: [],
-        },
-      ],
-      euDirective: {
-        url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32016L1148",
-        fullText: "",
-      },
-    };
-  }
-
-  forceMemoryRestart = true;
-
-  async setupMemoryIfNeeded(): Promise<void> {
-    if (this.forceMemoryRestart || !this.memory) {
-      this.memory = {
-        agentId: this.agent.id, // Add this line
-        researchItems: [this.getTestResearchItemTwo()],
-      } as GoldPlatingMemoryData;
-    }
+  private static readonly GOLDPLATING_AGENT_CLASS_VERSION = 3;
+  constructor(
+    agent: PsAgent,
+    memory: GoldPlatingMemoryData,
+    startProgress: number,
+    endProgress: number
+  ) {
+    super(agent, memory, startProgress, endProgress);
+    this.memory = memory;
   }
 
   async process() {

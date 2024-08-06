@@ -22,6 +22,34 @@ export class AgentManager {
         }
         return this.fetchAgentWithSubAgents(topLevelAgent.id);
     }
+    async getSubAgentMemoryKey(groupId, agentId) {
+        // Get the top-level agent for the group
+        const topLevelAgent = await this.getAgent(groupId);
+        if (!topLevelAgent) {
+            throw new Error("Top-level agent not found for the given group");
+        }
+        // Helper function to recursively search for the agent
+        const findAgent = (agent) => {
+            if (agent.id === agentId) {
+                return agent;
+            }
+            if (agent.SubAgents) {
+                for (const subAgent of agent.SubAgents) {
+                    const found = findAgent(subAgent);
+                    if (found)
+                        return found;
+                }
+            }
+            return null;
+        };
+        // Search for the agent with the given agentId
+        const foundAgent = findAgent(topLevelAgent);
+        if (!foundAgent) {
+            throw new Error(`Agent with id ${agentId} not found in the group`);
+        }
+        // Return the redisMemoryKey if it exists, otherwise return null
+        return foundAgent.configuration?.redisMemoryKey || null;
+    }
     async createAgent(name, agentClassId, aiModels, groupId, userId, parentAgentId) {
         if (!agentClassId ||
             !aiModels ||

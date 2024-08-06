@@ -5,6 +5,8 @@ import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.j
 export class TextCleaningAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
+  modelsize: PsAiModelSize = PsAiModelSize.Small;
+
   maxCleanupTokenLength: number = 4000;
   maxCleanupRetries: number = 15;
 
@@ -109,13 +111,11 @@ Instructions:
 - Clean up the document and only output actual unchanged contents.
 - Do not output any initial acknowledgments, table of contents, page numbers, or any other conversion artifacts.
 - Remove all repeated titles as those may come from page headers or footers.
-- If the text starts with a numbered index like 1. or 4. do not remove it in your cleanup.
+- If the law articles start with a numbered index like 1. or 4. do not remove it in your cleanup.
 - Do not add anything to the document.
 - Remove all lists of references and replace with empty text.
 - Remove all lists of URLs with the exception of single URLs that are inline in actual text.
-- Combine very short paragraphs into longer paragraphs.
-- Split long paragraphs into smaller, more readable paragraphs.
-- Do not change the content, just remove unwanted artifacts and reformat paragraphs in the cleanup.`;
+- Do not change the content, just remove unwanted artifacts and reformat paragraphs if needed.`;
   }
 
   private getCleaningUserPrompt(text: string, previousValidationResults?: string): string {

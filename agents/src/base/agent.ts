@@ -75,6 +75,10 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
       );
     }
 
+    if (agent && !agent.redisStatusKey) {
+      this.logger.error("Agent status key not set", agent);
+    }
+
     this.progressTracker = new PsProgressTracker(
       agent ? agent.redisStatusKey : "agent:status:-1", //TODO: Look into this fallback
       startProgress,

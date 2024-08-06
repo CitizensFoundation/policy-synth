@@ -19,25 +19,36 @@ export class PsProgressTracker extends PolicySynthAgentBase {
     this.redisStatusKey = redisStatusKey;
     this.startProgress = startProgress;
     this.endProgress = endProgress;
-    this.logger.debug(`Progress range: ${startProgress} - ${endProgress} Redis key: ${redisStatusKey}`);
+    this.logger.debug(
+      `Progress range: ${startProgress} - ${endProgress} Redis key: ${redisStatusKey}`
+    );
   }
 
   public async loadStatusFromRedis(): Promise<void> {
-    try {
-      const statusDataString = await this.redis.get(this.redisStatusKey);
-      if (statusDataString) {
-        this.status = JSON.parse(statusDataString);
-        //this.logger.debug(`Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`);
-      } else {
-        this.logger.error("No status data found!");
+    if (this.redisStatusKey) {
+      try {
+        const statusDataString = await this.redis.get(this.redisStatusKey);
+        if (statusDataString) {
+          this.status = JSON.parse(statusDataString);
+          this.logger.debug(
+            `Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`
+          );
+        } else {
+          this.logger.error("No status data found!");
+        }
+      } catch (error) {
+        this.logger.error("Error initializing agent status");
+        this.logger.error(error);
       }
-    } catch (error) {
-      this.logger.error("Error initializing agent status");
-      this.logger.error(error);
+    } else {
+      this.logger.error("No Redis key set for agent status");
     }
   }
 
-  public async updateRangedProgress(progress: number | undefined, message: string): Promise<void> {
+  public async updateRangedProgress(
+    progress: number | undefined,
+    message: string
+  ): Promise<void> {
     await this.loadStatusFromRedis();
 
     if (!this.status) {
@@ -57,14 +68,24 @@ export class PsProgressTracker extends PolicySynthAgentBase {
       );
     }
 
-    this.status.messages.push(message);
+    if (!this.status.messages) {
+      this.logger.debug(
+        `No messages for ${this.redisStatusKey} ${JSON.stringify(this.status)}`
+      );
+    } else {
+      this.status.messages.push(message);
+    }
+
     this.status.lastUpdated = Date.now();
 
     // Save updated memory to Redis
     await this.saveRedisStatus();
   }
 
-  public async updateProgress(progress: number | undefined, message: string): Promise<void> {
+  public async updateProgress(
+    progress: number | undefined,
+    message: string
+  ): Promise<void> {
     await this.loadStatusFromRedis();
 
     if (!this.status) {
@@ -86,12 +107,17 @@ export class PsProgressTracker extends PolicySynthAgentBase {
   }
 
   async saveRedisStatus(): Promise<void> {
-    try {
-      //this.logger.debug(`Saving agent memory to Redis: ${JSON.stringify(this.status)}`);
-      await this.redis.set(this.redisStatusKey, JSON.stringify(this.status));
-    } catch (error) {
-      this.logger.error("Error saving agent memory to Redis");
-      this.logger.error(error);
+    if (this.redisStatusKey) {
+      try {
+        //this.logger.debug(`Saving agent memory to Redis: ${JSON.stringify(this.status)}`);
+        await this.redis.set(this.redisStatusKey, JSON.stringify(this.status));
+      } catch (error) {
+        this.logger.error("Error saving agent memory to Redis");
+        this.logger.error(error);
+      }
+    } else {
+      this.logger.error("No Redis key set for agent status");
+      return;
     }
   }
 

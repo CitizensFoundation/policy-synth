@@ -24,6 +24,7 @@ export enum PsAgentClassCategories {
   InventoryManagement = "inventoryManagement",
   ITSupport = "itSupport",
   LegalAssistance = "legalAssistance",
+  LegalResearch = "legalResearch",
   MarketResearch = "marketResearch",
   Marketing = "marketing",
   MeetingFacilitation = "meetingFacilitation",

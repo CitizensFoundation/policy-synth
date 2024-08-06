@@ -25,6 +25,7 @@ export var PsAgentClassCategories;
     PsAgentClassCategories["InventoryManagement"] = "inventoryManagement";
     PsAgentClassCategories["ITSupport"] = "itSupport";
     PsAgentClassCategories["LegalAssistance"] = "legalAssistance";
+    PsAgentClassCategories["LegalResearch"] = "legalResearch";
     PsAgentClassCategories["MarketResearch"] = "marketResearch";
     PsAgentClassCategories["Marketing"] = "marketing";
     PsAgentClassCategories["MeetingFacilitation"] = "meetingFacilitation";

@@ -5,6 +5,7 @@ import { PsGoogleDocsConnector } from "@policysynth/agents/connectors/documents/
 import { PsYourPrioritiesConnector } from "@policysynth/agents/connectors/collaboration/yourPrioritiesConnector.js";
 import { PsBaseDiscordConnector } from "@policysynth/agents/connectors/notifications/discordConnector.js";
 import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/googleSheetsConnector.js";
+import { GoldPlatingResearchQueue } from "./agentQeueu.js";
 
 export class GoldPlatingAgentRunner extends PsBaseAgentRunner {
   protected agentClasses: PsAgentClassCreationAttributes[];
@@ -13,7 +14,7 @@ export class GoldPlatingAgentRunner extends PsBaseAgentRunner {
   constructor() {
     super();
     this.agentsToRun = [
-      new GoldPlatingResearchAgent(),
+      new GoldPlatingResearchQueue(),
     ];
 
     this.agentClasses = [
