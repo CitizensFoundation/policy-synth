@@ -145,7 +145,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
             },
         };
     }
-    forceMemoryRestart = false;
+    forceMemoryRestart = true;
     async setupMemoryIfNeeded() {
         if (this.forceMemoryRestart || !this.memory) {
             this.memory = {

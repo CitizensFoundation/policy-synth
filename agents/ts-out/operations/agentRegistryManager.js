@@ -122,7 +122,18 @@ export class AgentRegistryManager {
                 ["version", "DESC"],
             ],
         });
-        return connectors;
+        const latestConnectors = connectors.reduce((acc, current) => {
+            const existingConnector = acc.find((connector) => connector.class_base_id === current.class_base_id);
+            if (!existingConnector || existingConnector.version < current.version) {
+                return [
+                    ...acc.filter((connector) => connector.class_base_id !== current.class_base_id),
+                    current,
+                ];
+            }
+            return acc;
+        }, []);
+        console.log("Latest connectors:", latestConnectors.length);
+        return latestConnectors;
     }
 }
 //# sourceMappingURL=agentRegistryManager.js.map

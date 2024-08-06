@@ -23,7 +23,7 @@ export class XlsReportAgent extends PolicySynthAgent {
     this.sheetsConnector = PsConnectorFactory.getConnector(
       this.agent,
       this.memory,
-      PsConnectorClassTypes.Document,
+      PsConnectorClassTypes.Spreadsheet,
       false
     ) as PsBaseSheetConnector;
 
@@ -59,7 +59,7 @@ export class XlsReportAgent extends PolicySynthAgent {
     }
 
     if (researchItem.nationalRegulation) {
-      researchItem.nationalRegulation.forEach(regulation => {
+      researchItem.nationalRegulation.forEach((regulation) => {
         articles.push(
           ...regulation.articles
             .filter((article) => article.research?.possibleGoldPlating)
@@ -83,11 +83,23 @@ export class XlsReportAgent extends PolicySynthAgent {
     const detailedFindingsSheet =
       this.generateDetailedFindingsSheet(rankedArticles);
 
-    await this.sheetsConnector.updateSheet([
+    const allData = [
       ...summarySheet,
       [], // Empty row for separation
       ...detailedFindingsSheet,
-    ]);
+    ];
+
+    try {
+      // Update the sheet using updateRange method
+      const sanitizedData = this.sanitizeData(allData);
+      await this.sheetsConnector.updateRange("A1", sanitizedData);
+      console.log(
+        "Report generated and uploaded to Google Sheets successfully."
+      );
+    } catch (error) {
+      console.error("Error updating Google Sheet:", error);
+      throw error;
+    }
   }
 
   private generateSummarySheet(
@@ -112,6 +124,17 @@ export class XlsReportAgent extends PolicySynthAgent {
           article.research?.description || "N/A",
         ]),
     ];
+  }
+
+  private sanitizeData(data: any[][]): string[][] {
+    return data.map(row =>
+      row.map(cell => {
+        if (typeof cell === 'object' && cell !== null) {
+          return JSON.stringify(cell);
+        }
+        return String(cell);
+      })
+    );
   }
 
   private generateDetailedFindingsSheet(

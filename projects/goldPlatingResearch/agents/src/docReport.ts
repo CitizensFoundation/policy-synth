@@ -145,6 +145,8 @@ export class GoogleDocsReportAgent extends PolicySynthAgent {
       findings += "Research Results:\n";
       if (article.research?.results) {
         const results = article.research.results;
+        console.log(JSON.stringify(results, null, 2));
+        console.log(JSON.stringify(article, null, 2));
         findings += `- Detailed Rules: ${results.detailedRules}\n`;
         findings += `- Expanded Scope: ${results.expandedScope}\n`;
         findings += `- Exemptions Not Utilized: ${results.exemptionsNotUtilized}\n`;

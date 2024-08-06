@@ -11,7 +11,7 @@ export class PsConnectorFactory {
         switch (connectorClass.configuration.classType) {
             case PsConnectorClassTypes.Document:
                 return this.createDocumentConnector(connector, connectorClass, agent, memory);
-            case PsConnectorClassTypes.Document:
+            case PsConnectorClassTypes.Spreadsheet:
                 return this.createSheetConnector(connector, connectorClass, agent, memory);
             case PsConnectorClassTypes.NotificationsAndChat:
                 return this.createNotificationsConnector(connector, connectorClass, agent, memory);

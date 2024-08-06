@@ -37,13 +37,14 @@ export class PsConnectorFactory {
           memory
         );
 
-      case PsConnectorClassTypes.Document:
+      case PsConnectorClassTypes.Spreadsheet:
         return this.createSheetConnector(
           connector,
           connectorClass,
           agent,
           memory
         );
+
       case PsConnectorClassTypes.NotificationsAndChat:
         return this.createNotificationsConnector(
           connector,

@@ -144,6 +144,23 @@ export class AgentRegistryManager {
       ],
     });
 
-    return connectors;
+    const latestConnectors = connectors.reduce((acc, current) => {
+      const existingConnector = acc.find(
+        (connector) => connector.class_base_id === current.class_base_id
+      );
+      if (!existingConnector || existingConnector.version < current.version) {
+        return [
+          ...acc.filter(
+            (connector) => connector.class_base_id !== current.class_base_id
+          ),
+          current,
+        ];
+      }
+      return acc;
+    }, [] as PsAgentConnectorClass[]);
+
+    console.log("Latest connectors:", latestConnectors.length);
+
+    return latestConnectors;
   }
 }

@@ -46,7 +46,7 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
         researchItem.nationalLaw.law.fullText,
         researchItem.euDirective.fullText,
         article.text
-      );
+      ) as LlmAnalysisResponse;
 
       article.research = this.processGoldPlatingResult(goldPlatingResult);
     }
@@ -164,7 +164,7 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
     return result;
   }
 
-  private processGoldPlatingResult(result: any): GoldPlatingResearch {
+  private processGoldPlatingResult(result: LlmAnalysisResponse): GoldPlatingResearch {
     const research: GoldPlatingResearch = {
       possibleGoldPlating: false,
       description: "",
@@ -187,9 +187,8 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
     ) {
       research.possibleGoldPlating = true;
       research.description = result.conclusion;
-      research.reasonForGoldPlating = this.extractReasonForGoldPlating(
-        result.analysis
-      );
+      research.results = result.analysis;
+      research.reasonForGoldPlating = result.reasonsForGoldPlating;
       research.recommendation =
         "Further review recommended to address potential gold-plating issues.";
     }
@@ -243,7 +242,8 @@ Present your analysis in the following JSON format:
     "disproportionatePenalties": "Your analysis here",
     "earlierImplementation": "Your analysis here"
   },
-  "conclusion": "Summarize your findings here, stating whether "gold plating was found" and in which aspects"
+  "conclusion": "Summarize your findings here, stating whether "gold plating was found" and in which aspects",
+  "reasonsForGoldPlating": "Provide reasons for gold plating only if found otherwise leave empty",
 }
 
 Remember to be thorough in your analysis and provide specific examples from both laws to support your conclusions. If you're unsure about any aspect, state your uncertainty clearly.`;

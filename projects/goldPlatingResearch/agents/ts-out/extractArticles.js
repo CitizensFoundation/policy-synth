@@ -17,7 +17,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
         let startArticleNumber = 1;
         let hasMoreArticles = true;
         let articleCount = 0;
-        const MAX_ARTICLES = 4;
+        const MAX_ARTICLES = 29;
         while (hasMoreArticles) {
             const endArticleNumber = startArticleNumber + this.articlesPerBatch - 1;
             await this.updateRangedProgress((startArticleNumber / 100) * 100, // Assuming there won't be more than 100 articles

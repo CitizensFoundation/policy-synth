@@ -5,7 +5,7 @@ export class XlsReportAgent extends PolicySynthAgent {
     sheetsConnector;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
-        this.sheetsConnector = PsConnectorFactory.getConnector(this.agent, this.memory, PsConnectorClassTypes.Document, false);
+        this.sheetsConnector = PsConnectorFactory.getConnector(this.agent, this.memory, PsConnectorClassTypes.Spreadsheet, false);
         if (!this.sheetsConnector) {
             throw new Error("Google Sheets connector not found");
         }
@@ -28,7 +28,7 @@ export class XlsReportAgent extends PolicySynthAgent {
             })));
         }
         if (researchItem.nationalRegulation) {
-            researchItem.nationalRegulation.forEach(regulation => {
+            researchItem.nationalRegulation.forEach((regulation) => {
                 articles.push(...regulation.articles
                     .filter((article) => article.research?.possibleGoldPlating)
                     .map((article) => ({
@@ -43,11 +43,21 @@ export class XlsReportAgent extends PolicySynthAgent {
     async generateReport(researchItem, rankedArticles) {
         const summarySheet = this.generateSummarySheet(rankedArticles);
         const detailedFindingsSheet = this.generateDetailedFindingsSheet(rankedArticles);
-        await this.sheetsConnector.updateSheet([
+        const allData = [
             ...summarySheet,
             [], // Empty row for separation
             ...detailedFindingsSheet,
-        ]);
+        ];
+        try {
+            // Update the sheet using updateRange method
+            const sanitizedData = this.sanitizeData(allData);
+            await this.sheetsConnector.updateRange("A1", sanitizedData);
+            console.log("Report generated and uploaded to Google Sheets successfully.");
+        }
+        catch (error) {
+            console.error("Error updating Google Sheet:", error);
+            throw error;
+        }
     }
     generateSummarySheet(rankedArticles) {
         return [
@@ -69,6 +79,14 @@ export class XlsReportAgent extends PolicySynthAgent {
                 article.research?.description || "N/A",
             ]),
         ];
+    }
+    sanitizeData(data) {
+        return data.map(row => row.map(cell => {
+            if (typeof cell === 'object' && cell !== null) {
+                return JSON.stringify(cell);
+            }
+            return String(cell);
+        }));
     }
     generateDetailedFindingsSheet(rankedArticles) {
         const headers = [

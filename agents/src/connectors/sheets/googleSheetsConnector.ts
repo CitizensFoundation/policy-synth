@@ -10,7 +10,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
   static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID =
     "4b8c3d2e-5f6a-1a8b-9c0d-1ecf3afb536d";
 
-  static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 3;
+  static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 4;
 
   static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID,
@@ -20,7 +20,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     available: true,
     configuration: {
       name: "Google Sheets",
-      classType: PsConnectorClassTypes.Document as string,
+      classType: PsConnectorClassTypes.Spreadsheet as string,
       description: "Connector for Google Sheets",
       hasPublicAccess: true,
       imageUrl:

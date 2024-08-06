@@ -46,7 +46,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     let startArticleNumber = 1;
     let hasMoreArticles = true;
     let articleCount = 0;
-    const MAX_ARTICLES = 4;
+    const MAX_ARTICLES = 29;
 
     while (hasMoreArticles) {
       const endArticleNumber = startArticleNumber + this.articlesPerBatch - 1;

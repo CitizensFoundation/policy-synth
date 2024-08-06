@@ -4,7 +4,7 @@ import { PsConnectorClassTypes } from "../../connectorTypes.js";
 import { PsBaseSheetConnector } from "../base/baseSheetConnector.js";
 export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     static GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID = "4b8c3d2e-5f6a-1a8b-9c0d-1ecf3afb536d";
-    static GOOGLE_SHEETS_CONNECTOR_VERSION = 3;
+    static GOOGLE_SHEETS_CONNECTOR_VERSION = 4;
     static getConnectorClass = {
         class_base_id: this.GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID,
         name: "Google Sheets",
@@ -13,7 +13,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
         available: true,
         configuration: {
             name: "Google Sheets",
-            classType: PsConnectorClassTypes.Document,
+            classType: PsConnectorClassTypes.Spreadsheet,
             description: "Connector for Google Sheets",
             hasPublicAccess: true,
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/1187aee2-39e8-48b2-afa2-0aba91c0ced0.png",
