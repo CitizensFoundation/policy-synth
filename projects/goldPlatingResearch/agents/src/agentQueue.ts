@@ -126,7 +126,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
       },
       supportArticleTextArticleIdMapping: {
         1: 1,
-        2: 2 //...
+        //...
       },
       nationalRegulation: [
         {

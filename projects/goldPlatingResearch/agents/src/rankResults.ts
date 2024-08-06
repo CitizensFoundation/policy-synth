@@ -31,7 +31,7 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     );
     await this.performPairwiseRanking(-1);
 
-    const rankedArticles = this.getOrderedListOfItems(-1) as RankableArticle[];
+    const rankedArticles = this.getOrderedListOfItems(-1, true) as RankableArticle[];
     this.updateArticlesWithRankings(researchItem, rankedArticles);
   }
 
@@ -117,15 +117,19 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     researchItem: GoldplatingResearchItem,
     rankedArticles: RankableArticle[]
   ): void {
-    rankedArticles.forEach((article, index) => {
-      const eloRating = 2000 - index * (500 / rankedArticles.length); // Simple ELO-like rating
-
+    rankedArticles.forEach((article) => {
+      if (!article.eloRating) {
+        this.logger.error(
+          `Article ${article.number} has no ELO rating after ranking`
+        );
+      }
       if (article.source === "law" && researchItem.nationalLaw) {
         const lawArticle = researchItem.nationalLaw.law.articles.find(
           (a) => a.number === article.number
         );
         if (lawArticle) {
-          lawArticle.eloRating = eloRating;
+          lawArticle.eloRating = article.eloRating;
+          this.logger.debug(`Updated law article ${article.number} with ELO rating ${article.eloRating}`);
         }
       } else if (
         article.source === "regulation" &&
@@ -136,8 +140,9 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
             (a) => a.number === article.number
           );
           if (regulationArticle) {
-            regulationArticle.eloRating = eloRating;
-            break; // Exit the loop once we've found and updated the article
+            regulationArticle.eloRating = article.eloRating;
+            this.logger.debug(`Updated regulation article ${article.number} with ELO rating ${article.eloRating}`);
+            break;
           }
         }
       }

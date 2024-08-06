@@ -12,7 +12,7 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
         const rankableArticles = this.collectRankableArticles(researchItem);
         this.setupRankingPrompts(-1, rankableArticles, rankableArticles.length * 15);
         await this.performPairwiseRanking(-1);
-        const rankedArticles = this.getOrderedListOfItems(-1);
+        const rankedArticles = this.getOrderedListOfItems(-1, true);
         this.updateArticlesWithRankings(researchItem, rankedArticles);
     }
     collectRankableArticles(researchItem) {
@@ -68,12 +68,15 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
         return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
     updateArticlesWithRankings(researchItem, rankedArticles) {
-        rankedArticles.forEach((article, index) => {
-            const eloRating = 2000 - index * (500 / rankedArticles.length); // Simple ELO-like rating
+        rankedArticles.forEach((article) => {
+            if (!article.eloRating) {
+                this.logger.error(`Article ${article.number} has no ELO rating after ranking`);
+            }
             if (article.source === "law" && researchItem.nationalLaw) {
                 const lawArticle = researchItem.nationalLaw.law.articles.find((a) => a.number === article.number);
                 if (lawArticle) {
-                    lawArticle.eloRating = eloRating;
+                    lawArticle.eloRating = article.eloRating;
+                    this.logger.debug(`Updated law article ${article.number} with ELO rating ${article.eloRating}`);
                 }
             }
             else if (article.source === "regulation" &&
@@ -81,8 +84,9 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
                 for (const regulation of researchItem.nationalRegulation) {
                     const regulationArticle = regulation.articles.find((a) => a.number === article.number);
                     if (regulationArticle) {
-                        regulationArticle.eloRating = eloRating;
-                        break; // Exit the loop once we've found and updated the article
+                        regulationArticle.eloRating = article.eloRating;
+                        this.logger.debug(`Updated regulation article ${article.number} with ELO rating ${article.eloRating}`);
+                        break;
                     }
                 }
             }
