@@ -21,13 +21,23 @@ export class GoogleDocsReportAgent extends PolicySynthAgent {
         let articles = [];
         if (researchItem.nationalLaw) {
             articles.push(...researchItem.nationalLaw.law.articles
-                .filter(article => article.research?.possibleGoldplating)
-                .map(article => ({ ...article, source: 'law', eloRating: article.eloRating || 0 })));
+                .filter((article) => article.research?.possibleGoldplating)
+                .map((article) => ({
+                ...article,
+                source: "law",
+                eloRating: article.eloRating || 0,
+            })));
         }
         if (researchItem.nationalRegulation) {
-            articles.push(...researchItem.nationalRegulation.articles
-                .filter(article => article.research?.possibleGoldplating)
-                .map(article => ({ ...article, source: 'regulation', eloRating: article.eloRating || 0 })));
+            researchItem.nationalRegulation.forEach(regulation => {
+                articles.push(...regulation.articles
+                    .filter((article) => article.research?.possibleGoldplating)
+                    .map((article) => ({
+                    ...article,
+                    source: "regulation",
+                    eloRating: article.eloRating || 0,
+                })));
+            });
         }
         return articles.sort((a, b) => b.eloRating - a.eloRating);
     }

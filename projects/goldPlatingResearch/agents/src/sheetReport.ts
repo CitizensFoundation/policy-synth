@@ -5,7 +5,7 @@ import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector";
 
 interface ArticleWithRanking extends LawArticle {
-  source: 'law' | 'regulation';
+  source: "law" | "regulation";
   eloRating: number;
 }
 
@@ -41,52 +41,82 @@ export class XlsReportAgent extends PolicySynthAgent {
     await this.updateRangedProgress(100, "XLS report generation completed");
   }
 
-  private collectAndRankArticles(researchItem: GoldplatingResearchItem): ArticleWithRanking[] {
+  private collectAndRankArticles(
+    researchItem: GoldplatingResearchItem
+  ): ArticleWithRanking[] {
     let articles: ArticleWithRanking[] = [];
 
     if (researchItem.nationalLaw) {
-      articles.push(...researchItem.nationalLaw.law.articles
-        .filter(article => article.research?.possibleGoldplating)
-        .map(article => ({ ...article, source: 'law' as const, eloRating: article.eloRating || 0 })));
-          }
+      articles.push(
+        ...researchItem.nationalLaw.law.articles
+          .filter((article) => article.research?.possibleGoldplating)
+          .map((article) => ({
+            ...article,
+            source: "law" as const,
+            eloRating: article.eloRating || 0,
+          }))
+      );
+    }
 
     if (researchItem.nationalRegulation) {
-      articles.push(...researchItem.nationalRegulation.articles
-        .filter(article => article.research?.possibleGoldplating)
-        .map(article => ({ ...article, source: 'regulation' as const, eloRating: article.eloRating || 0 })));    }
+      researchItem.nationalRegulation.forEach(regulation => {
+        articles.push(
+          ...regulation.articles
+            .filter((article) => article.research?.possibleGoldplating)
+            .map((article) => ({
+              ...article,
+              source: "regulation" as const,
+              eloRating: article.eloRating || 0,
+            }))
+        );
+      });
+    }
 
     return articles.sort((a, b) => b.eloRating - a.eloRating);
   }
 
-  private async generateReport(researchItem: GoldplatingResearchItem, rankedArticles: ArticleWithRanking[]): Promise<void> {
+  private async generateReport(
+    researchItem: GoldplatingResearchItem,
+    rankedArticles: ArticleWithRanking[]
+  ): Promise<void> {
     const summarySheet = this.generateSummarySheet(rankedArticles);
-    const detailedFindingsSheet = this.generateDetailedFindingsSheet(rankedArticles);
+    const detailedFindingsSheet =
+      this.generateDetailedFindingsSheet(rankedArticles);
 
     await this.sheetsConnector.updateSheet([
       ...summarySheet,
-      [],  // Empty row for separation
-      ...detailedFindingsSheet
+      [], // Empty row for separation
+      ...detailedFindingsSheet,
     ]);
   }
 
-  private generateSummarySheet(rankedArticles: ArticleWithRanking[]): string[][] {
+  private generateSummarySheet(
+    rankedArticles: ArticleWithRanking[]
+  ): string[][] {
     return [
       ["Gold-Plating Analysis Report - Executive Summary"],
-      ["Total instances of potential gold-plating:", rankedArticles.length.toString()],
+      [
+        "Total instances of potential gold-plating:",
+        rankedArticles.length.toString(),
+      ],
       [""],
       ["Top 5 Most Significant Instances:"],
       ["Rank", "Source", "Article Number", "ELO Rating", "Description"],
-      ...rankedArticles.slice(0, 5).map((article, index) => [
-        (index + 1).toString(),
-        article.source,
-        article.number,
-        article.eloRating.toString(),
-        article.research?.description || "N/A"
-      ])
+      ...rankedArticles
+        .slice(0, 5)
+        .map((article, index) => [
+          (index + 1).toString(),
+          article.source,
+          article.number,
+          article.eloRating.toString(),
+          article.research?.description || "N/A",
+        ]),
     ];
   }
 
-  private generateDetailedFindingsSheet(rankedArticles: ArticleWithRanking[]): string[][] {
+  private generateDetailedFindingsSheet(
+    rankedArticles: ArticleWithRanking[]
+  ): string[][] {
     const headers = [
       "Rank",
       "Source",
@@ -102,7 +132,7 @@ export class XlsReportAgent extends PolicySynthAgent {
       "Stricter National Laws",
       "Disproportionate Penalties",
       "Earlier Implementation",
-      "Conclusion"
+      "Conclusion",
     ];
 
     const rows = rankedArticles.map((article, index) => [
@@ -120,13 +150,9 @@ export class XlsReportAgent extends PolicySynthAgent {
       article.research?.results.stricterNationalLaws || "N/A",
       article.research?.results.disproportionatePenalties || "N/A",
       article.research?.results.earlierImplementation || "N/A",
-      article.research?.results.conclusion || "N/A"
+      article.research?.results.conclusion || "N/A",
     ]);
 
-    return [
-      ["Detailed Findings"],
-      headers,
-      ...rows
-    ];
+    return [["Detailed Findings"], headers, ...rows];
   }
 }

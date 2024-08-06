@@ -19,13 +19,15 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
         const rankableArticles = [];
         if (researchItem.nationalLaw) {
             rankableArticles.push(...researchItem.nationalLaw.law.articles
-                .filter(article => article.research?.possibleGoldplating)
-                .map(article => ({ ...article, source: 'law' })));
+                .filter((article) => article.research?.possibleGoldplating)
+                .map((article) => ({ ...article, source: "law" })));
         }
         if (researchItem.nationalRegulation) {
-            rankableArticles.push(...researchItem.nationalRegulation.articles
-                .filter(article => article.research?.possibleGoldplating)
-                .map(article => ({ ...article, source: 'regulation' })));
+            researchItem.nationalRegulation.forEach((regulation) => {
+                rankableArticles.push(...regulation.articles
+                    .filter((article) => article.research?.possibleGoldplating)
+                    .map((article) => ({ ...article, source: "regulation" })));
+            });
         }
         return rankableArticles;
     }
@@ -68,16 +70,20 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     updateArticlesWithRankings(researchItem, rankedArticles) {
         rankedArticles.forEach((article, index) => {
             const eloRating = 2000 - index * (500 / rankedArticles.length); // Simple ELO-like rating
-            if (article.source === 'law' && researchItem.nationalLaw) {
-                const lawArticle = researchItem.nationalLaw.law.articles.find(a => a.number === article.number);
+            if (article.source === "law" && researchItem.nationalLaw) {
+                const lawArticle = researchItem.nationalLaw.law.articles.find((a) => a.number === article.number);
                 if (lawArticle) {
                     lawArticle.eloRating = eloRating;
                 }
             }
-            else if (article.source === 'regulation' && researchItem.nationalRegulation) {
-                const regulationArticle = researchItem.nationalRegulation.articles.find(a => a.number === article.number);
-                if (regulationArticle) {
-                    regulationArticle.eloRating = eloRating;
+            else if (article.source === "regulation" &&
+                researchItem.nationalRegulation) {
+                for (const regulation of researchItem.nationalRegulation) {
+                    const regulationArticle = regulation.articles.find((a) => a.number === article.number);
+                    if (regulationArticle) {
+                        regulationArticle.eloRating = eloRating;
+                        break; // Exit the loop once we've found and updated the article
+                    }
                 }
             }
         });

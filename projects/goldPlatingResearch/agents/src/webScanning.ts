@@ -6,7 +6,10 @@ import axios from "axios";
 import { BaseGetWebPagesOperationsAgent } from "@policysynth/agents/webResearch/getWebPagesOperations.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import {
+  PsAiModelSize,
+  PsAiModelType,
+} from "@policysynth/agents/aiModelTypes.js";
 
 export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
   declare memory: GoldPlatingMemoryData;
@@ -37,11 +40,11 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
     }
 
     if (researchItem.nationalRegulation) {
-      urls.push(researchItem.nationalRegulation.url);
+      urls.push(...researchItem.nationalRegulation.map((reg) => reg.url));
     }
 
-    if (researchItem.euLaw) {
-      urls.push(researchItem.euLaw.url);
+    if (researchItem.euDirective) {
+      urls.push(researchItem.euDirective.url);
     }
 
     if (researchItem.euRegulation) {
@@ -75,7 +78,13 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
       const progress = Math.round(((i + 1) / listOfUrls.length) * 100);
       await this.updateRangedProgress(progress, `Scanning ${listOfUrls[i]}`);
 
-      await this.getAndProcessPage(undefined, listOfUrls[i], browserPage, "law", undefined);
+      await this.getAndProcessPage(
+        undefined,
+        listOfUrls[i],
+        browserPage,
+        "law",
+        undefined
+      );
     }
 
     await browser.close();
@@ -95,7 +104,13 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
     if (url.toLowerCase().endsWith(".pdf")) {
       await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
     } else {
-      await this.getAndProcessHtml(subProblemIndex, url, browserPage, type, entityIndex);
+      await this.getAndProcessHtml(
+        subProblemIndex,
+        url,
+        browserPage,
+        type,
+        entityIndex
+      );
     }
     return true;
   }
@@ -108,9 +123,7 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
     entityIndex: number | undefined,
     policy: any | undefined = undefined
   ): Promise<void> {
-    this.logger.debug(
-      `Processing page text ${text.slice(0, 150)} for ${url}`
-    );
+    this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url}`);
 
     // Store the text in memory for later use
     if (!this.memory.scannedPages) {
@@ -126,22 +139,30 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
     }
 
     if (researchItem.nationalLaw) {
-      researchItem.nationalLaw.law.fullText = this.memory.scannedPages[researchItem.nationalLaw.law.url] || "";
+      researchItem.nationalLaw.law.fullText =
+        this.memory.scannedPages[researchItem.nationalLaw.law.url] || "";
       if (researchItem.nationalLaw.supportArticleText) {
-        researchItem.nationalLaw.supportArticleText.fullText = this.memory.scannedPages[researchItem.nationalLaw.supportArticleText.url] || "";
+        researchItem.nationalLaw.supportArticleText.fullText =
+          this.memory.scannedPages[
+            researchItem.nationalLaw.supportArticleText.url
+          ] || "";
       }
     }
 
     if (researchItem.nationalRegulation) {
-      researchItem.nationalRegulation.fullText = this.memory.scannedPages[researchItem.nationalRegulation.url] || "";
+      researchItem.nationalRegulation.forEach((regulation) => {
+        regulation.fullText = this.memory.scannedPages![regulation.url] || "";
+      });
     }
 
-    if (researchItem.euLaw) {
-      researchItem.euLaw.fullText = this.memory.scannedPages[researchItem.euLaw.url] || "";
+    if (researchItem.euDirective) {
+      researchItem.euDirective.fullText =
+        this.memory.scannedPages[researchItem.euDirective.url] || "";
     }
 
     if (researchItem.euRegulation) {
-      researchItem.euRegulation.fullText = this.memory.scannedPages[researchItem.euRegulation.url] || "";
+      researchItem.euRegulation.fullText =
+        this.memory.scannedPages[researchItem.euRegulation.url] || "";
     }
   }
 }

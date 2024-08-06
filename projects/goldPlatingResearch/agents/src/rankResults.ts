@@ -3,7 +3,7 @@ import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRank
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 
 interface RankableArticle extends LawArticle {
-  source: 'law' | 'regulation';
+  source: "law" | "regulation";
 }
 
 export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
@@ -24,26 +24,38 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
   async processItem(researchItem: GoldplatingResearchItem): Promise<void> {
     const rankableArticles = this.collectRankableArticles(researchItem);
 
-    this.setupRankingPrompts(-1, rankableArticles, rankableArticles.length * 15);
+    this.setupRankingPrompts(
+      -1,
+      rankableArticles,
+      rankableArticles.length * 15
+    );
     await this.performPairwiseRanking(-1);
 
     const rankedArticles = this.getOrderedListOfItems(-1) as RankableArticle[];
     this.updateArticlesWithRankings(researchItem, rankedArticles);
   }
 
-  private collectRankableArticles(researchItem: GoldplatingResearchItem): RankableArticle[] {
+  private collectRankableArticles(
+    researchItem: GoldplatingResearchItem
+  ): RankableArticle[] {
     const rankableArticles: RankableArticle[] = [];
 
     if (researchItem.nationalLaw) {
-      rankableArticles.push(...researchItem.nationalLaw.law.articles
-        .filter(article => article.research?.possibleGoldplating)
-        .map(article => ({ ...article, source: 'law' as const })));
+      rankableArticles.push(
+        ...researchItem.nationalLaw.law.articles
+          .filter((article) => article.research?.possibleGoldplating)
+          .map((article) => ({ ...article, source: "law" as const }))
+      );
     }
 
     if (researchItem.nationalRegulation) {
-      rankableArticles.push(...researchItem.nationalRegulation.articles
-        .filter(article => article.research?.possibleGoldplating)
-        .map(article => ({ ...article, source: 'regulation' as const })));
+      researchItem.nationalRegulation.forEach((regulation) => {
+        rankableArticles.push(
+          ...regulation.articles
+            .filter((article) => article.research?.possibleGoldplating)
+            .map((article) => ({ ...article, source: "regulation" as const }))
+        );
+      });
     }
 
     return rankableArticles;
@@ -101,19 +113,32 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     );
   }
 
-  private updateArticlesWithRankings(researchItem: GoldplatingResearchItem, rankedArticles: RankableArticle[]): void {
+  private updateArticlesWithRankings(
+    researchItem: GoldplatingResearchItem,
+    rankedArticles: RankableArticle[]
+  ): void {
     rankedArticles.forEach((article, index) => {
       const eloRating = 2000 - index * (500 / rankedArticles.length); // Simple ELO-like rating
 
-      if (article.source === 'law' && researchItem.nationalLaw) {
-        const lawArticle = researchItem.nationalLaw.law.articles.find(a => a.number === article.number);
+      if (article.source === "law" && researchItem.nationalLaw) {
+        const lawArticle = researchItem.nationalLaw.law.articles.find(
+          (a) => a.number === article.number
+        );
         if (lawArticle) {
           lawArticle.eloRating = eloRating;
         }
-      } else if (article.source === 'regulation' && researchItem.nationalRegulation) {
-        const regulationArticle = researchItem.nationalRegulation.articles.find(a => a.number === article.number);
-        if (regulationArticle) {
-          regulationArticle.eloRating = eloRating;
+      } else if (
+        article.source === "regulation" &&
+        researchItem.nationalRegulation
+      ) {
+        for (const regulation of researchItem.nationalRegulation) {
+          const regulationArticle = regulation.articles.find(
+            (a) => a.number === article.number
+          );
+          if (regulationArticle) {
+            regulationArticle.eloRating = eloRating;
+            break; // Exit the loop once we've found and updated the article
+          }
         }
       }
     });

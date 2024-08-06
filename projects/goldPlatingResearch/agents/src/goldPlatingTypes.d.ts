@@ -45,7 +45,7 @@ interface NationalLaw {
   }
 }
 
-interface EuLaw {
+interface EuDirective {
   url: string;
   fullText: string;
 }
@@ -62,11 +62,12 @@ interface EuRegulation {
 }
 
 interface GoldplatingResearchItem {
+  name: string;
   nationalLaw: NationalLaw;
   supportArticleTextArticleIdMapping: Record<number, number>;
-  nationalRegulation: NationalRegulation;
-  euLaw: EuLaw;
-  euRegulation: EuRegulation;
+  nationalRegulation: NationalRegulation[];
+  euDirective: EuDirective;
+  euRegulation?: EuRegulation;
 }
 
 interface GoldPlatingMemoryData extends PsAgentMemoryData {

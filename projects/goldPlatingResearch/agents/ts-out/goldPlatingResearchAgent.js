@@ -9,8 +9,8 @@ import { FoundGoldPlatingRankingAgent } from "./rankResults.js";
 import { GoogleDocsReportAgent } from "./docReport.js";
 import { XlsReportAgent } from "./sheetReport.js";
 export class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
-    static GOLDPLATING_AGENT_CLASS_BASE_ID = "a1c2l3a4-f516n72-48e9a0e-a152c394-a5f6e7a819";
-    static GOLDPLATING_AGENT_CLASS_VERSION = 1;
+    static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
+    static GOLDPLATING_AGENT_CLASS_VERSION = 2;
     get agentQueueName() {
         return "GOLDPLATING_RESEARCH";
     }
@@ -22,11 +22,144 @@ export class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
             },
         ];
     }
+    getTestResearchItem() {
+        return {
+            name: "Lög um fjarskipti",
+            nationalLaw: {
+                law: {
+                    url: "https://www.althingi.is/lagas/nuna/2022070.html",
+                    fullText: "",
+                    articles: [],
+                },
+                supportArticleText: {
+                    url: "https://www.althingi.is/altext/154/s/1573.html",
+                    fullText: "",
+                    articles: [],
+                },
+            },
+            supportArticleTextArticleIdMapping: {
+                1: 1,
+            },
+            nationalRegulation: [
+                {
+                    url: "https://files.reglugerd.is/pdf/1227-2019/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/0034-2020/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/0480-2021/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/0945-2023/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/0845-2022/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/1350-2022/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/1100-2022/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/1588-2022/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/1589-2022/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/0555-2023/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/0556-2023/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://island.is/reglugerdir/nr/0422-2023",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/0944-2019/current",
+                    fullText: "",
+                    articles: [],
+                },
+            ],
+            euDirective: {
+                url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32018L1972",
+                fullText: "",
+            },
+        };
+    }
+    getTestResearchItemTwo() {
+        return {
+            name: "Lög um öryggi net- og upplýsingakerfa mikilvægra innviða",
+            nationalLaw: {
+                law: {
+                    url: "https://www.althingi.is/lagas/nuna/2019078.html",
+                    fullText: "",
+                    articles: [],
+                },
+                supportArticleText: {
+                    url: "https://www.althingi.is/altext/149/s/0557.html",
+                    fullText: "",
+                    articles: [],
+                },
+            },
+            supportArticleTextArticleIdMapping: {
+                1: 1,
+            },
+            nationalRegulation: [
+                {
+                    url: "https://files.reglugerd.is/pdf/0866-2020/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/1720-2023/current",
+                    fullText: "",
+                    articles: [],
+                },
+                {
+                    url: "https://files.reglugerd.is/pdf/1255-2020/current",
+                    fullText: "",
+                    articles: [],
+                },
+            ],
+            euDirective: {
+                url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32016L1148",
+                fullText: "",
+            },
+        };
+    }
+    forceMemoryRestart = true;
     async setupMemoryIfNeeded() {
-        if (!this.memory) {
+        if (this.forceMemoryRestart || !this.memory) {
             this.memory = {
                 agentId: this.agent.id, // Add this line
-                researchItems: []
+                researchItems: [this.getTestResearchItemTwo()],
             };
         }
     }
@@ -42,19 +175,25 @@ export class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
         // 1. Download laws and regulations
         const webScanningAgent = new WebScanningAgent(this.agent, this.memory, 0, 10);
         await webScanningAgent.processItem(researchItem);
+        this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 2. Clean and process National laws and regulations
         await this.cleanAndProcessNationalLawsAndRegulations(researchItem);
+        this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 3. Compare and search for gold-plating
         const goldPlatingSearchAgent = new GoldPlatingSearchAgent(this.agent, this.memory, 40, 60);
         await goldPlatingSearchAgent.processItem(researchItem);
+        this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 4. Review support text for possible gold-plating
         const supportTextReviewAgent = new SupportTextReviewAgent(this.agent, this.memory, 60, 70);
         await supportTextReviewAgent.processItem(researchItem);
+        this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 5. Rank found gold-plating
         const foundGoldPlatingRankingAgent = new FoundGoldPlatingRankingAgent(this.agent, this.memory, 70, 80);
         await foundGoldPlatingRankingAgent.processItem(researchItem);
+        this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 6. Generate reports
         const googleDocsReportAgent = new GoogleDocsReportAgent(this.agent, this.memory, 80, 90);
+        this.logger.debug(JSON.stringify(this.memory, null, 2));
         await googleDocsReportAgent.processItem(researchItem);
         const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
         await xlsReportAgent.processItem(researchItem);
@@ -64,16 +203,22 @@ export class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
         const textCleaningAgent = new TextCleaningAgent(this.agent, this.memory, 10, 20);
         const articleExtractionAgent = new ArticleExtractionAgent(this.agent, this.memory, 20, 40);
         if (researchItem.nationalLaw) {
-            researchItem.nationalLaw.law.fullText = await textCleaningAgent.processItem(researchItem.nationalLaw.law.fullText);
-            researchItem.nationalLaw.law.articles = await articleExtractionAgent.processItem(researchItem.nationalLaw.law.fullText, 'law');
+            researchItem.nationalLaw.law.fullText =
+                await textCleaningAgent.processItem(researchItem.nationalLaw.law.fullText);
+            researchItem.nationalLaw.law.articles =
+                await articleExtractionAgent.processItem(researchItem.nationalLaw.law.fullText, "law");
             if (researchItem.nationalLaw.supportArticleText) {
-                researchItem.nationalLaw.supportArticleText.fullText = await textCleaningAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText);
-                researchItem.nationalLaw.supportArticleText.articles = await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, 'law');
+                researchItem.nationalLaw.supportArticleText.fullText =
+                    await textCleaningAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText);
+                researchItem.nationalLaw.supportArticleText.articles =
+                    await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, "law");
             }
         }
         if (researchItem.nationalRegulation) {
-            researchItem.nationalRegulation.fullText = await textCleaningAgent.processItem(researchItem.nationalRegulation.fullText);
-            researchItem.nationalRegulation.articles = await articleExtractionAgent.processItem(researchItem.nationalRegulation.fullText, 'regulation');
+            for (const regulation of researchItem.nationalRegulation) {
+                regulation.fullText = await textCleaningAgent.processItem(regulation.fullText);
+                regulation.articles = await articleExtractionAgent.processItem(regulation.fullText, "regulation");
+            }
         }
     }
     static getAgentClass() {
@@ -89,7 +234,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
                 hasPublicAccess: false,
                 description: "An agent for conducting gold-plating research on laws and regulations",
                 queueName: "GOLDPLATING_RESEARCH",
-                imageUrl: "https://example.com/goldplating-agent-image.png",
+                imageUrl: "https://aoi-storage-production.citizens.is/dl/3071cb4af1d0891e2f14c576a795cfa1--retina-1.png",
                 iconName: "goldplating_research",
                 capabilities: ["research", "analysis", "legal"],
                 requestedAiModelSizes: ["small", "medium", "large"],

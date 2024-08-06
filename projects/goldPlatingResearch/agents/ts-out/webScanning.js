@@ -19,10 +19,10 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
             }
         }
         if (researchItem.nationalRegulation) {
-            urls.push(researchItem.nationalRegulation.url);
+            urls.push(...researchItem.nationalRegulation.map((reg) => reg.url));
         }
-        if (researchItem.euLaw) {
-            urls.push(researchItem.euLaw.url);
+        if (researchItem.euDirective) {
+            urls.push(researchItem.euDirective.url);
         }
         if (researchItem.euRegulation) {
             urls.push(researchItem.euRegulation.url);
@@ -76,19 +76,25 @@ export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
             return;
         }
         if (researchItem.nationalLaw) {
-            researchItem.nationalLaw.law.fullText = this.memory.scannedPages[researchItem.nationalLaw.law.url] || "";
+            researchItem.nationalLaw.law.fullText =
+                this.memory.scannedPages[researchItem.nationalLaw.law.url] || "";
             if (researchItem.nationalLaw.supportArticleText) {
-                researchItem.nationalLaw.supportArticleText.fullText = this.memory.scannedPages[researchItem.nationalLaw.supportArticleText.url] || "";
+                researchItem.nationalLaw.supportArticleText.fullText =
+                    this.memory.scannedPages[researchItem.nationalLaw.supportArticleText.url] || "";
             }
         }
         if (researchItem.nationalRegulation) {
-            researchItem.nationalRegulation.fullText = this.memory.scannedPages[researchItem.nationalRegulation.url] || "";
+            researchItem.nationalRegulation.forEach((regulation) => {
+                regulation.fullText = this.memory.scannedPages[regulation.url] || "";
+            });
         }
-        if (researchItem.euLaw) {
-            researchItem.euLaw.fullText = this.memory.scannedPages[researchItem.euLaw.url] || "";
+        if (researchItem.euDirective) {
+            researchItem.euDirective.fullText =
+                this.memory.scannedPages[researchItem.euDirective.url] || "";
         }
         if (researchItem.euRegulation) {
-            researchItem.euRegulation.fullText = this.memory.scannedPages[researchItem.euRegulation.url] || "";
+            researchItem.euRegulation.fullText =
+                this.memory.scannedPages[researchItem.euRegulation.url] || "";
         }
     }
 }

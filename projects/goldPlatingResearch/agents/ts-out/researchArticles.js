@@ -1,5 +1,5 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
-import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class GoldPlatingSearchAgent extends PolicySynthAgent {
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
@@ -13,27 +13,33 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
         await this.updateRangedProgress(100, "Gold-plating search completed");
     }
     async compareNationalLawToEULaw(researchItem) {
-        if (!researchItem.nationalLaw || !researchItem.euLaw)
+        if (!researchItem.nationalLaw || !researchItem.euDirective)
             return;
         const totalArticles = researchItem.nationalLaw.law.articles.length;
         for (let i = 0; i < totalArticles; i++) {
             const article = researchItem.nationalLaw.law.articles[i];
             const progress = (i / totalArticles) * 25; // 25% of total progress
             await this.updateRangedProgress(progress, `Analyzing national law article ${article.number}`);
-            const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalLaw.law.fullText, researchItem.euLaw.fullText, article.text);
+            const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalLaw.law.fullText, researchItem.euDirective.fullText, article.text);
             article.research = this.processGoldPlatingResult(goldPlatingResult);
         }
     }
     async compareNationalRegulationToEULaw(researchItem) {
-        if (!researchItem.nationalRegulation || !researchItem.euLaw)
+        if (!researchItem.nationalRegulation || !researchItem.euDirective)
             return;
-        const totalArticles = researchItem.nationalRegulation.articles.length;
-        for (let i = 0; i < totalArticles; i++) {
-            const article = researchItem.nationalRegulation.articles[i];
-            const progress = 25 + (i / totalArticles) * 25; // 25% to 50% of total progress
-            await this.updateRangedProgress(progress, `Analyzing national regulation article ${article.number}`);
-            const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalRegulation.fullText, researchItem.euLaw.fullText, article.text);
-            article.research = this.processGoldPlatingResult(goldPlatingResult);
+        let totalArticles = 0;
+        researchItem.nationalRegulation.forEach((regulation) => {
+            totalArticles += regulation.articles.length;
+        });
+        let processedArticles = 0;
+        for (const regulation of researchItem.nationalRegulation) {
+            for (const article of regulation.articles) {
+                const progress = 25 + (processedArticles / totalArticles) * 25; // 25% to 50% of total progress
+                await this.updateRangedProgress(progress, `Analyzing national regulation article ${article.number}`);
+                const goldPlatingResult = await this.analyzeGoldPlating(regulation.fullText, researchItem.euDirective.fullText, article.text);
+                article.research = this.processGoldPlatingResult(goldPlatingResult);
+                processedArticles++;
+            }
         }
     }
     async compareNationalLawToEURegulation(researchItem) {
@@ -51,13 +57,19 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
     async compareNationalRegulationToEURegulation(researchItem) {
         if (!researchItem.nationalRegulation || !researchItem.euRegulation)
             return;
-        const totalArticles = researchItem.nationalRegulation.articles.length;
-        for (let i = 0; i < totalArticles; i++) {
-            const article = researchItem.nationalRegulation.articles[i];
-            const progress = 75 + (i / totalArticles) * 25; // 75% to 100% of total progress
-            await this.updateRangedProgress(progress, `Analyzing national regulation article ${article.number} against EU regulation`);
-            const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalRegulation.fullText, researchItem.euRegulation.fullText, article.text);
-            article.research = this.processGoldPlatingResult(goldPlatingResult);
+        let totalArticles = 0;
+        researchItem.nationalRegulation.forEach((regulation) => {
+            totalArticles += regulation.articles.length;
+        });
+        let processedArticles = 0;
+        for (const regulation of researchItem.nationalRegulation) {
+            for (const article of regulation.articles) {
+                const progress = 75 + (processedArticles / totalArticles) * 25; // 75% to 100% of total progress
+                await this.updateRangedProgress(progress, `Analyzing national regulation article ${article.number} against EU regulation`);
+                const goldPlatingResult = await this.analyzeGoldPlating(regulation.fullText, researchItem.euRegulation.fullText, article.text);
+                article.research = this.processGoldPlatingResult(goldPlatingResult);
+                processedArticles++;
+            }
         }
     }
     async analyzeGoldPlating(icelandicLaw, euLaw, articleToAnalyze) {
@@ -79,21 +91,24 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
                 stricterNationalLaws: "",
                 disproportionatePenalties: "",
                 earlierImplementation: "",
-                conclusion: ""
-            }
+                conclusion: "",
+            },
         };
-        if (result.conclusion && result.conclusion.toLowerCase().includes("gold plating was found")) {
+        if (result.conclusion &&
+            result.conclusion.toLowerCase().includes("gold plating was found")) {
             research.possibleGoldplating = true;
             research.description = result.conclusion;
             research.reasonForGoldPlating = this.extractReasonForGoldPlating(result.analysis);
-            research.recommendation = "Further review recommended to address potential gold-plating issues.";
+            research.recommendation =
+                "Further review recommended to address potential gold-plating issues.";
         }
         return research;
     }
     extractReasonForGoldPlating(analysis) {
         const reasons = [];
         for (const key in analysis) {
-            if (analysis[key] && !analysis[key].toLowerCase().includes("no evidence")) {
+            if (analysis[key] &&
+                !analysis[key].toLowerCase().includes("no evidence")) {
                 reasons.push(`${key}: ${analysis[key]}`);
             }
         }
@@ -154,7 +169,7 @@ ${euLaw}
 ${articleToAnalyze}
 </icelandic_law_article_to_analyse>
 
-Your analysis of the law article:`;
+Your analysis of the law article in JSON format:`;
     }
 }
 //# sourceMappingURL=researchArticles.js.map

@@ -32,16 +32,21 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     async reviewNationalRegulationSupportText(researchItem) {
         if (!researchItem.nationalRegulation)
             return;
-        const articles = researchItem.nationalRegulation.articles;
-        const totalArticles = articles.length;
-        for (let i = 0; i < totalArticles; i++) {
-            const article = articles[i];
-            const progress = 50 + (i / totalArticles) * 50; // 50% to 100% of total progress
-            await this.updateRangedProgress(progress, `Reviewing support text for national regulation article ${article.number}`);
-            if (article.research?.possibleGoldplating) {
-                // For regulations, we don't have separate support text, so we'll use the article's own text as context
-                const explanation = await this.analyzeSupportText(article, article);
-                article.research.supportTextExplanation = explanation;
+        let totalArticles = 0;
+        researchItem.nationalRegulation.forEach(regulation => {
+            totalArticles += regulation.articles.length;
+        });
+        let processedArticles = 0;
+        for (const regulation of researchItem.nationalRegulation) {
+            for (const article of regulation.articles) {
+                const progress = 50 + (processedArticles / totalArticles) * 50; // 50% to 100% of total progress
+                await this.updateRangedProgress(progress, `Reviewing support text for national regulation article ${article.number}`);
+                if (article.research?.possibleGoldplating) {
+                    // For regulations, we don't have separate support text, so we'll use the article's own text as context
+                    const explanation = await this.analyzeSupportText(article, article);
+                    article.research.supportTextExplanation = explanation;
+                }
+                processedArticles++;
             }
         }
     }

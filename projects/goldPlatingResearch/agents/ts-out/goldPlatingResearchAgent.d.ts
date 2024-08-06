@@ -8,6 +8,9 @@ export declare class GoldPlatingResearchAgent extends PolicySynthAgentQueue {
         processor: typeof GoldPlatingResearchAgent;
         weight: number;
     }[];
+    getTestResearchItem(): GoldplatingResearchItem;
+    getTestResearchItemTwo(): GoldplatingResearchItem;
+    forceMemoryRestart: boolean;
     setupMemoryIfNeeded(): Promise<void>;
     process(): Promise<void>;
     private processResearchItem;
