@@ -117,33 +117,53 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             throw new Error("Google Docs ID is not set.");
         }
         try {
+            // First, get the current document to find its length
+            const currentDoc = await this.docs.documents.get({ documentId });
+            const endIndex = currentDoc.data.body?.content?.length || 1;
+            console.log(`Current document length: ${endIndex}`);
+            let requests = [];
+            // Only include the deleteContentRange request if there's actual content to delete
+            if (false && endIndex > 1) {
+                requests.push({
+                    deleteContentRange: {
+                        range: {
+                            startIndex: 1,
+                            endIndex: endIndex, // Include the entire content
+                        },
+                    },
+                });
+            }
+            // Add the insertText request
+            requests.push({
+                insertText: {
+                    location: {
+                        index: 1,
+                    },
+                    text: doc,
+                },
+            });
+            console.log(`Number of update requests: ${requests.length}`);
+            console.log("Requests to be sent:", JSON.stringify(requests, null, 2));
+            // Perform the update
             await this.docs.documents.batchUpdate({
                 documentId,
                 requestBody: {
-                    requests: [
-                        {
-                            deleteContentRange: {
-                                range: {
-                                    startIndex: 1,
-                                    endIndex: -1,
-                                },
-                            },
-                        },
-                        {
-                            insertText: {
-                                location: {
-                                    index: 1,
-                                },
-                                text: doc,
-                            },
-                        },
-                    ],
+                    requests: requests,
                 },
             });
+            console.log("Document updated successfully");
         }
         catch (error) {
-            console.error("Error:", error);
-            throw error;
+            console.error("Error updating document:", error);
+            if (error.code === 429) {
+                throw new Error("Rate limit exceeded. Please try again later.");
+            }
+            else if (error.code >= 500 && error.code < 600) {
+                throw new Error("Google Docs server error. Please try again later.");
+            }
+            else {
+                throw error;
+            }
         }
     }
     async getData(documentId) {

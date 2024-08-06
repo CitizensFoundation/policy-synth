@@ -20,7 +20,9 @@ export class PsProgressTracker extends PolicySynthAgentBase {
                 const statusDataString = await this.redis.get(this.redisStatusKey);
                 if (statusDataString) {
                     this.status = JSON.parse(statusDataString);
-                    this.logger.debug(`Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`);
+                    /*this.logger.debug(
+                      `Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`
+                    );*/
                 }
                 else {
                     this.logger.error("No status data found!");

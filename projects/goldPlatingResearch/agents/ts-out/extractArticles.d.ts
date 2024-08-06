@@ -5,7 +5,7 @@ export declare class ArticleExtractionAgent extends PolicySynthAgent {
     maxExtractionRetries: number;
     articlesPerBatch: number;
     constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
-    processItem(text: string, type: 'law' | 'regulation'): Promise<LawArticle[] | RegulationArticle[]>;
+    processItem(text: string, type: "law" | "regulation" | "lawSupportArticle"): Promise<LawArticle[] | RegulationArticle[]>;
     private extractArticles;
     private extractArticleBatch;
     private callExtractionModel;

@@ -1,5 +1,5 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
-import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class ArticleExtractionAgent extends PolicySynthAgent {
     maxExtractionRetries = 3;
     articlesPerBatch = 5;
@@ -16,17 +16,25 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
         let allExtractedArticles = [];
         let startArticleNumber = 1;
         let hasMoreArticles = true;
+        let articleCount = 0;
+        const MAX_ARTICLES = 4;
         while (hasMoreArticles) {
             const endArticleNumber = startArticleNumber + this.articlesPerBatch - 1;
             await this.updateRangedProgress((startArticleNumber / 100) * 100, // Assuming there won't be more than 100 articles
             `Extracting articles ${startArticleNumber} to ${endArticleNumber}`);
             const extractedBatch = await this.extractArticleBatch(text, type, startArticleNumber, endArticleNumber);
-            if (extractedBatch.length > 0) {
-                allExtractedArticles = allExtractedArticles.concat(extractedBatch);
-                startArticleNumber = endArticleNumber + 1;
+            articleCount += extractedBatch.length;
+            if (articleCount >= MAX_ARTICLES) {
+                hasMoreArticles = false;
             }
             else {
-                hasMoreArticles = false;
+                if (extractedBatch.length > 0) {
+                    allExtractedArticles = allExtractedArticles.concat(extractedBatch);
+                    startArticleNumber = endArticleNumber + 1;
+                }
+                else {
+                    hasMoreArticles = false;
+                }
             }
         }
         // Validate and deduplicate articles
@@ -42,6 +50,9 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
                 extractedArticles = result;
                 break;
             }
+            else {
+                this.logger.warn(`Extraction result is invalid: ${JSON.stringify(result, null, 2)}`);
+            }
             retryCount++;
             this.logger.warn(`Extraction failed, retrying (${retryCount}/${this.maxExtractionRetries})`);
         }
@@ -54,9 +65,9 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     async callExtractionModel(text, type, startNumber, endNumber) {
         const messages = [
             this.createSystemMessage(this.getExtractionSystemPrompt(type, startNumber, endNumber)),
-            this.createHumanMessage(this.getExtractionUserPrompt(text))
+            this.createHumanMessage(this.getExtractionUserPrompt(text)),
         ];
-        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true);
+        return (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true));
     }
     getExtractionSystemPrompt(type, startNumber, endNumber) {
         return `You are an expert legal document analyzer specializing in extracting articles from ${type}s. Your task is to identify and extract individual articles from the given text.
@@ -64,15 +75,21 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
 Instructions:
 - Carefully analyze the provided text and identify articles numbered from ${startNumber} to ${endNumber}.
 - Extract the article number, full text for each article within this range.
-- If an article number in this range is not found, skip it and move to the next number.
+- If no articles are found in this range output an empty JSON array and nothing else, it means we have reached the end of the articles.
 - Ensure that the extracted information is accurate and complete.
 - Return the extracted articles as a JSON array, where each object represents an article with the following structure:
   {
-    "number": "string",
+    "number": "string", ${type === "law" ? "// Article number, e.g. '7. gr.'" : ""}
     "text": "string"
   }
-- If you cannot extract any articles in this range, return an empty array.
-${type === 'law' ? `- Articles always start with "<number>. gr." for example: "7. gr."` : ``}
+- Only output JSON, nothing else, no explainations or introductions.
+- If you cannot extract any articles in this range, return an empty array never output articles not found in the document.
+${type === "lawSupportArticle"
+            ? `- The law supporing articles start after the law articles themselves and always with the text "Greinargerð", then each greinargerð has <number>. <title>`
+            : ``}
+${type === "law"
+            ? `- Law articles always start with "<number>. gr." for example: "7. gr." at the start of a line.\n\n- Never extract articles that just have a <number>. <title> they always have to have "gr." as an identifier`
+            : ``}
 Remember, accuracy and completeness are crucial. Do not add, remove, or modify any content from the original articles.`;
     }
     getExtractionUserPrompt(text) {
@@ -85,10 +102,9 @@ Respond with a JSON array of extracted articles:`;
     isValidExtractionResult(result) {
         if (!Array.isArray(result))
             return false;
-        return result.every(article => typeof article === 'object' &&
-            typeof article.number === 'string' &&
-            typeof article.text === 'string' &&
-            typeof article.description === 'string');
+        return result.every((article) => typeof article === "object" &&
+            typeof article.number === "string" &&
+            typeof article.text === "string");
     }
     async validateAndDeduplicateArticles(articles) {
         const validatedArticles = [];
@@ -110,10 +126,10 @@ Respond with a JSON array of extracted articles:`;
     async validateArticle(article) {
         const validationMessages = [
             this.createSystemMessage(this.getValidationSystemPrompt()),
-            this.createHumanMessage(this.getValidationUserPrompt(article))
+            this.createHumanMessage(this.getValidationUserPrompt(article)),
         ];
-        const validationResult = await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, validationMessages, false);
-        return validationResult.toLowerCase().includes('valid');
+        const validationResult = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, validationMessages, false));
+        return validationResult.toLowerCase().includes("valid");
     }
     getValidationSystemPrompt() {
         return `You are a legal document validation expert. Your task is to verify the validity and integrity of extracted articles.
@@ -132,7 +148,6 @@ Your assessment is crucial for maintaining the accuracy of our legal document da
 
 Article Number: ${article.number}
 Article Text: ${article.text}
-Description: ${article.description}
 
 Is this article valid?`;
     }

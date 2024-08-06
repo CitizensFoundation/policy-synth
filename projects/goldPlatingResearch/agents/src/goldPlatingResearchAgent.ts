@@ -113,7 +113,6 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
 
     const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
     await xlsReportAgent.processItem(researchItem);
-
     await this.saveMemory();
   }
 
@@ -152,7 +151,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         researchItem.nationalLaw.supportArticleText.articles =
           await articleExtractionAgent.processItem(
             researchItem.nationalLaw.supportArticleText.fullText,
-            "law"
+            "lawSupportArticle"
           );
       }
     }

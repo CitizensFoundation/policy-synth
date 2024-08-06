@@ -38,6 +38,13 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         await goldPlatingSearchAgent.processItem(researchItem);
         await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
+        // 6. Generate reports
+        const googleDocsReportAgent = new GoogleDocsReportAgent(this.agent, this.memory, 80, 90);
+        this.logger.debug(JSON.stringify(this.memory, null, 2));
+        await this.saveMemory();
+        await googleDocsReportAgent.processItem(researchItem);
+        const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
+        await xlsReportAgent.processItem(researchItem);
         // 4. Review support text for possible gold-plating
         const supportTextReviewAgent = new SupportTextReviewAgent(this.agent, this.memory, 60, 70);
         await this.saveMemory();
@@ -48,13 +55,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         await foundGoldPlatingRankingAgent.processItem(researchItem);
         await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
-        // 6. Generate reports
-        const googleDocsReportAgent = new GoogleDocsReportAgent(this.agent, this.memory, 80, 90);
-        this.logger.debug(JSON.stringify(this.memory, null, 2));
-        await this.saveMemory();
-        await googleDocsReportAgent.processItem(researchItem);
-        const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
-        await xlsReportAgent.processItem(researchItem);
+        // ---->
         await this.saveMemory();
     }
     async cleanAndProcessNationalLawsAndRegulations(researchItem) {
@@ -69,7 +70,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
                 researchItem.nationalLaw.supportArticleText.fullText =
                     await textCleaningAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText);
                 researchItem.nationalLaw.supportArticleText.articles =
-                    await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, "law");
+                    await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, "lawSupportArticle");
             }
         }
         if (researchItem.nationalRegulation) {

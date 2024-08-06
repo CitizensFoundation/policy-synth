@@ -68,7 +68,6 @@ export class GoogleDocsReportAgent extends PolicySynthAgent {
             findings += `${index + 1}. ${article.source.charAt(0).toUpperCase() + article.source.slice(1)} Article ${article.number}\n`;
             findings += `ELO Rating: ${article.eloRating}\n`;
             findings += `Text: ${article.text}\n`;
-            findings += `Description: ${article.research?.description || "N/A"}\n`;
             findings += `Reason for Gold-Plating: ${article.research?.reasonForGoldPlating || "N/A"}\n`;
             findings += `Recommendation: ${article.research?.recommendation || "N/A"}\n\n`;
             findings += "Research Results:\n";

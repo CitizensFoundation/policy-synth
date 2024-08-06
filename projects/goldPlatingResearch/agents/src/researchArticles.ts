@@ -243,7 +243,7 @@ Present your analysis in the following JSON format:
     "disproportionatePenalties": "Your analysis here",
     "earlierImplementation": "Your analysis here"
   },
-  "conclusion": "Summarize your findings here, stating whether gold plating was found and in which aspects"
+  "conclusion": "Summarize your findings here, stating whether "gold plating was found" and in which aspects"
 }
 
 Remember to be thorough in your analysis and provide specific examples from both laws to support your conclusions. If you're unsure about any aspect, state your uncertainty clearly.`;

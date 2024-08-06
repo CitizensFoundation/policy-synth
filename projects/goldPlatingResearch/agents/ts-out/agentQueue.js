@@ -32,57 +32,57 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
             },
             nationalRegulation: [
                 {
-                    url: "https://files.reglugerd.is/pdf/1227-2019/current",
+                    url: "https://island.is/reglugerdir/nr/1227-2019",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/0034-2020/current",
+                    url: "https://island.is/reglugerdir/nr/0034-2020",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/0480-2021/current",
+                    url: "https://island.is/reglugerdir/nr/0480-2021",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/0945-2023/current",
+                    url: "https://island.is/reglugerdir/nr/0945-2023",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/0845-2022/current",
+                    url: "https://island.is/reglugerdir/nr/0845-2022",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/1350-2022/current",
+                    url: "https://island.is/reglugerdir/nr/1350-2022",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/1100-2022/current",
+                    url: "https://island.is/reglugerdir/nr/1100-2022",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/1588-2022/current",
+                    url: "https://island.is/reglugerdir/nr/1588-2022",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/1589-2022/current",
+                    url: "https://island.is/reglugerdir/nr/1589-2022",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/0555-2023/current",
+                    url: "https://island.is/reglugerdir/nr/0555-2023",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/0556-2023/current",
+                    url: "https://island.is/reglugerdir/nr/0556-2023",
                     fullText: "",
                     articles: [],
                 },
@@ -92,7 +92,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/0944-2019/current",
+                    url: "https://island.is/reglugerdir/nr/0944-2019",
                     fullText: "",
                     articles: [],
                 },
@@ -120,20 +120,21 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
             },
             supportArticleTextArticleIdMapping: {
                 1: 1,
+                2: 2 //...
             },
             nationalRegulation: [
                 {
-                    url: "https://files.reglugerd.is/pdf/0866-2020/current",
+                    url: "https://island.is/reglugerdir/nr/0866-2020",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/1720-2023/current",
+                    url: "https://island.is/reglugerdir/nr/1720-2023",
                     fullText: "",
                     articles: [],
                 },
                 {
-                    url: "https://files.reglugerd.is/pdf/1255-2020/current",
+                    url: "https://island.is/reglugerdir/nr/1255-2020",
                     fullText: "",
                     articles: [],
                 },
@@ -144,7 +145,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
             },
         };
     }
-    forceMemoryRestart = true;
+    forceMemoryRestart = false;
     async setupMemoryIfNeeded() {
         if (this.forceMemoryRestart || !this.memory) {
             this.memory = {

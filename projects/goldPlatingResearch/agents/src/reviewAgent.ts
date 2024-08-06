@@ -21,7 +21,7 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     await this.updateRangedProgress(0, "Starting support text review");
 
     await this.reviewNationalLawSupportText(researchItem);
-    await this.reviewNationalRegulationSupportText(researchItem);
+    //await this.reviewNationalRegulationSupportText(researchItem);
 
     await this.updateRangedProgress(100, "Support text review completed");
   }

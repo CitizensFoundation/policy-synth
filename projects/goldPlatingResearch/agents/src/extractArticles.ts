@@ -1,6 +1,9 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import {
+  PsAiModelType,
+  PsAiModelSize,
+} from "@policysynth/agents/aiModelTypes.js";
 
 export class ArticleExtractionAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -17,19 +20,33 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     super(agent, memory, startProgress, endProgress);
   }
 
-  async processItem(text: string, type: 'law' | 'regulation'): Promise<LawArticle[] | RegulationArticle[]> {
-    await this.updateRangedProgress(0, `Starting article extraction for ${type}`);
+  async processItem(
+    text: string,
+    type: "law" | "regulation" | "lawSupportArticle"
+  ): Promise<LawArticle[] | RegulationArticle[]> {
+    await this.updateRangedProgress(
+      0,
+      `Starting article extraction for ${type}`
+    );
 
     const extractedArticles = await this.extractArticles(text, type);
 
-    await this.updateRangedProgress(100, `Article extraction completed for ${type}`);
+    await this.updateRangedProgress(
+      100,
+      `Article extraction completed for ${type}`
+    );
     return extractedArticles;
   }
 
-  private async extractArticles(text: string, type: 'law' | 'regulation'): Promise<LawArticle[] | RegulationArticle[]> {
+  private async extractArticles(
+    text: string,
+    type: "law" | "regulation" | "lawSupportArticle"
+  ): Promise<LawArticle[] | RegulationArticle[]> {
     let allExtractedArticles: (LawArticle | RegulationArticle)[] = [];
     let startArticleNumber = 1;
     let hasMoreArticles = true;
+    let articleCount = 0;
+    const MAX_ARTICLES = 4;
 
     while (hasMoreArticles) {
       const endArticleNumber = startArticleNumber + this.articlesPerBatch - 1;
@@ -38,13 +55,24 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
         `Extracting articles ${startArticleNumber} to ${endArticleNumber}`
       );
 
-      const extractedBatch = await this.extractArticleBatch(text, type, startArticleNumber, endArticleNumber);
+      const extractedBatch = await this.extractArticleBatch(
+        text,
+        type,
+        startArticleNumber,
+        endArticleNumber
+      );
 
-      if (extractedBatch.length > 0) {
-        allExtractedArticles = allExtractedArticles.concat(extractedBatch);
-        startArticleNumber = endArticleNumber + 1;
-      } else {
+      articleCount += extractedBatch.length;
+
+      if (articleCount >= MAX_ARTICLES) {
         hasMoreArticles = false;
+      } else {
+        if (extractedBatch.length > 0) {
+          allExtractedArticles = allExtractedArticles.concat(extractedBatch);
+          startArticleNumber = endArticleNumber + 1;
+        } else {
+          hasMoreArticles = false;
+        }
       }
     }
 
@@ -54,54 +82,100 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     return validatedArticles;
   }
 
-  private async extractArticleBatch(text: string, type: 'law' | 'regulation', startNumber: number, endNumber: number): Promise<(LawArticle | RegulationArticle)[]> {
+  private async extractArticleBatch(
+    text: string,
+    type: "law" | "regulation" | "lawSupportArticle",
+    startNumber: number,
+    endNumber: number
+  ): Promise<(LawArticle | RegulationArticle)[]> {
     let retryCount = 0;
     let extractedArticles: (LawArticle | RegulationArticle)[] = [];
 
     while (retryCount < this.maxExtractionRetries) {
-      const result = await this.callExtractionModel(text, type, startNumber, endNumber);
+      const result = await this.callExtractionModel(
+        text,
+        type,
+        startNumber,
+        endNumber
+      );
 
       if (this.isValidExtractionResult(result)) {
         extractedArticles = result;
         break;
+      } else {
+        this.logger.warn(
+          `Extraction result is invalid: ${JSON.stringify(result, null, 2)}`
+        );
       }
 
       retryCount++;
-      this.logger.warn(`Extraction failed, retrying (${retryCount}/${this.maxExtractionRetries})`);
+      this.logger.warn(
+        `Extraction failed, retrying (${retryCount}/${this.maxExtractionRetries})`
+      );
     }
 
     if (retryCount === this.maxExtractionRetries) {
-      this.logger.error(`Failed to extract articles ${startNumber}-${endNumber} after ${this.maxExtractionRetries} attempts`);
+      this.logger.error(
+        `Failed to extract articles ${startNumber}-${endNumber} after ${this.maxExtractionRetries} attempts`
+      );
       return [];
     }
 
     return extractedArticles;
   }
 
-  private async callExtractionModel(text: string, type: 'law' | 'regulation', startNumber: number, endNumber: number): Promise<any> {
+  private async callExtractionModel(
+    text: string,
+    type: "law" | "regulation" | "lawSupportArticle",
+    startNumber: number,
+    endNumber: number
+  ): Promise<any> {
     const messages = [
-      this.createSystemMessage(this.getExtractionSystemPrompt(type, startNumber, endNumber)),
-      this.createHumanMessage(this.getExtractionUserPrompt(text))
+      this.createSystemMessage(
+        this.getExtractionSystemPrompt(type, startNumber, endNumber)
+      ),
+      this.createHumanMessage(this.getExtractionUserPrompt(text)),
     ];
 
-    return await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true) as any;
+    return (await this.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Large,
+      messages,
+      true
+    )) as any;
   }
 
-  private getExtractionSystemPrompt(type: 'law' | 'regulation', startNumber: number, endNumber: number): string {
+  private getExtractionSystemPrompt(
+    type: "law" | "regulation" | "lawSupportArticle",
+    startNumber: number,
+    endNumber: number
+  ): string {
     return `You are an expert legal document analyzer specializing in extracting articles from ${type}s. Your task is to identify and extract individual articles from the given text.
 
 Instructions:
 - Carefully analyze the provided text and identify articles numbered from ${startNumber} to ${endNumber}.
 - Extract the article number, full text for each article within this range.
-- If an article number in this range is not found, skip it and move to the next number.
+- If no articles are found in this range output an empty JSON array and nothing else, it means we have reached the end of the articles.
 - Ensure that the extracted information is accurate and complete.
 - Return the extracted articles as a JSON array, where each object represents an article with the following structure:
   {
-    "number": "string",
+    "number": "string", ${
+      type === "law" ? "// Article number, e.g. '7. gr.'" : ""
+    }
     "text": "string"
   }
-- If you cannot extract any articles in this range, return an empty array.
-${type === 'law' ? `- Articles always start with "<number>. gr." for example: "7. gr."`: ``}
+- Only output JSON, nothing else, no explainations or introductions.
+- If you cannot extract any articles in this range, return an empty array never output articles not found in the document.
+${
+  type === "lawSupportArticle"
+    ? `- The law supporing articles start after the law articles themselves and always with the text "Greinargerð", then each greinargerð has <number>. <title>`
+    : ``
+}
+${
+  type === "law"
+    ? `- Law articles always start with "<number>. gr." for example: "7. gr." at the start of a line.\n\n- Never extract articles that just have a <number>. <title> they always have to have "gr." as an identifier`
+    : ``
+}
 Remember, accuracy and completeness are crucial. Do not add, remove, or modify any content from the original articles.`;
   }
 
@@ -113,18 +187,22 @@ ${text}
 Respond with a JSON array of extracted articles:`;
   }
 
-  private isValidExtractionResult(result: any): result is (LawArticle | RegulationArticle)[] {
+  private isValidExtractionResult(
+    result: any
+  ): result is (LawArticle | RegulationArticle)[] {
     if (!Array.isArray(result)) return false;
 
-    return result.every(article =>
-      typeof article === 'object' &&
-      typeof article.number === 'string' &&
-      typeof article.text === 'string' &&
-      typeof article.description === 'string'
+    return result.every(
+      (article) =>
+        typeof article === "object" &&
+        typeof article.number === "string" &&
+        typeof article.text === "string"
     );
   }
 
-  private async validateAndDeduplicateArticles(articles: (LawArticle | RegulationArticle)[]): Promise<(LawArticle | RegulationArticle)[]> {
+  private async validateAndDeduplicateArticles(
+    articles: (LawArticle | RegulationArticle)[]
+  ): Promise<(LawArticle | RegulationArticle)[]> {
     const validatedArticles: (LawArticle | RegulationArticle)[] = [];
     const seenNumbers = new Set<string>();
 
@@ -135,7 +213,9 @@ Respond with a JSON array of extracted articles:`;
           validatedArticles.push(article);
           seenNumbers.add(article.number);
         } else {
-          this.logger.warn(`Article ${article.number} failed validation, skipping`);
+          this.logger.warn(
+            `Article ${article.number} failed validation, skipping`
+          );
         }
       }
     }
@@ -143,15 +223,22 @@ Respond with a JSON array of extracted articles:`;
     return validatedArticles;
   }
 
-  private async validateArticle(article: LawArticle | RegulationArticle): Promise<boolean> {
+  private async validateArticle(
+    article: LawArticle | RegulationArticle
+  ): Promise<boolean> {
     const validationMessages = [
       this.createSystemMessage(this.getValidationSystemPrompt()),
-      this.createHumanMessage(this.getValidationUserPrompt(article))
+      this.createHumanMessage(this.getValidationUserPrompt(article)),
     ];
 
-    const validationResult = await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, validationMessages, false) as string;
+    const validationResult = (await this.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      validationMessages,
+      false
+    )) as string;
 
-    return validationResult.toLowerCase().includes('valid');
+    return validationResult.toLowerCase().includes("valid");
   }
 
   private getValidationSystemPrompt(): string {
@@ -167,12 +254,13 @@ Instructions:
 Your assessment is crucial for maintaining the accuracy of our legal document database.`;
   }
 
-  private getValidationUserPrompt(article: LawArticle | RegulationArticle): string {
+  private getValidationUserPrompt(
+    article: LawArticle | RegulationArticle
+  ): string {
     return `Please validate the following extracted article:
 
 Article Number: ${article.number}
 Article Text: ${article.text}
-Description: ${article.description}
 
 Is this article valid?`;
   }
