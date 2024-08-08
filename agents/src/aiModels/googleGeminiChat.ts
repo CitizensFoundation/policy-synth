@@ -16,44 +16,52 @@ export class GoogleGeminiChat extends BaseChatModel {
     streaming?: boolean,
     streamingCallback?: Function
   ) {
-    const history = messages.map((msg) => ({
-      role: msg.role,
-      parts: [{ text: msg.message }],
-    }));
+    const chat = this.model.startChat();
 
-    //TODO: FIX
-    /*if (streaming) {
-      const stream = await this.model.generateContentStream({
-        request: history,
-        generationConfig: {
-          maxOutputTokens: this.maxTokensOut,
-        },
-      });
+    // Add messages to the chat history
+    for (const message of messages) {
+      if (message.role === 'user') {
+        await chat.sendMessage(message.message);
+      } else if (message.role === 'assistant') {
+        // For assistant messages, just send the message without the role option
+        await chat.sendMessage(message.message);
+      }
+    }
 
-      for await (const chunk of stream) {
-        const chunkText = chunk.text();
-        if (streamingCallback) {
-          streamingCallback(chunkText);
+    if (streaming) {
+      const stream = await chat.sendMessageStream(messages[messages.length - 1].message);
+
+      // Iterate over the stream using a while loop and the 'next' method
+      let done = false;
+      while (!done) {
+        const { value: chunk, done: streamDone } = await stream.next();
+        done = streamDone;
+
+        if (chunk) {
+          const chunkText = chunk.text();
+          if (streamingCallback) {
+            streamingCallback(chunkText);
+          }
         }
       }
-      // Deal with tokenusage here
-      return;
-    } else {
-      const result = await this.model.generateContent({
-        history,
-        generationConfig: {
-          maxOutputTokens: this.maxTokensOut,
-        },
-      });
 
+      // You'll need to track token usage yourself in streaming mode.
+      // Google doesn't provide it in the chunks.
+      return {
+        tokensIn: 0, // Placeholder - you need to calculate this
+        tokensOut: 0, // Placeholder - you need to calculate this
+        content: '', // Content is built up in the streaming callback
+      };
+    } else {
+      const result = await chat.sendMessage(messages[messages.length - 1].message);
       const content = result.response.text();
+
       return {
         tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
         tokensOut: result.response.usageMetadata?.candidatesTokenCount ?? 0,
         content,
       };
-    }*/
-    return undefined;
+    }
   }
 
   async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
