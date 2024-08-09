@@ -1,6 +1,7 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class GoldPlatingSearchAgent extends PolicySynthAgent {
+    modelSize = PsAiModelSize.Medium;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
     }
@@ -20,8 +21,8 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
             const article = researchItem.nationalLaw.law.articles[i];
             const progress = (i / totalArticles) * 25; // 25% of total progress
             await this.updateRangedProgress(progress, `Analyzing national law article ${article.number}`);
-            const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalLaw.law.fullText, researchItem.euDirective.fullText, article.text);
-            article.research = this.processGoldPlatingResult(goldPlatingResult);
+            const goldPlatingResult = (await this.analyzeGoldPlating(researchItem.nationalLaw.law.fullText, researchItem.euDirective.fullText, article.text, "law"));
+            article.research = this.processGoldPlatingResult(goldPlatingResult, researchItem.nationalLaw.law.url);
         }
     }
     async compareNationalRegulationToEULaw(researchItem) {
@@ -36,8 +37,8 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
             for (const article of regulation.articles) {
                 const progress = 25 + (processedArticles / totalArticles) * 25; // 25% to 50% of total progress
                 await this.updateRangedProgress(progress, `Analyzing national regulation article ${article.number}`);
-                const goldPlatingResult = await this.analyzeGoldPlating(regulation.fullText, researchItem.euDirective.fullText, article.text);
-                article.research = this.processGoldPlatingResult(goldPlatingResult);
+                const goldPlatingResult = await this.analyzeGoldPlating(regulation.fullText, researchItem.euDirective.fullText, article.text, "regulation");
+                article.research = this.processGoldPlatingResult(goldPlatingResult, regulation.url);
                 processedArticles++;
             }
         }
@@ -50,9 +51,9 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
             const article = researchItem.nationalLaw.law.articles[i];
             const progress = 50 + (i / totalArticles) * 25; // 50% to 75% of total progress
             await this.updateRangedProgress(progress, `Analyzing national law article ${article.number} against EU regulation`);
-            const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalLaw.law.fullText, researchItem.euRegulation.fullText, article.text);
+            const goldPlatingResult = await this.analyzeGoldPlating(researchItem.nationalLaw.law.fullText, researchItem.euRegulation.fullText, article.text, "law");
             JSON.stringify(goldPlatingResult, null, 2);
-            article.research = this.processGoldPlatingResult(goldPlatingResult);
+            article.research = this.processGoldPlatingResult(goldPlatingResult, researchItem.nationalLaw.law.url);
             await this.saveMemory();
         }
     }
@@ -68,22 +69,24 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
             for (const article of regulation.articles) {
                 const progress = 75 + (processedArticles / totalArticles) * 25; // 75% to 100% of total progress
                 await this.updateRangedProgress(progress, `Analyzing national regulation article ${article.number} against EU regulation`);
-                const goldPlatingResult = await this.analyzeGoldPlating(regulation.fullText, researchItem.euRegulation.fullText, article.text);
-                article.research = this.processGoldPlatingResult(goldPlatingResult);
+                const goldPlatingResult = await this.analyzeGoldPlating(regulation.fullText, researchItem.euRegulation.fullText, article.text, "regulation");
+                article.research = this.processGoldPlatingResult(goldPlatingResult, regulation.url);
                 processedArticles++;
+                await this.saveMemory();
             }
         }
     }
-    async analyzeGoldPlating(icelandicLaw, euLaw, articleToAnalyze) {
-        const systemMessage = this.createSystemMessage(this.getGoldPlatingSystemPrompt());
-        const userMessage = this.createHumanMessage(this.getGoldPlatingUserPrompt(icelandicLaw, euLaw, articleToAnalyze));
+    async analyzeGoldPlating(icelandicLaw, euLaw, articleToAnalyze, type) {
+        const systemMessage = this.createSystemMessage(this.getGoldPlatingSystemPrompt(type));
+        const userMessage = this.createHumanMessage(this.getGoldPlatingUserPrompt(icelandicLaw, euLaw, articleToAnalyze, type));
         const result = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, [systemMessage, userMessage], true);
         return result;
     }
-    processGoldPlatingResult(result) {
+    processGoldPlatingResult(result, url) {
         const research = {
             possibleGoldPlating: false,
             description: "",
+            url: url,
             reasonForGoldPlating: "",
             recommendation: "",
             results: {
@@ -97,6 +100,7 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
             },
         };
         if (result.conclusion &&
+            !result.conclusion.toLowerCase().includes("no gold plating was found") &&
             result.conclusion.toLowerCase().includes("gold plating was found")) {
             research.possibleGoldPlating = true;
             research.description = result.conclusion;
@@ -117,10 +121,11 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
         }
         return reasons.join(" ");
     }
-    getGoldPlatingSystemPrompt() {
-        return `You are an expert legal analyst specializing in comparative law between Icelandic and EU legislation. Your task is to analyze whether the provided Icelandic law implementing EU law exhibits any signs of gold plating.
+    getGoldPlatingSystemPrompt(type) {
+        return `You are an expert legal analyst specializing in comparative law and regulations between Icelandic and EU legislation.
+    Your task is to analyze whether the provided Icelandic ${type} implementing EU law exhibits any signs of gold plating.
 
-First, let's define gold plating in the context of Icelandic Law implementing EU law:
+First, let's define gold plating in the context of Icelandic ${type} implementing EU law:
 
 Gold plating refers to the practice of:
 1. Setting more detailed rules than the minimum requirements.
@@ -130,14 +135,15 @@ Gold plating refers to the practice of:
 5. Imposing penalties that are not in line with good legislative practice.
 6. Implementing a directive earlier than the date specified in it.
 
-Your task is to carefully analyze the Icelandic law in comparison to the EU law and determine if there are any instances of gold plating. Follow these steps:
+Your task is to carefully analyze the Icelandic ${type} in comparison to the EU law and determine if there are any instances of gold plating. Follow these steps:
 
-1. Carefully read both the Icelandic law and the EU law.
-2. Compare the two laws, focusing on the six aspects of gold plating mentioned in the definition.
-3. You will be provided with the full law but also an article to focus your analysis on only provide analysis for the Icelandic Article To Analyse.
-4. For each aspect of gold plating, determine if it is present in the Icelandic law.
-5. If you find an instance of gold plating, note the specific section or article of the Icelandic law where it occurs and explain how it differs from the EU law.
+1. Carefully read both the Icelandic ${type} and the EU law for full context.
+2. Then review the <icelandic_${type}_article_to_analyse> provided, focusing on the six aspects of gold plating mentioned in the definition.
+3. You will be provided with the full law but then one article at the time in a loop, calling you multiple times so only look at <icelandic_${type}_article_to_analyse> for your analysis.
+4. For each aspect of gold plating, determine if it is present in the <icelandic_${type}_article_to_analyse>.
+5. If you find an instance of gold plating, note the specific section of the <icelandic_${type}_article_to_analyse> where it occurs and explain how it differs from the EU law.
 6. If you do not find any instances of gold plating for a particular aspect, state that clearly.
+7. If you do find gold plating always start the conclusion with the word: "gold plating was found"
 
 Present your analysis in the following JSON format:
 
@@ -150,18 +156,19 @@ Present your analysis in the following JSON format:
     "disproportionatePenalties": "Your analysis here",
     "earlierImplementation": "Your analysis here"
   },
-  "conclusion": "Summarize your findings here, stating whether "gold plating was found" and in which aspects",
+  "conclusion": "Summarize your findings here, stating whether gold plating was found and in which aspects",
   "reasonsForGoldPlating": "Provide reasons for gold plating only if found otherwise leave empty",
 }
 
-Remember to be thorough in your analysis and provide specific examples from both laws to support your conclusions. If you're unsure about any aspect, state your uncertainty clearly.`;
+Remember to be thorough in your analysis and provide specific examples to support your conclusions.
+If you're unsure about any aspect, state your uncertainty clearly.`;
     }
-    getGoldPlatingUserPrompt(icelandicLaw, euLaw, articleToAnalyze) {
+    getGoldPlatingUserPrompt(icelandicLaw, euLaw, articleToAnalyze, type) {
         return `Now, here is the Icelandic law to be analyzed:
 
-<icelandic_law>
+<the_full_icelandic_law>
 ${icelandicLaw}
-</icelandic_law>
+</the_full_icelandic_law>
 
 And here is the corresponding EU law:
 
@@ -169,11 +176,11 @@ And here is the corresponding EU law:
 ${euLaw}
 </eu_law>
 
-<icelandic_law_article_to_analyse>
+<icelandic_${type}_article_to_analyse>
 ${articleToAnalyze}
 </icelandic_law_article_to_analyse>
 
-Your analysis of the law article in JSON format:`;
+Your analysis of the <icelandic_${type}_article_to_analyse> in JSON format:`;
     }
 }
 //# sourceMappingURL=researchArticles.js.map

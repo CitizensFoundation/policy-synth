@@ -3,7 +3,7 @@ interface BaseArticle {
   text: string;
   description: string;
   eloRating?: number;
-  research?: GoldPlatingResearch
+  research?: GoldPlatingResearch;
 }
 
 interface ResearchResults {
@@ -23,6 +23,7 @@ interface LlmAnalysisResponse {
 }
 
 interface GoldPlatingResearch {
+  url: string;
   results: ResearchResults;
   possibleGoldPlating?: boolean;
   description?: string;

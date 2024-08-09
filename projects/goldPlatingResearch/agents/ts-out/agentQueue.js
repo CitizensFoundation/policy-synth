@@ -120,7 +120,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
             },
             supportArticleTextArticleIdMapping: {
                 1: 1,
-                2: 2 //...
+                //...
             },
             nationalRegulation: [
                 {
@@ -145,7 +145,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
             },
         };
     }
-    forceMemoryRestart = true;
+    forceMemoryRestart = false;
     async setupMemoryIfNeeded() {
         if (this.forceMemoryRestart || !this.memory) {
             this.memory = {

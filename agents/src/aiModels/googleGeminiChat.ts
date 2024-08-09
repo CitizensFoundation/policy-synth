@@ -34,6 +34,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       // Iterate over the stream using a while loop and the 'next' method
       let done = false;
       while (!done) {
+        //@ts-ignore TODO: Check
         const { value: chunk, done: streamDone } = await stream.next();
         done = streamDone;
 

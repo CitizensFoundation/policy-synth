@@ -1,6 +1,7 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class SupportTextReviewAgent extends PolicySynthAgent {
+    modelSize = PsAiModelSize.Medium;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
     }
@@ -21,12 +22,16 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
             const progress = (i / totalArticles) * 50; // 0% to 50% of total progress
             await this.updateRangedProgress(progress, `Reviewing support text for national law article ${article.number}`);
             if (article.research?.possibleGoldPlating) {
-                const supportArticleId = researchItem.supportArticleTextArticleIdMapping[parseInt(article.number)] || parseInt(article.number);
+                const normalizedArticleNumber = this.normalizeArticleNumber(article.number);
+                const supportArticleId = researchItem.supportArticleTextArticleIdMapping[parseInt(normalizedArticleNumber)] || parseInt(normalizedArticleNumber);
                 if (supportArticleId) {
-                    const supportArticle = researchItem.nationalLaw.supportArticleText.articles.find((a) => a.number === supportArticleId.toString());
+                    const supportArticle = researchItem.nationalLaw.supportArticleText.articles.find((a) => this.normalizeArticleNumber(a.number) === supportArticleId.toString());
                     if (supportArticle) {
                         const explanation = await this.analyzeSupportText(article, supportArticle);
                         article.research.supportTextExplanation = explanation;
+                    }
+                    else {
+                        this.logger.error(`No support text found for article ${article.number} in national law`);
                     }
                 }
                 else {
@@ -34,6 +39,9 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
                 }
             }
         }
+    }
+    normalizeArticleNumber(number) {
+        return number.replace(/(\.|gr|Um)/g, "").trim();
     }
     async reviewNationalRegulationSupportText(researchItem) {
         if (!researchItem.nationalRegulation)

@@ -68,7 +68,7 @@ export class XlsReportAgent extends PolicySynthAgent {
             ],
             [""],
             ["Top 5 Most Significant Instances:"],
-            ["Rank", "Source", "Article Number", "ELO Rating", "Description"],
+            ["Rank", "Source", "Article Number", "ELO Rating", "Description", "Url"],
             ...rankedArticles
                 .slice(0, 5)
                 .map((article, index) => [
@@ -77,6 +77,7 @@ export class XlsReportAgent extends PolicySynthAgent {
                 article.number,
                 article.eloRating.toString(),
                 article.research?.description || "N/A",
+                article.research?.url || "N/A",
             ]),
         ];
     }
@@ -96,6 +97,7 @@ export class XlsReportAgent extends PolicySynthAgent {
             "ELO Rating",
             "Text",
             "Description",
+            "Url",
             "Reason for Gold-Plating",
             "Recommendation",
             "Detailed Rules",
@@ -104,7 +106,7 @@ export class XlsReportAgent extends PolicySynthAgent {
             "Stricter National Laws",
             "Disproportionate Penalties",
             "Earlier Implementation",
-            "Conclusion",
+            "Possible Explanation",
         ];
         const rows = rankedArticles.map((article, index) => [
             (index + 1).toString(),
@@ -113,6 +115,7 @@ export class XlsReportAgent extends PolicySynthAgent {
             article.eloRating.toString(),
             article.text,
             article.research?.description || "N/A",
+            article.research?.url || "N/A",
             article.research?.reasonForGoldPlating || "N/A",
             article.research?.recommendation || "N/A",
             article.research?.results.detailedRules || "N/A",
@@ -121,7 +124,7 @@ export class XlsReportAgent extends PolicySynthAgent {
             article.research?.results.stricterNationalLaws || "N/A",
             article.research?.results.disproportionatePenalties || "N/A",
             article.research?.results.earlierImplementation || "N/A",
-            article.research?.results.conclusion || "N/A",
+            article.research?.supportTextExplanation || "N/A",
         ]);
         return [["Detailed Findings"], headers, ...rows];
     }

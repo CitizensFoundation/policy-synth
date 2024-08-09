@@ -84,6 +84,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
     }
     async callModel(modelType, modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
+        if (process.env.PS_PROMPT_DEBUG) {
+            this.logger.debug("\n\n\n\n\n\n\n\nDebugging callModel");
+            this.logger.debug(`modelType: ${modelType}`);
+            this.logger.debug(`modelSize: ${modelSize}`);
+            this.logger.debug(`messages: ${JSON.stringify(messages)}\n\n\n\n\n\n\n\n`);
+        }
         switch (modelType) {
             case PsAiModelType.Text:
                 return await this.callTextModel(modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);

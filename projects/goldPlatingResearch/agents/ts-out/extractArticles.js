@@ -1,6 +1,7 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class ArticleExtractionAgent extends PolicySynthAgent {
+    modelSize = PsAiModelSize.Small;
     maxExtractionRetries = 3;
     articlesPerBatch = 5;
     constructor(agent, memory, startProgress, endProgress) {
@@ -17,7 +18,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
         let startArticleNumber = 1;
         let hasMoreArticles = true;
         let articleCount = 0;
-        const MAX_ARTICLES = 29;
+        const MAX_ARTICLES = 39;
         while (hasMoreArticles) {
             const endArticleNumber = startArticleNumber + this.articlesPerBatch - 1;
             await this.updateRangedProgress((startArticleNumber / 100) * 100, // Assuming there won't be more than 100 articles
@@ -26,6 +27,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
             articleCount += extractedBatch.length;
             if (articleCount >= MAX_ARTICLES) {
                 hasMoreArticles = false;
+                this.logger.warn("Reached maximum number of articles");
             }
             else {
                 if (extractedBatch.length > 0) {
@@ -67,7 +69,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
             this.createSystemMessage(this.getExtractionSystemPrompt(type, startNumber, endNumber)),
             this.createHumanMessage(this.getExtractionUserPrompt(text)),
         ];
-        return (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true));
+        return (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true));
     }
     getExtractionSystemPrompt(type, startNumber, endNumber) {
         return `You are an expert legal document analyzer specializing in extracting articles from ${type}s. Your task is to identify and extract individual articles from the given text.
@@ -79,13 +81,13 @@ Instructions:
 - Ensure that the extracted information is accurate and complete.
 - Return the extracted articles as a JSON array, where each object represents an article with the following structure:
   {
-    "number": "string", ${type === "law" ? "// Article number, e.g. '7. gr.'" : ""}
+    "number": "string", ${type === "law" ? "// Article number, e.g. '7. gr.' and only that format never extract 'mgr.' as an article" : ""}
     "text": "string"
   }
 - Only output JSON, nothing else, no explainations or introductions.
 - If you cannot extract any articles in this range, return an empty array never output articles not found in the document.
 ${type === "lawSupportArticle"
-            ? `- The law supporing articles start after the law articles themselves and always with the text "Greinargerð", then each greinargerð has <number>. <title>`
+            ? `- 1) in the second half of your context find where it says: "greinargerð" 2) After that exctract only articles in the format "Um <number>. gr."  f.e. "Um 1. gr."`
             : ``}
 ${type === "law"
             ? `- Law articles always start with "<number>. gr." for example: "7. gr." at the start of a line.\n\n- Never extract articles that just have a <number>. <title> they always have to have "gr." as an identifier`

@@ -75,7 +75,7 @@ export class TextCleaningAgent extends PolicySynthAgent {
       this.createHumanMessage(this.getCleaningUserPrompt(text, previousValidationResults))
     ];
 
-    return await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false) as string;
+    return await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, false) as string;
   }
 
   private async validateCleanedPart(original: string, cleaned: string): Promise<{ valid: boolean; validationTextResults: string }> {
@@ -101,7 +101,7 @@ export class TextCleaningAgent extends PolicySynthAgent {
       this.createHumanMessage(this.getValidationUserPrompt(original, cleaned))
     ];
 
-    return await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false) as string;
+    return await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, false) as string;
   }
 
   private getCleaningSystemPrompt(): string {

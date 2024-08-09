@@ -13,6 +13,10 @@ import { GoogleDocsReportAgent } from "./docReport.js";
 import { XlsReportAgent } from "./sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 
+const disableScanning = true;
+const skipFullTextProcessing = true;
+const skipArticleExtraction = true;
+
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
@@ -49,7 +53,9 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
       10
     );
 
-    await webScanningAgent.processItem(researchItem);
+    if (!disableScanning) {
+      await webScanningAgent.processItem(researchItem);
+    }
 
     await this.saveMemory();
     this.logger.debug(JSON.stringify(this.memory, null, 2));
@@ -133,38 +139,51 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
     );
 
     if (researchItem.nationalLaw) {
-      researchItem.nationalLaw.law.fullText =
-        await textCleaningAgent.processItem(
-          researchItem.nationalLaw.law.fullText
-        );
-      researchItem.nationalLaw.law.articles =
+      if (!skipFullTextProcessing) {
+        researchItem.nationalLaw.law.fullText =
+          await textCleaningAgent.processItem(
+            researchItem.nationalLaw.law.fullText
+          );
+      }
+
+      if (!skipArticleExtraction) {
+        researchItem.nationalLaw.law.articles =
         await articleExtractionAgent.processItem(
           researchItem.nationalLaw.law.fullText,
           "law"
         );
+      }
 
       if (researchItem.nationalLaw.supportArticleText) {
-        researchItem.nationalLaw.supportArticleText.fullText =
-          await textCleaningAgent.processItem(
-            researchItem.nationalLaw.supportArticleText.fullText
-          );
-        researchItem.nationalLaw.supportArticleText.articles =
+        if (!skipFullTextProcessing) {
+          researchItem.nationalLaw.supportArticleText.fullText =
+            await textCleaningAgent.processItem(
+              researchItem.nationalLaw.supportArticleText.fullText
+            );
+        }
+
+        if (!skipArticleExtraction) {
+          researchItem.nationalLaw.supportArticleText.articles =
           await articleExtractionAgent.processItem(
             researchItem.nationalLaw.supportArticleText.fullText,
             "lawSupportArticle"
           );
+
+        }
       }
     }
 
-    if (researchItem.nationalRegulation) {
-      for (const regulation of researchItem.nationalRegulation) {
-        regulation.fullText = await textCleaningAgent.processItem(
-          regulation.fullText
-        );
-        regulation.articles = await articleExtractionAgent.processItem(
-          regulation.fullText,
-          "regulation"
-        );
+    if (!skipArticleExtraction) {
+      if (researchItem.nationalRegulation) {
+        for (const regulation of researchItem.nationalRegulation) {
+          /*regulation.fullText = await textCleaningAgent.processItem(
+            regulation.fullText
+          );*/
+          regulation.articles = await articleExtractionAgent.processItem(
+            regulation.fullText,
+            "regulation"
+          );
+        }
       }
     }
   }

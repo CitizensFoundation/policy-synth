@@ -9,6 +9,7 @@ interface RankableArticle extends LawArticle {
 export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
   override memory: GoldPlatingMemoryData;
   defaultModelSize = PsAiModelSize.Small;
+
   updatePrefix = "Rank Gold-Plating Articles";
 
   constructor(

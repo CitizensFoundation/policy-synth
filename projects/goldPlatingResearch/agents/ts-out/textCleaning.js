@@ -47,7 +47,7 @@ export class TextCleaningAgent extends PolicySynthAgent {
             this.createSystemMessage(this.getCleaningSystemPrompt()),
             this.createHumanMessage(this.getCleaningUserPrompt(text, previousValidationResults))
         ];
-        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
+        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, false);
     }
     async validateCleanedPart(original, cleaned) {
         const [completionValidation, correctnessValidation, hallucinationValidation] = await Promise.all([
@@ -66,7 +66,7 @@ export class TextCleaningAgent extends PolicySynthAgent {
             this.createSystemMessage(this.getValidationSystemPrompt(type)),
             this.createHumanMessage(this.getValidationUserPrompt(original, cleaned))
         ];
-        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false);
+        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, false);
     }
     getCleaningSystemPrompt() {
         return `You are an expert document cleaner. Your job is to help clean up legal documents coming from various sources.

@@ -48,9 +48,9 @@
   ],
   "type": "module",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.3",
+    "@anthropic-ai/sdk": "^0.25.0",
     "@azure/openai": "^1.0.0-beta.12",
-    "@google/generative-ai": "^0.15.0",
+    "@google/generative-ai": "^0.16.0",
     "aws-sdk": "^2.1659.0",
     "axios": "^1.7.2",
     "bullmq": "^5.10.3",

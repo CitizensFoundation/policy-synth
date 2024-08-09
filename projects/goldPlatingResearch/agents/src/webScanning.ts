@@ -14,6 +14,8 @@ import {
 export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
   declare memory: GoldPlatingMemoryData;
 
+  modelSize: PsAiModelSize = PsAiModelSize.Small;
+
   constructor(
     agent: PsAgent,
     memory: GoldPlatingMemoryData,

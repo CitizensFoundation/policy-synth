@@ -8,6 +8,8 @@ import {
 export class ArticleExtractionAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
+  modelSize: PsAiModelSize = PsAiModelSize.Small;
+
   maxExtractionRetries: number = 3;
   articlesPerBatch: number = 5;
 
@@ -46,7 +48,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     let startArticleNumber = 1;
     let hasMoreArticles = true;
     let articleCount = 0;
-    const MAX_ARTICLES = 29;
+    const MAX_ARTICLES = 39;
 
     while (hasMoreArticles) {
       const endArticleNumber = startArticleNumber + this.articlesPerBatch - 1;
@@ -66,6 +68,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
 
       if (articleCount >= MAX_ARTICLES) {
         hasMoreArticles = false;
+        this.logger.warn("Reached maximum number of articles");
       } else {
         if (extractedBatch.length > 0) {
           allExtractedArticles = allExtractedArticles.concat(extractedBatch);
@@ -139,7 +142,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
 
     return (await this.callModel(
       PsAiModelType.Text,
-      PsAiModelSize.Large,
+      PsAiModelSize.Small,
       messages,
       true
     )) as any;
@@ -160,7 +163,7 @@ Instructions:
 - Return the extracted articles as a JSON array, where each object represents an article with the following structure:
   {
     "number": "string", ${
-      type === "law" ? "// Article number, e.g. '7. gr.'" : ""
+      type === "law" ? "// Article number, e.g. '7. gr.' and only that format never extract 'mgr.' as an article" : ""
     }
     "text": "string"
   }
@@ -168,7 +171,7 @@ Instructions:
 - If you cannot extract any articles in this range, return an empty array never output articles not found in the document.
 ${
   type === "lawSupportArticle"
-    ? `- The law supporing articles start after the law articles themselves and always with the text "Greinargerð", then each greinargerð has <number>. <title>`
+    ? `- 1) in the second half of your context find where it says: "greinargerð" 2) After that exctract only articles in the format "Um <number>. gr."  f.e. "Um 1. gr."`
     : ``
 }
 ${

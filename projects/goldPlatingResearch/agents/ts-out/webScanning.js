@@ -1,7 +1,9 @@
 import puppeteer from "puppeteer-extra";
 import { BaseGetWebPagesOperationsAgent } from "@policysynth/agents/webResearch/getWebPagesOperations.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
+import { PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class WebScanningAgent extends BaseGetWebPagesOperationsAgent {
+    modelSize = PsAiModelSize.Small;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
     }

@@ -7,6 +7,7 @@ import {
 
 export class SupportTextReviewAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
+  modelSize: PsAiModelSize = PsAiModelSize.Medium;
 
   constructor(
     agent: PsAgent,
@@ -47,14 +48,16 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
       );
 
       if (article.research?.possibleGoldPlating) {
+        const normalizedArticleNumber = this.normalizeArticleNumber(article.number);
         const supportArticleId =
           researchItem.supportArticleTextArticleIdMapping[
-            parseInt(article.number)
-          ] || parseInt(article.number);
+            parseInt(normalizedArticleNumber)
+          ] || parseInt(normalizedArticleNumber);
+
         if (supportArticleId) {
           const supportArticle =
             researchItem.nationalLaw.supportArticleText.articles.find(
-              (a) => a.number === supportArticleId.toString()
+              (a) => this.normalizeArticleNumber(a.number) === supportArticleId.toString()
             );
 
           if (supportArticle) {
@@ -63,6 +66,10 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
               supportArticle
             );
             article.research.supportTextExplanation = explanation;
+          } else {
+            this.logger.error(
+              `No support text found for article ${article.number} in national law`
+            );
           }
         } else {
           this.logger.error(
@@ -71,6 +78,10 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
         }
       }
     }
+  }
+
+  private normalizeArticleNumber(number: string): string {
+    return number.replace(/(\.|gr|Um)/g, "").trim();
   }
 
   private async reviewNationalRegulationSupportText(
