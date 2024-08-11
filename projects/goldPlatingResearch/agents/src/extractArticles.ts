@@ -8,10 +8,12 @@ import {
 export class ArticleExtractionAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
-  modelSize: PsAiModelSize = PsAiModelSize.Small;
+  modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  maxModelTokensOut = 8192;
+  modelTemperature = 0.0;
 
   maxExtractionRetries: number = 3;
-  articlesPerBatch: number = 5;
+  maxValidationRetries: number = 3;
 
   constructor(
     agent: PsAgent,
@@ -31,240 +33,334 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
       `Starting article extraction for ${type}`
     );
 
-    const extractedArticles = await this.extractArticles(text, type);
+    try {
+      const lastArticleNumber = await this.getLastArticleNumber(text, type);
+      const extractedArticles = await this.extractArticles(
+        text,
+        type,
+        lastArticleNumber
+      );
 
-    await this.updateRangedProgress(
-      100,
-      `Article extraction completed for ${type}`
-    );
-    return extractedArticles;
+      /*const validatedArticles = await this.validateExtractedArticles(
+        text,
+        extractedArticles,
+        type
+      );*/
+
+      const validatedArticles = extractedArticles;
+
+      await this.updateRangedProgress(
+        100,
+        `Article extraction completed for ${type}`
+      );
+      return validatedArticles;
+    } catch (error) {
+      this.logger.error(`Error during article extraction: ${error}`);
+      throw error;
+    }
+  }
+
+  private async getLastArticleNumber(
+    text: string,
+    type: "law" | "regulation" | "lawSupportArticle"
+  ): Promise<number> {
+    let lookForText;
+    if (type == "law") {
+      lookForText = "N. gr.";
+    } else if (type == "regulation") {
+      lookForText = "N.";
+    } else if (type == "lawSupportArticle") {
+      lookForText = "Um N. gr.";
+    } else {
+      throw new Error(`Invalid type: ${type}`);
+    }
+
+    const systemPrompt = `Analyze the following ${type} text and identify the number of the last article. Look for the last instance of article number in this format ${lookForText}.
+    Return a JSON markdown object with the format:
+      { "lastArticleNumber": number }
+    Only output the JSON object without any other explanations. `;
+    const userPrompt = `${type} to analyize for last article number:\n${text}`;
+
+    const result = (await this.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Medium,
+      [
+        this.createSystemMessage(systemPrompt),
+        this.createHumanMessage(userPrompt),
+      ],
+      true
+    )) as { lastArticleNumber: number };
+
+    if (
+      typeof result.lastArticleNumber !== "number" ||
+      result.lastArticleNumber <= 0
+    ) {
+      throw new Error(
+        `Invalid last article number: ${result.lastArticleNumber}`
+      );
+    }
+
+    this.logger.debug(`Last article number: ${result.lastArticleNumber}`);
+
+    return result.lastArticleNumber;
+  }
+
+  getArticleTextNumber(
+    type: "law" | "regulation" | "lawSupportArticle",
+    articleNumber: number
+  ): string {
+    if (type === "law") {
+      return `${articleNumber}. gr.`;
+    } else if (type === "regulation") {
+      return `${articleNumber}.`;
+    } else if (type === "lawSupportArticle") {
+      return `Um ${articleNumber}. gr.`;
+    } else {
+      throw new Error(`Invalid type: ${type}`);
+    }
   }
 
   private async extractArticles(
     text: string,
-    type: "law" | "regulation" | "lawSupportArticle"
-  ): Promise<LawArticle[] | RegulationArticle[]> {
-    let allExtractedArticles: (LawArticle | RegulationArticle)[] = [];
-    let startArticleNumber = 1;
-    let hasMoreArticles = true;
-    let articleCount = 0;
-    const MAX_ARTICLES = 39;
+    type: "law" | "regulation" | "lawSupportArticle",
+    lastArticleNumber: number
+  ): Promise<(LawArticle | RegulationArticle)[]> {
+    const articles: (LawArticle | RegulationArticle)[] = [];
 
-    while (hasMoreArticles) {
-      const endArticleNumber = startArticleNumber + this.articlesPerBatch - 1;
-      await this.updateRangedProgress(
-        (startArticleNumber / 100) * 100, // Assuming there won't be more than 100 articles
-        `Extracting articles ${startArticleNumber} to ${endArticleNumber}`
-      );
+    for (let i = 1; i <= lastArticleNumber; i++) {
+      let articleNumberText = this.getArticleTextNumber(type, i);
+      let nextArticleNumberText;
 
-      const extractedBatch = await this.extractArticleBatch(
+      if (i < lastArticleNumber) {
+        nextArticleNumberText = this.getArticleTextNumber(type, i + 1);
+      }
+
+      const article = await this.extractSingleArticle(
         text,
         type,
-        startArticleNumber,
-        endArticleNumber
+        i,
+        articleNumberText,
+        nextArticleNumberText
       );
-
-      articleCount += extractedBatch.length;
-
-      if (articleCount >= MAX_ARTICLES) {
-        hasMoreArticles = false;
-        this.logger.warn("Reached maximum number of articles");
+      if (article) {
+        articles.push(article);
+        this.logger.debug(
+          `Extracted article ${i}:\n${JSON.stringify(article, null, 2)}`
+        );
       } else {
-        if (extractedBatch.length > 0) {
-          allExtractedArticles = allExtractedArticles.concat(extractedBatch);
-          startArticleNumber = endArticleNumber + 1;
-        } else {
-          hasMoreArticles = false;
-        }
+        this.logger.error(`Failed to extract article ${i}`);
       }
+      await this.updateRangedProgress(
+        (i / lastArticleNumber) * 50, // Use only 50% of the progress for extraction
+        `Extracting article ${i} of ${lastArticleNumber}`
+      );
     }
 
-    // Validate and deduplicate articles
-    const validatedArticles = allExtractedArticles; //TODO: Look into this await this.validateAndDeduplicateArticles(allExtractedArticles);
-
-    return validatedArticles;
+    return articles;
   }
 
-  private async extractArticleBatch(
+  private async extractSingleArticle(
     text: string,
     type: "law" | "regulation" | "lawSupportArticle",
-    startNumber: number,
-    endNumber: number
-  ): Promise<(LawArticle | RegulationArticle)[]> {
+    articleNumber: number,
+    articleNumberText: string,
+    nextArticleNumberText?: string
+  ): Promise<LawArticle | RegulationArticle | null> {
     let retryCount = 0;
-    let extractedArticles: (LawArticle | RegulationArticle)[] = [];
-
     while (retryCount < this.maxExtractionRetries) {
-      const result = await this.callExtractionModel(
-        text,
-        type,
-        startNumber,
-        endNumber
-      );
-
-      if (this.isValidExtractionResult(result)) {
-        extractedArticles = result;
-        break;
-      } else {
-        this.logger.warn(
-          `Extraction result is invalid: ${JSON.stringify(result, null, 2)}`
+      try {
+        const articleText = await this.callExtractionModel(
+          text,
+          type,
+          articleNumberText,
+          nextArticleNumberText
         );
-      }
 
+        this.logger.debug(
+          `Extracted article ${articleNumberText}:\n${articleText}`
+        );
+
+        const result = {
+          number: articleNumber,
+          text: articleText,
+        };
+
+        if (this.isValidExtractionResult(result)) {
+          return result;
+        }
+      } catch (error) {
+        this.logger.warn(`Error extracting article ${articleNumber}: ${error}`);
+      }
       retryCount++;
       this.logger.warn(
-        `Extraction failed, retrying (${retryCount}/${this.maxExtractionRetries})`
+        `Extraction failed for article ${articleNumber}, retrying (${retryCount}/${this.maxExtractionRetries})`
       );
     }
-
-    if (retryCount === this.maxExtractionRetries) {
-      this.logger.error(
-        `Failed to extract articles ${startNumber}-${endNumber} after ${this.maxExtractionRetries} attempts`
-      );
-      return [];
-    }
-
-    return extractedArticles;
+    this.logger.error(
+      `Failed to extract article ${articleNumber} after ${this.maxExtractionRetries} attempts`
+    );
+    return null;
   }
 
   private async callExtractionModel(
     text: string,
     type: "law" | "regulation" | "lawSupportArticle",
-    startNumber: number,
-    endNumber: number
-  ): Promise<any> {
-    const messages = [
-      this.createSystemMessage(
-        this.getExtractionSystemPrompt(type, startNumber, endNumber)
-      ),
-      this.createHumanMessage(this.getExtractionUserPrompt(text)),
-    ];
+    articleNumber: string,
+    nextArticleNumberText?: string
+  ): Promise<string> {
+    const systemPrompt = `Extract the an article from the ${type} text.
+    The user will provide you with the article number in the format: ${articleNumber}, only extract that article exactly as it appears in the ${type} text.
+    ${
+      nextArticleNumberText
+        ? `The law article might reference other laws by numbers in the same reference format but you must extract fully until the next ${type} article: ${nextArticleNumberText}`
+        : ""
+    }
+    Output the extracted article exactly as it appears in the <${type}TextToExtractFrom> text, word for word without any expainations before or after.
+    ${
+      type == "lawSupportArticle"
+        ? `The support text articles start after the main law articles in ths provided text, so only look for the ${articleNumber} lawSupportArticle after the word 'Greinargerð' appears in the document`
+        : ""
+    }
+    `;
+
+    const userPrompt = `<${type}TextToExtractFrom>${text}</${type}TextToExtractFrom>
+
+    <articleNumberToExtract>${articleNumber}</articleNumberToExtract>
+    ${
+      nextArticleNumberText
+        ? `<extractUntilThisNextArticleStart>${nextArticleNumberText}</extractUntilThisNextArticleStart>`
+        : ""
+    }
+
+    Your fully extracted ${type} article in text format:
+    `;
 
     return (await this.callModel(
       PsAiModelType.Text,
-      PsAiModelSize.Small,
-      messages,
-      true
-    )) as any;
-  }
-
-  private getExtractionSystemPrompt(
-    type: "law" | "regulation" | "lawSupportArticle",
-    startNumber: number,
-    endNumber: number
-  ): string {
-    return `You are an expert legal document analyzer specializing in extracting articles from ${type}s. Your task is to identify and extract individual articles from the given text.
-
-Instructions:
-- Carefully analyze the provided text and identify articles numbered from ${startNumber} to ${endNumber}.
-- Extract the article number, full text for each article within this range.
-- If no articles are found in this range output an empty JSON array and nothing else, it means we have reached the end of the articles.
-- Ensure that the extracted information is accurate and complete.
-- Return the extracted articles as a JSON array, where each object represents an article with the following structure:
-  {
-    "number": "string", ${
-      type === "law" ? "// Article number, e.g. '7. gr.' and only that format never extract 'mgr.' as an article" : ""
-    }
-    "text": "string"
-  }
-- Only output JSON, nothing else, no explainations or introductions.
-- If you cannot extract any articles in this range, return an empty array never output articles not found in the document.
-${
-  type === "lawSupportArticle"
-    ? `- 1) in the second half of your context find where it says: "greinargerð" 2) After that exctract only articles in the format "Um <number>. gr."  f.e. "Um 1. gr."`
-    : ``
-}
-${
-  type === "law"
-    ? `- Law articles always start with "<number>. gr." for example: "7. gr." at the start of a line.\n\n- Never extract articles that just have a <number>. <title> they always have to have "gr." as an identifier`
-    : ``
-}
-Remember, accuracy and completeness are crucial. Do not add, remove, or modify any content from the original articles.`;
-  }
-
-  private getExtractionUserPrompt(text: string): string {
-    return `Please extract the specified range of articles from the following text:
-
-${text}
-
-Respond with a JSON array of extracted articles:`;
+      PsAiModelSize.Medium,
+      [
+        this.createSystemMessage(systemPrompt),
+        this.createHumanMessage(userPrompt),
+      ],
+      false
+    )) as string;
   }
 
   private isValidExtractionResult(
     result: any
-  ): result is (LawArticle | RegulationArticle)[] {
-    if (!Array.isArray(result)) return false;
-
-    return result.every(
-      (article) =>
-        typeof article === "object" &&
-        typeof article.number === "string" &&
-        typeof article.text === "string"
+  ): result is LawArticle | RegulationArticle {
+    return (
+      typeof result === "object" &&
+      typeof result.number === "number" &&
+      typeof result.text === "string" &&
+      result.text.trim().length > 0
     );
   }
 
-  private async validateAndDeduplicateArticles(
-    articles: (LawArticle | RegulationArticle)[]
+  private async validateExtractedArticles(
+    originalText: string,
+    extractedArticles: (LawArticle | RegulationArticle)[],
+    type: "law" | "regulation" | "lawSupportArticle"
   ): Promise<(LawArticle | RegulationArticle)[]> {
-    const validatedArticles: (LawArticle | RegulationArticle)[] = [];
-    const seenNumbers = new Set<string>();
+    let validationRetries = 0;
+    while (validationRetries < this.maxValidationRetries) {
+      const systemPrompt = `You are an expert validator for legal documents. Your task is to compare extracted articles with the original text and verify their accuracy and completeness. Follow these steps:
 
-    for (const article of articles) {
-      if (!seenNumbers.has(article.number)) {
-        const isValid = await this.validateArticle(article);
-        if (isValid) {
-          validatedArticles.push(article);
-          seenNumbers.add(article.number);
-        } else {
-          this.logger.warn(
-            `Article ${article.number} failed validation, skipping`
+1. Analyze the original text and the extracted articles.
+2. Check if all articles from the original text are present in the extracted articles.
+3. Verify that the content of each extracted article matches the corresponding article in the original text.
+4. If any discrepancies are found, identify missing or incorrect articles.
+5. Return a JSON markdown object with the following format:
+   {
+     "valid": boolean,
+     "missingArticles": string[] (optional),
+     "incorrectArticles": string[] (optional)
+   }
+6. Only output JSON without any other explainations
+7. If everything is correct, set "valid" to true and omit the other fields.
+8. If discrepancies are found, set "valid" to false and include the relevant "missingArticles" and/or "incorrectArticles" arrays.`;
+
+      const userPrompt = `Validate the following extracted articles against the original ${type} text:
+
+Original ${type} text:
+${originalText}...
+
+Extracted articles:
+${JSON.stringify(extractedArticles, null, 2)}
+
+Please provide your validation result in JSON format:`;
+
+      const validationResult = (await this.callModel(
+        PsAiModelType.Text,
+        PsAiModelSize.Medium,
+        [
+          this.createSystemMessage(systemPrompt),
+          this.createHumanMessage(userPrompt),
+        ],
+        true
+      )) as {
+        valid: boolean;
+        missingArticles?: string[];
+        incorrectArticles?: string[];
+      };
+
+      if (validationResult.valid) {
+        this.logger.info("Validation successful. No discrepancies found.");
+        return extractedArticles;
+      }
+
+      this.logger.warn("Validation failed. Attempting to fix discrepancies.");
+      console.warn("Validation failed. Discrepancies found:", validationResult);
+
+      // Attempt to fix discrepancies
+      if (validationResult.missingArticles) {
+        for (let i = 0; i > validationResult.missingArticles.length; i++) {
+          const articleNumber = validationResult.missingArticles[i];
+          const missingArticle = await this.extractSingleArticle(
+            originalText,
+            type,
+            parseInt(articleNumber),
+            articleNumber
           );
+          if (missingArticle) {
+            extractedArticles.push(missingArticle);
+            this.logger.debug(`Added missing article ${articleNumber}`);
+          }
         }
       }
+
+      if (validationResult.incorrectArticles) {
+        for (let i = 0; i > validationResult.incorrectArticles.length; i++) {
+          const articleNumber = validationResult.incorrectArticles[i];
+          const index = extractedArticles.findIndex(
+            (a) => a.number === articleNumber
+          );
+          if (index !== -1) {
+            const correctedArticle = await this.extractSingleArticle(
+              originalText,
+              type,
+              parseInt(articleNumber),
+              articleNumber
+            );
+            if (correctedArticle) {
+              extractedArticles[index] = correctedArticle;
+              this.logger.debug(`Corrected article ${articleNumber}`);
+            }
+          }
+        }
+      }
+
+      validationRetries++;
+      this.logger.debug(`Validation attempt ${validationRetries}`);
+      await this.updateRangedProgress(
+        50 + (validationRetries / this.maxValidationRetries) * 50, // Use remaining 50% of progress for validation
+        `Validation attempt ${validationRetries + 1}`
+      );
     }
 
-    return validatedArticles;
-  }
-
-  private async validateArticle(
-    article: LawArticle | RegulationArticle
-  ): Promise<boolean> {
-    const validationMessages = [
-      this.createSystemMessage(this.getValidationSystemPrompt()),
-      this.createHumanMessage(this.getValidationUserPrompt(article)),
-    ];
-
-    const validationResult = (await this.callModel(
-      PsAiModelType.Text,
-      PsAiModelSize.Small,
-      validationMessages,
-      false
-    )) as string;
-
-    return validationResult.toLowerCase().includes("valid");
-  }
-
-  private getValidationSystemPrompt(): string {
-    return `You are a legal document validation expert. Your task is to verify the validity and integrity of extracted articles.
-
-Instructions:
-- Examine the provided article carefully.
-- Verify that the article number, text, and description are consistent and make sense together.
-- Check for any signs of incorrect extraction, such as incomplete sentences, mismatched content, or irrelevant information.
-- If the article appears valid and correctly extracted, respond with "VALID".
-- If there are any issues or inconsistencies, respond with "INVALID" followed by a brief explanation.
-
-Your assessment is crucial for maintaining the accuracy of our legal document database.`;
-  }
-
-  private getValidationUserPrompt(
-    article: LawArticle | RegulationArticle
-  ): string {
-    return `Please validate the following extracted article:
-
-Article Number: ${article.number}
-Article Text: ${article.text}
-
-Is this article valid?`;
+    this.logger.error(
+      "Validation failed after maximum retries. Returning current results."
+    );
+    return extractedArticles;
   }
 }

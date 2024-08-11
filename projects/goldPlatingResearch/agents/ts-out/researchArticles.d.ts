@@ -4,6 +4,8 @@ import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 export declare class GoldPlatingSearchAgent extends PolicySynthAgent {
     memory: GoldPlatingMemoryData;
     modelSize: PsAiModelSize;
+    maxModelTokensOut: number;
+    modelTemperature: number;
     constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
     processItem(researchItem: GoldplatingResearchItem): Promise<void>;
     private compareNationalLawToEULaw;

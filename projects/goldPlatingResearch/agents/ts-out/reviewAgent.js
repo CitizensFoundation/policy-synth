@@ -2,6 +2,8 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class SupportTextReviewAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    maxModelTokensOut = 8192;
+    modelTemperature = 0.0;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
     }

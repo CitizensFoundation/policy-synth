@@ -14,8 +14,8 @@ import { XlsReportAgent } from "./sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 
 const disableScanning = true;
-const skipFullTextProcessing = true;
-const skipArticleExtraction = true;
+const skipFullTextProcessing = false;
+const skipArticleExtraction = false;
 
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -139,14 +139,14 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
     );
 
     if (researchItem.nationalLaw) {
-      if (!skipFullTextProcessing) {
+      if (false && !skipFullTextProcessing) {
         researchItem.nationalLaw.law.fullText =
           await textCleaningAgent.processItem(
             researchItem.nationalLaw.law.fullText
           );
       }
 
-      if (!skipArticleExtraction) {
+      if (false && !skipArticleExtraction) {
         researchItem.nationalLaw.law.articles =
         await articleExtractionAgent.processItem(
           researchItem.nationalLaw.law.fullText,

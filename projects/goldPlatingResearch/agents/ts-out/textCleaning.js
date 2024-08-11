@@ -2,6 +2,8 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 export class TextCleaningAgent extends PolicySynthAgent {
     modelsize = PsAiModelSize.Small;
+    maxModelTokensOut = 8192;
+    modelTemperature = 0.0;
     maxCleanupTokenLength = 4000;
     maxCleanupRetries = 15;
     completionValidationSuccessMessage = "All content present in cleaned text.";
@@ -12,7 +14,9 @@ export class TextCleaningAgent extends PolicySynthAgent {
     }
     async processItem(textToClean) {
         await this.updateRangedProgress(0, "Starting text cleaning process");
-        const cleanedText = await this.clean(textToClean);
+        //TODO: Renable for non Icelandic law
+        //const cleanedText = await this.clean(textToClean);
+        const cleanedText = textToClean;
         await this.updateRangedProgress(100, "Text cleaning completed");
         return cleanedText;
     }

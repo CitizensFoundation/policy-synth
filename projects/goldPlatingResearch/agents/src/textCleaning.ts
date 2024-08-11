@@ -6,6 +6,8 @@ export class TextCleaningAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
   modelsize: PsAiModelSize = PsAiModelSize.Small;
+  maxModelTokensOut = 8192;
+  modelTemperature = 0.0;
 
   maxCleanupTokenLength: number = 4000;
   maxCleanupRetries: number = 15;
@@ -26,8 +28,10 @@ export class TextCleaningAgent extends PolicySynthAgent {
   async processItem(textToClean: string): Promise<string> {
     await this.updateRangedProgress(0, "Starting text cleaning process");
 
-    const cleanedText = await this.clean(textToClean);
+    //TODO: Renable for non Icelandic law
+    //const cleanedText = await this.clean(textToClean);
 
+    const cleanedText = textToClean;
     await this.updateRangedProgress(100, "Text cleaning completed");
     return cleanedText;
   }

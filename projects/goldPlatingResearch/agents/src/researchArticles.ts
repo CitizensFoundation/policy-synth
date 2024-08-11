@@ -9,6 +9,8 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  maxModelTokensOut = 8192;
+  modelTemperature = 0.0;
 
   constructor(
     agent: PsAgent,

@@ -1,21 +1,22 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
-export declare class ArticleExtractionAgent extends PolicySynthAgent {
+export declare class SimpleArticleExtractionAgent extends PolicySynthAgent {
     memory: GoldPlatingMemoryData;
     modelSize: PsAiModelSize;
-    maxModelTokensOut: number;
-    modelTemperature: number;
     maxExtractionRetries: number;
-    maxValidationRetries: number;
+    articlesPerBatch: number;
     constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
     processItem(text: string, type: "law" | "regulation" | "lawSupportArticle"): Promise<LawArticle[] | RegulationArticle[]>;
-    private getLastArticleNumber;
-    getArticleTextNumber(type: "law" | "regulation" | "lawSupportArticle", articleNumber: number): string;
     private extractArticles;
-    private extractSingleArticle;
+    private extractArticleBatch;
     private callExtractionModel;
+    private getExtractionSystemPrompt;
+    private getExtractionUserPrompt;
     private isValidExtractionResult;
-    private validateExtractedArticles;
+    private validateAndDeduplicateArticles;
+    private validateArticle;
+    private getValidationSystemPrompt;
+    private getValidationUserPrompt;
 }
-//# sourceMappingURL=extractArticles.d.ts.map
+//# sourceMappingURL=simpleExtractArticles.d.ts.map

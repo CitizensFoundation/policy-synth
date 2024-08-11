@@ -4,6 +4,8 @@ import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 export declare class TextCleaningAgent extends PolicySynthAgent {
     memory: GoldPlatingMemoryData;
     modelsize: PsAiModelSize;
+    maxModelTokensOut: number;
+    modelTemperature: number;
     maxCleanupTokenLength: number;
     maxCleanupRetries: number;
     completionValidationSuccessMessage: string;
