@@ -9,8 +9,9 @@ import { GoogleDocsReportAgent } from "./docReport.js";
 import { XlsReportAgent } from "./sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 const disableScanning = true;
-const skipFullTextProcessing = false;
-const skipArticleExtraction = false;
+const skipFullTextProcessing = true;
+const skipArticleExtraction = true;
+const skipMainReview = true;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
     static GOLDPLATING_AGENT_CLASS_VERSION = 3;
@@ -40,14 +41,16 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 3. Compare and search for gold-plating
         const goldPlatingSearchAgent = new GoldPlatingSearchAgent(this.agent, this.memory, 40, 60);
-        await goldPlatingSearchAgent.processItem(researchItem);
+        if (!skipMainReview) {
+            await goldPlatingSearchAgent.processItem(researchItem);
+        }
         await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 4. Review support text for possible gold-plating
         const supportTextReviewAgent = new SupportTextReviewAgent(this.agent, this.memory, 60, 70);
         await this.saveMemory();
         await supportTextReviewAgent.processItem(researchItem);
-        this.logger.debug(JSON.stringify(this.memory, null, 2));
+        //this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 5. Rank found gold-plating
         const foundGoldPlatingRankingAgent = new FoundGoldPlatingRankingAgent(this.agent, this.memory, 70, 80);
         await foundGoldPlatingRankingAgent.processItem(researchItem);

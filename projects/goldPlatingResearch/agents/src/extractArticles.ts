@@ -333,7 +333,7 @@ Please provide your validation result in JSON format:`;
         for (let i = 0; i > validationResult.incorrectArticles.length; i++) {
           const articleNumber = validationResult.incorrectArticles[i];
           const index = extractedArticles.findIndex(
-            (a) => a.number === articleNumber
+            (a) => a.number === parseInt(articleNumber)
           );
           if (index !== -1) {
             const correctedArticle = await this.extractSingleArticle(

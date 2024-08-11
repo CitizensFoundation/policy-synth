@@ -1,5 +1,5 @@
 interface BaseArticle {
-  number: string;
+  number: number | string;
   text: string;
   description: string;
   eloRating?: number;
@@ -20,6 +20,8 @@ interface LlmAnalysisResponse {
   analysis: ResearchResults;
   conclusion: string;
   reasonsForGoldPlating: string;
+  euLawExtract?: string;
+  englishTranslationOfIcelandicArticle?: string;
 }
 
 interface GoldPlatingResearch {
@@ -30,6 +32,8 @@ interface GoldPlatingResearch {
   reasonForGoldPlating?: string;
   recommendation?: string;
   supportTextExplanation?: string;
+  euLawExtract?: string;
+  englishTranslationOfIcelandicArticle?: string;
 }
 
 interface LawArticle extends BaseArticle {

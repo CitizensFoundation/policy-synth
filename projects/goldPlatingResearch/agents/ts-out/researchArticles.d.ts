@@ -12,6 +12,8 @@ export declare class GoldPlatingSearchAgent extends PolicySynthAgent {
     private compareNationalRegulationToEULaw;
     private compareNationalLawToEURegulation;
     private compareNationalRegulationToEURegulation;
+    private extractRelevantEuText;
+    private translateToEnglish;
     private analyzeGoldPlating;
     private processGoldPlatingResult;
     private extractReasonForGoldPlating;

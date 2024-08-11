@@ -74,7 +74,7 @@ export class XlsReportAgent extends PolicySynthAgent {
                 .map((article, index) => [
                 (index + 1).toString(),
                 article.source,
-                article.number,
+                article.number.toString(),
                 article.eloRating.toString(),
                 article.research?.description || "N/A",
                 article.research?.url || "N/A",
@@ -99,7 +99,6 @@ export class XlsReportAgent extends PolicySynthAgent {
             "Description",
             "Url",
             "Reason for Gold-Plating",
-            "Recommendation",
             "Detailed Rules",
             "Expanded Scope",
             "Exemptions Not Utilized",
@@ -107,17 +106,18 @@ export class XlsReportAgent extends PolicySynthAgent {
             "Disproportionate Penalties",
             "Earlier Implementation",
             "Possible Explanation",
+            "EU Law Relevant Extract",
+            "English Article Translation",
         ];
         const rows = rankedArticles.map((article, index) => [
             (index + 1).toString(),
             article.source,
-            article.number,
+            article.number.toString(),
             article.eloRating.toString(),
             article.text,
             article.research?.description || "N/A",
             article.research?.url || "N/A",
             article.research?.reasonForGoldPlating || "N/A",
-            article.research?.recommendation || "N/A",
             article.research?.results.detailedRules || "N/A",
             article.research?.results.expandedScope || "N/A",
             article.research?.results.exemptionsNotUtilized || "N/A",
@@ -125,6 +125,8 @@ export class XlsReportAgent extends PolicySynthAgent {
             article.research?.results.disproportionatePenalties || "N/A",
             article.research?.results.earlierImplementation || "N/A",
             article.research?.supportTextExplanation || "N/A",
+            article.research?.euLawExtract || "N/A",
+            article.research?.englishTranslationOfIcelandicArticle || "N/A",
         ]);
         return [["Detailed Findings"], headers, ...rows];
     }

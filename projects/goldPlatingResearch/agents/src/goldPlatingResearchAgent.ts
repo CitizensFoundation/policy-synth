@@ -14,8 +14,9 @@ import { XlsReportAgent } from "./sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 
 const disableScanning = true;
-const skipFullTextProcessing = false;
-const skipArticleExtraction = false;
+const skipFullTextProcessing = true;
+const skipArticleExtraction = true;
+const skipMainReview = true;
 
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -73,7 +74,10 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
       40,
       60
     );
-    await goldPlatingSearchAgent.processItem(researchItem);
+
+    if (!skipMainReview) {
+      await goldPlatingSearchAgent.processItem(researchItem);
+    }
 
     await this.saveMemory();
     this.logger.debug(JSON.stringify(this.memory, null, 2));
@@ -89,7 +93,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
     await this.saveMemory();
     await supportTextReviewAgent.processItem(researchItem);
 
-    this.logger.debug(JSON.stringify(this.memory, null, 2));
+    //this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 5. Rank found gold-plating
     const foundGoldPlatingRankingAgent = new FoundGoldPlatingRankingAgent(

@@ -35,8 +35,12 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     if (
       !researchItem.nationalLaw ||
       !researchItem.nationalLaw.supportArticleText
-    )
+    ) {
+      this.logger.warn(
+        `No national law or support text found for research item`
+      );
       return;
+    }
 
     const articles = researchItem.nationalLaw.law.articles;
     const totalArticles = articles.length;
@@ -50,17 +54,31 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
       );
 
       if (article.research?.possibleGoldPlating) {
-        const normalizedArticleNumber = this.normalizeArticleNumber(article.number);
         const supportArticleId =
           researchItem.supportArticleTextArticleIdMapping[
-            parseInt(normalizedArticleNumber)
-          ] || parseInt(normalizedArticleNumber);
+            this.normalizeArticleNumber(article.number)
+          ] || this.normalizeArticleNumber(article.number);
+
+        this.logger.debug(`Support article ID: ${supportArticleId}`);
 
         if (supportArticleId) {
-          const supportArticle =
-            researchItem.nationalLaw.supportArticleText.articles.find(
-              (a) => this.normalizeArticleNumber(a.number) === supportArticleId.toString()
+          let supportArticle;
+
+          for (
+            let r = 0;
+            r < researchItem.nationalLaw.supportArticleText.articles.length;
+            r++
+          ) {
+            const realArticleId = this.normalizeArticleNumber(
+              researchItem.nationalLaw.supportArticleText.articles[r].number
             );
+            this.logger.debug(`Compare ${realArticleId} with ${supportArticleId}`);
+            if (realArticleId == supportArticleId) {
+              supportArticle =
+                researchItem.nationalLaw.supportArticleText.articles[r];
+              break;
+            }
+          }
 
           if (supportArticle) {
             const explanation = await this.analyzeSupportText(
@@ -68,6 +86,12 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
               supportArticle
             );
             article.research.supportTextExplanation = explanation;
+
+            this.logger.debug(
+              `Support text analysis for article ${article.number}: ${explanation}`
+            );
+
+            await this.saveMemory();
           } else {
             this.logger.error(
               `No support text found for article ${article.number} in national law`
@@ -82,8 +106,20 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     }
   }
 
-  private normalizeArticleNumber(number: string): string {
-    return number.replace(/(\.|gr|Um)/g, "").trim();
+  private normalizeArticleNumber(number: string | number): number {
+    if (typeof number === "number") {
+      return number;
+    } else if (typeof number === "string") {
+      try {
+        const intValue = parseInt(number.replace(/(\.|gr|Um)/g, "").trim());
+        return intValue;
+      } catch (error) {
+        this.logger.error(`Failed to normalize article number: ${number}`);
+        return 0;
+      }
+    } else {
+      return number;
+    }
   }
 
   private async reviewNationalRegulationSupportText(
