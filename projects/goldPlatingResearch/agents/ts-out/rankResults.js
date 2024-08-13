@@ -2,7 +2,7 @@ import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRanking.js";
 export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     memory;
-    defaultModelSize = PsAiModelSize.Small;
+    defaultModelSize = PsAiModelSize.Medium;
     updatePrefix = "Rank Gold-Plating Articles";
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);

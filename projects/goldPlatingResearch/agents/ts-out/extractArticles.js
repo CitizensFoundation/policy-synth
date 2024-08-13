@@ -2,7 +2,7 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 export class ArticleExtractionAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
-    maxModelTokensOut = 8192;
+    maxModelTokensOut = 15192;
     modelTemperature = 0.0;
     maxExtractionRetries = 3;
     maxValidationRetries = 3;

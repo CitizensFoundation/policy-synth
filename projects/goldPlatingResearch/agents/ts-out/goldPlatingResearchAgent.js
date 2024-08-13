@@ -9,9 +9,9 @@ import { GoogleDocsReportAgent } from "./docReport.js";
 import { XlsReportAgent } from "./sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 const disableScanning = true;
-const skipFullTextProcessing = true;
-const skipArticleExtraction = true;
-const skipMainReview = true;
+const skipFullTextProcessing = false;
+const skipArticleExtraction = false;
+const skipMainReview = false;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
     static GOLDPLATING_AGENT_CLASS_VERSION = 3;
@@ -69,11 +69,11 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         const textCleaningAgent = new TextCleaningAgent(this.agent, this.memory, 10, 20);
         const articleExtractionAgent = new ArticleExtractionAgent(this.agent, this.memory, 20, 40);
         if (researchItem.nationalLaw) {
-            if (false && !skipFullTextProcessing) {
+            if (!skipFullTextProcessing) {
                 researchItem.nationalLaw.law.fullText =
                     await textCleaningAgent.processItem(researchItem.nationalLaw.law.fullText);
             }
-            if (false && !skipArticleExtraction) {
+            if (!skipArticleExtraction) {
                 researchItem.nationalLaw.law.articles =
                     await articleExtractionAgent.processItem(researchItem.nationalLaw.law.fullText, "law");
             }

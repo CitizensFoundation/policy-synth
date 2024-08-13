@@ -9,7 +9,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  maxModelTokensOut = 8192;
+  maxModelTokensOut = 15192;
   modelTemperature = 0.0;
 
   maxExtractionRetries: number = 3;
