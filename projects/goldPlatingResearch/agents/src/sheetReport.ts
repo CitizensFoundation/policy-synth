@@ -79,7 +79,7 @@ export class XlsReportAgent extends PolicySynthAgent {
     researchItem: GoldplatingResearchItem,
     rankedArticles: ArticleWithRanking[]
   ): Promise<void> {
-    const summarySheet = this.generateSummarySheet(rankedArticles);
+    const summarySheet = this.generateSummarySheet(researchItem, rankedArticles);
     const detailedFindingsSheet =
       this.generateDetailedFindingsSheet(rankedArticles);
 
@@ -103,16 +103,17 @@ export class XlsReportAgent extends PolicySynthAgent {
   }
 
   private generateSummarySheet(
+    researchItem: GoldplatingResearchItem,
     rankedArticles: ArticleWithRanking[]
   ): string[][] {
     return [
-      ["Gold-Plating Analysis Report - Executive Summary"],
-      [
+      [`Rannsókn á gullhúðun fyrir ${researchItem.name}`],
+      ["",
         "Total instances of potential gold-plating:",
         rankedArticles.length.toString(),
       ],
       [""],
-      ["Top 5 Most Significant Instances:"],
+      ["Topp 5 dæmi:"],
       ["Rank", "Source", "Article Number", "ELO Rating", "Description", "Url"],
       ...rankedArticles
         .slice(0, 5)
@@ -128,9 +129,9 @@ export class XlsReportAgent extends PolicySynthAgent {
   }
 
   private sanitizeData(data: any[][]): string[][] {
-    return data.map(row =>
-      row.map(cell => {
-        if (typeof cell === 'object' && cell !== null) {
+    return data.map((row) =>
+      row.map((cell) => {
+        if (typeof cell === "object" && cell !== null) {
           return JSON.stringify(cell);
         }
         return String(cell);
@@ -149,6 +150,9 @@ export class XlsReportAgent extends PolicySynthAgent {
       "Text",
       "Description",
       "Url",
+      "Gold-Plating Found",
+      "Conclusion",
+      "EU Directive Article Numbers",
       "Reason for Gold-Plating",
       "Detailed Rules",
       "Expanded Scope",
@@ -156,8 +160,9 @@ export class XlsReportAgent extends PolicySynthAgent {
       "Stricter National Laws",
       "Disproportionate Penalties",
       "Earlier Implementation",
-      "Possible Explanation",
-      "EU Law Relevant Extract",
+      "Possible Reasons",
+      "Possible Explanation (frá greinargerð)",
+      "EU Directive Relevant Extract",
       "English Article Translation",
     ];
 
@@ -169,6 +174,9 @@ export class XlsReportAgent extends PolicySynthAgent {
       article.text,
       article.research?.description || "N/A",
       article.research?.url || "N/A",
+      article.research?.results.goldPlatingWasFound ? "Yes" : "No",
+      article.research?.results.conclusion || "N/A",
+      article.research?.results.euDirectiveArticlesNumbers?.join(", ") || "N/A",
       article.research?.reasonForGoldPlating || "N/A",
       article.research?.results.detailedRules || "N/A",
       article.research?.results.expandedScope || "N/A",
@@ -176,6 +184,7 @@ export class XlsReportAgent extends PolicySynthAgent {
       article.research?.results.stricterNationalLaws || "N/A",
       article.research?.results.disproportionatePenalties || "N/A",
       article.research?.results.earlierImplementation || "N/A",
+      article.research?.results.possibleReasons || "N/A",
       article.research?.supportTextExplanation || "N/A",
       article.research?.euLawExtract || "N/A",
       article.research?.englishTranslationOfIcelandicArticle || "N/A",

@@ -326,4 +326,39 @@ export class AgentConnectorManager {
 
     await connector.save();
   }
+
+  public async addExistingConnector(
+    groupId: number,
+    agentId: number,
+    connectorId: number,
+    type: 'input' | 'output'
+  ): Promise<void> {
+    const transaction: Transaction = await sequelize.transaction();
+
+    try {
+      const agent = await PsAgent.findByPk(agentId);
+      const connector = await PsAgentConnector.findByPk(connectorId);
+
+      if (!agent || !connector) {
+        await transaction.rollback();
+        throw new Error("Agent or connector not found");
+      }
+
+      if (connector.group_id !== groupId) {
+        await transaction.rollback();
+        throw new Error("Connector does not belong to the specified group");
+      }
+
+      if (type === "input") {
+        await agent.addInputConnector(connector, { transaction });
+      } else {
+        await agent.addOutputConnector(connector, { transaction });
+      }
+
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
 }

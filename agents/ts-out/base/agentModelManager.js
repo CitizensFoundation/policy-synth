@@ -17,7 +17,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     agentId;
     maxModelTokensOut;
     modelTemperature;
-    limitedLLMmaxRetryCount = 3;
+    limitedLLMmaxRetryCount = 1;
     mainLLMmaxRetryCount = 10;
     constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, agentId, userId) {
         super();

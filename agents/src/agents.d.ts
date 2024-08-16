@@ -62,6 +62,7 @@ interface PsBaseModelPriceConfiguration {
   costInTokensPerMillion: number;
   costOutTokensPerMillion: number;
   costInCachedContextTokensPerMillion?: number;
+  costOutCachedContextTokensPerMillion?: number;
   currency: string;
 }
 
@@ -172,7 +173,8 @@ interface PsModelTokenUsage {
   modelId: number;
   tokensIn: number;
   tokensOut: number;
-  contextTokensIn?: number;
+  contextCacheTokensIn?: number;
+  contextCacheTokensOut?: number;
 }
 
 interface PsAgentClassAttributesConfiguration {

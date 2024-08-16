@@ -106,7 +106,7 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
 Your analysis should focus on:
 1. Explaining any justifications provided in the support text for the potential gold-plating.
 2. Identifying any additional context that might clarify why the article was implemented in its current form.
-3. Noting any explicit mentions of intentional divergence from EU law and the reasons given.
+3. Noting any explicit mentions of intentional divergence from EU directive and the reasons given.
 4. Highlighting any explanations for stricter rules, expanded scope, or earlier implementation.
 
 Provide a concise but comprehensive explanation based on the support text. If the support text does not provide relevant information, state that clearly.`;

@@ -1,0 +1,68 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "es2020",
+    "lib": ["es2021", "DOM", "DOM.Iterable"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "outDir": "ts-out",
+    "rootDir": "./src",
+    "strict": true,
+    "strictNullChecks": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": false,
+    "plugins": [
+      {
+        "name": "ts-lit-plugin",
+        "strict": true
+      }
+    ],
+  },
+  "include": [
+    "**/*.ts",
+    "./node_modules/@policysynth/agents/*.d.ts",
+    "./node_modules/@yrpri/webapp/*.d.ts",
+    "../agents/src/**/*.d.ts",
+    "src/flexbox-literals/literals.ts"
+  ],
+  "importHelpers": true,
+  "plugins": [
+    {
+      "name": "ts-lit-plugin",
+      "rules": {
+        "no-unknown-tag-name": "error",
+        "no-unclosed-tag": "error",
+        "no-unknown-property": "error",
+        "no-unintended-mixed-binding": "error",
+        "no-invalid-boolean-binding": "error",
+        "no-expressionless-property-binding": "error",
+        "no-noncallable-event-binding": "error",
+        "no-boolean-in-attribute-binding": "error",
+        "no-complex-attribute-binding": "error",
+        "no-nullable-attribute-binding": "error",
+        "no-incompatible-type-binding": "error",
+        "no-invalid-directive-binding": "error",
+        "no-incompatible-property-type": "error",
+        "no-unknown-property-converter": "error",
+        "no-invalid-attribute-name": "error",
+        "no-invalid-tag-name": "error",
+        "no-unknown-attribute": "off",
+        "no-unknown-event": "off",
+        "no-unknown-slot": "off",
+        "no-invalid-css": "off"
+      }
+    }
+  ]
+}

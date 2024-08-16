@@ -1,0 +1,1 @@
+{"version":3,"file":"PsAppUser.d.ts","sourceRoot":"","sources":["../../src/base/PsAppUser.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,WAAW,EAAE,MAAM,kCAAkC,CAAC;AAC/D,OAAO,EAAE,SAAS,EAAE,MAAM,gCAAgC,CAAC;AAE3D,qBAAa,SAAU,SAAQ,SAAS;gBAC1B,SAAS,EAAE,WAAW,EAAE,eAAe,UAAQ;CAG5D"}

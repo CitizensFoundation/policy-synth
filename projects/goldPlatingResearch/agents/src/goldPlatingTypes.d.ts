@@ -6,6 +6,15 @@ interface BaseArticle {
   research?: GoldPlatingResearch;
 }
 
+
+interface OneGoldplatingTypeResearch {
+  goldPlatingType: string;
+  goldPlatingIssueAnalysis: string;
+  goldPlatingWasFound: boolean;
+  goldPlatingForEuDirectiveArticlesNumbers: string[];
+  goldPlatingPossibleReasons: string;
+}
+
 interface ResearchResults {
   detailedRules: string;
   expandedScope: string;
@@ -14,6 +23,9 @@ interface ResearchResults {
   disproportionatePenalties: string;
   earlierImplementation: string;
   conclusion: string;
+  euDirectiveArticlesNumbers: string[];
+  possibleReasons: string;
+  goldPlatingWasFound: boolean;
 }
 
 interface LlmAnalysisResponse {

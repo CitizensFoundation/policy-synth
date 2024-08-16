@@ -14,8 +14,8 @@ import { XlsReportAgent } from "./sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 
 const disableScanning = true;
-const skipFullTextProcessing = false;
-const skipArticleExtraction = false;
+const skipFullTextProcessing = true;
+const skipArticleExtraction = true;
 const skipMainReview = false;
 
 export class GoldPlatingResearchAgent extends PolicySynthAgent {

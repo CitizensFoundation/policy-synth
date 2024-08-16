@@ -41,21 +41,25 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
   ): RankableArticle[] {
     const rankableArticles: RankableArticle[] = [];
 
+    const addArticles = (articles: LawArticle[], source: "law" | "regulation") => {
+      articles
+        .filter((article) => article.research?.possibleGoldPlating)
+        .forEach((article) => {
+          rankableArticles.push({
+            ...article,
+            source,
+            eloRating: article.eloRating || 1000
+          });
+        });
+    };
+
     if (researchItem.nationalLaw) {
-      rankableArticles.push(
-        ...researchItem.nationalLaw.law.articles
-          .filter((article) => article.research?.possibleGoldPlating)
-          .map((article) => ({ ...article, source: "law" as const }))
-      );
+      addArticles(researchItem.nationalLaw.law.articles, "law");
     }
 
     if (researchItem.nationalRegulation) {
       researchItem.nationalRegulation.forEach((regulation) => {
-        rankableArticles.push(
-          ...regulation.articles
-            .filter((article) => article.research?.possibleGoldPlating)
-            .map((article) => ({ ...article, source: "regulation" as const }))
-        );
+        addArticles(regulation.articles, "regulation");
       });
     }
 
@@ -79,7 +83,7 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
 
         Instructions:
         1. You will receive two articles with identified gold-plating issues.
-        2. Your task is to analyze, compare, and rank these articles based on the severity and potential impact of the gold-plating.
+        2. Your task is to analyze, compare, and rank these articles based on how the identified gold-plating issues add costs or stifle innovation for Icelandic companies and citizens, potentially harming their competitiveness. Focus on factors like additional regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
         3. Consider factors such as the extent of divergence from EU law, potential economic impact, and implications for citizens or businesses.
         4. Output your decision as "One", "Two" or "Neither". Output nothing else. No explanation is required.
         `
@@ -119,32 +123,46 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     rankedArticles: RankableArticle[]
   ): void {
     rankedArticles.forEach((article) => {
-      if (!article.eloRating) {
+      if (!article.eloRating || article.eloRating === 0) {
         this.logger.error(
-          `Article ${article.number} has no ELO rating after ranking`
+          `Article ${article.number} has invalid ELO rating (${article.eloRating}) after ranking`
         );
+        article.eloRating = 1000; // Set a default score if invalid
       }
+
+      const updateArticle = (targetArticle: LawArticle) => {
+        if (targetArticle.eloRating !== article.eloRating) {
+          targetArticle.eloRating = article.eloRating;
+          this.logger.debug(`Updated ${article.source} article ${article.number} with ELO rating ${article.eloRating}`);
+        }
+      };
+
       if (article.source === "law" && researchItem.nationalLaw) {
         const lawArticle = researchItem.nationalLaw.law.articles.find(
           (a) => a.number === article.number
         );
         if (lawArticle) {
-          lawArticle.eloRating = article.eloRating;
-          this.logger.debug(`Updated law article ${article.number} with ELO rating ${article.eloRating}`);
+          updateArticle(lawArticle);
+        } else {
+          this.logger.error(`Law article ${article.number} not found in research item`);
         }
       } else if (
         article.source === "regulation" &&
         researchItem.nationalRegulation
       ) {
+        let found = false;
         for (const regulation of researchItem.nationalRegulation) {
           const regulationArticle = regulation.articles.find(
             (a) => a.number === article.number
           );
           if (regulationArticle) {
-            regulationArticle.eloRating = article.eloRating;
-            this.logger.debug(`Updated regulation article ${article.number} with ELO rating ${article.eloRating}`);
+            updateArticle(regulationArticle);
+            found = true;
             break;
           }
+        }
+        if (!found) {
+          this.logger.error(`Regulation article ${article.number} not found in research item`);
         }
       }
     });

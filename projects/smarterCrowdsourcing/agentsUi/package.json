@@ -1,0 +1,133 @@
+{
+  "name": "@policysynth/agents-playground",
+  "version": "1.0.0",
+  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/webApps/agents-playground"
+  },
+  "license": "MIT",
+  "scripts": {
+    "copyInLocalAgents": "cp -R ../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
+    "prepublishOnly": "npm pack && node repack",
+    "publish": "npm pack && node repack && node publish.js https://registry.npmjs.org/",
+    "publish_local": "npm pack && node repack && node publish.js http://localhost:4873",
+    "lint:eslint": "eslint --ext .ts,.html . --ignore-path .gitignore",
+    "format:eslint": "eslint --ext .ts,.html . --fix --ignore-path .gitignore",
+    "lint:prettier": "prettier \"**/*.js\" \"**/*.ts\" --check --ignore-path .gitignore",
+    "format:prettier": "prettier \"**/*.js\" \"**/*.ts\" --write --ignore-path .gitignore",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "format": "npm run format:eslint && npm run format:prettier",
+    "test": "tsc && web-test-runner --coverage --node-resolve",
+    "test:watch": "web-test-runner --watch --node-resolve",
+    "storybook": "concurrently --kill-others --names tsc,storybook \"npm run tsc:watch\" \"start-storybook --node-resolve --watch --open\"",
+    "storybook:build": "build-storybook",
+    "build": "rimraf dist && tsc && rollup -c rollup.config.js",
+    "start:build": "npm run build && web-dev-server --root-dir dist --app-index index.html --open --compatibility none",
+    "start": "concurrently --kill-others --names tsc,web-dev-server \"npm run tsc:watch\" \"web-dev-server --app-index index.html --node-resolve --open --watch\"",
+    "tsc:watch": "tsc --watch"
+  },
+  "type": "module",
+  "dependencies": {
+    "@joint/core": "^4.0.4",
+    "@joint/layout-directed-graph": "^4.0.3",
+    "@policysynth/agents": "^1.2.12"
+  },
+  "peerDependencies": {
+    "@yrpri/webapp": "^9.0.44"
+  },
+  "files": [
+    "ts-out/**/*",
+    "src/*.d.ts"
+  ],
+  "overrides": {
+    "@lit/reactive-element": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.18.10",
+    "@babel/preset-env": "^7.16.6",
+    "@babel/runtime": "^7.18.9",
+    "@custom-elements-manifest/analyzer": "^0.6.4",
+    "@open-wc/building-rollup": "^2.2.3",
+    "@open-wc/eslint-config": "^9.2.2",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.2",
+    "@web/dev-server": "^0.4.1",
+    "@web/dev-server-rollup": "^0.6.1",
+    "@web/rollup-plugin-html": "^1.11.0",
+    "@web/rollup-plugin-import-meta-assets": "^1.0.7",
+    "@web/test-runner": "^0.15.1",
+    "babel-plugin-template-html-minifier": "^4.1.0",
+    "chai": "^4.3.6",
+    "concurrently": "^7.3.0",
+    "deepmerge": "^4.2.2",
+    "eslint": "^8.22.0",
+    "eslint-config-prettier": "^8.5.0",
+    "fetch-mock": "^9.11.0",
+    "koa-proxies": "^0.12.2",
+    "lint-staged": "^13.0.3",
+    "openai": "^4.25.0",
+    "prettier": "^2.7.1",
+    "rimraf": "^4.2.0",
+    "rollup": "^2.78.1",
+    "rollup-plugin-analyzer": "^4.0.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-workbox": "^6.2.0",
+    "sinon": "^15.0.1",
+    "tslib": "^2.4.0",
+    "typescript": "^5.3.3"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "@open-wc",
+      "prettier"
+    ],
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "rules": {
+      "overrides": [
+        {
+          "rules": {
+            "no-unused-expressions": "off",
+            "no-unused-vars": "off",
+            "eslint-disable wc/guard-super-call": "off",
+            "eslint-disable no-nested-ternary": "off",
+            "eslint-disable no-else-return": "off",
+            "eslint-disable no-plusplus": "off",
+            "eslint-disable import/no-duplicates": "off",
+            "eslint-disable import/order": "off",
+            "eslint-disable class-methods-use-this": "off"
+          }
+        }
+      ],
+      "no-unused-vars": "off",
+      "eslint-disable wc/guard-super-call": "off",
+      "eslint-disable no-nested-ternary": "off",
+      "eslint-disable no-else-return": "off",
+      "eslint-disable no-plusplus": "off",
+      "eslint-disable import/no-duplicates": "off",
+      "eslint-disable import/order": "off",
+      "eslint-disable class-methods-use-this": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error"
+      ],
+      "import/no-unresolved": "off",
+      "import/extensions": [
+        "error",
+        "always",
+        {
+          "ignorePackages": true
+        }
+      ]
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "arrowParens": "avoid"
+  }
+}

@@ -9,8 +9,8 @@ import { GoogleDocsReportAgent } from "./docReport.js";
 import { XlsReportAgent } from "./sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 const disableScanning = true;
-const skipFullTextProcessing = false;
-const skipArticleExtraction = false;
+const skipFullTextProcessing = true;
+const skipArticleExtraction = true;
 const skipMainReview = false;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
