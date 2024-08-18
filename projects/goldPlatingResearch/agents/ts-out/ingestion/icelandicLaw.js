@@ -73,14 +73,18 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
         console.log(`Extracting content from article: ${JSON.stringify(article).slice(0, 200)}...`);
         const articleNumber = parseInt(article['@_nr'], 10);
         let articleText = "";
+        // Extract article name if present
+        if (article.name) {
+            articleText += `${article.name}\n\n`;
+        }
         if (article.subart) {
             if (Array.isArray(article.subart)) {
                 for (const subart of article.subart) {
-                    articleText += this.extractSentences(subart);
+                    articleText += this.extractSubarticle(subart);
                 }
             }
             else {
-                articleText += this.extractSentences(article.subart);
+                articleText += this.extractSubarticle(article.subart);
             }
         }
         if (!isNaN(articleNumber) && articleText.trim() !== "") {
@@ -95,28 +99,55 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
             console.log(`Failed to add article: number=${articleNumber}, text length=${articleText.length}`);
         }
     }
-    extractSentences(subart) {
+    extractSubarticle(subart) {
         let text = "";
         if (subart.sen) {
-            if (Array.isArray(subart.sen)) {
-                for (const sentence of subart.sen) {
-                    if (typeof sentence === 'string') {
-                        text += sentence + " ";
-                    }
-                    else if (sentence['#text']) {
-                        text += sentence['#text'] + " ";
-                    }
+            text += this.extractSentences(subart.sen);
+        }
+        if (subart.numart) {
+            if (Array.isArray(subart.numart)) {
+                for (const numart of subart.numart) {
+                    text += this.extractNumart(numart);
                 }
             }
-            else if (typeof subart.sen === 'string') {
-                text += subart.sen + " ";
-            }
-            else if (subart.sen['#text']) {
-                text += subart.sen['#text'] + " ";
+            else {
+                text += this.extractNumart(subart.numart);
             }
         }
-        console.log(`Extracted text: ${text.slice(0, 50)}...`);
         return text;
+    }
+    extractNumart(numart) {
+        let text = "";
+        if (numart['nr-title']) {
+            text += `${numart['nr-title']} `;
+        }
+        if (numart.name) {
+            text += `${numart.name} `;
+        }
+        if (numart.sen) {
+            text += this.extractSentences(numart.sen);
+        }
+        return text + "\n";
+    }
+    extractSentences(sen) {
+        let text = "";
+        if (Array.isArray(sen)) {
+            for (const sentence of sen) {
+                if (typeof sentence === 'string') {
+                    text += sentence + " ";
+                }
+                else if (sentence['#text']) {
+                    text += sentence['#text'] + " ";
+                }
+            }
+        }
+        else if (typeof sen === 'string') {
+            text += sen + " ";
+        }
+        else if (sen['#text']) {
+            text += sen['#text'] + " ";
+        }
+        return text + "\n";
     }
     isValidExtractionResult(result) {
         return (typeof result === "object" &&

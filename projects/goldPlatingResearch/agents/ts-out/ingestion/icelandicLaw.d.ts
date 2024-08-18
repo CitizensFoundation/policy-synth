@@ -9,6 +9,8 @@ export declare class IcelandicLawXmlAgent extends PolicySynthAgent {
     private fetchXmlContent;
     private extractArticles;
     private extractArticleContent;
+    private extractSubarticle;
+    private extractNumart;
     private extractSentences;
     private isValidExtractionResult;
     static runFromCommandLine(url: string): Promise<void>;
