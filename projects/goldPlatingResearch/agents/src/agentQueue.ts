@@ -114,7 +114,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
       name: "Lög um öryggi net- og upplýsingakerfa mikilvægra innviða",
       nationalLaw: {
         law: {
-          url: "https://www.althingi.is/lagas/nuna/2019078.html",
+          url: "https://raw.githubusercontent.com/althingi-net/lagasafn-xml/master/data/xml/2019.78.xml",
           fullText: "",
           articles: [],
         },

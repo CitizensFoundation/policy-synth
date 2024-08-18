@@ -1,12 +1,12 @@
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
-import { WebScanningAgent } from "./webScanning.js";
-import { TextCleaningAgent } from "./textCleaning.js";
-import { ArticleExtractionAgent } from "./extractArticles.js";
+import { WebScanningAgent } from "./ingestion/webScanning.js";
+import { TextCleaningAgent } from "./ingestion/textCleaning.js";
+import { ArticleExtractionAgent } from "./ingestion/extractArticles.js";
 import { GoldPlatingSearchAgent } from "./researchArticles.js";
 import { SupportTextReviewAgent } from "./reviewAgent.js";
 import { FoundGoldPlatingRankingAgent } from "./rankResults.js";
-import { GoogleDocsReportAgent } from "./docReport.js";
-import { XlsReportAgent } from "./sheetReport.js";
+import { GoogleDocsReportAgent } from "./reporting/docReport.js";
+import { XlsReportAgent } from "./reporting/sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 const disableScanning = true;
 const skipFullTextProcessing = true;
