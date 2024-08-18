@@ -28,7 +28,23 @@ export class ClaudeChat extends BaseChatModel {
             model: this.modelName,
         };
         if (systemMessage) {
-            requestOptions.system = systemMessage;
+            if (process.env.ANTHROPIC_BETA_CONTEXT_CACHING) {
+                requestOptions.system = [
+                    {
+                        type: "text",
+                        text: systemMessage,
+                        cache_control: { "type": "ephemeral" }
+                    },
+                ];
+            }
+            else {
+                requestOptions.system = [
+                    {
+                        type: "text",
+                        text: systemMessage,
+                    },
+                ];
+            }
         }
         if (streaming) {
             const stream = await this.client.messages.create({
@@ -44,7 +60,13 @@ export class ClaudeChat extends BaseChatModel {
             // TODO: Deal with token usage here
         }
         else {
-            const response = await this.client.messages.create(requestOptions);
+            let response;
+            if (process.env.ANTHROPIC_BETA_CONTEXT_CACHING) {
+                response = await this.client.beta.promptCaching.messages.create(requestOptions);
+            }
+            else {
+                response = await this.client.messages.create(requestOptions);
+            }
             console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
             return {
                 tokensIn: response.usage.input_tokens,

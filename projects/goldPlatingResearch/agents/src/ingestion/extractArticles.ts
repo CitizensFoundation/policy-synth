@@ -4,6 +4,8 @@ import {
   PsAiModelType,
   PsAiModelSize,
 } from "@policysynth/agents/aiModelTypes.js";
+import {IcelandicLawXmlAgent} from './icelandicLaw.js';
+
 
 export class ArticleExtractionAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -26,7 +28,8 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
 
   async processItem(
     text: string,
-    type: "law" | "regulation" | "lawSupportArticle"
+    type: "law" | "regulation" | "lawSupportArticle",
+    xmlUrl?: string
   ): Promise<LawArticle[] | RegulationArticle[]> {
     await this.updateRangedProgress(
       0,
@@ -34,26 +37,32 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     );
 
     try {
-      const lastArticleNumber = await this.getLastArticleNumber(text, type);
-      const extractedArticles = await this.extractArticles(
-        text,
-        type,
-        lastArticleNumber
-      );
+      let validatedArticles;
+      if (type=="law" && xmlUrl && xmlUrl.endsWith(".xml")) {
+        const icelandicLawXmlAgent = new IcelandicLawXmlAgent(this.agent, this.memory, 0,20);
+        validatedArticles = await icelandicLawXmlAgent.processItem(xmlUrl);
+      } else {
+        const lastArticleNumber = await this.getLastArticleNumber(text, type);
+        const extractedArticles = await this.extractArticles(
+          text,
+          type,
+          lastArticleNumber
+        );
 
-      /*const validatedArticles = await this.validateExtractedArticles(
-        text,
-        extractedArticles,
-        type
-      );*/
+        /*const validatedArticles = await this.validateExtractedArticles(
+          text,
+          extractedArticles,
+          type
+        );*/
 
-      const validatedArticles = extractedArticles;
+        validatedArticles = extractedArticles;
+      }
 
       await this.updateRangedProgress(
         100,
         `Article extraction completed for ${type}`
       );
-      return validatedArticles;
+      return validatedArticles || [];
     } catch (error) {
       this.logger.error(`Error during article extraction: ${error}`);
       throw error;
@@ -77,9 +86,14 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
 
     const systemPrompt = `Analyze the following ${type} text and identify the number of the last article. Look for the last instance of article number in this format ${lookForText}.
     Return a JSON markdown object with the format:
-      { "lastArticleNumber": number }
-    Only output the JSON object without any other explanations. `;
-    const userPrompt = `${type} to analyize for last article number:\n${text}`;
+    \`\`\`json
+    {
+      "lastArticleNumber": <number>
+    }
+    \`\`\`
+
+    Only output the JSON object without any other explanations.`;
+    const userPrompt = `${type} to analyize for last article number, your JSON markdown format output:\n${text}`;
 
     const result = (await this.callModel(
       PsAiModelType.Text,

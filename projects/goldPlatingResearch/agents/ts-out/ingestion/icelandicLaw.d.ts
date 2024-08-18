@@ -4,7 +4,7 @@ export declare class IcelandicLawXmlAgent extends PolicySynthAgent {
     memory: GoldPlatingMemoryData;
     skipAiModels: boolean;
     constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
-    processItem(item: GoldplatingResearchItem): Promise<void>;
+    processItem(xmlUrl: string): Promise<LawArticle[]>;
     processLawXml(url: string): Promise<LawArticle[]>;
     private fetchXmlContent;
     private extractArticles;

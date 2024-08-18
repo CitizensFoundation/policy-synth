@@ -18,20 +18,19 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
     console.log(`IcelandicLawXmlAgent constructor`);
   }
 
-  async processItem(item: GoldplatingResearchItem): Promise<void> {
+  async processItem(xmlUrl: string): Promise<LawArticle[]> {
     await this.updateRangedProgress(0, "Starting article extraction from XML");
 
     try {
-      const url = item.nationalLaw.law.url;
+      const url = xmlUrl;
       console.log(`Processing XML from URL: ${url}`);
       const articles = await this.processLawXml(url);
-      console.log(`Extracted ${articles.length} articles`);
 
-      // Store the extracted articles in the research item
-      item.nationalLaw.law.articles = articles;
-
-      await this.updateRangedProgress(100, "Article extraction from XML completed");
-      await this.saveMemory();
+      await this.updateRangedProgress(
+        100,
+        "Article extraction from XML completed"
+      );
+      return articles;
     } catch (error) {
       console.error(`Error during article extraction from XML: ${error}`);
       throw error;
@@ -45,10 +44,12 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "@_",
-      textNodeName: "#text"
+      textNodeName: "#text",
     });
     const jsonObj = parser.parse(xmlContent);
-    console.log(`Parsed XML to JSON: ${JSON.stringify(jsonObj).slice(0, 200)}...`);
+    console.log(
+      `Parsed XML to JSON: ${JSON.stringify(jsonObj).slice(0, 200)}...`
+    );
 
     if (!jsonObj.law) {
       console.error('No "law" object found in parsed XML');
@@ -71,7 +72,9 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
   }
 
   private extractArticles(node: any, articles: LawArticle[]) {
-    console.log(`Extracting articles from node: ${JSON.stringify(node).slice(0, 200)}...`);
+    console.log(
+      `Extracting articles from node: ${JSON.stringify(node).slice(0, 200)}...`
+    );
 
     if (node.chapter && Array.isArray(node.chapter)) {
       for (const chapter of node.chapter) {
@@ -91,9 +94,14 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
   }
 
   private extractArticleContent(article: any, articles: LawArticle[]) {
-    console.log(`Extracting content from article: ${JSON.stringify(article).slice(0, 200)}...`);
+    console.log(
+      `Extracting content from article: ${JSON.stringify(article).slice(
+        0,
+        200
+      )}...`
+    );
 
-    const articleNumber = parseInt(article['@_nr'], 10);
+    const articleNumber = parseInt(article["@_nr"], 10);
     let articleText = "";
 
     // Extract article name if present
@@ -115,11 +123,15 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
       articles.push({
         number: articleNumber,
         text: articleText.trim(),
-        description: "" // This field is included to match the LawArticle interface
+        description: "", // This field is included to match the LawArticle interface
       });
-      console.log(`Added article ${articleNumber}, text length: ${articleText.length}`);
+      console.log(
+        `Added article ${articleNumber}, text length: ${articleText.length}`
+      );
     } else {
-      console.log(`Failed to add article: number=${articleNumber}, text length=${articleText.length}`);
+      console.log(
+        `Failed to add article: number=${articleNumber}, text length=${articleText.length}`
+      );
     }
   }
 
@@ -142,8 +154,8 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
 
   private extractNumart(numart: any): string {
     let text = "";
-    if (numart['nr-title']) {
-      text += `${numart['nr-title']} `;
+    if (numart["nr-title"]) {
+      text += `${numart["nr-title"]} `;
     }
     if (numart.name) {
       text += `${numart.name} `;
@@ -158,16 +170,16 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
     let text = "";
     if (Array.isArray(sen)) {
       for (const sentence of sen) {
-        if (typeof sentence === 'string') {
+        if (typeof sentence === "string") {
           text += sentence + " ";
-        } else if (sentence['#text']) {
-          text += sentence['#text'] + " ";
+        } else if (sentence["#text"]) {
+          text += sentence["#text"] + " ";
         }
       }
-    } else if (typeof sen === 'string') {
+    } else if (typeof sen === "string") {
       text += sen + " ";
-    } else if (sen['#text']) {
-      text += sen['#text'] + " ";
+    } else if (sen["#text"]) {
+      text += sen["#text"] + " ";
     }
     return text + "\n";
   }
@@ -203,9 +215,12 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
 }
 
 // Command-line execution
-if (typeof process !== 'undefined' && process.argv.length > 1) {
+if (typeof process !== "undefined" && process.argv.length > 1) {
   const scriptPath = process.argv[1];
-  if (scriptPath.includes('icelandicLaw') || scriptPath.includes('IcelandicLawXmlAgent')) {
+  if (
+    scriptPath.includes("icelandicLaw") ||
+    scriptPath.includes("IcelandicLawXmlAgent")
+  ) {
     const url = process.argv[2];
     if (!url) {
       console.error("Please provide a URL as a command-line argument.");

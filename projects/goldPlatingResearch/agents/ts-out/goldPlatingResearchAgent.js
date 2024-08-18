@@ -69,22 +69,22 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         const textCleaningAgent = new TextCleaningAgent(this.agent, this.memory, 10, 20);
         const articleExtractionAgent = new ArticleExtractionAgent(this.agent, this.memory, 20, 40);
         if (researchItem.nationalLaw) {
-            if (!skipFullTextProcessing) {
-                researchItem.nationalLaw.law.fullText =
-                    await textCleaningAgent.processItem(researchItem.nationalLaw.law.fullText);
-            }
             if (!skipArticleExtraction) {
                 researchItem.nationalLaw.law.articles =
-                    await articleExtractionAgent.processItem(researchItem.nationalLaw.law.fullText, "law");
+                    await articleExtractionAgent.processItem(researchItem.nationalLaw.law.fullText, "law", researchItem.nationalLaw.law.url);
             }
+            await this.saveMemory();
             if (researchItem.nationalLaw.supportArticleText) {
                 if (!skipFullTextProcessing) {
-                    researchItem.nationalLaw.supportArticleText.fullText =
-                        await textCleaningAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText);
+                    /*researchItem.nationalLaw.supportArticleText.fullText =
+                      await textCleaningAgent.processItem(
+                        researchItem.nationalLaw.supportArticleText.fullText
+                      );*/
                 }
                 if (!skipArticleExtraction) {
                     researchItem.nationalLaw.supportArticleText.articles =
                         await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, "lawSupportArticle");
+                    await this.saveMemory();
                 }
             }
         }
@@ -95,6 +95,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
                       regulation.fullText
                     );*/
                     regulation.articles = await articleExtractionAgent.processItem(regulation.fullText, "regulation");
+                    await this.saveMemory();
                 }
             }
         }

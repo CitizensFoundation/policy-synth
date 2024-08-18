@@ -1,7 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
-import { ContentBlock } from "@anthropic-ai/sdk/resources/messages.js";
+import {
+  ContentBlock,
+  TextBlockParam,
+} from "@anthropic-ai/sdk/resources/messages.js";
 
 export class ClaudeChat extends BaseChatModel {
   private client: Anthropic;
@@ -42,7 +45,22 @@ export class ClaudeChat extends BaseChatModel {
     };
 
     if (systemMessage) {
-      requestOptions.system = systemMessage;
+      if (process.env.ANTHROPIC_BETA_CONTEXT_CACHING) {
+        requestOptions.system = [
+          {
+            type: "text",
+            text: systemMessage,
+            cache_control: {"type": "ephemeral"}
+          },
+        ] as any[];
+      } else {
+        requestOptions.system = [
+          {
+            type: "text",
+            text: systemMessage,
+          },
+        ] as TextBlockParam[];
+      }
     }
 
     if (streaming) {
@@ -59,7 +77,14 @@ export class ClaudeChat extends BaseChatModel {
       return undefined;
       // TODO: Deal with token usage here
     } else {
-      const response = await this.client.messages.create(requestOptions);
+      let response;
+      if (process.env.ANTHROPIC_BETA_CONTEXT_CACHING) {
+        response = await this.client.beta.promptCaching.messages.create(
+          requestOptions
+        );
+      } else {
+        response = await this.client.messages.create(requestOptions);
+      }
       console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
       return {
         tokensIn: response.usage.input_tokens,
@@ -69,7 +94,9 @@ export class ClaudeChat extends BaseChatModel {
     }
   }
 
-  async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+  async getEstimatedNumTokensFromMessages(
+    messages: PsModelMessage[]
+  ): Promise<number> {
     //TODO: Get the right encoding
     const encoding = encoding_for_model(
       /*this.modelName*/ "gpt-4o" as TiktokenModel

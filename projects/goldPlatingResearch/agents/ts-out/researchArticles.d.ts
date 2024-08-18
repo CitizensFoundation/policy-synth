@@ -21,6 +21,7 @@ export declare class GoldPlatingSearchAgent extends PolicySynthAgent {
     private getFinalAnalysisUserPrompt;
     private processGoldPlatingResult;
     private getGoldPlatingSystemPrompt;
+    renderEuAndIcelandicLaws(euLaw: string, icelandicLaw: string): string;
     private getGoldPlatingUserPrompt;
 }
 //# sourceMappingURL=researchArticles.d.ts.map

@@ -149,11 +149,15 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
     }
     forceMemoryRestart = false;
     async setupMemoryIfNeeded() {
-        if (this.forceMemoryRestart || !this.memory) {
+        if (!this.memory || !this.memory.researchItems) {
+            this.logger.info(`Setting up memory for agent ${this.agent.id}`);
             this.memory = {
                 agentId: this.agent.id,
-                researchItems: [this.getTestResearchItemTwo()],
+                researchItems: [this.getTestResearchItem()],
             };
+        }
+        else {
+            this.logger.info(`Memory already set up for agent ${this.agent.id}`);
         }
     }
 }

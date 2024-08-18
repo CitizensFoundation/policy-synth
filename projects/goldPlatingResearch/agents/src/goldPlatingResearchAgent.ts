@@ -143,27 +143,23 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
     );
 
     if (researchItem.nationalLaw) {
-      if (!skipFullTextProcessing) {
-        researchItem.nationalLaw.law.fullText =
-          await textCleaningAgent.processItem(
-            researchItem.nationalLaw.law.fullText
-          );
-      }
-
       if (!skipArticleExtraction) {
         researchItem.nationalLaw.law.articles =
         await articleExtractionAgent.processItem(
           researchItem.nationalLaw.law.fullText,
-          "law"
+          "law",
+          researchItem.nationalLaw.law.url
         );
       }
 
+      await this.saveMemory();
+
       if (researchItem.nationalLaw.supportArticleText) {
         if (!skipFullTextProcessing) {
-          researchItem.nationalLaw.supportArticleText.fullText =
+          /*researchItem.nationalLaw.supportArticleText.fullText =
             await textCleaningAgent.processItem(
               researchItem.nationalLaw.supportArticleText.fullText
-            );
+            );*/
         }
 
         if (!skipArticleExtraction) {
@@ -173,6 +169,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
             "lawSupportArticle"
           );
 
+          await this.saveMemory();
         }
       }
     }
@@ -187,6 +184,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
             regulation.fullText,
             "regulation"
           );
+          await this.saveMemory();
         }
       }
     }
