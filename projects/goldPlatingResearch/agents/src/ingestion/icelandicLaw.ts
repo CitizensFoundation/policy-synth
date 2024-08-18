@@ -45,6 +45,7 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "@_",
+      textNodeName: "#text"
     });
     const jsonObj = parser.parse(xmlContent);
     console.log(`Parsed XML to JSON: ${JSON.stringify(jsonObj).slice(0, 200)}...`);
@@ -95,12 +96,14 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
     const articleNumber = parseInt(article['@_nr'], 10);
     let articleText = "";
 
-    if (article.subart && Array.isArray(article.subart)) {
-      for (const subart of article.subart) {
-        articleText += this.extractSentences(subart);
+    if (article.subart) {
+      if (Array.isArray(article.subart)) {
+        for (const subart of article.subart) {
+          articleText += this.extractSentences(subart);
+        }
+      } else {
+        articleText += this.extractSentences(article.subart);
       }
-    } else if (article.subart) {
-      articleText += this.extractSentences(article.subart);
     }
 
     if (!isNaN(articleNumber) && articleText.trim() !== "") {
@@ -109,7 +112,7 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
         text: articleText.trim(),
         description: "" // This field is included to match the LawArticle interface
       });
-      console.log(`Added article ${articleNumber}`);
+      console.log(`Added article ${articleNumber}, text length: ${articleText.length}`);
     } else {
       console.log(`Failed to add article: number=${articleNumber}, text length=${articleText.length}`);
     }
@@ -117,15 +120,22 @@ export class IcelandicLawXmlAgent extends PolicySynthAgent {
 
   private extractSentences(subart: any): string {
     let text = "";
-    if (subart.sen && Array.isArray(subart.sen)) {
-      for (const sentence of subart.sen) {
-        if (typeof sentence === 'string') {
-          text += sentence + " ";
+    if (subart.sen) {
+      if (Array.isArray(subart.sen)) {
+        for (const sentence of subart.sen) {
+          if (typeof sentence === 'string') {
+            text += sentence + " ";
+          } else if (sentence['#text']) {
+            text += sentence['#text'] + " ";
+          }
         }
+      } else if (typeof subart.sen === 'string') {
+        text += subart.sen + " ";
+      } else if (subart.sen['#text']) {
+        text += subart.sen['#text'] + " ";
       }
-    } else if (subart.sen && typeof subart.sen === 'string') {
-      text += subart.sen + " ";
     }
+    console.log(`Extracted text: ${text.slice(0, 50)}...`);
     return text;
   }
 
