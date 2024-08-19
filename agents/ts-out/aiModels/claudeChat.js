@@ -28,7 +28,7 @@ export class ClaudeChat extends BaseChatModel {
             model: this.modelName,
         };
         if (systemMessage) {
-            if (process.env.ANTHROPIC_BETA_CONTEXT_CACHING) {
+            if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
                 requestOptions.system = [
                     {
                         type: "text",
@@ -36,6 +36,9 @@ export class ClaudeChat extends BaseChatModel {
                         cache_control: { "type": "ephemeral" }
                     },
                 ];
+                if (process.env.PS_PROMPT_DEBUG) {
+                    console.debug(`--------------> Using system message: ${JSON.stringify(requestOptions.system, null, 2)}`);
+                }
             }
             else {
                 requestOptions.system = [
@@ -61,16 +64,27 @@ export class ClaudeChat extends BaseChatModel {
         }
         else {
             let response;
-            if (process.env.ANTHROPIC_BETA_CONTEXT_CACHING) {
+            if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
                 response = await this.client.beta.promptCaching.messages.create(requestOptions);
             }
             else {
                 response = await this.client.messages.create(requestOptions);
             }
             console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
+            let tokensIn = response.usage.input_tokens;
+            let tokensOut = response.usage.output_tokens;
+            //TODO: Fix this properly
+            if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
+                if (response.usage.cache_creation_input_tokens) {
+                    tokensIn += response.usage.cache_creation_input_tokens * 1.25;
+                }
+                if (response.usage.cache_read_input_tokens) {
+                    tokensOut += response.usage.cache_read_input_tokens * 0.1;
+                }
+            }
             return {
-                tokensIn: response.usage.input_tokens,
-                tokensOut: response.usage.output_tokens,
+                tokensIn: Math.round(tokensIn),
+                tokensOut: Math.round(tokensOut),
                 content: response.content[0].text,
             };
         }

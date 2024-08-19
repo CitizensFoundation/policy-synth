@@ -50,6 +50,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         const supportTextReviewAgent = new SupportTextReviewAgent(this.agent, this.memory, 60, 70);
         await this.saveMemory();
         await supportTextReviewAgent.processItem(researchItem);
+        await this.saveMemory();
         //this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 5. Rank found gold-plating
         const foundGoldPlatingRankingAgent = new FoundGoldPlatingRankingAgent(this.agent, this.memory, 70, 80);

@@ -93,6 +93,8 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
     await this.saveMemory();
     await supportTextReviewAgent.processItem(researchItem);
 
+    await this.saveMemory();
+
     //this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 5. Rank found gold-plating
