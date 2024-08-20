@@ -44,7 +44,9 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     const totalArticles = articles.length;
 
     for (let i = 0; i < totalArticles; i++) {
-      this.logger.info(`Analyzing justification for national law article ${articles[i].number}`);
+      this.logger.info(
+        `Analyzing justification for national law article ${articles[i].number}`
+      );
       const article = articles[i];
       const progress = (i / totalArticles) * 50; // 0% to 50% of total progress
       await this.updateRangedProgress(
@@ -63,7 +65,9 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             article.research.euLawExtract || "N/A"
           );
         } else {
-          this.logger.info(`No support text explanation for article ${article.number}`);
+          this.logger.info(
+            `No support text explanation for article ${article.number}`
+          );
         }
 
         if (justification && !justification.likelyJustifiedGoldPlating) {
@@ -106,7 +110,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
 
     let processedArticles = 0;
     for (const regulation of researchItem.nationalRegulation) {
-      const supportText = regulation.articles
+      const allSupportText = regulation.articles
         .map((article) => article.research?.supportTextExplanation || "")
         .join("\n\n");
 
@@ -122,7 +126,12 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             article,
             researchItem.euDirective.fullText,
             article.research.englishTranslationOfIcelandicArticle!,
-            article.research.euLawExtract || "N/A"
+            article.research.euLawExtract || "N/A",
+            allSupportText
+          );
+
+          this.logger.debug(
+            `Justification: ${JSON.stringify(justification, null, 2)}`
           );
 
           if (!justification.likelyJustifiedGoldPlating) {
@@ -132,6 +141,11 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
               article.research.englishTranslationOfIcelandicArticle!,
               article.research.euLawExtract || "N/A"
             );
+
+            this.logger.debug(
+              `secondCheck: ${JSON.stringify(secondCheck, null, 2)}`
+            );
+
             if (secondCheck.likelyJustifiedGoldPlating) {
               article.research.likelyJustified = true;
               article.research.justification =
@@ -160,13 +174,17 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     article: LawArticle | RegulationArticle,
     euDirectiveFullText: string,
     englishTranslation: string,
-    euLawExtract: string
+    euLawExtract: string,
+    allSupportText?: string
   ): Promise<{
     justificationForGoldPlating: string;
     likelyJustifiedGoldPlating: boolean;
   }> {
     const systemMessage = this.createSystemMessage(
-      this.getJustificationAnalysisSystemPrompt(euDirectiveFullText)
+      this.getJustificationAnalysisSystemPrompt(
+        euDirectiveFullText,
+        allSupportText
+      )
     );
     const userMessage = this.createHumanMessage(
       this.getJustificationAnalysisUserPrompt(
@@ -223,7 +241,8 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
   }
 
   private getJustificationAnalysisSystemPrompt(
-    euDirectiveFullText: string
+    euDirectiveFullText: string,
+    allSupportText?: string
   ): string {
     return `<JustificationAnalysisSystem>
 You are an expert legal analyst specializing in EU and national law comparisons. Your task is to analyze gold-plating that has been confirmed in national laws or regulations and determine if there's a reasonable justification for it.
@@ -231,7 +250,7 @@ You are an expert legal analyst specializing in EU and national law comparisons.
 Consider the following when analyzing:
 1. The context and intent of the national law or regulation.
 2. Any specific national circumstances that might necessitate stricter or more detailed rules.
-3. The potential benefits of the gold-plating for the country's legal or regulatory framework.
+3. The potential benefits of gold-plating for the national legal or regulatory framework that does not contradict the EU directive.
 4. Whether the gold-plating aligns with the overall objectives of the EU directive.
 
 Here is the full text of the EU Directive for reference:
@@ -239,6 +258,12 @@ Here is the full text of the EU Directive for reference:
 <FullEuDirective>
 ${euDirectiveFullText}
 </FullEuDirective>
+
+${
+  allSupportText
+    ? `<AllLawSupportExplainationText>${allSupportText}</AllLawSupportExplainationText>`
+    : ``
+}
 
 Provide your analysis in JSON format with two fields:
 
@@ -260,12 +285,16 @@ Provide your analysis in JSON format with two fields:
 Number: ${article.number}
 Text: ${article.text}
 English Translation: ${englishTranslation}
-Support text explanation: ${article.research?.supportTextExplanation || "N/A"}
+Support text explanation: ${
+      article.research?.supportTextExplanation
+        ? `Support text explanation to review for justification: ${article.research?.supportTextExplanation}`
+        : ""
+    }
 
 Relevant EU Directive extract:
 ${euLawExtract}
 
-Let's think step by step. First, start by outlining your reasoning in analysing if there is a justification for gold plating, then output in JSON markdown format:`;
+Let's think step by step. First, start by outlining your reasoning in analysing if there is justification for gold plating, then output in JSON markdown format:`;
   }
 
   private getEURegulationMinimumsSystemPrompt(
@@ -286,7 +315,7 @@ Here is the full text of the EU Directive for reference:
 ${euDirectiveFullText}
 </FullEuDirective>
 
-Let's think step by step. First, start by outlining your reasoning in analysing if there is a justification for gold plating, then output in JSON markdown format:
+Let's think step by step. First, start by outlining your reasoning in analysing if there is justification for gold plating, then output in JSON markdown format:
 \`\`\`json
   {
     justificationForGoldPlating: string;
@@ -309,6 +338,6 @@ English Translation: ${englishTranslation}
 Relevant EU Directive extract:
 ${euLawExtract}
 
-Let's think step by step. First, start by outlining your reasoning in analysing if there is a justification for gold plating, then output in this JSON markdown format:`;
+Let's think step by step. First, start by outlining your reasoning in analysing if there is justification for gold plating, then output in this JSON markdown format:`;
   }
 }

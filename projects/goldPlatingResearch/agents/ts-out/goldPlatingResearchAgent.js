@@ -2,16 +2,18 @@ import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { WebScanningAgent } from "./ingestion/webScanning.js";
 import { TextCleaningAgent } from "./ingestion/textCleaning.js";
 import { ArticleExtractionAgent } from "./ingestion/extractArticles.js";
-import { GoldPlatingSearchAgent } from "./researchArticles.js";
-import { SupportTextReviewAgent } from "./reviewAgent.js";
-import { FoundGoldPlatingRankingAgent } from "./rankResults.js";
+import { GoldPlatingSearchAgent } from "./research/researchArticles.js";
+import { SupportTextReviewAgent } from "./research/reviewAgent.js";
+import { FoundGoldPlatingRankingAgent } from "./research/rankResults.js";
 import { GoogleDocsReportAgent } from "./reporting/docReport.js";
 import { XlsReportAgent } from "./reporting/sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { JustifyGoldPlatingAgent } from "./research/justifyGoldPlating.js";
 const disableScanning = true;
 const skipFullTextProcessing = true;
 const skipArticleExtraction = true;
-const skipMainReview = false;
+const skipMainReview = true;
+const skipSupportTextReview = true;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
     static GOLDPLATING_AGENT_CLASS_VERSION = 3;
@@ -28,31 +30,36 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         await this.setCompleted("Task Completed");
     }
     async processResearchItem(researchItem) {
-        // 1. Download laws and regulations
+        // Download laws and regulations
         const webScanningAgent = new WebScanningAgent(this.agent, this.memory, 0, 10);
         if (!disableScanning) {
             await webScanningAgent.processItem(researchItem);
         }
         await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
-        // 2. Clean and process National laws and regulations
+        // Clean and process National laws and regulations
         await this.cleanAndProcessNationalLawsAndRegulations(researchItem);
         await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
-        // 3. Compare and search for gold-plating
+        // Compare and search for gold-plating
         const goldPlatingSearchAgent = new GoldPlatingSearchAgent(this.agent, this.memory, 40, 60);
         if (!skipMainReview) {
             await goldPlatingSearchAgent.processItem(researchItem);
         }
         await this.saveMemory();
         this.logger.debug(JSON.stringify(this.memory, null, 2));
-        // 4. Review support text for possible gold-plating
+        // Review support text for possible gold-plating
         const supportTextReviewAgent = new SupportTextReviewAgent(this.agent, this.memory, 60, 70);
         await this.saveMemory();
-        await supportTextReviewAgent.processItem(researchItem);
+        if (!skipSupportTextReview) {
+            await supportTextReviewAgent.processItem(researchItem);
+        }
+        await this.saveMemory();
+        const justificationAgent = new JustifyGoldPlatingAgent(this.agent, this.memory, 70, 80);
+        await justificationAgent.processItem(researchItem);
         await this.saveMemory();
         //this.logger.debug(JSON.stringify(this.memory, null, 2));
-        // 5. Rank found gold-plating
+        // Rank found gold-plating
         const foundGoldPlatingRankingAgent = new FoundGoldPlatingRankingAgent(this.agent, this.memory, 70, 80);
         await foundGoldPlatingRankingAgent.processItem(researchItem);
         await this.saveMemory();

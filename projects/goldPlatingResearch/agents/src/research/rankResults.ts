@@ -78,14 +78,12 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
 
     const messages = [
       this.createSystemMessage(
-        `
-        You are an AI expert trained to rank articles based on the severity and importance of identified gold-plating issues.
+        `You are an AI expert trained to rank articles based on the severity and importance of identified gold-plating issues.
 
         Instructions:
         1. You will receive two articles with identified gold-plating issues.
         2. Your task is to analyze, compare, and rank these articles based on how the identified gold-plating issues add costs or stifle innovation for Icelandic companies and citizens, potentially harming their competitiveness. Focus on factors like additional regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
-        3. Consider factors such as the extent of divergence from EU law, potential economic impact, and implications for citizens or businesses.
-        4. Output your decision as "One", "Two" or "Neither". Output nothing else. No explanation is required.
+        3. Output your decision as "One", "Two" or "Neither". Output nothing else. No explanation is required.
         `
       ),
       this.createHumanMessage(
