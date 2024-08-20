@@ -129,7 +129,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             researchItem.euDirective.fullText,
             article.research.englishTranslationOfIcelandicArticle!,
             article.research.euLawExtract || "N/A",
-            allSupportText
+            /*allSupportText*/
           );
 
           this.logger.debug(
@@ -248,14 +248,14 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
   ): string {
     return `<JustificationAnalysisSystem>
 You are an expert legal analyst specializing in EU and national law comparisons.
-Your task is to analyze gold-plating that has been confirmed in national laws or regulations and determine if there's a clear justification for it.
+Your task is to analyze gold-plating that has been confirmed in national laws or regulations and determine if there's a full justification for it.
 
 Consider the following when analyzing:
 1. The context and intent of the national law or regulation.
 2. Any specific national circumstances that might necessitate stricter or more detailed rules.
-3. The potential benefits of gold-plating for the national legal or regulatory framework that does not contradict the EU directive.
+3. The potential benefits of gold-plating for the national legal or regulatory framework.
 4. Whether the gold-plating aligns with the overall objectives of the EU directive.
-5. That the gold plating is not adding regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
+5. The justification needs to be very clear if the gold plating is adding regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
 
 Here is the full text of the EU Directive for reference:
 
@@ -305,16 +305,14 @@ Let's think step by step. First, start by outlining your reasoning in analysing 
     euDirectiveFullText: string
   ): string {
     return `<EURegulationMinimumsSystem>
-You are an expert legal analyst specializing in EU and national law comparisons. Your task is to determine if the EU regulation is offering minimums and expecting the national law to add detail.
+You are an expert legal analyst specializing in EU and national law comparisons.
+Your task is to analyze gold-plating in an article that has been confirmed in national laws or regulations and determine if there's a full justification for it.
 
 Consider the following:
 1. Whether the EU directive explicitly states that it sets minimum standards.
 2. If the directive uses language that suggests member states should or may elaborate on certain points.
-3. Whether the nature of the subject matter necessitates more detailed implementation at the national level.
-4. If the directive's objectives can be better achieved through more detailed national provisions.
-5. That the gold plating is not adding regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
+3. The justification needs to be very clear if the gold plating is adding regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
 
-Here is the full text of the EU Directive for reference:
 
 <FullEuDirective>
 ${euDirectiveFullText}
