@@ -40,6 +40,8 @@ interface GoldPlatingResearch {
   url: string;
   results: ResearchResults;
   possibleGoldPlating?: boolean;
+  likelyJustified?: boolean;
+  justification?: string;
   description?: string;
   reasonForGoldPlating?: string;
   recommendation?: string;
