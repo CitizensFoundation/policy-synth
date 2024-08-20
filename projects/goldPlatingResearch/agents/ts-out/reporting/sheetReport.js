@@ -12,41 +12,50 @@ export class XlsReportAgent extends PolicySynthAgent {
     }
     async processItem(researchItem) {
         await this.updateRangedProgress(0, "Starting XLS report generation");
-        const rankedArticles = this.collectAndRankArticles(researchItem);
-        await this.generateReport(researchItem, rankedArticles);
+        const notJustifiedGoldPlating = this.collectArticles(researchItem, "notJustifiedGoldPlating");
+        const justifiedGoldPlating = this.collectArticles(researchItem, "justifiedGoldPlating");
+        await this.generateReport(researchItem, notJustifiedGoldPlating, justifiedGoldPlating);
         await this.updateRangedProgress(100, "XLS report generation completed");
     }
-    collectAndRankArticles(researchItem) {
-        let articles = [];
+    collectArticles(researchItem, collectionType) {
+        const rankableArticles = [];
+        const addArticles = (articles) => {
+            articles
+                .filter((article) => collectionType == "justifiedGoldPlating"
+                ? article.research?.likelyJustified === true
+                : article.research?.likelyJustified === false)
+                .forEach((article) => {
+                rankableArticles.push(article);
+            });
+        };
         if (researchItem.nationalLaw) {
-            articles.push(...researchItem.nationalLaw.law.articles
-                .filter((article) => article.research?.possibleGoldPlating)
-                .map((article) => ({
-                ...article,
-                source: "law",
-                eloRating: article.eloRating || 0,
-            })));
+            addArticles(researchItem.nationalLaw.law.articles);
+            researchItem.nationalLaw.law.articles.forEach((article) => {
+                article.source = "law";
+            });
         }
         if (researchItem.nationalRegulation) {
             researchItem.nationalRegulation.forEach((regulation) => {
-                articles.push(...regulation.articles
-                    .filter((article) => article.research?.possibleGoldPlating)
-                    .map((article) => ({
-                    ...article,
-                    source: "regulation",
-                    eloRating: article.eloRating || 0,
-                })));
+                addArticles(regulation.articles);
+                regulation.articles.forEach((article) => {
+                    article.source = "regulation";
+                });
             });
         }
-        return articles.sort((a, b) => b.eloRating - a.eloRating);
+        return rankableArticles.sort((a, b) => (b.eloRating || 0) - (a.eloRating || 0));
     }
-    async generateReport(researchItem, rankedArticles) {
-        const summarySheet = this.generateSummarySheet(researchItem, rankedArticles);
-        const detailedFindingsSheet = this.generateDetailedFindingsSheet(rankedArticles);
+    async generateReport(researchItem, notJustifiedGoldPlating, justifiedGoldPlating) {
+        const summarySheet = this.generateSummarySheet(researchItem, notJustifiedGoldPlating);
+        const notJustifiedGoldPlatingRows = this.generateDetailedFindingsSheet(notJustifiedGoldPlating);
+        const justifiedGoldPlatingRows = this.generateDetailedFindingsSheet(justifiedGoldPlating);
         const allData = [
             ...summarySheet,
             [], // Empty row for separation
-            ...detailedFindingsSheet,
+            ["Not justified gold-plating"],
+            ...notJustifiedGoldPlatingRows,
+            [], // Empty row for separation
+            ["Likely Justified gold-plating"],
+            ...justifiedGoldPlatingRows
         ];
         try {
             // Update the sheet using updateRange method
@@ -62,7 +71,9 @@ export class XlsReportAgent extends PolicySynthAgent {
     generateSummarySheet(researchItem, rankedArticles) {
         return [
             [`Rannsókn á gullhúðun fyrir ${researchItem.name}`],
-            ["",
+            [
+                "",
+                "",
                 "Total instances of potential gold-plating:",
                 rankedArticles.length.toString(),
             ],
@@ -75,7 +86,7 @@ export class XlsReportAgent extends PolicySynthAgent {
                 (index + 1).toString(),
                 article.source,
                 article.number.toString(),
-                article.eloRating.toString(),
+                (article.eloRating || 0).toString(),
                 article.research?.description || "N/A",
                 article.research?.url || "N/A",
             ]),
@@ -98,8 +109,9 @@ export class XlsReportAgent extends PolicySynthAgent {
             "Text",
             "Description",
             "Url",
+            "Justification",
             "EU Directive Article Numbers",
-            "Reason for Gold-Plating",
+            "Possible Reason for Gold-Plating",
             "Detailed Rules",
             "Expanded Scope",
             "Exemptions Not Utilized",
@@ -115,10 +127,11 @@ export class XlsReportAgent extends PolicySynthAgent {
             (index + 1).toString(),
             article.source,
             article.number.toString(),
-            article.eloRating.toString(),
+            (article.eloRating || 0).toString(),
             article.text,
             article.research?.description || "N/A",
             article.research?.url || "N/A",
+            article.research?.justification || "N/A",
             article.research?.results.euDirectiveArticlesNumbers?.join(", ") || "N/A",
             article.research?.reasonForGoldPlating || "N/A",
             article.research?.results.detailedRules || "N/A",

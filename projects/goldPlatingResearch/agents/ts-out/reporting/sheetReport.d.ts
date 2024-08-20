@@ -5,7 +5,7 @@ export declare class XlsReportAgent extends PolicySynthAgent {
     private sheetsConnector;
     constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
     processItem(researchItem: GoldplatingResearchItem): Promise<void>;
-    private collectAndRankArticles;
+    private collectArticles;
     private generateReport;
     private generateSummarySheet;
     private sanitizeData;

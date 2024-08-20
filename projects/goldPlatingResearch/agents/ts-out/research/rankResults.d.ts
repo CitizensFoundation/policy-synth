@@ -9,6 +9,5 @@ export declare class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     processItem(researchItem: GoldplatingResearchItem): Promise<void>;
     private collectRankableArticles;
     voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
-    private updateArticlesWithRankings;
 }
 //# sourceMappingURL=rankResults.d.ts.map

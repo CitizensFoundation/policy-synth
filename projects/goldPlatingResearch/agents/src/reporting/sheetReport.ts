@@ -4,11 +4,6 @@ import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connecto
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector";
 
-interface ArticleWithRanking extends LawArticle {
-  source: "law" | "regulation";
-  eloRating: number;
-}
-
 export class XlsReportAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
   private sheetsConnector: PsBaseSheetConnector;
@@ -35,58 +30,82 @@ export class XlsReportAgent extends PolicySynthAgent {
   async processItem(researchItem: GoldplatingResearchItem): Promise<void> {
     await this.updateRangedProgress(0, "Starting XLS report generation");
 
-    const rankedArticles = this.collectAndRankArticles(researchItem);
-    await this.generateReport(researchItem, rankedArticles);
+    const notJustifiedGoldPlating = this.collectArticles(researchItem, "notJustifiedGoldPlating");
+    const justifiedGoldPlating = this.collectArticles(researchItem, "justifiedGoldPlating");
+
+    await this.generateReport(researchItem, notJustifiedGoldPlating, justifiedGoldPlating);
 
     await this.updateRangedProgress(100, "XLS report generation completed");
   }
 
-  private collectAndRankArticles(
-    researchItem: GoldplatingResearchItem
-  ): ArticleWithRanking[] {
-    let articles: ArticleWithRanking[] = [];
+  private collectArticles(
+    researchItem: GoldplatingResearchItem,
+    collectionType: "justifiedGoldPlating" | "notJustifiedGoldPlating"
+  ): LawArticle[] {
+    const rankableArticles: LawArticle[] = [];
+
+    const addArticles = (
+      articles: LawArticle[]
+    ) => {
+      articles
+        .filter((article) =>
+          collectionType == "justifiedGoldPlating"
+            ? article.research?.likelyJustified === true
+            : article.research?.likelyJustified === false
+        )
+        .forEach((article) => {
+          rankableArticles.push(article);
+        });
+    };
 
     if (researchItem.nationalLaw) {
-      articles.push(
-        ...researchItem.nationalLaw.law.articles
-          .filter((article) => article.research?.possibleGoldPlating)
-          .map((article) => ({
-            ...article,
-            source: "law" as const,
-            eloRating: article.eloRating || 0,
-          }))
-      );
+      addArticles(researchItem.nationalLaw.law.articles);
+      researchItem.nationalLaw.law.articles.forEach((article) => {
+        article.source = "law";
+      });
     }
 
     if (researchItem.nationalRegulation) {
       researchItem.nationalRegulation.forEach((regulation) => {
-        articles.push(
-          ...regulation.articles
-            .filter((article) => article.research?.possibleGoldPlating)
-            .map((article) => ({
-              ...article,
-              source: "regulation" as const,
-              eloRating: article.eloRating || 0,
-            }))
-        );
+        addArticles(regulation.articles);
+        regulation.articles.forEach((article) => {
+          article.source = "regulation";
+        });
       });
     }
 
-    return articles.sort((a, b) => b.eloRating - a.eloRating);
+    return rankableArticles.sort(
+      (a, b) => (b.eloRating || 0) - (a.eloRating || 0)
+    );
   }
 
   private async generateReport(
     researchItem: GoldplatingResearchItem,
-    rankedArticles: ArticleWithRanking[]
+    notJustifiedGoldPlating: LawArticle[],
+    justifiedGoldPlating: LawArticle[]
   ): Promise<void> {
-    const summarySheet = this.generateSummarySheet(researchItem, rankedArticles);
-    const detailedFindingsSheet =
-      this.generateDetailedFindingsSheet(rankedArticles);
+    const summarySheet = this.generateSummarySheet(
+      researchItem,
+      notJustifiedGoldPlating
+    );
+
+    const notJustifiedGoldPlatingRows =
+      this.generateDetailedFindingsSheet(notJustifiedGoldPlating);
+
+    const justifiedGoldPlatingRows = this.generateDetailedFindingsSheet(
+      justifiedGoldPlating
+    );
+
+
 
     const allData = [
       ...summarySheet,
       [], // Empty row for separation
-      ...detailedFindingsSheet,
+      ["Not justified gold-plating"],
+      ...notJustifiedGoldPlatingRows,
+      [], // Empty row for separation
+      ["Likely Justified gold-plating"],
+      ...justifiedGoldPlatingRows
     ];
 
     try {
@@ -104,11 +123,13 @@ export class XlsReportAgent extends PolicySynthAgent {
 
   private generateSummarySheet(
     researchItem: GoldplatingResearchItem,
-    rankedArticles: ArticleWithRanking[]
+    rankedArticles: LawArticle[]
   ): string[][] {
     return [
       [`Rannsókn á gullhúðun fyrir ${researchItem.name}`],
-      ["",
+      [
+        "",
+        "",
         "Total instances of potential gold-plating:",
         rankedArticles.length.toString(),
       ],
@@ -119,9 +140,9 @@ export class XlsReportAgent extends PolicySynthAgent {
         .slice(0, 5)
         .map((article, index) => [
           (index + 1).toString(),
-          article.source,
+          article.source!,
           article.number.toString(),
-          article.eloRating.toString(),
+          (article.eloRating || 0).toString(),
           article.research?.description || "N/A",
           article.research?.url || "N/A",
         ]),
@@ -140,7 +161,7 @@ export class XlsReportAgent extends PolicySynthAgent {
   }
 
   private generateDetailedFindingsSheet(
-    rankedArticles: ArticleWithRanking[]
+    rankedArticles: LawArticle[]
   ): string[][] {
     const headers = [
       "Rank",
@@ -150,8 +171,9 @@ export class XlsReportAgent extends PolicySynthAgent {
       "Text",
       "Description",
       "Url",
+      "Justification",
       "EU Directive Article Numbers",
-      "Reason for Gold-Plating",
+      "Possible Reason for Gold-Plating",
       "Detailed Rules",
       "Expanded Scope",
       "Exemptions Not Utilized",
@@ -166,12 +188,13 @@ export class XlsReportAgent extends PolicySynthAgent {
 
     const rows = rankedArticles.map((article, index) => [
       (index + 1).toString(),
-      article.source,
+      article.source!,
       article.number.toString(),
-      article.eloRating.toString(),
+      (article.eloRating || 0).toString(),
       article.text,
       article.research?.description || "N/A",
       article.research?.url || "N/A",
+      article.research?.justification || "N/A",
       article.research?.results.euDirectiveArticlesNumbers?.join(", ") || "N/A",
       article.research?.reasonForGoldPlating || "N/A",
       article.research?.results.detailedRules || "N/A",

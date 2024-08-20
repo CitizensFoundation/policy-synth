@@ -9,23 +9,28 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
         this.memory = memory;
     }
     async processItem(researchItem) {
-        const rankableArticles = this.collectRankableArticles(researchItem);
-        this.setupRankingPrompts(-1, rankableArticles, rankableArticles.length * 15);
+        let rankablePossibleArticles = this.collectRankableArticles(researchItem, "possibleGoldPlating");
+        this.setupRankingPrompts(-1, rankablePossibleArticles, rankablePossibleArticles.length * 15);
+        this.logger.info(`Ranking possible gold-plating articles for ${researchItem.name} possibleGoldPlating`);
         await this.performPairwiseRanking(-1);
         const rankedArticles = this.getOrderedListOfItems(-1, true);
-        this.updateArticlesWithRankings(researchItem, rankedArticles);
+        this.logger.debug(`Ranked possible gold-plating articles for ${researchItem.name} possibleGoldPlating: ${JSON.stringify(rankedArticles, null, 2)}`);
+        let rankableJustifiedArticles = this.collectRankableArticles(researchItem, "justifiedGoldPlating");
+        this.setupRankingPrompts(-2, rankableJustifiedArticles, rankableJustifiedArticles.length * 15);
+        this.logger.info(`Ranking justified gold-plating articles for ${researchItem.name} justifiedGoldPlating`);
+        await this.performPairwiseRanking(-2);
+        const rankedJustifiedArticles = this.getOrderedListOfItems(-2, true);
+        this.logger.debug(`Ranked justified gold-plating articles for ${researchItem.name} justifiedGoldPlating: ${JSON.stringify(rankedJustifiedArticles, null, 2)}`);
     }
-    collectRankableArticles(researchItem) {
+    collectRankableArticles(researchItem, collectionType) {
         const rankableArticles = [];
         const addArticles = (articles, source) => {
             articles
-                .filter((article) => article.research?.possibleGoldPlating)
+                .filter((article) => collectionType == "possibleGoldPlating"
+                ? article.research?.possibleGoldPlating
+                : article.research?.likelyJustified)
                 .forEach((article) => {
-                rankableArticles.push({
-                    ...article,
-                    source,
-                    eloRating: article.eloRating || 1000
-                });
+                rankableArticles.push(article);
             });
         };
         if (researchItem.nationalLaw) {
@@ -55,60 +60,18 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
 
         Article One:
         Number: ${itemOne.number}
-        Source: ${itemOne.source}
         Text: ${itemOne.text}
-        Gold-plating issue: ${itemOne.research?.reasonForGoldPlating}
-        Support text explanation: ${itemOne.research?.supportTextExplanation}
+        ${itemOne.research?.supportTextExplanation ? `Support text explanation: ${itemOne.research?.supportTextExplanation}` : ''}
 
         Article Two:
         Number: ${itemTwo.number}
-        Source: ${itemTwo.source}
         Text: ${itemTwo.text}
-        Gold-plating issue: ${itemTwo.research?.reasonForGoldPlating}
-        Support text explanation: ${itemTwo.research?.supportTextExplanation}
+        ${itemTwo.research?.supportTextExplanation ? `Support text explanation: ${itemTwo.research?.supportTextExplanation}` : ''}
 
-        The Article with More Severe or Important Gold-Plating Is:
+        The Article with Burdensome Gold-Plating Is:
         `),
         ];
         return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
-    }
-    updateArticlesWithRankings(researchItem, rankedArticles) {
-        rankedArticles.forEach((article) => {
-            if (!article.eloRating || article.eloRating === 0) {
-                this.logger.error(`Article ${article.number} has invalid ELO rating (${article.eloRating}) after ranking`);
-                article.eloRating = 1000; // Set a default score if invalid
-            }
-            const updateArticle = (targetArticle) => {
-                if (targetArticle.eloRating !== article.eloRating) {
-                    targetArticle.eloRating = article.eloRating;
-                    this.logger.debug(`Updated ${article.source} article ${article.number} with ELO rating ${article.eloRating}`);
-                }
-            };
-            if (article.source === "law" && researchItem.nationalLaw) {
-                const lawArticle = researchItem.nationalLaw.law.articles.find((a) => a.number === article.number);
-                if (lawArticle) {
-                    updateArticle(lawArticle);
-                }
-                else {
-                    this.logger.error(`Law article ${article.number} not found in research item`);
-                }
-            }
-            else if (article.source === "regulation" &&
-                researchItem.nationalRegulation) {
-                let found = false;
-                for (const regulation of researchItem.nationalRegulation) {
-                    const regulationArticle = regulation.articles.find((a) => a.number === article.number);
-                    if (regulationArticle) {
-                        updateArticle(regulationArticle);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    this.logger.error(`Regulation article ${article.number} not found in research item`);
-                }
-            }
-        });
     }
 }
 //# sourceMappingURL=rankResults.js.map

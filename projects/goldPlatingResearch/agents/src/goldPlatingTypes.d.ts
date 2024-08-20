@@ -2,6 +2,7 @@ interface BaseArticle {
   number: number | string;
   text: string;
   description: string;
+  source?: string;
   eloRating?: number;
   research?: GoldPlatingResearch;
 }

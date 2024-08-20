@@ -2,10 +2,6 @@ import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRanking.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 
-interface RankableArticle extends LawArticle {
-  source: "law" | "regulation";
-}
-
 export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
   override memory: GoldPlatingMemoryData;
   defaultModelSize = PsAiModelSize.Medium;
@@ -23,33 +19,82 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
   }
 
   async processItem(researchItem: GoldplatingResearchItem): Promise<void> {
-    const rankableArticles = this.collectRankableArticles(researchItem);
+    let rankablePossibleArticles = this.collectRankableArticles(
+      researchItem,
+      "possibleGoldPlating"
+    );
 
     this.setupRankingPrompts(
       -1,
-      rankableArticles,
-      rankableArticles.length * 15
+      rankablePossibleArticles,
+      rankablePossibleArticles.length * 15
     );
+
+    this.logger.info(
+      `Ranking possible gold-plating articles for ${researchItem.name} possibleGoldPlating`
+    );
+
     await this.performPairwiseRanking(-1);
 
-    const rankedArticles = this.getOrderedListOfItems(-1, true) as RankableArticle[];
-    this.updateArticlesWithRankings(researchItem, rankedArticles);
+    const rankedArticles = this.getOrderedListOfItems(-1, true) as LawArticle[];
+
+    this.logger.debug(
+      `Ranked possible gold-plating articles for ${
+        researchItem.name
+      } possibleGoldPlating: ${JSON.stringify(rankedArticles, null, 2)}`
+    );
+
+    let rankableJustifiedArticles = this.collectRankableArticles(
+      researchItem,
+      "justifiedGoldPlating"
+    );
+
+    this.setupRankingPrompts(
+      -2,
+      rankableJustifiedArticles,
+      rankableJustifiedArticles.length * 15
+    );
+
+    this.logger.info(
+      `Ranking justified gold-plating articles for ${researchItem.name} justifiedGoldPlating`
+    );
+
+    await this.performPairwiseRanking(-2);
+
+    const rankedJustifiedArticles = this.getOrderedListOfItems(
+      -2,
+      true
+    ) as LawArticle[];
+
+    this.logger.debug(
+      `Ranked justified gold-plating articles for ${
+        researchItem.name
+      } justifiedGoldPlating: ${JSON.stringify(
+        rankedJustifiedArticles,
+        null,
+        2
+      )}`
+    );
   }
 
   private collectRankableArticles(
-    researchItem: GoldplatingResearchItem
-  ): RankableArticle[] {
-    const rankableArticles: RankableArticle[] = [];
+    researchItem: GoldplatingResearchItem,
+    collectionType: "possibleGoldPlating" | "justifiedGoldPlating"
+  ): LawArticle[] {
+    const rankableArticles: LawArticle[] = [];
 
-    const addArticles = (articles: LawArticle[], source: "law" | "regulation") => {
+    const addArticles = (
+      articles: LawArticle[],
+      source: "law" | "regulation"
+    ) => {
       articles
-        .filter((article) => article.research?.possibleGoldPlating)
+        .filter((article) =>
+          collectionType == "possibleGoldPlating"
+            ? article.research?.possibleGoldPlating
+            : article.research?.likelyJustified
+        )
         .forEach((article) => {
-          rankableArticles.push({
-            ...article,
-            source,
-            eloRating: article.eloRating || 1000
-          });
+          rankableArticles.push(article);
         });
     };
 
@@ -73,8 +118,8 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![itemOneIndex] as RankableArticle;
-    const itemTwo = this.allItems![index]![itemTwoIndex] as RankableArticle;
+    const itemOne = this.allItems![index]![itemOneIndex] as LawArticle;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as LawArticle;
 
     const messages = [
       this.createSystemMessage(
@@ -91,19 +136,15 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
 
         Article One:
         Number: ${itemOne.number}
-        Source: ${itemOne.source}
         Text: ${itemOne.text}
-        Gold-plating issue: ${itemOne.research?.reasonForGoldPlating}
-        Support text explanation: ${itemOne.research?.supportTextExplanation}
+        ${itemOne.research?.supportTextExplanation ? `Support text explanation: ${itemOne.research?.supportTextExplanation}` : '' }
 
         Article Two:
         Number: ${itemTwo.number}
-        Source: ${itemTwo.source}
         Text: ${itemTwo.text}
-        Gold-plating issue: ${itemTwo.research?.reasonForGoldPlating}
-        Support text explanation: ${itemTwo.research?.supportTextExplanation}
+        ${itemTwo.research?.supportTextExplanation ? `Support text explanation: ${itemTwo.research?.supportTextExplanation}` : '' }
 
-        The Article with More Severe or Important Gold-Plating Is:
+        The Article with Burdensome Gold-Plating Is:
         `
       ),
     ];
@@ -114,55 +155,5 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
       itemOneIndex,
       itemTwoIndex
     );
-  }
-
-  private updateArticlesWithRankings(
-    researchItem: GoldplatingResearchItem,
-    rankedArticles: RankableArticle[]
-  ): void {
-    rankedArticles.forEach((article) => {
-      if (!article.eloRating || article.eloRating === 0) {
-        this.logger.error(
-          `Article ${article.number} has invalid ELO rating (${article.eloRating}) after ranking`
-        );
-        article.eloRating = 1000; // Set a default score if invalid
-      }
-
-      const updateArticle = (targetArticle: LawArticle) => {
-        if (targetArticle.eloRating !== article.eloRating) {
-          targetArticle.eloRating = article.eloRating;
-          this.logger.debug(`Updated ${article.source} article ${article.number} with ELO rating ${article.eloRating}`);
-        }
-      };
-
-      if (article.source === "law" && researchItem.nationalLaw) {
-        const lawArticle = researchItem.nationalLaw.law.articles.find(
-          (a) => a.number === article.number
-        );
-        if (lawArticle) {
-          updateArticle(lawArticle);
-        } else {
-          this.logger.error(`Law article ${article.number} not found in research item`);
-        }
-      } else if (
-        article.source === "regulation" &&
-        researchItem.nationalRegulation
-      ) {
-        let found = false;
-        for (const regulation of researchItem.nationalRegulation) {
-          const regulationArticle = regulation.articles.find(
-            (a) => a.number === article.number
-          );
-          if (regulationArticle) {
-            updateArticle(regulationArticle);
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          this.logger.error(`Regulation article ${article.number} not found in research item`);
-        }
-      }
-    });
   }
 }
