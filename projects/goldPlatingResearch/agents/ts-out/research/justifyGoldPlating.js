@@ -26,13 +26,13 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             if (article.research?.possibleGoldPlating) {
                 let justification;
                 if (article.research.supportTextExplanation) {
-                    justification = await this.analyzeJustification(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A");
+                    justification = await this.analyzeJustification(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A", "law");
                 }
                 else {
                     this.logger.info(`No support text explanation for article ${article.number}`);
                 }
                 if (justification && !justification.fullyJustifiedGoldPlating) {
-                    const secondCheck = await this.checkEURegulationMinimums(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A");
+                    const secondCheck = await this.checkEURegulationMinimums(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A", "law");
                     if (secondCheck.fullyJustifiedGoldPlating) {
                         article.research.likelyJustified = true;
                         article.research.justification =
@@ -73,10 +73,19 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
                 const progress = 50 + (processedArticles / totalArticles) * 50; // 50% to 100% of total progress
                 await this.updateRangedProgress(progress, `Analyzing justification for national regulation article ${article.number}`);
                 if (article.research?.possibleGoldPlating) {
-                    const justification = await this.analyzeJustification(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A");
-                    this.logger.debug(`Justification: ${JSON.stringify(justification, null, 2)}`);
-                    if (!justification.fullyJustifiedGoldPlating) {
-                        const secondCheck = await this.checkEURegulationMinimums(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A");
+                    /*const justification = await this.analyzeJustification(
+                      article,
+                      researchItem.euDirective.fullText,
+                      article.research.englishTranslationOfIcelandicArticle!,
+                      article.research.euLawExtract || "N/A",
+                      "regulation"
+                    );
+          
+                    this.logger.debug(
+                      `Justification: ${JSON.stringify(justification, null, 2)}`
+                    );*/
+                    if (true /*!justification.fullyJustifiedGoldPlating*/) {
+                        const secondCheck = await this.checkEURegulationMinimums(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A", "regulation");
                         this.logger.debug(`secondCheck: ${JSON.stringify(secondCheck, null, 2)}`);
                         if (secondCheck.fullyJustifiedGoldPlating) {
                             article.research.likelyJustified = true;
@@ -90,10 +99,10 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
                         }
                     }
                     else {
-                        article.research.likelyJustified =
-                            justification.fullyJustifiedGoldPlating;
+                        /*article.research.likelyJustified =
+                          justification.fullyJustifiedGoldPlating;
                         article.research.justification =
-                            justification.justificationForGoldPlating;
+                          justification.justificationForGoldPlating;*/
                     }
                     await this.saveMemory();
                 }
@@ -101,15 +110,15 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             }
         }
     }
-    async analyzeJustification(article, euDirectiveFullText, englishTranslation, euLawExtract, allSupportText) {
+    async analyzeJustification(article, euDirectiveFullText, englishTranslation, euLawExtract, type, allSupportText) {
         const systemMessage = this.createSystemMessage(this.getJustificationAnalysisSystemPrompt(euDirectiveFullText, allSupportText));
-        const userMessage = this.createHumanMessage(this.getJustificationAnalysisUserPrompt(article, englishTranslation, euLawExtract));
+        const userMessage = this.createHumanMessage(this.getJustificationAnalysisUserPrompt(article, englishTranslation, euLawExtract, type));
         const result = (await this.callModel(PsAiModelType.Text, this.modelSize, [systemMessage, userMessage], true));
         return result;
     }
-    async checkEURegulationMinimums(article, euDirectiveFullText, englishTranslation, euLawExtract) {
+    async checkEURegulationMinimums(article, euDirectiveFullText, englishTranslation, euLawExtract, type) {
         const systemMessage = this.createSystemMessage(this.getEURegulationMinimumsSystemPrompt(euDirectiveFullText));
-        const userMessage = this.createHumanMessage(this.getEURegulationMinimumsUserPrompt(article, englishTranslation, euLawExtract));
+        const userMessage = this.createHumanMessage(this.getEURegulationMinimumsUserPrompt(article, englishTranslation, euLawExtract, type));
         const result = (await this.callModel(PsAiModelType.Text, this.modelSize, [systemMessage, userMessage], true));
         return result;
     }
@@ -145,9 +154,10 @@ Provide your analysis in JSON format with two fields:
   \`\`\`
 </JustificationAnalysisSystem>`;
     }
-    getJustificationAnalysisUserPrompt(article, englishTranslation, euLawExtract) {
+    getJustificationAnalysisUserPrompt(article, englishTranslation, euLawExtract, type) {
         return `Article with possible justifiable gold-plating:
 Number: ${article.number}
+Type: ${type}
 Text: ${article.text}
 English Translation: ${englishTranslation}
 Support text explanation: ${article.research?.supportTextExplanation
@@ -183,9 +193,10 @@ Let's think step by step. First, start by outlining your reasoning in analysing 
   \`\`\`
 </EURegulationMinimumsSystem>`;
     }
-    getEURegulationMinimumsUserPrompt(article, englishTranslation, euLawExtract) {
+    getEURegulationMinimumsUserPrompt(article, englishTranslation, euLawExtract, type) {
         return `Article with potential gold-plating:
 Number: ${article.number}
+Type: ${type}
 Text: ${article.text}
 English Translation: ${englishTranslation}
 
