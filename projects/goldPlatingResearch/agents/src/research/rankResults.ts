@@ -19,9 +19,9 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
   }
 
   async processItem(researchItem: GoldplatingResearchItem): Promise<void> {
-    let rankablePossibleArticles = this.collectRankableArticles(
+    let rankablePossibleArticles = this.collectArticles(
       researchItem,
-      "possibleGoldPlating"
+      "notJustifiedGoldPlating"
     );
 
     this.setupRankingPrompts(
@@ -31,20 +31,22 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     );
 
     this.logger.info(
-      `Ranking possible gold-plating articles for ${researchItem.name} possibleGoldPlating`
+      `Ranking possible gold-plating articles for ${researchItem.name} notJustifiedGoldPlating`
     );
 
     await this.performPairwiseRanking(-1);
 
     const rankedArticles = this.getOrderedListOfItems(-1, true) as LawArticle[];
 
+    await this.saveMemory();
+
     this.logger.debug(
       `Ranked possible gold-plating articles for ${
         researchItem.name
-      } possibleGoldPlating: ${JSON.stringify(rankedArticles, null, 2)}`
+      } notJustifiedGoldPlating: ${JSON.stringify(rankedArticles, null, 2)}`
     );
 
-    let rankableJustifiedArticles = this.collectRankableArticles(
+    let rankableJustifiedArticles = this.collectArticles(
       researchItem,
       "justifiedGoldPlating"
     );
@@ -77,21 +79,18 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     );
   }
 
-  private collectRankableArticles(
+  private collectArticles(
     researchItem: GoldplatingResearchItem,
-    collectionType: "possibleGoldPlating" | "justifiedGoldPlating"
+    collectionType: "justifiedGoldPlating" | "notJustifiedGoldPlating"
   ): LawArticle[] {
     const rankableArticles: LawArticle[] = [];
 
-    const addArticles = (
-      articles: LawArticle[],
-      source: "law" | "regulation"
-    ) => {
+    const addArticles = (articles: LawArticle[]) => {
       articles
         .filter((article) =>
-          collectionType == "possibleGoldPlating"
-            ? article.research?.possibleGoldPlating
-            : article.research?.likelyJustified
+          collectionType == "justifiedGoldPlating"
+            ? article.research?.likelyJustified === true
+            : article.research?.likelyJustified === false
         )
         .forEach((article) => {
           rankableArticles.push(article);
@@ -99,12 +98,18 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     };
 
     if (researchItem.nationalLaw) {
-      addArticles(researchItem.nationalLaw.law.articles, "law");
+      addArticles(researchItem.nationalLaw.law.articles);
+      researchItem.nationalLaw.law.articles.forEach((article) => {
+        article.source = "law";
+      });
     }
 
     if (researchItem.nationalRegulation) {
       researchItem.nationalRegulation.forEach((regulation) => {
-        addArticles(regulation.articles, "regulation");
+        addArticles(regulation.articles);
+        regulation.articles.forEach((article) => {
+          article.source = "regulation";
+        });
       });
     }
 

@@ -7,7 +7,7 @@ export declare class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     updatePrefix: string;
     constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
     processItem(researchItem: GoldplatingResearchItem): Promise<void>;
-    private collectRankableArticles;
+    private collectArticles;
     voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;
 }
 //# sourceMappingURL=rankResults.d.ts.map

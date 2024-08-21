@@ -19,6 +19,7 @@ const skipFullTextProcessing = true;
 const skipArticleExtraction = true;
 const skipMainReview = true;
 const skipSupportTextReview = true;
+const skipJustification = true;
 
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -107,7 +108,9 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
       80
     );
 
-    await justificationAgent.processItem(researchItem);
+    if (!skipJustification) {
+      await justificationAgent.processItem(researchItem);
+    }
 
     await this.saveMemory();
 

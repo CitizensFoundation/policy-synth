@@ -30,10 +30,20 @@ export class XlsReportAgent extends PolicySynthAgent {
   async processItem(researchItem: GoldplatingResearchItem): Promise<void> {
     await this.updateRangedProgress(0, "Starting XLS report generation");
 
-    const notJustifiedGoldPlating = this.collectArticles(researchItem, "notJustifiedGoldPlating");
-    const justifiedGoldPlating = this.collectArticles(researchItem, "justifiedGoldPlating");
+    const notJustifiedGoldPlating = this.collectArticles(
+      researchItem,
+      "notJustifiedGoldPlating"
+    );
+    const justifiedGoldPlating = this.collectArticles(
+      researchItem,
+      "justifiedGoldPlating"
+    );
 
-    await this.generateReport(researchItem, notJustifiedGoldPlating, justifiedGoldPlating);
+    await this.generateReport(
+      researchItem,
+      notJustifiedGoldPlating,
+      justifiedGoldPlating
+    );
 
     await this.updateRangedProgress(100, "XLS report generation completed");
   }
@@ -44,9 +54,7 @@ export class XlsReportAgent extends PolicySynthAgent {
   ): LawArticle[] {
     const rankableArticles: LawArticle[] = [];
 
-    const addArticles = (
-      articles: LawArticle[]
-    ) => {
+    const addArticles = (articles: LawArticle[]) => {
       articles
         .filter((article) =>
           collectionType == "justifiedGoldPlating"
@@ -89,14 +97,12 @@ export class XlsReportAgent extends PolicySynthAgent {
       notJustifiedGoldPlating
     );
 
-    const notJustifiedGoldPlatingRows =
-      this.generateDetailedFindingsSheet(notJustifiedGoldPlating);
-
-    const justifiedGoldPlatingRows = this.generateDetailedFindingsSheet(
-      justifiedGoldPlating
+    const notJustifiedGoldPlatingRows = this.generateDetailedFindingsSheet(
+      notJustifiedGoldPlating
     );
 
-
+    const justifiedGoldPlatingRows =
+      this.generateDetailedFindingsSheet(justifiedGoldPlating);
 
     const allData = [
       ...summarySheet,
@@ -105,7 +111,7 @@ export class XlsReportAgent extends PolicySynthAgent {
       ...notJustifiedGoldPlatingRows,
       [], // Empty row for separation
       ["Likely Justified gold-plating"],
-      ...justifiedGoldPlatingRows
+      ...justifiedGoldPlatingRows,
     ];
 
     try {

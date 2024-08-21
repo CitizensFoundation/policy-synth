@@ -58,6 +58,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
         let justification;
 
         if (article.research.supportTextExplanation) {
+          //this.logger.debug(`Support text explanation for article ${article.number}:\n\n${article.research.supportTextExplanation}`);
           justification = await this.analyzeJustification(
             article,
             researchItem.euDirective.fullText,
@@ -71,7 +72,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
           );
         }
 
-        if (justification && !justification.fullyJustifiedGoldPlating) {
+        if (!justification) {
           const secondCheck = await this.checkEURegulationMinimums(
             article,
             researchItem.euDirective.fullText,
@@ -262,7 +263,7 @@ Consider the following when analyzing:
 2. Any specific national circumstances that might necessitate stricter or more detailed rules.
 3. The potential benefits of gold-plating for the national legal or regulatory framework.
 4. Whether the gold-plating aligns with the overall objectives of the EU directive.
-5. The justification needs to be very clear if the gold plating is adding regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
+5. Only set fullyJustifiedGoldPlating to true if the gold-plating is fully justified and necessary.
 
 Here is the full text of the EU Directive for reference:
 
@@ -320,7 +321,7 @@ Your task is to analyze gold-plating in an article that has been confirmed in na
 Consider the following:
 1. Whether the EU directive explicitly states that it sets minimum standards.
 2. If the directive uses language that suggests member states should or may elaborate on certain points.
-3. The justification needs to be very clear if the gold plating is adding regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
+3. Only set fullyJustifiedGoldPlating to true if the gold-plating is fully justified and necessary.
 
 
 <FullEuDirective>

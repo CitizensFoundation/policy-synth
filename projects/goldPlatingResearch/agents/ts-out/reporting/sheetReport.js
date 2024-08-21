@@ -55,7 +55,7 @@ export class XlsReportAgent extends PolicySynthAgent {
             ...notJustifiedGoldPlatingRows,
             [], // Empty row for separation
             ["Likely Justified gold-plating"],
-            ...justifiedGoldPlatingRows
+            ...justifiedGoldPlatingRows,
         ];
         try {
             // Update the sheet using updateRange method

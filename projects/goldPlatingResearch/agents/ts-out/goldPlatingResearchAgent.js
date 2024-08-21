@@ -14,6 +14,7 @@ const skipFullTextProcessing = true;
 const skipArticleExtraction = true;
 const skipMainReview = true;
 const skipSupportTextReview = true;
+const skipJustification = true;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
     static GOLDPLATING_AGENT_CLASS_VERSION = 3;
@@ -56,7 +57,9 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         }
         await this.saveMemory();
         const justificationAgent = new JustifyGoldPlatingAgent(this.agent, this.memory, 70, 80);
-        await justificationAgent.processItem(researchItem);
+        if (!skipJustification) {
+            await justificationAgent.processItem(researchItem);
+        }
         await this.saveMemory();
         //this.logger.debug(JSON.stringify(this.memory, null, 2));
         // Rank found gold-plating
