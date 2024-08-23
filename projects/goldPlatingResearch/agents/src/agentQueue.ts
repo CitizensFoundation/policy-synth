@@ -28,7 +28,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
           articles: [],
         },
         supportArticleText: {
-          url: "https://www.althingi.is/altext/154/s/1573.html",
+          url: "https://www.althingi.is/altext/152/s/0666.html",
           fullText: "",
           articles: [],
         },
@@ -36,6 +36,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
       supportArticleTextArticleIdMapping: {
         1: 1,
       },
+      lastLawArticleNumber: 109,
       nationalRegulation: [
         {
           url: "https://island.is/reglugerdir/nr/1227-2019",
@@ -165,6 +166,7 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
       } as GoldPlatingMemoryData;
     } else {
       this.logger.info(`Memory already set up for agent ${this.agent.id}`);
+      this.memory.researchItems[0].nationalLaw.supportArticleText.url = "https://www.althingi.is/altext/152/s/0666.html";
     }
   }
 }

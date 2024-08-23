@@ -12,9 +12,11 @@ import { JustifyGoldPlatingAgent } from "./research/justifyGoldPlating.js";
 const disableScanning = true;
 const skipFullTextProcessing = true;
 const skipArticleExtraction = true;
-const skipMainReview = true;
 const skipSupportTextReview = true;
-const skipJustification = true;
+const skipMainReview = false;
+const skipJustification = false;
+const skipEloRating = false;
+const skipGoogleExport = true;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
     static GOLDPLATING_AGENT_CLASS_VERSION = 3;
@@ -64,14 +66,18 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         //this.logger.debug(JSON.stringify(this.memory, null, 2));
         // Rank found gold-plating
         const foundGoldPlatingRankingAgent = new FoundGoldPlatingRankingAgent(this.agent, this.memory, 70, 80);
-        await foundGoldPlatingRankingAgent.processItem(researchItem);
+        if (!skipEloRating) {
+            await foundGoldPlatingRankingAgent.processItem(researchItem);
+        }
         await this.saveMemory();
-        this.logger.debug(JSON.stringify(this.memory, null, 2));
+        //this.logger.debug(JSON.stringify(this.memory, null, 2));
         // 6. Generate reports
         const googleDocsReportAgent = new GoogleDocsReportAgent(this.agent, this.memory, 80, 90);
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         await this.saveMemory();
-        await googleDocsReportAgent.processItem(researchItem);
+        if (!skipGoogleExport) {
+            await googleDocsReportAgent.processItem(researchItem);
+        }
         const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
         await xlsReportAgent.processItem(researchItem);
         await this.saveMemory();
@@ -82,7 +88,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         if (researchItem.nationalLaw) {
             if (!skipArticleExtraction) {
                 researchItem.nationalLaw.law.articles =
-                    await articleExtractionAgent.processItem(researchItem.nationalLaw.law.fullText, "law", researchItem.nationalLaw.law.url);
+                    await articleExtractionAgent.processItem(researchItem.nationalLaw.law.fullText, "law", researchItem.lastLawArticleNumber, researchItem.nationalLaw.law.url);
             }
             await this.saveMemory();
             if (researchItem.nationalLaw.supportArticleText) {
@@ -94,7 +100,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
                 }
                 if (!skipArticleExtraction) {
                     researchItem.nationalLaw.supportArticleText.articles =
-                        await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, "lawSupportArticle");
+                        await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, "lawSupportArticle", researchItem.lastLawArticleNumber || 109);
                     await this.saveMemory();
                 }
             }

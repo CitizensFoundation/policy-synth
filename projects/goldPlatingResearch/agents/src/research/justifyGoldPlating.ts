@@ -193,6 +193,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
         allSupportText
       )
     );
+
     const userMessage = this.createHumanMessage(
       this.getJustificationAnalysisUserPrompt(
         article,
@@ -201,6 +202,8 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
         type
       )
     );
+
+    //this.logger.debug(`analyzeJustification - userMessage: ${JSON.stringify(userMessage, null, 2)}`);
 
     const result = (await this.callModel(
       PsAiModelType.Text,
@@ -228,6 +231,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     const systemMessage = this.createSystemMessage(
       this.getEURegulationMinimumsSystemPrompt(euDirectiveFullText)
     );
+
     const userMessage = this.createHumanMessage(
       this.getEURegulationMinimumsUserPrompt(
         article,
@@ -236,6 +240,8 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
         type
       )
     );
+
+    //this.logger.debug(`checkEURegulationMinimums - userMessage: ${JSON.stringify(userMessage, null, 2)}`);
 
     const result = (await this.callModel(
       PsAiModelType.Text,
@@ -297,16 +303,23 @@ Provide your analysis in JSON format with two fields:
     return `Article with possible justifiable gold-plating:
 Number: ${article.number}
 Type: ${type}
-Text: ${article.text}
-English Translation: ${englishTranslation}
-Support text explanation: ${
+
+<ArticleText>${article.text}</ArticleText>
+
+<RelevantEUDirectiveExtract>
+${euLawExtract}
+</RelevantEUDirectiveExtract>
+
+<ArticleEnglishTranslation>${englishTranslation}</ArticleEnglishTranslation>
+
+<GoldplatingFoundInPreviousStep>${article.research?.description}</GoldplatingFoundInPreviousStep>
+
+${
       article.research?.supportTextExplanation
-        ? `Support text explanation to review for justification: ${article.research?.supportTextExplanation}`
+        ? `<SupportTextExplanationToReviewForJustification>${article.research?.supportTextExplanation}<SupportTextExplanationToReviewForJustification>`
         : ""
     }
 
-Relevant EU Directive extract:
-${euLawExtract}
 
 Let's think step by step. First, start by outlining your reasoning in analysing if there is justification for gold plating, then output in JSON markdown format:`;
   }
@@ -347,11 +360,16 @@ Let's think step by step. First, start by outlining your reasoning in analysing 
     return `Article with potential gold-plating:
 Number: ${article.number}
 Type: ${type}
-Text: ${article.text}
-English Translation: ${englishTranslation}
 
-Relevant EU Directive extract:
+<ArticleText>${article.text}</ArticleText>
+
+<RelevantEUDirectiveExtract>
 ${euLawExtract}
+</RelevantEUDirectiveExtract>
+
+<ArticleEnglishTranslation>${englishTranslation}</ArticleEnglishTranslation>
+
+<GoldplatingFoundInPreviousStep>${article.research?.description}</GoldplatingFoundInPreviousStep>
 
 Let's think step by step. First, start by outlining your reasoning in analysing if there is justification for gold plating, then output in this JSON markdown format:`;
   }

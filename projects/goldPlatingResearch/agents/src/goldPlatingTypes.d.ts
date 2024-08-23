@@ -89,6 +89,7 @@ interface GoldplatingResearchItem {
   name: string;
   nationalLaw: NationalLaw;
   supportArticleTextArticleIdMapping: Record<number, number>;
+  lastLawArticleNumber?: number;
   nationalRegulation: NationalRegulation[];
   euDirective: EuDirective;
   euRegulation?: EuRegulation;

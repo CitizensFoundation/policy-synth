@@ -278,14 +278,14 @@ Your English translation without any comments:`;
   Your task is to provide a comprehensive conclusion and reasons for gold plating based on the individual analyses of six different types of gold plating.
 
   Your analysis should:
-  1. Provide an overall conclusion on whether gold plating was found and to what extent.
+  1. Provide an overall conclusion on whether gold plating was found and to what extent, make sure to output the conclusion as a JSON string in the format below.
   2. If gold plating was found, explain the possible reasons and potential implications.
 
   Present your analysis in the following JSON format:
 
   {
-    "conclusion": "Overall conclusion on gold plating",
-    "reasonsForGoldPlating": "Comprehensive explanation of reasons if gold plating was found, otherwise leave empty"
+    "conclusion": string;
+    "reasonsForGoldPlating": string;
   }
 
   Be thorough in your analysis and provide specific examples to support your conclusions.

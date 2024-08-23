@@ -14,6 +14,7 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
         this.logger.info(`Ranking possible gold-plating articles for ${researchItem.name} notJustifiedGoldPlating`);
         await this.performPairwiseRanking(-1);
         const rankedArticles = this.getOrderedListOfItems(-1, true);
+        await this.saveMemory();
         this.logger.debug(`Ranked possible gold-plating articles for ${researchItem.name} notJustifiedGoldPlating: ${JSON.stringify(rankedArticles, null, 2)}`);
         let rankableJustifiedArticles = this.collectArticles(researchItem, "justifiedGoldPlating");
         this.setupRankingPrompts(-2, rankableJustifiedArticles, rankableJustifiedArticles.length * 15);

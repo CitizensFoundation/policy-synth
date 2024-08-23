@@ -17,9 +17,11 @@ import { JustifyGoldPlatingAgent } from "./research/justifyGoldPlating.js";
 const disableScanning = true;
 const skipFullTextProcessing = true;
 const skipArticleExtraction = true;
-const skipMainReview = true;
 const skipSupportTextReview = true;
-const skipJustification = true;
+const skipMainReview = false;
+const skipJustification = false;
+const skipEloRating = false;
+const skipGoogleExport = true;
 
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -124,10 +126,12 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
       80
     );
 
-    await foundGoldPlatingRankingAgent.processItem(researchItem);
+    if (!skipEloRating) {
+      await foundGoldPlatingRankingAgent.processItem(researchItem);
+    }
 
     await this.saveMemory();
-    this.logger.debug(JSON.stringify(this.memory, null, 2));
+    //this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 6. Generate reports
     const googleDocsReportAgent = new GoogleDocsReportAgent(
@@ -140,7 +144,10 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
     this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     await this.saveMemory();
-    await googleDocsReportAgent.processItem(researchItem);
+
+    if (!skipGoogleExport) {
+      await googleDocsReportAgent.processItem(researchItem);
+    }
 
     const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
     await xlsReportAgent.processItem(researchItem);
@@ -169,6 +176,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         await articleExtractionAgent.processItem(
           researchItem.nationalLaw.law.fullText,
           "law",
+          researchItem.lastLawArticleNumber,
           researchItem.nationalLaw.law.url
         );
       }
@@ -187,7 +195,8 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
           researchItem.nationalLaw.supportArticleText.articles =
           await articleExtractionAgent.processItem(
             researchItem.nationalLaw.supportArticleText.fullText,
-            "lawSupportArticle"
+            "lawSupportArticle",
+            researchItem.lastLawArticleNumber || 109
           );
 
           await this.saveMemory();
