@@ -87,29 +87,33 @@ export class CreateSubProblemsAgent extends ProblemsSmarterCrowdsourcingAgent {
   }
 
   async createSubProblems() {
-    let results = (await this.callModel(
-      PsAiModelType.Text,
-      PsAiModelSize.Medium,
-      await this.renderCreatePrompt()
-    )) as PsSubProblem[];
-
-    if (this.createSubProblemsRefineEnabled) {
-      results = await this.callModel(
+    if (false && !this.skipSubProblemCreation) {
+      let results = (await this.callModel(
         PsAiModelType.Text,
-        PsAiModelSize.Medium,
-        await this.renderRefinePrompt(results)
-      );
-    }
+        PsAiModelSize.Large,
+        await this.renderCreatePrompt()
+      )) as PsSubProblem[];
 
-    if (this.memory.subProblems && this.memory.subProblems.length > 0) {
-      this.memory.subProblems = [...this.memory.subProblems, ...results];
+      if (this.createSubProblemsRefineEnabled) {
+        results = await this.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Large,
+          await this.renderRefinePrompt(results)
+        );
+      }
+
+      if (this.memory.subProblems && this.memory.subProblems.length > 0) {
+        this.memory.subProblems = [...this.memory.subProblems, ...results];
+      } else {
+        this.memory.subProblems = results;
+      }
+
+      await this.saveMemory();
+
+      this.logger.info("Sub Problems Created");
     } else {
-      this.memory.subProblems = results;
+      this.logger.info("Skipping Sub Problems Creation");
     }
-
-    await this.saveMemory();
-
-    this.logger.info("Sub Problems Created");
   }
 
   async process() {

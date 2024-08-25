@@ -4,7 +4,8 @@ import axios from "axios";
 import AWS from "aws-sdk";
 import fs from "fs";
 import path from "path";
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
+import { Colors } from "discord.js";
 const engineId = "stable-diffusion-xl-1024-v1-0";
 const apiHost = process.env.API_HOST ?? "https://api.stability.ai";
 const apiKey = process.env.STABILITY_API_KEY;
@@ -111,24 +112,69 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
             });
         });
     }
+    staticSecondaryColors = [
+        "gold",
+        "silver",
+        "bronze",
+        "copper",
+        "brass",
+        "steel",
+        "pewter",
+    ];
     get randomSecondaryColor() {
-        let secondaryColors;
-        if (this.secondaryColors) {
-            secondaryColors = this.secondaryColors;
-        }
-        else {
-            secondaryColors = this.secondaryColors;
-        }
+        let secondaryColors = this.staticSecondaryColors;
+        /*if (this.secondaryColors) {
+          secondaryColors = this.secondaryColors;
+        } else {
+          secondaryColors = this.secondaryColors;
+        }*/
         const randomSecondaryColorIndex = Math.floor(Math.random() * secondaryColors.length);
         return secondaryColors[randomSecondaryColorIndex];
     }
+    staticColors = [
+        "orange",
+        "blue",
+        "yellow",
+        "green",
+        "light blue",
+        "red",
+        "violet",
+        "sea Green",
+        "saddle Brown",
+        "chocolate",
+        "fire Brick",
+        "orange Red",
+        "yellow Green",
+        "gold",
+        "dark Khaki",
+        "dark Magenta",
+        "dark Violet",
+        "wheat",
+        "forest Green",
+        "tan",
+        "gray",
+    ];
     getSubProblemColor(subProblemIndex) {
+        return this.staticColors[subProblemIndex];
+        let color;
         if (this.subProblemColors) {
-            return this.subProblemColors[subProblemIndex];
+            try {
+                if (typeof this.subProblemColors === "string") {
+                    color = JSON.parse(this.subProblemColors)[subProblemIndex];
+                }
+                else {
+                    color = this.subProblemColors[subProblemIndex];
+                }
+            }
+            catch (error) {
+                this.logger.error(error);
+                color = this.staticColors[subProblemIndex];
+            }
         }
         else {
-            return this.subProblemColors[subProblemIndex];
+            color = "#1F10fa";
         }
+        return Colors;
     }
     async renderCreatePrompt(subProblemIndex, solution, injectText) {
         const messages = [
@@ -155,7 +201,7 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
         ];
         return messages;
     }
-    async getImageUrlFromPrompt(prompt) {
+    async getImageUrlFromPrompt(prompt, quality = "hd") {
         const configuration = {
             apiKey: process.env.OPENAI_API_KEY,
         };
@@ -169,7 +215,7 @@ export class CreateSolutionImagesAgent extends SolutionsEvolutionSmarterCrowdsou
                     model: "dall-e-3",
                     prompt,
                     n: 1,
-                    quality: "hd",
+                    quality: quality,
                     size: "1792x1024",
                 });
                 if (result) {
@@ -241,7 +287,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
                         gotImage = await this.downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution);
                     }
                     else {
-                        const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
+                        const imageUrl = await this.getImageUrlFromPrompt(imagePrompt, "standard");
                         await this.downloadImage(imageUrl, imageFilePath);
                         gotImage = true;
                     }
@@ -277,7 +323,12 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
         this.logger.info("Create Images Agent");
         super.process();
         try {
-            await this.createImages();
+            if (!this.skipImageCreation) {
+                await this.createImages();
+            }
+            else {
+                this.logger.info("Skipping Image Creation");
+            }
         }
         catch (error) {
             this.logger.error(error);

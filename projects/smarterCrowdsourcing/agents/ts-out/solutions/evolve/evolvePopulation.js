@@ -7,9 +7,9 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
         return JSON.stringify({
             title: solution.title,
             description: solution.description,
-            mainBenefitOfSolutionComponent: solution.mainBenefitOfSolutionComponent ||
+            mainBenefitOfSolution: solution.mainBenefitOfSolution ||
                 solution.mainBenefitOfSolution,
-            mainObstacleToSolutionComponentAdoption: solution.mainObstacleToSolutionComponentAdoption ||
+            mainObstacleToSolutionAdoption: solution.mainObstacleToSolutionAdoption ||
                 solution.mainObstacleToSolutionAdoption,
         }, null, 2);
     }
@@ -33,7 +33,7 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
           `
                 : ""}
 
-        Always output your merged solution component in the following JSON format: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not add any new JSON properties.
+        Always output your merged solution component in the following JSON format: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not add any new JSON properties.
         Let's think step by step.
         `),
             this.createHumanMessage(`
@@ -67,7 +67,7 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
           `
                 : ""}
 
-        Always format your mutated solution component in the following JSON structure: { title, description, mainBenefitOfSolutionComponent, mainObstacleToSolutionComponentAdoption }. Do not introduce any new JSON properties.
+        Always format your mutated solution component in the following JSON structure: { title, description, mainBenefitOfSolution, mainObstacleToSolutionAdoption }. Do not introduce any new JSON properties.
         Let's think step by step.
         `),
             this.createHumanMessage(`

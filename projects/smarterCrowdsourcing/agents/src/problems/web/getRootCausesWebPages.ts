@@ -287,7 +287,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
 
     const analysis = (await this.callModel(
       PsAiModelType.Text,
-      PsAiModelSize.Small,
+      PsAiModelSize.Medium,
       messages,
       true,
       true

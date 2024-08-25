@@ -102,7 +102,11 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
     this.logger.info("Create Problem Statement Image Agent");
 
     try {
-      await this.createProblemStatementImage();
+      if (!this.skipImageCreation) {
+        await this.createProblemStatementImage();
+      } else {
+        this.logger.info("Skipping image creation.");
+      }
     } catch (error: any) {
       this.logger.error(error);
       this.logger.error(error.stack);

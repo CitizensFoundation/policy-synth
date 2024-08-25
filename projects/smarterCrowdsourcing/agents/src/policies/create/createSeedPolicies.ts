@@ -10,9 +10,9 @@ export class CreateSeedPoliciesAgent extends BaseSmarterCrowdsourcingAgent {
 
       Description: ${solution.description}
 
-      Main benefit: ${solution.mainBenefitOfSolutionComponent}
+      Main benefit: ${solution.mainBenefitOfSolution}
 
-      Main obstacle: ${solution.mainObstacleToSolutionComponentAdoption}
+      Main obstacle: ${solution.mainObstacleToSolutionAdoption}
 
       Best pros:
       ${this.getProCons(solution.pros as PsProCon[]).slice(

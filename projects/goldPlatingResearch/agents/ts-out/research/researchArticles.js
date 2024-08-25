@@ -281,7 +281,7 @@ Your English translation without any comments:`;
   1. Provide an overall conclusion on whether gold plating was found and to what extent, make sure to output the conclusion as a JSON string in the format below.
   2. If gold plating was found, explain the possible reasons and potential implications.
 
-  Present your analysis in the following JSON format:
+  Present your analysis in the following JSON format without any comments before or after:
 
   {
     "conclusion": string;
@@ -318,7 +318,7 @@ Your English translation without any comments:`;
             .map((analysis) => JSON.stringify(analysis, null, 2))
             .join("\n\n")}
 
-  Please provide your comprehensive conclusion and reasons for gold plating in the specified JSON format:`;
+  Please provide your conclusion and reasons for gold plating in the specified JSON format without any explainations:`;
     }
     processGoldPlatingResult(result, url) {
         const research = {

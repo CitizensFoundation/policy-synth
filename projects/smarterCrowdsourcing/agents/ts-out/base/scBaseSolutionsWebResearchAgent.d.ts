@@ -8,5 +8,6 @@ export declare abstract class SolutionsWebResearchSmarterCrowdsourcingAgent exte
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
     get maxTopSearchQueriesForSolutionCreation(): number;
     get maxPercentOfSolutionsWebPagesToGet(): number;
+    get generationLanguage(): string;
 }
 //# sourceMappingURL=scBaseSolutionsWebResearchAgent.d.ts.map

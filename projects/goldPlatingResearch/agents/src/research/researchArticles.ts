@@ -675,7 +675,7 @@ Your English translation without any comments:`;
   Let's think step by step. First, start by outlining your reasoning in identifing the gold plating, then output in this JSON markdown format and copy your reasoning into the analysis field:
   `;
 
-    const outputFormat = `Output in this format:
+    const outputFormat = `Output in this format without any explainations before or after:
 
   <Step by Step Reasoning for Gold Plating Analysis/>
 
@@ -750,7 +750,7 @@ ${articleToAnalyze}
 ${translatedArticle}
 </english_translation_of_${type}_article_to_analyze>
 
-Your analysis of the <icelandic_${type}_article_to_analyse> in JSON format:`;
+Your analysis of the <icelandic_${type}_article_to_analyse> in JSON format without explainations:`;
     return finalPrompt;
   }
 }

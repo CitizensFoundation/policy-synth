@@ -604,12 +604,14 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
     renderSubProblem(subProblemIndex, useProblemAsHeader = false) {
         const subProblem = this.memory.subProblems[subProblemIndex];
         return `
-      ${useProblemAsHeader ? "Problem" : "Sub Problem"}:
+      ${useProblemAsHeader ? "<Problem>" : "<SubProblem>"}:
       ${subProblem.title}
 
       ${subProblem.description}
 
       ${subProblem.whyIsSubProblemImportant}
+
+      ${useProblemAsHeader ? "</Problem>" : "</SubProblem>"}:
       `;
     }
     renderSubProblemSimple(subProblemIndex) {
@@ -650,8 +652,10 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
     renderEntity(subProblemIndex, entityIndex) {
         const entity = this.memory.subProblems[subProblemIndex].entities[entityIndex];
         return `
-      Entity: ${entity.name}
-      ${this.renderEntityPosNegReasons(entity)}
+      <AffectedEntity>
+        ${entity.name}
+        ${this.renderEntityPosNegReasons(entity)}
+      </AffectedEntity>
       `;
     }
     renderProblemStatement() {

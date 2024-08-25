@@ -23,8 +23,8 @@ export class SolutionsWebResearchAgentQueue extends PolicySynthAgentQueue {
         return [
             { processor: CreateSearchQueriesAgent, weight: 10 },
             { processor: RankSearchQueriesAgent, weight: 10 },
-            { processor: SearchWebAgent, weight: 15 },
-            { processor: RankSearchResultsAgent, weight: 10 },
+            { processor: SearchWebAgent, weight: 5 },
+            { processor: RankSearchResultsAgent, weight: 20 },
             { processor: SmarterCrowdsourcingGetWebPagesAgent, weight: 15 },
         ];
     }

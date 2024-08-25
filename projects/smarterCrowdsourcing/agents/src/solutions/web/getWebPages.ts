@@ -27,11 +27,11 @@ const onlyCheckWhatNeedsToBeScanned = false;
 
 export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
   webPageVectorStore = new WebPageVectorStore();
-  urlsScanned = new Set<string>();
+  urlsScanned = new Map<number, Set<string>>();
 
   totalPagesSave = 0;
 
-  maxModelTokensOut = 4096;
+  maxModelTokensOut = 16384;
   modelTemperature = 0.0;
 
   renderScanningPrompt(
@@ -53,8 +53,6 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
             title: string;
             description: string;
             relevanceToProblem: string;
-            mainBenefitOfSolutionComponent: string;
-            mainObstacleToSolutionComponentAdoption: string;
             mainBenefitOfSolution: string;
             mainObstacleToSolutionAdoption: string;
             contacts?: string[];
@@ -68,8 +66,9 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
       ),
       this.createHumanMessage(
         `
-        Problem Statement:
+        <ProblemStatement>
         ${this.problemStatementDescription}
+        </ProblemStatement>
 
         ${
           subProblemIndex !== undefined
@@ -263,7 +262,7 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
 
     const analysis = (await this.callModel(
       PsAiModelType.Text,
-      PsAiModelSize.Small,
+      PsAiModelSize.Medium,
       messages,
       true,
       true
@@ -368,11 +367,15 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
       )} for ${url} for ${type} search results ${subProblemIndex} sub problem index`
     );
 
-    if (this.urlsScanned.has(url)) {
+    if (this.urlsScanned.get(subProblemIndex || 0) === undefined) {
+      this.urlsScanned.set(subProblemIndex || 0, new Set());
+    }
+
+    if (this.urlsScanned.get(subProblemIndex || 0)!.has(url)) {
       this.logger.warn(`Already scanned ${url}, skipping`);
       return;
     } else {
-      this.urlsScanned.add(url);
+      this.urlsScanned.get(subProblemIndex || 0)!.add(url);
     }
 
     try {

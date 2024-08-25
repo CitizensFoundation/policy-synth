@@ -35,6 +35,7 @@ export declare abstract class SolutionsEvolutionSmarterCrowdsourcingAgent extend
     get evolutionHighMutationRate(): number;
     get evolutionSelectParentTournamentSize(): number;
     get evolutionCrossoverMutationPercent(): number;
+    get skipImageCreation(): boolean;
     get maxPercentOfEloMatched(): number;
     get minimumNumberOfPairwiseVotesForPopulation(): number;
     get maxNumberOfPairwiseRankingPrompts(): number;

@@ -9,6 +9,7 @@ import { CreateInitialSolutionsAgent } from "./create/createSolutions.js";
 import { CreateProsConsAgent } from "./create/createProsCons.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
 import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
+import { RankWebSolutionsAgent } from "./ranking/rankWebSolutions.js";
 export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS_EVOLUTION;
@@ -18,17 +19,28 @@ export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
     }
     async setupMemoryIfNeeded() {
         if (!this.memory || !this.memory.subProblems) {
+            // Initialize memory if it doesn't exist
             this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
             await this.saveMemory();
         }
+        // Iterate through each subproblem to ensure the solutions object with populations is set up
+        for (let subProblem of this.memory.subProblems) {
+            if (!subProblem.solutions) {
+                subProblem.solutions = {
+                    populations: []
+                };
+            }
+        }
+        await this.saveMemory();
     }
     get processors() {
         if (this.memory.subProblems[0].solutions.populations.length === 0) {
             // Create initial solutions for the first population
             return [
+                { processor: RankWebSolutionsAgent, weight: 10 },
                 { processor: CreateInitialSolutionsAgent, weight: 10 },
                 { processor: CreateProsConsAgent, weight: 10 },
-                { processor: RankProsConsAgent, weight: 20 },
+                { processor: RankProsConsAgent, weight: 10 },
                 { processor: RankSolutionsAgent, weight: 30 },
                 { processor: GroupSolutionsAgent, weight: 10 },
                 { processor: CreateSolutionImagesAgent, weight: 20 },
@@ -40,9 +52,9 @@ export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
                 { processor: ReapSolutionsAgent, weight: 5 },
                 { processor: CreateProsConsAgent, weight: 10 },
                 { processor: RankProsConsAgent, weight: 10 },
-                { processor: RankSolutionsAgent, weight: 25 },
+                { processor: RankSolutionsAgent, weight: 35 },
                 { processor: GroupSolutionsAgent, weight: 5 },
-                { processor: CreateSolutionImagesAgent, weight: 25 },
+                /*{ processor: CreateSolutionImagesAgent, weight: 25 },*/
             ];
         }
     }

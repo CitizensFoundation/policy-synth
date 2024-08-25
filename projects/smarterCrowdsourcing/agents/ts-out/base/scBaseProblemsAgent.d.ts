@@ -9,5 +9,6 @@ export declare abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmar
     get rootCauseFieldTypes(): never[];
     get createEntitiesRefinedEnabled(): boolean;
     get createSubProblemsRefineEnabled(): boolean;
+    get skipSubProblemCreation(): boolean;
 }
 //# sourceMappingURL=scBaseProblemsAgent.d.ts.map

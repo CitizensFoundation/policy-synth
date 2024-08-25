@@ -147,8 +147,8 @@ interface PsSolution extends PsEloRateable {
   description: string;
   similarityGroup?: PsSimilarityGroup;
   isFirstInGroup?: boolean;
-  mainBenefitOfSolutionComponent: string;
-  mainObstacleToSolutionComponentAdoption: string;
+  mainBenefitOfSolution: string;
+  mainObstacleToSolutionAdoption: string;
   mainBenefitOfSolution?: string;
   mainObstacleToSolutionAdoption?: string;
   relevanceToProblem?: string;

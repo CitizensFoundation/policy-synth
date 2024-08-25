@@ -9,8 +9,8 @@ export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
       Title: ${solution.title}
       Description: ${solution.description}
 
-      How Solution Component Can Help: ${solution.mainBenefitOfSolutionComponent}
-      Main Obstacles to Solution Component Adoption: ${solution.mainObstacleToSolutionComponentAdoption}
+      How Solution Component Can Help: ${solution.mainBenefitOfSolution}
+      Main Obstacles to Solution Component Adoption: ${solution.mainObstacleToSolutionAdoption}
     `;
   }
 

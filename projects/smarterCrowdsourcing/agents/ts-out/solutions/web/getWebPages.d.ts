@@ -3,7 +3,7 @@ import { SolutionsEvolutionSmarterCrowdsourcingAgent } from "../../base/scBaseSo
 import { WebPageVectorStore } from "../../vectorstore/webPage.js";
 export declare class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     webPageVectorStore: WebPageVectorStore;
-    urlsScanned: Set<string>;
+    urlsScanned: Map<number, Set<string>>;
     totalPagesSave: number;
     maxModelTokensOut: number;
     modelTemperature: number;

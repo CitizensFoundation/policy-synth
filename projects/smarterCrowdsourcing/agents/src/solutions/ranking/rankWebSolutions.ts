@@ -65,6 +65,47 @@ export class RankWebSolutionsAgent extends BaseSmarterCrowdsourcingPairwiseAgent
     );
   }
 
+  async rankSubProblemEntities(subProblemIndex: number): Promise<void> {
+    const subProblem = this.memory.subProblems[subProblemIndex];
+
+    if (!subProblem || !subProblem.entities || subProblem.entities.length === 0) {
+      this.logger.info(`No entities to rank for sub problem ${subProblemIndex}`);
+      return;
+    }
+
+    this.logger.info(`Ranking solutions for entities in sub problem ${subProblemIndex}`);
+
+    for (let entityIndex = 0; entityIndex < subProblem.entities.length; entityIndex++) {
+      const entity = subProblem.entities[entityIndex];
+
+      if (!entity.solutionsFromSearch || entity.solutionsFromSearch.length === 0) {
+        this.logger.info(`No solutions to rank for entity ${entityIndex} in sub problem ${subProblemIndex}`);
+        continue;
+      }
+
+      if (entity.solutionsFromSearch[0].eloRating) {
+        this.logger.info(`Solutions for entity ${entityIndex} in sub problem ${subProblemIndex} already ranked, skipping`);
+        continue;
+      }
+
+      this.logger.info(`Ranking solutions for entity ${entityIndex} in sub problem ${subProblemIndex}`);
+
+      this.setupRankingPrompts(
+        subProblemIndex,
+        entity.solutionsFromSearch,
+        entity.solutionsFromSearch.length * 10,
+      );
+
+      await this.performPairwiseRanking(subProblemIndex);
+
+      entity.solutionsFromSearch = this.getOrderedListOfItems(subProblemIndex, true) as PsSolution[];
+
+      this.logger.info(`Finished ranking solutions for entity ${entityIndex} in sub problem ${subProblemIndex}`);
+    }
+
+    this.logger.info(`Completed ranking solutions for all entities in sub problem ${subProblemIndex}`);
+  }
+
   async processSubProblem(subProblemIndex: number) {
     this.logger.info(
       `Ranking web solution for sub problem ${subProblemIndex} population`
@@ -85,6 +126,19 @@ export class RankWebSolutionsAgent extends BaseSmarterCrowdsourcingPairwiseAgent
 
       this.memory.subProblems[subProblemIndex].solutionsFromSearch =
         this.getOrderedListOfItems(subProblemIndex, true) as PsSolution[];
+
+
+        if (this.memory.subProblems[subProblemIndex].entities[0] &&
+          this.memory.subProblems[subProblemIndex].entities[0].solutionsFromSearch![0] &&
+            !this.memory.subProblems[subProblemIndex].entities[0]!.solutionsFromSearch![0].eloRating) {
+            await this.rankSubProblemEntities(subProblemIndex);
+        } else {
+          this.logger.info(`Sub problem entities ${subProblemIndex} already ranked, skipping`);
+        }
+    } else {
+      this.logger.info(
+        `Sub problem ${subProblemIndex} already ranked, skipping`
+      );
     }
 
     await this.saveMemory();
@@ -106,6 +160,8 @@ export class RankWebSolutionsAgent extends BaseSmarterCrowdsourcingPairwiseAgent
 
         this.memory.problemStatement.solutionsFromSearch =
           this.getOrderedListOfItems(-1, true) as PsSolution[];
+      } else {
+        this.logger.info("Problem statement already ranked");
       }
 
       const subProblemsPromises = Array.from(

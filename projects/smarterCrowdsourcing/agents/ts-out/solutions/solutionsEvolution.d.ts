@@ -48,9 +48,6 @@ export declare class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue 
     } | {
         processor: typeof GroupSolutionsAgent;
         weight: number;
-    } | {
-        processor: typeof CreateSolutionImagesAgent;
-        weight: number;
     })[];
 }
 //# sourceMappingURL=solutionsEvolution.d.ts.map

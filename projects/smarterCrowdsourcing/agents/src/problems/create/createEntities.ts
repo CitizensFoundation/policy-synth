@@ -122,14 +122,14 @@ export class CreateEntitiesAgent extends ProblemsSmarterCrowdsourcingAgent {
       async (_, subProblemIndex) => {
         let results = (await this.callModel(
           PsAiModelType.Text,
-          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
           await this.renderCreatePrompt(subProblemIndex)
         )) as PsAffectedEntity[];
 
         if (this.createEntitiesRefinedEnabled) {
           results = (await this.callModel(
             PsAiModelType.Text,
-            PsAiModelSize.Medium,
+            PsAiModelSize.Large,
             await this.renderRefinePrompt(subProblemIndex, results)
           )) as PsAffectedEntity[];
         }

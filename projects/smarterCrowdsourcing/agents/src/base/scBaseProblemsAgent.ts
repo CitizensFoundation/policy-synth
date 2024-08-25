@@ -7,7 +7,7 @@ export abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowd
   private static readonly PROBLEMS_AGENT_CLASS_BASE_ID =
     "3f9f7a9f-98f4-4e54-8bf8-5936b82e5bd3";
 
-  private static readonly PROBLEMS_AGENT_CLASS_VERSION = 2;
+  private static readonly PROBLEMS_AGENT_CLASS_VERSION = 3;
 
   static getAgentClass(): PsAgentClassCreationAttributes {
     return {
@@ -64,6 +64,13 @@ export abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowd
         text: "Enable refined entity creation",
       },
       {
+        uniqueId: "skipSubProblemCreation",
+        type: "checkbox",
+        value: false,
+        required: true,
+        text: "Skip sub problem creation",
+      },
+      {
         uniqueId: "createSubProblemsRefineEnabled",
         type: "checkbox",
         value: true,
@@ -77,13 +84,20 @@ export abstract class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowd
   get subProblemsRankingMinNumberOfMatches() {
     return this.getConfig("subProblemsRankingMinNumberOfMatches", 10);
   }
+
   get rootCauseFieldTypes() {
     return this.getConfig("rootCauseFieldTypes", []);
   }
+
   get createEntitiesRefinedEnabled() {
     return this.getConfig("createEntitiesRefinedEnabled", true);
   }
+
   get createSubProblemsRefineEnabled() {
     return this.getConfig("createSubProblemsRefineEnabled", true);
+  }
+
+  get skipSubProblemCreation() {
+    return this.getConfig("skipSubProblemCreation", false);
   }
 }

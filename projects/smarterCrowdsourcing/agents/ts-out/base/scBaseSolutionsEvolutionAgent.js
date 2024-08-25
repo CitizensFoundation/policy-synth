@@ -2,7 +2,7 @@ import { PsClassScAgentType } from "./agentTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "./scBaseAgent.js";
 export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingAgent {
     static SOLUTIONS_EVOLUTION_AGENT_CLASS_BASE_ID = "b2a5d8f1-5e8a-4b1d-8c2c-7d45e3b1f123";
-    static SOLUTIONS_EVOLUTION_AGENT_CLASS_VERSION = 2;
+    static SOLUTIONS_EVOLUTION_AGENT_CLASS_VERSION = 3;
     static getAgentClass() {
         return {
             class_base_id: this.SOLUTIONS_EVOLUTION_AGENT_CLASS_BASE_ID,
@@ -120,6 +120,13 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
                 rows: 5,
                 charCounter: true,
                 text: "Rate Solutions Instructions",
+            },
+            {
+                uniqueId: "skipImageCreation",
+                type: "checkbox",
+                value: false,
+                required: true,
+                text: "Skip image creation",
             },
         ];
     }
@@ -464,6 +471,9 @@ export class SolutionsEvolutionSmarterCrowdsourcingAgent extends BaseSmarterCrow
     }
     get evolutionCrossoverMutationPercent() {
         return this.getConfig("evolutionCrossoverMutationPercent", 0.05);
+    }
+    get skipImageCreation() {
+        return this.getConfig("skipImageCreation", false);
     }
     // Other configuration options
     get maxPercentOfEloMatched() {

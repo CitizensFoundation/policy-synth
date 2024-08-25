@@ -19,9 +19,9 @@ puppeteer.use(StealthPlugin());
 const onlyCheckWhatNeedsToBeScanned = false;
 export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
     webPageVectorStore = new WebPageVectorStore();
-    urlsScanned = new Set();
+    urlsScanned = new Map();
     totalPagesSave = 0;
-    maxModelTokensOut = 4096;
+    maxModelTokensOut = 16384;
     modelTemperature = 0.0;
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         return [
@@ -36,8 +36,6 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
             title: string;
             description: string;
             relevanceToProblem: string;
-            mainBenefitOfSolutionComponent: string;
-            mainObstacleToSolutionComponentAdoption: string;
             mainBenefitOfSolution: string;
             mainObstacleToSolutionAdoption: string;
             contacts?: string[];
@@ -49,8 +47,9 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
         7. It is very important for society that you find the best solutions to those problems.
         `),
             this.createHumanMessage(`
-        Problem Statement:
+        <ProblemStatement>
         ${this.problemStatementDescription}
+        </ProblemStatement>
 
         ${subProblemIndex !== undefined
                 ? `
@@ -175,7 +174,7 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt(this.memory.problemStatement, text, subProblemIndex, entityIndex);
-        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, true, true));
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex, entityIndex) {
@@ -218,12 +217,15 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
     }
     async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
-        if (this.urlsScanned.has(url)) {
+        if (this.urlsScanned.get(subProblemIndex || 0) === undefined) {
+            this.urlsScanned.set(subProblemIndex || 0, new Set());
+        }
+        if (this.urlsScanned.get(subProblemIndex || 0).has(url)) {
             this.logger.warn(`Already scanned ${url}, skipping`);
             return;
         }
         else {
-            this.urlsScanned.add(url);
+            this.urlsScanned.get(subProblemIndex || 0).add(url);
         }
         try {
             const textAnalysisItems = (await this.getTextAnalysis(text, subProblemIndex, entityIndex));

@@ -2,7 +2,7 @@ import { PsClassScAgentType } from "./agentTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "./scBaseAgent.js";
 export class SolutionsWebResearchSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingAgent {
     static SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_BASE_ID = "c155d8f1-5efa-cb1d-8526-7d48a341f163";
-    static SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_VERSION = 2;
+    static SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_VERSION = 3;
     static getAgentClass() {
         return {
             class_base_id: this.SOLUTIONS_WEB_RESEARCH_AGENT_CLASS_BASE_ID,
@@ -66,6 +66,14 @@ export class SolutionsWebResearchSmarterCrowdsourcingAgent extends BaseSmarterCr
                 required: true,
                 text: "Maximum percent of solutions web pages to get",
             },
+            {
+                uniqueId: "generationLanguage",
+                type: "textField",
+                value: "",
+                maxLength: 50,
+                required: false,
+                text: "Generation language (default: English)",
+            },
         ];
     }
     get maxTopSearchQueriesForSolutionCreation() {
@@ -73,6 +81,9 @@ export class SolutionsWebResearchSmarterCrowdsourcingAgent extends BaseSmarterCr
     }
     get maxPercentOfSolutionsWebPagesToGet() {
         return this.getConfig("maxPercentOfSolutionsWebPagesToGet", 0.5);
+    }
+    get generationLanguage() {
+        return this.getConfig("generationLanguage", "");
     }
 }
 //# sourceMappingURL=scBaseSolutionsWebResearchAgent.js.map

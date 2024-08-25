@@ -202,7 +202,7 @@ export class GetRootCausesWebPagesAgent extends SmarterCrowdsourcingGetWebPagesA
             console.log(JSON.stringify(messages, null, 2));
             this.hasPrintedPrompt = true;
         }
-        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true, true));
+        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, true, true));
         return analysis;
     }
     isUrlInSubProblemMemory(url) {

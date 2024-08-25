@@ -24,9 +24,9 @@ export class RateSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
 
         Description: ${solution.description}
 
-        Main benefit: ${solution.mainBenefitOfSolutionComponent}
+        Main benefit: ${solution.mainBenefitOfSolution}
 
-        Main obstacle: ${solution.mainObstacleToSolutionComponentAdoption}
+        Main obstacle: ${solution.mainObstacleToSolutionAdoption}
 
         Best pros:
         ${this.getProCons(solution.pros).slice(0, this.maxTopProsConsUsedForRating)}

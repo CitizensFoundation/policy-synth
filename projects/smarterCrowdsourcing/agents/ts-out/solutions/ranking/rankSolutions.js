@@ -1,5 +1,7 @@
+import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { BaseSmarterCrowdsourcingPairwiseAgent } from "../../base/scPairwiseAgent.js";
 export class RankSolutionsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
+    defaultModelSize = PsAiModelSize.Medium;
     async voteOnPromptPair(subProblemIndex, promptPair) {
         const itemOneIndex = promptPair[0];
         const itemTwoIndex = promptPair[1];
@@ -77,6 +79,11 @@ export class RankSolutionsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
     async process() {
         this.logger.info("Rank Solution Components Agent");
         super.process();
+        // Use medium model size 50% of the time
+        if (Math.random() < 0.5) {
+            this.defaultModelSize = PsAiModelSize.Medium;
+            this.logger.info("Using Medium Model Size");
+        }
         try {
             const subProblemsPromises = Array.from({
                 length: Math.min(this.memory.subProblems.length, this.maxSubProblems),

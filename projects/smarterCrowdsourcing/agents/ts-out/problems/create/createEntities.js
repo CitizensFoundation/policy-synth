@@ -104,9 +104,9 @@ export class CreateEntitiesAgent extends ProblemsSmarterCrowdsourcingAgent {
     async createEntities() {
         const subProblemsLimit = Math.min(this.memory.subProblems.length, this.maxSubProblems);
         const subProblemsPromises = Array.from({ length: subProblemsLimit }, async (_, subProblemIndex) => {
-            let results = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex)));
+            let results = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderCreatePrompt(subProblemIndex)));
             if (this.createEntitiesRefinedEnabled) {
-                results = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderRefinePrompt(subProblemIndex, results)));
+                results = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderRefinePrompt(subProblemIndex, results)));
             }
             this.memory.subProblems[subProblemIndex].entities = results;
             await this.saveMemory();

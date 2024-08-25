@@ -2,7 +2,7 @@ import { PsClassScAgentType } from "./agentTypes.js";
 import { BaseSmarterCrowdsourcingAgent } from "./scBaseAgent.js";
 export class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingAgent {
     static PROBLEMS_AGENT_CLASS_BASE_ID = "3f9f7a9f-98f4-4e54-8bf8-5936b82e5bd3";
-    static PROBLEMS_AGENT_CLASS_VERSION = 2;
+    static PROBLEMS_AGENT_CLASS_VERSION = 3;
     static getAgentClass() {
         return {
             class_base_id: this.PROBLEMS_AGENT_CLASS_BASE_ID,
@@ -53,6 +53,13 @@ export class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingA
                 text: "Enable refined entity creation",
             },
             {
+                uniqueId: "skipSubProblemCreation",
+                type: "checkbox",
+                value: false,
+                required: true,
+                text: "Skip sub problem creation",
+            },
+            {
                 uniqueId: "createSubProblemsRefineEnabled",
                 type: "checkbox",
                 value: true,
@@ -73,6 +80,9 @@ export class ProblemsSmarterCrowdsourcingAgent extends BaseSmarterCrowdsourcingA
     }
     get createSubProblemsRefineEnabled() {
         return this.getConfig("createSubProblemsRefineEnabled", true);
+    }
+    get skipSubProblemCreation() {
+        return this.getConfig("skipSubProblemCreation", false);
     }
 }
 //# sourceMappingURL=scBaseProblemsAgent.js.map
