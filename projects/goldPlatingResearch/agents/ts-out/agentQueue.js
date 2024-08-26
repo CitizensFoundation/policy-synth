@@ -14,6 +14,39 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
     }
     getTestResearchItem() {
         return {
+            name: "Lög um persónuvernd og vinnslu persónuupplýsinga",
+            nationalLaw: {
+                law: {
+                    // https://www.althingi.is/lagas/nuna/2018090.html
+                    url: "https://raw.githubusercontent.com/althingi-net/lagasafn-xml/master/data/xml/2018.90.xml",
+                    fullText: "",
+                    articles: [],
+                },
+                supportArticleText: {
+                    url: "https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/2407/umPersonGreinargerd2.html",
+                    fullText: "",
+                    articles: [],
+                },
+            },
+            supportArticleTextArticleIdMapping: {
+                1: 1,
+            },
+            lastLawArticleNumber: 53,
+            nationalRegulation: [
+                {
+                    url: "https://island.is/reglugerdir/nr/0606-2023",
+                    fullText: "",
+                    articles: [],
+                }
+            ],
+            euDirective: {
+                url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32016R0679",
+                fullText: "",
+            },
+        };
+    }
+    getTestResearchItemThree() {
+        return {
             name: "Lög um fjarskipti",
             nationalLaw: {
                 law: {

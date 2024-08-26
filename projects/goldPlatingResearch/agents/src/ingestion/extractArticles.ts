@@ -241,11 +241,6 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
   ): Promise<string> {
     const systemPrompt = `<LawExtractionSystemPrompt>Extract the an article from the ${type} text.
     The user will provide you with the article number in the <articleNumberToExtract> field, only extract that article exactly as it appears in the ${type} text.
-    ${
-      nextArticleNumberText
-        ? `The law article might reference other laws by numbers in the same reference format but you must extract fully until the next ${type} article provided by the user in <extractUntilThisNextArticleStart>`
-        : ""
-    }
 
     <${type}TextToExtractFrom>${text}</${type}TextToExtractFrom>
 
@@ -258,6 +253,7 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     </LawExtractionSystemPrompt>`;
 
     const userPrompt = `<articleNumberToExtract>${articleNumber}</articleNumberToExtract>
+
     ${
       nextArticleNumberText
         ? `<extractUntilThisNextArticleStart>${nextArticleNumberText}</extractUntilThisNextArticleStart>`

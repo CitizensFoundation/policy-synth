@@ -86,7 +86,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
                       `Justification: ${JSON.stringify(justification, null, 2)}`
                     );*/
                     if (true /*!justification.justifiedGoldPlating*/) {
-                        const secondCheck = await this.checkEURegulationMinimums(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "N/A", "regulation");
+                        const secondCheck = await this.checkEURegulationMinimums(article, researchItem.euDirective.fullText, article.research.englishTranslationOfIcelandicArticle, article.research.euLawExtract || "", "regulation");
                         this.logger.debug(`secondCheck: ${JSON.stringify(secondCheck, null, 2)}`);
                         if (secondCheck.justifiedGoldPlating) {
                             article.research.likelyJustified = true;

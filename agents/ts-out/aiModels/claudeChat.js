@@ -79,7 +79,7 @@ export class ClaudeChat extends BaseChatModel {
                     tokensIn += response.usage.cache_creation_input_tokens * 1.25;
                 }
                 if (response.usage.cache_read_input_tokens) {
-                    tokensOut += response.usage.cache_read_input_tokens * 0.1;
+                    tokensIn += response.usage.cache_read_input_tokens * 0.1;
                 }
             }
             return {
