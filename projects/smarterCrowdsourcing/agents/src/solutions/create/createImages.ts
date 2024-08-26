@@ -433,7 +433,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
             } else {
               const imageUrl = await this.getImageUrlFromPrompt(
                 imagePrompt,
-                "standard"
+                //"standard"
               );
               await this.downloadImage(imageUrl, imageFilePath);
               gotImage = true;

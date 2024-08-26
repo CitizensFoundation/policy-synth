@@ -63,7 +63,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             article,
             researchItem.euDirective.fullText,
             article.research.englishTranslationOfIcelandicArticle!,
-            article.research.euLawExtract || "N/A",
+            article.research.euLawExtract || "",
             "law"
           );
         } else {
@@ -77,10 +77,10 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             article,
             researchItem.euDirective.fullText,
             article.research.englishTranslationOfIcelandicArticle!,
-            article.research.euLawExtract || "N/A",
+            article.research.euLawExtract || "",
             "law"
           );
-          if (secondCheck.fullyJustifiedGoldPlating) {
+          if (secondCheck.justifiedGoldPlating) {
             article.research.likelyJustified = true;
             article.research.justification =
               secondCheck.justificationForGoldPlating;
@@ -91,14 +91,16 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
           }
         } else if (justification) {
           article.research.likelyJustified =
-            justification.fullyJustifiedGoldPlating;
+            justification.justifiedGoldPlating;
           article.research.justification =
             justification.justificationForGoldPlating;
         }
 
         await this.saveMemory();
       } else {
-        this.logger.info(`No possible gold-plating for article ${article.number}`);
+        this.logger.info(
+          `No possible gold-plating for article ${article.number}`
+        );
       }
     }
   }
@@ -139,12 +141,12 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             `Justification: ${JSON.stringify(justification, null, 2)}`
           );*/
 
-          if (true/*!justification.fullyJustifiedGoldPlating*/) {
+          if (true /*!justification.justifiedGoldPlating*/) {
             const secondCheck = await this.checkEURegulationMinimums(
               article,
               researchItem.euDirective.fullText,
               article.research.englishTranslationOfIcelandicArticle!,
-              article.research.euLawExtract || "N/A",
+              article.research.euLawExtract || "",
               "regulation"
             );
 
@@ -152,7 +154,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
               `secondCheck: ${JSON.stringify(secondCheck, null, 2)}`
             );
 
-            if (secondCheck.fullyJustifiedGoldPlating) {
+            if (secondCheck.justifiedGoldPlating) {
               article.research.likelyJustified = true;
               article.research.justification =
                 secondCheck.justificationForGoldPlating;
@@ -163,7 +165,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             }
           } else {
             /*article.research.likelyJustified =
-              justification.fullyJustifiedGoldPlating;
+              justification.justifiedGoldPlating;
             article.research.justification =
               justification.justificationForGoldPlating;*/
           }
@@ -185,7 +187,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     allSupportText?: string
   ): Promise<{
     justificationForGoldPlating: string;
-    fullyJustifiedGoldPlating: boolean;
+    justifiedGoldPlating: boolean;
   }> {
     const systemMessage = this.createSystemMessage(
       this.getJustificationAnalysisSystemPrompt(
@@ -212,7 +214,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
       true
     )) as {
       justificationForGoldPlating: string;
-      fullyJustifiedGoldPlating: boolean;
+      justifiedGoldPlating: boolean;
     };
 
     return result;
@@ -226,7 +228,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     type: "law" | "regulation"
   ): Promise<{
     justificationForGoldPlating: string;
-    fullyJustifiedGoldPlating: boolean;
+    justifiedGoldPlating: boolean;
   }> {
     const systemMessage = this.createSystemMessage(
       this.getEURegulationMinimumsSystemPrompt(euDirectiveFullText)
@@ -250,7 +252,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
       true
     )) as {
       justificationForGoldPlating: string;
-      fullyJustifiedGoldPlating: boolean;
+      justifiedGoldPlating: boolean;
     };
 
     return result;
@@ -260,6 +262,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     euDirectiveFullText: string,
     allSupportText?: string
   ): string {
+    const skipFullEuDirective = true;
     return `<JustificationAnalysisSystem>
 You are an expert legal analyst specializing in EU and national law comparisons.
 Your task is to analyze gold-plating that has been confirmed in national laws or regulations and determine if there's a full justification for it.
@@ -269,13 +272,17 @@ Consider the following when analyzing:
 2. Any specific national circumstances that might necessitate stricter or more detailed rules.
 3. The potential benefits of gold-plating for the national legal or regulatory framework.
 4. Whether the gold-plating aligns with the overall objectives of the EU directive.
-5. Only set fullyJustifiedGoldPlating to true if the gold-plating is fully justified and necessary.
+5. Only set justifiedGoldPlating to true if the gold-plating is justified and necessary.
 
-Here is the full text of the EU Directive for reference:
+${
+  !skipFullEuDirective
+    ? `Here is the full text of the EU Directive for reference:
 
 <FullEuDirective>
 ${euDirectiveFullText}
-</FullEuDirective>
+</FullEuDirective>`
+    : ``
+}
 
 ${
   allSupportText
@@ -288,7 +295,7 @@ Provide your analysis in JSON format with two fields:
 \`\`\`json
   {
     justificationForGoldPlating: string;
-    fullyJustifiedGoldPlating: boolean;
+    justifiedGoldPlating: boolean;
   }
   \`\`\`
 </JustificationAnalysisSystem>`;
@@ -312,13 +319,15 @@ ${euLawExtract}
 
 <ArticleEnglishTranslation>${englishTranslation}</ArticleEnglishTranslation>
 
-<GoldplatingFoundInPreviousStep>${article.research?.description}</GoldplatingFoundInPreviousStep>
+<GoldplatingFoundInPreviousStep>${
+      article.research?.description
+    }</GoldplatingFoundInPreviousStep>
 
 ${
-      article.research?.supportTextExplanation
-        ? `<SupportTextExplanationToReviewForJustification>${article.research?.supportTextExplanation}<SupportTextExplanationToReviewForJustification>`
-        : ""
-    }
+  article.research?.supportTextExplanation
+    ? `<SupportTextExplanationToReviewForJustification>${article.research?.supportTextExplanation}<SupportTextExplanationToReviewForJustification>`
+    : ""
+}
 
 
 Let's think step by step. First, start by outlining your reasoning in analysing if there is justification for gold plating, then output in JSON markdown format:`;
@@ -327,6 +336,7 @@ Let's think step by step. First, start by outlining your reasoning in analysing 
   private getEURegulationMinimumsSystemPrompt(
     euDirectiveFullText: string
   ): string {
+    const skipFullEuDirective = true;
     return `<EURegulationMinimumsSystem>
 You are an expert legal analyst specializing in EU and national law comparisons.
 Your task is to analyze gold-plating in an article that has been confirmed in national laws or regulations and determine if there's a full justification for it.
@@ -334,18 +344,21 @@ Your task is to analyze gold-plating in an article that has been confirmed in na
 Consider the following:
 1. Whether the EU directive explicitly states that it sets minimum standards.
 2. If the directive uses language that suggests member states should or may elaborate on certain points.
-3. Only set fullyJustifiedGoldPlating to true if the gold-plating is fully justified and necessary.
+3. Only set justifiedGoldPlating to true if the gold-plating is justified and necessary.
 
-
-<FullEuDirective>
+${
+  !skipFullEuDirective
+    ? `<FullEuDirective>
 ${euDirectiveFullText}
-</FullEuDirective>
+</FullEuDirective>`
+    : ``
+}
 
 Let's think step by step. First, start by outlining your reasoning in analysing if there is justification for gold plating, then output in JSON markdown format:
 \`\`\`json
   {
     justificationForGoldPlating: string;
-    fullyJustifiedGoldPlating: boolean;
+    justifiedGoldPlating: boolean;
   }
   \`\`\`
 </EURegulationMinimumsSystem>`;

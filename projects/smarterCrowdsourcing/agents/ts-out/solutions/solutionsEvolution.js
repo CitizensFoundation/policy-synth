@@ -54,7 +54,7 @@ export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
                 { processor: RankProsConsAgent, weight: 10 },
                 { processor: RankSolutionsAgent, weight: 35 },
                 { processor: GroupSolutionsAgent, weight: 5 },
-                /*{ processor: CreateSolutionImagesAgent, weight: 25 },*/
+                { processor: CreateSolutionImagesAgent, weight: 25 },
             ];
         }
     }

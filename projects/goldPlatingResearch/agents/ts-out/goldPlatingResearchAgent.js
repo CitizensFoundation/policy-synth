@@ -16,7 +16,7 @@ const skipSupportTextReview = true;
 const skipMainReview = false;
 const skipJustification = false;
 const skipEloRating = false;
-const skipGoogleExport = true;
+const skipGoogleDocsExport = true;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
     static GOLDPLATING_AGENT_CLASS_VERSION = 3;
@@ -75,7 +75,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         const googleDocsReportAgent = new GoogleDocsReportAgent(this.agent, this.memory, 80, 90);
         this.logger.debug(JSON.stringify(this.memory, null, 2));
         await this.saveMemory();
-        if (!skipGoogleExport) {
+        if (!skipGoogleDocsExport) {
             await googleDocsReportAgent.processItem(researchItem);
         }
         const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);

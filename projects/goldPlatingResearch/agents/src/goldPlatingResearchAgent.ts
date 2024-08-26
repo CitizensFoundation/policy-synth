@@ -21,7 +21,7 @@ const skipSupportTextReview = true;
 const skipMainReview = false;
 const skipJustification = false;
 const skipEloRating = false;
-const skipGoogleExport = true;
+const skipGoogleDocsExport = true;
 
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -145,7 +145,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
 
     await this.saveMemory();
 
-    if (!skipGoogleExport) {
+    if (!skipGoogleDocsExport) {
       await googleDocsReportAgent.processItem(researchItem);
     }
 

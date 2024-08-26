@@ -5,6 +5,8 @@ import {
   PsAiModelSize,
 } from "@policysynth/agents/aiModelTypes.js";
 
+let havePrintedDebugPrompt = false;
+
 export class SupportTextReviewAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
@@ -59,7 +61,7 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
             this.normalizeArticleNumber(article.number)
           ] || this.normalizeArticleNumber(article.number);
 
-        this.logger.debug(`Support article ID: ${supportArticleId}`);
+        this.logger.debug(`Analytics Support article ID: ${supportArticleId}`);
 
         if (supportArticleId) {
           let supportArticle;
@@ -72,13 +74,14 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
             const realArticleId = this.normalizeArticleNumber(
               researchItem.nationalLaw.supportArticleText.articles[r].number
             );
-            this.logger.debug(`Compare ${realArticleId} with ${supportArticleId}`);
             if (realArticleId == supportArticleId) {
               supportArticle =
                 researchItem.nationalLaw.supportArticleText.articles[r];
               break;
             }
           }
+
+          this.logger.debug(`Analysing ${supportArticleId}`);
 
           if (supportArticle) {
             const explanation = await this.analyzeSupportText(
@@ -88,7 +91,7 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
             article.research.supportTextExplanation = explanation;
 
             this.logger.debug(
-              `Support text analysis for article ${article.number}: ${explanation}`
+              `Support text EXPLAINATION for article ${article.number}: ${explanation}`
             );
 
             await this.saveMemory();
@@ -159,9 +162,16 @@ export class SupportTextReviewAgent extends PolicySynthAgent {
     const systemMessage = this.createSystemMessage(
       this.getSupportTextAnalysisSystemPrompt()
     );
+
     const userMessage = this.createHumanMessage(
       this.getSupportTextAnalysisUserPrompt(article, supportArticle)
     );
+
+    if (!havePrintedDebugPrompt) {
+      this.logger.debug(`Support text analysis system prompt: ${JSON.stringify(systemMessage, null, 2)}`);
+      this.logger.debug(`Support text analysis user prompt: ${JSON.stringify(userMessage, null, 2)}`);
+      havePrintedDebugPrompt = true;
+    }
 
     const result = (await this.callModel(
       PsAiModelType.Text,
@@ -190,13 +200,12 @@ Provide a concise but comprehensive explanation based on the support text. If th
     supportArticle: LawArticle | RegulationArticle
   ): string {
     return `Article with potential gold-plating:
-Number: ${article.number}
-Text: ${article.text}
-Gold-plating concern: ${article.research?.reasonForGoldPlating}
+<LawArticleInEnglish>${article.research?.englishTranslationOfIcelandicArticle || article.text}</LawArticleInEnglish>
+<GoldPlatingConcern>${article.research?.description}</GoldPlatingConcern>
 
-Support text for this article:
-Number: ${supportArticle.number}
-Text: ${supportArticle.text}
+<SupportTextAboutTheLawArticle>
+${supportArticle.text}
+</SupportTextAboutTheLawArticle>
 
 Please analyze the support text and provide an explanation for the potential gold-plating:`;
   }

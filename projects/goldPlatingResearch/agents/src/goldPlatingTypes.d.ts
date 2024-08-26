@@ -34,6 +34,7 @@ interface LlmAnalysisResponse {
   conclusion: string;
   reasonsForGoldPlating: string;
   euLawExtract?: string;
+  conclusion?: string;
   englishTranslationOfIcelandicArticle?: string;
 }
 

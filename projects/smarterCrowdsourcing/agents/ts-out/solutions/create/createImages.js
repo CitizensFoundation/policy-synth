@@ -287,7 +287,7 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
                         gotImage = await this.downloadStabilityImage(subProblemIndex, imagePrompt, imageFilePath, solution);
                     }
                     else {
-                        const imageUrl = await this.getImageUrlFromPrompt(imagePrompt, "standard");
+                        const imageUrl = await this.getImageUrlFromPrompt(imagePrompt);
                         await this.downloadImage(imageUrl, imageFilePath);
                         gotImage = true;
                     }

@@ -1,5 +1,6 @@
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRanking.js";
+let havePrintedDebugPrompt = false;
 export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
     memory;
     defaultModelSize = PsAiModelSize.Medium;
@@ -56,28 +57,36 @@ export class FoundGoldPlatingRankingAgent extends PairwiseRankingAgent {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            this.createSystemMessage(`You are an AI expert trained to rank articles based on the severity and importance of identified gold-plating issues.
+            this.createSystemMessage(`You are an AI expert trained to rank articles based on how burdensome their "gold plating" is.
+         Gold plating refers to the practice of adding unnecessary or overly burdensome requirements to laws or regulations adopted from EU law.
 
         Instructions:
         1. You will receive two articles with identified gold-plating issues.
-        2. Your task is to analyze, compare, and rank these articles based on how the identified gold-plating issues add costs or stifle innovation for Icelandic companies and citizens, potentially harming their competitiveness. Focus on factors like additional regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
-        3. Output your decision as "One", "Two" or "Neither". Output nothing else. No explanation is required.
+        2. Your task is to analyze, compare, and rank these articles based on how the identified gold-plating issues add costs or stifle innovation for Icelandic companies and citizens, potentially harming their competitiveness.
+        4. Focus on factors like additional regulatory costs, increased administrative burdens, and restrictions that may hinder innovation or growth.
+        5. Output your decision as "One", "Two" or "Neither". Output nothing else. No explanation is required.
         `),
             this.createHumanMessage(`Gold-Plating Articles to Rank:
 
-        Article One:
-        Number: ${itemOne.number}
-        Text: ${itemOne.text}
-        ${itemOne.research?.supportTextExplanation ? `Support text explanation: ${itemOne.research?.supportTextExplanation}` : ''}
+        <ArticleOne>
+          Text: ${itemOne.research?.englishTranslationOfIcelandicArticle || itemOne.text}
+          Gold-plating found: ${itemOne.research?.description}
+          ${itemOne.research?.justification ? `Possible justification: ${itemOne.research?.justification}` : ''}
+        </ArticleOne>
 
-        Article Two:
-        Number: ${itemTwo.number}
-        Text: ${itemTwo.text}
-        ${itemTwo.research?.supportTextExplanation ? `Support text explanation: ${itemTwo.research?.supportTextExplanation}` : ''}
+        <ArticleTwo>
+          Text: ${itemTwo.research?.englishTranslationOfIcelandicArticle || itemTwo.text}
+          Gold-plating found: ${itemTwo.research?.description}
+          ${itemTwo.research?.justification ? `Possible justification: ${itemTwo.research?.justification}` : ''}
+        </ArticleTwo>
 
-        The Article with Burdensome Gold-Plating Is:
+        The Article number with more burdensome Gold-Plating Is:
         `),
         ];
+        if (!havePrintedDebugPrompt) {
+            this.logger.debug(`Prompting user to rank articles: ${JSON.stringify(messages, null, 2)}`);
+            havePrintedDebugPrompt = true;
+        }
         return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
 }

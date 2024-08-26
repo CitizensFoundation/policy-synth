@@ -6,6 +6,7 @@ let havePrintedFinalReivewSystemPrompt = false;
 let havePrintedGoldPlatingUserPrompt = false;
 let havePrintedGoldPlatingSystemPrompt = false;
 const alwaysSkipFullIcelandicLawOrRegulation = true;
+const skipFullDirectiveForMainGoldplatingAnalysis = true;
 const overrideArticleResults = false;
 export class GoldPlatingSearchAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
@@ -106,24 +107,25 @@ export class GoldPlatingSearchAgent extends PolicySynthAgent {
         }
     }
     async extractRelevantEuText(euLaw, type, articleToAnalyze, englishTranslationOfArticle) {
-        let systemPrompt = `You are an expert in EU directive. Your task is to extract the most relevant parts of the EU directive that could apply to the given national law article.
-    Focus on sections that directly relate to the content of the national law article.
-    Extract and output the unchanged EU directive text without any comments before or after your EU directive text extraction.
+        let systemPrompt = `You are an expert in EU directive. Your task is to extract the all relevant parts of the EU directive that could apply to the given national law article.
+    Focus on sections that relate to the content of the national law article.
+    Always include the article numbers in your extraction.
+    Extract and only output unchanged exctracted text from the <FullEuDirective>.
 
     <FullEuDirective>
     ${euLaw}
     </FullEuDirective>
 `;
         if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
-            systemPrompt = `<EuRelevantTextSystem>${systemPrompt}</EuRelevantTextSystem>`;
+            systemPrompt = `<EuRelevantText>${systemPrompt}</EuRelevantText>`;
         }
-        const userPrompt = `Given the <FullEuDirective> and the national law article below, please extract the most relevant parts of the EU directive that could apply to the <national_${type}_article> or it's English translation <translation_of_national_${type}_article>.
+        const userPrompt = `Given the <FullEuDirective> and the national law article below, please extract all relevant parts of the EU directive that could apply to the <national_${type}_article> or it's English translation <translation_of_national_${type}_article>.
 
 <national_${type}_article>${articleToAnalyze}</national_${type}_article>
 
 <translation_of_national_${type}_article>${englishTranslationOfArticle}</translation_of_national_${type}_article>
 
-Output the extracted relevant EU directive text without comments:`;
+Output the extracted relevant EU directive text without comments before or after:`;
         return (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, [
             this.createSystemMessage(systemPrompt),
             this.createHumanMessage(userPrompt),
@@ -134,9 +136,9 @@ Output the extracted relevant EU directive text without comments:`;
     The EU directive is provided for reference for your translation, try to use similar terminology and structure in your translation.
     Your task is to accurately translate the given text to English. Preserve the original meaning.
 
-    <EuLawForTerminlogyReference>${euLaw}</EuLawForTerminlogyReference>`;
+    <EuDirectiveForTerminlogyReference>${euLaw}</EuDirectiveForTerminlogyReference>`;
         if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
-            systemPrompt = `<TranslationTextSystem>${systemPrompt}</TranslationTextSystem>`;
+            systemPrompt = `<TranslationTextSystemPrompt>${systemPrompt}</TranslationTextSystemPrompt>`;
         }
         const userPrompt = `Please translate the following text to English:
 
@@ -153,8 +155,8 @@ Your English translation without any comments:`;
         "Expanding the scope of the directive beyond its original intent",
         "Not fully utilizing exemptions allowed in the directive",
         "Maintaining stricter national laws than what the directive requires",
-        "Imposing penalties that are not in line with good legislative practice",
-        "Implementing a directive earlier than the date specified in it",
+        // "Imposing penalties that are not in line with good legislative practice",
+        // "Implementing a directive earlier than the date specified in it",
     ];
     async analyzeGoldPlating(icelandicLawInput, euLaw, articleToAnalyze, type) {
         const translatedArticle = await this.translateToEnglish(euLaw, type, articleToAnalyze.text);
@@ -215,7 +217,7 @@ Your English translation without any comments:`;
             icelandicLaw = "";
         }
         for (const goldPlatingType of this.goldPlatingTypes) {
-            const systemMessage = this.createSystemMessage(this.getGoldPlatingSystemPrompt(goldPlatingType, type, icelandicLaw, euLaw));
+            const systemMessage = this.createSystemMessage(this.getGoldPlatingSystemPrompt(goldPlatingType, type, icelandicLaw, euLaw, relevantEuText));
             const userMessage = this.createHumanMessage(this.getGoldPlatingUserPrompt(icelandicLaw, euLaw, articleToAnalyze.text, type, relevantEuText, translatedArticle, goldPlatingType));
             if (promptDebugOutput && !havePrintedGoldPlatingUserPrompt) {
                 this.logger.debug(JSON.stringify(userMessage, null, 2));
@@ -230,21 +232,25 @@ Your English translation without any comments:`;
             goldPlatingAnalyses.push(result);
             this.logger.debug(`Gold plating analysis result: ${JSON.stringify(result, null, 2)}`);
         }
-        const finalResults = await this.performFinalAnalysis(icelandicLaw, euLaw, articleToAnalyze.text, type, translatedArticle, goldPlatingAnalyses);
+        const finalResults = await this.performFinalAnalysis(icelandicLaw, euLaw, articleToAnalyze.text, type, translatedArticle, goldPlatingAnalyses, relevantEuText);
         finalResults.euLawExtract = relevantEuText;
         finalResults.englishTranslationOfIcelandicArticle = translatedArticle;
         this.logger.debug(`Full gold plating analysis result: ${JSON.stringify(finalResults, null, 2)}`);
         return finalResults;
     }
-    async performFinalAnalysis(icelandicLaw, euLaw, articleToAnalyze, type, translatedArticle, goldPlatingAnalyses) {
+    async performFinalAnalysis(icelandicLaw, euLaw, articleToAnalyze, type, translatedArticle, goldPlatingAnalyses, euLawExtract) {
         // First, let's create the ResearchResults object from the goldPlatingAnalyses
         const researchResults = {
             detailedRules: goldPlatingAnalyses[0].goldPlatingIssueAnalysis,
             expandedScope: goldPlatingAnalyses[1].goldPlatingIssueAnalysis,
             exemptionsNotUtilized: goldPlatingAnalyses[2].goldPlatingIssueAnalysis,
             stricterNationalLaws: goldPlatingAnalyses[3].goldPlatingIssueAnalysis,
-            disproportionatePenalties: goldPlatingAnalyses[4].goldPlatingIssueAnalysis,
-            earlierImplementation: goldPlatingAnalyses[5].goldPlatingIssueAnalysis,
+            disproportionatePenalties: goldPlatingAnalyses[4]
+                ? goldPlatingAnalyses[4].goldPlatingIssueAnalysis
+                : "Not analyzed",
+            earlierImplementation: goldPlatingAnalyses[5]
+                ? goldPlatingAnalyses[5].goldPlatingIssueAnalysis
+                : "Not analyzed",
             conclusion: "",
             euDirectiveArticlesNumbers: goldPlatingAnalyses.flatMap((analysis) => analysis.goldPlatingForEuDirectiveArticlesNumbers),
             possibleReasons: goldPlatingAnalyses
@@ -255,7 +261,7 @@ Your English translation without any comments:`;
         };
         // Now, let's call the LLM to generate the final conclusion and reasons for gold plating
         const systemMessage = this.createSystemMessage(this.getFinalAnalysisSystemPrompt());
-        const userMessage = this.createHumanMessage(this.getFinalAnalysisUserPrompt(icelandicLaw, euLaw, articleToAnalyze, type, translatedArticle, goldPlatingAnalyses));
+        const userMessage = this.createHumanMessage(this.getFinalAnalysisUserPrompt(icelandicLaw, euLaw, articleToAnalyze, type, translatedArticle, goldPlatingAnalyses, euLawExtract));
         if (promptDebugOutput && !havePrintedFinalReivewSystemPrompt) {
             this.logger.debug(JSON.stringify(systemMessage, null, 2));
             havePrintedFinalReivewSystemPrompt = true;
@@ -268,41 +274,42 @@ Your English translation without any comments:`;
         return {
             analysis: researchResults,
             conclusion: finalAnalysis.conclusion,
-            reasonsForGoldPlating: finalAnalysis.reasonsForGoldPlating,
+            reasonsForGoldPlating: "",
             euLawExtract: undefined,
             englishTranslationOfIcelandicArticle: undefined,
         };
     }
     getFinalAnalysisSystemPrompt() {
         return `You are an expert legal analyst specializing in comparative law and regulations between Icelandic and EU legislation.
-  Your task is to provide a comprehensive conclusion and reasons for gold plating based on the individual analyses of six different types of gold plating.
+  Your task is to provide a conclusion for gold plating based on the individual analyses of six different types of gold plating.
 
   Your analysis should:
-  1. Provide an overall conclusion on whether gold plating was found and to what extent, make sure to output the conclusion as a JSON string in the format below.
-  2. If gold plating was found, explain the possible reasons and potential implications.
+  1. Provide an overall conclusion on whether gold plating was found in the previous individual analyses and to what extent
 
   Present your analysis in the following JSON format without any comments before or after:
 
+   \`\`\`json
   {
     "conclusion": string;
-    "reasonsForGoldPlating": string;
   }
-
-  Be thorough in your analysis and provide specific examples to support your conclusions.
-  If you're unsure about any aspect, state your uncertainty clearly.`;
+  \`\`\`
+`;
     }
-    getFinalAnalysisUserPrompt(icelandicLaw, euLaw, articleToAnalyze, type, translatedArticle, goldPlatingAnalyses) {
-        return `Here is the Icelandic ${type} that was analyzed:
-
-  <the_full_icelandic_${type}>
+    getFinalAnalysisUserPrompt(icelandicLaw, euLaw, articleToAnalyze, type, translatedArticle, goldPlatingAnalyses, euLawExtract) {
+        const showIcelandicLaw = false;
+        return `${showIcelandicLaw
+            ? `Here is the Icelandic ${type} that was analyzed:<the_full_icelandic_${type}>
   ${icelandicLaw}
-  </the_full_icelandic_${type}>
+  </the_full_icelandic_${type}>`
+            : ""}
 
-  Here is the corresponding EU directive:
-
-  <the_full_eu_directive>
+  ${euLawExtract
+            ? `<keyTextFromEuDirective> ${euLawExtract} </keyTextFromEuDirective>`
+            : `
+      <the_full_eu_directive>
   ${euLaw}
   </the_full_eu_directive>
+    `}
 
   <icelandic_${type}_article_analysed>
   ${articleToAnalyze}
@@ -332,8 +339,8 @@ Your English translation without any comments:`;
                 expandedScope: result.analysis.expandedScope,
                 exemptionsNotUtilized: result.analysis.exemptionsNotUtilized,
                 stricterNationalLaws: result.analysis.stricterNationalLaws,
-                disproportionatePenalties: result.analysis.disproportionatePenalties,
-                earlierImplementation: result.analysis.earlierImplementation,
+                disproportionatePenalties: result.analysis.disproportionatePenalties || "Not analyzed",
+                earlierImplementation: result.analysis.earlierImplementation || "Not analyzed",
                 conclusion: result.conclusion,
                 euDirectiveArticlesNumbers: result.analysis.euDirectiveArticlesNumbers,
                 possibleReasons: result.analysis.possibleReasons,
@@ -353,13 +360,14 @@ Your English translation without any comments:`;
             "Imposing penalties that are not in line with good legislative practice": "Gold plating is often seen when sanctions or penalties are more severe than what is required to ensure compliance with the directive. For instance, a directive may suggest administrative fines as a deterrent, but Iceland could choose to impose criminal sanctions or substantially higher fines than necessary. Additionally, implementing enforcement measures that exceed the directive's requirements may be seen as disproportionate, particularly when the original intent of the directive was to offer flexibility to member states.",
             "Implementing a directive earlier than the date specified in it": "While EU directives typically include a set deadline by which member states must comply, gold plating occurs when Iceland chooses to implement the requirements of the directive before the specified deadline. Early implementation might be intended to show proactive compliance or to align with national strategies, but it can impose unnecessary pressure on industries and stakeholders who need time to adapt. It also creates a competitive disadvantage compared to other jurisdictions that might take the full allotted time to implement the directive, thereby benefiting from more gradual adjustments.",
         };
-        return `Goldplating type:
+        return `Goldplating type to look for:
   ${goldPlatingType}
 
-  Description:
+  Gold Plating type to look for description:
   ${goldPlatingDescriptions[goldPlatingType]}`;
     }
-    getGoldPlatingSystemPrompt(goldPlatingType, type, icelandicFullLaw, euLaw) {
+    getGoldPlatingSystemPrompt(goldPlatingType, type, icelandicFullLaw, euLaw, euLawExtract) {
+        const showFullEuDirective = !skipFullDirectiveForMainGoldplatingAnalysis || !euLawExtract;
         let systemPrompt = `You are an expert legal analyst specializing in comparative law and regulations between Icelandic and EU legislation.
     Your task is to analyze whether the provided Icelandic ${type} implementing EU directive exhibits any signs of gold plating.`;
         if (!process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
@@ -381,20 +389,29 @@ Your English translation without any comments:`;
   - Your task is to carefully analyze the Icelandic ${type} article in comparison to the EU directive and determine if there are any instances of gold plating for this gold plating type.
   - You are being provided with one article at the time from the Icelandic ${type}, keep that in mind and only focus on that one ${type} article in your gold plating analysis.
   `}
-- You might also have key text from the EU directive to focus on, use that also but also look at the big picture from the full eu directive.
+ ${euLawExtract
+            ? `- You will have key text from the EU directive in <keyTextFromEuDirectiveToCompareToIcelandicLaw> to focus on ${showFullEuDirective ? `but also look at the full EuDirective` : ``}`
+            : ``}
+ ${!euLawExtract
+            ? `- You will have the full EU directive to compare to the Icelandic ${type} article`
+            : ""}
 - Review the <icelandic_${type}_article_to_analyse> provided, focusing on the provided type of gold plating.
-- If you find an instance of gold plating, note the specific section of the <icelandic_${type}_article_to_analyse> where it occurs and explain how it differs from the EU directive.
+- If you find an instance of gold plating explain how it differs from the EU directive.
 - If you do not find any instances of gold plating for a particular aspect, just output no gold plating was found.
-
-  Let's think step by step. First, start by outlining your reasoning in identifing the gold plating, then output in this JSON markdown format and copy your reasoning into the analysis field:
   `;
-        const outputFormat = `Output in this format:
+        const outputFormat = `Output in this format without any explainations before or after:
 
-  <Step by Step Reasoning for Gold Plating Analysis/>
+  <ReasoningStepsNeededForGoldPlatingAnalysis>
+    ...
+  </ReasoningStepsNeededForGoldPlatingAnalysis>
+
+  <YourActualReasoningInAnalyzingIfThereIsGoldPlating>
+    ...
+  </YourActualReasoningInAnalyzingIfThereIsGoldPlating>
 
   \`\`\`json
   {
-    "goldPlatingIssueAnalysis": "Your full reasoning here if gold plating is found, if no gold plating was found just output: no gold plating was found",
+    "goldPlatingIssueAnalysis": string;
     "goldPlatingWasFound": boolean;
     "goldPlatingForEuDirectiveArticlesNumbers": ["Article X", "Article Y"],
     "goldPlatingPossibleReasons": "Provide reasons for gold plating if found, otherwise leave empty"
@@ -402,7 +419,9 @@ Your English translation without any comments:`;
   \`\`\`
   `;
         if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
-            systemPrompt = `<GoldPlatingSystem${type}>${this.renderEuAndIcelandicLaws(euLaw, icelandicFullLaw)}\n${outputFormat}\n</GoldPlatingSystem${type}>`;
+            systemPrompt = `<GoldPlatingSystemPromptFor${type}>${systemPrompt} ${!skipFullDirectiveForMainGoldplatingAnalysis || !euLawExtract
+                ? this.renderEuAndIcelandicLaws(euLaw, icelandicFullLaw)
+                : ""}\n${outputFormat}\n</GoldPlatingSystemPromptFor${type}>`;
         }
         else {
             systemPrompt += `\n\n${outputFormat}`;
@@ -434,9 +453,9 @@ Your English translation without any comments:`;
             finalPrompt += this.renderGoldPlatingType(goldplatingType);
         }
         finalPrompt += `${relevantEuText
-            ? `<keyTextFromEuLawToCompareToIcelandicLaw>
+            ? `<keyTextFromEuDirectiveToCompareToIcelandicLaw>
 ${relevantEuText}
-</keyTextFromEuLawToCompareToIcelandicLaw>`
+</keyTextFromEuDirectiveToCompareToIcelandicLaw>`
             : ``}
 
 <icelandic_${type}_article_to_analyse>
@@ -447,7 +466,7 @@ ${articleToAnalyze}
 ${translatedArticle}
 </english_translation_of_${type}_article_to_analyze>
 
-Your analysis of the <icelandic_${type}_article_to_analyse> in JSON format:`;
+Your analysis of the <icelandic_${type}_article_to_analyse> in JSON format without explainations:`;
         return finalPrompt;
     }
 }
