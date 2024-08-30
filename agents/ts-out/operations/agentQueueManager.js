@@ -10,7 +10,7 @@ export class AgentQueueManager {
         this.queues = new Map();
     }
     initializeRedis() {
-        let redisUrl = process.env.REDIS_AGENT_URL || "redis://localhost:6379";
+        let redisUrl = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379";
         // Handle the 'redis://h:' case
         if (redisUrl.startsWith("redis://h:")) {
             redisUrl = redisUrl.replace("redis://h:", "redis://:");

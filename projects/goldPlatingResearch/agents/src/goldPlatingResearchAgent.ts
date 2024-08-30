@@ -15,10 +15,10 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { JustifyGoldPlatingAgent } from "./research/justifyGoldPlating.js";
 
 const disableScanning = false;
-const skipFullTextProcessing = false;
-const skipArticleExtraction = false;
+const skipFullTextProcessing = true;
+const skipArticleExtraction = true;
 const skipSupportTextReview = false;
-const skipMainReview = false;
+const skipMainReview = true;
 const skipJustification = false;
 const skipEloRating = false;
 const skipGoogleDocsExport = true;
@@ -191,12 +191,14 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
             );*/
         }
 
-        if (!skipArticleExtraction) {
+        if (true || !skipArticleExtraction) {
           researchItem.nationalLaw.supportArticleText.articles =
           await articleExtractionAgent.processItem(
             researchItem.nationalLaw.supportArticleText.fullText,
             "lawSupportArticle",
-            researchItem.lastLawArticleNumber || 109
+            researchItem.lastLawArticleNumber || 54,
+            undefined,
+            researchItem.nationalLaw.supportArticleText.url
           );
 
           await this.saveMemory();

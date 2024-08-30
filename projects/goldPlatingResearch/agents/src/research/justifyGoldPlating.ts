@@ -63,7 +63,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             article,
             researchItem.euDirective.fullText,
             article.research.englishTranslationOfIcelandicArticle!,
-            article.research.euLawExtract || "",
+            article.research.euLawExtract,
             "law"
           );
         } else {
@@ -77,7 +77,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
             article,
             researchItem.euDirective.fullText,
             article.research.englishTranslationOfIcelandicArticle!,
-            article.research.euLawExtract || "",
+            article.research.euLawExtract,
             "law"
           );
           if (secondCheck.justifiedGoldPlating) {
@@ -90,8 +90,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
               "No justification found for gold-plating";
           }
         } else if (justification) {
-          article.research.likelyJustified =
-            justification.justifiedGoldPlating;
+          article.research.likelyJustified = justification.justifiedGoldPlating;
           article.research.justification =
             justification.justificationForGoldPlating;
         }
@@ -146,7 +145,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
               article,
               researchItem.euDirective.fullText,
               article.research.englishTranslationOfIcelandicArticle!,
-              article.research.euLawExtract || "",
+              article.research.euLawExtract,
               "regulation"
             );
 
@@ -182,7 +181,7 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     article: LawArticle | RegulationArticle,
     euDirectiveFullText: string,
     englishTranslation: string,
-    euLawExtract: string,
+    euLawExtract: string | undefined,
     type: "law" | "regulation",
     allSupportText?: string
   ): Promise<{
@@ -224,14 +223,17 @@ export class JustifyGoldPlatingAgent extends PolicySynthAgent {
     article: LawArticle | RegulationArticle,
     euDirectiveFullText: string,
     englishTranslation: string,
-    euLawExtract: string,
+    euLawExtract: string | undefined,
     type: "law" | "regulation"
   ): Promise<{
     justificationForGoldPlating: string;
     justifiedGoldPlating: boolean;
   }> {
     const systemMessage = this.createSystemMessage(
-      this.getEURegulationMinimumsSystemPrompt(euDirectiveFullText)
+      this.getEURegulationMinimumsSystemPrompt(
+        euDirectiveFullText,
+        euLawExtract
+      )
     );
 
     const userMessage = this.createHumanMessage(
@@ -304,7 +306,7 @@ Provide your analysis in JSON format with two fields:
   private getJustificationAnalysisUserPrompt(
     article: LawArticle | RegulationArticle,
     englishTranslation: string,
-    euLawExtract: string,
+    euLawExtract: string | undefined,
     type: "law" | "regulation"
   ): string {
     return `Article with possible justifiable gold-plating:
@@ -313,9 +315,13 @@ Type: ${type}
 
 <ArticleText>${article.text}</ArticleText>
 
-<RelevantEUDirectiveExtract>
+${
+  euLawExtract
+    ? `<RelevantEUDirectiveExtract>
 ${euLawExtract}
-</RelevantEUDirectiveExtract>
+</RelevantEUDirectiveExtract>`
+    : ``
+}
 
 <ArticleEnglishTranslation>${englishTranslation}</ArticleEnglishTranslation>
 
@@ -334,7 +340,8 @@ Let's think step by step. First, start by outlining your reasoning in analysing 
   }
 
   private getEURegulationMinimumsSystemPrompt(
-    euDirectiveFullText: string
+    euDirectiveFullText: string,
+    euLawExtract: string | undefined
   ): string {
     const skipFullEuDirective = true;
     return `<EURegulationMinimumsSystem>
@@ -347,7 +354,7 @@ Consider the following:
 3. Only set justifiedGoldPlating to true if the gold-plating is justified and necessary.
 
 ${
-  !skipFullEuDirective
+  !skipFullEuDirective || !euLawExtract
     ? `<FullEuDirective>
 ${euDirectiveFullText}
 </FullEuDirective>`
@@ -367,7 +374,7 @@ Let's think step by step. First, start by outlining your reasoning in analysing 
   private getEURegulationMinimumsUserPrompt(
     article: LawArticle | RegulationArticle,
     englishTranslation: string,
-    euLawExtract: string,
+    euLawExtract: string | undefined,
     type: "law" | "regulation"
   ): string {
     return `Article with potential gold-plating:
@@ -376,9 +383,13 @@ Type: ${type}
 
 <ArticleText>${article.text}</ArticleText>
 
-<RelevantEUDirectiveExtract>
+${
+  euLawExtract
+    ? `<RelevantEUDirectiveExtract>
 ${euLawExtract}
-</RelevantEUDirectiveExtract>
+</RelevantEUDirectiveExtract>`
+    : ``
+}
 
 <ArticleEnglishTranslation>${englishTranslation}</ArticleEnglishTranslation>
 

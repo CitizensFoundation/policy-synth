@@ -1,6 +1,8 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 import { IcelandicLawXmlAgent } from "./icelandicLaw.js";
+import { JSDOM } from 'jsdom';
+import fetch from "node-fetch";
 export class ArticleExtractionAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
     maxModelTokensOut = 15192;
@@ -10,13 +12,16 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
     }
-    async processItem(text, type, lastArticleNumber, xmlUrl) {
+    async processItem(text, type, lastArticleNumber, xmlUrl, lawArticleUrl) {
         await this.updateRangedProgress(0, `Starting article extraction for ${type}`);
         try {
             let validatedArticles;
             if (type == "law" && xmlUrl && xmlUrl.endsWith(".xml")) {
                 const icelandicLawXmlAgent = new IcelandicLawXmlAgent(this.agent, this.memory, 0, 20);
                 validatedArticles = await icelandicLawXmlAgent.processItem(xmlUrl);
+            }
+            else if (type == "lawSupportArticle") {
+                validatedArticles = await this.extractLawSupportArticles(lawArticleUrl);
             }
             else {
                 this.logger.debug(`lastLawArticleNumber ${lastArticleNumber}`);
@@ -86,6 +91,39 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
         }
         else {
             throw new Error(`Invalid type: ${type}`);
+        }
+    }
+    async extractLawSupportArticles(url) {
+        try {
+            this.logger.info(`----> Fetching law support articles from ${url}`);
+            // Fetch the HTML content from the URL
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const html = await response.text();
+            this.logger.debug(`Fetched HTML from ${url} First 100 chars: ${html.slice(0, 100)}`);
+            const articles = [];
+            const articleRegex = /-->Um (\d+)\. gr\.([\s\S]*?)(?=-->Um \d+\. gr\.|-->Um ákvæði|$)/g;
+            let match;
+            while ((match = articleRegex.exec(html)) !== null) {
+                const articleNumber = parseInt(match[1]);
+                const articleHtmlContent = match[2].trim();
+                // Extract text content from the HTML snippet
+                const dom = new JSDOM(articleHtmlContent);
+                const textContent = dom.window.document.body.textContent || "";
+                this.logger.debug(`\n\n\nExtracted article ${articleNumber} from HTML content:\n${articleHtmlContent}\n\n${textContent}`);
+                articles.push({
+                    number: articleNumber,
+                    text: textContent.trim(),
+                    description: ""
+                });
+            }
+            return articles;
+        }
+        catch (error) {
+            this.logger.error(`Error fetching or parsing HTML from ${url}: ${error}`);
+            throw error;
         }
     }
     async extractArticles(text, type, lastArticleNumber) {

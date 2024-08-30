@@ -5,6 +5,8 @@ import {
   PsAiModelSize,
 } from "@policysynth/agents/aiModelTypes.js";
 import { IcelandicLawXmlAgent } from "./icelandicLaw.js";
+import { JSDOM } from 'jsdom';
+import fetch from "node-fetch";
 
 export class ArticleExtractionAgent extends PolicySynthAgent {
   declare memory: GoldPlatingMemoryData;
@@ -29,7 +31,8 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
     text: string,
     type: "law" | "regulation" | "lawSupportArticle",
     lastArticleNumber?: number,
-    xmlUrl?: string
+    xmlUrl?: string,
+    lawArticleUrl?: string
   ): Promise<LawArticle[] | RegulationArticle[]> {
     await this.updateRangedProgress(
       0,
@@ -46,6 +49,8 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
           20
         );
         validatedArticles = await icelandicLawXmlAgent.processItem(xmlUrl);
+      } else if (type == "lawSupportArticle") {
+        validatedArticles = await this.extractLawSupportArticles(lawArticleUrl!);
       } else {
 
         this.logger.debug(`lastLawArticleNumber ${lastArticleNumber}`);
@@ -142,6 +147,47 @@ export class ArticleExtractionAgent extends PolicySynthAgent {
       return `Um ${articleNumber}. gr.`;
     } else {
       throw new Error(`Invalid type: ${type}`);
+    }
+  }
+
+  private async extractLawSupportArticles(url: string): Promise<LawArticle[]> {
+    try {
+      this.logger.info(`----> Fetching law support articles from ${url}`);
+      // Fetch the HTML content from the URL
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const html = await response.text();
+
+      this.logger.debug(`Fetched HTML from ${url} First 100 chars: ${html.slice(0, 100)}`);
+
+      const articles: LawArticle[] = [];
+      const articleRegex = /-->Um (\d+)\. gr\.([\s\S]*?)(?=-->Um \d+\. gr\.|-->Um ákvæði|$)/g;
+
+      let match;
+      while ((match = articleRegex.exec(html)) !== null) {
+        const articleNumber = parseInt(match[1]);
+        const articleHtmlContent = match[2].trim();
+
+        // Extract text content from the HTML snippet
+        const dom = new JSDOM(articleHtmlContent);
+        const textContent = dom.window.document.body.textContent || "";
+
+        this.logger.debug(`\n\n\nExtracted article ${articleNumber} from HTML content:\n${articleHtmlContent}\n\n${textContent}`);
+
+        articles.push({
+          number: articleNumber,
+          text: textContent.trim(),
+          description: ""
+        });
+      }
+
+      return articles;
+    } catch (error) {
+      this.logger.error(`Error fetching or parsing HTML from ${url}: ${error}`);
+      throw error;
     }
   }
 

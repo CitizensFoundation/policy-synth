@@ -9,7 +9,7 @@ import tiktoken from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
 
 const redis = new ioredis(
-  process.env.REDIS_AGENT_URL || "redis://localhost:6379"
+  process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379"
 );
 
 export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {

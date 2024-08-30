@@ -12,7 +12,7 @@ export class PsProgressTracker extends PolicySynthAgentBase {
     redisStatusKey: string,
     startProgress: number,
     endProgress: number,
-    redisUrl: string = process.env.REDIS_AGENT_URL || "redis://localhost:6379"
+    redisUrl: string = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379"
   ) {
     super();
     this.redis = new Redis(redisUrl);

@@ -25,7 +25,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
   }
 
   initializeRedis() {
-    let redisUrl = process.env.REDIS_AGENT_URL || "redis://localhost:6379";
+    let redisUrl = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379";
 
     // Handle the 'redis://h:' case
     if (redisUrl.startsWith("redis://h:")) {

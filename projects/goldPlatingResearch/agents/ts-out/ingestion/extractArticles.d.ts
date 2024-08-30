@@ -9,9 +9,10 @@ export declare class ArticleExtractionAgent extends PolicySynthAgent {
     maxExtractionRetries: number;
     maxValidationRetries: number;
     constructor(agent: PsAgent, memory: GoldPlatingMemoryData, startProgress: number, endProgress: number);
-    processItem(text: string, type: "law" | "regulation" | "lawSupportArticle", lastArticleNumber?: number, xmlUrl?: string): Promise<LawArticle[] | RegulationArticle[]>;
+    processItem(text: string, type: "law" | "regulation" | "lawSupportArticle", lastArticleNumber?: number, xmlUrl?: string, lawArticleUrl?: string): Promise<LawArticle[] | RegulationArticle[]>;
     private getLastArticleNumber;
     getArticleTextNumber(type: "law" | "regulation" | "lawSupportArticle", articleNumber: number): string;
+    private extractLawSupportArticles;
     private extractArticles;
     private extractSingleArticle;
     private callExtractionModel;

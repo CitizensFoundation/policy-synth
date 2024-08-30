@@ -162,7 +162,7 @@ Your English translation without any comments:`;
         const translatedArticle = await this.translateToEnglish(euLaw, type, articleToAnalyze.text);
         this.logger.debug(`Translated article: ${translatedArticle}`);
         const relevantEuText = await this.extractRelevantEuText(euLaw, type, articleToAnalyze.text, translatedArticle);
-        this.logger.debug(`Relevant EU text: ${relevantEuText}`);
+        this.logger.debug(`------------> Relevant EU text: ${relevantEuText}`);
         let icelandicLaw;
         if (typeof icelandicLawInput === "string") {
             icelandicLaw = icelandicLawInput;
@@ -429,6 +429,7 @@ Your English translation without any comments:`;
         return systemPrompt;
     }
     renderEuAndIcelandicLaws(euLaw, icelandicLaw) {
+        this.logger.debug(`Rendering EU ${icelandicLaw ? 'and Icelandic' : ''} laws`);
         return `${!icelandicLaw
             ? ``
             : `Now, here is the Icelandic law to be analyzed:

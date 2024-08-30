@@ -310,7 +310,7 @@ Your English translation without any comments:`;
       translatedArticle
     );
 
-    this.logger.debug(`Relevant EU text: ${relevantEuText}`);
+    this.logger.debug(`------------> Relevant EU text: ${relevantEuText}`);
 
     let icelandicLaw: string;
     if (typeof icelandicLawInput === "string") {
@@ -744,6 +744,7 @@ Your English translation without any comments:`;
   }
 
   renderEuAndIcelandicLaws(euLaw: string, icelandicLaw: string) {
+    this.logger.debug(`Rendering EU ${icelandicLaw ? 'and Icelandic' : ''} laws`);
     return `${
       !icelandicLaw
         ? ``
