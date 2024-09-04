@@ -5,6 +5,7 @@ interface BaseArticle {
   source?: string;
   eloRating?: number;
   research?: GoldPlatingResearch;
+  researchNationalLanguageTranslation?: GoldPlatingResearch;
 }
 
 

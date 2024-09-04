@@ -9,13 +9,15 @@ import { GoogleDocsReportAgent } from "./reporting/docReport.js";
 import { XlsReportAgent } from "./reporting/sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { JustifyGoldPlatingAgent } from "./research/justifyGoldPlating.js";
-const disableScanning = false;
+import { NationalLanguageTranslationAgent } from "./research/nationalLanguageTranslator.js";
+const disableScanning = true;
 const skipFullTextProcessing = true;
 const skipArticleExtraction = true;
-const skipSupportTextReview = false;
+const skipSupportTextReview = true;
 const skipMainReview = true;
-const skipJustification = false;
-const skipEloRating = false;
+const skipJustification = true;
+const skipEloRating = true;
+const skipTranslation = false;
 const skipGoogleDocsExport = true;
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
     static GOLDPLATING_AGENT_CLASS_BASE_ID = "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
@@ -78,6 +80,11 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
         if (!skipGoogleDocsExport) {
             await googleDocsReportAgent.processItem(researchItem);
         }
+        if (!skipTranslation) {
+            const translationAgent = new NationalLanguageTranslationAgent(this.agent, this.memory, 80, 90);
+            await translationAgent.processItem(researchItem);
+            await this.saveMemory();
+        }
         const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
         await xlsReportAgent.processItem(researchItem);
         await this.saveMemory();
@@ -98,7 +105,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
                         researchItem.nationalLaw.supportArticleText.fullText
                       );*/
                 }
-                if (true || !skipArticleExtraction) {
+                if (!skipArticleExtraction) {
                     researchItem.nationalLaw.supportArticleText.articles =
                         await articleExtractionAgent.processItem(researchItem.nationalLaw.supportArticleText.fullText, "lawSupportArticle", researchItem.lastLawArticleNumber || 54, undefined, researchItem.nationalLaw.supportArticleText.url);
                     await this.saveMemory();

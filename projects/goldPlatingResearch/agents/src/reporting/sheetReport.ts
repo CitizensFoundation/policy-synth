@@ -106,11 +106,11 @@ export class XlsReportAgent extends PolicySynthAgent {
 
     const allData = [
       ...summarySheet,
-      [], // Empty row for separation
-      ["Not justified gold-plating"],
+      [], // Tóm röð til að aðgreina
+      ["Gullhúðun án réttlætingar"],
       ...notJustifiedGoldPlatingRows,
-      [], // Empty row for separation
-      ["Likely Justified gold-plating"],
+      [], // Tóm röð til að aðgreina
+      ["Líklega réttlætanleg gullhúðun"],
       ...justifiedGoldPlatingRows,
     ];
 
@@ -136,20 +136,20 @@ export class XlsReportAgent extends PolicySynthAgent {
       [
         "",
         "",
-        "Total instances of potential gold-plating:",
+        "Heildarfjöldi dæma um gullhúðun án réttlætingar:",
         rankedArticles.length.toString(),
       ],
       [""],
       ["Topp 5 dæmi:"],
-      ["Rank", "Source", "Article Number", "ELO Rating", "Description", "Url"],
+      ["Röð", "Heimild", "Greinanúmer", "ELO mat", "Lýsing", "Vefslóð"],
       ...rankedArticles
         .slice(0, 5)
         .map((article, index) => [
           (index + 1).toString(),
-          article.source!,
+          this.translateSource(article.source!),
           article.number.toString(),
           (article.eloRating || 0).toString(),
-          article.research?.description || "N/A",
+          article.researchNationalLanguageTranslation?.description || "N/A",
           article.research?.url || "N/A",
         ]),
     ];
@@ -170,51 +170,71 @@ export class XlsReportAgent extends PolicySynthAgent {
     rankedArticles: LawArticle[]
   ): string[][] {
     const headers = [
-      "Rank",
-      "Source",
-      "Article Number",
-      "ELO Rating",
-      "Text",
-      "Description",
-      "Url",
-      "Justification",
-      "EU Directive Article Numbers",
-      "Possible Reason",
-      "Detailed Rules",
-      "Expanded Scope",
-      "Exemptions Not Utilized",
-      "Stricter National Laws",
-      "Disproportionate Penalties",
-      "Earlier Implementation",
-      "Possible Reasons",
-      "Possible Explanation (frá greinargerð)",
-      "EU Directive Relevant Extract",
-      "English Article Translation",
+      "Röð",
+      "Tegund",
+      "Greinanúmer",
+      "ELO mat",
+      "Texti",
+      "Lýsing",
+      "Vefslóð",
+      "Réttlæting",
+      "Töluliðir úr tilskipun ESB",
+      "Möguleg ástæða",
+      "Nánari reglur",
+      "Víkkun á gildissviði",
+      "Úrlausnir sem ekki voru nýttar",
+      "Strangari landslög",
+      "Óhóflegar refsingar",
+      "Fyrri innleiðing",
+      "Mögulegar ástæður",
+      "Möguleg skýring (frá greinargerð)",
+      "Viðeigandi úrdráttur úr tilskipun ESB",
+      "Ensk þýðing á grein",
     ];
 
     const rows = rankedArticles.map((article, index) => [
       (index + 1).toString(),
-      article.source!,
+      this.translateSource(article.source!),
       article.number.toString(),
       (article.eloRating || 0).toString(),
       article.text,
-      article.research?.description || "N/A",
+      article.researchNationalLanguageTranslation?.description || "N/A",
       article.research?.url || "N/A",
-      article.research?.justification || "N/A",
+      article.researchNationalLanguageTranslation?.justification || "N/A",
       article.research?.results.euDirectiveArticlesNumbers?.join(", ") || "N/A",
-      article.research?.results.possibleReasons || "N/A",
-      article.research?.results.detailedRules || "N/A",
-      article.research?.results.expandedScope || "N/A",
-      article.research?.results.exemptionsNotUtilized || "N/A",
-      article.research?.results.stricterNationalLaws || "N/A",
-      article.research?.results.disproportionatePenalties || "N/A",
-      article.research?.results.earlierImplementation || "N/A",
-      article.research?.results.possibleReasons || "N/A",
-      article.research?.supportTextExplanation || "N/A",
+      article.researchNationalLanguageTranslation?.results.possibleReasons ||
+        "N/A",
+      article.researchNationalLanguageTranslation?.results.detailedRules ||
+        "N/A",
+      article.researchNationalLanguageTranslation?.results.expandedScope ||
+        "N/A",
+      article.researchNationalLanguageTranslation?.results
+        .exemptionsNotUtilized || "N/A",
+      article.researchNationalLanguageTranslation?.results
+        .stricterNationalLaws || "N/A",
+      article.researchNationalLanguageTranslation?.results
+        .disproportionatePenalties || "N/A",
+      article.researchNationalLanguageTranslation?.results
+        .earlierImplementation || "N/A",
+      article.researchNationalLanguageTranslation?.results.possibleReasons ||
+        "N/A",
+      article.researchNationalLanguageTranslation?.supportTextExplanation ||
+        "N/A",
       article.research?.euLawExtract || "N/A",
       article.research?.englishTranslationOfIcelandicArticle || "N/A",
     ]);
 
-    return [["Detailed Findings"], headers, ...rows];
+    return [[""], headers, ...rows];
+  }
+
+  private translateSource(source: string): string {
+    switch (source) {
+      case "law":
+        return "lög";
+      case "regulation":
+        return "reglugerð";
+      default:
+        return source;
+    }
   }
 }

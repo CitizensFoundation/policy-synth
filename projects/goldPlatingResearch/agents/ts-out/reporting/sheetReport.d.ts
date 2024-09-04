@@ -10,5 +10,6 @@ export declare class XlsReportAgent extends PolicySynthAgent {
     private generateSummarySheet;
     private sanitizeData;
     private generateDetailedFindingsSheet;
+    private translateSource;
 }
 //# sourceMappingURL=sheetReport.d.ts.map

@@ -13,14 +13,16 @@ import { GoogleDocsReportAgent } from "./reporting/docReport.js";
 import { XlsReportAgent } from "./reporting/sheetReport.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { JustifyGoldPlatingAgent } from "./research/justifyGoldPlating.js";
+import { NationalLanguageTranslationAgent } from "./research/nationalLanguageTranslator.js";
 
-const disableScanning = false;
+const disableScanning = true;
 const skipFullTextProcessing = true;
 const skipArticleExtraction = true;
-const skipSupportTextReview = false;
+const skipSupportTextReview = true;
 const skipMainReview = true;
-const skipJustification = false;
-const skipEloRating = false;
+const skipJustification = true;
+const skipEloRating = true;
+const skipTranslation = false;
 const skipGoogleDocsExport = true;
 
 export class GoldPlatingResearchAgent extends PolicySynthAgent {
@@ -149,6 +151,21 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
       await googleDocsReportAgent.processItem(researchItem);
     }
 
+    if (!skipTranslation) {
+
+      const translationAgent = new NationalLanguageTranslationAgent(
+        this.agent,
+        this.memory,
+        80,
+        90
+      );
+
+      await translationAgent.processItem(researchItem);
+
+      await this.saveMemory();
+    }
+
+
     const xlsReportAgent = new XlsReportAgent(this.agent, this.memory, 90, 100);
     await xlsReportAgent.processItem(researchItem);
     await this.saveMemory();
@@ -191,7 +208,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
             );*/
         }
 
-        if (true || !skipArticleExtraction) {
+        if (!skipArticleExtraction) {
           researchItem.nationalLaw.supportArticleText.articles =
           await articleExtractionAgent.processItem(
             researchItem.nationalLaw.supportArticleText.fullText,
