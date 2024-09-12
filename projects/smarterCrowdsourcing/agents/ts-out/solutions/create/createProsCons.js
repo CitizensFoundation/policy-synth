@@ -99,7 +99,8 @@ export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
                                 gotFullPoints = true;
                                 this.logger.debug(`${prosOrCons}: ${JSON.stringify(results, null, 2)}`);
                                 solution[prosOrCons] = results;
-                                await this.saveMemory();
+                                this.scheduleMemorySave();
+                                this.checkLastMemorySaveError();
                             }
                             else {
                                 retries++;

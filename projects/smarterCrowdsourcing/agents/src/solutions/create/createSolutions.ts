@@ -324,7 +324,8 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
         solutions
       );
 
-      await this.saveMemory();
+      this.scheduleMemorySave();
+      this.checkLastMemorySaveError();
       this.logger.debug(`Saved memory for sub problem ${subProblemIndex}`);
     }
   }

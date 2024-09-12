@@ -177,7 +177,8 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
                 };
             }
             this.memory.subProblems[subProblemIndex].solutions.populations.push(solutions);
-            await this.saveMemory();
+            this.scheduleMemorySave();
+            this.checkLastMemorySaveError();
             this.logger.debug(`Saved memory for sub problem ${subProblemIndex}`);
         }
     }

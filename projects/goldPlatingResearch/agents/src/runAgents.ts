@@ -23,9 +23,7 @@ export class GoldPlatingAgentRunner extends PsBaseAgentRunner {
 
     this.connectorClasses = [
       PsGoogleDocsConnector.getConnectorClass,
-      PsGoogleSheetsConnector.getConnectorClass,
-      PsYourPrioritiesConnector.getConnectorClass,
-      PsBaseDiscordConnector.getConnectorClass,
+      PsGoogleSheetsConnector.getConnectorClass
     ];
   }
 

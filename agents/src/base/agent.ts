@@ -242,7 +242,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
             this.memorySaveTimer = null;
           }
         }
-      }, 1000);
+      }, 15000);
     }
   }
 

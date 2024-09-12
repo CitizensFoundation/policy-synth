@@ -31,6 +31,7 @@ export class GoldPlatingResearchAgent extends PolicySynthAgent {
   private static readonly GOLDPLATING_AGENT_CLASS_BASE_ID =
     "a05a9cd8-4d4e-4b30-9a28-613a5f09402e";
   private static readonly GOLDPLATING_AGENT_CLASS_VERSION = 3;
+
   constructor(
     agent: PsAgent,
     memory: GoldPlatingMemoryData,

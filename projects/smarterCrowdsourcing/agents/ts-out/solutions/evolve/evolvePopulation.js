@@ -355,7 +355,8 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
         this.logger.info(`New population size: ${newPopulation.length} for sub problem ${subProblemIndex}`);
         this.memory.subProblems[subProblemIndex].solutions.populations.push(newPopulation);
         this.logger.debug(`Current number of generations after push: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`);
-        await this.saveMemory();
+        this.scheduleMemorySave();
+        this.checkLastMemorySaveError();
     }
     async evolvePopulation() {
         const subProblemPromises = [];

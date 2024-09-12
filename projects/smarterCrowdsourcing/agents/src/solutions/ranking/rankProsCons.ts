@@ -172,7 +172,8 @@ export class RankProsConsAgent extends BaseSmarterCrowdsourcingPairwiseAgent {
         this.logger.info(`Finished ranking ${prosOrCons} for solution ${solutionIndex} for sub problem ${subProblemIndex}`)
       }
 
-      await this.saveMemory();
+      this.scheduleMemorySave();
+      this.checkLastMemorySaveError();
     }
   }
 

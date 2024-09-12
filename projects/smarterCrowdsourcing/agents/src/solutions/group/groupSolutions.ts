@@ -125,7 +125,8 @@ export class GroupSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
         await this.groupSolutionsForSubProblem(subProblemIndex, solutions);
         this.calculateGroupStats(solutions);
 
-        await this.saveMemory();
+        this.scheduleMemorySave();
+        this.checkLastMemorySaveError();
       }
     );
 

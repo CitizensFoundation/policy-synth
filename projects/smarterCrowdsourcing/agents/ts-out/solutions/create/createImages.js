@@ -313,7 +313,8 @@ Image style: very simple abstract geometric cartoon with max 3 items in the imag
                 else {
                     this.logger.debug(`Image URL already exists: ${solution.imageUrl}`);
                 }
-                await this.saveMemory();
+                this.scheduleMemorySave();
+                this.checkLastMemorySaveError();
             }
         });
         await Promise.all(subProblemsPromises);

@@ -595,7 +595,8 @@ export class EvolvePopulationAgent extends CreateInitialSolutionsAgent {
       `Current number of generations after push: ${this.memory.subProblems[subProblemIndex].solutions.populations.length}`
     );
 
-    await this.saveMemory();
+    this.scheduleMemorySave();
+    this.checkLastMemorySaveError();
   }
 
   async evolvePopulation() {

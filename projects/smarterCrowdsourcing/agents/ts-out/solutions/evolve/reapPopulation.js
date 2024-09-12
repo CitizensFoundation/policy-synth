@@ -47,7 +47,8 @@ export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
             const viableSolutions = solutions.filter(solution => !solution.reaped);
             this.memory.subProblems[subProblemIndex].solutions.populations[this.lastPopulationIndex(subProblemIndex)] = viableSolutions;
             this.logger.info(`Population size after deletion of reaped solutions: ${viableSolutions.length}`);
-            await this.saveMemory();
+            this.scheduleMemorySave();
+            this.checkLastMemorySaveError();
         });
         await Promise.all(subProblemsPromises);
         this.logger.info("Finished Reaping for all");

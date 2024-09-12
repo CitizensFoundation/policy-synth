@@ -177,7 +177,8 @@ export class CreateProsConsAgent extends SolutionsEvolutionSmarterCrowdsourcingA
 
                   solution[prosOrCons] = results;
 
-                  await this.saveMemory();
+                  this.scheduleMemorySave();
+                  this.checkLastMemorySaveError();
                 } else {
                   retries++;
                   this.logger.error(

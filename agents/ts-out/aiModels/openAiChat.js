@@ -4,8 +4,12 @@ import { encoding_for_model } from "tiktoken";
 export class OpenAiChat extends BaseChatModel {
     client;
     constructor(config) {
-        const { apiKey, modelName = "gpt-4o", maxTokensOut = 4096 } = config;
+        let { apiKey, modelName = "gpt-4o", maxTokensOut = 4096 } = config;
         super(modelName, maxTokensOut);
+        if (process.env.PS_AGENT_OPENAI_API_KEY) {
+            apiKey = process.env.PS_AGENT_OPENAI_API_KEY;
+        }
+        console.debug(`Using OpenAI API key: ${apiKey}`);
         this.client = new OpenAI({ apiKey });
     }
     async generate(messages, streaming, streamingCallback) {

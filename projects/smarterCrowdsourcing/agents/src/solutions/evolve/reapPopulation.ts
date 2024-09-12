@@ -83,7 +83,8 @@ export class ReapSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAg
 
         this.logger.info(`Population size after deletion of reaped solutions: ${viableSolutions.length}`);
 
-        await this.saveMemory();
+        this.scheduleMemorySave();
+        this.checkLastMemorySaveError();
       }
     );
 

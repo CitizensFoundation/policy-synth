@@ -8,7 +8,6 @@ interface BaseArticle {
   researchNationalLanguageTranslation?: GoldPlatingResearch;
 }
 
-
 interface OneGoldplatingTypeResearch {
   goldPlatingType: string;
   goldPlatingIssueAnalysis: string;
