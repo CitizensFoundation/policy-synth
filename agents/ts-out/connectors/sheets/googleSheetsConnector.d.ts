@@ -10,6 +10,7 @@ export declare class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     sheets: sheets_v4.Sheets;
     constructor(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData | undefined, startProgress?: number, endProgress?: number);
     getSheet(): Promise<string[][]>;
+    addSheetIfNotExists(sheetName: string): Promise<void>;
     createNewSheet(sheetName: string): Promise<void>;
     formatCells(range: string, format: sheets_v4.Schema$CellFormat): Promise<void>;
     updateSheet(data: string[][]): Promise<void>;

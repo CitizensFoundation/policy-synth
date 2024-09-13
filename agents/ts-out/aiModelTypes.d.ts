@@ -4,7 +4,9 @@ export declare enum PsAiModelType {
     MultiModal = "multiModal",
     Audio = "audio",
     Video = "video",
-    Image = "image"
+    Image = "image",
+    TextReasoning = "reasoning",
+    MultiModalReasoning = "multiModalReasoning"
 }
 export declare enum PsAiModelSize {
     Large = "large",

@@ -130,6 +130,50 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     }
   }
 
+  async addSheetIfNotExists(sheetName: string): Promise<void> {
+    const spreadsheetId: string = this.getConfig("googleSheetsId", "");
+    if (!spreadsheetId) {
+      throw new Error("Google Sheets ID is not set.");
+    }
+
+    try {
+      // Get the spreadsheet metadata to check existing sheets
+      const response = await this.sheets.spreadsheets.get({
+        spreadsheetId,
+        includeGridData: false,
+      });
+
+      const sheets = response.data.sheets || [];
+      const sheetExists = sheets.some(
+        (sheet) => sheet.properties?.title === sheetName
+      );
+
+      if (!sheetExists) {
+        // Sheet does not exist; add it
+        await this.sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          requestBody: {
+            requests: [
+              {
+                addSheet: {
+                  properties: {
+                    title: sheetName,
+                  },
+                },
+              },
+            ],
+          },
+        });
+        console.log(`Sheet '${sheetName}' added.`);
+      } else {
+        console.log(`Sheet '${sheetName}' already exists.`);
+      }
+    } catch (error) {
+      console.error("Error in addSheetIfNotExists:", error);
+      throw error;
+    }
+  }
+
   async createNewSheet(sheetName: string): Promise<void> {
     const spreadsheetId: string = this.getConfig("googleSheetsId", "");
     if (!spreadsheetId) {

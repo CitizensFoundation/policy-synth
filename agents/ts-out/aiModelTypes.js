@@ -6,6 +6,8 @@ export var PsAiModelType;
     PsAiModelType["Audio"] = "audio";
     PsAiModelType["Video"] = "video";
     PsAiModelType["Image"] = "image";
+    PsAiModelType["TextReasoning"] = "reasoning";
+    PsAiModelType["MultiModalReasoning"] = "multiModalReasoning";
 })(PsAiModelType || (PsAiModelType = {}));
 export var PsAiModelSize;
 (function (PsAiModelSize) {

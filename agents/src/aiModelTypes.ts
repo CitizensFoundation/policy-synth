@@ -4,7 +4,9 @@ export enum PsAiModelType {
   MultiModal = "multiModal",
   Audio = "audio",
   Video = "video",
-  Image = "image"
+  Image = "image",
+  TextReasoning = "reasoning",
+  MultiModalReasoning = "multiModalReasoning",
 }
 
 export enum PsAiModelSize {
