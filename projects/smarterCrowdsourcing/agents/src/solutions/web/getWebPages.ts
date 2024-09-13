@@ -58,8 +58,8 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
             contacts?: string[];
           }
         ]
-        4. If you find importantant contacts connected to the solutions add them to the optional contacts array.
-        5. Never offer explainations only output JSON.
+        4. If you find important contacts connected to the solutions add them to the optional contacts array.
+        5. Never offer explanations, only output JSON.
         6. Output the data part of the JSON in English.
         7. It is very important for society that you find the best solutions to those problems.
         `

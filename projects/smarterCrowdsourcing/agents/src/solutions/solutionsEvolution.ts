@@ -10,6 +10,8 @@ import { CreateProsConsAgent } from "./create/createProsCons.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
 import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
 import { RankWebSolutionsAgent } from "./ranking/rankWebSolutions.js";
+import { SolutionsSheetsExportAgent } from "./export/googleSheets.js";
+import { SolutionsFromSearchSheetsExportAgent } from "./export/sheetsWebSolutions.js";
 
 export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
   declare memory: PsSmarterCrowdsourcingMemoryData;
@@ -44,25 +46,29 @@ export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
 
   get processors() {
     if (this.memory.subProblems[0].solutions.populations.length === 0) {
+      this.logger.info(`Creating initial solutions for the first population`);
       // Create initial solutions for the first population
       return [
-        { processor: RankWebSolutionsAgent, weight: 10 },
+       { processor: RankWebSolutionsAgent, weight: 10 },
         { processor: CreateInitialSolutionsAgent, weight: 10 },
         { processor: CreateProsConsAgent, weight: 10 },
         { processor: RankProsConsAgent, weight: 10 },
         { processor: RankSolutionsAgent, weight: 30 },
         { processor: GroupSolutionsAgent, weight: 10 },
         { processor: CreateSolutionImagesAgent, weight: 20 },
+   //     { processor: SolutionsSheetsExportAgent, weight: 10 },
       ];
     } else {
       return [
-        { processor: EvolvePopulationAgent, weight: 20 },
+        /*{ processor: EvolvePopulationAgent, weight: 20 },
         { processor: ReapSolutionsAgent, weight: 5 },
         { processor: CreateProsConsAgent, weight: 10 },
         { processor: RankProsConsAgent, weight: 10 },
         { processor: RankSolutionsAgent, weight: 35 },
-        { processor: GroupSolutionsAgent, weight: 5 },
-        { processor: CreateSolutionImagesAgent, weight: 25 },
+        { processor: GroupSolutionsAgent, weight: 5 },*/
+        //{ processor: CreateSolutionImagesAgent, weight: 25 },
+        //{ processor: SolutionsSheetsExportAgent, weight: 10 },
+        { processor: SolutionsFromSearchSheetsExportAgent, weight: 10 },
       ];
     }
   }

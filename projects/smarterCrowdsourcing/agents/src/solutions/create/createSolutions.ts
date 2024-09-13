@@ -6,15 +6,16 @@ const DISABLE_LLM_FOR_DEBUG = false;
 export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowdsourcingAgent {
    renderCreateSystemMessage() {
     return this.createSystemMessage(
-      `As an expert, you are tasked with creating innovative solution components for sub problems, considering the affected entities based on the <SolutionsToBaseYourSolutionComponentsOn> provided by the user.
+      `As an expert, you are tasked with creating innovative solutions for sub problems, considering the affected entities based on the <UserSolutionsToBaseYourSolutionsOn> provided by the user.
 
       Instructions:
-      1. Generate four simple solution components focused on the sub problem and its affected entities directly based on the <SolutionsToBaseYourSolutionComponentsOn>.
-      2. Solution components should be specific, not just improving this or enhancing that.
-      3. Solution components should be actionable, innovative, and equitable.
-      4. Each solution component should include a short title, description, mainBenefitOfSolution, and mainObstacleToSolutionAdoption.
-      5. Limit the description of each solution component to six sentences maximum and the description should be accessible and free of technical jargon.
-      6. Never re-create solution components listed under '<AlreadyCreatedSolutionComponents>'.
+      1. Generate four simple solutions, focused on the sub problem and its affected entities directly.
+      2. Use <UserSolutionsToBaseYourSolutionsOn> as the source for your solutions but:
+      2.1. Solutions should be specific, not just improving this or enhancing that.
+      2.2. Solutions should be actionable, innovative, and equitable.
+      3. Each solution should include a short title, description, mainBenefitOfSolution, and mainObstacleToSolutionAdoption.
+      4. Limit the description of each solution to six sentences maximum and the description should be accessible and free of technical jargon.
+      5. Never re-create solution listed under '<AlreadyCreatedSolutions>'.
       ${this.generateInLanguage ? `7. Always output in ${this.generateInLanguage}` : ""}
       ${
         false && this.createSolutionsInstructions
@@ -25,7 +26,7 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
           : ""
       }
 
-      Always output your solution components in the following JSON format:
+      Always output your solutions in the following JSON format:
       [
         {
           "title": string,
@@ -52,18 +53,18 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
           false
         )}
 
-        <SolutionsToBaseYourSolutionComponentsOn>
+        <UserSolutionsToBaseYourSolutionsOn>
           ${solutionsForInspiration
             .map((s) => `# ${s.title}\n\n${s.description}`)
             .join("\n\n")}
-        </SolutionsToBaseYourSolutionComponentsOn>
+        </UserSolutionsToBaseYourSolutionsOn>
 
         ${
           alreadyCreatedSolutions
             ? `
-          <AlreadyCreatedSolutionComponents>
+          <AlreadyCreatedSolutions>
           ${alreadyCreatedSolutions}
-          </AlreadyCreatedSolutionComponents>
+          </AlreadyCreatedSolutions>
         `
             : ``
         }
@@ -232,6 +233,28 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
       }
     }
 
+    if (selectedSolutions.length < numberOfSolutionComponents) {
+      this.logger.warn(
+        `Not enough solutions found, only ${selectedSolutions.length} selected`
+      );
+
+      const missingCount = numberOfSolutionComponents - selectedSolutions.length;
+      const missingSolutions = this.getRandomItemsFromArray(
+        problemStatementSolutions,
+        missingCount
+      );
+
+      selectedSolutions = selectedSolutions.concat(missingSolutions);
+
+      this.logger.debug(
+        `Missing solutions added: ${JSON.stringify(
+          missingSolutions.map((s) => `${s.title}: ${s.description}`),
+          null,
+          2
+        )}`
+      );
+    }
+
     return selectedSolutions;
   }
 
@@ -297,12 +320,28 @@ export class CreateInitialSolutionsAgent extends SolutionsEvolutionSmarterCrowds
 
         solutions = solutions.concat(newSolutions);
 
-        const seedUrls = [
-          solutionsForInspiration[0].fromUrl!,
-          solutionsForInspiration[1].fromUrl!,
-          solutionsForInspiration[2].fromUrl!,
-          solutionsForInspiration[3].fromUrl!,
-        ];
+        const seedUrls = [];
+        const missingSeedUrls = [];
+
+        for (let i = 0; i < 4; i++) {
+          const url = solutionsForInspiration[i]?.fromUrl;
+          if (url !== undefined) {
+            seedUrls.push(url);
+          } else {
+            missingSeedUrls.push(i);
+          }
+        }
+
+        for (let solution of solutions) {
+          solution.family = {
+            seedUrls,
+            gen: 0,
+          };
+        }
+
+        if (missingSeedUrls.length > 0) {
+          console.log(`Missing fromUrl for solutions at indices: ${missingSeedUrls.join(', ')}`);
+        }
 
         for (let solution of solutions) {
           solution.family = {
