@@ -1,7 +1,8 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { GetEvidenceWebPagesAgent } from "./getEvidenceWebPages.js";
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
+import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
 //@ts-ignore
 puppeteer.use(StealthPlugin());
 export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
@@ -60,9 +61,7 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
             this.logger.debug(`Total token count: ${totalTokenCount} Prompt token count: ${JSON.stringify(promptTokenCount)}`);
             let textAnalysis;
             if (this.tokenInLimit < totalTokenCount) {
-                const maxTokenLengthForChunk = this.tokenInLimit -
-                    promptTokenCount -
-                    64;
+                const maxTokenLengthForChunk = this.tokenInLimit - promptTokenCount - 64;
                 this.logger.debug(`Splitting text into chunks of ${maxTokenLengthForChunk} tokens`);
                 const splitText = this.splitText(text, maxTokenLengthForChunk, subProblemIndex);
                 this.logger.debug(`Got ${splitText.length} splitTexts`);
@@ -145,20 +144,25 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
             qualityScore: data1.qualityScore,
             totalScore: data1.totalScore,
             summary: data1.summary,
-            hasBeenRefined: true
+            hasBeenRefined: true,
         };
     }
-    async processPageText(text, subProblemIndex, url, type, entityIndex, policy = undefined) {
+    async processPageText(text, subProblemIndex, url, type, entityIndex, policy) {
         this.logger.debug(`Processing page text ${text.slice(0, 150)} for ${url} for ${type} search results ${subProblemIndex} sub problem index`);
         try {
             const refinedAnalysis = (await this.getEvidenceTextAnalysis(subProblemIndex, policy, type, text));
             if (refinedAnalysis) {
                 this.logger.debug(`Saving refined analysis ${JSON.stringify(refinedAnalysis, null, 2)}`);
                 refinedAnalysis.hasBeenRefined = true;
+                refinedAnalysis.url = url;
                 try {
-                    await this.evidenceWebPageVectorStore.updateRefinedAnalysis(policy.vectorStoreId, refinedAnalysis);
+                    if (!policy.webEvidence) {
+                        policy.webEvidence = [];
+                    }
+                    policy.webEvidence.push(refinedAnalysis);
                     this.totalPagesSave += 1;
                     this.logger.info(`Total ${this.totalPagesSave} saved pages`);
+                    await this.saveMemory();
                 }
                 catch (e) {
                     this.logger.error(`Error posting web page for url ${url}`);
@@ -184,27 +188,28 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
         }
         return true;
     }
-    async refineWebEvidence(policy, subProblemIndex, page) {
+    async refineWebEvidence(policyIn, subProblemIndex, page) {
         const limit = 10;
         try {
-            for (const evidenceType of this.policyEvidenceFieldTypes) {
-                const searchType = this.simplifyEvidenceType(evidenceType);
-                const results = await this.evidenceWebPageVectorStore.getTopPagesForProcessing(this.memory.groupId, subProblemIndex, policy.title, searchType, limit);
-                this.logger.debug(`Got ${results.data.Get["EvidenceWebPage"].length} WebPage results from Weaviate`);
-                if (results.data.Get["EvidenceWebPage"].length === 0) {
-                    this.logger.error(`No results for ${policy.title} ${searchType}`);
-                    continue;
+            const subProblem = this.memory.subProblems[subProblemIndex];
+            const policies = subProblem.policies?.populations[subProblem.policies.populations.length - 1];
+            if (policies) {
+                for (let policyIndex = 0; policyIndex < policies.length; policyIndex++) {
+                    this.logger.info(`Getting evidence web pages for policy ${policyIndex}/${policies.length} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(subProblemIndex)})`);
+                    const policy = policies[policyIndex];
+                    for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
+                        const urlsToGet = policy.evidenceSearchResults[searchResultType];
+                        if (urlsToGet) {
+                            for (let i = 0; i < urlsToGet.length; i++) {
+                                await this.getAndProcessEvidencePage(subProblemIndex, urlsToGet[i].url, page, searchResultType, policy);
+                            }
+                        }
+                        else {
+                            console.error(`No urls to get for ${searchResultType} for policy ${policyIndex} of sub problem ${subProblemIndex} (${this.lastPopulationIndex})`);
+                        }
+                    }
                 }
-                let pageCounter = 0;
-                for (const retrievedObject of results.data.Get["EvidenceWebPage"]) {
-                    const webPage = retrievedObject;
-                    const id = webPage._additional.id;
-                    this.logger.info(`Score ${webPage.totalScore} for ${webPage.url}`);
-                    this.logger.debug(`All scores ${webPage.relevanceScore} ${webPage.relevanceToTypeScore} ${webPage.confidenceScore} ${webPage.qualityScore}`);
-                    policy.vectorStoreId = id;
-                    await this.getAndProcessEvidencePage(subProblemIndex, webPage.url, page, searchType, policy);
-                    this.logger.info(`${subProblemIndex} - (+${pageCounter++}) - ${id} - Updated`);
-                }
+                await this.saveMemory();
             }
         }
         catch (error) {
@@ -226,8 +231,7 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
             if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
                 if (subProblem.policies) {
                     const policies = subProblem.policies.populations[currentGeneration];
-                    for (let p = 0; p <
-                        Math.min(policies.length, this.maxTopPoliciesToProcess); p++) {
+                    for (let p = 0; p < Math.min(policies.length, this.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];
                         try {
                             await this.refineWebEvidence(policy, subProblemIndex, newPage);

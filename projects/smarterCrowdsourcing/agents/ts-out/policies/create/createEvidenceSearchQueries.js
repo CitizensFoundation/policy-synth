@@ -122,6 +122,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
         return (this.memory.subProblems[subProblemIndex].policies.populations.length - 1);
     }
     async createEvidenceSearchQueries(policy, subProblemIndex, policyIndex) {
+        this.logger.debug(`Policy: ${JSON.stringify(policy, null, 2)}`);
         if (!policy.evidenceSearchQueries) {
             //@ts-ignore
             policy.evidenceSearchQueries = {};
@@ -129,6 +130,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
         for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
             if (!policy.evidenceSearchQueries[searchResultType]) {
                 this.logger.info(`Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
+                this.logger.info(await this.renderCreatePrompt(subProblemIndex, policy, searchResultType));
                 // create search queries for each type
                 let searchResults = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderCreatePrompt(subProblemIndex, policy, searchResultType)));
                 this.logger.info(`Refine evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
@@ -159,7 +161,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
                 }
             }
             else {
-                this.logger.debug(`Sub problem ${subProblemIndex} already has ${subProblem.policies?.populations.length} populations`);
+                this.logger.debug(`Sub problem ${subProblemIndex} has ${subProblem.policies?.populations.length} populations`);
             }
             await this.saveMemory();
         });

@@ -169,6 +169,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
     subProblemIndex: number,
     policyIndex: number
   ) {
+    this.logger.debug(`Policy: ${JSON.stringify(policy, null, 2)}`);
     if (!policy.evidenceSearchQueries) {
       //@ts-ignore
       policy.evidenceSearchQueries = {};
@@ -179,6 +180,11 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
         this.logger.info(
           `Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
         );
+        this.logger.info(await this.renderCreatePrompt(
+          subProblemIndex,
+          policy,
+          searchResultType
+        ))
         // create search queries for each type
         let searchResults = (await this.callModel(
           PsAiModelType.Text,
@@ -239,60 +245,43 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
 
   async process() {
     this.logger.info("Create Evidence Search Queries Agent");
-    super.process();
+    await super.process();
 
     const subProblemsLimit = Math.min(
       this.memory.subProblems.length,
       this.maxSubProblems
     );
 
-    const subProblemsPromises = Array.from(
-      { length: subProblemsLimit },
-      async (_, subProblemIndex) => {
-        const subProblem = this.memory.subProblems[subProblemIndex];
+    for (let subProblemIndex = 0; subProblemIndex < subProblemsLimit; subProblemIndex++) {
+      const subProblem = this.memory.subProblems[subProblemIndex];
 
-        const policies =
-          subProblem.policies?.populations[
-            subProblem.policies!.populations.length - 1
-          ];
+      const policies = subProblem.policies?.populations[
+        subProblem.policies!.populations.length - 1
+      ];
 
-        if (policies) {
-          for (
-            let policyIndex = 0;
-            policyIndex < policies.length;
-            policyIndex++
-          ) {
-            this.logger.info(
-              `Creating evidence search queries for policy ${policyIndex}/${
-                policies.length
-              } of sub problem ${subProblemIndex} (${this.lastPopulationIndex(
-                subProblemIndex
-              )})`
-            );
-
-            const policy = policies[policyIndex];
-
-            await this.createEvidenceSearchQueries(
-              policy,
-              subProblemIndex,
-              policyIndex
-            );
-
-            await this.saveMemory();
-          }
-        } else {
-          this.logger.debug(
-            `Sub problem ${subProblemIndex} already has ${subProblem.policies?.populations.length} populations`
+      if (policies) {
+        for (let policyIndex = 0; policyIndex < policies.length; policyIndex++) {
+          this.logger.info(
+            `Creating evidence search queries for policy ${policyIndex}/${policies.length} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(subProblemIndex)})`
           );
+
+          const policy = policies[policyIndex];
+
+          await this.createEvidenceSearchQueries(policy, subProblemIndex, policyIndex);
+          await this.saveMemory();
         }
-
-        await this.saveMemory();
+      } else {
+        this.logger.debug(
+          `Sub problem ${subProblemIndex} has ${subProblem.policies?.populations.length} populations`
+        );
       }
-    );
 
-    await Promise.all(subProblemsPromises);
+      await this.saveMemory();
+    }
+
     this.logger.info(
       "Finished creating policies evidence search queries for all subproblems"
     );
   }
+
 }

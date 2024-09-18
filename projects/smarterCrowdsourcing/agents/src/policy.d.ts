@@ -164,6 +164,7 @@ interface PSEvidenceWebPageAnalysisData {
 }
 
 interface PSRefinedPolicyEvidence {
+  url?: string;
   summary: string;
   mostRelevantParagraphs: string[];
   relevanceToPolicyProposal: string;
@@ -244,6 +245,7 @@ interface PSPolicy {
   fullDescription?: string;
   conditionsForSuccess: string[];
   mainObstaclesForImplemention: string[];
+  mainBenefits: string[];
   mainRisks: string[];
   policyKPIMetrics: string[];
   whyTheBestChoice?: string;
@@ -264,6 +266,7 @@ interface PSPolicy {
   legalConsiderations?: PSLegalConsideration[];
   technologicalDependencies?: PSTechnologicalDependency[];
   ratings?: object;
+  webEvidence?: PSRefinedPolicyEvidence[];
   family?: {
     parentA?: string; // "<generationIndex>:<solutionId>"
     parentB?: string;
