@@ -191,7 +191,7 @@ export class GetMetaDataForTopWebEvidenceAgent extends GetEvidenceWebPagesAgent 
             await newPage.setUserAgent(this.currentUserAgent);
             const subProblem = this.memory.subProblems[subProblemIndex];
             if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
-                if (subProblem.policies) {
+                if (subProblem.policies && subProblem.policies.populations && subProblem.policies.populations.length > 0) {
                     const policies = subProblem.policies.populations[currentGeneration];
                     for (let p = 0; p < Math.min(policies.length, this.maxTopPoliciesToProcess); p++) {
                         const policy = policies[p];

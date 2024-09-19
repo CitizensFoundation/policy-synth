@@ -20,17 +20,16 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
   ) {
     return [
       this.createSystemMessage(
-        `You are an expert in analyzing policy evidence:
+        `You are an expert in analyzing policy evidence from the web.
 
         Important Instructions:
-        1. Examine the "<text context>" and analyze the evidence on how it relates to the problem and the specified policy proposal.
-        2. Always rank JSON string[] output in importance to policy proposal.
-        3. Output scores in the ranges of 0-100.
-        4. Keep all texts clear and simple.
-        5. relevanceToPolicyProposal should outline how the evidence found in the text is relevant to the policy proposal.
-        6. mostRelevantParagraphs should be direct quotes from the most relevant and important paragraphs, in relation to the policy proposal, found in the text context, the most relevant paragraph should be first.
-        7. Instead of referring to "The text" refer to "The website".
-        8. Always output your results in the following JSON format:
+        1. Examine the "<websiteContent>" for evidence, if any, for the specified policy proposal.
+        2. Output scores in the ranges of 0-100.
+        3. Keep all texts clear and simple.
+        4. relevanceToPolicyProposal should outline how the evidence found in the text is relevant to the policy proposal.
+        5. mostRelevantParagraphs should be direct quotes from the most relevant and important paragraphs, in relation to the policy proposal, found in the websiteContent>.
+        6. Instead of referring to "The text" refer to "The website", if needed.
+        7. Always output your results in the following JSON format without any explainations:
         {
           relevanceToPolicyProposal: string;
           mostRelevantParagraphs: string[];
@@ -47,6 +46,8 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
           relevanceToTypeScore: number;
           relevanceScore: number;
           qualityScore: number;
+          contentPublishingYear: number;
+          hasPotentialRelevantEvidence: boolean;
         }`
       ),
       this.createHumanMessage(
@@ -59,11 +60,9 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
 
         Policy Evidence Type: ${type}
 
-        <text context>
+        <websiteContent>
         ${text}
-        </text context>
-
-        Let's think step by step.
+        </websiteContent>
 
         JSON Output:
         `
@@ -232,11 +231,14 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
         ...(data2.risksForPolicy || []),
       ],
 
+      hasPotentialRelevantEvidence: data1.hasPotentialRelevantEvidence || data2.hasPotentialRelevantEvidence,
+
       relevanceToPolicyProposal: data1.relevanceToPolicyProposal,
       relevanceToTypeScore: data1.relevanceToTypeScore,
       confidenceScore: data1.confidenceScore,
       relevanceScore: data1.relevanceScore,
       qualityScore: data1.qualityScore,
+      contentPublishingYear: data1.contentPublishingYear,
       totalScore: data1.totalScore,
       summary: data1.summary,
       hasBeenRefined: true,
@@ -273,13 +275,19 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
 
         refinedAnalysis.hasBeenRefined = true;
         refinedAnalysis.url = url;
+        refinedAnalysis.type = type as PSEvidenceWebPageTypes;
 
         try {
           if (!policy.webEvidence) {
             policy.webEvidence = [];
           }
 
-          policy.webEvidence.push(refinedAnalysis);
+          if (refinedAnalysis.hasPotentialRelevantEvidence) {
+            policy.webEvidence.push(refinedAnalysis);
+          } else {
+            this.logger.info(`No potential relevant evidence for ${url}`);
+            this.logger.info(JSON.stringify(refinedAnalysis, null, 2));
+          }
 
           this.totalPagesSave += 1;
           this.logger.info(`Total ${this.totalPagesSave} saved pages`);
@@ -307,22 +315,30 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
     policy: PSPolicy
   ) {
     if (url.toLowerCase().endsWith(".pdf")) {
-      await this.getAndProcessPdf(
-        subProblemIndex,
-        url,
-        type,
-        undefined,
-        policy
-      );
+      try {
+        await this.getAndProcessPdf(
+          subProblemIndex,
+          url,
+          type,
+          undefined,
+          policy
+        );
+      } catch (error: any) {
+        this.logger.error(`Error in getAndProcessPdf: ${error}`);
+      }
     } else {
-      await this.getAndProcessHtml(
-        subProblemIndex,
-        url,
-        browserPage,
-        type,
-        undefined,
-        policy
-      );
+      try {
+        await this.getAndProcessHtml(
+          subProblemIndex,
+          url,
+          browserPage,
+          type,
+          undefined,
+          policy
+        );
+      } catch (error: any) {
+        this.logger.error(`Error in getAndProcessHtml: ${error}`);
+      }
     }
 
     return true;
@@ -334,6 +350,7 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
     page: Page
   ) {
     const limit = 10;
+    const resetWebEvidence = false;
 
     try {
       const subProblem = this.memory.subProblems[subProblemIndex];
@@ -359,26 +376,69 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
 
           const policy = policies[policyIndex];
 
-          for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
-            const urlsToGet = policy.evidenceSearchResults![searchResultType];
+          if (resetWebEvidence) {
+            policy.webEvidence = [];
+          }
 
-            if (urlsToGet) {
-              for (let i = 0; i < urlsToGet.length; i++) {
-                await this.getAndProcessEvidencePage(
-                  subProblemIndex,
-                  urlsToGet[i].url,
-                  page,
-                  searchResultType,
-                  policy
-                );
-              }
+
+        for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
+          // First check if policy.webEvidence contains any evidence of searchResultType
+          if (
+            policy.webEvidence &&
+            policy.webEvidence.some(
+              (evidence) => evidence.type === searchResultType
+            )
+          ) {
+            this.logger.info(
+              `Skipping searchResultType ${searchResultType} as policy.webEvidence already contains evidence of this type`
+            );
+            continue;
+          }
+
+          const urlsToGet = policy.evidenceSearchResults![searchResultType];
+
+          if (urlsToGet) {
+            const random = Math.random();
+            let filteredUrlsToGet: PsSearchResultItem[];
+
+            if (random < 0.95) {
+              // 95% chance, filter out items with originalPosition less than 5
+              this.logger.debug(
+                `---------------------> Filtering out items with originalPosition less than 3`
+              );
+              filteredUrlsToGet = urlsToGet.filter(
+                (item) => item.originalPosition <= 3
+              );
             } else {
-              console.error(
-                `No urls to get for ${searchResultType} for policy ${policyIndex} of sub problem ${subProblemIndex} (${this.lastPopulationIndex})`
+              // 5% chance, filter out items with originalPosition greater than 5
+              this.logger.debug(
+                `Filtering out items with originalPosition greater than 5`
+              );
+              filteredUrlsToGet = urlsToGet.filter(
+                (item) => item.originalPosition >= 7
               );
             }
+
+            this.logger.info(`========================================================================================== > > > Count of urls to get: ${filteredUrlsToGet.length}`);
+
+            for (let i = 0; i < filteredUrlsToGet.length; i++) {
+              await this.getAndProcessEvidencePage(
+                subProblemIndex,
+                filteredUrlsToGet[i].url,
+                page,
+                searchResultType,
+                policy
+              );
+            }
+          } else {
+            console.error(
+              `No urls to get for ${searchResultType} for policy ${policyIndex} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(
+                subProblemIndex
+              )})`
+            );
           }
         }
+      }
 
         await this.saveMemory();
       }
@@ -411,7 +471,11 @@ export class GetRefinedEvidenceAgent extends GetEvidenceWebPagesAgent {
         await newPage.setUserAgent(this.currentUserAgent);
         const subProblem = this.memory.subProblems[subProblemIndex];
         if (!skipSubProblemsIndexes.includes(subProblemIndex)) {
-          if (subProblem.policies) {
+          if (
+            subProblem.policies &&
+            subProblem.policies.populations &&
+            subProblem.policies.populations.length > 0
+          ) {
             const policies = subProblem.policies.populations[currentGeneration];
             for (
               let p = 0;

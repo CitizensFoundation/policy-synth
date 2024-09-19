@@ -19,13 +19,35 @@ export class SearchWebForEvidenceAgent extends SearchWebAgent {
                 this.searchCounter = 300;
             }
             if (!policy.evidenceSearchResults[searchResultType]) {
-                let queriesToSearch = policy.evidenceSearchQueries[searchResultType]
-                    .slice(0, this.maxTopEvidenceQueriesToSearchPerType);
-                const results = await this.getQueryResults(queriesToSearch, `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`);
-                this.searchCounter += this.maxTopEvidenceQueriesToSearchPerType;
-                policy.evidenceSearchResults[searchResultType] = results.searchResults;
-                this.logger.info(`Have saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
-                await this.saveMemory();
+                let searchQueries = policy.evidenceSearchQueries[searchResultType];
+                if (!Array.isArray(searchQueries)) {
+                    const keys = Object.keys(searchQueries);
+                    if (keys.length === 1) {
+                        searchQueries = searchQueries[keys[0]];
+                    }
+                }
+                this.logger.debug(`searchQueries: ${JSON.stringify(searchQueries)}`);
+                try {
+                    let queriesToSearch = policy.evidenceSearchQueries[searchResultType];
+                    if (!Array.isArray(queriesToSearch)) {
+                        const keys = Object.keys(queriesToSearch);
+                        if (keys.length === 1) {
+                            queriesToSearch = queriesToSearch[keys[0]];
+                        }
+                    }
+                    queriesToSearch = queriesToSearch.slice(0, this.maxTopEvidenceQueriesToSearchPerType);
+                    const results = await this.getQueryResults(queriesToSearch, `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`);
+                    this.searchCounter += this.maxTopEvidenceQueriesToSearchPerType;
+                    policy.evidenceSearchResults[searchResultType] = results.searchResults;
+                    this.logger.info(`Have saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
+                    await this.saveMemory();
+                }
+                catch (error) {
+                    this.logger.error(`searchQueries: ${JSON.stringify(searchQueries)}`);
+                    this.logger.error(`Error searching web for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
+                    this.logger.error(error);
+                    throw error;
+                }
             }
             else {
                 this.logger.info(`Have already saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);

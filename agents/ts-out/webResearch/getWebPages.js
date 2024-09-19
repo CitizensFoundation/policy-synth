@@ -344,7 +344,7 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
                         this.logger.debug("Have cached PDF response");
                     }
                 }
-                if (pdfBuffer) {
+                if (pdfBuffer && pdfBuffer.length > 0) {
                     //this.logger.debug(pdfBuffer.toString().slice(0, 100));
                     try {
                         new PdfReader({ debug: false }).parseBuffer(pdfBuffer, async (err, item) => {
@@ -421,16 +421,22 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
                         100; //TODO: Read from agent config
                 this.logger.info(`Fetching HTML page ${url} in ${sleepingForMs} ms`);
                 await new Promise((r) => setTimeout(r, sleepingForMs));
-                const response = await browserPage.goto(url, {
-                    waitUntil: "networkidle0",
-                });
-                if (response) {
-                    htmlText = await response.text();
-                    if (htmlText) {
-                        this.logger.debug(`Caching response`);
-                        const gzipData = gzipSync(Buffer.from(htmlText));
-                        await writeFileAsync(fullPath, gzipData);
+                try {
+                    const response = await browserPage.goto(url, {
+                        waitUntil: "networkidle0",
+                    });
+                    if (response) {
+                        htmlText = await response.text();
+                        if (htmlText) {
+                            this.logger.debug(`Caching response`);
+                            const gzipData = gzipSync(Buffer.from(htmlText));
+                            await writeFileAsync(fullPath, gzipData);
+                        }
                     }
+                }
+                catch (error) {
+                    this.logger.error(`Error in goto`);
+                    this.logger.error(error.stack || error);
                 }
             }
             if (htmlText) {

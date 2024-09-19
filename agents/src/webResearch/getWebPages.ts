@@ -513,7 +513,7 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
           }
         }
 
-        if (pdfBuffer) {
+        if (pdfBuffer && pdfBuffer.length > 0) {
           //this.logger.debug(pdfBuffer.toString().slice(0, 100));
           try {
             new PdfReader({ debug: false }).parseBuffer(
@@ -614,16 +614,21 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
 
         await new Promise((r) => setTimeout(r, sleepingForMs));
 
-        const response = await browserPage.goto(url, {
-          waitUntil: "networkidle0",
-        });
-        if (response) {
-          htmlText = await response.text();
-          if (htmlText) {
-            this.logger.debug(`Caching response`);
-            const gzipData = gzipSync(Buffer.from(htmlText));
-            await writeFileAsync(fullPath, gzipData);
+        try {
+          const response = await browserPage.goto(url, {
+            waitUntil: "networkidle0",
+          });
+          if (response) {
+            htmlText = await response.text();
+            if (htmlText) {
+              this.logger.debug(`Caching response`);
+              const gzipData = gzipSync(Buffer.from(htmlText));
+              await writeFileAsync(fullPath, gzipData);
+            }
           }
+        } catch (error: any) {
+          this.logger.error(`Error in goto`);
+          this.logger.error(error.stack || error);
         }
       }
 

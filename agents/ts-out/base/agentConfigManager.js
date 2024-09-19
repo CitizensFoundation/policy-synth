@@ -9,15 +9,15 @@ export class PsConfigManager extends PolicySynthAgentBase {
         if (uniqueId in this.configuration) {
             //@ts-ignore
             const value = this.configuration[uniqueId];
-            this.logger.debug(`Value for ${uniqueId}: ${value}`);
+            //this.logger.debug(`Value for ${uniqueId}: ${value}`);
             // Check for null, undefined, or empty string and return defaultValue
             if (value === null ||
                 value === undefined ||
                 (typeof value === "string" && value.trim() === "")) {
-                this.logger.debug(`Returning default value for ${uniqueId}`);
+                this.logger.debug(`Empty value, returning default value for ${uniqueId}`);
                 return defaultValue;
             }
-            this.logger.debug(`Type of value for ${uniqueId}: ${typeof value}`);
+            //this.logger.debug(`Type of value for ${uniqueId}: ${typeof value}`);
             // If value is not a string, return it as is (assuming it's already of type T)
             if (typeof value !== "string") {
                 this.logger.debug(`Returning value as is for ${uniqueId}`);

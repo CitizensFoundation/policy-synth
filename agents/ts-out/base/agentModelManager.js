@@ -92,6 +92,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
         switch (modelType) {
             case PsAiModelType.Text:
+            case PsAiModelType.TextReasoning:
                 return await this.callTextModel(modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
             case PsAiModelType.Embedding:
                 return await this.callEmbeddingModel(messages);

@@ -351,7 +351,7 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
                 type: "textField",
                 subType: "number",
                 value: 8000,
-                maxLength: 5,
+                maxLength: 7,
                 required: true,
                 text: "Token input limit",
             },
@@ -416,7 +416,7 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
         return this.getConfig("currentUserAgent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
     }
     get tokenInLimit() {
-        return this.getConfig("tokenInLimit", 8000);
+        return this.getConfig("tokenInLimit", 100000);
     }
     // Problems-specific configuration options
     get maxTopRootCauseQueriesToSearchPerType() {
@@ -609,7 +609,7 @@ export class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
 
       ${subProblem.description}
 
-      ${subProblem.whyIsSubProblemImportant}
+      ${subProblem.whyIsSubProblemImportant ? subProblem.whyIsSubProblemImportant : ``}
 
       ${useProblemAsHeader ? "</Problem>" : "</SubProblem>"}:
       `;

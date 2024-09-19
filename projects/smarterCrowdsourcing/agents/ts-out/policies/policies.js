@@ -1,10 +1,7 @@
 import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
-import { SearchWebForEvidenceAgent } from "./web/searchWebForEvidence.js";
-import { GetRefinedEvidenceAgent } from "./web/getRefinedEvidence.js";
-import { GetMetaDataForTopWebEvidenceAgent } from "./web/getMetaDataForTopWebEvidence.js";
-import { CreateEvidenceSearchQueriesAgent } from "./create/createEvidenceSearchQueries.js";
 import { PsClassScAgentType } from "../base/agentTypes.js";
 import { emptySmarterCrowdsourcingMemory } from "../base/emptyMemory.js";
+import { PoliciesSheetsExportAgent } from "./export/evidenceSheets.js";
 export class PoliciesAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_POLICIES;
@@ -22,13 +19,14 @@ export class PoliciesAgentQueue extends PolicySynthAgentQueue {
         return [
             //  { processor: CreateSeedPoliciesAgent, weight: 15 },
             //  { processor: CreatePolicyImagesAgent, weight: 10 },
-            { processor: CreateEvidenceSearchQueriesAgent, weight: 10 },
-            { processor: SearchWebForEvidenceAgent, weight: 15 },
+            //  { processor: CreateEvidenceSearchQueriesAgent, weight: 10 },
+            //  { processor: SearchWebForEvidenceAgent, weight: 15 },
             // { processor: GetEvidenceWebPagesAgent, weight: 15 },
             // { processor: RankWebEvidenceAgent, weight: 10 },
             // { processor: RateWebEvidenceAgent, weight: 10 },
-            { processor: GetRefinedEvidenceAgent, weight: 10 },
-            { processor: GetMetaDataForTopWebEvidenceAgent, weight: 10 },
+            //  { processor: GetRefinedEvidenceAgent, weight: 10 },
+            { processor: PoliciesSheetsExportAgent, weight: 10 },
+            // { processor: GetMetaDataForTopWebEvidenceAgent, weight: 10 },
         ];
     }
 }

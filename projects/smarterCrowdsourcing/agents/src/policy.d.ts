@@ -184,6 +184,12 @@ interface PSRefinedPolicyEvidence {
   relevanceScore: number;
   qualityScore: number;
   totalScore?: number;
+
+  hasPotentialRelevantEvidence: boolean;
+
+  contentPublishingYear?: number;
+
+  type?: PSEvidenceWebPageTypes;
 }
 
 interface PSWebPageMetadata {

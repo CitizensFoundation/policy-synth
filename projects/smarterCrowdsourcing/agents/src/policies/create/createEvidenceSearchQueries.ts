@@ -36,7 +36,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
   filterPolicyParameters(
     policy: PSPolicy
   ): Omit<PSPolicy, "imageUrl" | "imagePrompt" | "solutionIndex"> {
-    const { imageUrl, imagePrompt, solutionIndex, ...filteredPolicy } = policy;
+    const { imageUrl, imagePrompt, solutionIndex, evidenceSearchQueries, ...filteredPolicy } = policy;
     return filteredPolicy;
   }
 
@@ -169,7 +169,6 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
     subProblemIndex: number,
     policyIndex: number
   ) {
-    this.logger.debug(`Policy: ${JSON.stringify(policy, null, 2)}`);
     if (!policy.evidenceSearchQueries) {
       //@ts-ignore
       policy.evidenceSearchQueries = {};
@@ -180,20 +179,19 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
         this.logger.info(
           `Creating evidence search queries for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
         );
-        this.logger.info(await this.renderCreatePrompt(
+        const createPrompt = await this.renderCreatePrompt(
           subProblemIndex,
           policy,
           searchResultType
-        ))
+        );
+
+        //this.logger.debug(JSON.stringify(createPrompt, null, 2));
+
         // create search queries for each type
         let searchResults = (await this.callModel(
           PsAiModelType.Text,
           PsAiModelSize.Medium,
-          await this.renderCreatePrompt(
-            subProblemIndex,
-            policy,
-            searchResultType
-          )
+          createPrompt
         )) as string[];
 
         this.logger.info(
@@ -260,6 +258,7 @@ export class CreateEvidenceSearchQueriesAgent extends BaseSmarterCrowdsourcingAg
       ];
 
       if (policies) {
+        this.logger.debug(`----> Sub problem ${subProblemIndex} has ${policies.length} policies`);
         for (let policyIndex = 0; policyIndex < policies.length; policyIndex++) {
           this.logger.info(
             `Creating evidence search queries for policy ${policyIndex}/${policies.length} of sub problem ${subProblemIndex} (${this.lastPopulationIndex(subProblemIndex)})`

@@ -2,7 +2,7 @@ import { SearchWebAgent } from "../../solutions/web/searchWeb.js";
 import { CreateEvidenceSearchQueriesAgent } from "../create/createEvidenceSearchQueries.js";
 
 export class SearchWebForEvidenceAgent extends SearchWebAgent {
-  searchCounter = 0
+  searchCounter = 0;
   async searchWeb(
     policy: PSPolicy,
     subProblemIndex: number,
@@ -13,42 +13,76 @@ export class SearchWebForEvidenceAgent extends SearchWebAgent {
       policy.evidenceSearchResults = {};
     }
     for (const searchResultType of CreateEvidenceSearchQueriesAgent.evidenceWebPageTypesArray) {
-
       // If searchCounter mod 10 then print
       if (this.searchCounter % 10 == 0) {
         this.logger.info(`Have searched ${this.searchCounter} queries`);
       }
       if (this.searchCounter > 990) {
         // Sleep for 15 minutes
-        this.logger.info(`Sleeping for 15 minutes to avoid search API rate limit`);
+        this.logger.info(
+          `Sleeping for 15 minutes to avoid search API rate limit`
+        );
         await new Promise((resolve) => setTimeout(resolve, 15 * 60 * 1000));
         this.searchCounter = 300;
       }
 
       if (!policy.evidenceSearchResults![searchResultType]) {
+        let searchQueries = policy.evidenceSearchQueries![searchResultType];
 
-        let queriesToSearch =  policy.evidenceSearchQueries![searchResultType]
-         .slice(0, this.maxTopEvidenceQueriesToSearchPerType);
+        if (!Array.isArray(searchQueries)) {
+          const keys = Object.keys(searchQueries);
+          if (keys.length === 1) {
+            searchQueries = searchQueries[keys[0]];
+          }
+        }
 
-        const results = await this.getQueryResults(
-          queriesToSearch,
-          `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`
-        );
+        this.logger.debug(`searchQueries: ${JSON.stringify(searchQueries)}`);
 
-        this.searchCounter+=this.maxTopEvidenceQueriesToSearchPerType;
+        try {
+          let queriesToSearch = policy.evidenceSearchQueries![searchResultType];
 
-        policy.evidenceSearchResults![searchResultType] = results.searchResults;
+          if (!Array.isArray(queriesToSearch)) {
+            const keys = Object.keys(queriesToSearch);
+            if (keys.length === 1) {
+              queriesToSearch = queriesToSearch[keys[0]];
+            }
+          }
 
-        this.logger.info(
-          `Have saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
-        );
+          queriesToSearch = queriesToSearch.slice(
+            0,
+            this.maxTopEvidenceQueriesToSearchPerType
+          );
 
-        await this.saveMemory();
+          const results = await this.getQueryResults(
+            queriesToSearch,
+            `subProblem_${subProblemIndex}_${searchResultType}_policy_${policyIndex}}`
+          );
+
+          this.searchCounter += this.maxTopEvidenceQueriesToSearchPerType;
+
+          policy.evidenceSearchResults![searchResultType] = results.searchResults;
+
+          this.logger.info(
+            `Have saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
+          );
+
+          await this.saveMemory();
+        } catch (error) {
+          this.logger.error(`searchQueries: ${JSON.stringify(searchQueries)}`);
+          this.logger.error(
+            `Error searching web for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
+          );
+          this.logger.error(error);
+          throw error;
+        }
       } else {
-        this.logger.info(`Have already saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`);
+        this.logger.info(
+          `Have already saved search results for ${subProblemIndex}/${policyIndex}: ${searchResultType} search results`
+        );
       }
     }
   }
+
 
   async process() {
     this.logger.info("Search Web for Evidence Agent");

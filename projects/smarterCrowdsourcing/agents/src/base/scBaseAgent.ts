@@ -378,7 +378,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
         type: "textField",
         subType: "number",
         value: 8000,
-        maxLength: 5,
+        maxLength: 7,
         required: true,
         text: "Token input limit",
       },
@@ -449,7 +449,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
     );
   }
   get tokenInLimit() {
-    return this.getConfig("tokenInLimit", 8000);
+    return this.getConfig("tokenInLimit", 100000);
   }
 
   // Problems-specific configuration options
@@ -675,7 +675,7 @@ export abstract class BaseSmarterCrowdsourcingAgent extends PolicySynthAgent {
 
       ${subProblem.description}
 
-      ${subProblem.whyIsSubProblemImportant}
+      ${subProblem.whyIsSubProblemImportant ? subProblem.whyIsSubProblemImportant : ``}
 
       ${useProblemAsHeader ? "</Problem>" : "</SubProblem>"}:
       `;
