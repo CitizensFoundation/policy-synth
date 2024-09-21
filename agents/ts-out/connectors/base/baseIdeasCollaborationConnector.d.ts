@@ -3,6 +3,7 @@ export declare abstract class PsBaseIdeasCollaborationConnector extends PsBaseCo
     abstract login(): Promise<void>;
     abstract post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string): Promise<YpPostData>;
     abstract vote(itemId: number, value: number): Promise<void>;
+    abstract getGroupPosts(groupId: string): Promise<YpPostData[]>;
     generateImage?(groupId: number, prompt: string): Promise<number>;
 }
 //# sourceMappingURL=baseIdeasCollaborationConnector.d.ts.map

@@ -147,6 +147,40 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             };
         }
     }
+    async getGroupPosts(groupId) {
+        await this.login(); // Ensure we're logged in.
+        let posts = [];
+        let offset = 0;
+        const limit = 20;
+        let isMorePosts = true;
+        const filter = "recent"; // Options: "recent", "popular", "random", etc.
+        const categoryId = "null"; // Use "null" if no specific category.
+        const statusFilter = "published"; // Options: "published", "draft", etc.
+        while (isMorePosts) {
+            let url = `${this.serverBaseUrl}/groups/${groupId}/posts/${filter}/${categoryId}/${statusFilter}?offset=${offset}`;
+            if (this.agentFabricUserId) {
+                url += `&agentFabricUserId=${this.agentFabricUserId}`;
+            }
+            try {
+                const response = await axios.get(url, {
+                    headers: this.getHeaders(),
+                });
+                const data = response.data;
+                posts = posts.concat(data);
+                if (data.length < limit) {
+                    isMorePosts = false;
+                }
+                else {
+                    offset += data.length;
+                }
+            }
+            catch (error) {
+                console.error("Error fetching posts:", error);
+                throw new Error("Failed to fetch group posts.");
+            }
+        }
+        return posts;
+    }
     async vote(postId, value) {
         console.log("Voting on post...");
         const votingData = {
