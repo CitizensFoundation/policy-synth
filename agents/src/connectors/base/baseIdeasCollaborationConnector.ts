@@ -6,7 +6,7 @@ export abstract class PsBaseIdeasCollaborationConnector extends PsBaseConnector 
   abstract post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string): Promise<YpPostData>;
   abstract vote(itemId: number, value: number): Promise<void>;
 
-  abstract getGroupPosts(groupId: string): Promise<YpPostData[]>
+  abstract getGroupPosts(groupId: number): Promise<YpPostData[]>
 
   // Optional method for image generation, if supported by the collaboration platform
   async generateImage?(groupId: number, prompt: string): Promise<number> {

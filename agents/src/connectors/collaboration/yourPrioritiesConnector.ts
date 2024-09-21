@@ -178,8 +178,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
   }
 
-  async getGroupPosts(groupId: string): Promise<YpPostData[]> {
-    await this.login(); // Ensure we're logged in.
+  async getGroupPosts(groupId: number): Promise<YpPostData[]> {
+    await this.login();
 
     let posts: YpPostData[] = [];
     let offset = 0;

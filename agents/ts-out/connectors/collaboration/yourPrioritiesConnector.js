@@ -148,7 +148,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         }
     }
     async getGroupPosts(groupId) {
-        await this.login(); // Ensure we're logged in.
+        await this.login();
         let posts = [];
         let offset = 0;
         const limit = 20;

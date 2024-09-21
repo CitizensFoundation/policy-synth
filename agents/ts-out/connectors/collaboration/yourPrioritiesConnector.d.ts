@@ -21,7 +21,7 @@ export declare class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationC
         Cookie: string | undefined;
         "x-api-key"?: undefined;
     };
-    getGroupPosts(groupId: string): Promise<YpPostData[]>;
+    getGroupPosts(groupId: number): Promise<YpPostData[]>;
     vote(postId: number, value: number): Promise<void>;
     post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string): Promise<YpPostData>;
     generateImageWithAi(groupId: number, prompt: string): Promise<number>;
