@@ -21,6 +21,7 @@ export class AgentRegistryManager {
                     as: "Users",
                     attributes: [],
                     through: { attributes: [] },
+                    where: { id: userId },
                     required: false,
                 },
                 {
@@ -28,6 +29,7 @@ export class AgentRegistryManager {
                     as: "Admins",
                     attributes: [],
                     through: { attributes: [] },
+                    where: { id: userId },
                     required: false,
                 },
             ],
@@ -35,8 +37,8 @@ export class AgentRegistryManager {
                 available: true,
                 [Op.or]: [
                     Sequelize.literal(`(configuration->>'hasPublicAccess')::boolean = true`),
-                    { "$Users.id$": userId },
-                    { "$Admins.id$": userId },
+                    Sequelize.literal(`"Users"."id" IS NOT NULL`),
+                    Sequelize.literal(`"Admins"."id" IS NOT NULL`),
                 ],
             },
             order: [
@@ -44,19 +46,15 @@ export class AgentRegistryManager {
                 ["version", "DESC"],
             ],
         });
-        //console.log("Fetched agents:", JSON.stringify(agents, null, 2));
-        // Filter to keep only the latest version of each agent
-        const latestAgents = agents.reduce((acc, current) => {
-            const existingAgent = acc.find((agent) => agent.class_base_id === current.class_base_id);
-            if (!existingAgent || existingAgent.version < current.version) {
-                return [
-                    ...acc.filter((agent) => agent.class_base_id !== current.class_base_id),
-                    current,
-                ];
+        // Use a Map to keep track of the latest versions
+        const latestAgentsMap = new Map();
+        for (const agent of agents) {
+            const existingAgent = latestAgentsMap.get(agent.class_base_id);
+            if (!existingAgent || existingAgent.version < agent.version) {
+                latestAgentsMap.set(agent.class_base_id, agent);
             }
-            return acc;
-        }, []);
-        //console.log("Latest agents:", JSON.stringify(latestAgents, null, 2));
+        }
+        const latestAgents = Array.from(latestAgentsMap.values());
         return latestAgents;
     }
     async getActiveConnectorClasses(userId) {

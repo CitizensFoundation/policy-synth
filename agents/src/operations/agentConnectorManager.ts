@@ -250,7 +250,7 @@ export class AgentConnectorManager {
       customBackURL: "",
       customBackName: "",
       optionalSortOrder: "",
-      hideAllTabs: "0",
+      hideAllTabs: "",
       actAsLinkToCommunityId: "",
       maxDaysBackForRecommendations: "",
       customUserNamePrompt: "",

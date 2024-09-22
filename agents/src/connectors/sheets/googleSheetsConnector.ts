@@ -10,7 +10,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
   static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID =
     "4b8c3d2e-5f6a-1a8b-9c0d-1ecf3afb536d";
 
-  static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 4;
+  static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 5;
 
   static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID,
@@ -24,7 +24,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
       description: "Connector for Google Sheets",
       hasPublicAccess: true,
       imageUrl:
-        "https://aoi-storage-production.citizens.is/ypGenAi/community/1/1187aee2-39e8-48b2-afa2-0aba91c0ced0.png",
+        "https://aoi-storage-production.citizens.is/dl/b4169a97d688a3cfc763c453742fe77c--retina-1.png",
       iconName: "sheets",
       questions: [
         {

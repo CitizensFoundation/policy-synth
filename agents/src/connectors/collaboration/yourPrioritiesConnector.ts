@@ -8,7 +8,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
   static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
     "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
 
-  static readonly YOUR_PRIORITIES_CONNECTOR_VERSION = 4;
+  static readonly YOUR_PRIORITIES_CONNECTOR_VERSION = 6;
 
   static baseQuestions = [
     {
@@ -67,12 +67,12 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     user_id: 1,
     available: true,
     configuration: {
-      name: "Your Priorities",
+      name: "Ideas Collaboration",
       classType: PsConnectorClassTypes.IdeasCollaboration,
       hasPublicAccess: true,
-      description: "Connector for Your Priorities",
+      description: "Connector for Your Priorities Ideas Collaboration",
       imageUrl:
-        "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
+        "https://aoi-storage-production.citizens.is/dl/242cb3b51b2282f311b715af18203dc8--retina-1.png",
       iconName: "yourPriorities",
       questions: process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY
         ? this.baseQuestions
@@ -186,9 +186,9 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     const limit = 20;
     let isMorePosts = true;
 
-    const filter = "recent"; // Options: "recent", "popular", "random", etc.
-    const categoryId = "null"; // Use "null" if no specific category.
-    const statusFilter = "published"; // Options: "published", "draft", etc.
+    const filter = "newest";
+    const categoryId = "null";
+    const statusFilter = "open";
 
     while (isMorePosts) {
       let url = `${this.serverBaseUrl}/groups/${groupId}/posts/${filter}/${categoryId}/${statusFilter}?offset=${offset}`;
@@ -201,7 +201,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         const response = await axios.get(url, {
           headers: this.getHeaders(),
         });
-        const data = response.data as YpPostData[];
+        const data = response.data.posts as YpPostData[];
 
         posts = posts.concat(data);
 
@@ -335,6 +335,9 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         if (pollResponse.data.data.imageId) {
           isGenerating = false;
           console.log("AI image generated:", pollResponse.data.data.imageId);
+        } else if (pollResponse.data.error) {
+          isGenerating = false;
+          console.error("Error generating AI image:", pollResponse.data.data.error);
         }
 
         if (isGenerating) {

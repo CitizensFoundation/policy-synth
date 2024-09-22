@@ -4,7 +4,7 @@ import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaboratio
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
-    static YOUR_PRIORITIES_CONNECTOR_VERSION = 4;
+    static YOUR_PRIORITIES_CONNECTOR_VERSION = 5;
     static baseQuestions = [
         {
             uniqueId: "name",
@@ -60,10 +60,10 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         user_id: 1,
         available: true,
         configuration: {
-            name: "Your Priorities",
+            name: "Ideas Collaboration",
             classType: PsConnectorClassTypes.IdeasCollaboration,
             hasPublicAccess: true,
-            description: "Connector for Your Priorities",
+            description: "Connector for Your Priorities Ideas Collaboration",
             imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
             iconName: "yourPriorities",
             questions: process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY
@@ -153,9 +153,9 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         let offset = 0;
         const limit = 20;
         let isMorePosts = true;
-        const filter = "recent"; // Options: "recent", "popular", "random", etc.
-        const categoryId = "null"; // Use "null" if no specific category.
-        const statusFilter = "published"; // Options: "published", "draft", etc.
+        const filter = "newest";
+        const categoryId = "null";
+        const statusFilter = "open";
         while (isMorePosts) {
             let url = `${this.serverBaseUrl}/groups/${groupId}/posts/${filter}/${categoryId}/${statusFilter}?offset=${offset}`;
             if (this.agentFabricUserId) {
@@ -165,7 +165,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                 const response = await axios.get(url, {
                     headers: this.getHeaders(),
                 });
-                const data = response.data;
+                const data = response.data.posts;
                 posts = posts.concat(data);
                 if (data.length < limit) {
                     isMorePosts = false;
@@ -258,6 +258,10 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                 if (pollResponse.data.data.imageId) {
                     isGenerating = false;
                     console.log("AI image generated:", pollResponse.data.data.imageId);
+                }
+                else if (pollResponse.data.error) {
+                    isGenerating = false;
+                    console.error("Error generating AI image:", pollResponse.data.data.error);
                 }
                 if (isGenerating) {
                     await new Promise((resolve) => setTimeout(resolve, 2000));
