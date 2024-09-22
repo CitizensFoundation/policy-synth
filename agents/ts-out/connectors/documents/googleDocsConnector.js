@@ -4,7 +4,7 @@ import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     static GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID = "3a7b2c1d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
-    static GOOGLE_DOCS_CONNECTOR_VERSION = 2;
+    static GOOGLE_DOCS_CONNECTOR_VERSION = 3;
     static getConnectorClass = {
         class_base_id: this.GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID,
         name: "Google Docs",
@@ -16,7 +16,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             classType: PsConnectorClassTypes.Document,
             description: "Connector for Google Docs",
             hasPublicAccess: true,
-            imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/339c8468-eb12-4167-a719-606bde321dc2.png",
+            imageUrl: "https://aoi-storage-production.citizens.is/dl/948e0e85b5a4036af23fa33aad2672cc--retina-1.png",
             iconName: "docs",
             questions: [
                 {

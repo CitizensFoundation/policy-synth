@@ -4,7 +4,7 @@ import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseSheetConnector } from "../base/baseSheetConnector.js";
 export declare class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     static readonly GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID = "4b8c3d2e-5f6a-1a8b-9c0d-1ecf3afb536d";
-    static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 4;
+    static readonly GOOGLE_SHEETS_CONNECTOR_VERSION = 5;
     static getConnectorClass: PsAgentConnectorClassCreationAttributes;
     client: JWT;
     sheets: sheets_v4.Sheets;

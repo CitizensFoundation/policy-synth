@@ -167,6 +167,7 @@ export class PsConnectorFactory {
     memory: any
   ): PsBaseIdeasCollaborationConnector | null {
     switch (connectorClass.configuration.name) {
+      case "Ideas Collaboration":
       case "Your Priorities":
         return new PsYourPrioritiesConnector(
           connector,

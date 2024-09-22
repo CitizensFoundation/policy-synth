@@ -8,7 +8,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
   static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
     "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
 
-  static readonly YOUR_PRIORITIES_CONNECTOR_VERSION = 6;
+  static readonly YOUR_PRIORITIES_CONNECTOR_VERSION = 7;
 
   static baseQuestions = [
     {
@@ -62,7 +62,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
   static getConnectorClass: PsAgentConnectorClassCreationAttributes = {
     class_base_id: this.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID,
-    name: "Your Priorities",
+    name: "Ideas Collaboration",
     version: this.YOUR_PRIORITIES_CONNECTOR_VERSION,
     user_id: 1,
     available: true,

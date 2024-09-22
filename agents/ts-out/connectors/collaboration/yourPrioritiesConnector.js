@@ -4,7 +4,7 @@ import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaboratio
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
-    static YOUR_PRIORITIES_CONNECTOR_VERSION = 5;
+    static YOUR_PRIORITIES_CONNECTOR_VERSION = 6;
     static baseQuestions = [
         {
             uniqueId: "name",
@@ -64,7 +64,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             classType: PsConnectorClassTypes.IdeasCollaboration,
             hasPublicAccess: true,
             description: "Connector for Your Priorities Ideas Collaboration",
-            imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/0a10f369-185b-40dc-802a-c2d78e6aab6d.png",
+            imageUrl: "https://aoi-storage-production.citizens.is/dl/242cb3b51b2282f311b715af18203dc8--retina-1.png",
             iconName: "yourPriorities",
             questions: process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY
                 ? this.baseQuestions
