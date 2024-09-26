@@ -36,6 +36,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             const modelType = model.configuration.type;
             const modelSize = model.configuration.modelSize;
             const modelKey = `${modelType}_${modelSize}`;
+            this.logger.debug(`Initializing model ${model.id} ${modelKey}`);
             const apiKeyConfig = accessConfiguration.find((access) => access.aiModelId === model.id);
             this.logger.debug(`Initializing model ${model.id}`);
             this.logger.debug(`Initializing model ${modelType}`);
@@ -93,7 +94,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         switch (modelType) {
             case PsAiModelType.Text:
             case PsAiModelType.TextReasoning:
-                return await this.callTextModel(modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+                return await this.callTextModel(modelType, modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
             case PsAiModelType.Embedding:
                 return await this.callEmbeddingModel(messages);
             case PsAiModelType.MultiModal:
@@ -108,7 +109,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 throw new Error(`Unsupported model type: ${modelType}`);
         }
     }
-    async callTextModel(modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
+    async callTextModel(modelType, modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
         let selectedModelSize = modelSize;
         const getFallbackPriority = (size) => {
             switch (size) {
@@ -141,7 +142,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         const modelSizePriority = getFallbackPriority(modelSize);
         let model;
         for (const size of modelSizePriority) {
-            const modelKey = `${PsAiModelType.Text}_${size}`;
+            const modelKey = `${modelType}_${size}`;
+            this.logger.debug(`Checking model ${modelKey}`);
             model = this.models.get(modelKey);
             if (model) {
                 selectedModelSize = size;
@@ -152,12 +154,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             }
         }
         if (!model) {
-            model = this.modelsByType.get(PsAiModelType.Text);
+            model = this.modelsByType.get(modelType);
             if (model) {
-                this.logger.warn(`Model not found by size, using default ${PsAiModelType.Text} model`);
+                this.logger.warn(`Model not found by size, using default ${modelType} model`);
             }
             else {
-                throw new Error(`No model available for type ${PsAiModelType.Text}`);
+                throw new Error(`No model available for type ${modelType}`);
             }
         }
         try {
@@ -170,13 +172,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 try {
                     //const estimatedTokensToAdd = tokensIn + tokenOutEstimate;
                     //TODO: Get Rate limit working again
-                    //await this.checkRateLimits(PsAiModelType.Text, estimatedTokensToAdd);
-                    //await this.updateRateLimits(PsAiModelType.Text, tokensIn);
+                    //await this.checkRateLimits(modelType, estimatedTokensToAdd);
+                    //await this.updateRateLimits(modelType, tokensIn);
                     const results = await model.generate(messages, !!streamingCallbacks, streamingCallbacks);
                     if (results) {
                         const { tokensIn, tokensOut, content } = results;
-                        //await this.updateRateLimits(PsAiModelType.Text, tokensOut);
-                        await this.saveTokenUsage(PsAiModelType.Text, selectedModelSize, tokensIn, tokensOut);
+                        //await this.updateRateLimits(modelType, tokensOut);
+                        await this.saveTokenUsage(modelType, selectedModelSize, tokensIn, tokensOut);
                         if (parseJson) {
                             let parsedJson;
                             try {

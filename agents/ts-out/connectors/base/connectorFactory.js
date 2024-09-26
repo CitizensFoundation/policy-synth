@@ -69,6 +69,7 @@ export class PsConnectorFactory {
     }
     static createIdeasCollaborationConnector(connector, connectorClass, agent, memory) {
         switch (connectorClass.configuration.name) {
+            case "Ideas Collaboration":
             case "Your Priorities":
                 return new PsYourPrioritiesConnector(connector, connectorClass, agent, memory);
             case "GitHub":

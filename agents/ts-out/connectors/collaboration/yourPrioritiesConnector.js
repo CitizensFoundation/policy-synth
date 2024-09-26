@@ -2,9 +2,11 @@ import axios from "axios";
 import qs from "qs";
 import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
+const MAX_RETRIES = 7;
+const RETRY_DELAY = 1000; // 1 second
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
-    static YOUR_PRIORITIES_CONNECTOR_VERSION = 6;
+    static YOUR_PRIORITIES_CONNECTOR_VERSION = 7;
     static baseQuestions = [
         {
             uniqueId: "name",
@@ -55,7 +57,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     ];
     static getConnectorClass = {
         class_base_id: this.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID,
-        name: "Your Priorities",
+        name: "Ideas Collaboration",
         version: this.YOUR_PRIORITIES_CONNECTOR_VERSION,
         user_id: 1,
         available: true,
@@ -215,27 +217,44 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             location: "",
             coverMediaType: "image",
         };
-        try {
-            const imageId = await this.generateImageWithAi(groupId, imagePrompt);
-            formData.uploadedHeaderImageId = imageId.toString();
-            console.log("Posting data:", formData);
-            const postResponse = await axios.post(`${this.serverBaseUrl}/posts/${groupId}${this.agentFabricUserId
-                ? `?agentFabricUserId=${this.agentFabricUserId}`
-                : ""}`, qs.stringify(formData), {
-                headers: {
-                    ...this.getHeaders(),
-                    ...{
-                        "Content-Type": "application/x-www-form-urlencoded",
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const imageId = await this.generateImageWithAi(groupId, imagePrompt);
+                formData.uploadedHeaderImageId = imageId.toString();
+                console.log(`Attempt ${attempt}: Posting data:`, formData);
+                const postResponse = await axios.post(`${this.serverBaseUrl}/posts/${groupId}${this.agentFabricUserId
+                    ? `?agentFabricUserId=${this.agentFabricUserId}`
+                    : ""}`, qs.stringify(formData), {
+                    headers: {
+                        ...this.getHeaders(),
+                        ...{
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
                     },
-                },
-            });
-            const responseData = postResponse.data;
-            return responseData;
+                });
+                return postResponse.data;
+            }
+            catch (error) {
+                console.error(`Attempt ${attempt} failed:`, error);
+                if (attempt === MAX_RETRIES) {
+                    console.error("Max retries reached. Throwing final error.");
+                    throw new Error("Failed to post data after multiple attempts.");
+                }
+                const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                if (axios.isAxiosError(error)) {
+                    const axiosError = error;
+                    if (axiosError.response && axiosError.response.status >= 500) {
+                        console.log(`Server error (5xx). Retrying in ${RETRY_DELAY}ms...`);
+                        await sleep(RETRY_DELAY);
+                        continue;
+                    }
+                }
+                throw error; // Rethrow if it's not a 5xx error
+            }
         }
-        catch (error) {
-            console.error("Error posting data:", error);
-            throw new Error("Failed to post data.");
-        }
+        // This line should never be reached due to the loop structure,
+        // but TypeScript might expect a return statement here
+        throw new Error("Unexpected end of post method");
     }
     async generateImageWithAi(groupId, prompt) {
         await this.login();

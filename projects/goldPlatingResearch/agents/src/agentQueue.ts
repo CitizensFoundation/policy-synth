@@ -200,7 +200,6 @@ export class GoldPlatingResearchQueue extends PolicySynthAgentQueue {
       } as GoldPlatingMemoryData;
     } else {
       this.logger.info(`Memory already set up for agent ${this.agent.id}`);
-      this.memory.researchItems[0].nationalLaw.supportArticleText.url = "https://www.althingi.is/altext/148/s/1029.html";
     }
   }
 }
