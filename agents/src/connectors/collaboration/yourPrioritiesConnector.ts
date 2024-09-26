@@ -1,8 +1,11 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import qs from "qs";
 import { PsAgent } from "../../dbModels/agent";
 import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
+
+const MAX_RETRIES = 7;
+const RETRY_DELAY = 1000; // 1 second
 
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
   static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
@@ -269,36 +272,58 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       coverMediaType: "image",
     };
 
-    try {
-      const imageId = await this.generateImageWithAi(groupId, imagePrompt);
-      formData.uploadedHeaderImageId = imageId.toString();
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const imageId = await this.generateImageWithAi(groupId, imagePrompt);
+        formData.uploadedHeaderImageId = imageId.toString();
 
-      console.log("Posting data:", formData);
+        console.log(`Attempt ${attempt}: Posting data:`, formData);
 
-      const postResponse = await axios.post(
-        `${this.serverBaseUrl}/posts/${groupId}${
-          this.agentFabricUserId
-            ? `?agentFabricUserId=${this.agentFabricUserId}`
-            : ""
-        }`,
-        qs.stringify(formData),
-        {
-          headers: {
-            ...this.getHeaders(),
-            ...{
-              "Content-Type": "application/x-www-form-urlencoded",
+        const postResponse = await axios.post(
+          `${this.serverBaseUrl}/posts/${groupId}${
+            this.agentFabricUserId
+              ? `?agentFabricUserId=${this.agentFabricUserId}`
+              : ""
+          }`,
+          qs.stringify(formData),
+          {
+            headers: {
+              ...this.getHeaders(),
+              ...{
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
             },
-          },
+          }
+        );
+
+        return postResponse.data;
+      } catch (error) {
+        console.error(`Attempt ${attempt} failed:`, error);
+
+        if (attempt === MAX_RETRIES) {
+          console.error("Max retries reached. Throwing final error.");
+          throw new Error("Failed to post data after multiple attempts.");
         }
-      );
 
-      const responseData = postResponse.data;
+        const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-      return responseData;
-    } catch (error) {
-      console.error("Error posting data:", error);
-      throw new Error("Failed to post data.");
+        if (axios.isAxiosError(error)) {
+          const axiosError = error as AxiosError;
+          if (axiosError.response && axiosError.response.status >= 500) {
+            console.log(`Server error (5xx). Retrying in ${RETRY_DELAY}ms...`);
+            await sleep(RETRY_DELAY);
+            continue;
+          }
+        }
+
+        throw error; // Rethrow if it's not a 5xx error
+      }
     }
+
+    // This line should never be reached due to the loop structure,
+    // but TypeScript might expect a return statement here
+    throw new Error("Unexpected end of post method");
+
   }
 
   async generateImageWithAi(groupId: number, prompt: string): Promise<number> {
