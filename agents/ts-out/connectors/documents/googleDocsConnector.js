@@ -4,7 +4,7 @@ import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     static GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID = "3a7b2c1d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
-    static GOOGLE_DOCS_CONNECTOR_VERSION = 3;
+    static GOOGLE_DOCS_CONNECTOR_VERSION = 5;
     static getConnectorClass = {
         class_base_id: this.GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID,
         name: "Google Docs",
@@ -177,6 +177,269 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
         catch (error) {
             console.error("Error:", error);
             throw error;
+        }
+    }
+    markdownToGoogleDocs(markdown) {
+        const requests = [];
+        let currentIndex = 1;
+        // Base font for the document
+        const baseAttributes = {
+            weightedFontFamily: {
+                fontFamily: "Poppins"
+            }
+        };
+        // Split markdown into lines
+        const lines = markdown.split('\n');
+        let insideCodeBlock = false;
+        for (let line of lines) {
+            // Handle code blocks
+            if (line.startsWith('```')) {
+                insideCodeBlock = !insideCodeBlock;
+                continue;
+            }
+            let attributes = { ...baseAttributes }; // Start with base attributes
+            let text = line + '\n'; // Append newline character
+            // Handle different Markdown elements
+            if (insideCodeBlock) {
+                Object.assign(attributes, {
+                    backgroundColor: { color: { rgbColor: { red: 0.95, green: 0.95, blue: 0.95 } } },
+                    weightedFontFamily: {
+                        fontFamily: "Courier New"
+                    },
+                });
+            }
+            else if (line.startsWith('# ')) {
+                // H1
+                text = line.substring(2) + '\n';
+                Object.assign(attributes, {
+                    bold: true,
+                    fontSize: { magnitude: 24, unit: 'PT' },
+                    weightedFontFamily: {
+                        fontFamily: "Prompt"
+                    },
+                });
+            }
+            else if (line.startsWith('## ')) {
+                // H2
+                text = line.substring(3) + '\n';
+                Object.assign(attributes, {
+                    bold: true,
+                    fontSize: { magnitude: 18, unit: 'PT' },
+                });
+            }
+            else if (line.startsWith('### ')) {
+                // H3
+                text = line.substring(4) + '\n';
+                Object.assign(attributes, {
+                    bold: true,
+                    fontSize: { magnitude: 16, unit: 'PT' },
+                });
+            }
+            // Initialize array to hold segments of text with styles
+            let segments = [];
+            // Process images
+            const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
+            let imageMatch;
+            let remainingText = text;
+            while ((imageMatch = imageRegex.exec(text)) !== null) {
+                const imageUrl = imageMatch[2];
+                // Insert text before the image
+                const indexBeforeImage = remainingText.indexOf(imageMatch[0]);
+                if (indexBeforeImage > 0) {
+                    segments.push({
+                        text: remainingText.substring(0, indexBeforeImage),
+                        style: { ...attributes },
+                    });
+                }
+                // Insert image
+                requests.push({
+                    insertInlineImage: {
+                        location: { index: currentIndex },
+                        uri: imageUrl,
+                    },
+                });
+                currentIndex += 1;
+                // Update remaining text
+                remainingText = remainingText.substring(indexBeforeImage + imageMatch[0].length);
+            }
+            // Add any remaining text after last image
+            if (remainingText) {
+                segments.push({
+                    text: remainingText,
+                    style: { ...attributes },
+                });
+            }
+            // Process each segment for inline styles
+            for (let segment of segments) {
+                let segmentText = segment.text;
+                let segmentStyle = { ...segment.style };
+                // Handle links
+                const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+                let linkMatch;
+                let linkSegments = [];
+                let lastIndex = 0;
+                while ((linkMatch = linkRegex.exec(segmentText)) !== null) {
+                    // Text before the link
+                    if (linkMatch.index > lastIndex) {
+                        linkSegments.push({
+                            text: segmentText.substring(lastIndex, linkMatch.index),
+                            style: { ...segmentStyle },
+                        });
+                    }
+                    // Link text
+                    linkSegments.push({
+                        text: linkMatch[1],
+                        style: {
+                            ...segmentStyle,
+                            link: { url: linkMatch[2] },
+                            underline: true,
+                            foregroundColor: { color: { rgbColor: { red: 0.0, green: 0.0, blue: 1.0 } } },
+                        },
+                    });
+                    lastIndex = linkMatch.index + linkMatch[0].length;
+                }
+                // Text after the last link
+                if (lastIndex < segmentText.length) {
+                    linkSegments.push({
+                        text: segmentText.substring(lastIndex),
+                        style: { ...segmentStyle },
+                    });
+                }
+                // Process each link segment for bold and italic
+                for (let linkSegment of linkSegments) {
+                    let linkSegmentText = linkSegment.text;
+                    let linkSegmentStyle = { ...linkSegment.style };
+                    // Handle bold and italic
+                    const styleRegex = /(\*\*|\*)(.*?)\1/g;
+                    let styleMatch;
+                    let styleSegments = [];
+                    let styleLastIndex = 0;
+                    while ((styleMatch = styleRegex.exec(linkSegmentText)) !== null) {
+                        // Text before the styled text
+                        if (styleMatch.index > styleLastIndex) {
+                            styleSegments.push({
+                                text: linkSegmentText.substring(styleLastIndex, styleMatch.index),
+                                style: { ...linkSegmentStyle },
+                            });
+                        }
+                        // Styled text
+                        let styleAttributes = { ...linkSegmentStyle };
+                        if (styleMatch[1] === '**') {
+                            styleAttributes.bold = true;
+                        }
+                        else if (styleMatch[1] === '*') {
+                            styleAttributes.italic = true;
+                        }
+                        styleSegments.push({
+                            text: styleMatch[2],
+                            style: styleAttributes,
+                        });
+                        styleLastIndex = styleMatch.index + styleMatch[0].length;
+                    }
+                    // Text after the last styled text
+                    if (styleLastIndex < linkSegmentText.length) {
+                        styleSegments.push({
+                            text: linkSegmentText.substring(styleLastIndex),
+                            style: { ...linkSegmentStyle },
+                        });
+                    }
+                    // Insert each style segment
+                    for (let styleSegment of styleSegments) {
+                        if (styleSegment.text.trim().length > 0) {
+                            // Insert the text
+                            requests.push({
+                                insertText: {
+                                    location: {
+                                        index: currentIndex,
+                                    },
+                                    text: styleSegment.text,
+                                },
+                            });
+                            // Update text style
+                            const fields = this.getFieldsFromAttributes(styleSegment.style);
+                            requests.push({
+                                updateTextStyle: {
+                                    range: {
+                                        startIndex: currentIndex,
+                                        endIndex: currentIndex + styleSegment.text.length,
+                                    },
+                                    textStyle: styleSegment.style,
+                                    fields: fields,
+                                },
+                            });
+                            currentIndex += styleSegment.text.length;
+                        }
+                    }
+                }
+            }
+        }
+        return { requests };
+    }
+    getFieldsFromAttributes(attributes) {
+        const fields = [];
+        for (const key in attributes) {
+            if (typeof attributes[key] === 'object' && !Array.isArray(attributes[key])) {
+                for (const subKey in attributes[key]) {
+                    fields.push(`${key}.${subKey}`);
+                }
+            }
+            else {
+                fields.push(key);
+            }
+        }
+        return fields.join(',');
+    }
+    // Updated updateDocumentFromMarkdown method to handle images and links
+    async updateDocumentFromMarkdown(markdown) {
+        const documentId = this.getConfig("googleDocsId", "");
+        if (!documentId) {
+            throw new Error("Google Docs ID is not set.");
+        }
+        try {
+            // Get the current document length
+            const currentDoc = await this.docs.documents.get({ documentId });
+            const endIndex = currentDoc.data.body?.content?.reduce((max, elem) => {
+                return elem.endIndex ? Math.max(max, elem.endIndex) : max;
+            }, 1) || 1;
+            console.log(`Current document length: ${endIndex}`);
+            let requests = [];
+            /* Delete existing content
+            if (endIndex > 1) {
+              requests.push({
+                deleteContentRange: {
+                  range: {
+                    startIndex: 1,
+                    endIndex: endIndex - 1, // Adjusted to not delete the last newline character
+                  },
+                },
+              });
+            }*/
+            // Convert Markdown to Google Docs requests
+            const { requests: markdownRequests } = this.markdownToGoogleDocs(markdown);
+            // Combine delete request with markdown requests
+            requests = requests.concat(markdownRequests);
+            console.log(`Number of update requests: ${requests.length}`);
+            console.log("Requests to be sent:", JSON.stringify(requests, null, 2));
+            // Perform the batch update
+            await this.docs.documents.batchUpdate({
+                documentId,
+                requestBody: {
+                    requests: requests,
+                },
+            });
+            console.log("Document updated successfully");
+        }
+        catch (error) {
+            console.error("Error updating document:", error);
+            if (error.code === 429) {
+                throw new Error("Rate limit exceeded. Please try again later.");
+            }
+            else if (error.code >= 500 && error.code < 600) {
+                throw new Error("Google Docs server error. Please try again later.");
+            }
+            else {
+                throw error;
+            }
         }
     }
     extractText(content) {
