@@ -1,18 +1,10 @@
 // Enum representing various levels of education types.
 // Each member represents a specific education level, mapped to a string value.
-export enum EducationType {
-  HighSchool = "highschool", // Type1: High school degree or completion.
-  CollegeCoursework = "collegeCoursework", // Type2: College coursework or study at a college/university.
-  AssociatesDegree = "associatesDegree", // Type3: Associate's degree or equivalent.
-  BachelorsDegree = "bachelorsDegree", // Type4: Bachelor's degree or equivalent.
-  MastersDegree = "mastersDegree", // Type5: Master's degree or equivalent.
-  DoctoralDegree = "doctoralDegree", // Type6: Doctoral degree or equivalent.
-  undefined = "undefined", // undefined
-}
+
 
 // Interface defining additional information for each EducationType.
 // This includes a code and an array of phrases associated with the education type.
-export interface EducationTypeInfo {
+interface EducationTypeInfo {
   code: string; // The code representing the education type, e.g., "Type1".
   phrases: string[]; // An array of phrases that are associated with the education type.
 }
@@ -20,7 +12,7 @@ export interface EducationTypeInfo {
 /**
  * Represents a job description along with its analysis.
  */
-export interface JobDescription {
+interface JobDescription {
   titleCode: string;
   variant: string;
   classOfService: string;
@@ -170,14 +162,14 @@ interface ProfessionalLicenseRequirement {
 /**
  * Represents an occupational category.
  */
-export interface OccupationalCategory {
+interface OccupationalCategory {
   id: string;
   mainCategory: string;
   descriptionMainCategory: string;
   subCategories: OccupationalSubCategory[];
 }
 
-export interface OccupationalSubCategory {
+interface OccupationalSubCategory {
   subCategory: string;
   descriptionSubCategory: string;
   link: string;

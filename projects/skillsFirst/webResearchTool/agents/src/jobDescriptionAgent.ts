@@ -1,18 +1,21 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
-import { PsAgentClassCreationAttributes } from "@policysynth/agents/dbModels/agentClass.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
-import { JobDescriptionMemoryData, JobDescription, EducationType, EducationTypes, JobEducationRequirement, JobDescriptionDegreeAnalysis, DegreeRequirementStatus, MandatoryStatusExplanations, ProfessionalLicenseRequirement, JobEducationRequirementTypes } from "./types.js";
 import fs from "fs";
 import path from "path";
+import { DetermineCollegeDegreeStatusAgent } from "./reviewAgents/determineStatus.js";
+import { ReviewEvidenceQuoteAgent } from "./reviewAgents/reviewEvidenceAgent.js";
+import { DetermineMandatoryStatusAgent } from "./reviewAgents/mantatoryStatus.js";
+import { DetermineProfessionalLicenseRequirementAgent } from "./reviewAgents/additionalRequirements.js";
+import { IdentifyBarriersAgent } from "./reviewAgents/identifyBarriers.js";
 
 // Main agent class that orchestrates the job description analysis
 export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  private static readonly JOB_DESCRIPTION_AGENT_CLASS_BASE_ID = "3a1b2c3d-4e5f-6789-0abc-def123456789"; // Replace with a unique UUID
+  private static readonly JOB_DESCRIPTION_AGENT_CLASS_BASE_ID = "efe71e49-50e5-4636-b3bd-f4adc97bbad4";
   private static readonly JOB_DESCRIPTION_AGENT_CLASS_VERSION = 1;
 
   constructor(
@@ -37,8 +40,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     const allJobDescriptions = JSON.parse(jobDescriptionsData) as JobDescription[];
 
     // Get the number of job descriptions to process from configuration or default to 10
-    const numJobDescriptions =
-      this.agent.configuration?.numJobDescriptions || 10;
+    const numJobDescriptions =10; // this.agent.configuration?.numJobDescriptions ||
 
     // Choose numJobDescriptions at random
     const selectedJobDescriptions = this.selectRandomJobDescriptions(
@@ -160,7 +162,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         description:
           "An agent for analyzing job descriptions for education requirements",
         queueName: "JOB_DESCRIPTION_ANALYSIS",
-        imageUrl: "", // Provide an image URL if available
+        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/d243273c-f11e-4055-9a78-eaa1fa4baa28.png", // Provide an image URL if available
         iconName: "job_description_analysis",
         capabilities: ["analysis", "text processing"],
         requestedAiModelSizes: [PsAiModelSize.Medium],

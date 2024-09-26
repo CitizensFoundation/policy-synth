@@ -1,4 +1,3 @@
-import { OccupationalCategory } from './types';
-import occupationalCategoriesData from './occupationalCategories.json';
+//import occupationalCategoriesData from './occupationalCategories.json';
 
-export const occupationalCategories: OccupationalCategory[] = occupationalCategoriesData;
+//export const occupationalCategories: OccupationalCategory[] = occupationalCategoriesData;
