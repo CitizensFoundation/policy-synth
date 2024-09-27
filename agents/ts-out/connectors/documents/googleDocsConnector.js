@@ -211,6 +211,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             weightedFontFamily: {
                 fontFamily: "Poppins",
             },
+            fontSize: { magnitude: 11, unit: "PT" },
         };
         // Split markdown into lines
         const lines = markdown.split("\n");
