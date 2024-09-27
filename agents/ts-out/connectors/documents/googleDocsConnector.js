@@ -2,9 +2,37 @@ import { google } from "googleapis";
 import { JWT } from "google-auth-library";
 import { PsBaseDocumentConnector } from "../base/baseDocumentConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
+function deepClone(obj) {
+    if (obj === null || typeof obj !== 'object')
+        return obj;
+    if (Array.isArray(obj))
+        return obj.map(deepClone);
+    const cloned = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            cloned[key] = deepClone(obj[key]);
+        }
+    }
+    return cloned;
+}
+function getFieldsFromAttributes(attributes, prefix = '') {
+    const fields = [];
+    for (const key in attributes) {
+        const value = attributes[key];
+        const path = prefix ? `${prefix}.${key}` : key;
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            const subFields = getFieldsFromAttributes(value, path);
+            fields.push(subFields);
+        }
+        else {
+            fields.push(path);
+        }
+    }
+    return fields.join(',');
+}
 export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     static GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID = "3a7b2c1d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
-    static GOOGLE_DOCS_CONNECTOR_VERSION = 5;
+    static GOOGLE_DOCS_CONNECTOR_VERSION = 6;
     static getConnectorClass = {
         class_base_id: this.GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID,
         name: "Google Docs",
@@ -59,7 +87,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             throw new Error("Google Service Account credentials are not set.");
         }
         let credentials;
-        if (typeof credentialsConfig === 'string') {
+        if (typeof credentialsConfig === "string") {
             try {
                 credentials = JSON.parse(credentialsConfig);
             }
@@ -67,7 +95,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
                 throw new Error("Invalid JSON string for Google Service Account credentials.");
             }
         }
-        else if (typeof credentialsConfig === 'object') {
+        else if (typeof credentialsConfig === "object") {
             credentials = credentialsConfig;
         }
         else {
@@ -80,13 +108,9 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
         this.client = new JWT({
             email: credentials.client_email,
             key: credentials.private_key,
-            scopes: ["https://www.googleapis.com/auth/documents"],
-        });
-        // Create a new JWT client using the credentials
-        this.client = new JWT({
-            email: credentials.client_email,
-            key: credentials.private_key,
-            scopes: ["https://www.googleapis.com/auth/documents"],
+            scopes: [
+                "https://www.googleapis.com/auth/documents"
+            ],
         });
         // Authorize and create a Google Docs API instance
         try {
@@ -185,55 +209,66 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
         // Base font for the document
         const baseAttributes = {
             weightedFontFamily: {
-                fontFamily: "Poppins"
-            }
+                fontFamily: "Poppins",
+            },
         };
         // Split markdown into lines
-        const lines = markdown.split('\n');
+        const lines = markdown.split("\n");
         let insideCodeBlock = false;
         for (let line of lines) {
             // Handle code blocks
-            if (line.startsWith('```')) {
+            if (line.startsWith("```")) {
                 insideCodeBlock = !insideCodeBlock;
                 continue;
             }
-            let attributes = { ...baseAttributes }; // Start with base attributes
-            let text = line + '\n'; // Append newline character
+            // Deep clone base attributes to prevent mutations
+            let attributes = deepClone(baseAttributes);
+            let text = line + "\n"; // Append newline character
             // Handle different Markdown elements
             if (insideCodeBlock) {
-                Object.assign(attributes, {
-                    backgroundColor: { color: { rgbColor: { red: 0.95, green: 0.95, blue: 0.95 } } },
-                    weightedFontFamily: {
-                        fontFamily: "Courier New"
+                Object.assign(attributes, deepClone({
+                    backgroundColor: {
+                        color: { rgbColor: { red: 0.95, green: 0.95, blue: 0.95 } },
                     },
-                });
+                    weightedFontFamily: {
+                        fontFamily: "Courier New",
+                    },
+                }));
             }
-            else if (line.startsWith('# ')) {
+            else if (line.startsWith("# ")) {
                 // H1
-                text = line.substring(2) + '\n';
-                Object.assign(attributes, {
+                text = line.substring(2) + "\n";
+                Object.assign(attributes, deepClone({
                     bold: true,
-                    fontSize: { magnitude: 24, unit: 'PT' },
+                    fontSize: { magnitude: 22, unit: "PT" },
                     weightedFontFamily: {
-                        fontFamily: "Prompt"
+                        fontFamily: "Prompt",
                     },
-                });
+                }));
             }
-            else if (line.startsWith('## ')) {
+            else if (line.startsWith("## ")) {
                 // H2
-                text = line.substring(3) + '\n';
-                Object.assign(attributes, {
+                text = line.substring(3) + "\n";
+                Object.assign(attributes, deepClone({
                     bold: true,
-                    fontSize: { magnitude: 18, unit: 'PT' },
-                });
+                    fontSize: { magnitude: 18, unit: "PT" },
+                }));
             }
-            else if (line.startsWith('### ')) {
+            else if (line.startsWith("### ")) {
                 // H3
-                text = line.substring(4) + '\n';
-                Object.assign(attributes, {
+                text = line.substring(4) + "\n";
+                Object.assign(attributes, deepClone({
                     bold: true,
-                    fontSize: { magnitude: 16, unit: 'PT' },
-                });
+                    fontSize: { magnitude: 16, unit: "PT" },
+                }));
+            }
+            else if (line.startsWith("#### ")) {
+                // H4
+                text = line.substring(5) + "\n";
+                Object.assign(attributes, deepClone({
+                    bold: true,
+                    fontSize: { magnitude: 14, unit: "PT" },
+                }));
             }
             // Initialize array to hold segments of text with styles
             let segments = [];
@@ -241,14 +276,14 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
             let imageMatch;
             let remainingText = text;
-            while ((imageMatch = imageRegex.exec(text)) !== null) {
+            while ((imageMatch = imageRegex.exec(remainingText)) !== null) {
                 const imageUrl = imageMatch[2];
                 // Insert text before the image
                 const indexBeforeImage = remainingText.indexOf(imageMatch[0]);
                 if (indexBeforeImage > 0) {
                     segments.push({
                         text: remainingText.substring(0, indexBeforeImage),
-                        style: { ...attributes },
+                        style: deepClone(attributes),
                     });
                 }
                 // Insert image
@@ -258,7 +293,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
                         uri: imageUrl,
                     },
                 });
-                currentIndex += 1;
+                currentIndex += 1; // Images occupy one character position
                 // Update remaining text
                 remainingText = remainingText.substring(indexBeforeImage + imageMatch[0].length);
             }
@@ -266,15 +301,15 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             if (remainingText) {
                 segments.push({
                     text: remainingText,
-                    style: { ...attributes },
+                    style: deepClone(attributes),
                 });
             }
             // Process each segment for inline styles
             for (let segment of segments) {
                 let segmentText = segment.text;
-                let segmentStyle = { ...segment.style };
+                let segmentStyle = deepClone(segment.style);
                 // Handle links
-                const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+                const linkRegex = /\[(.*?)\]\((https?:\/\/[^\s)]+)\)/g;
                 let linkMatch;
                 let linkSegments = [];
                 let lastIndex = 0;
@@ -283,18 +318,20 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
                     if (linkMatch.index > lastIndex) {
                         linkSegments.push({
                             text: segmentText.substring(lastIndex, linkMatch.index),
-                            style: { ...segmentStyle },
+                            style: deepClone(segmentStyle),
                         });
                     }
                     // Link text
                     linkSegments.push({
                         text: linkMatch[1],
-                        style: {
+                        style: deepClone({
                             ...segmentStyle,
                             link: { url: linkMatch[2] },
-                            underline: true,
-                            foregroundColor: { color: { rgbColor: { red: 0.0, green: 0.0, blue: 1.0 } } },
-                        },
+                            //underline: true,
+                            foregroundColor: {
+                            // color: { rgbColor: { red: 0.0, green: 0.0, blue: 1.0 } },
+                            },
+                        }),
                     });
                     lastIndex = linkMatch.index + linkMatch[0].length;
                 }
@@ -302,13 +339,13 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
                 if (lastIndex < segmentText.length) {
                     linkSegments.push({
                         text: segmentText.substring(lastIndex),
-                        style: { ...segmentStyle },
+                        style: deepClone(segmentStyle),
                     });
                 }
                 // Process each link segment for bold and italic
                 for (let linkSegment of linkSegments) {
                     let linkSegmentText = linkSegment.text;
-                    let linkSegmentStyle = { ...linkSegment.style };
+                    let linkSegmentStyle = deepClone(linkSegment.style);
                     // Handle bold and italic
                     const styleRegex = /(\*\*|\*)(.*?)\1/g;
                     let styleMatch;
@@ -319,15 +356,15 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
                         if (styleMatch.index > styleLastIndex) {
                             styleSegments.push({
                                 text: linkSegmentText.substring(styleLastIndex, styleMatch.index),
-                                style: { ...linkSegmentStyle },
+                                style: deepClone(linkSegmentStyle),
                             });
                         }
                         // Styled text
-                        let styleAttributes = { ...linkSegmentStyle };
-                        if (styleMatch[1] === '**') {
+                        let styleAttributes = deepClone(linkSegmentStyle);
+                        if (styleMatch[1] === "**") {
                             styleAttributes.bold = true;
                         }
-                        else if (styleMatch[1] === '*') {
+                        else if (styleMatch[1] === "*") {
                             styleAttributes.italic = true;
                         }
                         styleSegments.push({
@@ -340,12 +377,12 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
                     if (styleLastIndex < linkSegmentText.length) {
                         styleSegments.push({
                             text: linkSegmentText.substring(styleLastIndex),
-                            style: { ...linkSegmentStyle },
+                            style: deepClone(linkSegmentStyle),
                         });
                     }
                     // Insert each style segment
                     for (let styleSegment of styleSegments) {
-                        if (styleSegment.text.trim().length > 0) {
+                        if (styleSegment.text.length > 0) {
                             // Insert the text
                             requests.push({
                                 insertText: {
@@ -356,7 +393,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
                                 },
                             });
                             // Update text style
-                            const fields = this.getFieldsFromAttributes(styleSegment.style);
+                            const fields = getFieldsFromAttributes(styleSegment.style);
                             requests.push({
                                 updateTextStyle: {
                                     range: {
@@ -374,20 +411,6 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
             }
         }
         return { requests };
-    }
-    getFieldsFromAttributes(attributes) {
-        const fields = [];
-        for (const key in attributes) {
-            if (typeof attributes[key] === 'object' && !Array.isArray(attributes[key])) {
-                for (const subKey in attributes[key]) {
-                    fields.push(`${key}.${subKey}`);
-                }
-            }
-            else {
-                fields.push(key);
-            }
-        }
-        return fields.join(',');
     }
     // Updated updateDocumentFromMarkdown method to handle images and links
     async updateDocumentFromMarkdown(markdown) {
