@@ -48,10 +48,11 @@ Please analyze the job description and provide the output in the specified JSON 
             this.createHumanMessage(userPrompt),
         ];
         const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, true);
-        const result = JSON.parse(resultText);
+        const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.needsCollegeDegree = result.needsCollegeDegree;
         jobDescription.degreeAnalysis.educationRequirements = result.educationRequirements;
+        this.logger.debug(`College degree status determined for ${jobDescription.name} - ${result.needsCollegeDegree}`);
         await this.updateRangedProgress(100, "College degree status determined");
     }
     // Helper function to render education types

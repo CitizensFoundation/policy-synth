@@ -71,7 +71,7 @@ Do not include any explanations or comments before or after the JSON output.
       true
     );
 
-    const result = JSON.parse(resultText) as ProfessionalLicenseRequirement;
+    const result = resultText as ProfessionalLicenseRequirement;
 
     jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {} as JobDescriptionDegreeAnalysis;
     jobDescription.degreeAnalysis.professionalLicenseRequirement = result;

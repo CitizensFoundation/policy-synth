@@ -1,8 +1,11 @@
+import { fileURLToPath } from "url";
+import path, { dirname } from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import fs from "fs";
-import path from "path";
 import { DetermineCollegeDegreeStatusAgent } from "./reviewAgents/determineStatus.js";
 import { ReviewEvidenceQuoteAgent } from "./reviewAgents/reviewEvidenceAgent.js";
 import { DetermineMandatoryStatusAgent } from "./reviewAgents/mantatoryStatus.js";
@@ -23,7 +26,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         const jobDescriptionsData = fs.readFileSync(path.join(__dirname, "data", "jobDescriptions.json"), "utf-8");
         const allJobDescriptions = JSON.parse(jobDescriptionsData);
         // Get the number of job descriptions to process from configuration or default to 10
-        const numJobDescriptions = 10; // this.agent.configuration?.numJobDescriptions ||
+        const numJobDescriptions = 250; // this.agent.configuration?.numJobDescriptions ||
         // Choose numJobDescriptions at random
         const selectedJobDescriptions = this.selectRandomJobDescriptions(allJobDescriptions, numJobDescriptions);
         this.memory.jobDescriptions = selectedJobDescriptions;
@@ -45,7 +48,9 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
             }
             // Now process the job description
             await this.processJobDescription(jobDescription);
+            await this.saveMemory();
         }
+        await this.saveMemory();
         await this.updateRangedProgress(100, "Job Description Analysis Completed");
         await this.setCompleted("Task Completed");
     }
@@ -64,18 +69,23 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         // Step 1: Determine if the JobDescription includes a discussion of a college degree or higher education requirement.
         const determineDegreeStatusAgent = new DetermineCollegeDegreeStatusAgent(this.agent, this.memory, 0, 20);
         await determineDegreeStatusAgent.processJobDescription(jobDescription);
+        await this.saveMemory();
         // Step 2: For all EducationTypes identified as True (except HighSchool), review evidence quote.
         const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(this.agent, this.memory, 20, 40);
         await reviewEvidenceQuoteAgent.processJobDescription(jobDescription);
+        await this.saveMemory();
         // Step 3: Determine whether any college degree requirement is mandatory or permissive.
         const determineMandatoryStatusAgent = new DetermineMandatoryStatusAgent(this.agent, this.memory, 40, 60);
         await determineMandatoryStatusAgent.processJobDescription(jobDescription);
+        await this.saveMemory();
         // Step 4: Determine whether any professional license is required.
         const determineProfessionalLicenseAgent = new DetermineProfessionalLicenseRequirementAgent(this.agent, this.memory, 60, 80);
         await determineProfessionalLicenseAgent.processJobDescription(jobDescription);
+        await this.saveMemory();
         // Step 5: Identify any barriers to hiring applicants without a college or university degree.
         const identifyBarriersAgent = new IdentifyBarriersAgent(this.agent, this.memory, 80, 100);
         await identifyBarriersAgent.processJobDescription(jobDescription);
+        await this.saveMemory();
     }
     // Static method to get agent class attributes
     static getAgentClass() {

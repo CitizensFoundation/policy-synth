@@ -57,7 +57,7 @@ Do not include any explanations or comments before or after the JSON output.
 `;
         const messages = [this.createSystemMessage(systemPrompt)];
         const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, true);
-        const result = JSON.parse(resultText);
+        const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.degreeRequirementStatus = result;
         // Handle mandatory status explanations based on conditions

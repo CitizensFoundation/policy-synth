@@ -48,7 +48,7 @@ Do not include any explanations or comments before or after the JSON output.
 `;
         const messages = [this.createSystemMessage(systemPrompt)];
         const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, true);
-        const result = JSON.parse(resultText);
+        const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.professionalLicenseRequirement = result;
         await this.updateRangedProgress(100, "Professional license requirements determined");

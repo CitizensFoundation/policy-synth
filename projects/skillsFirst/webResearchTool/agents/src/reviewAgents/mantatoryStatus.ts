@@ -80,7 +80,7 @@ Do not include any explanations or comments before or after the JSON output.
       true
     );
 
-    const result = JSON.parse(resultText) as DegreeRequirementStatus;
+    const result = resultText as DegreeRequirementStatus;
 
     jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {} as JobDescriptionDegreeAnalysis;
     jobDescription.degreeAnalysis.degreeRequirementStatus = result;

@@ -72,7 +72,7 @@ Please analyze the job description and provide the output in the specified JSON 
       true
     );
 
-    const result = JSON.parse(resultText) as {
+    const result = resultText as {
       needsCollegeDegree: boolean;
       educationRequirements: JobEducationRequirement[];
     };
@@ -80,6 +80,8 @@ Please analyze the job description and provide the output in the specified JSON 
     jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {} as JobDescriptionDegreeAnalysis;
     jobDescription.degreeAnalysis.needsCollegeDegree = result.needsCollegeDegree;
     jobDescription.degreeAnalysis.educationRequirements = result.educationRequirements;
+
+    this.logger.debug(`College degree status determined for ${jobDescription.name} - ${result.needsCollegeDegree}`);
 
     await this.updateRangedProgress(100, "College degree status determined");
   }
