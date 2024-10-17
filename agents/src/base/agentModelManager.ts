@@ -462,47 +462,53 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     this.logger.debug(`Model: ${model.modelName}`);
 
-    try {
-      // Use a transaction to ensure data consistency
-      await sequelize.transaction(async (t: Transaction) => {
-        const [usage, created] = await PsModelUsage.findOrCreate({
-          where: {
-            model_id: modelId,
-            agent_id: this.agentId,
-          },
-          defaults: {
-            token_in_count: tokensIn,
-            token_out_count: tokensOut,
-            token_in_cached_context_count: 0,
-            model_id: modelId,
-            agent_id: this.agentId,
-            user_id: this.userId,
-          },
-          transaction: t,
-        });
-
-        if (!created) {
-          // Use increment to safely update the counters only if the record wasn't just created
-          await usage.increment(
-            {
+    if (!this.agentId && process.env.PS_AI_MODEL_TYPE) {
+      console.log(`Token usage for model ${model.modelName}: tokensIn: ${tokensIn} tokensOut: ${tokensOut}`);
+    } else {
+      try {
+        // Use a transaction to ensure data consistency
+        await sequelize.transaction(async (t: Transaction) => {
+          const [usage, created] = await PsModelUsage.findOrCreate({
+            where: {
+              model_id: modelId,
+              agent_id: this.agentId,
+            },
+            defaults: {
               token_in_count: tokensIn,
               token_out_count: tokensOut,
+              token_in_cached_context_count: 0,
+              model_id: modelId,
+              agent_id: this.agentId,
+              user_id: this.userId,
             },
-            { transaction: t }
-          );
-        }
+            transaction: t,
+          });
 
-        this.logger.debug("Usage after update: ", usage.get({ plain: true }));
-      });
+          if (!created) {
+            // Use increment to safely update the counters only if the record wasn't just created
+            await usage.increment(
+              {
+                token_in_count: tokensIn,
+                token_out_count: tokensOut,
+              },
+              { transaction: t }
+            );
+          }
 
-      this.logger.info(
-        `Token usage updated for agent ${this.agentId} and model ${model.modelName}`
-      );
-    } catch (error) {
-      this.logger.error("Error saving or updating token usage in database");
-      this.logger.error(error);
-      throw error;
+          this.logger.debug("Usage after update: ", usage.get({ plain: true }));
+        });
+
+        this.logger.info(
+          `Token usage updated for agent ${this.agentId} and model ${model.modelName}`
+        );
+      } catch (error) {
+        this.logger.error("Error saving or updating token usage in database");
+        this.logger.error(error);
+        throw error;
+      }
+
     }
+
   }
 
   public async getTokensFromMessages(messages: PsModelMessage[]): Promise<number> {

@@ -87,11 +87,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     this.logger.warn(`Unsupported model provider: ${modelProvider}`);
                     return;
             }
-            this.models.set(modelKey, model);
-            this.modelsByType.set(modelType, model);
-            this.modelIds.set(modelKey, -1); // Use -1 to indicate that this is a single model not really in db
-            this.modelIdsByType.set(modelType, -1);
-            this.logger.info(`Initialized AI model from environment variables: ${modelKey}`);
+            if (model) {
+                this.models.set(modelKey, model);
+                this.modelsByType.set(modelType, model);
+                this.modelIds.set(modelKey, -1); // Use -1 to indicate that this is a single model not really in db
+                this.modelIdsByType.set(modelType, -1);
+                this.logger.info(`Initialized AI model from environment variables: ${modelKey}`);
+            }
+            else {
+                this.logger.warn(`Failed to initialize AI model from environment variables: ${modelKey}`);
+            }
         }
         return model;
     }
@@ -227,7 +232,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             if (model) {
                 this.logger.warn(`Model not found by size, using default ${modelType} model`);
             }
-            else if (process.env.PS_AI_MODEL_NAME && process.env.PS_AI_MODEL_TYPE) {
+            else {
                 throw new Error(`No model available for type ${modelType}`);
             }
         }
@@ -345,39 +350,44 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             throw new Error(`Model of type ${modelType} and size ${modelSize} not initialized`);
         }
         this.logger.debug(`Model: ${model.modelName}`);
-        try {
-            // Use a transaction to ensure data consistency
-            await sequelize.transaction(async (t) => {
-                const [usage, created] = await PsModelUsage.findOrCreate({
-                    where: {
-                        model_id: modelId,
-                        agent_id: this.agentId,
-                    },
-                    defaults: {
-                        token_in_count: tokensIn,
-                        token_out_count: tokensOut,
-                        token_in_cached_context_count: 0,
-                        model_id: modelId,
-                        agent_id: this.agentId,
-                        user_id: this.userId,
-                    },
-                    transaction: t,
-                });
-                if (!created) {
-                    // Use increment to safely update the counters only if the record wasn't just created
-                    await usage.increment({
-                        token_in_count: tokensIn,
-                        token_out_count: tokensOut,
-                    }, { transaction: t });
-                }
-                this.logger.debug("Usage after update: ", usage.get({ plain: true }));
-            });
-            this.logger.info(`Token usage updated for agent ${this.agentId} and model ${model.modelName}`);
+        if (!this.agentId && process.env.PS_AI_MODEL_TYPE) {
+            console.log(`Token usage for model ${model.modelName}: tokensIn: ${tokensIn} tokensOut: ${tokensOut}`);
         }
-        catch (error) {
-            this.logger.error("Error saving or updating token usage in database");
-            this.logger.error(error);
-            throw error;
+        else {
+            try {
+                // Use a transaction to ensure data consistency
+                await sequelize.transaction(async (t) => {
+                    const [usage, created] = await PsModelUsage.findOrCreate({
+                        where: {
+                            model_id: modelId,
+                            agent_id: this.agentId,
+                        },
+                        defaults: {
+                            token_in_count: tokensIn,
+                            token_out_count: tokensOut,
+                            token_in_cached_context_count: 0,
+                            model_id: modelId,
+                            agent_id: this.agentId,
+                            user_id: this.userId,
+                        },
+                        transaction: t,
+                    });
+                    if (!created) {
+                        // Use increment to safely update the counters only if the record wasn't just created
+                        await usage.increment({
+                            token_in_count: tokensIn,
+                            token_out_count: tokensOut,
+                        }, { transaction: t });
+                    }
+                    this.logger.debug("Usage after update: ", usage.get({ plain: true }));
+                });
+                this.logger.info(`Token usage updated for agent ${this.agentId} and model ${model.modelName}`);
+            }
+            catch (error) {
+                this.logger.error("Error saving or updating token usage in database");
+                this.logger.error(error);
+                throw error;
+            }
         }
     }
     async getTokensFromMessages(messages) {
