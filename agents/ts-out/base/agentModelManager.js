@@ -27,9 +27,78 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         this.agentId = agentId;
         this.initializeModels(aiModels, accessConfiguration);
     }
+    initializeOneModelFromEnv() {
+        const modelType = process.env.PS_AI_MODEL_TYPE;
+        const modelSize = process.env.PS_AI_MODEL_SIZE;
+        const modelProvider = process.env.PS_AI_MODEL_PROVIDER;
+        const modelName = process.env.PS_AI_MODEL_NAME;
+        let apiKey;
+        switch (modelProvider?.toLowerCase()) {
+            case "openai":
+                apiKey = process.env.OPENAI_API_KEY;
+                break;
+            case "anthropic":
+                apiKey = process.env.ANTHROPIC_API_KEY;
+                break;
+            case "google":
+                apiKey = process.env.GOOGLE_API_KEY;
+                break;
+            case "azure":
+                apiKey = process.env.AZURE_API_KEY;
+                break;
+            default:
+                throw new Error(`Unsupported model provider: ${modelProvider}`);
+        }
+        if (!modelType || !modelSize || !modelProvider || !modelName || !apiKey) {
+            this.logger.warn("Missing required environment variables for AI model initialization");
+            return;
+        }
+        const modelKey = `${modelType}_${modelSize}`;
+        let model = this.models.get(modelKey);
+        if (!model) {
+            const baseConfig = {
+                apiKey: apiKey,
+                modelName: modelName,
+                maxTokensOut: this.maxModelTokensOut,
+                temperature: this.modelTemperature,
+            };
+            switch (modelProvider.toLowerCase()) {
+                case "anthropic":
+                    model = new ClaudeChat(baseConfig);
+                    break;
+                case "openai":
+                    model = new OpenAiChat(baseConfig);
+                    break;
+                case "google":
+                    model = new GoogleGeminiChat(baseConfig);
+                    break;
+                case "azure":
+                    if (!process.env.PS_AI_MODEL_ENDPOINT || !process.env.PS_AI_MODEL_DEPLOYMENT_NAME) {
+                        this.logger.warn("Missing Azure-specific environment variables");
+                        return;
+                    }
+                    model = new AzureOpenAiChat({
+                        ...baseConfig,
+                        endpoint: process.env.PS_AI_MODEL_ENDPOINT,
+                        deploymentName: process.env.PS_AI_MODEL_DEPLOYMENT_NAME,
+                    });
+                    break;
+                default:
+                    this.logger.warn(`Unsupported model provider: ${modelProvider}`);
+                    return;
+            }
+            this.models.set(modelKey, model);
+            this.modelsByType.set(modelType, model);
+            this.modelIds.set(modelKey, -1); // Use -1 to indicate that this is a single model not really in db
+            this.modelIdsByType.set(modelType, -1);
+            this.logger.info(`Initialized AI model from environment variables: ${modelKey}`);
+        }
+        return model;
+    }
     initializeModels(aiModels, accessConfiguration) {
         if (!aiModels || aiModels.length === 0) {
             this.logger.info(`No AI models found for agent ${this.agentId}`);
+            this.initializeOneModelFromEnv();
             return;
         }
         for (const model of aiModels) {
@@ -158,7 +227,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             if (model) {
                 this.logger.warn(`Model not found by size, using default ${modelType} model`);
             }
-            else {
+            else if (process.env.PS_AI_MODEL_NAME && process.env.PS_AI_MODEL_TYPE) {
                 throw new Error(`No model available for type ${modelType}`);
             }
         }

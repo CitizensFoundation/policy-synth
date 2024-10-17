@@ -25,7 +25,10 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
   }
 
   initializeRedis() {
-    let redisUrl = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379";
+    let redisUrl =
+      process.env.REDIS_AGENT_URL ||
+      process.env.REDIS_URL ||
+      "redis://localhost:6379";
 
     // Handle the 'redis://h:' case
     if (redisUrl.startsWith("redis://h:")) {
@@ -259,6 +262,15 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
                     `Unknown action ${data.action} for job ${job.id}`
                   );
               }
+            } else if (
+              process.env.PS_AI_MODEL_NAME &&
+              process.env.PS_AI_MODEL_TYPE
+            ) {
+              await this.loadAgentMemoryFromRedis();
+              await this.setupMemoryIfNeeded();
+              await this.loadAgentStatusFromRedis();
+              await this.setupStatusIfNeeded();
+              await this.startAgent();
             } else {
               throw new Error(`Agent not found for job ${job.id}`);
             }
@@ -371,7 +383,9 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     state: "running" | "stopped" | "paused" | "error",
     message?: string
   ) {
-    this.logger.debug(`Changing agent status to ${state} with message ${message}`);
+    this.logger.debug(
+      `Changing agent status to ${state} with message ${message}`
+    );
     //TODO: Look into moving status into the agent db object so we can update with transactions
     await this.loadStatusFromRedis();
     if (this.agent && this.status) {

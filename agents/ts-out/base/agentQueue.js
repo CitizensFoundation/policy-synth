@@ -21,7 +21,9 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
         this.initializeRedis();
     }
     initializeRedis() {
-        let redisUrl = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379";
+        let redisUrl = process.env.REDIS_AGENT_URL ||
+            process.env.REDIS_URL ||
+            "redis://localhost:6379";
         // Handle the 'redis://h:' case
         if (redisUrl.startsWith("redis://h:")) {
             redisUrl = redisUrl.replace("redis://h:", "redis://:");
@@ -205,6 +207,14 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                             default:
                                 throw new Error(`Unknown action ${data.action} for job ${job.id}`);
                         }
+                    }
+                    else if (process.env.PS_AI_MODEL_NAME &&
+                        process.env.PS_AI_MODEL_TYPE) {
+                        await this.loadAgentMemoryFromRedis();
+                        await this.setupMemoryIfNeeded();
+                        await this.loadAgentStatusFromRedis();
+                        await this.setupStatusIfNeeded();
+                        await this.startAgent();
                     }
                     else {
                         throw new Error(`Agent not found for job ${job.id}`);
