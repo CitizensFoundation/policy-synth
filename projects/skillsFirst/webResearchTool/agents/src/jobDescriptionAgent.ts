@@ -44,7 +44,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       path.join(__dirname, "data", "jobDescriptions.json"),
       "utf-8"
     );
-    const allJobDescriptions = JSON.parse(jobDescriptionsData) as JobDescription[];
+
+    let allJobDescriptions = JSON.parse(jobDescriptionsData) as JobDescription[];
 
     // Get the number of job descriptions to process from configuration or default to 10
     const numJobDescriptions = 250; // this.agent.configuration?.numJobDescriptions ||
@@ -55,7 +56,9 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       numJobDescriptions
     );
 
-    this.memory.jobDescriptions = selectedJobDescriptions;
+    if (!this.memory.jobDescriptions || this.memory.jobDescriptions.length === 0) {
+      this.memory.jobDescriptions = selectedJobDescriptions;
+    }
 
     // Process each job description
     for (let i = 0; i < selectedJobDescriptions.length; i++) {
