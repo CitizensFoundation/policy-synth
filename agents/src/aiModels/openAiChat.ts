@@ -43,13 +43,30 @@ export class OpenAiChat extends BaseChatModel {
         model: this.modelName,
         messages: formattedMessages,
       });
-      const content = response.choices[0]?.message?.content;
 
-      //console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
+      const content = response.choices[0]?.message?.content;
+      const tokensIn = response.usage!.prompt_tokens;
+      const tokensOut = response.usage!.completion_tokens;
+      const cachedTokens = response.usage!.prompt_tokens_details?.cached_tokens || 0;
+
+      // Adjust the tokensIn to reflect the 50% discount for cached tokens
+      const adjustedTokensIn = tokensIn - (cachedTokens * 0.5);
+
+      const cacheRatio = (cachedTokens / tokensIn) * 100;
+
+      console.debug({
+        tokensIn,
+        cachedTokens,
+        cacheRatio,
+        tokensOut,
+        adjustedTokensIn,
+        content,
+      });
 
       return {
-        tokensIn: response.usage!.prompt_tokens,
-        tokensOut: response.usage!.completion_tokens,
+        tokensIn: adjustedTokensIn,
+        tokensOut,
+        cacheRatio,
         content,
       };
     }
