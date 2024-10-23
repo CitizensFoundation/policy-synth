@@ -40,9 +40,7 @@ export class OpenAiChat extends BaseChatModel {
             const cachedTokens = response.usage.prompt_tokens_details?.cached_tokens || 0;
             // Adjust the tokensIn to reflect the 50% discount for cached tokens
             const adjustedTokensIn = tokensIn - (cachedTokens * 0.5);
-            // Calculate the cache ratio (percentage of tokens retrieved from cache)
             const cacheRatio = (cachedTokens / tokensIn) * 100;
-            // Log the original data, cache ratio, and adjusted token counts for debugging/analysis
             console.debug({
                 tokensIn,
                 cachedTokens,

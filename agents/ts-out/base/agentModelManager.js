@@ -103,7 +103,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     initializeModels(aiModels, accessConfiguration) {
         if (!aiModels || aiModels.length === 0) {
             this.logger.info(`No AI models found for agent ${this.agentId}`);
-            this.initializeOneModelFromEnv();
+            if (process.env.PS_AI_MODEL_TYPE) {
+                this.initializeOneModelFromEnv();
+            }
             return;
         }
         for (const model of aiModels) {
