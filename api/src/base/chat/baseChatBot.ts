@@ -4,8 +4,6 @@ import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
 
-import { PsConstants } from "@policysynth/agents/constants.js";
-
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
 
@@ -19,9 +17,6 @@ export class PsBaseChatBot {
   wsClientSocket: WebSocket;
   openaiClient: OpenAI;
   memory!: PsChatBotMemoryData;
-  broadcastingLiveCosts = false;
-  liveCostsBroadcastInterval = 1000;
-  liveCostsInactivityTimeout = 1000 * 60 * 10;
   static redisMemoryKeyPrefix = "ps-chatbot-memory";
   tempeture = 0.7;
   maxTokens = 4000;
@@ -29,10 +24,7 @@ export class PsBaseChatBot {
   persistMemory = false;
   memoryId: string | undefined = undefined;
 
-  liveCostsBroadcastTimeout: NodeJS.Timeout | undefined = undefined;
-  liveCostsBoadcastStartAt: Date | undefined;
   lastSentToUserAt: Date | undefined;
-  lastBroacastedCosts: number | undefined;
 
   get redisKey() {
     return `${PsBaseChatBot.redisMemoryKeyPrefix}-${this.memoryId}`;
@@ -57,19 +49,6 @@ export class PsBaseChatBot {
         }
       }
     );
-  }
-
-  static getFullCostOfMemory(memory: PsChatBotMemoryData) {
-    let totalCost: number | undefined = undefined;
-    if (memory && memory.stages) {
-      totalCost = 0;
-      Object.values(memory.stages).forEach((stage) => {
-        if (stage.tokensInCost && stage.tokensOutCost) {
-          totalCost! += stage.tokensInCost + stage.tokensOutCost;
-        }
-      });
-    }
-    return totalCost;
   }
 
   loadMemory() {
@@ -119,14 +98,6 @@ export class PsBaseChatBot {
       } else {
         console.error("No wsClientSocket found");
       }
-    }
-  }
-
-  get fullLLMCostsForMemory() {
-    if (this.memory && this.memory.stages) {
-      return PsBaseChatBot.getFullCostOfMemory(this.memory);
-    } else {
-      return undefined;
     }
   }
 
@@ -221,102 +192,14 @@ export class PsBaseChatBot {
     }
   }
 
-  startBroadcastingLiveCosts() {
-    this.stopBroadcastingLiveCosts();
-    this.liveCostsBoadcastStartAt = new Date();
-    this.lastBroacastedCosts = undefined;
-
-    this.broadcastingLiveCosts = true;
-    this.broadCastLiveCosts();
-  }
-
-  broadCastLiveCosts() {
-    if (this.broadcastingLiveCosts) {
-      if (this.memory) {
-        if (this.lastBroacastedCosts != this.fullLLMCostsForMemory) {
-          console.log(`Broadcasting live costs: ${this.fullLLMCostsForMemory}`);
-          const botMessage = {
-            sender: "bot",
-            type: "liveLlmCosts",
-            data: this.fullLLMCostsForMemory,
-          } as PsAiChatWsMessage;
-          if (this.wsClientSocket) {
-            this.wsClientSocket.send(JSON.stringify(botMessage));
-          } else {
-            console.error("No wsClientSocket found");
-          }
-          this.lastBroacastedCosts = this.fullLLMCostsForMemory;
-        }
-      }
-      let timePassedSinceBroadcastStartActivity = 0;
-      if (this.liveCostsBoadcastStartAt && this.lastSentToUserAt) {
-        timePassedSinceBroadcastStartActivity =
-          this.lastSentToUserAt.getTime() -
-          this.liveCostsBoadcastStartAt.getTime();
-      }
-
-      if (
-        timePassedSinceBroadcastStartActivity < this.liveCostsInactivityTimeout
-      ) {
-        this.liveCostsBroadcastTimeout = setTimeout(() => {
-          this.broadCastLiveCosts();
-        }, this.liveCostsBroadcastInterval);
-      }
-    } else {
-      this.stopBroadcastingLiveCosts();
-    }
-  }
-
-  stopBroadcastingLiveCosts() {
-    if (this.liveCostsBroadcastTimeout) {
-      clearTimeout(this.liveCostsBroadcastTimeout);
-    }
-    this.broadcastingLiveCosts = false;
-    console.log("Stopped broadcasting live costs");
-  }
-
   get emptyChatBotStagesData() {
-    return {
-      "chatbot-conversation": {
-        tokensInCost: 0,
-        tokensOutCost: 0,
-        tokensIn: 0,
-        tokensOut: 0,
-      } as any,
-    } as Record<PSChatBotMemoryStageTypes, any>; //TODO: Set a type here
+    return {};
   }
 
   getEmptyMemory() {
     return {
       redisKey: this.redisKey,
-      currentStage: "chatbot-conversation",
-      stages: {
-      },
-      timeStart: Date.now(),
-      chatLog: [],
-      groupId: 1,
-      communityId: 1,
-      domainId: 1,
-      totalCost: 0,
-      customInstructions: {},
-      problemStatement: {
-        description: "",
-        searchQueries: {
-          general: [],
-          scientific: [],
-          news: [],
-          openData: [],
-        },
-        searchResults: {
-          pages: {
-            general: [],
-            scientific: [],
-            news: [],
-            openData: [],
-          },
-        },
-      },
-      subProblems: [],
+      chatLog: [] as PsSimpleChatLog[],
     } as PsChatBotMemoryData;
   }
 
@@ -332,7 +215,6 @@ export class PsBaseChatBot {
   }
 
   async streamWebSocketResponses(
-    //@ts-ignore
     stream: Stream<OpenAI.Chat.Completions.ChatCompletionChunk>
   ) {
     return new Promise<void>(async (resolve, reject) => {
@@ -342,10 +224,6 @@ export class PsBaseChatBot {
         for await (const part of stream) {
           this.sendToClient("bot", part.choices[0].delta.content!);
           botMessage += part.choices[0].delta.content!;
-          this.addToExternalSolutionsMemoryCosts(
-            part.choices[0].delta.content!,
-            "out"
-          );
           if (part.choices[0].finish_reason == "stop") {
             this.memory.chatLog!.push({
               sender: "bot",
@@ -368,60 +246,6 @@ export class PsBaseChatBot {
       }
       resolve();
     });
-  }
-
-  getTokenCosts(estimateTokens: number, type: "in" | "out") {
-    if (type == "in") {
-      return (
-        3/1000000 * //TODO: Get this from model
-        estimateTokens
-      );
-    } else {
-      return (
-        15/1000000 * //TODO: Get this from model
-        estimateTokens
-      );
-    }
-  }
-
-  addToExternalSolutionsMemoryCosts(text: string, type: "in" | "out") {
-    if (text) {
-      const parts = text.split(" ").filter((part) => part != "");
-      const estimateTokens = parts.length * WORDS_TO_TOKENS_MAGIC_CONSTANT;
-
-      if (this.memory) {
-        if (type == "in") {
-          if (
-            this.memory.stages["chatbot-conversation"].tokensInCost ===
-              undefined ||
-            this.memory.stages["chatbot-conversation"].tokensIn === undefined
-          ) {
-            this.memory.stages["chatbot-conversation"].tokensInCost = 0;
-            this.memory.stages["chatbot-conversation"].tokensIn = 0;
-          }
-          this.memory.stages["chatbot-conversation"].tokensIn += estimateTokens;
-          this.memory.stages["chatbot-conversation"].tokensInCost +=
-            this.getTokenCosts(estimateTokens, type);
-        } else {
-          if (
-            this.memory.stages["chatbot-conversation"].tokensOutCost ===
-              undefined ||
-            this.memory.stages["chatbot-conversation"].tokensOut === undefined
-          ) {
-            this.memory.stages["chatbot-conversation"].tokensOutCost = 0;
-            this.memory.stages["chatbot-conversation"].tokensOut = 0;
-          }
-          this.memory.stages["chatbot-conversation"].tokensOut +=
-            estimateTokens;
-          this.memory.stages["chatbot-conversation"].tokensOutCost +=
-            this.getTokenCosts(estimateTokens, type);
-        }
-      } else {
-        console.warn(`No memory found to add external solutions costs`);
-      }
-    } else {
-      console.warn(`No text found to add external solutions costs`);
-    }
   }
 
   async saveMemoryIfNeeded() {
@@ -463,4 +287,9 @@ export class PsBaseChatBot {
 
     this.streamWebSocketResponses(stream);
   };
+}
+
+interface PsChatBotMemoryData {
+  redisKey: string;
+  chatLog?: PsSimpleChatLog[];
 }

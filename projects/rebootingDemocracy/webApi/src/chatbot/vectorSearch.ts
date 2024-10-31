@@ -1,7 +1,7 @@
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
+import { PolicySynthAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 
-export class PsRagVectorSearch extends PolicySynthScAgentBase {
+export class PsRagVectorSearch extends PolicySynthAgentBase {
   getChunkId(chunk: PsRagChunk, documentUrl: string): string {
     return `${documentUrl}#${chunk.chunkIndex}#${chunk.chapterIndex}`;
   }
