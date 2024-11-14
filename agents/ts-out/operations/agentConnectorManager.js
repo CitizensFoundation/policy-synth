@@ -41,7 +41,7 @@ export class AgentConnectorManager {
                 agentClass.configuration.defaultStructuredQuestions) {
                 console.log(`Creating Your Priorities group for agent ${agent.id}`);
                 try {
-                    await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, newConnector);
+                    await this.createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, newConnector, type);
                 }
                 catch (error) {
                     console.error("Error creating group:", error);
@@ -72,7 +72,7 @@ export class AgentConnectorManager {
             throw error;
         }
     }
-    async createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, agentConnector) {
+    async createYourPrioritiesGroupAndUpdateAgent(agent, agentClass, agentConnector, type) {
         try {
             const agentGroup = (await Group.findByPk(agent.group_id, {
                 attributes: ["community_id", "id"],
@@ -80,7 +80,7 @@ export class AgentConnectorManager {
             if (!agentGroup) {
                 throw new Error("Group not found");
             }
-            const newGroup = (await this.createGroup(agentGroup.id, agentGroup.community_id, agent.user_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions));
+            const newGroup = (await this.createGroup(agentGroup.id, agent.id, type, agentGroup.community_id, agent.user_id, agent.configuration.name, agent.configuration.name, agentClass.configuration.defaultStructuredQuestions));
             if (!newGroup) {
                 throw new Error("Group creation failed");
             }
@@ -127,7 +127,7 @@ export class AgentConnectorManager {
             return {};
         }
     }
-    async createGroup(currentGroupId, communityId, userId, name, description, structuredQuestions) {
+    async createGroup(currentGroupId, forAgentId, inputOutput, communityId, userId, name, description, structuredQuestions) {
         const groupData = {
             name: name,
             description: description,
@@ -196,6 +196,8 @@ export class AgentConnectorManager {
             themeId: "",
             uploadedLogoImageId: "",
             uploadedHeaderImageId: "",
+            forAgentId: forAgentId,
+            inputOutput: inputOutput
         };
         // Convert the data to x-www-form-urlencoded format
         const formBody = Object.entries(groupData)

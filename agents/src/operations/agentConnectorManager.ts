@@ -79,7 +79,8 @@ export class AgentConnectorManager {
           await this.createYourPrioritiesGroupAndUpdateAgent(
             agent,
             agentClass,
-            newConnector
+            newConnector,
+            type
           );
         } catch (error) {
           console.error("Error creating group:", error);
@@ -125,7 +126,8 @@ export class AgentConnectorManager {
   async createYourPrioritiesGroupAndUpdateAgent(
     agent: PsAgent,
     agentClass: PsAgentClass,
-    agentConnector: PsAgentConnector
+    agentConnector: PsAgentConnector,
+    type: "input" | "output"
   ) {
     try {
       const agentGroup = (await Group.findByPk(agent.group_id, {
@@ -138,6 +140,8 @@ export class AgentConnectorManager {
 
       const newGroup = (await this.createGroup(
         agentGroup.id,
+        agent.id,
+        type,
         agentGroup.community_id!,
         agent.user_id,
         agent.configuration.name,
@@ -196,6 +200,8 @@ export class AgentConnectorManager {
 
   async createGroup(
     currentGroupId: number,
+    forAgentId: number,
+    inputOutput: "input" | "output",
     communityId: number,
     userId: number,
     name: string,
@@ -270,6 +276,8 @@ export class AgentConnectorManager {
       themeId: "",
       uploadedLogoImageId: "",
       uploadedHeaderImageId: "",
+      forAgentId: forAgentId,
+      inputOutput: inputOutput
     };
 
     // Convert the data to x-www-form-urlencoded format

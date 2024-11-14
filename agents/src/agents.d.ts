@@ -243,6 +243,7 @@ type PsAgentsNodeType = "agent" | "connector";
 interface PsAgentConnectorsBaseConfiguration extends PsBaseNodeConfiguration {
   name: string;
   permissionNeeded: PsAgentConnectorPermissionTypes;
+  [key: string]: any;
 }
 
 // tablename "ps_agents"
