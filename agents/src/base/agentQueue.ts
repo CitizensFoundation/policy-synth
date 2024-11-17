@@ -15,6 +15,8 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
   status!: PsAgentStatus;
   redisClient!: Redis;
 
+  structuredAnswersOverrides?: Array<YpStructuredAnswer>;
+
   skipCheckForProgress = true;
 
   constructor() {
@@ -246,6 +248,13 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
               await this.setupMemoryIfNeeded();
               await this.loadAgentStatusFromRedis();
               await this.setupStatusIfNeeded();
+
+              if (data.structuredAnswersOverrides) {
+                this.structuredAnswersOverrides =
+                  data.structuredAnswersOverrides;
+              } else {
+                this.structuredAnswersOverrides = undefined;
+              }
 
               switch (data.action) {
                 case "start":

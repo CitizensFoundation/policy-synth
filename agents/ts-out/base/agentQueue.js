@@ -13,6 +13,7 @@ import { PsAiModel } from "../dbModels/aiModel.js";
 export class PolicySynthAgentQueue extends PolicySynthAgent {
     status;
     redisClient;
+    structuredAnswersOverrides;
     skipCheckForProgress = true;
     constructor() {
         super({}, undefined, 0, 100);
@@ -194,6 +195,13 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                         await this.setupMemoryIfNeeded();
                         await this.loadAgentStatusFromRedis();
                         await this.setupStatusIfNeeded();
+                        if (data.structuredAnswersOverrides) {
+                            this.structuredAnswersOverrides =
+                                data.structuredAnswersOverrides;
+                        }
+                        else {
+                            this.structuredAnswersOverrides = undefined;
+                        }
                         switch (data.action) {
                             case "start":
                                 await this.startAgent();

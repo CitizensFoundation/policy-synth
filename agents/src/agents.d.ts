@@ -317,6 +317,7 @@ interface PsAgentStartJobData {
   agentId: number;
   userId: number;
   action: "start" | "pause" | "stop";
+  structuredAnswersOverrides?: Array<YpStructuredAnswer>;
 }
 
 

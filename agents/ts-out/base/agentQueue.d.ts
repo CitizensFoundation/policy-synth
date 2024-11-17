@@ -4,6 +4,7 @@ import { PolicySynthAgent } from "./agent.js";
 export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     status: PsAgentStatus;
     redisClient: Redis;
+    structuredAnswersOverrides?: Array<YpStructuredAnswer>;
     skipCheckForProgress: boolean;
     constructor();
     initializeRedis(): void;

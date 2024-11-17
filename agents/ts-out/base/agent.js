@@ -119,7 +119,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
             }
         }
         catch (error) {
-            this.logger.error("Error initializing agent memory");
+            this.logger.error("Error loading status from Redis");
             this.logger.error(error);
         }
     }
