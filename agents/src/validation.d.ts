@@ -1,6 +1,7 @@
 interface PsAgentMemory {
   set(key: string, value: any): void;
   get(key: string): any;
+  structuredAnswerOverrides?: Record<string, any>;
 }
 
 interface PsValidationAgentResult {

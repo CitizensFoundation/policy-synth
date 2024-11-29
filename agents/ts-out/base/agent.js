@@ -50,14 +50,15 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         }
         this.progressTracker = new PsProgressTracker(agent ? agent.redisStatusKey : "agent:status:-1", //TODO: Look into this fallback
         startProgress, endProgress);
-        this.configManager = new PsConfigManager(agent.configuration);
         this.redis = new Redis(process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379");
         if (memory) {
             this.memory = memory;
+            console.log(`Agent ${this.agent.id} loaded memory from constructor: ${JSON.stringify(this.memory)}`);
         }
         else {
             this.loadAgentMemoryFromRedis();
         }
+        this.configManager = new PsConfigManager(agent.configuration, this.memory);
     }
     async process() {
         if (!this.memory) {

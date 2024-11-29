@@ -167,6 +167,7 @@ interface PsSimpleAgentMemoryData extends PsAgentMemoryData {
 interface PsAgentMemoryData extends PsAgentBaseMemoryData {
   agentId: number;
   connectors?: PsConnectorsConfig;
+  structuredAnswersOverrides?: YpStructuredAnswer[];
 }
 
 interface PsModelTokenUsage {

@@ -1,7 +1,9 @@
 import { PolicySynthAgentBase } from "./agentBase.js";
 export declare class PsConfigManager extends PolicySynthAgentBase {
     configuration: PsBaseNodeConfiguration;
-    constructor(configuration: PsBaseNodeConfiguration);
+    memory: PsAgentMemoryData;
+    constructor(configuration: PsBaseNodeConfiguration, memory: PsAgentMemoryData);
+    getValueFromOverride(uniqueId: string): string | number | boolean | undefined;
     getConfig<T>(uniqueId: string, defaultValue: T): T;
     getConfigOld<T>(uniqueId: string, defaultValue: T): T;
     setConfig<T>(uniqueId: string, value: T): void;

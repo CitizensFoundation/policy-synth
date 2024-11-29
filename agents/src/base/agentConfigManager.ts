@@ -2,17 +2,42 @@ import { PolicySynthAgentBase } from "./agentBase.js";
 
 export class PsConfigManager extends PolicySynthAgentBase{
   configuration: PsBaseNodeConfiguration;
+  memory: PsAgentMemoryData;
 
-  constructor(configuration: PsBaseNodeConfiguration) {
+  constructor(configuration: PsBaseNodeConfiguration, memory: PsAgentMemoryData) {
     super();
     this.configuration = configuration;
+    this.memory = memory;
+  }
+
+  getValueFromOverride(uniqueId: string): string | number | boolean | undefined {
+    if (this.memory.structuredAnswersOverrides) {
+      for (const answer of this.memory.structuredAnswersOverrides) {
+        if (answer.uniqueId === uniqueId) {
+          return answer.value;
+        }
+      }
+    }
+    return undefined;
   }
 
   public getConfig<T>(uniqueId: string, defaultValue: T): T {
-    if (uniqueId in this.configuration) {
-      //@ts-ignore
-      const value: unknown = this.configuration[uniqueId];
+      let value: unknown;
+      if (this.memory.structuredAnswersOverrides) {
+        value = this.getValueFromOverride(uniqueId);
+        console.log(`Value for ${uniqueId}: ${value} from override`);
+      }
+
+      if (!value) {
+        //@ts-ignore
+        value = this.configuration[uniqueId];
+      }
       //this.logger.debug(`Value for ${uniqueId}: ${value}`);
+
+      if (!value) {
+        this.logger.error(`Configuration answer not found for ${uniqueId}`);
+        return defaultValue;
+      }
 
       // Check for null, undefined, or empty string and return defaultValue
       if (
@@ -49,10 +74,7 @@ export class PsConfigManager extends PolicySynthAgentBase{
           return value as T;
         }
       }
-    } else {
-      this.logger.error(`Configuration answer not found for ${uniqueId}`);
-      return defaultValue;
-    }
+
   }
 
   public getConfigOld<T>(uniqueId: string, defaultValue: T): T {

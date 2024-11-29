@@ -12,7 +12,9 @@ export class PsProgressTracker extends PolicySynthAgentBase {
     redisStatusKey: string,
     startProgress: number,
     endProgress: number,
-    redisUrl: string = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379"
+    redisUrl: string = process.env.REDIS_AGENT_URL ||
+      process.env.REDIS_URL ||
+      "redis://localhost:6379"
   ) {
     super();
     this.redis = new Redis(redisUrl);
@@ -135,13 +137,17 @@ export class PsProgressTracker extends PolicySynthAgentBase {
 
   public async setCompleted(message: string): Promise<void> {
     await this.loadStatusFromRedis();
-    this.status.state = "completed";
-    this.status.progress = 100;
+    if (this.status) {
+      this.status.state = "completed";
+      this.status.progress = 100;
 
-    this.status.messages.push(message);
-    this.status.lastUpdated = Date.now();
+      this.status.messages.push(message);
+      this.status.lastUpdated = Date.now();
 
-    await this.saveRedisStatus();
+      await this.saveRedisStatus();
+    } else {
+      this.logger.error("Agent status not initialized");
+    }
   }
 
   public async setError(errorMessage: string): Promise<void> {

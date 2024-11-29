@@ -256,6 +256,15 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
                 this.structuredAnswersOverrides = undefined;
               }
 
+              console.log(
+                `${data.action} agent ${this.agent.id} with structured answers overrides: ${JSON.stringify(
+                  this.structuredAnswersOverrides
+                )}`
+              );
+
+              this.memory.structuredAnswersOverrides =
+                this.structuredAnswersOverrides;
+
               switch (data.action) {
                 case "start":
                   await this.startAgent();
@@ -369,7 +378,9 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
   }
 
   async startAgent() {
-    this.logger.info(`Starting agent ${this.agent.id}`);
+    this.logger.info(
+      `Starting agent ${this.agent.id} ${JSON.stringify(this.memory)}`
+    );
     try {
       await this.updateAgentStatus("running");
       await this.processAllAgents();
