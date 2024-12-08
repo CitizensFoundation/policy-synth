@@ -1,15 +1,21 @@
 import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
+import { PolicySynthAgent } from "../base/agent.js";
+import { PsAgent } from "../dbModels/agent.js";
 
-export class BaseSearchWebAgent extends PolicySynthAgentBase {
+export class BaseSearchWebAgentWithAi extends PolicySynthAgent {
   seenUrls!: Map<string, Set<string>>;
+
+  constructor(agent: PsAgent, memory: PsAgentMemoryData) {
+    super(agent, memory, 0, 100);
+  }
 
   async callSearchApi(query: string, numberOfResults: number): Promise<PsSearchResultItem[]> {
     if (process.env.GOOGLE_SEARCH_API_KEY &&
         process.env.GOOGLE_SEARCH_API_CX_ID) {
-      const googleSearchApi = new GoogleSearchApi();
-      return await googleSearchApi.search(query, numberOfResults);
+        const googleSearchApi = new GoogleSearchApi();
+        return await googleSearchApi.search(query, numberOfResults);
     } else if (process.env.AZURE_BING_SEARCH_KEY) {
       const bingSearchApi = new BingSearchApi();
       return await bingSearchApi.search(query, numberOfResults);

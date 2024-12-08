@@ -13,8 +13,13 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
     }
   }
 
-  public async search(query: string): Promise<PsSearchResultItem[]> {
-    const maxBingResults = process.env.PS_MAX_BING_RESULTS ? parseInt(process.env.PS_MAX_BING_RESULTS) : 10;
+  public async search(
+    query: string,
+    numberOfResults: number
+  ): Promise<PsSearchResultItem[]> {
+    // Bing API allows specifying count up to a certain limit (commonly 50)
+    // For simplicity, we assume numberOfResults <= 50. If needed, multiple calls could be implemented similarly to Google.
+    const maxBingResults = numberOfResults > 50 ? 50 : numberOfResults;
     const requestParams: AxiosRequestConfig = {
       method: "GET",
       url:
@@ -49,7 +54,7 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
         this.logger.debug("\nBing Search JSON Response:\n");
         this.logger.debug(JSON.stringify(body, null, "  "));
 
-        if (body.webPages) {
+        if (body.webPages && body.webPages.value) {
           for (let i = 0; i < body.webPages.value.length; i++) {
             outResults.push({
               originalPosition: i + 1,
@@ -58,21 +63,25 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
               description: body.webPages.value[i].snippet,
               date: body.webPages.value[i].dateLastCrawled,
             });
+            if (outResults.length >= numberOfResults) {
+              break;
+            }
           }
         }
+
+        // Once the call is successful, no more retries are needed
+        retry = false;
       } catch (e: any) {
         this.logger.error(`Failed to get search data for ${query}`);
         this.logger.error("Bing Search Error: " + e.message);
         this.logger.error(e);
-        if (retryCount < maxRetries) {
-          retry = false;
+        retryCount++;
+        if (retryCount >= maxRetries) {
           throw e;
-        } else {
-          await new Promise((resolve) =>
-            setTimeout(resolve, 5000 + retryCount * 5000)
-          );
-          retryCount++;
         }
+        await new Promise((resolve) =>
+          setTimeout(resolve, 5000 + retryCount * 5000)
+        );
       }
     }
 

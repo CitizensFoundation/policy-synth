@@ -134,6 +134,7 @@ interface YpStructuredQuestionData {
     | "textArea"
     | "textFieldLong"
     | "textAreaLong"
+    | "textAreaJson"
     | "checkbox"
     | "radios"
     | "html"

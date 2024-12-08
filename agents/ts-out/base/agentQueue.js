@@ -202,7 +202,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                         else {
                             this.structuredAnswersOverrides = undefined;
                         }
-                        console.log(`Starting agent ${this.agent.id} with structured answers overrides: ${JSON.stringify(this.structuredAnswersOverrides)}`);
+                        console.log(`${data.action} agent ${this.agent.id} with structured answers overrides: ${JSON.stringify(this.structuredAnswersOverrides)}`);
                         this.memory.structuredAnswersOverrides =
                             this.structuredAnswersOverrides;
                         switch (data.action) {

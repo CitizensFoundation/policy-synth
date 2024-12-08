@@ -9,8 +9,10 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
             throw new Error("Missing the AZURE_BING_SEARCH_KEY environment variable");
         }
     }
-    async search(query) {
-        const maxBingResults = process.env.PS_MAX_BING_RESULTS ? parseInt(process.env.PS_MAX_BING_RESULTS) : 10;
+    async search(query, numberOfResults) {
+        // Bing API allows specifying count up to a certain limit (commonly 50)
+        // For simplicity, we assume numberOfResults <= 50. If needed, multiple calls could be implemented similarly to Google.
+        const maxBingResults = numberOfResults > 50 ? 50 : numberOfResults;
         const requestParams = {
             method: "GET",
             url: `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${maxBingResults}&q=` +
@@ -37,7 +39,7 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
                 });
                 this.logger.debug("\nBing Search JSON Response:\n");
                 this.logger.debug(JSON.stringify(body, null, "  "));
-                if (body.webPages) {
+                if (body.webPages && body.webPages.value) {
                     for (let i = 0; i < body.webPages.value.length; i++) {
                         outResults.push({
                             originalPosition: i + 1,
@@ -46,21 +48,23 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
                             description: body.webPages.value[i].snippet,
                             date: body.webPages.value[i].dateLastCrawled,
                         });
+                        if (outResults.length >= numberOfResults) {
+                            break;
+                        }
                     }
                 }
+                // Once the call is successful, no more retries are needed
+                retry = false;
             }
             catch (e) {
                 this.logger.error(`Failed to get search data for ${query}`);
                 this.logger.error("Bing Search Error: " + e.message);
                 this.logger.error(e);
-                if (retryCount < maxRetries) {
-                    retry = false;
+                retryCount++;
+                if (retryCount >= maxRetries) {
                     throw e;
                 }
-                else {
-                    await new Promise((resolve) => setTimeout(resolve, 5000 + retryCount * 5000));
-                    retryCount++;
-                }
+                await new Promise((resolve) => setTimeout(resolve, 5000 + retryCount * 5000));
             }
         }
         return outResults;
