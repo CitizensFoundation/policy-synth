@@ -5,7 +5,7 @@ import { PolicySynthAgent } from "../base/agent.js";
 import { PsAgent } from "../dbModels/agent.js";
 
 export class BaseSearchWebAgentWithAi extends PolicySynthAgent {
-  seenUrls!: Map<string, Set<string>>;
+  seenUrls: Map<string, Set<string>> = new Map();
 
   constructor(agent: PsAgent, memory: PsAgentMemoryData) {
     super(agent, memory, 0, 100);

@@ -3,7 +3,7 @@ import { GoogleSearchApi } from "./googleSearchApi.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 export class BaseSearchWebAgent extends PolicySynthAgentBase {
-  seenUrls!: Map<string, Set<string>>;
+  seenUrls: Map<string, Set<string>> = new Map();
 
   async callSearchApi(query: string, numberOfResults: number): Promise<PsSearchResultItem[]> {
     if (process.env.GOOGLE_SEARCH_API_KEY &&

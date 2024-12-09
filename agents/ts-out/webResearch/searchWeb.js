@@ -2,7 +2,7 @@ import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 export class BaseSearchWebAgent extends PolicySynthAgentBase {
-    seenUrls;
+    seenUrls = new Map();
     async callSearchApi(query, numberOfResults) {
         if (process.env.GOOGLE_SEARCH_API_KEY &&
             process.env.GOOGLE_SEARCH_API_CX_ID) {

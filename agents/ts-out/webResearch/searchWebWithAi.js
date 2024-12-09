@@ -2,7 +2,7 @@ import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
 import { PolicySynthAgent } from "../base/agent.js";
 export class BaseSearchWebAgentWithAi extends PolicySynthAgent {
-    seenUrls;
+    seenUrls = new Map();
     constructor(agent, memory) {
         super(agent, memory, 0, 100);
     }

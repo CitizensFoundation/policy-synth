@@ -4,6 +4,7 @@ import { PsAgent } from "../../dbModels/agent";
 import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 import fs from "fs";
+import FormData from "form-data";
 
 const MAX_RETRIES = 7;
 const RETRY_DELAY = 1000; // 1 second
@@ -279,16 +280,16 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     if (imageLocalPath) {
       // If we have a local image path, upload it using the /api/images endpoint
       const imageForm = new FormData();
-      const fileStream = fs.createReadStream(imageLocalPath);
-      imageForm.append("file", fileStream);
+      imageForm.append("file", fs.createReadStream(imageLocalPath), "image.png");
 
       try {
         const imageUploadResponse = await axios.post(
-          `${this.serverBaseUrl}/api/images`,
+          `${this.serverBaseUrl}/images`,
           imageForm,
           {
             headers: {
-              ...this.getHeaders()
+              ...this.getHeaders(),
+              ...imageForm.getHeaders(),
             },
           }
         );
