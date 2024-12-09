@@ -23,7 +23,7 @@ export declare class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationC
     };
     getGroupPosts(groupId: number): Promise<YpPostData[]>;
     vote(postId: number, value: number): Promise<void>;
-    post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string): Promise<YpPostData>;
+    post(groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string, imageLocalPath?: string | undefined): Promise<YpPostData>;
     generateImageWithAi(groupId: number, prompt: string): Promise<number>;
     static getExtraConfigurationQuestions(): YpStructuredQuestionData[];
 }

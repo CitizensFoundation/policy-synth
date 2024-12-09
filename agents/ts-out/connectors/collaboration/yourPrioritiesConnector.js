@@ -2,6 +2,7 @@ import axios from "axios";
 import qs from "qs";
 import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
+import fs from "fs";
 const MAX_RETRIES = 7;
 const RETRY_DELAY = 1000; // 1 second
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
@@ -204,7 +205,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             throw new Error("Voting failed.");
         }
     }
-    async post(groupId, name, structuredAnswersData, imagePrompt) {
+    async post(groupId, name, structuredAnswersData, imagePrompt, imageLocalPath = undefined) {
         await this.login();
         const formData = {
             name: name,
@@ -217,19 +218,43 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             location: "",
             coverMediaType: "image",
         };
+        let imageId;
+        if (imageLocalPath) {
+            // If we have a local image path, upload it using the /api/images endpoint
+            const imageForm = new FormData();
+            const fileStream = fs.createReadStream(imageLocalPath);
+            imageForm.append("file", fileStream);
+            try {
+                const imageUploadResponse = await axios.post(`${this.serverBaseUrl}/api/images`, imageForm, {
+                    headers: {
+                        ...this.getHeaders()
+                    },
+                });
+                if (!imageUploadResponse.data || !imageUploadResponse.data.id) {
+                    throw new Error("Image upload failed, no imageId received.");
+                }
+                this.logger.info("Image uploaded successfully:", imageUploadResponse.data);
+                imageId = imageUploadResponse.data.id;
+            }
+            catch (error) {
+                console.error("Error uploading local image:", error);
+                throw new Error("Image upload failed.");
+            }
+        }
+        else {
+            // No local image provided, generate an AI image as before
+            imageId = await this.generateImageWithAi(groupId, imagePrompt);
+        }
+        formData.uploadedHeaderImageId = imageId.toString();
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
-                const imageId = await this.generateImageWithAi(groupId, imagePrompt);
-                formData.uploadedHeaderImageId = imageId.toString();
                 console.log(`Attempt ${attempt}: Posting data:`, formData);
                 const postResponse = await axios.post(`${this.serverBaseUrl}/posts/${groupId}${this.agentFabricUserId
                     ? `?agentFabricUserId=${this.agentFabricUserId}`
                     : ""}`, qs.stringify(formData), {
                     headers: {
                         ...this.getHeaders(),
-                        ...{
-                            "Content-Type": "application/x-www-form-urlencoded",
-                        },
+                        "Content-Type": "application/x-www-form-urlencoded",
                     },
                 });
                 return postResponse.data;
@@ -240,7 +265,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                     console.error("Max retries reached. Throwing final error.");
                     throw new Error("Failed to post data after multiple attempts.");
                 }
-                const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
                 if (axios.isAxiosError(error)) {
                     const axiosError = error;
                     if (axiosError.response && axiosError.response.status >= 500) {
@@ -252,8 +277,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                 throw error; // Rethrow if it's not a 5xx error
             }
         }
-        // This line should never be reached due to the loop structure,
-        // but TypeScript might expect a return statement here
+        // Should never reach here
         throw new Error("Unexpected end of post method");
     }
     async generateImageWithAi(groupId, prompt) {

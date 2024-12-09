@@ -148,6 +148,7 @@ interface YpStructuredQuestionData {
   maxLength?: number;
   required?: boolean;
   rows?: number;
+  hiddenToUser?: boolean;
   pattern?: string;
   charCounter?: boolean;
   richTextAllowed?: boolean;

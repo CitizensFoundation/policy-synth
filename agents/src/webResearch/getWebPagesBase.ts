@@ -23,7 +23,12 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
   private firecrawlApiKey?: string;
   private firecrawlApp?: FirecrawlApp;
 
-  constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number) {
+  constructor(
+    agent: PsAgent,
+    memory: PsAgentMemoryData | undefined,
+    startProgress: number,
+    endProgress: number
+  ) {
     super(agent, memory, startProgress, endProgress);
     this.firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
     if (this.firecrawlApiKey) {
@@ -49,8 +54,14 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
   /**
    * Get cached data if available.
    */
-  private async getCachedData(url: string, suffix: string): Promise<string | null> {
-    const fullPath = join(this.getCacheDirectory(), this.generateFileName(url, suffix));
+  private async getCachedData(
+    url: string,
+    suffix: string
+  ): Promise<string | null> {
+    const fullPath = join(
+      this.getCacheDirectory(),
+      this.generateFileName(url, suffix)
+    );
     if (existsSync(fullPath) && statSync(fullPath).isFile()) {
       const cachedData = await readFileAsync(fullPath);
       return gunzipSync(cachedData).toString();
@@ -61,8 +72,15 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
   /**
    * Cache data.
    */
-  private async cacheData(url: string, suffix: string, data: string | Buffer): Promise<void> {
-    const fullPath = join(this.getCacheDirectory(), this.generateFileName(url, suffix));
+  private async cacheData(
+    url: string,
+    suffix: string,
+    data: string | Buffer
+  ): Promise<void> {
+    const fullPath = join(
+      this.getCacheDirectory(),
+      this.generateFileName(url, suffix)
+    );
     const gzipData = gzipSync(Buffer.from(data));
     await writeFileAsync(fullPath, gzipData);
   }
@@ -92,7 +110,9 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
       try {
         response = await page.goto(url, { waitUntil: "networkidle0" });
       } catch (error: any) {
-        this.logger.error(`Error fetching ${url} PDF with puppeteer: ${error.stack || error}`);
+        this.logger.error(
+          `Error fetching ${url} PDF with puppeteer: ${error.stack || error}`
+        );
       }
 
       if (response && response.ok()) {
@@ -115,18 +135,21 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
       }
 
       let finalText = "";
-      new PdfReader({ debug: false }).parseBuffer(pdfBuffer, (err: any, item: any) => {
-        if (err) {
-          this.logger.error(`Error parsing PDF ${url}`);
-          this.logger.error(err);
-          return resolve("");
-        } else if (!item) {
-          finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-          resolve(finalText);
-        } else if (item.text) {
-          finalText += item.text + " ";
+      new PdfReader({ debug: false }).parseBuffer(
+        pdfBuffer,
+        (err: any, item: any) => {
+          if (err) {
+            this.logger.error(`Error parsing PDF ${url}`);
+            this.logger.error(err);
+            return resolve("");
+          } else if (!item) {
+            finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
+            resolve(finalText);
+          } else if (item.text) {
+            finalText += item.text + " ";
+          }
         }
-      });
+      );
     });
   }
 
@@ -148,12 +171,16 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
 
     let htmlText: string | undefined;
     try {
-      const response = await browserPage.goto(url, { waitUntil: "networkidle0" });
+      const response = await browserPage.goto(url, {
+        waitUntil: "networkidle0",
+      });
       if (response) {
         htmlText = await response.text();
       }
     } catch (error: any) {
-      this.logger.error(`Error fetching ${url} with puppeteer: ${error.stack || error}`);
+      this.logger.error(
+        `Error fetching ${url} with puppeteer: ${error.stack || error}`
+      );
     }
 
     await browserPage.close();
@@ -184,7 +211,10 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
    * Fetches both rawHtml and markdown, caches them, and returns the requested format.
    * Works for both HTML and PDF URLs.
    */
-  private async getAndProcessWithFirecrawl(url: string, format: PageFormat): Promise<string> {
+  private async getAndProcessWithFirecrawl(
+    url: string,
+    format: PageFormat
+  ): Promise<string> {
     // Try cache first
     const cached = await this.getCachedData(url, format);
     if (cached) {
@@ -192,7 +222,9 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
       return cached;
     }
 
-    const scrapeResponse = await this.firecrawlApp!.scrapeUrl(url, { formats: ["markdown", "rawHtml"] });
+    const scrapeResponse = await this.firecrawlApp!.scrapeUrl(url, {
+      formats: ["markdown", "rawHtml"],
+    });
     if (!scrapeResponse.success) {
       throw new Error(`Failed to scrape: ${scrapeResponse.error}`);
     }
@@ -205,7 +237,8 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
       await this.cacheData(url, "rawHtml", scrapeResponse.rawHtml);
     }
 
-    const result = format === "markdown" ? scrapeResponse.markdown : scrapeResponse.rawHtml;
+    const result =
+      format === "markdown" ? scrapeResponse.markdown : scrapeResponse.rawHtml;
     return result || "";
   }
 
@@ -217,7 +250,10 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
    * @param url The URL to retrieve
    * @param format Which format to return. Only applies if Firecrawl is used. Puppeteer fallback always returns markdown.
    */
-  public async getAndProcessPage(url: string, format: PageFormat = "markdown"): Promise<string> {
+  public async getAndProcessPage(
+    url: string,
+    format: PageFormat = "markdown"
+  ): Promise<string> {
     this.logger.info(`Getting page: ${url}`);
 
     if (this.firecrawlApp) {

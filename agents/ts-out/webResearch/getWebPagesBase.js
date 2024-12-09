@@ -130,7 +130,9 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
         await new Promise((r) => setTimeout(r, sleepingForMs));
         let htmlText;
         try {
-            const response = await browserPage.goto(url, { waitUntil: "networkidle0" });
+            const response = await browserPage.goto(url, {
+                waitUntil: "networkidle0",
+            });
             if (response) {
                 htmlText = await response.text();
             }
@@ -168,7 +170,9 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
             this.logger.info(`Got cached ${format} for ${url}`);
             return cached;
         }
-        const scrapeResponse = await this.firecrawlApp.scrapeUrl(url, { formats: ["markdown", "rawHtml"] });
+        const scrapeResponse = await this.firecrawlApp.scrapeUrl(url, {
+            formats: ["markdown", "rawHtml"],
+        });
         if (!scrapeResponse.success) {
             throw new Error(`Failed to scrape: ${scrapeResponse.error}`);
         }
