@@ -202,7 +202,7 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
             this.logger.info(`Got cached ${format} for ${url}`);
             return cached;
         }
-        const scrapeResponse = await this.firecrawlAgent.scrapeUrl(url, ["markdown", "rawHtml"], 3, crawlIfDomainIs);
+        const scrapeResponse = await this.firecrawlAgent.scrapeUrl(url, ["markdown", "rawHtml"], 3, format === "markdown" ? true : false, crawlIfDomainIs);
         if (!scrapeResponse.success) {
             this.logger.error(JSON.stringify(scrapeResponse, null, 2));
             throw new Error(`Failed to scrape: ${scrapeResponse.error}`);

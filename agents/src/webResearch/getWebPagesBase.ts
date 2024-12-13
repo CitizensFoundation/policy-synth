@@ -264,6 +264,7 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
       url,
       ["markdown", "rawHtml"],
       3,
+      format === "markdown" ? true : false,
       crawlIfDomainIs
     );
 

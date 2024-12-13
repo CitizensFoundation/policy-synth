@@ -21,6 +21,6 @@ export declare class FirecrawlScrapeAgent extends PolicySynthAgent {
      * @param maxRetries - Maximum number of retries upon rate limits
      * @returns The scrape response from Firecrawl
      */
-    scrapeUrl(url: string, formats?: ("markdown" | "html" | "rawHtml" | "content" | "links" | "screenshot" | "screenshot@fullPage" | "extract")[], maxRetries?: number, crawlIfDomainIs?: string | undefined): Promise<any>;
+    scrapeUrl(url: string, formats?: ("markdown" | "html" | "rawHtml" | "content" | "links" | "screenshot" | "screenshot@fullPage" | "extract")[], maxRetries?: number, skipImages?: boolean, crawlIfDomainIs?: string | undefined): Promise<any>;
 }
 //# sourceMappingURL=fireCrawlApi.d.ts.map

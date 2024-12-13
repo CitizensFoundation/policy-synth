@@ -90,7 +90,7 @@ Your JSON output:`,
      * @param maxRetries - Maximum number of retries upon rate limits
      * @returns The scrape response from Firecrawl
      */
-    async scrapeUrl(url, formats = ["markdown", "rawHtml"], maxRetries = 3, crawlIfDomainIs = undefined) {
+    async scrapeUrl(url, formats = ["markdown", "rawHtml"], maxRetries = 3, skipImages = false, crawlIfDomainIs = undefined) {
         let retries = 0;
         const targetDomain = crawlIfDomainIs
             ? this.getDomainAndPath(crawlIfDomainIs)
@@ -103,10 +103,12 @@ Your JSON output:`,
                 // If a reference domain is specified, only crawl if the current URL's domain matches
                 // that of the reference domain. Using the more robust domain extraction here.
                 if (targetDomain && currentDomain === targetDomain) {
+                    this.logger.debug(`Crawling ${url} because it matches ${targetDomain}`);
                     scrapeResponse = await this.app.crawlUrl(url, {
                         limit: this.crawlPageLimit,
                         scrapeOptions: {
                             formats,
+                            excludeTags: skipImages ? ["img", "svg"] : [],
                         },
                     });
                     this.logger.debug(`Crawl response length: ${Object.keys(scrapeResponse).length}`);

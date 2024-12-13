@@ -131,6 +131,7 @@ Your JSON output:`,
       | "extract"
     )[] = ["markdown", "rawHtml"],
     maxRetries: number = 3,
+    skipImages: boolean = false,
     crawlIfDomainIs: string | undefined = undefined
   ): Promise<any> {
     let retries = 0;
@@ -147,10 +148,12 @@ Your JSON output:`,
         // If a reference domain is specified, only crawl if the current URL's domain matches
         // that of the reference domain. Using the more robust domain extraction here.
         if (targetDomain && currentDomain === targetDomain) {
+          this.logger.debug(`Crawling ${url} because it matches ${targetDomain}`);
           scrapeResponse = await this.app.crawlUrl(url, {
             limit: this.crawlPageLimit,
             scrapeOptions: {
               formats,
+              excludeTags: skipImages ? ["img", "svg"] : [],
             },
           });
 
