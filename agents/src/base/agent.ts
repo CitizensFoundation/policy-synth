@@ -91,11 +91,11 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
     if (memory) {
       this.memory = memory;
-      console.log(
+      /*console.log(
         `Agent ${this.agent.id} loaded memory from constructor: ${JSON.stringify(
           this.memory
         )}`
-      );
+      );*/
     } else {
       this.loadAgentMemoryFromRedis();
     }
@@ -265,7 +265,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
         JSON.stringify(this.memory)
       );
 
-      //this.logger.debug(`Saving memory to Redis: ${util.inspect(this.memory)}`);
+      this.logger.debug(`Saving memory to Redis ${this.agent.redisMemoryKey}`);
 
       if (!this.skipCheckForProgress) {
         await this.checkProgressForPauseOrStop();

@@ -284,7 +284,11 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
       try {
         const imageUploadResponse = await axios.post(
-          `${this.serverBaseUrl}/images`,
+          `${this.serverBaseUrl}/images${
+            this.agentFabricUserId
+              ? `?agentFabricUserId=${this.agentFabricUserId}`
+              : ""
+          }`,
           imageForm,
           {
             headers: {
@@ -303,7 +307,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         imageId = imageUploadResponse.data.id;
       } catch (error) {
         console.error("Error uploading local image:", error);
-        throw new Error("Image upload failed.");
+        console.log("Generating AI image with prompt:", imagePrompt);
+        imageId = await this.generateImageWithAi(groupId, imagePrompt);
       }
     } else {
       // No local image provided, generate an AI image as before

@@ -22,7 +22,6 @@ export class BaseSearchWebAgent extends PolicySynthAgentBase {
         let searchResults = [];
         for (let q = 0; q < queriesToSearch.length; q++) {
             const generalSearchData = await this.callSearchApi(queriesToSearch[q], numberOfResults);
-            this.logger.debug(`Got Search Data 1: ${JSON.stringify(generalSearchData, null, 2)}`);
             if (generalSearchData) {
                 searchResults = [...searchResults, ...generalSearchData];
             }
@@ -30,7 +29,6 @@ export class BaseSearchWebAgent extends PolicySynthAgentBase {
                 this.logger.error("No search results");
             }
             this.logger.debug("Got Search Results 2");
-            this.logger.debug(`Search Results Batch: ${JSON.stringify(searchResults, null, 2)}`);
             await new Promise((resolve) => setTimeout(resolve, 500));
         }
         if (!this.seenUrls.has(id)) {

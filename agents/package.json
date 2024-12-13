@@ -1,7 +1,7 @@
 {
   "name": "@policysynth/agents",
-  "version": "1.3.43",
-  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "version": "1.3.44",
+  "author": "Robert Bjarnason, Citizens Foundation, Evoly.ai & The GovLab",
   "repository": {
     "type": "git",
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/agents"

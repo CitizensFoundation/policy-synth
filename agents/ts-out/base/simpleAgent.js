@@ -233,6 +233,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
     }
     async saveMemory() {
         if (this.memory) {
+            this.logger.debug(`Saving memory to Redis: ${this.redisKey}`);
             try {
                 this.memory.lastSavedAt = Date.now();
                 await redis.set(this.redisKey, JSON.stringify(this.memory));

@@ -7,26 +7,26 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { htmlToText } from "html-to-text";
 import { PdfReader } from "pdfreader";
-import FirecrawlApp from "@mendable/firecrawl-js";
 import { PolicySynthAgent } from "../base/agent.js";
+import { FirecrawlScrapeAgent } from "./fireCrawlApi.js";
 puppeteer.use(StealthPlugin());
 const writeFileAsync = promisify(writeFile);
 const readFileAsync = promisify(readFile);
 export class GetWebPagesBaseAgent extends PolicySynthAgent {
     firecrawlApiKey;
-    firecrawlApp;
+    firecrawlAgent;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
         this.firecrawlApiKey = process.env.FIRECRAWL_API_KEY;
         if (this.firecrawlApiKey) {
-            this.firecrawlApp = new FirecrawlApp({ apiKey: this.firecrawlApiKey });
+            this.firecrawlAgent = new FirecrawlScrapeAgent(agent, memory, startProgress, endProgress);
         }
     }
     generateFileName(url, suffix) {
         const hash = crypto.createHash("sha256");
         hash.update(url + suffix);
         const hashedFileName = hash.digest("hex");
-        return hashedFileName + ".gz";
+        return "v2_" + hashedFileName + ".gz";
     }
     getCacheDirectory() {
         const directoryPath = `webPagesCache`;
@@ -41,8 +41,25 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
     async getCachedData(url, suffix) {
         const fullPath = join(this.getCacheDirectory(), this.generateFileName(url, suffix));
         if (existsSync(fullPath) && statSync(fullPath).isFile()) {
-            const cachedData = await readFileAsync(fullPath);
-            return gunzipSync(cachedData).toString();
+            try {
+                const cachedData = await readFileAsync(fullPath);
+                const unzippedData = gunzipSync(cachedData);
+                if (suffix === "markdown") {
+                    return JSON.parse(unzippedData.toString());
+                }
+                else if (suffix === "pdf") {
+                    // Return the raw binary data as a Buffer for PDF
+                    return unzippedData;
+                }
+                else {
+                    // For rawHtml or other textual data, return as string
+                    return unzippedData.toString();
+                }
+            }
+            catch (error) {
+                this.logger.error(`Error parsing cached data for ${url}: ${error}`);
+                return null;
+            }
         }
         return null;
     }
@@ -51,7 +68,23 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
      */
     async cacheData(url, suffix, data) {
         const fullPath = join(this.getCacheDirectory(), this.generateFileName(url, suffix));
-        const gzipData = gzipSync(Buffer.from(data));
+        let dataToWrite;
+        if (suffix === "markdown") {
+            // For markdown arrays, we need to stringify
+            if (!Array.isArray(data)) {
+                // Even if it's a single markdown, convert it to an array for consistency
+                data = [data];
+            }
+            dataToWrite = Buffer.from(JSON.stringify(data));
+        }
+        else if (data instanceof Buffer) {
+            dataToWrite = data;
+        }
+        else {
+            // For other text types (like rawHtml), data will be a string
+            dataToWrite = Buffer.from(data);
+        }
+        const gzipData = gzipSync(dataToWrite);
         await writeFileAsync(fullPath, gzipData);
     }
     /**
@@ -60,11 +93,10 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
      */
     async getAndProcessPdfFallback(url) {
         this.logger.info(`Fetching PDF (fallback mode): ${url}`);
-        // Check cache first
-        const cachedPdf = await this.getCachedData(url, "pdf");
+        const cachedPdf = (await this.getCachedData(url, "pdf"));
         let pdfBuffer;
         if (cachedPdf) {
-            pdfBuffer = Buffer.from(cachedPdf);
+            pdfBuffer = cachedPdf;
             this.logger.info("Got cached PDF");
         }
         else {
@@ -144,7 +176,7 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
         await browser.close();
         if (!htmlText) {
             this.logger.error(`No HTML text found for ${url}`);
-            return "";
+            return [""];
         }
         const markdown = htmlToText(htmlText, {
             wordwrap: false,
@@ -155,36 +187,43 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
                 { selector: "nav", format: "skip" },
             ],
         }).replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-        await this.cacheData(url, "markdown", markdown);
-        return markdown;
+        await this.cacheData(url, "markdown", [markdown]);
+        return [markdown];
     }
     /**
      * Process page using Firecrawl API.
      * Fetches both rawHtml and markdown, caches them, and returns the requested format.
      * Works for both HTML and PDF URLs.
      */
-    async getAndProcessWithFirecrawl(url, format) {
+    async getAndProcessWithFirecrawl(url, format, crawlIfDomainIs = undefined) {
         // Try cache first
         const cached = await this.getCachedData(url, format);
         if (cached) {
             this.logger.info(`Got cached ${format} for ${url}`);
             return cached;
         }
-        const scrapeResponse = await this.firecrawlApp.scrapeUrl(url, {
-            formats: ["markdown", "rawHtml"],
-        });
+        const scrapeResponse = await this.firecrawlAgent.scrapeUrl(url, ["markdown", "rawHtml"], 3, crawlIfDomainIs);
         if (!scrapeResponse.success) {
+            this.logger.error(JSON.stringify(scrapeResponse, null, 2));
             throw new Error(`Failed to scrape: ${scrapeResponse.error}`);
         }
+        let markdownArray;
+        if (scrapeResponse.markdownArray) {
+            markdownArray = scrapeResponse.markdownArray;
+        }
+        else {
+            markdownArray = [scrapeResponse.markdown];
+        }
+        const rawHtml = scrapeResponse.rawHtml;
         // Firecrawl returns markdown and rawHtml properties directly on scrapeResponse
-        if (scrapeResponse.markdown) {
-            await this.cacheData(url, "markdown", scrapeResponse.markdown);
+        if (markdownArray) {
+            await this.cacheData(url, "markdown", markdownArray);
         }
-        if (scrapeResponse.rawHtml) {
-            await this.cacheData(url, "rawHtml", scrapeResponse.rawHtml);
+        if (rawHtml) {
+            await this.cacheData(url, "rawHtml", rawHtml);
         }
-        const result = format === "markdown" ? scrapeResponse.markdown : scrapeResponse.rawHtml;
-        return result || "";
+        const result = format === "markdown" ? markdownArray : rawHtml;
+        return result || [""];
     }
     /**
      * Public method to get and process a single page.
@@ -193,12 +232,13 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
      *
      * @param url The URL to retrieve
      * @param format Which format to return. Only applies if Firecrawl is used. Puppeteer fallback always returns markdown.
+     * @param crawlIfDomainIs If specified, only crawl if the current URL's domain matches this domain.
      */
-    async getAndProcessPage(url, format = "markdown") {
+    async getAndProcessPage(url, format = "markdown", crawlIfDomainIs = undefined) {
         this.logger.info(`Getting page: ${url}`);
-        if (this.firecrawlApp) {
+        if (this.firecrawlAgent) {
             // Use Firecrawl for both HTML and PDF
-            return await this.getAndProcessWithFirecrawl(url, format);
+            return await this.getAndProcessWithFirecrawl(url, format, crawlIfDomainIs);
         }
         else {
             // Use puppeteer/pdf fallback

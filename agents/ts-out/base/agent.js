@@ -53,7 +53,11 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         this.redis = new Redis(process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379");
         if (memory) {
             this.memory = memory;
-            console.log(`Agent ${this.agent.id} loaded memory from constructor: ${JSON.stringify(this.memory)}`);
+            /*console.log(
+              `Agent ${this.agent.id} loaded memory from constructor: ${JSON.stringify(
+                this.memory
+              )}`
+            );*/
         }
         else {
             this.loadAgentMemoryFromRedis();
@@ -184,7 +188,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     async saveMemory() {
         try {
             await this.redis.set(this.agent.redisMemoryKey, JSON.stringify(this.memory));
-            //this.logger.debug(`Saving memory to Redis: ${util.inspect(this.memory)}`);
+            this.logger.debug(`Saving memory to Redis ${this.agent.redisMemoryKey}`);
             if (!this.skipCheckForProgress) {
                 await this.checkProgressForPauseOrStop();
             }

@@ -3,7 +3,7 @@ import { PsAgent } from "../dbModels/agent.js";
 type PageFormat = "rawHtml" | "markdown";
 export declare class GetWebPagesBaseAgent extends PolicySynthAgent {
     private firecrawlApiKey?;
-    private firecrawlApp?;
+    private firecrawlAgent?;
     constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number);
     generateFileName(url: string, suffix: string): string;
     private getCacheDirectory;
@@ -37,8 +37,9 @@ export declare class GetWebPagesBaseAgent extends PolicySynthAgent {
      *
      * @param url The URL to retrieve
      * @param format Which format to return. Only applies if Firecrawl is used. Puppeteer fallback always returns markdown.
+     * @param crawlIfDomainIs If specified, only crawl if the current URL's domain matches this domain.
      */
-    getAndProcessPage(url: string, format?: PageFormat): Promise<string>;
+    getAndProcessPage(url: string, format?: PageFormat, crawlIfDomainIs?: string | undefined): Promise<string | string[]>;
 }
 export {};
 //# sourceMappingURL=getWebPagesBase.d.ts.map

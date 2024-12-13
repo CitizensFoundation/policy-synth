@@ -225,7 +225,9 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             const imageForm = new FormData();
             imageForm.append("file", fs.createReadStream(imageLocalPath), "image.png");
             try {
-                const imageUploadResponse = await axios.post(`${this.serverBaseUrl}/images`, imageForm, {
+                const imageUploadResponse = await axios.post(`${this.serverBaseUrl}/images${this.agentFabricUserId
+                    ? `?agentFabricUserId=${this.agentFabricUserId}`
+                    : ""}`, imageForm, {
                     headers: {
                         ...this.getHeaders(),
                         ...imageForm.getHeaders(),
@@ -239,7 +241,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             }
             catch (error) {
                 console.error("Error uploading local image:", error);
-                throw new Error("Image upload failed.");
+                console.log("Generating AI image with prompt:", imagePrompt);
+                imageId = await this.generateImageWithAi(groupId, imagePrompt);
             }
         }
         else {
