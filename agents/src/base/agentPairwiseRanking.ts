@@ -17,6 +17,9 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
     ? parseInt(process.env.PS_MAX_PAIRWISE_PROMPTS)
     : 750;
 
+  // New property for concurrency
+  maxParallellRanking: number = 1;
+
   numComparisons: Record<number, Record<number, number>> = {};
   KFactors: Record<number, Record<number, number>> = {};
   eloRatings: Record<number, Record<number, number>> = {};
@@ -44,9 +47,11 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
     subProblemIndex: number,
     allItems: PsEloRateable[] | string[],
     maxPrompts: number | undefined = undefined,
-    updateFunction: Function | undefined = undefined
+    updateFunction: Function | undefined = undefined,
+    maxParallellRanking: number = 1
   ) {
     this.progressFunction = updateFunction;
+    this.maxParallellRanking = maxParallellRanking;
 
     this.logger.info(
       `Item count for sub-problem ${subProblemIndex}: ${allItems.length}`
@@ -120,7 +125,6 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
     itemOneIndex: number,
     itemTwoIndex: number
   ) {
-    //this.logger.info("Getting results from LLM");
     let wonItemIndex;
     let lostItemIndex;
 
@@ -133,6 +137,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
     try {
       while (retry && retryCount < maxRetryCount) {
         try {
+          this.logger.debug(`Calling model`);
           const winningItemText = await this.callModel(
             PsAiModelType.Text,
             this.defaultModelSize,
@@ -145,18 +150,19 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
           } else if (
             ["One", "Con One", "Pro One"].indexOf(winningItemText.trim()) > -1
           ) {
-            this.logger.debug("One is the winner");
+            this.logger.info(`Item One won`);
             wonItemIndex = itemOneIndex;
             lostItemIndex = itemTwoIndex;
           } else if (
             ["Two", "Con Two", "Pro Two"].indexOf(winningItemText.trim()) > -1
           ) {
-            this.logger.debug("Two is the winner");
+            this.logger.info(`Item Two won`);
             wonItemIndex = itemTwoIndex;
             lostItemIndex = itemOneIndex;
           } else if (
             ["Neither", "None", "Both"].indexOf(winningItemText.trim()) > -1
           ) {
+            this.logger.info(`Neither item won`);
             wonItemIndex = -1;
             lostItemIndex = -1;
           } else {
@@ -183,8 +189,10 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
         }
       }
 
-      this.scheduleMemorySave();
-      this.checkLastMemorySaveError();
+      if (this.maxParallellRanking == 1) {
+        this.scheduleMemorySave();
+        this.checkLastMemorySaveError();
+      }
     } catch (error) {
       throw error;
     }
@@ -212,68 +220,84 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
   async performPairwiseRanking(subProblemIndex: number, additionalData?: any) {
     this.logger.info("Performing pairwise ranking");
     this.logger.debug(`Sub-problem index: ${subProblemIndex}`);
+    const prompts = this.prompts[subProblemIndex];
+
     try {
-      for (let p = 0; p < this.prompts[subProblemIndex].length; p++) {
-        this.logger.info(
-          `Prompt ${p + 1} of ${this.prompts[subProblemIndex].length}`
-        );
-        if (this.progressFunction) {
-          this.progressFunction(
-            `${p + 1}/${this.prompts[subProblemIndex].length}`
-          );
-        }
+      // Process prompts in batches to respect maxParallellRanking
+      for (let p = 0; p < prompts.length; p += this.maxParallellRanking) {
+        // Extract a batch of prompts
+        const chunk = prompts.slice(p, p + this.maxParallellRanking);
 
-        const progress =
-          (p + 1 / (this.prompts[subProblemIndex].length - 1)) * 100;
-        this.updateRangedProgress(
-          this.disableRelativeProgress ? undefined : progress,
-          `${this.updatePrefix}\n${p + 1}/${
-            this.prompts[subProblemIndex].length
-          }`
-        );
-
-        const promptPair = this.prompts[subProblemIndex][p];
-        this.logger.debug(`Prompt pair: ${promptPair}`);
-        const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(
-          subProblemIndex,
-          promptPair,
-          additionalData
-        );
-        //this.logger.debug(`Won item index: ${wonItemIndex} Lost item index: ${lostItemIndex}`)
-        if (wonItemIndex === -1 && lostItemIndex === -1) {
-          this.logger.info(
-            `Neither won not updating elo score for prompt ${p}`
-          );
-        } else if (wonItemIndex !== undefined && lostItemIndex !== undefined) {
-          // Update Elo ratings
-          const winnerRating = this.eloRatings[subProblemIndex][wonItemIndex];
-          const loserRating = this.eloRatings[subProblemIndex][lostItemIndex];
-
-          const expectedWin =
-            1.0 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
-
-          const winnerK = this.KFactors[subProblemIndex][wonItemIndex];
-          const loserK = this.KFactors[subProblemIndex][lostItemIndex];
-
-          const newWinnerRating = winnerRating + winnerK * (1 - expectedWin);
-          const newLoserRating = loserRating + loserK * (0 - (1 - expectedWin));
-
-          this.eloRatings[subProblemIndex][wonItemIndex] = newWinnerRating;
-          this.eloRatings[subProblemIndex][lostItemIndex] = newLoserRating;
-
-          // Update number of comparisons and K-factor for each item
-          this.numComparisons[subProblemIndex][wonItemIndex] += 1;
-          this.numComparisons[subProblemIndex][lostItemIndex] += 1;
-
-          this.KFactors[subProblemIndex][wonItemIndex] = this.getUpdatedKFactor(
-            this.numComparisons[subProblemIndex][wonItemIndex]
-          );
-          this.KFactors[subProblemIndex][lostItemIndex] =
-            this.getUpdatedKFactor(
-              this.numComparisons[subProblemIndex][lostItemIndex]
+        // Process the current batch in parallel
+        const results = await Promise.all(
+          chunk.map(async (promptPair, idx) => {
+            const absoluteIndex = p + idx;
+            this.logger.debug(`Prompt pair: ${promptPair}`);
+            const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(
+              subProblemIndex,
+              promptPair,
+              additionalData
             );
-        } else {
-          throw new Error("Invalid won or lost item index");
+            //this.logger.debug(`Won item index: ${wonItemIndex} Lost item index: ${lostItemIndex}`)
+            return { promptPair, absoluteIndex, wonItemIndex, lostItemIndex };
+          })
+        );
+
+        // Update Elo ratings in the order of completion
+        for (const r of results) {
+          const promptIndex = r.absoluteIndex;
+          this.logger.info(`Prompt ${promptIndex + 1} of ${prompts.length}`);
+          if (this.progressFunction) {
+            this.progressFunction(`${promptIndex + 1}/${prompts.length}`);
+          }
+
+          const progress = ((promptIndex + 1) / (prompts.length - 1)) * 100;
+          this.updateRangedProgress(
+            this.disableRelativeProgress ? undefined : progress,
+            `${this.updatePrefix}\n${promptIndex + 1}/${prompts.length}`
+          );
+
+          const { wonItemIndex, lostItemIndex } = r;
+          if (wonItemIndex === -1 && lostItemIndex === -1) {
+            this.logger.info(
+              `Neither item won, not updating elo score for prompt ${promptIndex}`
+            );
+          } else if (
+            wonItemIndex !== undefined &&
+            lostItemIndex !== undefined
+          ) {
+            // Update Elo ratings
+            const winnerRating = this.eloRatings[subProblemIndex][wonItemIndex];
+            const loserRating = this.eloRatings[subProblemIndex][lostItemIndex];
+
+            const expectedWin =
+              1.0 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
+
+            const winnerK = this.KFactors[subProblemIndex][wonItemIndex];
+            const loserK = this.KFactors[subProblemIndex][lostItemIndex];
+
+            const newWinnerRating = winnerRating + winnerK * (1 - expectedWin);
+            const newLoserRating =
+              loserRating + loserK * (0 - (1 - expectedWin));
+
+            this.eloRatings[subProblemIndex][wonItemIndex] = newWinnerRating;
+            this.eloRatings[subProblemIndex][lostItemIndex] = newLoserRating;
+
+            // Update number of comparisons and K-factor for each item
+            this.numComparisons[subProblemIndex][wonItemIndex] += 1;
+            this.numComparisons[subProblemIndex][lostItemIndex] += 1;
+
+            this.KFactors[subProblemIndex][wonItemIndex] =
+              this.getUpdatedKFactor(
+                this.numComparisons[subProblemIndex][wonItemIndex]
+              );
+            this.KFactors[subProblemIndex][lostItemIndex] =
+              this.getUpdatedKFactor(
+                this.numComparisons[subProblemIndex][lostItemIndex]
+              );
+          } else {
+            throw new Error("Invalid won or lost item index");
+          }
         }
       }
     } catch (error: any) {

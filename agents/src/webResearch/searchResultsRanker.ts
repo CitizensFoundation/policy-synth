@@ -1,4 +1,3 @@
-
 import { SimplePairwiseRankingsAgent } from "../base/simplePairwiseRanking.js";
 
 export class SearchResultsRanker extends SimplePairwiseRankingsAgent {
@@ -19,12 +18,8 @@ export class SearchResultsRanker extends SimplePairwiseRankingsAgent {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![
-      itemOneIndex
-    ] as PsSearchResultItem;
-    const itemTwo = this.allItems![index]![
-      itemTwoIndex
-    ] as PsSearchResultItem;
+    const itemOne = this.allItems![index]![itemOneIndex] as PsSearchResultItem;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as PsSearchResultItem;
 
     console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
     console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
@@ -79,7 +74,12 @@ export class SearchResultsRanker extends SimplePairwiseRankingsAgent {
   ) {
     this.searchQuestion = searchQuestion;
 
-    this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
+    this.setupRankingPrompts(
+      -1,
+      queriesToRank,
+      maxPrompts,
+      this.progressFunction
+    );
     await this.performPairwiseRanking(-1);
     return this.getOrderedListOfItems(-1) as PsSearchResultItem[];
   }

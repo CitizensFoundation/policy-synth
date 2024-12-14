@@ -65,7 +65,7 @@ Your JSON output:`,
             },
         ];
         try {
-            const result = await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true);
+            const result = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true));
             if (result.isOnlyPrivacyPolicyOrTermsOfService) {
                 this.logger.debug("-------> filtering out legal or privacy policy");
                 this.logger.debug(document);
@@ -108,7 +108,9 @@ Your JSON output:`,
                         limit: this.crawlPageLimit,
                         scrapeOptions: {
                             formats,
-                            excludeTags: skipImages ? ["img", "svg"] : [],
+                            excludeTags: skipImages
+                                ? ["img", "svg", "a", "iframe", "script", "style"]
+                                : [],
                         },
                     });
                     this.logger.debug(`Crawl response length: ${Object.keys(scrapeResponse).length}`);
@@ -126,8 +128,13 @@ Your JSON output:`,
                         : "";
                 }
                 else {
-                    this.logger.debug(`Successfully scraped: ${url}`);
-                    scrapeResponse = await this.app.scrapeUrl(url, { formats });
+                    this.logger.debug(`Successfully scraped: ${url} skipImages ${skipImages}`);
+                    scrapeResponse = await this.app.scrapeUrl(url, {
+                        formats,
+                        excludeTags: skipImages
+                            ? ["img", "svg", "a", "iframe", "script", "style"]
+                            : [],
+                    });
                 }
                 return scrapeResponse;
             }

@@ -58,7 +58,7 @@ export class FirecrawlScrapeAgent extends PolicySynthAgent {
 
   private async checkIfLegalOrPrivacyPolicy(
     document: string
-    ): Promise<PrivacyPolicyCheckResult> {
+  ): Promise<PrivacyPolicyCheckResult> {
     const messages = [
       {
         role: "system" as const,
@@ -85,12 +85,12 @@ Your JSON output:`,
     ];
 
     try {
-      const result = await this.callModel(
+      const result = (await this.callModel(
         PsAiModelType.Text,
         PsAiModelSize.Small,
         messages,
         true
-      ) as PrivacyPolicyCheckResult;
+      )) as PrivacyPolicyCheckResult;
 
       if (result.isOnlyPrivacyPolicyOrTermsOfService) {
         this.logger.debug("-------> filtering out legal or privacy policy");
@@ -148,12 +148,16 @@ Your JSON output:`,
         // If a reference domain is specified, only crawl if the current URL's domain matches
         // that of the reference domain. Using the more robust domain extraction here.
         if (targetDomain && currentDomain === targetDomain) {
-          this.logger.debug(`Crawling ${url} because it matches ${targetDomain}`);
+          this.logger.debug(
+            `Crawling ${url} because it matches ${targetDomain}`
+          );
           scrapeResponse = await this.app.crawlUrl(url, {
             limit: this.crawlPageLimit,
             scrapeOptions: {
               formats,
-              excludeTags: skipImages ? ["img", "svg"] : [],
+              excludeTags: skipImages
+                ? ["img", "svg", "a", "iframe", "script", "style"]
+                : [],
             },
           });
 
@@ -184,8 +188,13 @@ Your JSON output:`,
             ? scrapeResponse.data.map((item: any) => item.rawHtml).join("\n\n")
             : "";
         } else {
-          this.logger.debug(`Successfully scraped: ${url}`);
-          scrapeResponse = await this.app.scrapeUrl(url, { formats });
+          this.logger.debug(`Successfully scraped: ${url} skipImages ${skipImages}`);
+          scrapeResponse = await this.app.scrapeUrl(url, {
+            formats,
+            excludeTags: skipImages
+              ? ["img", "svg", "a", "iframe", "script", "style"]
+              : [],
+          });
         }
 
         return scrapeResponse;

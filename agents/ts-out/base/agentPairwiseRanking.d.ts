@@ -11,6 +11,7 @@ export declare abstract class PairwiseRankingAgent extends PolicySynthAgent {
     K_FACTOR_MIN: number;
     NUM_COMPARISONS_FOR_MIN_K: number;
     maxNumberOfPrompts: number;
+    maxParallellRanking: number;
     numComparisons: Record<number, Record<number, number>>;
     KFactors: Record<number, Record<number, number>>;
     eloRatings: Record<number, Record<number, number>>;
@@ -18,7 +19,7 @@ export declare abstract class PairwiseRankingAgent extends PolicySynthAgent {
     updatePrefix: string;
     disableRelativeProgress: boolean;
     fisherYatesShuffle(array: any[]): any[];
-    setupRankingPrompts(subProblemIndex: number, allItems: PsEloRateable[] | string[], maxPrompts?: number | undefined, updateFunction?: Function | undefined): void;
+    setupRankingPrompts(subProblemIndex: number, allItems: PsEloRateable[] | string[], maxPrompts?: number | undefined, updateFunction?: Function | undefined, maxParallellRanking?: number): void;
     abstract voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<PsPairWiseVoteResults>;
     getResultsFromLLM(subProblemIndex: number, messages: PsModelMessage[], itemOneIndex: number, itemTwoIndex: number): Promise<{
         subProblemIndex: number;
