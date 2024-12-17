@@ -1,6 +1,7 @@
 import { BaseChatModel } from "./baseChatModel.js";
 export declare class OpenAiChat extends BaseChatModel {
     private client;
+    private reasoningEffort;
     constructor(config: PsOpenAiModelConfig);
     generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<any>;
     getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;

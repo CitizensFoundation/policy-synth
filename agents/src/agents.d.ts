@@ -13,6 +13,7 @@ interface PsAiModelConfig {
   modelName?: string;
   maxTokensOut?: number;
   temperature?: number;
+  reasoningEffort?: 'low' | 'medium' | 'high';
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

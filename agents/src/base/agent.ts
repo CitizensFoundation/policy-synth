@@ -30,6 +30,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
   maxModelTokensOut = 4096;
   modelTemperature = 0.7;
+  reasoningEffort: 'low' | 'medium' | 'high' = 'medium';
 
   pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours
   pauseTimeout = 1000;
@@ -70,6 +71,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
           : [] /*this.getAccessConfigFromEnv()*/,
         this.maxModelTokensOut,
         this.modelTemperature,
+        this.reasoningEffort,
         agent ? agent.id : -1,
         agent ? agent.user_id : -1
       );

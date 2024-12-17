@@ -3,6 +3,7 @@ import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model } from "tiktoken";
 export class OpenAiChat extends BaseChatModel {
     client;
+    reasoningEffort = 'medium';
     constructor(config) {
         let { apiKey, modelName = "gpt-4o", maxTokensOut = 4096 } = config;
         super(modelName, maxTokensOut);
@@ -11,6 +12,7 @@ export class OpenAiChat extends BaseChatModel {
         }
         console.debug(`Using OpenAI API key: ${apiKey}`);
         this.client = new OpenAI({ apiKey });
+        this.reasoningEffort = config.reasoningEffort || 'low';
     }
     async generate(messages, streaming, streamingCallback) {
         const formattedMessages = messages.map((msg) => ({
@@ -22,6 +24,7 @@ export class OpenAiChat extends BaseChatModel {
                 model: this.modelName,
                 messages: formattedMessages,
                 stream: true,
+                reasoning_effort: this.reasoningEffort,
             });
             for await (const chunk of stream) {
                 if (streamingCallback) {
@@ -33,6 +36,7 @@ export class OpenAiChat extends BaseChatModel {
             const response = await this.client.chat.completions.create({
                 model: this.modelName,
                 messages: formattedMessages,
+                reasoning_effort: this.reasoningEffort
             });
             const content = response.choices[0]?.message?.content;
             const tokensIn = response.usage.prompt_tokens;

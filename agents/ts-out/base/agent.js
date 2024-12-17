@@ -22,6 +22,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     endProgress = 100;
     maxModelTokensOut = 4096;
     modelTemperature = 0.7;
+    reasoningEffort = 'medium';
     pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours
     pauseTimeout = 1000;
     memorySaveTimer = null;
@@ -43,7 +44,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         if (!this.skipAiModels) {
             this.modelManager = new PsAiModelManager(agent.AiModels || [], agent
                 ? agent.Group?.private_access_configuration || []
-                : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, agent ? agent.id : -1, agent ? agent.user_id : -1);
+                : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, this.reasoningEffort, agent ? agent.id : -1, agent ? agent.user_id : -1);
         }
         if (agent && !agent.redisStatusKey) {
             this.logger.error("Agent status key not set", agent);

@@ -1,10 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
-import {
-  ContentBlock,
-  TextBlockParam,
-} from "@anthropic-ai/sdk/resources/messages.js";
 
 export class ClaudeChat extends BaseChatModel {
   private client: Anthropic;
@@ -45,25 +41,22 @@ export class ClaudeChat extends BaseChatModel {
     };
 
     if (systemMessage) {
-      if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
-        requestOptions.system = [
-          {
-            type: "text",
-            text: systemMessage,
-            cache_control: {"type": "ephemeral"}
-          },
-        ] as any[];
+      requestOptions.system = [
+        {
+          type: "text",
+          text: systemMessage,
+          cache_control: { type: "ephemeral" },
+        },
+      ] as any[];
 
-        if (process.env.PS_PROMPT_DEBUG) {
-          console.debug(`--------------> Using system message: ${JSON.stringify(requestOptions.system, null, 2)}`);
-        }
-      } else {
-        requestOptions.system = [
-          {
-            type: "text",
-            text: systemMessage,
-          },
-        ] as TextBlockParam[];
+      if (process.env.PS_PROMPT_DEBUG) {
+        console.debug(
+          `--------------> Using system message with cache control: ${JSON.stringify(
+            requestOptions.system,
+            null,
+            2
+          )}`
+        );
       }
     }
 
@@ -82,26 +75,18 @@ export class ClaudeChat extends BaseChatModel {
       // TODO: Deal with token usage here
     } else {
       let response;
-      if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
-        response = await this.client.beta.promptCaching.messages.create(
-          requestOptions
-        );
-      } else {
-        response = await this.client.messages.create(requestOptions);
-      }
+      response = await this.client.messages.create(requestOptions);
       console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
       let tokensIn = response.usage.input_tokens;
       let tokensOut = response.usage.output_tokens;
 
       //TODO: Fix this properly
-      if (process.env.PS_ANTHROPIC_BETA_CONTEXT_CACHING) {
-        if ((response.usage as any).cache_creation_input_tokens) {
-          tokensIn += (response.usage as any).cache_creation_input_tokens*1.25;
-        }
+      if ((response.usage as any).cache_creation_input_tokens) {
+        tokensIn += (response.usage as any).cache_creation_input_tokens * 1.25;
+      }
 
-        if ((response.usage as any).cache_read_input_tokens) {
-          tokensIn += (response.usage as any).cache_read_input_tokens*0.1;
-        }
+      if ((response.usage as any).cache_read_input_tokens) {
+        tokensIn += (response.usage as any).cache_read_input_tokens * 0.1;
       }
       return {
         tokensIn: Math.round(tokensIn),

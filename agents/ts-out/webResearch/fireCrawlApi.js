@@ -109,7 +109,7 @@ Your JSON output:`,
                         scrapeOptions: {
                             formats,
                             excludeTags: skipImages
-                                ? ["img", "svg", "a", "iframe", "script", "style"]
+                                ? ["img", "svg", "a", "iframe", "script", "style", "br"]
                                 : [],
                         },
                     });
@@ -132,7 +132,7 @@ Your JSON output:`,
                     scrapeResponse = await this.app.scrapeUrl(url, {
                         formats,
                         excludeTags: skipImages
-                            ? ["img", "svg", "a", "iframe", "script", "style"]
+                            ? ["img", "svg", "a", "iframe", "script", "style", "br"]
                             : [],
                     });
                 }

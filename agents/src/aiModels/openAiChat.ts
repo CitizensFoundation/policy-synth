@@ -5,6 +5,8 @@ import { resolve } from "path";
 
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
+  private reasoningEffort: 'low' | 'medium' | 'high' = 'medium';
+
 
   constructor(config: PsOpenAiModelConfig) {
     let { apiKey, modelName = "gpt-4o", maxTokensOut = 4096 } = config;
@@ -14,6 +16,7 @@ export class OpenAiChat extends BaseChatModel {
     }
     console.debug(`Using OpenAI API key: ${apiKey}`);
     this.client = new OpenAI({ apiKey });
+    this.reasoningEffort = config.reasoningEffort || 'low';
   }
 
   async generate(
@@ -22,7 +25,7 @@ export class OpenAiChat extends BaseChatModel {
     streamingCallback?: Function
   ): Promise<any> {
     const formattedMessages = messages.map((msg) => ({
-      role: msg.role as "system" | "user" | "assistant",
+      role: msg.role as "system" | "developer" | "user" | "assistant",
       content: msg.message,
     }));
 
@@ -31,6 +34,7 @@ export class OpenAiChat extends BaseChatModel {
         model: this.modelName,
         messages: formattedMessages,
         stream: true,
+        reasoning_effort: this.reasoningEffort,
       });
 
       for await (const chunk of stream) {
@@ -42,6 +46,7 @@ export class OpenAiChat extends BaseChatModel {
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,
+        reasoning_effort: this.reasoningEffort
       });
 
       const content = response.choices[0]?.message?.content;
