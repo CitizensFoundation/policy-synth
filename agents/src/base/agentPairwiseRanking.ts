@@ -2,8 +2,8 @@ import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PolicySynthAgent } from "./agent.js";
 
 export abstract class PairwiseRankingAgent extends PolicySynthAgent {
-  maxModelTokensOut = 3;
-  modelTemperature = 0.0;
+  protected get maxModelTokensOut(): number { return 3; }
+  protected get modelTemperature(): number { return 0.0; }
 
   defaultModelSize = PsAiModelSize.Medium;
 

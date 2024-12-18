@@ -12,6 +12,8 @@ interface PsAiModelConfig {
   apiKey: string;
   modelName?: string;
   maxTokensOut?: number;
+  modelType: import("./aiModelTypes.js").PsAiModelType;
+  modelSize: import("./aiModelTypes.js").PsAiModelSize;
   temperature?: number;
   reasoningEffort?: 'low' | 'medium' | 'high';
 }

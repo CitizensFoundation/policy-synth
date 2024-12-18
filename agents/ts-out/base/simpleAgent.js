@@ -85,6 +85,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
         const baseConfig = {
             apiKey: process.env.AI_MODEL_API_KEY,
             modelName: process.env.AI_MODEL_NAME,
+            reasoningEffort: process.env.AI_MODEL_REASONING_EFFORT || 'medium',
             maxTokensOut: this.maxModelTokensOut ??
                 (process.env.AI_MODEL_MAX_TOKENS_OUT
                     ? parseInt(process.env.AI_MODEL_MAX_TOKENS_OUT)
@@ -93,6 +94,8 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
                 (process.env.AI_MODEL_TEMPERATURE
                     ? parseFloat(process.env.AI_MODEL_TEMPERATURE)
                     : 0.5),
+            modelType: process.env.AI_MODEL_TYPE,
+            modelSize: process.env.AI_MODEL_SIZE,
         };
         switch (process.env.AI_MODEL_PROVIDER.toLowerCase()) {
             case "anthropic":

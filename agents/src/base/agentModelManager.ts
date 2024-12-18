@@ -21,7 +21,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   maxModelTokensOut: number;
   modelTemperature: number;
-  reasoningEffort: 'low' | 'medium' | 'high' = 'low';
+  reasoningEffort: 'low' | 'medium' | 'high' = 'medium';
 
   limitedLLMmaxRetryCount = 1;
   mainLLMmaxRetryCount = 10;
@@ -31,7 +31,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     accessConfiguration: YpGroupPrivateAccessConfiguration[],
     maxModelTokensOut: number = 4096,
     modelTemperature: number = 0.7,
-    reasoningEffort: 'low' | 'medium' | 'high' = 'low',
+    reasoningEffort: 'low' | 'medium' | 'high' = 'medium',
     agentId: number,
     userId: number
   ) {
@@ -81,6 +81,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         modelName: modelName,
         maxTokensOut: this.maxModelTokensOut,
         temperature: this.modelTemperature,
+        reasoningEffort: this.reasoningEffort,
+        modelType: modelType,
+        modelSize: modelSize
       };
 
       switch (modelProvider.toLowerCase()) {
@@ -159,7 +162,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         maxTokensOut: this.maxModelTokensOut,
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
+        modelType: modelType,
+        modelSize: modelSize
       };
+
+      this.logger.debug(`Reasoning effort is set to ${this.reasoningEffort} here`)
 
       let newModel: BaseChatModel;
 

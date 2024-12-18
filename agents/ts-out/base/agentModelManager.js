@@ -17,10 +17,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     agentId;
     maxModelTokensOut;
     modelTemperature;
-    reasoningEffort = 'low';
+    reasoningEffort = 'medium';
     limitedLLMmaxRetryCount = 1;
     mainLLMmaxRetryCount = 10;
-    constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = 'low', agentId, userId) {
+    constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = 'medium', agentId, userId) {
         super();
         this.maxModelTokensOut = maxModelTokensOut;
         this.modelTemperature = modelTemperature;
@@ -63,6 +63,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 modelName: modelName,
                 maxTokensOut: this.maxModelTokensOut,
                 temperature: this.modelTemperature,
+                reasoningEffort: this.reasoningEffort,
+                modelType: modelType,
+                modelSize: modelSize
             };
             switch (modelProvider.toLowerCase()) {
                 case "anthropic":
@@ -131,7 +134,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 maxTokensOut: this.maxModelTokensOut,
                 temperature: this.modelTemperature,
                 reasoningEffort: this.reasoningEffort,
+                modelType: modelType,
+                modelSize: modelSize
             };
+            this.logger.debug(`Reasoning effort is set to ${this.reasoningEffort} here`);
             let newModel;
             switch (model.configuration.provider) {
                 case "anthropic":

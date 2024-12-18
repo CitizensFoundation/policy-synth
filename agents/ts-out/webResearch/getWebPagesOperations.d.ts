@@ -3,8 +3,8 @@ import { PolicySynthAgent } from "../base/agent.js";
 export declare class BaseGetWebPagesOperationsAgent extends PolicySynthAgent {
     urlsScanned: Set<string>;
     totalPagesSave: number;
-    maxModelTokensOut: number;
-    modelTemperature: number;
+    protected get maxModelTokensOut(): number;
+    protected get modelTemperature(): number;
     renderScanningPrompt(problemStatement: string, text: string, subProblemIndex?: number, entityIndex?: number): PsModelMessage[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;

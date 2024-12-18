@@ -29,8 +29,8 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthAgent {
 
   totalPagesSave = 0;
 
-  maxModelTokensOut = 4096;
-  modelTemperature = 0.0;
+  protected get maxModelTokensOut(): number { return 4096; }
+  protected get modelTemperature(): number { return 0.0; }
 
   renderScanningPrompt(
     problemStatement: string,

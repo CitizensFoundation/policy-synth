@@ -6,7 +6,7 @@ import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PolicySynthAgentBase } from "./agentBase.js";
 import ioredis from "ioredis";
 import tiktoken from "tiktoken";
-import { PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 
 const redis = new ioredis(
   process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379"
@@ -99,6 +99,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
     const baseConfig: PsAiModelConfig = {
       apiKey: process.env.AI_MODEL_API_KEY!,
       modelName: process.env.AI_MODEL_NAME,
+      reasoningEffort: (process.env.AI_MODEL_REASONING_EFFORT as 'low' | 'medium' | 'high' | undefined) || 'medium',
       maxTokensOut: this.maxModelTokensOut ??
         (process.env.AI_MODEL_MAX_TOKENS_OUT
           ? parseInt(process.env.AI_MODEL_MAX_TOKENS_OUT)
@@ -107,6 +108,8 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
         (process.env.AI_MODEL_TEMPERATURE
           ? parseFloat(process.env.AI_MODEL_TEMPERATURE)
           : 0.5),
+      modelType: process.env.AI_MODEL_TYPE as PsAiModelType,
+      modelSize: process.env.AI_MODEL_SIZE as PsAiModelSize,
     };
 
     switch (process.env.AI_MODEL_PROVIDER.toLowerCase()) {

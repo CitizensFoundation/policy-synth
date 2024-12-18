@@ -9,6 +9,8 @@ interface PsAzureAiModelConfig {
   deploymentName: string;
   modelName?: string;
   maxTokensOut?: number;
+  reasoningEffort?: 'low' | 'medium' | 'high';
+  temperature?: number;
 }
 
 interface PsModelMessage {
@@ -19,6 +21,8 @@ interface PsModelMessage {
 export class AzureOpenAiChat extends BaseChatModel {
   private client: AzureOpenAI;
   private deploymentName: string;
+  private reasoningEffort: 'low' | 'medium' | 'high' = 'medium';
+  private temperature: number = 0.7;
 
   constructor(config: PsAzureAiModelConfig) {
     super(config.modelName || "gpt-4", config.maxTokensOut || 4096);
@@ -33,6 +37,8 @@ export class AzureOpenAiChat extends BaseChatModel {
       apiVersion: "2024-10-21"
     });
     this.deploymentName = config.deploymentName;
+    this.reasoningEffort = config.reasoningEffort || 'medium';
+    this.temperature = config.temperature || 0.7;
   }
 
   async generate(
@@ -52,6 +58,8 @@ export class AzureOpenAiChat extends BaseChatModel {
         max_tokens: this.maxTokensOut,
         stream: true,
         model: "", // Model is required, use "" for Azure deployments
+        reasoning_effort: this.reasoningEffort,
+        temperature: this.temperature
       });
 
       for await (const event of events) {
@@ -69,6 +77,8 @@ export class AzureOpenAiChat extends BaseChatModel {
         messages: chatMessages,
         max_tokens: this.maxTokensOut,
         model: "", // Model is required, use "" for Azure deployments
+        reasoning_effort: this.reasoningEffort,
+        temperature: this.temperature
       });
 
       const content = result.choices.map((choice) => choice.message?.content ?? "").join("");

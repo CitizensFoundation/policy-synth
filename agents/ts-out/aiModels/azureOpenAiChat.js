@@ -5,6 +5,8 @@ import { encoding_for_model } from "tiktoken";
 export class AzureOpenAiChat extends BaseChatModel {
     client;
     deploymentName;
+    reasoningEffort = 'medium';
+    temperature = 0.7;
     constructor(config) {
         super(config.modelName || "gpt-4", config.maxTokensOut || 4096);
         const scope = "https://cognitiveservices.azure.com/.default";
@@ -16,6 +18,8 @@ export class AzureOpenAiChat extends BaseChatModel {
             apiVersion: "2024-10-21"
         });
         this.deploymentName = config.deploymentName;
+        this.reasoningEffort = config.reasoningEffort || 'medium';
+        this.temperature = config.temperature || 0.7;
     }
     async generate(messages, streaming, streamingCallback) {
         const chatMessages = messages.map((msg) => ({
@@ -29,6 +33,8 @@ export class AzureOpenAiChat extends BaseChatModel {
                 max_tokens: this.maxTokensOut,
                 stream: true,
                 model: "", // Model is required, use "" for Azure deployments
+                reasoning_effort: this.reasoningEffort,
+                temperature: this.temperature
             });
             for await (const event of events) {
                 for (const choice of event.choices) {
@@ -45,6 +51,8 @@ export class AzureOpenAiChat extends BaseChatModel {
                 messages: chatMessages,
                 max_tokens: this.maxTokensOut,
                 model: "", // Model is required, use "" for Azure deployments
+                reasoning_effort: this.reasoningEffort,
+                temperature: this.temperature
             });
             const content = result.choices.map((choice) => choice.message?.content ?? "").join("");
             const usage = result.usage;

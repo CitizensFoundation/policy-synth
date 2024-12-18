@@ -19,9 +19,9 @@ export declare abstract class PolicySynthAgent extends PolicySynthAgentBase {
     skipCheckForProgress: boolean;
     startProgress: number;
     endProgress: number;
-    maxModelTokensOut: number;
-    modelTemperature: number;
-    reasoningEffort: 'low' | 'medium' | 'high';
+    protected get maxModelTokensOut(): number;
+    protected get modelTemperature(): number;
+    protected get reasoningEffort(): 'low' | 'medium' | 'high';
     pauseCheckInterval: number;
     pauseTimeout: number;
     private memorySaveTimer;

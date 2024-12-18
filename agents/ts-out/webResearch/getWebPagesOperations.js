@@ -19,8 +19,8 @@ const onlyCheckWhatNeedsToBeScanned = false;
 export class BaseGetWebPagesOperationsAgent extends PolicySynthAgent {
     urlsScanned = new Set();
     totalPagesSave = 0;
-    maxModelTokensOut = 4096;
-    modelTemperature = 0.0;
+    get maxModelTokensOut() { return 4096; }
+    get modelTemperature() { return 0.0; }
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         return [
             this.createSystemMessage(`Your are an AI expert in analyzing text for practical solutions to difficult problems:
