@@ -49,7 +49,10 @@ export class OpenAiChat extends BaseChatModel {
         model: this.modelName,
         messages: formattedMessages,
         stream: true,
-        reasoning_effort: this.modelConfig.reasoningEffort,
+        reasoning_effort:
+          this.modelConfig.modelType != PsAiModelType.TextReasoning
+            ? undefined
+            : this.modelConfig.reasoningEffort,
         temperature:
           this.modelConfig.modelType == PsAiModelType.TextReasoning
             ? undefined
@@ -73,7 +76,10 @@ export class OpenAiChat extends BaseChatModel {
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,
-        reasoning_effort: this.modelConfig.reasoningEffort,
+        reasoning_effort:
+          this.modelConfig.modelType != PsAiModelType.TextReasoning
+            ? undefined
+            : this.modelConfig.reasoningEffort,
         temperature:
           this.modelConfig.modelType == PsAiModelType.TextReasoning
             ? undefined
@@ -98,25 +104,29 @@ export class OpenAiChat extends BaseChatModel {
       const cachedTokens =
         response.usage!.prompt_tokens_details?.cached_tokens || 0;
 
-      const completion_tokens_details = response.usage!.completion_tokens_details;
+      const completion_tokens_details =
+        response.usage!.completion_tokens_details;
 
       // Adjust the tokensIn to reflect the 50% discount for cached tokens
       const adjustedTokensIn = tokensIn - cachedTokens * 0.5;
 
       const cacheRatio = (cachedTokens / tokensIn) * 100;
 
-      this.logger.debug(JSON.stringify({
-        tokensIn,
-        cachedTokens,
-        cacheRatio,
-        tokensOut,
-        adjustedTokensIn,
-        content,
-          completion_tokens_details,
-        },
-        null,
-        2
-      ));
+      this.logger.debug(
+        JSON.stringify(
+          {
+            tokensIn,
+            cachedTokens,
+            cacheRatio,
+            tokensOut,
+            adjustedTokensIn,
+            content,
+            completion_tokens_details,
+          },
+          null,
+          2
+        )
+      );
 
       return {
         tokensIn: adjustedTokensIn,

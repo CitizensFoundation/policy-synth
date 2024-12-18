@@ -28,7 +28,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   startProgress = 0;
   endProgress = 100;
 
-  protected get maxModelTokensOut(): number { return 64000; }
+  protected get maxModelTokensOut(): number { return 16384; }
   protected get modelTemperature(): number { return 0.7; }
   protected get reasoningEffort(): 'low' | 'medium' | 'high' { return 'medium'; }
 

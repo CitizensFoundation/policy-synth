@@ -20,7 +20,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     skipCheckForProgress = false;
     startProgress = 0;
     endProgress = 100;
-    get maxModelTokensOut() { return 64000; }
+    get maxModelTokensOut() { return 16384; }
     get modelTemperature() { return 0.7; }
     get reasoningEffort() { return 'medium'; }
     pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours

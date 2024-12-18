@@ -29,7 +29,9 @@ export class OpenAiChat extends BaseChatModel {
                 model: this.modelName,
                 messages: formattedMessages,
                 stream: true,
-                reasoning_effort: this.modelConfig.reasoningEffort,
+                reasoning_effort: this.modelConfig.modelType != PsAiModelType.TextReasoning
+                    ? undefined
+                    : this.modelConfig.reasoningEffort,
                 temperature: this.modelConfig.modelType == PsAiModelType.TextReasoning
                     ? undefined
                     : this.modelConfig.temperature,
@@ -50,7 +52,9 @@ export class OpenAiChat extends BaseChatModel {
             const response = await this.client.chat.completions.create({
                 model: this.modelName,
                 messages: formattedMessages,
-                reasoning_effort: this.modelConfig.reasoningEffort,
+                reasoning_effort: this.modelConfig.modelType != PsAiModelType.TextReasoning
+                    ? undefined
+                    : this.modelConfig.reasoningEffort,
                 temperature: this.modelConfig.modelType == PsAiModelType.TextReasoning
                     ? undefined
                     : this.modelConfig.temperature,
