@@ -1,26 +1,26 @@
 # AgentQueueManager
 
-The `AgentQueueManager` class is responsible for managing agent queues using Redis and BullMQ. It handles the initialization of Redis, creation and management of queues, and control of agent processing.
+The `AgentQueueManager` class is responsible for managing agent queues using Redis and BullMQ. It provides methods to initialize Redis connections, manage queues, and control agent processing.
 
 ## Properties
 
 | Name        | Type                | Description                                      |
 |-------------|---------------------|--------------------------------------------------|
-| redisClient | Redis               | The Redis client instance.                       |
-| queues      | Map<string, Queue>  | A map of queue names to their corresponding Queue instances. |
+| redisClient | Redis               | Redis client instance for managing connections.  |
+| queues      | Map<string, Queue>  | A map to store and manage queues by their names. |
 
 ## Methods
 
-| Name                  | Parameters                                                                 | Return Type                | Description                                                                                       |
-|-----------------------|----------------------------------------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------------|
-| constructor           | None                                                                       | void                       | Initializes the `AgentQueueManager` instance and sets up Redis and queues.                        |
-| initializeRedis       | None                                                                       | void                       | Initializes the Redis client and sets up event listeners for Redis connection events.             |
-| getQueue              | queueName: string                                                          | Queue                      | Retrieves or creates a new queue for the given queue name.                                        |
-| controlAgent          | agentId: number, action: string                                            | Promise<string>            | Controls an agent by adding a job to the appropriate queue.                                       |
-| startAgentProcessing  | agentId: number                                                            | Promise<boolean>           | Starts processing for the specified agent.                                                        |
-| pauseAgentProcessing  | agentId: number                                                            | Promise<boolean>           | Pauses processing for the specified agent.                                                        |
-| getAgentStatus        | agentId: number                                                            | Promise<PsAgentStatus \| null> | Retrieves the status of the specified agent.                                                      |
-| updateAgentStatus     | agentId: number, state: PsAgentStatus["state"], progress?: number, message?: string, details?: Record<string, any> | Promise<boolean>           | Updates the status of the specified agent.                                                        |
+| Name                  | Parameters                                                                 | Return Type          | Description                                                                 |
+|-----------------------|----------------------------------------------------------------------------|----------------------|-----------------------------------------------------------------------------|
+| constructor           | -                                                                          | -                    | Initializes the `AgentQueueManager` and sets up Redis connection.           |
+| initializeRedis       | -                                                                          | void                 | Initializes the Redis client with the specified connection options.         |
+| getQueue              | queueName: string                                                          | Queue                | Retrieves or creates a queue for the specified name.                        |
+| controlAgent          | agentId: number, action: string                                            | Promise<string>      | Controls an agent by adding a job to the queue for the specified action.    |
+| startAgentProcessing  | agentId: number                                                            | Promise<boolean>     | Starts processing for the specified agent by adding a job to the queue.     |
+| pauseAgentProcessing  | agentId: number                                                            | Promise<boolean>     | Pauses processing for the specified agent by adding a job to the queue.     |
+| getAgentStatus        | agentId: number                                                            | Promise<PsAgentStatus \| null> | Retrieves the status of the specified agent from Redis.                     |
+| updateAgentStatus     | agentId: number, state: PsAgentStatus["state"], progress?: number, message?: string, details?: Record<string, any> | Promise<boolean>     | Updates the status of the specified agent in Redis.                         |
 
 ## Example
 
@@ -29,86 +29,20 @@ import { AgentQueueManager } from '@policysynth/agents/operations/agentQueueMana
 
 const agentQueueManager = new AgentQueueManager();
 
-// Example usage: Start processing for an agent with ID 1
+// Example usage: Start processing for an agent
 agentQueueManager.startAgentProcessing(1).then((result) => {
-  console.log('Agent processing started:', result);
-}).catch((error) => {
-  console.error('Error starting agent processing:', error);
+  console.log("Agent processing started:", result);
+});
+
+// Example usage: Pause processing for an agent
+agentQueueManager.pauseAgentProcessing(1).then((result) => {
+  console.log("Agent processing paused:", result);
+});
+
+// Example usage: Get agent status
+agentQueueManager.getAgentStatus(1).then((status) => {
+  console.log("Agent status:", status);
 });
 ```
 
-## Detailed Method Descriptions
-
-### constructor
-
-Initializes the `AgentQueueManager` instance and sets up Redis and queues.
-
-### initializeRedis
-
-Initializes the Redis client and sets up event listeners for Redis connection events.
-
-### getQueue
-
-Retrieves or creates a new queue for the given queue name.
-
-**Parameters:**
-- `queueName` (string): The name of the queue to retrieve or create.
-
-**Returns:**
-- `Queue`: The queue instance for the given queue name.
-
-### controlAgent
-
-Controls an agent by adding a job to the appropriate queue.
-
-**Parameters:**
-- `agentId` (number): The ID of the agent to control.
-- `action` (string): The action to perform on the agent (e.g., "start", "pause").
-
-**Returns:**
-- `Promise<string>`: A promise that resolves to a message indicating the result of the control action.
-
-### startAgentProcessing
-
-Starts processing for the specified agent.
-
-**Parameters:**
-- `agentId` (number): The ID of the agent to start processing for.
-
-**Returns:**
-- `Promise<boolean>`: A promise that resolves to `true` if the agent processing was started successfully, or `false` otherwise.
-
-### pauseAgentProcessing
-
-Pauses processing for the specified agent.
-
-**Parameters:**
-- `agentId` (number): The ID of the agent to pause processing for.
-
-**Returns:**
-- `Promise<boolean>`: A promise that resolves to `true` if the agent processing was paused successfully, or `false` otherwise.
-
-### getAgentStatus
-
-Retrieves the status of the specified agent.
-
-**Parameters:**
-- `agentId` (number): The ID of the agent to retrieve the status for.
-
-**Returns:**
-- `Promise<PsAgentStatus | null>`: A promise that resolves to the status of the agent, or `null` if the agent or status data was not found.
-
-### updateAgentStatus
-
-Updates the status of the specified agent.
-
-**Parameters:**
-- `agentId` (number): The ID of the agent to update the status for.
-- `state` (PsAgentStatus["state"]): The new state of the agent.
-- `progress` (number, optional): The progress of the agent.
-- `message` (string, optional): A message to add to the agent's status.
-- `details` (Record<string, any>, optional): Additional details to add to the agent's status.
-
-**Returns:**
-- `Promise<boolean>`: A promise that resolves to `true` if the agent status was updated successfully, or `false` otherwise.
-```
+This class is designed to manage agent queues efficiently, providing methods to control agent processing and monitor their status using Redis and BullMQ.

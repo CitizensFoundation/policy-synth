@@ -1,7 +1,7 @@
 # Policy Agents API Documentation
 
-- [agentCategories](src/src/agentCategories.md)
-- [aiModelTypes](src/src/aiModelTypes.md)
+- [agentCategories](src/agentCategories.md)
+- [aiModelTypes](src/aiModelTypes.md)
 - aiModels
   - [azureOpenAiChat](src/aiModels/azureOpenAiChat.md)
   - [baseChatModel](src/aiModels/baseChatModel.md)
@@ -20,7 +20,7 @@
   - [agentRunner](src/base/agentRunner.md)
   - [simpleAgent](src/base/simpleAgent.md)
   - [simplePairwiseRanking](src/base/simplePairwiseRanking.md)
-- [connectorTypes](src/src/connectorTypes.md)
+- [connectorTypes](src/connectorTypes.md)
 - connectors
   - base
     - [baseCollaborationConnector](src/connectors/base/baseCollaborationConnector.md)
@@ -40,7 +40,7 @@
     - [discordConnector](src/connectors/notifications/discordConnector.md)
   - sheets
     - [googleSheetsConnector](src/connectors/sheets/googleSheetsConnector.md)
-- [constants](src/src/constants.md)
+- [constants](src/constants.md)
 - dbModels
   - [agent](src/dbModels/agent.md)
   - [agentAuditLog](src/dbModels/agentAuditLog.md)
@@ -64,7 +64,7 @@
   - [agentManager](src/operations/agentManager.md)
   - [agentQueueManager](src/operations/agentQueueManager.md)
   - [agentRegistryManager](src/operations/agentRegistryManager.md)
-- [queue](src/src/queue.md)
+- [queue](src/queue.md)
 - rag
   - ingestion
     - [baseAgent](src/rag/ingestion/baseAgent.md)
@@ -87,7 +87,9 @@
       - [destroyRagChunk](src/rag/vectorstore/tools/destroyRagChunk.md)
       - [destroyRagDocument](src/rag/vectorstore/tools/destroyRagDocument.md)
 - tools
+  - [addNewAiModel](src/tools/addNewAiModel.md)
   - [addUserToAgentClass](src/tools/addUserToAgentClass.md)
+  - [addUserToAllAgentClasses](src/tools/addUserToAllAgentClasses.md)
   - [generateDocumentation](src/tools/generateDocumentation.md)
   - [seedAiModels](src/tools/seedAiModels.md)
   - [seedDbTestClasses](src/tools/seedDbTestClasses.md)
@@ -100,7 +102,9 @@
     - [testValidationChain](src/validations/test/testValidationChain.md)
 - webResearch
   - [bingSearchApi](src/webResearch/bingSearchApi.md)
+  - [fireCrawlApi](src/webResearch/fireCrawlApi.md)
   - [getWebPages](src/webResearch/getWebPages.md)
+  - [getWebPagesBase](src/webResearch/getWebPagesBase.md)
   - [getWebPagesOperations](src/webResearch/getWebPagesOperations.md)
   - [googleSearchApi](src/webResearch/googleSearchApi.md)
   - [researchWeb](src/webResearch/researchWeb.md)
@@ -108,4 +112,5 @@
   - [searchQueriesRanker](src/webResearch/searchQueriesRanker.md)
   - [searchResultsRanker](src/webResearch/searchResultsRanker.md)
   - [searchWeb](src/webResearch/searchWeb.md)
+  - [searchWebWithAi](src/webResearch/searchWebWithAi.md)
   - [webPageScanner](src/webResearch/webPageScanner.md)

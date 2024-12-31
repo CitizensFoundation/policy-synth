@@ -1,21 +1,21 @@
 # PsGoogleSheetsConnector
 
-The `PsGoogleSheetsConnector` class is a connector for Google Sheets, allowing interaction with Google Sheets through the Google Sheets API. It extends the `PsBaseSheetConnector` class and provides methods to read and update data in Google Sheets.
+The `PsGoogleSheetsConnector` class is a connector for interacting with Google Sheets. It extends the `PsBaseSheetConnector` and provides methods to perform various operations on Google Sheets such as reading, updating, and formatting cells.
 
 ## Properties
 
-| Name          | Type                | Description                                      |
-|---------------|---------------------|--------------------------------------------------|
-| client        | JWT                 | JWT client for Google Sheets API authentication. |
-| sheets        | sheets_v4.Sheets    | Google Sheets API instance.                      |
+| Name    | Type               | Description                                      |
+|---------|--------------------|--------------------------------------------------|
+| client  | JWT                | JWT client for authentication with Google APIs.  |
+| sheets  | sheets_v4.Sheets   | Instance of Google Sheets API.                   |
 
 ## Static Properties
 
-| Name                                | Type                                      | Description                                      |
-|-------------------------------------|-------------------------------------------|--------------------------------------------------|
-| GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID | string                                    | Base ID for the Google Sheets connector class.   |
-| GOOGLE_SHEETS_CONNECTOR_VERSION     | number                                    | Version of the Google Sheets connector.          |
-| getConnectorClass                   | PsAgentConnectorClassCreationAttributes   | Configuration for the Google Sheets connector class. |
+| Name                                      | Type                                      | Description                                                                 |
+|-------------------------------------------|-------------------------------------------|-----------------------------------------------------------------------------|
+| GOOGLE_SHEETS_CONNECTOR_CLASS_BASE_ID     | string                                    | Base ID for the Google Sheets connector class.                              |
+| GOOGLE_SHEETS_CONNECTOR_VERSION           | number                                    | Version number of the Google Sheets connector.                              |
+| getConnectorClass                         | PsAgentConnectorClassCreationAttributes   | Configuration attributes for the connector class.                           |
 
 ## Constructor
 
@@ -25,85 +25,25 @@ Creates an instance of `PsGoogleSheetsConnector`.
 
 #### Parameters
 
-| Name            | Type                              | Description                                                                 |
-|-----------------|-----------------------------------|-----------------------------------------------------------------------------|
-| connector       | PsAgentConnectorAttributes        | Connector attributes.                                                       |
-| connectorClass  | PsAgentConnectorClassAttributes   | Connector class attributes.                                                 |
-| agent           | PsAgent                           | Agent instance.                                                             |
-| memory          | PsAgentMemoryData \| undefined    | Optional memory data.                                                       |
-| startProgress   | number                            | Optional start progress value (default is 0).                               |
-| endProgress     | number                            | Optional end progress value (default is 100).                               |
+- `connector`: `PsAgentConnectorAttributes` - Attributes of the connector.
+- `connectorClass`: `PsAgentConnectorClassAttributes` - Attributes of the connector class.
+- `agent`: `PsAgent` - The agent associated with the connector.
+- `memory`: `PsAgentMemoryData | undefined` - Optional memory data for the agent.
+- `startProgress`: `number` - Starting progress percentage (default is 0).
+- `endProgress`: `number` - Ending progress percentage (default is 100).
 
 ## Methods
 
-### getSheet
-
-Fetches all data from the first sheet of the Google Spreadsheet.
-
-#### Returns
-
-| Type          | Description                                      |
-|---------------|--------------------------------------------------|
-| Promise<string[][]> | A promise that resolves to a 2D array of strings representing the sheet data. |
-
-### updateSheet
-
-Updates the entire sheet with the provided data.
-
-#### Parameters
-
-| Name | Type          | Description                                      |
-|------|---------------|--------------------------------------------------|
-| data | string[][]    | 2D array of strings representing the data to update. |
-
-#### Returns
-
-| Type          | Description                                      |
-|---------------|--------------------------------------------------|
-| Promise<void> | A promise that resolves when the update is complete. |
-
-### getRange
-
-Fetches data from a specific range in the Google Spreadsheet.
-
-#### Parameters
-
-| Name  | Type   | Description                                      |
-|-------|--------|--------------------------------------------------|
-| range | string | The range to fetch data from (e.g., 'A1:B10').   |
-
-#### Returns
-
-| Type          | Description                                      |
-|---------------|--------------------------------------------------|
-| Promise<string[][]> | A promise that resolves to a 2D array of strings representing the range data. |
-
-### updateRange
-
-Updates a specific range in the Google Spreadsheet with the provided data.
-
-#### Parameters
-
-| Name | Type          | Description                                      |
-|------|---------------|--------------------------------------------------|
-| range | string       | The range to update (e.g., 'A1:B10').            |
-| data  | string[][]   | 2D array of strings representing the data to update. |
-
-#### Returns
-
-| Type          | Description                                      |
-|---------------|--------------------------------------------------|
-| Promise<void> | A promise that resolves when the update is complete. |
-
-### getExtraConfigurationQuestions
-
-Returns additional configuration questions for the Google Sheets connector.
-
-#### Returns
-
-| Type          | Description                                      |
-|---------------|--------------------------------------------------|
-| YpStructuredQuestionData[] | An array of structured question data for extra configuration. |
+| Name                     | Parameters                                                                 | Return Type       | Description                                                                 |
+|--------------------------|----------------------------------------------------------------------------|-------------------|-----------------------------------------------------------------------------|
+| `getSheet`               | -                                                                          | `Promise<string[][]>` | Retrieves all cells from the first sheet of the spreadsheet.                |
+| `addSheetIfNotExists`    | `sheetName: string`                                                        | `Promise<void>`   | Adds a new sheet with the specified name if it does not already exist.      |
+| `createNewSheet`         | `sheetName: string`                                                        | `Promise<void>`   | Creates a new sheet with the specified name.                                |
+| `formatCells`            | `range: string, format: sheets_v4.Schema$CellFormat`                       | `Promise<void>`   | Formats cells in the specified range with the given format.                 |
+| `updateSheet`            | `data: string[][]`                                                         | `Promise<void>`   | Updates the entire sheet starting from cell A1 with the provided data.      |
+| `getRange`               | `range: string`                                                            | `Promise<string[][]>` | Retrieves data from the specified range of the spreadsheet.                 |
+| `updateRange`            | `range: string, data: string[][]`                                          | `Promise<void>`   | Updates the specified range of the spreadsheet with the provided data.      |
+| `getExtraConfigurationQuestions` | -                                                                  | `YpStructuredQuestionData[]` | Returns additional configuration questions for the connector.               |
 
 ## Example
 
@@ -111,23 +51,12 @@ Returns additional configuration questions for the Google Sheets connector.
 import { PsGoogleSheetsConnector } from '@policysynth/agents/connectors/sheets/googleSheetsConnector.js';
 
 // Example usage of PsGoogleSheetsConnector
-const connectorAttributes = { /* ... */ };
-const connectorClassAttributes = { /* ... */ };
-const agent = { /* ... */ };
-const memory = undefined;
-
-const googleSheetsConnector = new PsGoogleSheetsConnector(
-  connectorAttributes,
-  connectorClassAttributes,
-  agent,
-  memory
-);
-
-googleSheetsConnector.getSheet().then(data => {
-  console.log(data);
-}).catch(error => {
-  console.error(error);
-});
+const connector = new PsGoogleSheetsConnector(connectorAttributes, connectorClassAttributes, agent, memory);
+await connector.getSheet();
+await connector.addSheetIfNotExists("NewSheet");
+await connector.createNewSheet("AnotherSheet");
+await connector.formatCells("A1:Z1", { textFormat: { bold: true } });
+await connector.updateSheet([["Header1", "Header2"], ["Value1", "Value2"]]);
+const rangeData = await connector.getRange("A1:B2");
+await connector.updateRange("A1:B2", [["Updated1", "Updated2"]]);
 ```
-
-This documentation provides a detailed overview of the `PsGoogleSheetsConnector` class, including its properties, methods, and an example of how to use it.

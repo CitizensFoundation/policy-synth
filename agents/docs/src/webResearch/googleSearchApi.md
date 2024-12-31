@@ -1,67 +1,61 @@
 # GoogleSearchApi
 
-The `GoogleSearchApi` class provides a simple interface to perform Google Search queries using the Google Custom Search API. It extends the `PolicySynthSimpleAgentBase` class.
+The `GoogleSearchApi` class is a specialized agent that extends the `PolicySynthSimpleAgentBase`. It is designed to perform web searches using the Google Custom Search API.
 
 ## Properties
 
-| Name          | Type   | Description               |
-|---------------|--------|---------------------------|
+| Name          | Type | Description                              |
+|---------------|------|------------------------------------------|
 | needsAiModel  | boolean | Indicates if an AI model is needed. Defaults to `false`. |
 
 ## Methods
 
-| Name       | Parameters        | Return Type | Description                 |
-|------------|-------------------|-------------|-----------------------------|
-| search     | query: string     | Promise<PsSearchResultItem[]> | Performs a search query using the Google Custom Search API and returns the results. |
+| Name       | Parameters        | Return Type          | Description                 |
+|------------|-------------------|----------------------|-----------------------------|
+| search     | query: string, numberOfResults: number | Promise<PsSearchResultItem[]> | Performs a search using the Google Custom Search API and returns an array of search results. |
 
-## Example
-
-```typescript
-import { GoogleSearchApi } from '@policysynth/agents/solutions/web/googleSearchApi.js';
-
-const googleSearchApi = new GoogleSearchApi();
-googleSearchApi.search("liberal democracies: issues and solutions")
-  .then(results => {
-    console.log("Search results:", results);
-  })
-  .catch(error => {
-    console.error("An error occurred:", error);
-  });
-```
-
-## Detailed Method Description
-
-### `search(query: string): Promise<PsSearchResultItem[]>`
-
-Performs a search query using the Google Custom Search API and returns the results.
+### Method: `search`
 
 #### Parameters
 
-- `query` (string): The search query string.
+- `query: string`: The search query string.
+- `numberOfResults: number`: The number of search results to retrieve.
 
 #### Returns
 
 - `Promise<PsSearchResultItem[]>`: A promise that resolves to an array of search result items.
 
-#### Example
+#### Description
+
+The `search` method performs a web search using the Google Custom Search API. It calculates the number of API calls needed based on the requested number of results and the maximum number of results that can be fetched per request (10). It constructs the API request URL using the provided query and environment variables for the API key and CX ID. The method processes the response to extract relevant search result data, including the title, URL, description, and date, and returns an array of `PsSearchResultItem` objects.
+
+## Example
 
 ```typescript
-const googleSearchApi = new GoogleSearchApi();
-googleSearchApi.search("liberal democracies: issues and solutions")
-  .then(results => {
+import { GoogleSearchApi } from '@policysynth/agents/webResearch/googleSearchApi.js';
+
+async function exampleUsage() {
+  const googleSearchApi = new GoogleSearchApi();
+  try {
+    const results = await googleSearchApi.search(
+      "liberal democracies: issues and solutions",
+      20
+    );
     console.log("Search results:", results);
-  })
-  .catch(error => {
-    console.error("An error occurred:", error);
-  });
+  } catch (error) {
+    console.error("Error during search:", error);
+  }
+}
+
+exampleUsage();
 ```
 
-## Testing
+### Environment Variables
 
-To test the `GoogleSearchApi` class, you can set the environment variables `TEST_GOOGLE_SEARCH`, `GOOGLE_SEARCH_API_KEY`, and `GOOGLE_SEARCH_API_CX_ID`, and then run the script.
+- `GOOGLE_SEARCH_API_KEY`: Your Google Custom Search API key.
+- `GOOGLE_SEARCH_API_CX_ID`: Your Google Custom Search Engine ID.
+- `TEST_GOOGLE_SEARCH`: Set to `true` to enable the test function.
 
-```bash
-TEST_GOOGLE_SEARCH=true GOOGLE_SEARCH_API_KEY=your_api_key GOOGLE_SEARCH_API_CX_ID=your_cx_id node src/dist/agents/solutions/web/googleSearchApi.js
-```
+### Test Function
 
-This will execute the `test` function, which performs a search query and logs the results to the console.
+A test function is provided to demonstrate the usage of the `GoogleSearchApi` class. It can be executed by setting the `TEST_GOOGLE_SEARCH` environment variable to `true` and running the script. The test function performs a search and logs the results to the console.

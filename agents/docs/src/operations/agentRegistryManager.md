@@ -1,69 +1,54 @@
 # AgentRegistryManager
 
-The `AgentRegistryManager` class is responsible for managing and retrieving active agent and connector classes from the database. It provides methods to fetch active agent classes and active connector classes for a given user.
+The `AgentRegistryManager` class is responsible for managing and retrieving active agent and connector classes from the database. It provides methods to fetch the latest versions of active agent and connector classes that are available to a specific user.
 
 ## Methods
 
+| Name                      | Parameters        | Return Type                              | Description                                                                 |
+|---------------------------|-------------------|------------------------------------------|-----------------------------------------------------------------------------|
+| getActiveAgentClasses     | userId: number    | Promise<PsAgentClassAttributes[]>        | Retrieves the latest versions of active agent classes available to the user. |
+| getActiveConnectorClasses | userId: number    | Promise<PsAgentConnectorClassAttributes[]> | Retrieves the latest versions of active connector classes available to the user. |
+
+## Method Details
+
 ### getActiveAgentClasses
 
-Fetches the active agent classes for a given user. It filters the agents to keep only the latest version of each agent.
+Retrieves the latest versions of active agent classes that are available to a specific user. The method filters the agent classes based on their availability and the user's access rights.
 
 #### Parameters
 
-| Name   | Type   | Description          |
-|--------|--------|----------------------|
-| userId | number | The ID of the user.  |
+- `userId` (number): The ID of the user for whom the active agent classes are being retrieved.
 
-#### Return Type
+#### Returns
 
-`Promise<PsAgentClassAttributes[]>`
-
-#### Description
-
-Returns a promise that resolves to an array of active agent class attributes.
+- `Promise<PsAgentClassAttributes[]>`: A promise that resolves to an array of the latest active agent class attributes available to the user.
 
 #### Example
 
 ```typescript
-import { AgentRegistryManager } from '@policysynth/agents/operations/agentRegistryManager.js';
-
-const manager = new AgentRegistryManager();
-const userId = 1;
-
-manager.getActiveAgentClasses(userId).then((agentClasses) => {
-  console.log(agentClasses);
-});
+const agentRegistryManager = new AgentRegistryManager();
+const activeAgentClasses = await agentRegistryManager.getActiveAgentClasses(userId);
+console.log(activeAgentClasses);
 ```
 
 ### getActiveConnectorClasses
 
-Fetches the active connector classes for a given user. It filters the connectors to keep only the latest version of each connector.
+Retrieves the latest versions of active connector classes that are available to a specific user. The method filters the connector classes based on their availability and the user's access rights.
 
 #### Parameters
 
-| Name   | Type   | Description          |
-|--------|--------|----------------------|
-| userId | number | The ID of the user.  |
+- `userId` (number): The ID of the user for whom the active connector classes are being retrieved.
 
-#### Return Type
+#### Returns
 
-`Promise<PsAgentConnectorClassAttributes[]>`
-
-#### Description
-
-Returns a promise that resolves to an array of active connector class attributes.
+- `Promise<PsAgentConnectorClassAttributes[]>`: A promise that resolves to an array of the latest active connector class attributes available to the user.
 
 #### Example
 
 ```typescript
-import { AgentRegistryManager } from '@policysynth/agents/operations/agentRegistryManager.js';
-
-const manager = new AgentRegistryManager();
-const userId = 1;
-
-manager.getActiveConnectorClasses(userId).then((connectorClasses) => {
-  console.log(connectorClasses);
-});
+const agentRegistryManager = new AgentRegistryManager();
+const activeConnectorClasses = await agentRegistryManager.getActiveConnectorClasses(userId);
+console.log(activeConnectorClasses);
 ```
 
 ## Example Usage
@@ -71,32 +56,18 @@ manager.getActiveConnectorClasses(userId).then((connectorClasses) => {
 ```typescript
 import { AgentRegistryManager } from '@policysynth/agents/operations/agentRegistryManager.js';
 
-const manager = new AgentRegistryManager();
-const userId = 1;
+const agentRegistryManager = new AgentRegistryManager();
+const userId = 123;
 
-async function fetchAgentAndConnectorClasses() {
-  const agentClasses = await manager.getActiveAgentClasses(userId);
-  console.log('Active Agent Classes:', agentClasses);
+// Fetch active agent classes for the user
+agentRegistryManager.getActiveAgentClasses(userId).then((activeAgentClasses) => {
+  console.log('Active Agent Classes:', activeAgentClasses);
+});
 
-  const connectorClasses = await manager.getActiveConnectorClasses(userId);
-  console.log('Active Connector Classes:', connectorClasses);
-}
-
-fetchAgentAndConnectorClasses();
+// Fetch active connector classes for the user
+agentRegistryManager.getActiveConnectorClasses(userId).then((activeConnectorClasses) => {
+  console.log('Active Connector Classes:', activeConnectorClasses);
+});
 ```
 
-## Dependencies
-
-The `AgentRegistryManager` class relies on the following imports:
-
-```typescript
-import {
-  PsAgentRegistry,
-  PsAgentClass,
-  PsAgentConnectorClass,
-  User,
-} from "../dbModels/index.js";
-import { literal, fn, col, Op, Sequelize } from "sequelize";
-```
-
-These imports include the necessary models and Sequelize functions used in the methods.
+This class utilizes Sequelize to interact with the database and retrieve the necessary data. It ensures that only the latest versions of the agent and connector classes are returned, based on the user's access rights and the availability of the classes.

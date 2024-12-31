@@ -1,19 +1,19 @@
 # BaseSearchWebAgent
 
-The `BaseSearchWebAgent` class is designed to perform web searches using either the Google Search API or the Bing Search API, depending on the available environment variables. It extends the `PolicySynthAgentBase` class and provides methods to call the search APIs and process the search results.
+The `BaseSearchWebAgent` class is designed to perform web searches using either Google or Bing search APIs. It extends the `PolicySynthAgentBase` class and provides methods to call search APIs and retrieve search results while avoiding duplicate URLs.
 
 ## Properties
 
-| Name      | Type                        | Description                                      |
-|-----------|-----------------------------|--------------------------------------------------|
-| seenUrls  | Map<string, Set<string>>    | A map to keep track of URLs that have been seen. |
+| Name     | Type                          | Description                        |
+|----------|-------------------------------|------------------------------------|
+| seenUrls | Map<string, Set<string>>      | A map to track seen URLs for deduplication purposes. |
 
 ## Methods
 
-| Name            | Parameters                          | Return Type                | Description                                                                 |
-|-----------------|-------------------------------------|----------------------------|-----------------------------------------------------------------------------|
-| callSearchApi   | query: string                       | Promise<PsSearchResultItem[]> | Calls the appropriate search API based on the available environment variables. |
-| getQueryResults | queriesToSearch: string[], id: string | Promise<{ searchResults: PsSearchResultItem[] }> | Retrieves and processes search results for the given queries.               |
+| Name            | Parameters                                      | Return Type                  | Description                                                                 |
+|-----------------|-------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
+| callSearchApi   | query: string, numberOfResults: number          | Promise<PsSearchResultItem[]>| Calls the appropriate search API (Google or Bing) based on available keys.  |
+| getQueryResults | queriesToSearch: string[], id: string, numberOfResults: number = 10 | Promise<{ searchResults: PsSearchResultItem[] }> | Retrieves search results for a list of queries, ensuring no duplicate URLs. |
 
 ## Example
 
@@ -21,54 +21,37 @@ The `BaseSearchWebAgent` class is designed to perform web searches using either 
 import { BaseSearchWebAgent } from '@policysynth/agents/webResearch/searchWeb.js';
 
 const searchAgent = new BaseSearchWebAgent();
-
 const queries = ["example query 1", "example query 2"];
-const id = "unique-id";
-
-searchAgent.getQueryResults(queries, id).then(results => {
-  console.log(results);
-}).catch(error => {
-  console.error(error);
-});
+const results = await searchAgent.getQueryResults(queries, "uniqueId");
+console.log(results.searchResults);
 ```
 
-## Detailed Method Descriptions
+### Method Details
 
-### callSearchApi
+#### `callSearchApi`
 
-```typescript
-async callSearchApi(query: string): Promise<PsSearchResultItem[]>
-```
-
-Calls the appropriate search API based on the available environment variables.
+This method determines which search API to use based on the environment variables set for API keys. It supports both Google and Bing search APIs.
 
 - **Parameters:**
-  - `query` (string): The search query string.
+  - `query`: The search query string.
+  - `numberOfResults`: The number of search results to retrieve.
 
-- **Returns:**
-  - `Promise<PsSearchResultItem[]>`: A promise that resolves to an array of search result items.
+- **Returns:** A promise that resolves to an array of `PsSearchResultItem` containing the search results.
 
-- **Throws:**
-  - `Error`: If no search API key is available.
+- **Throws:** An error if no search API key is available.
 
-### getQueryResults
+#### `getQueryResults`
 
-```typescript
-async getQueryResults(queriesToSearch: string[], id: string): Promise<{ searchResults: PsSearchResultItem[] }>
-```
-
-Retrieves and processes search results for the given queries.
+This method performs searches for a list of queries and returns the combined results, ensuring that duplicate URLs are filtered out.
 
 - **Parameters:**
-  - `queriesToSearch` (string[]): An array of search query strings.
-  - `id` (string): A unique identifier to track seen URLs.
+  - `queriesToSearch`: An array of search query strings.
+  - `id`: A unique identifier used to track seen URLs.
+  - `numberOfResults`: The number of search results to retrieve per query (default is 10).
 
-- **Returns:**
-  - `Promise<{ searchResults: PsSearchResultItem[] }>`: A promise that resolves to an object containing an array of search result items.
+- **Returns:** A promise that resolves to an object containing the `searchResults`, which is an array of `PsSearchResultItem`.
 
-- **Description:**
-  - Iterates over the provided queries and calls the `callSearchApi` method to get search results.
-  - Logs the search data and results for debugging purposes.
-  - Deduplicates the search results based on the URLs seen for the given `id`.
-  - Returns the deduplicated search results.
-```
+- **Behavior:** 
+  - Calls `callSearchApi` for each query.
+  - Deduplicates URLs using the `seenUrls` map.
+  - Logs the number of results before and after deduplication.

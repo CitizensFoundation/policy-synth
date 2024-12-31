@@ -1,6 +1,6 @@
 # PsBaseDocumentConnector
 
-The `PsBaseDocumentConnector` is an abstract class that extends the `PsBaseConnector`. It provides a base structure for document connectors, defining methods for retrieving and updating documents.
+The `PsBaseDocumentConnector` is an abstract class that extends the `PsBaseConnector`. It provides a base structure for connectors that interact with documents, offering methods to retrieve and update document content.
 
 ## Properties
 
@@ -8,10 +8,11 @@ This class does not define any additional properties beyond those inherited from
 
 ## Methods
 
-| Name            | Parameters       | Return Type     | Description                                      |
-|-----------------|------------------|-----------------|--------------------------------------------------|
-| `getDocument`   | None             | `Promise<string>` | Abstract method to retrieve a document.          |
-| `updateDocument`| `doc: string`    | `Promise<void>` | Abstract method to update a document with the provided content. |
+| Name                        | Parameters                  | Return Type     | Description                                      |
+|-----------------------------|-----------------------------|-----------------|--------------------------------------------------|
+| `getDocument`               | None                        | `Promise<string>` | Abstract method to retrieve the document content as a string. |
+| `updateDocument`            | `doc: string`               | `Promise<void>` | Abstract method to update the document with the provided string content. |
+| `updateDocumentFromMarkdown`| `markdown: string`          | `Promise<void>` | Abstract method to update the document using the provided markdown content. |
 
 ## Example
 
@@ -20,18 +21,17 @@ import { PsBaseDocumentConnector } from '@policysynth/agents/connectors/base/bas
 
 class MyDocumentConnector extends PsBaseDocumentConnector {
   async getDocument(): Promise<string> {
-    // Implementation to retrieve the document
-    return "Document content";
+    // Implementation to retrieve document content
   }
 
   async updateDocument(doc: string): Promise<void> {
-    // Implementation to update the document
+    // Implementation to update document content
+  }
+
+  async updateDocumentFromMarkdown(markdown: string): Promise<void> {
+    // Implementation to update document from markdown
   }
 }
-
-const myConnector = new MyDocumentConnector();
-myConnector.getDocument().then(doc => console.log(doc));
-myConnector.updateDocument("Updated content").then(() => console.log("Document updated"));
 ```
 
-In this example, `MyDocumentConnector` extends `PsBaseDocumentConnector` and provides concrete implementations for the `getDocument` and `updateDocument` methods.
+In this example, `MyDocumentConnector` extends `PsBaseDocumentConnector` and provides concrete implementations for the abstract methods to interact with document content.

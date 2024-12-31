@@ -1,57 +1,14 @@
 # AgentCostManager
 
-The `AgentCostManager` class is responsible for managing and calculating the costs associated with agents in the system. It provides methods to retrieve the costs for a single agent as well as for an agent and its hierarchy.
-
-## Properties
-
-This class does not have any properties.
+The `AgentCostManager` class is responsible for managing and calculating the costs associated with agents in the system. It provides methods to retrieve detailed costs, aggregate costs for an agent and its hierarchy, and costs for a single agent.
 
 ## Methods
 
-| Name                | Parameters        | Return Type  | Description                                                                 |
-|---------------------|-------------------|--------------|-----------------------------------------------------------------------------|
-| `getAgentCosts`     | `agentId: number` | `Promise<AgentCost>` | Retrieves the costs for an agent and its hierarchy.                         |
-| `getSingleAgentCosts` | `agentId: number` | `Promise<string>` | Retrieves the total cost for a single agent.                                |
-
-### `getAgentCosts`
-
-Retrieves the costs for an agent and its hierarchy.
-
-#### Parameters
-
-- `agentId: number`: The ID of the agent for which to retrieve the costs.
-
-#### Returns
-
-- `Promise<AgentCost>`: An object containing the costs for the agent and its hierarchy, as well as the total cost.
-
-#### Example
-
-```typescript
-const agentCostManager = new AgentCostManager();
-const agentCosts = await agentCostManager.getAgentCosts(1);
-console.log(agentCosts);
-```
-
-### `getSingleAgentCosts`
-
-Retrieves the total cost for a single agent.
-
-#### Parameters
-
-- `agentId: number`: The ID of the agent for which to retrieve the cost.
-
-#### Returns
-
-- `Promise<string>`: The total cost for the agent as a string.
-
-#### Example
-
-```typescript
-const agentCostManager = new AgentCostManager();
-const totalCost = await agentCostManager.getSingleAgentCosts(1);
-console.log(totalCost);
-```
+| Name                  | Parameters        | Return Type                        | Description                                                                 |
+|-----------------------|-------------------|------------------------------------|-----------------------------------------------------------------------------|
+| getDetailedAgentCosts | agentId: number   | Promise<PsDetailedAgentCostResults[]> | Retrieves detailed cost information for a specific agent, including token usage and costs. |
+| getAgentCosts         | agentId: number   | Promise<PsAgentCostResults>        | Calculates the total costs for an agent and its hierarchy, returning a summary of costs. |
+| getSingleAgentCosts   | agentId: number   | Promise<string>                    | Retrieves the total cost for a single agent, without considering its hierarchy. |
 
 ## Example
 
@@ -60,30 +17,41 @@ import { AgentCostManager } from '@policysynth/agents/operations/agentCostsManag
 
 const agentCostManager = new AgentCostManager();
 
-// Get costs for an agent and its hierarchy
-agentCostManager.getAgentCosts(1).then(agentCosts => {
-  console.log('Agent Costs:', agentCosts);
+// Example usage to get detailed costs for an agent
+agentCostManager.getDetailedAgentCosts(1).then(detailedCosts => {
+  console.log(detailedCosts);
 }).catch(error => {
-  console.error('Error:', error);
+  console.error("Error fetching detailed agent costs:", error);
 });
 
-// Get total cost for a single agent
-agentCostManager.getSingleAgentCosts(1).then(totalCost => {
-  console.log('Total Cost:', totalCost);
+// Example usage to get aggregated costs for an agent and its hierarchy
+agentCostManager.getAgentCosts(1).then(agentCosts => {
+  console.log(agentCosts);
 }).catch(error => {
-  console.error('Error:', error);
+  console.error("Error fetching agent costs:", error);
+});
+
+// Example usage to get costs for a single agent
+agentCostManager.getSingleAgentCosts(1).then(totalCost => {
+  console.log("Total cost for single agent:", totalCost);
+}).catch(error => {
+  console.error("Error fetching single agent costs:", error);
 });
 ```
 
-## Types
+### Method Details
 
-### `AgentCost`
+#### getDetailedAgentCosts
 
-An interface representing the structure of the agent cost data.
+- **Parameters**: `agentId` - The ID of the agent for which to retrieve detailed cost information.
+- **Returns**: A promise that resolves to an array of `PsDetailedAgentCostResults`, which includes detailed cost information such as token usage and costs for each AI model associated with the agent.
 
-#### Properties
+#### getAgentCosts
 
-| Name        | Type   | Description                       |
-|-------------|--------|-----------------------------------|
-| `agentCosts` | `object` | An object containing the costs for each agent in the hierarchy. |
-| `totalCost`  | `string` | The total cost for the agent and its hierarchy.                |
+- **Parameters**: `agentId` - The ID of the agent for which to calculate costs.
+- **Returns**: A promise that resolves to a `PsAgentCostResults` object, which includes the total costs for the agent and its hierarchy, broken down by agent level.
+
+#### getSingleAgentCosts
+
+- **Parameters**: `agentId` - The ID of the agent for which to retrieve the total cost.
+- **Returns**: A promise that resolves to a string representing the total cost for the specified agent, without considering its hierarchy.

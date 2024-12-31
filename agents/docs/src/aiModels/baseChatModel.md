@@ -1,55 +1,50 @@
 # BaseChatModel
 
-The `BaseChatModel` is an abstract class that provides a foundation for chat models. It defines the basic properties and methods that any chat model should implement.
+The `BaseChatModel` is an abstract class that extends the `PolicySynthAgentBase`. It serves as a foundational class for chat models, providing basic properties and abstract methods that need to be implemented by subclasses.
 
 ## Properties
 
-| Name         | Type                | Description                                      |
-|--------------|---------------------|--------------------------------------------------|
-| modelName    | string \| TiktokenModel | The name of the model or a TiktokenModel instance. |
-| maxTokensOut | number              | The maximum number of tokens that can be output. |
+| Name         | Type                      | Description                                                                 |
+|--------------|---------------------------|-----------------------------------------------------------------------------|
+| modelName    | `string \| TiktokenModel` | The name of the model or a TiktokenModel instance used for tokenization.    |
+| maxTokensOut | `number`                  | The maximum number of tokens that can be output by the model. Default is 4096. |
 
 ## Constructor
 
-| Parameters   | Type                | Description                                      |
-|--------------|---------------------|--------------------------------------------------|
-| modelName    | string \| TiktokenModel | The name of the model or a TiktokenModel instance. |
-| maxTokensOut | number              | The maximum number of tokens that can be output. Defaults to 4096. |
+### BaseChatModel
+
+The constructor initializes a new instance of the `BaseChatModel` class.
+
+#### Parameters
+
+- `modelName: string | TiktokenModel` - The name of the model or a TiktokenModel instance.
+- `maxTokensOut: number` (optional) - The maximum number of tokens that can be output by the model. Defaults to 4096.
 
 ## Methods
 
-| Name                               | Parameters                                                                 | Return Type                                                                 | Description                                                                 |
-|------------------------------------|----------------------------------------------------------------------------|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| generate                           | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function | Promise<{tokensIn: number, tokensOut: number, content: string} \| undefined> | Abstract method to generate a response based on the provided messages.      |
-| getEstimatedNumTokensFromMessages  | messages: PsModelMessage[]                                                | Promise<number>                                                             | Abstract method to estimate the number of tokens from the provided messages. |
+| Name                                 | Parameters                                                                 | Return Type                                                                 | Description                                                                 |
+|--------------------------------------|----------------------------------------------------------------------------|------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `generate`                           | `messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function` | `Promise<{tokensIn: number, tokensOut: number, content: string} \| undefined>` | Abstract method to generate a response based on input messages.             |
+| `getEstimatedNumTokensFromMessages`  | `messages: PsModelMessage[]`                                               | `Promise<number>`                                                           | Abstract method to estimate the number of tokens from a list of messages.   |
 
 ## Example
 
 ```typescript
 import { BaseChatModel } from '@policysynth/agents/aiModels/baseChatModel.js';
-import { PsModelMessage } from '@policysynth/agents/aiModels/types.js';
 
-class MyChatModel extends BaseChatModel {
-  async generate(
-    messages: PsModelMessage[],
-    streaming?: boolean,
-    streamingCallback?: Function
-  ): Promise<{tokensIn: number, tokensOut: number, content: string} | undefined> {
-    // Implementation here
+class CustomChatModel extends BaseChatModel {
+  constructor(modelName: string | TiktokenModel) {
+    super(modelName);
   }
 
-  async getEstimatedNumTokensFromMessages(
-    messages: PsModelMessage[]
-  ): Promise<number> {
-    // Implementation here
+  async generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<{tokensIn: number, tokensOut: number, content: string} | undefined> {
+    // Implementation of the generate method
+  }
+
+  async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+    // Implementation of the token estimation method
   }
 }
-
-const model = new MyChatModel('my-model', 2048);
-const messages: PsModelMessage[] = [{ role: 'user', message: 'Hello!' }];
-model.generate(messages).then(response => {
-  console.log(response);
-});
 ```
 
-This example demonstrates how to extend the `BaseChatModel` class and implement its abstract methods.
+In this example, `CustomChatModel` extends `BaseChatModel` and provides implementations for the abstract methods `generate` and `getEstimatedNumTokensFromMessages`.

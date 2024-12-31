@@ -1,34 +1,35 @@
 # PsYourPrioritiesConnector
 
-The `PsYourPrioritiesConnector` class is a connector for the "Your Priorities" platform, which allows for interaction with the platform's API to perform actions such as logging in, voting on posts, and creating new posts. This class extends the `PsBaseIdeasCollaborationConnector` and provides methods to handle these interactions.
+The `PsYourPrioritiesConnector` class is a connector for the Your Priorities Ideas Collaboration platform. It extends the `PsBaseIdeasCollaborationConnector` and provides methods to interact with the Your Priorities API, including logging in, fetching group posts, voting on posts, and posting new content.
 
 ## Properties
 
-| Name                  | Type                        | Description                                                                 |
-|-----------------------|-----------------------------|-----------------------------------------------------------------------------|
-| YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID | string                      | The base ID for the Your Priorities connector class.                        |
-| YOUR_PRIORITIES_CONNECTOR_VERSION      | number                      | The version number of the Your Priorities connector class.                  |
-| baseQuestions                          | YpStructuredQuestionData[]  | The base questions required for the connector configuration.                |
-| loginQuestions                         | YpStructuredQuestionData[]  | The login questions required for the connector configuration.               |
-| getConnectorClass                      | PsAgentConnectorClassCreationAttributes | The configuration attributes for the connector class.                        |
-| userEmail                              | string                      | The email of the user for authentication.                                    |
-| password                               | string                      | The password of the user for authentication.                                 |
-| serverBaseUrl                          | string                      | The base URL of the Your Priorities server.                                  |
-| sessionCookie                          | string \| undefined         | The session cookie received after login.                                     |
-| user                                   | YpUserData \| undefined     | The user data received after login.                                          |
-| agentFabricUserId                      | number \| undefined         | The user ID for the agent fabric.                                            |
+| Name                  | Type                              | Description                                                                 |
+|-----------------------|-----------------------------------|-----------------------------------------------------------------------------|
+| YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID | `string`                          | Static constant for the connector class base ID.                            |
+| YOUR_PRIORITIES_CONNECTOR_VERSION      | `number`                          | Static constant for the connector version.                                  |
+| baseQuestions         | `YpStructuredQuestionData[]`      | Static array of base questions for the connector configuration.             |
+| loginQuestions        | `YpStructuredQuestionData[]`      | Static array of login questions for the connector configuration.            |
+| getConnectorClass     | `PsAgentConnectorClassCreationAttributes` | Static configuration for the connector class.                               |
+| userEmail             | `string`                          | The email of the user for authentication.                                   |
+| password              | `string`                          | The password of the user for authentication.                                |
+| serverBaseUrl         | `string`                          | The base URL of the Your Priorities server.                                 |
+| sessionCookie         | `string` \| `undefined`           | The session cookie for authenticated requests.                              |
+| user                  | `YpUserData` \| `undefined`       | The user data after successful login.                                       |
+| agentFabricUserId     | `number` \| `undefined`           | The user ID for the agent fabric, if applicable.                            |
 
 ## Methods
 
-| Name                          | Parameters                                                                 | Return Type                | Description                                                                 |
-|-------------------------------|----------------------------------------------------------------------------|----------------------------|-----------------------------------------------------------------------------|
-| constructor                   | connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: PsAgentMemoryData \| undefined = undefined, startProgress: number = 0, endProgress: number = 100 | void                       | Initializes the connector with the provided attributes and configuration.   |
-| login                         | none                                                                       | Promise<void>              | Logs in to the Your Priorities platform and sets the session cookie.        |
-| getHeaders                    | none                                                                       | object                     | Returns the headers required for authenticated requests.                    |
-| vote                          | postId: number, value: number                                              | Promise<void>              | Votes on a post with the specified value.                                    |
-| post                          | groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string | Promise<YpPostData>        | Creates a new post in the specified group with the provided data.            |
-| generateImageWithAi           | groupId: number, prompt: string                                            | Promise<number>            | Generates an AI image with the specified prompt and returns the image ID.    |
-| getExtraConfigurationQuestions| none                                                                       | YpStructuredQuestionData[] | Returns additional configuration questions if required.                     |
+| Name                          | Parameters                                                                 | Return Type                  | Description                                                                 |
+|-------------------------------|----------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
+| constructor                   | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: PsAgentMemoryData \| undefined = undefined, startProgress: number = 0, endProgress: number = 100` | `void`                       | Initializes a new instance of the `PsYourPrioritiesConnector` class.       |
+| login                         | `()`                                                                       | `Promise<void>`              | Logs in to the Your Priorities platform and sets the session cookie.       |
+| getHeaders                    | `()`                                                                       | `object`                     | Returns the headers for authenticated requests.                            |
+| getGroupPosts                 | `groupId: number`                                                          | `Promise<YpPostData[]>`      | Fetches posts from a specified group.                                      |
+| vote                          | `postId: number, value: number`                                            | `Promise<void>`              | Votes on a specified post with a given value.                              |
+| post                          | `groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string, imageLocalPath: string \| undefined = undefined` | `Promise<YpPostData>`        | Posts new content to a specified group, optionally with an image.          |
+| generateImageWithAi           | `groupId: number, prompt: string`                                          | `Promise<number>`            | Generates an AI image based on a prompt and returns the image ID.          |
+| getExtraConfigurationQuestions| `()`                                                                       | `YpStructuredQuestionData[]` | Returns additional configuration questions based on environment variables. |
 
 ## Example
 
@@ -36,46 +37,9 @@ The `PsYourPrioritiesConnector` class is a connector for the "Your Priorities" p
 import { PsYourPrioritiesConnector } from '@policysynth/agents/connectors/collaboration/yourPrioritiesConnector.js';
 
 // Example usage of PsYourPrioritiesConnector
-const connectorAttributes = {
-  // ...connector attributes
-};
-
-const connectorClassAttributes = {
-  // ...connector class attributes
-};
-
-const agent = {
-  // ...agent attributes
-};
-
-const memory = {
-  // ...memory data
-};
-
-const yourPrioritiesConnector = new PsYourPrioritiesConnector(
-  connectorAttributes,
-  connectorClassAttributes,
-  agent,
-  memory
-);
-
-yourPrioritiesConnector.login().then(() => {
-  console.log("Logged in successfully");
-}).catch((error) => {
-  console.error("Login failed:", error);
-});
-
-yourPrioritiesConnector.vote(123, 1).then(() => {
-  console.log("Voted successfully");
-}).catch((error) => {
-  console.error("Voting failed:", error);
-});
-
-yourPrioritiesConnector.post(1, "New Post", [], "Generate an image").then((postData) => {
-  console.log("Post created successfully:", postData);
-}).catch((error) => {
-  console.error("Post creation failed:", error);
-});
+const connector = new PsYourPrioritiesConnector(connectorAttributes, connectorClassAttributes, agent);
+await connector.login();
+const posts = await connector.getGroupPosts(123);
+await connector.vote(posts[0].id, 1);
+const newPost = await connector.post(123, "New Idea", structuredAnswers, "Generate an image of a futuristic city");
 ```
-
-This documentation provides a detailed overview of the `PsYourPrioritiesConnector` class, including its properties, methods, and an example of how to use it.

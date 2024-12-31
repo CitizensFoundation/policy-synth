@@ -1,49 +1,60 @@
 # AzureOpenAiChat
 
-The `AzureOpenAiChat` class is a specialized chat model that integrates with Azure OpenAI services. It extends the `BaseChatModel` and provides functionalities to generate chat completions and estimate token usage.
+The `AzureOpenAiChat` class is a specialized chat model that integrates with Azure's OpenAI service. It extends the `BaseChatModel` and provides functionality to generate chat completions using Azure's OpenAI API. This class supports both streaming and non-streaming scenarios for generating chat responses.
 
 ## Properties
 
-| Name           | Type            | Description                                      |
-|----------------|-----------------|--------------------------------------------------|
-| client         | OpenAIClient    | The client instance for interacting with Azure OpenAI. |
-| deploymentName | string          | The name of the deployment to use for chat completions. |
+| Name            | Type                  | Description                                                                 |
+|-----------------|-----------------------|-----------------------------------------------------------------------------|
+| client          | AzureOpenAI           | An instance of the AzureOpenAI client used to interact with the Azure API.  |
+| deploymentName  | string                | The name of the deployment used for the Azure OpenAI service.               |
+| reasoningEffort | 'low' \| 'medium' \| 'high' | The level of reasoning effort to be used by the model. Default is 'medium'. |
+| temperature     | number                | The temperature setting for the model, affecting randomness. Default is 0.7.|
 
 ## Constructor
 
 ### AzureOpenAiChat(config: PsAzureAiModelConfig)
 
-Creates an instance of `AzureOpenAiChat`.
+Creates an instance of the `AzureOpenAiChat` class.
 
-| Parameter | Type                | Description                                      |
-|-----------|---------------------|--------------------------------------------------|
-| config    | PsAzureAiModelConfig | Configuration object for Azure OpenAI.           |
+#### Parameters
+
+- `config`: `PsAzureAiModelConfig`
+  - `endpoint`: `string` - The endpoint for the Azure OpenAI service.
+  - `apiKey`: `string` - The API key for authentication.
+  - `deploymentName`: `string` - The name of the deployment.
+  - `modelName`: `string` (optional) - The name of the model. Defaults to "gpt-4".
+  - `maxTokensOut`: `number` (optional) - The maximum number of tokens for output. Defaults to 4096.
+  - `reasoningEffort`: `'low' | 'medium' | 'high'` (optional) - The reasoning effort level. Defaults to 'medium'.
+  - `temperature`: `number` (optional) - The temperature setting. Defaults to 0.7.
 
 ## Methods
 
-### generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function)
+### generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: (chunk: string) => void)
 
-Generates chat completions based on the provided messages.
+Generates chat completions based on the provided messages. Supports both streaming and non-streaming scenarios.
 
-| Parameter         | Type                | Description                                      |
-|-------------------|---------------------|--------------------------------------------------|
-| messages          | PsModelMessage[]    | Array of messages to generate completions for.   |
-| streaming         | boolean             | Optional. If true, enables streaming mode.       |
-| streamingCallback | Function            | Optional. Callback function for streaming mode.  |
+#### Parameters
 
-**Returns:** 
-- If `streaming` is false: `{ tokensIn: number, tokensOut: number, content: string }`
-- If `streaming` is true: void
+- `messages`: `PsModelMessage[]` - An array of messages to be processed by the model.
+- `streaming`: `boolean` (optional) - If true, enables streaming mode. Defaults to false.
+- `streamingCallback`: `(chunk: string) => void` (optional) - A callback function to handle streaming chunks.
+
+#### Returns
+
+- `Promise<{ tokensIn: number; tokensOut: number; content: string; } | void>` - Returns an object containing token usage and content for non-streaming mode, or void for streaming mode.
 
 ### getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>
 
-Estimates the number of tokens required for the provided messages.
+Estimates the number of tokens required for the given messages.
 
-| Parameter | Type                | Description                                      |
-|-----------|---------------------|--------------------------------------------------|
-| messages  | PsModelMessage[]    | Array of messages to estimate token usage for.   |
+#### Parameters
 
-**Returns:** `Promise<number>` - The estimated number of tokens.
+- `messages`: `PsModelMessage[]` - An array of messages to estimate token usage for.
+
+#### Returns
+
+- `Promise<number>` - The estimated number of tokens.
 
 ## Example
 
@@ -51,27 +62,25 @@ Estimates the number of tokens required for the provided messages.
 import { AzureOpenAiChat } from '@policysynth/agents/aiModels/azureOpenAiChat.js';
 
 const config = {
-  apiKey: 'your-azure-api-key',
-  endpoint: 'https://your-endpoint.openai.azure.com/',
-  deploymentName: 'your-deployment-name',
-  modelName: 'gpt-4o',
-  maxTokensOut: 4096
+  endpoint: "https://your-endpoint.cognitiveservices.azure.com/",
+  apiKey: "your-api-key",
+  deploymentName: "your-deployment-name",
+  modelName: "gpt-4",
+  maxTokensOut: 4096,
+  reasoningEffort: 'medium',
+  temperature: 0.7
 };
 
-const azureChat = new AzureOpenAiChat(config);
+const chatModel = new AzureOpenAiChat(config);
 
 const messages = [
-  { role: 'user', message: 'Hello, how are you?' },
-  { role: 'assistant', message: 'I am fine, thank you!' }
+  { role: "user", message: "Hello, how are you?" },
+  { role: "assistant", message: "I'm good, thank you!" }
 ];
 
-azureChat.generate(messages).then(response => {
+chatModel.generate(messages).then(response => {
   console.log(response.content);
-});
-
-azureChat.getEstimatedNumTokensFromMessages(messages).then(tokenCount => {
-  console.log(`Estimated tokens: ${tokenCount}`);
 });
 ```
 
-This example demonstrates how to create an instance of `AzureOpenAiChat`, generate chat completions, and estimate token usage.
+This example demonstrates how to instantiate the `AzureOpenAiChat` class and generate a chat response using the Azure OpenAI service.

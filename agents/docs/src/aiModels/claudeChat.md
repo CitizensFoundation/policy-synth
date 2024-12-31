@@ -1,51 +1,50 @@
 # ClaudeChat
 
-The `ClaudeChat` class is a specialized chat model that extends the `BaseChatModel` class. It utilizes the Anthropic API to generate responses based on provided messages. This class supports both synchronous and streaming message generation.
+The `ClaudeChat` class is a specialized chat model that extends the `BaseChatModel`. It is designed to interact with the Anthropic API to generate chat responses using the Claude model.
 
 ## Properties
 
-| Name    | Type     | Description                  |
-|---------|----------|------------------------------|
-| client  | Anthropic | An instance of the Anthropic client used to interact with the Anthropic API. |
+| Name   | Type      | Description                  |
+|--------|-----------|------------------------------|
+| client | Anthropic | An instance of the Anthropic client used to interact with the API. |
 
 ## Constructor
 
-### `constructor(config: PsAiModelConfig)`
+### ClaudeChat(config: PsAiModelConfig)
 
 Creates an instance of the `ClaudeChat` class.
 
-| Parameter | Type           | Description                                                                 |
-|-----------|----------------|-----------------------------------------------------------------------------|
-| config    | PsAiModelConfig | Configuration object containing API key, model name, and maximum tokens out. |
+- **Parameters:**
+  - `config`: `PsAiModelConfig` - Configuration object for the AI model, including API key, model name, and maximum tokens.
 
 ## Methods
 
-### `generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<any>`
+### generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function)
 
-Generates a response based on the provided messages. Supports both synchronous and streaming responses.
+Generates a response based on the provided messages.
 
-| Parameter         | Type                | Description                                                                                     |
-|-------------------|---------------------|-------------------------------------------------------------------------------------------------|
-| messages          | PsModelMessage[]    | An array of messages to be processed by the model.                                              |
-| streaming         | boolean (optional)  | A flag indicating whether to use streaming for the response.                                     |
-| streamingCallback | Function (optional) | A callback function to handle streaming events.                                                  |
+- **Parameters:**
+  - `messages`: `PsModelMessage[]` - An array of messages to be processed by the model.
+  - `streaming`: `boolean` (optional) - Indicates if the response should be streamed.
+  - `streamingCallback`: `Function` (optional) - Callback function to handle streaming events.
 
-**Returns:** `Promise<any>` - A promise that resolves to the generated response or undefined if streaming is used.
+- **Returns:** 
+  - `Promise<{ tokensIn: number, tokensOut: number, content: string } | undefined>` - Returns an object containing token usage and generated content, or `undefined` if streaming.
 
-### `getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>`
+### getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>
 
 Estimates the number of tokens in the provided messages.
 
-| Parameter | Type             | Description                              |
-|-----------|------------------|------------------------------------------|
-| messages  | PsModelMessage[] | An array of messages to estimate tokens. |
+- **Parameters:**
+  - `messages`: `PsModelMessage[]` - An array of messages to estimate token count.
 
-**Returns:** `Promise<number>` - A promise that resolves to the estimated number of tokens.
+- **Returns:** 
+  - `Promise<number>` - The estimated number of tokens.
 
 ## Example
 
 ```typescript
-import { ClaudeChat } from '@policysynth/agents/aiModels/claudeChat.js';
+import ClaudeChat from '@policysynth/agents/aiModels/claudeChat.js';
 
 const config = {
   apiKey: 'your-api-key',
@@ -63,10 +62,6 @@ const messages = [
 claudeChat.generate(messages).then(response => {
   console.log(response);
 });
-
-claudeChat.getEstimatedNumTokensFromMessages(messages).then(tokenCount => {
-  console.log(`Estimated token count: ${tokenCount}`);
-});
 ```
 
-This example demonstrates how to create an instance of the `ClaudeChat` class, generate a response, and estimate the number of tokens in a set of messages.
+This class provides a structured way to interact with the Claude model from Anthropic, allowing for both synchronous and streaming message generation.

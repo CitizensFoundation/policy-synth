@@ -1,44 +1,49 @@
 # OpenAiChat
 
-The `OpenAiChat` class is a specialized chat model that interacts with the OpenAI API to generate responses based on provided messages. It extends the `BaseChatModel` class and provides methods for generating responses and estimating token usage.
+The `OpenAiChat` class is a specialized chat model that extends the `BaseChatModel` class. It is designed to interact with the OpenAI API to generate chat completions based on provided messages. This class handles both streaming and non-streaming responses from the OpenAI API.
 
 ## Properties
 
-| Name   | Type     | Description                  |
-|--------|----------|------------------------------|
-| client | OpenAI   | An instance of the OpenAI client used to interact with the OpenAI API. |
+| Name         | Type                | Description                                      |
+|--------------|---------------------|--------------------------------------------------|
+| client       | OpenAI              | An instance of the OpenAI client for API calls.  |
+| modelConfig  | PsOpenAiModelConfig | Configuration settings for the OpenAI model.     |
 
 ## Constructor
 
-### `constructor(config: PsOpenAiModelConfig)`
+### OpenAiChat(config: PsOpenAiModelConfig)
 
 Creates an instance of the `OpenAiChat` class.
 
-| Parameter | Type                | Description                                                                 |
-|-----------|---------------------|-----------------------------------------------------------------------------|
-| config    | PsOpenAiModelConfig | Configuration object containing the API key, model name, and maximum tokens. |
+- **Parameters:**
+  - `config`: `PsOpenAiModelConfig` - Configuration object for the OpenAI model, including API key, model name, max tokens, and temperature.
 
 ## Methods
 
-### `generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<any>`
+| Name                                    | Parameters                                                                 | Return Type | Description                                                                 |
+|-----------------------------------------|----------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| `generate`                              | `messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function` | `Promise<any>` | Generates chat completions using the OpenAI API, with optional streaming.   |
+| `getEstimatedNumTokensFromMessages`     | `messages: PsModelMessage[]`                                               | `Promise<number>` | Estimates the number of tokens in the provided messages.                    |
 
-Generates a response based on the provided messages. Supports both streaming and non-streaming modes.
+### generate
 
-| Parameter         | Type              | Description                                                                                  |
-|-------------------|-------------------|----------------------------------------------------------------------------------------------|
-| messages          | PsModelMessage[]  | An array of messages to be sent to the OpenAI API.                                           |
-| streaming         | boolean           | (Optional) If true, enables streaming mode.                                                  |
-| streamingCallback | Function          | (Optional) A callback function to handle streaming responses.                                |
-| Returns           | Promise<any>      | A promise that resolves to the generated response, including token usage and content.        |
+Generates chat completions using the OpenAI API. Supports both streaming and non-streaming responses.
 
-### `getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>`
+- **Parameters:**
+  - `messages`: `PsModelMessage[]` - An array of messages to be sent to the OpenAI API.
+  - `streaming`: `boolean` (optional) - If true, enables streaming of responses.
+  - `streamingCallback`: `Function` (optional) - Callback function to handle streaming data.
 
-Estimates the number of tokens required for the provided messages.
+- **Returns:** `Promise<any>` - A promise that resolves with the generated content and token usage details.
 
-| Parameter | Type              | Description                                      |
-|-----------|-------------------|--------------------------------------------------|
-| messages  | PsModelMessage[]  | An array of messages to estimate token usage for.|
-| Returns   | Promise<number>   | A promise that resolves to the estimated number of tokens. |
+### getEstimatedNumTokensFromMessages
+
+Estimates the number of tokens in the provided messages using the Tiktoken model.
+
+- **Parameters:**
+  - `messages`: `PsModelMessage[]` - An array of messages to estimate token count.
+
+- **Returns:** `Promise<number>` - A promise that resolves with the estimated number of tokens.
 
 ## Example
 
@@ -49,22 +54,19 @@ const config = {
   apiKey: 'your-api-key',
   modelName: 'gpt-4o',
   maxTokensOut: 4096,
+  temperature: 0.7,
 };
 
-const chatModel = new OpenAiChat(config);
+const openAiChat = new OpenAiChat(config);
 
 const messages = [
-  { role: 'system', message: 'You are a helpful assistant.' },
-  { role: 'user', message: 'What is the weather like today?' },
+  { role: 'user', message: 'Hello, how are you?' },
+  { role: 'assistant', message: 'I am fine, thank you!' },
 ];
 
-chatModel.generate(messages).then(response => {
+openAiChat.generate(messages).then(response => {
   console.log(response.content);
-});
-
-chatModel.getEstimatedNumTokensFromMessages(messages).then(tokenCount => {
-  console.log(`Estimated token count: ${tokenCount}`);
 });
 ```
 
-This example demonstrates how to create an instance of the `OpenAiChat` class, generate a response, and estimate the number of tokens for a set of messages.
+This example demonstrates how to create an instance of the `OpenAiChat` class and use it to generate chat completions from a series of messages.

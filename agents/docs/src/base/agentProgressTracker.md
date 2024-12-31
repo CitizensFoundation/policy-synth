@@ -1,121 +1,39 @@
 # PsProgressTracker
 
-The `PsProgressTracker` class is designed to track and manage the progress of an agent using Redis for state persistence. It extends the `PolicySynthAgentBase` class and provides methods to load, update, and save the agent's status.
+The `PsProgressTracker` class is responsible for tracking the progress of an agent's task and storing the status in a Redis database. It extends the `PolicySynthAgentBase` class and provides methods to load, update, and save the agent's status.
 
 ## Properties
 
 | Name            | Type          | Description                                                                 |
 |-----------------|---------------|-----------------------------------------------------------------------------|
-| redis           | Redis         | An instance of the Redis client.                                            |
-| redisStatusKey  | string        | The Redis key used to store the agent's status.                             |
-| status          | PsAgentStatus | The current status of the agent.                                            |
-| startProgress   | number        | The starting progress value.                                                |
-| endProgress     | number        | The ending progress value.                                                  |
-
-## Constructor
-
-### `constructor(redisStatusKey: string, startProgress: number, endProgress: number, redisUrl: string = process.env.REDIS_AGENT_URL || "redis://localhost:6379")`
-
-Initializes a new instance of the `PsProgressTracker` class.
-
-#### Parameters
-
-- `redisStatusKey` (string): The Redis key used to store the agent's status.
-- `startProgress` (number): The starting progress value.
-- `endProgress` (number): The ending progress value.
-- `redisUrl` (string, optional): The URL of the Redis server. Defaults to the value of the `REDIS_AGENT_URL` environment variable or `"redis://localhost:6379"`.
+| redis           | Redis         | An instance of the Redis client used to interact with the Redis database.   |
+| redisStatusKey  | string        | The key used to store and retrieve the agent's status in Redis.             |
+| status          | PsAgentStatus | The current status of the agent, including progress, state, and messages.   |
+| startProgress   | number        | The starting point of the progress range.                                   |
+| endProgress     | number        | The ending point of the progress range.                                     |
 
 ## Methods
 
-### `public async loadStatusFromRedis(): Promise<void>`
-
-Loads the agent's status from Redis.
-
-### `public async updateRangedProgress(progress: number | undefined, message: string): Promise<void>`
-
-Updates the agent's progress within a specified range and adds a message to the status.
-
-#### Parameters
-
-- `progress` (number | undefined): The progress value to update.
-- `message` (string): The message to add to the status.
-
-### `public async updateProgress(progress: number | undefined, message: string): Promise<void>`
-
-Updates the agent's progress and adds a message to the status.
-
-#### Parameters
-
-- `progress` (number | undefined): The progress value to update.
-- `message` (string): The message to add to the status.
-
-### `async saveRedisStatus(): Promise<void>`
-
-Saves the agent's status to Redis.
-
-### `public getProgress(): number`
-
-Returns the current progress of the agent.
-
-#### Returns
-
-- `number`: The current progress value.
-
-### `public getMessages(): string[]`
-
-Returns the messages associated with the agent's status.
-
-#### Returns
-
-- `string[]`: An array of messages.
-
-### `public getState(): string`
-
-Returns the current state of the agent.
-
-#### Returns
-
-- `string`: The current state of the agent.
-
-### `public async setCompleted(message: string): Promise<void>`
-
-Sets the agent's status to "completed" and updates the progress to 100%.
-
-#### Parameters
-
-- `message` (string): The message to add to the status.
-
-### `public async setError(errorMessage: string): Promise<void>`
-
-Sets the agent's status to "error" and adds an error message.
-
-#### Parameters
-
-- `errorMessage` (string): The error message to add to the status.
-
-### `public formatNumber(number: number, fractions = 0): string`
-
-Formats a number with a specified number of fraction digits.
-
-#### Parameters
-
-- `number` (number): The number to format.
-- `fractions` (number, optional): The number of fraction digits. Defaults to 0.
-
-#### Returns
-
-- `string`: The formatted number.
+| Name                   | Parameters                                      | Return Type | Description                                                                 |
+|------------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| constructor            | redisStatusKey: string, startProgress: number, endProgress: number, redisUrl?: string | void        | Initializes a new instance of the `PsProgressTracker` class.                |
+| loadStatusFromRedis    | -                                               | Promise<void> | Loads the agent's status from Redis.                                        |
+| updateRangedProgress   | progress: number \| undefined, message: string  | Promise<void> | Updates the agent's progress within a specified range and saves it to Redis.|
+| updateProgress         | progress: number \| undefined, message: string  | Promise<void> | Updates the agent's progress and saves it to Redis.                         |
+| saveRedisStatus        | -                                               | Promise<void> | Saves the current status of the agent to Redis.                             |
+| getProgress            | -                                               | number       | Returns the current progress of the agent.                                  |
+| getMessages            | -                                               | string[]     | Returns the messages associated with the agent's status.                    |
+| getState               | -                                               | string       | Returns the current state of the agent.                                     |
+| setCompleted           | message: string                                 | Promise<void> | Sets the agent's status to "completed" and updates the progress to 100%.    |
+| setError               | errorMessage: string                            | Promise<void> | Sets the agent's status to "error" and logs the error message.              |
+| formatNumber           | number: number, fractions?: number              | string       | Formats a number with a specified number of decimal places.                 |
 
 ## Example
 
 ```typescript
 import { PsProgressTracker } from '@policysynth/agents/base/agentProgressTracker.js';
 
-const tracker = new PsProgressTracker("agent:status:key", 0, 100);
-
-(async () => {
-  await tracker.updateProgress(50, "Halfway there!");
-  console.log(tracker.getProgress()); // 50
-  console.log(tracker.getMessages()); // ["Halfway there!"]
-})();
+const progressTracker = new PsProgressTracker('agentStatusKey', 0, 100);
+await progressTracker.updateProgress(50, 'Task is halfway done.');
+console.log(progressTracker.getProgress()); // Outputs: 50
 ```
