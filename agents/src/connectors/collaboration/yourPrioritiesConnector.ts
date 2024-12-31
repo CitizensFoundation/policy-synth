@@ -191,7 +191,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     const limit = 20;
     let isMorePosts = true;
 
-    const filter = "newest";
+    const filter: "newest" | "top" = "top";
     const categoryId = "null";
     const statusFilter = "open";
 
