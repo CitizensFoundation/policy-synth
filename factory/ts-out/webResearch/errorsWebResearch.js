@@ -1,5 +1,5 @@
-import { PsEngineerBaseWebResearchAgent } from "./baseResearchAgent.js";
-export class PsEngineerErrorWebResearchAgent extends PsEngineerBaseWebResearchAgent {
+import { PsAgentFactoryBaseWebResearchAgent } from "./baseResearchAgent.js";
+export class PsAgentFactoryErrorWebResearchAgent extends PsAgentFactoryBaseWebResearchAgent {
     numberOfQueriesToGenerate = 8;
     percentOfQueriesToSearch = 0.2;
     percentOfResultsToScan = 0.2;

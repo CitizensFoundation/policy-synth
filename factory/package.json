@@ -1,7 +1,7 @@
 {
   "name": "@policysynth/factory",
   "version": "1.0.0",
-  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "author": "Robert Bjarnason, Citizens Foundation",
   "repository": {
     "type": "git",
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/factory"

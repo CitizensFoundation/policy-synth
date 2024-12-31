@@ -1,8 +1,8 @@
 import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-import { PsEngineerInitialAnalyzer } from "./analyze/initialAnalyzer.js";
-import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
-import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
-import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
+import { PsAgentFactoryInitialAnalyzer } from "./analyze/initialAnalyzer.js";
+import { PsAgentFactoryExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
+import { PsAgentFactoryDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
+import { PsAgentFactoryProgrammingAgent } from "./programming/programmingAgent.js";
 import fs from "fs";
 import path from "path";
 import strip from "strip-comments";
@@ -10,7 +10,7 @@ import { PsConstants } from "@policysynth/agents/constants.js";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import axios from "axios";
-export class PSEngineerAgent extends PolicySynthScAgentBase {
+export class PsAgentFactory extends PolicySynthScAgentBase {
     memory;
     githubIssueUrl;
     constructor(githubIssueUrl = undefined) {
@@ -22,7 +22,6 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
             taskTitle: "",
             taskDescription: ``,
             taskInstructions: ``,
-            stages: PSEngineerAgent.emptyDefaultStages,
             docsSiteToScan: [], // Hardcoded docs sites to scan that will be scanned even if they are not found through the autoamted web research
         };
         this.chat = new ChatOpenAI({
@@ -117,8 +116,8 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
         return path.join(this.memory.workspaceFolder, filePath);
     }
     async doWebResearch() {
-        const exampleResearcher = new PsEngineerExamplesWebResearchAgent(this.memory);
-        const docsResearcher = new PsEngineerDocsWebResearchAgent(this.memory);
+        const exampleResearcher = new PsAgentFactoryExamplesWebResearchAgent(this.memory);
+        const docsResearcher = new PsAgentFactoryDocsWebResearchAgent(this.memory);
         const [exampleContextItems, docsContextItems] = await Promise.all([
             exampleResearcher.doWebResearch(),
             docsResearcher.doWebResearch(),
@@ -260,7 +259,7 @@ Please return a JSON string array of the relevant files:`;
             .join("\n");
         this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
         //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
-        const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
+        const analyzeAgent = new PsAgentFactoryInitialAnalyzer(this.memory);
         await analyzeAgent.analyzeAndSetup();
         if (this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
             const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
@@ -290,7 +289,7 @@ Please return a JSON string array of the relevant files:`;
         if (this.memory.needsDocumentionsAndExamples === true) {
             await this.doWebResearch();
         }
-        const programmer = new PsEngineerProgrammingAgent(this.memory);
+        const programmer = new PsAgentFactoryProgrammingAgent(this.memory);
         await programmer.implementTask();
     }
     loadFileContents(fileName) {

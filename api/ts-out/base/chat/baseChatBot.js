@@ -13,7 +13,7 @@ export class PsBaseChatBot {
     static redisMemoryKeyPrefix = "ps-chatbot-memory";
     tempeture = 0.7;
     maxTokens = 4000;
-    llmModel = "gpt-4-0125-preview";
+    llmModel = "gpt-4o";
     persistMemory = false;
     memoryId = undefined;
     lastSentToUserAt;

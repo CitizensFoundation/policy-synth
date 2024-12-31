@@ -1,8 +1,8 @@
-import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
+import { PsAgentFactoryBaseProgrammingAgent } from "./baseAgent.js";
 import { exec } from "child_process";
 import util from "util";
 const execPromise = util.promisify(exec);
-export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAgent {
+export class PsAgentFactoryProgrammingBuildAgent extends PsAgentFactoryBaseProgrammingAgent {
     async build() {
         console.log(`Starting build process in ${this.memory.workspaceFolder}`);
         try {

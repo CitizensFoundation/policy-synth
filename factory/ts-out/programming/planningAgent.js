@@ -1,7 +1,7 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PsConstants } from "@policysynth/agents/constants.js";
-import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
-export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
+import { PsAgentFactoryBaseProgrammingAgent } from "./baseAgent.js";
+export class PsAgentFactoryProgrammingPlanningAgent extends PsAgentFactoryBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
     planSystemPrompt() {
         return `You are an expert software engineering analyzer.

@@ -4,7 +4,7 @@ import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
 import fs from "fs";
 import path from "path";
-export class PsEngineerInitialAnalyzer extends PolicySynthScAgentBase {
+export class PsAgentFactoryInitialAnalyzer extends PolicySynthScAgentBase {
     memory;
     constructor(memory) {
         super(memory);

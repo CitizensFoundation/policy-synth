@@ -1,7 +1,7 @@
 {
   "name": "@policysynth/api",
   "version": "1.2.7",
-  "author": "Robert Bjarnason, Citizens Foundation & The GovLab",
+  "author": "Robert Bjarnason, Citizens Foundation",
   "repository": {
     "type": "git",
     "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/api"

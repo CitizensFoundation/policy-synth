@@ -1,7 +1,7 @@
 import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { ChatOpenAI } from "@langchain/openai";
 import fs from "fs";
-export class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentBase {
+export class PsAgentFactoryBaseProgrammingAgent extends PolicySynthScAgentBase {
     memory;
     otherFilesToKeepInContextContent;
     documentationFilesInContextContent;

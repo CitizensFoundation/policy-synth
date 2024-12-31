@@ -1,6 +1,6 @@
-import { PsEngineerBaseWebResearchAgent } from "./baseResearchAgent.js";
-export declare class PsEngineerExamplesWebResearchAgent extends PsEngineerBaseWebResearchAgent {
+import { PsAgentFactoryBaseWebResearchAgent } from "./baseResearchAgent.js";
+export declare class PsAgentFactoryExamplesWebResearchAgent extends PsAgentFactoryBaseWebResearchAgent {
     searchInstructions: string;
-    scanType: PsEngineerWebResearchTypes;
+    scanType: PsAgentFactoryWebResearchTypes;
 }
 //# sourceMappingURL=examplesWebResearch.d.ts.map

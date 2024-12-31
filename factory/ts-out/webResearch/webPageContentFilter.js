@@ -1,8 +1,8 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PsConstants } from "@policysynth/agents/constants.js";
 import { ChatOpenAI } from "@langchain/openai";
-import { PsEngineerBaseProgrammingAgent } from "../programming/baseAgent.js";
-export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
+import { PsAgentFactoryBaseProgrammingAgent } from "../programming/baseAgent.js";
+export class PsAgentFactoryWebContentFilter extends PsAgentFactoryBaseProgrammingAgent {
     memory;
     constructor(memory) {
         super(memory);

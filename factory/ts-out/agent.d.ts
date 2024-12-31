@@ -3,8 +3,8 @@ interface GitHubIssue {
     title: string;
     body: string;
 }
-export declare class PSEngineerAgent extends PolicySynthScAgentBase {
-    memory: PsEngineerMemoryData;
+export declare class PsAgentFactory extends PolicySynthScAgentBase {
+    memory: PsAgentFactoryMemoryData;
     githubIssueUrl: string | undefined;
     constructor(githubIssueUrl?: string | undefined);
     initializeFromGitHubIssue(): Promise<void>;

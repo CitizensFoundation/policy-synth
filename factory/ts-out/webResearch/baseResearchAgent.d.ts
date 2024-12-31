@@ -1,5 +1,5 @@
 import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-export declare abstract class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentBase {
+export declare abstract class PsAgentFactoryBaseWebResearchAgent extends PolicySynthScAgentBase {
     numberOfQueriesToGenerate: number;
     percentOfQueriesToSearch: number;
     percentOfResultsToScan: number;
@@ -8,7 +8,7 @@ export declare abstract class PsEngineerBaseWebResearchAgent extends PolicySynth
     debugCache: string[] | undefined;
     debugCacheVersion: string;
     abstract searchInstructions: string;
-    abstract scanType: PsEngineerWebResearchTypes;
+    abstract scanType: PsAgentFactoryWebResearchTypes;
     doWebResearch(): Promise<any[] | undefined>;
 }
 //# sourceMappingURL=baseResearchAgent.d.ts.map

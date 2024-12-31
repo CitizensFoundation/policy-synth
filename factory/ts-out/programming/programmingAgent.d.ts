@@ -1,5 +1,5 @@
-import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
-export declare class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
+import { PsAgentFactoryBaseProgrammingAgent } from "./baseAgent.js";
+export declare class PsAgentFactoryProgrammingAgent extends PsAgentFactoryBaseProgrammingAgent {
     implementChanges(): Promise<void>;
     searchForSolutionsToErrors(currentErrors: string): Promise<void>;
     createAndRunActionPlan(currentErrors?: string | undefined): Promise<void>;

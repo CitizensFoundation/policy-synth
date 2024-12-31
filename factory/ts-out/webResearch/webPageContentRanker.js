@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
-export class PsEngineerWebContentRanker extends BasePairwiseRankingsProcessor {
+export class PsAgentFactoryWebContentRanker extends BasePairwiseRankingsProcessor {
     instructions;
     memory;
     constructor(memory, progressFunction = undefined) {

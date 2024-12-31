@@ -4,10 +4,10 @@ import { SearchQueriesRanker } from "./searchQueriesRanker.js";
 import { ResearchWeb } from "./searchWeb.js";
 import { SearchResultsRanker } from "./searchResultsRanker.js";
 import { WebPageScanner } from "./webPageScanner.js";
-import { PsEngineerWebContentFilter } from "./webPageContentFilter.js";
-import { PsEngineerWebContentRanker } from "./webPageContentRanker.js";
+import { PsAgentFactoryWebContentFilter } from "./webPageContentFilter.js";
+import { PsAgentFactoryWebContentRanker } from "./webPageContentRanker.js";
 import fs from "fs";
-export class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentBase {
+export class PsAgentFactoryBaseWebResearchAgent extends PolicySynthScAgentBase {
     numberOfQueriesToGenerate = 12;
     percentOfQueriesToSearch = 0.25;
     percentOfResultsToScan = 0.3;
@@ -64,10 +64,10 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentBase {
             let webScanResults = await webPageResearch.scan(searchResultsToScan.map((i) => i.url), this.scanType);
             this.logger.info("Website Scanning Completed", true);
             console.log(`webScan: (${webScanResults.length}) ${JSON.stringify(webScanResults, null, 2)}`);
-            const filter = new PsEngineerWebContentFilter(this.memory);
+            const filter = new PsAgentFactoryWebContentFilter(this.memory);
             webScanResults = await filter.filterContent(webScanResults);
             if (webScanResults.length > this.maxTopContentResultsToUse) {
-                const ranker = new PsEngineerWebContentRanker(this.memory);
+                const ranker = new PsAgentFactoryWebContentRanker(this.memory);
                 webScanResults = await ranker.rankWebContent(webScanResults, this.searchInstructions, searchResults.length * 10);
             }
             const topWebScanResults = webScanResults.slice(0, this.maxTopContentResultsToUse);

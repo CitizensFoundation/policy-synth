@@ -1,7 +1,7 @@
-import { PsEngineerBaseProgrammingAgent } from "../programming/baseAgent.js";
-export declare class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
-    memory: PsEngineerMemoryData;
-    constructor(memory: PsEngineerMemoryData);
+import { PsAgentFactoryBaseProgrammingAgent } from "../programming/baseAgent.js";
+export declare class PsAgentFactoryWebContentFilter extends PsAgentFactoryBaseProgrammingAgent {
+    memory: PsAgentFactoryMemoryData;
+    constructor(memory: PsAgentFactoryMemoryData);
     get filterSystemPrompt(): string;
     filterUserPrompt(contentToEvaluate: string): string;
     filterContent(webContentToFilter: string[]): Promise<string[]>;

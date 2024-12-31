@@ -1,18 +1,18 @@
 import { Project } from "ts-morph";
 import path from "path";
-import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
-import { PsEngineerProgrammingPlanningAgent } from "./planningAgent.js";
-import { PsEngineerProgrammingImplementationAgent } from "./implementationAgent.js";
-import { PsEngineerProgrammingBuildAgent } from "./buildAgent.js";
-import { PsEngineerErrorWebResearchAgent } from "../webResearch/errorsWebResearch.js";
-export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
+import { PsAgentFactoryBaseProgrammingAgent } from "./baseAgent.js";
+import { PsAgentFactoryProgrammingPlanningAgent } from "./planningAgent.js";
+import { PsAgentFactoryProgrammingImplementationAgent } from "./implementationAgent.js";
+import { PsAgentFactoryProgrammingBuildAgent } from "./buildAgent.js";
+import { PsAgentFactoryErrorWebResearchAgent } from "../webResearch/errorsWebResearch.js";
+export class PsAgentFactoryProgrammingAgent extends PsAgentFactoryBaseProgrammingAgent {
     async implementChanges() {
         console.log(`Implementing changes `);
         let retryCount = 0;
         const retriesUntilWebResearch = 3;
         let hasCompleted = false;
         let currentErrors = undefined;
-        const buildAgent = new PsEngineerProgrammingBuildAgent(this.memory);
+        const buildAgent = new PsAgentFactoryProgrammingBuildAgent(this.memory);
         while (!hasCompleted && retryCount < this.maxRetries) {
             await this.createAndRunActionPlan(currentErrors);
             currentErrors = await buildAgent.build();
@@ -25,14 +25,14 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         }
     }
     async searchForSolutionsToErrors(currentErrors) {
-        const docsResearcher = new PsEngineerErrorWebResearchAgent(this.memory);
+        const docsResearcher = new PsAgentFactoryErrorWebResearchAgent(this.memory);
     }
     async createAndRunActionPlan(currentErrors = undefined) {
-        const planningAgent = new PsEngineerProgrammingPlanningAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+        const planningAgent = new PsAgentFactoryProgrammingPlanningAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
         const actionPlan = await planningAgent.getActionPlan(currentErrors);
         console.log(`Coding plan: ${JSON.stringify(actionPlan, null, 2)}`);
         if (actionPlan) {
-            const implementationAgent = new PsEngineerProgrammingImplementationAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+            const implementationAgent = new PsAgentFactoryProgrammingImplementationAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
             // Loop until all actions are completed
             let allCompleted = false;
             while (!allCompleted) {
