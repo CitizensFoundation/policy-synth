@@ -232,7 +232,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
         const results = await Promise.all(
           chunk.map(async (promptPair, idx) => {
             const absoluteIndex = p + idx;
-            this.logger.debug(`Prompt pair: ${promptPair}`);
+            this.logger.debug(`Voting on prompt pair: ${promptPair} ...`);
             const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(
               subProblemIndex,
               promptPair,

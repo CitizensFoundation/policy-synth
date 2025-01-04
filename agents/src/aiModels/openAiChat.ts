@@ -73,6 +73,7 @@ export class OpenAiChat extends BaseChatModel {
         }
       }
     } else {
+      this.logger.debug("Calling OpenAI model...");
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,

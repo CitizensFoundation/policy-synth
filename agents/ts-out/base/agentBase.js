@@ -92,8 +92,8 @@ export class PolicySynthAgentBase {
                 }
             }
         }
-        totalTokens += 2; // Every reply is primed with <im_start>assistant
-        encoding.free(); // Free up the memory used by the encoder
+        totalTokens += 2;
+        encoding.free();
         return totalTokens;
     }
 }

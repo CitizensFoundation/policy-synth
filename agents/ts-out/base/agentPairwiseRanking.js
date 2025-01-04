@@ -163,7 +163,7 @@ export class PairwiseRankingAgent extends PolicySynthAgent {
                 // Process the current batch in parallel
                 const results = await Promise.all(chunk.map(async (promptPair, idx) => {
                     const absoluteIndex = p + idx;
-                    this.logger.debug(`Prompt pair: ${promptPair}`);
+                    this.logger.debug(`Voting on prompt pair: ${promptPair} ...`);
                     const { wonItemIndex, lostItemIndex } = await this.voteOnPromptPair(subProblemIndex, promptPair, additionalData);
                     //this.logger.debug(`Won item index: ${wonItemIndex} Lost item index: ${lostItemIndex}`)
                     return { promptPair, absoluteIndex, wonItemIndex, lostItemIndex };

@@ -6,6 +6,7 @@ import fs from "fs";
 import FormData from "form-data";
 const MAX_RETRIES = 7;
 const RETRY_DELAY = 1000; // 1 second
+const AI_IMAGE_GENERATION_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
     static YOUR_PRIORITIES_CONNECTOR_VERSION = 7;
@@ -249,7 +250,12 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             // No local image provided, generate an AI image as before
             imageId = await this.generateImageWithAi(groupId, imagePrompt);
         }
-        formData.uploadedHeaderImageId = imageId.toString();
+        if (imageId) {
+            formData.uploadedHeaderImageId = imageId.toString();
+        }
+        else {
+            console.warn("Skipping image setting, no imageId received.");
+        }
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 console.log(`Attempt ${attempt}: Posting data:`, formData);
@@ -297,6 +303,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             const { jobId } = startResponse.data;
             let isGenerating = true;
             let pollResponse;
+            // NEW: Start timing for the 2-minute limit
+            const startTime = Date.now();
             while (isGenerating) {
                 pollResponse = await axios.get(`${this.serverBaseUrl}/groups/${groupId}/${jobId}/poll_for_generating_ai_image`, {
                     headers: this.getHeaders(),
@@ -310,7 +318,13 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                     isGenerating = false;
                     console.error("Error generating AI image:", pollResponse.data.data.error);
                 }
+                // If still generating, sleep 2s before next poll
                 if (isGenerating) {
+                    // Check if we exceeded our 2-minute timeout
+                    if (Date.now() - startTime > AI_IMAGE_GENERATION_TIMEOUT_MS) {
+                        console.log("AI image generation timed out after 2 minutes. Skipping image...");
+                        return 0; // Will signal to skip the image
+                    }
                     await new Promise((resolve) => setTimeout(resolve, 2000));
                 }
             }
