@@ -35,14 +35,10 @@ export class OpenAiChat extends BaseChatModel {
     }));
 
     this.logger.debug(
-      `Reasoning effort is set to ${this.modelConfig.reasoningEffort}`
+      `Model config: type=${this.modelConfig.modelType}, size=${this.modelConfig.modelSize}, ` +
+      `effort=${this.modelConfig.reasoningEffort}, temp=${this.modelConfig.temperature}, ` +
+      `maxTokens=${this.modelConfig.maxTokensOut}`
     );
-    this.logger.debug(`Temperature is set to ${this.modelConfig.temperature}`);
-    this.logger.debug(
-      `Max tokens out is set to ${this.modelConfig.maxTokensOut}`
-    );
-    this.logger.debug(`Model type is set to ${this.modelConfig.modelType}`);
-    this.logger.debug(`Model size is set to ${this.modelConfig.modelSize}`);
 
     if (streaming) {
       const stream = await this.client.chat.completions.create({

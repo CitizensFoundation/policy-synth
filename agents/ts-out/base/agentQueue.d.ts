@@ -1,28 +1,50 @@
-import { Redis } from "ioredis";
-import { PsAgent } from "../dbModels/agent.js";
+import ioredis from "ioredis";
 import { PolicySynthAgent } from "./agent.js";
+import { PsAgent } from "../dbModels/agent.js";
+export interface PsAgentStartJobData {
+    agentId: number;
+    action: "start" | "stop" | "pause";
+    structuredAnswersOverrides?: Array<any>;
+}
+/**
+ * Abstract queue that can hold multiple agent implementations
+ * This class has been refactored to store multiple Agents in maps
+ */
 export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
-    status: PsAgentStatus;
-    redisClient: Redis;
-    structuredAnswersOverrides?: Array<YpStructuredAnswer>;
+    protected agentsMap: Map<number, PsAgent>;
+    protected agentInstancesMap: Map<number, PolicySynthAgent>;
+    protected agentStatusMap: Map<number, PsAgentStatus>;
+    /**
+     * NEW: We also keep a memory map so each agentId can have its own memory,
+     * and we can inject structuredAnswersOverrides there.
+     */
+    protected agentMemoryMap: Map<number, PsAgentMemoryData>;
+    structuredAnswersOverrides?: Array<any>;
     skipCheckForProgress: boolean;
+    redisClient: ioredis;
     constructor();
-    initializeRedis(): void;
-    loadAgentStatusFromRedis(): Promise<PsAgentStatus>;
-    saveAgentStatusToRedis(): Promise<void>;
-    setupStatusIfNeeded(): Promise<void>;
     abstract get processors(): Array<{
-        processor: new (agent: PsAgent, memory: any, //TODO: Fix this to T or something
-        startProgress: number, endProgress: number) => PolicySynthAgent;
+        processor: new (agent: PsAgent, memory: any, startProgress: number, endProgress: number) => PolicySynthAgent;
         weight: number;
     }>;
-    processAllAgents(): Promise<void>;
     abstract get agentQueueName(): string;
-    abstract setupMemoryIfNeeded(): Promise<void>;
+    abstract setupMemoryIfNeeded(agentId: number): Promise<void>;
+    initializeRedis(): void;
+    getOrCreatePsAgent(agentId: number): Promise<PsAgent>;
+    /**
+     * Retrieve or create the actual PolicySynthAgent instance.
+     * Now we pass the memory from agentMemoryMap to the constructor,
+     * so we always have an object with structuredAnswersOverrides set.
+     */
+    getOrCreateAgentInstance(agentId: number): PolicySynthAgent;
+    processAllAgents(agentId: number): Promise<void>;
+    loadAgentStatusFromRedis(agentId: number): Promise<PsAgentStatus | undefined>;
+    saveAgentStatusToRedis(agentId: number): Promise<void>;
+    setupStatusIfNeeded(agentId: number): Promise<void>;
     setupAgentQueue(): Promise<void>;
-    startAgent(): Promise<void>;
-    stopAgent(): Promise<void>;
-    pauseAgent(): Promise<void>;
-    updateAgentStatus(state: "running" | "stopped" | "paused" | "error", message?: string): Promise<void>;
+    startAgent(agentId: number): Promise<void>;
+    stopAgent(agentId: number): Promise<void>;
+    pauseAgent(agentId: number): Promise<void>;
+    updateAgentStatus(agentId: number, state: "running" | "stopped" | "paused" | "error", message?: string): Promise<void>;
 }
 //# sourceMappingURL=agentQueue.d.ts.map

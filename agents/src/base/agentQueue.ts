@@ -1,5 +1,5 @@
+// agentQueue.ts
 import ioredis, { Redis, RedisOptions } from "ioredis";
-import { PsAgent } from "../dbModels/agent.js";
 import { Job, QueueEvents, Worker } from "bullmq";
 import { PolicySynthAgent } from "./agent.js";
 import { PsAgentConnector } from "../dbModels/agentConnector.js";
@@ -10,149 +10,265 @@ import { Group } from "../dbModels/ypGroup.js";
 import { PsExternalApiUsage } from "../dbModels/externalApiUsage.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
+import { PsAgent } from "../dbModels/agent.js";
 
+export interface PsAgentStartJobData {
+  agentId: number;
+  action: "start" | "stop" | "pause";
+  structuredAnswersOverrides?: Array<any>;
+}
+
+
+/**
+ * Abstract queue that can hold multiple agent implementations
+ * This class has been refactored to store multiple Agents in maps
+ */
 export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
-  status!: PsAgentStatus;
-  redisClient!: Redis;
+  // Instead of single references, we keep them in maps keyed by agentId
+  protected agentsMap: Map<number, PsAgent> = new Map();
+  protected agentInstancesMap: Map<number, PolicySynthAgent> = new Map();
+  protected agentStatusMap: Map<number, PsAgentStatus> = new Map();
 
-  structuredAnswersOverrides?: Array<YpStructuredAnswer>;
+  /**
+   * NEW: We also keep a memory map so each agentId can have its own memory,
+   * and we can inject structuredAnswersOverrides there.
+   */
+  protected agentMemoryMap: Map<number, PsAgentMemoryData> = new Map();
 
+  structuredAnswersOverrides?: Array<any>;
   skipCheckForProgress = true;
+  redisClient!: ioredis;
 
   constructor() {
-    super({} as any, undefined, 0, 100);
-    this.startProgress = 0;
-    this.endProgress = 100;
+    // We pass a dummy agent to the super since we must call `super()`
+    // The rest of the code is adjusted so we rarely use `this.agent` in this queue class
+    super({} as PsAgent, undefined, 0, 100);
     this.initializeRedis();
-  }
-
-  initializeRedis() {
-    let redisUrl =
-      process.env.REDIS_AGENT_URL ||
-      process.env.REDIS_URL ||
-      "redis://localhost:6379";
-
-    // Handle the 'redis://h:' case
-    if (redisUrl.startsWith("redis://h:")) {
-      redisUrl = redisUrl.replace("redis://h:", "redis://:");
-    }
-
-    console.log(
-      "AgentQueueManager: Initializing Redis connection: " + redisUrl
-    );
-
-    const options: RedisOptions = {
-      maxRetriesPerRequest: null,
-      tls: redisUrl.startsWith("rediss://")
-        ? { rejectUnauthorized: false }
-        : undefined,
-    };
-
-    this.redisClient = new Redis(redisUrl, options);
-
-    this.redisClient.on("error", (err) => {
-      console.error("Redis Client Error", err);
-    });
-
-    this.redisClient.on("connect", () => {
-      console.log("AgentQueueManager: Successfully connected to Redis");
-    });
-
-    this.redisClient.on("reconnecting", () => {
-      console.log("AgentQueueManager: Redis client is reconnecting");
-    });
-
-    this.redisClient.on("ready", () => {
-      console.log("AgentQueueManager: Redis client is ready");
-    });
-  }
-
-  async loadAgentStatusFromRedis(): Promise<PsAgentStatus> {
-    try {
-      const statusDataString = await this.redis.get(this.agent.redisStatusKey);
-      if (statusDataString) {
-        this.status = JSON.parse(statusDataString);
-      } else {
-        console.error(
-          `No status data found for agent ${this.agent.id} ${this.agent.redisStatusKey}`
-        );
-      }
-    } catch (error) {
-      this.logger.error("Error initializing agent status");
-      this.logger.error(error);
-    }
-
-    return this.status;
-  }
-
-  async saveAgentStatusToRedis() {
-    if (this.status) {
-      await this.redis.set(
-        this.agent.redisStatusKey,
-        JSON.stringify(this.status)
-      );
-      this.logger.debug(
-        "Saved status to Redis for:" + this.agent.redisStatusKey
-      );
-      this.logger.debug(`Status: ${JSON.stringify(this.status, null, 2)}`);
-    } else {
-      this.logger.error("Agent status not initialized");
-    }
-  }
-
-  async setupStatusIfNeeded() {
-    this.logger.info("Setting up agent status");
-    await this.loadAgentStatusFromRedis();
-    if (!this.status) {
-      this.logger.error(`No status found for agent ${this.agent.id} reseting`);
-      this.status = {
-        state: "running",
-        progress: 0,
-        messages: [],
-        lastUpdated: Date.now(),
-      };
-      this.logger.debug("Initialized agent status");
-      await this.saveAgentStatusToRedis();
-    }
   }
 
   abstract get processors(): Array<{
     processor: new (
       agent: PsAgent,
-      memory: any, //TODO: Fix this to T or something
+      memory: any,
       startProgress: number,
       endProgress: number
     ) => PolicySynthAgent;
     weight: number;
   }>;
 
-  async processAllAgents() {
-    let totalProgress = 0;
+  // This is your abstract name for the queue
+  abstract get agentQueueName(): string;
 
+  // Instead of referencing `this.memory`, we define an abstract method
+  // that can set up memory for a given agentId if needed
+  abstract setupMemoryIfNeeded(agentId: number): Promise<void>;
+
+  initializeRedis() {
+    let redisUrl = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379";
+    // Handle 'redis://h:' case if needed
+    if (redisUrl.startsWith("redis://h:")) {
+      redisUrl = redisUrl.replace("redis://h:", "redis://:");
+    }
+
+    console.log("AgentQueueManager: Initializing Redis connection:", redisUrl);
+    const options: RedisOptions = {
+      maxRetriesPerRequest: null,
+      tls: redisUrl.startsWith("rediss://") ? { rejectUnauthorized: false } : undefined,
+    };
+
+    this.redisClient = new ioredis(redisUrl, options);
+    this.redisClient.on("error", (err) => {
+      console.error("Redis Client Error", err);
+    });
+    this.redisClient.on("connect", () => {
+      console.log("AgentQueueManager: Successfully connected to Redis");
+    });
+    this.redisClient.on("reconnecting", () => {
+      console.log("AgentQueueManager: Redis client is reconnecting");
+    });
+    this.redisClient.on("ready", () => {
+      console.log("AgentQueueManager: Redis client is ready");
+    });
+  }
+
+  // Retrieve or load PsAgent from DB
+  async getOrCreatePsAgent(agentId: number): Promise<PsAgent> {
+    let psAgent = this.agentsMap.get(agentId);
+    if (!psAgent) {
+      // We fetch from DB
+      psAgent = (await PsAgent.findByPk(agentId, {
+        include: [
+          {
+            model: PsAgent,
+            as: "SubAgents",
+            include: [
+              {
+                model: PsAgentConnector,
+                as: "InputConnectors",
+                include: [{ model: PsAgentConnectorClass, as: "Class" }],
+              },
+              {
+                model: PsAgentConnector,
+                as: "OutputConnectors",
+                include: [{ model: PsAgentConnectorClass, as: "Class" }],
+              },
+              { model: PsAgentClass, as: "Class" },
+            ],
+          },
+          {
+            model: PsAgentConnector,
+            as: "InputConnectors",
+            include: [{ model: PsAgentConnectorClass, as: "Class" }],
+          },
+          {
+            model: PsAgentConnector,
+            as: "OutputConnectors",
+            include: [{ model: PsAgentConnectorClass, as: "Class" }],
+          },
+          { model: PsAgentClass, as: "Class" },
+          {
+            model: User,
+            as: "User",
+            attributes: ["id", "email", "name"],
+          },
+          {
+            model: Group,
+            as: "Group",
+            attributes: [
+              "id",
+              "user_id",
+              "configuration",
+              "name",
+              "private_access_configuration",
+            ],
+          },
+          { model: PsExternalApiUsage, as: "ExternalApiUsage" },
+          { model: PsModelUsage, as: "ModelUsage" },
+          { model: PsAiModel, as: "AiModels" },
+        ],
+      })) as PsAgent | undefined;
+
+      if (!psAgent) {
+        throw new Error(`Agent not found in DB for agentId=${agentId}`);
+      }
+      this.agentsMap.set(agentId, psAgent);
+    }
+    return psAgent;
+  }
+
+  /**
+   * Retrieve or create the actual PolicySynthAgent instance.
+   * Now we pass the memory from agentMemoryMap to the constructor,
+   * so we always have an object with structuredAnswersOverrides set.
+   */
+  getOrCreateAgentInstance(agentId: number): PolicySynthAgent {
+    let policySynthAgent = this.agentInstancesMap.get(agentId);
+    if (!policySynthAgent) {
+      const psAgent = this.agentsMap.get(agentId);
+      if (!psAgent) {
+        throw new Error(`PsAgent object not found in agentsMap for agentId=${agentId}`);
+      }
+
+      // We'll take the first processor’s weight as an example, or pass 0/100
+      const startProgress = 0;
+      const endProgress = 100;
+
+      // Ensure we have a memory object for this agent
+      let agentMemory = this.agentMemoryMap.get(agentId);
+      if (!agentMemory) {
+        agentMemory = { agentId };
+        this.agentMemoryMap.set(agentId, agentMemory);
+      }
+
+      // By default, pick your first processor
+      const firstProcessorClass = this.processors[0].processor;
+      policySynthAgent = new firstProcessorClass(psAgent, agentMemory, startProgress, endProgress);
+
+      this.agentInstancesMap.set(agentId, policySynthAgent);
+    }
+    return policySynthAgent;
+  }
+
+  // If you want multiple processor steps in sequence:
+  async processAllAgents(agentId: number) {
+    let totalProgress = 0;
     for (let i = 0; i < this.processors.length; i++) {
-      const { processor: Agent, weight } = this.processors[i];
+      const { processor: AgentClass, weight } = this.processors[i];
       const startProgress = totalProgress;
       const endProgress = totalProgress + weight;
+      totalProgress = endProgress;
 
       try {
-        const processorInstance = new Agent(
-          this.agent,
-          this.memory,
-          startProgress,
-          endProgress
-        );
-        await processorInstance.process();
+        const psAgent = this.agentsMap.get(agentId);
+        if (!psAgent) {
+          throw new Error(`PsAgent not loaded for agentId=${agentId}`);
+        }
 
-        //totalProgress = endProgress;
-        //await this.updateProgress(totalProgress, `${Agent.name} completed`);
+        // Make sure the memory is the same one we've stored
+        let agentMemory = this.agentMemoryMap.get(agentId);
+        if (!agentMemory) {
+          agentMemory = { agentId };
+          this.agentMemoryMap.set(agentId, agentMemory);
+        }
+
+        const policySynthAgent = new AgentClass(psAgent, agentMemory, startProgress, endProgress);
+        this.agentInstancesMap.set(agentId, policySynthAgent);
+
+        await policySynthAgent.process();
       } catch (error) {
         throw error;
       }
     }
   }
 
-  abstract get agentQueueName(): string;
-  abstract setupMemoryIfNeeded(): Promise<void>;
+  async loadAgentStatusFromRedis(agentId: number): Promise<PsAgentStatus | undefined> {
+    const psAgent = this.agentsMap.get(agentId);
+    if (!psAgent) return undefined;
+    try {
+      const statusDataString = await this.redisClient.get(psAgent.redisStatusKey);
+      if (statusDataString) {
+        const status: PsAgentStatus = JSON.parse(statusDataString);
+        this.agentStatusMap.set(agentId, status);
+        return status;
+      } else {
+        console.error(`No status data found for agent ${agentId} ${psAgent.redisStatusKey}`);
+      }
+    } catch (error) {
+      this.logger.error("Error initializing agent status", error);
+    }
+    return undefined;
+  }
+
+  async saveAgentStatusToRedis(agentId: number) {
+    const psAgent = this.agentsMap.get(agentId);
+    if (!psAgent) return;
+    const status = this.agentStatusMap.get(agentId);
+    if (!status) {
+      this.logger.error(`Agent status not found for agentId=${agentId}`);
+      return;
+    }
+    await this.redisClient.set(psAgent.redisStatusKey, JSON.stringify(status));
+    this.logger.debug("Saved status to Redis for:" + psAgent.redisStatusKey);
+    this.logger.debug(`Status: ${JSON.stringify(status, null, 2)}`);
+  }
+
+  async setupStatusIfNeeded(agentId: number) {
+    this.logger.info(`Setting up agent status for agentId=${agentId}`);
+    await this.loadAgentStatusFromRedis(agentId);
+    const status = this.agentStatusMap.get(agentId);
+    if (!status) {
+      this.logger.error(`No status found for agent ${agentId}, resetting`);
+      const newStatus: PsAgentStatus = {
+        state: "running",
+        progress: 0,
+        messages: [],
+        lastUpdated: Date.now(),
+      };
+      this.agentStatusMap.set(agentId, newStatus);
+      await this.saveAgentStatusToRedis(agentId);
+    }
+  }
 
   async setupAgentQueue() {
     if (this.agentQueueName) {
@@ -161,136 +277,51 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
         this.agentQueueName,
         async (job: Job) => {
           try {
-            console.log(
-              `Processing job ${job.id} for agentQueue ${this.agentQueueName}`
-            );
+            console.log(`Processing job ${job.id} for agentQueue ${this.agentQueueName}`);
             const data = job.data as PsAgentStartJobData;
-            const loadedAgent = await PsAgent.findByPk(data.agentId, {
-              include: [
-                {
-                  model: PsAgent,
-                  as: "SubAgents",
-                  include: [
-                    {
-                      model: PsAgentConnector,
-                      as: "InputConnectors",
-                      include: [
-                        {
-                          model: PsAgentConnectorClass,
-                          as: "Class",
-                        },
-                      ],
-                    },
-                    {
-                      model: PsAgentConnector,
-                      as: "OutputConnectors",
-                      include: [
-                        {
-                          model: PsAgentConnectorClass,
-                          as: "Class",
-                        },
-                      ],
-                    },
-                    { model: PsAgentClass, as: "Class" },
-                  ],
-                },
-                {
-                  model: PsAgentConnector,
-                  as: "InputConnectors",
-                  include: [
-                    {
-                      model: PsAgentConnectorClass,
-                      as: "Class",
-                    },
-                  ],
-                },
-                {
-                  model: PsAgentConnector,
-                  as: "OutputConnectors",
-                  include: [
-                    {
-                      model: PsAgentConnectorClass,
-                      as: "Class",
-                    },
-                  ],
-                },
-                { model: PsAgentClass, as: "Class" },
-                {
-                  model: User,
-                  as: "User",
-                  attributes: ["id", "email", "name"],
-                },
-                {
-                  model: Group,
-                  as: "Group",
-                  //TODO: Don't have private_access_configuration as a part of the group, find a more secure solution so Group.find will never expose the keys accidentally
-                  attributes: [
-                    "id",
-                    "user_id",
-                    "configuration",
-                    "name",
-                    "private_access_configuration",
-                  ],
-                },
-                { model: PsExternalApiUsage, as: "ExternalApiUsage" },
-                { model: PsModelUsage, as: "ModelUsage" },
-                { model: PsAiModel, as: "AiModels" },
-              ],
-            });
+            const { agentId, action, structuredAnswersOverrides } = data;
 
-            if (loadedAgent) {
-              this.logger.debug(`Agent group config: ${loadedAgent.group_id}`);
-              this.logger.debug(
-                `Agent group config: ${loadedAgent.Group?.configuration}`
-              );
-              this.agent = loadedAgent;
-              await this.loadAgentMemoryFromRedis();
-              await this.setupMemoryIfNeeded();
-              await this.loadAgentStatusFromRedis();
-              await this.setupStatusIfNeeded();
+            // 1) Ensure PsAgent is loaded from DB
+            const loadedAgent = await this.getOrCreatePsAgent(agentId);
 
-              if (data.structuredAnswersOverrides) {
-                this.structuredAnswersOverrides =
-                  data.structuredAnswersOverrides;
-              } else {
-                this.structuredAnswersOverrides = undefined;
-              }
+            // 2) Make sure we have a memory object for this agent
+            let agentMemory = this.agentMemoryMap.get(agentId);
+            if (!agentMemory) {
+              agentMemory = { agentId };
+              this.agentMemoryMap.set(agentId, agentMemory);
+            }
 
-              console.log(
-                `${data.action} agent ${this.agent.id} with structured answers overrides: ${JSON.stringify(
-                  this.structuredAnswersOverrides
-                )}`
-              );
+            // 3) If we want to store structuredAnswersOverrides, do so here
+            if (structuredAnswersOverrides) {
+              this.structuredAnswersOverrides = structuredAnswersOverrides;
+              agentMemory.structuredAnswersOverrides = structuredAnswersOverrides;
+            }
 
-              this.memory.structuredAnswersOverrides =
-                this.structuredAnswersOverrides;
+            // 4) Run any subclass-specific memory setup
+            await this.setupMemoryIfNeeded(agentId);
 
-              switch (data.action) {
-                case "start":
-                  await this.startAgent();
-                  break;
-                case "stop":
-                  await this.stopAgent();
-                  break;
-                case "pause":
-                  await this.pauseAgent();
-                  break;
-                default:
-                  throw new Error(
-                    `Unknown action ${data.action} for job ${job.id}`
-                  );
-              }
-            } else if (
-              process.env.PS_AI_MODEL_NAME &&
-              process.env.PS_AI_MODEL_TYPE
-            ) {
-              await this.loadAgentMemoryFromRedis();
-              await this.setupMemoryIfNeeded();
-              await this.loadAgentStatusFromRedis();
-              await this.setupStatusIfNeeded();
-              await this.startAgent();
-            } else {
-              throw new Error(`Agent not found for job ${job.id}`);
+            // 5) Setup status
+            await this.setupStatusIfNeeded(agentId);
+
+            // 6) Log the action
+            console.log(
+              `${action} agent ${loadedAgent.id} with structured answers overrides:`,
+              JSON.stringify(structuredAnswersOverrides)
+            );
+
+            // 7) Actually start/stop/pause
+            switch (action) {
+              case "start":
+                await this.startAgent(agentId);
+                break;
+              case "stop":
+                await this.stopAgent(agentId);
+                break;
+              case "pause":
+                await this.pauseAgent(agentId);
+                break;
+              default:
+                throw new Error(`Unknown action ${action} for job ${job.id}`);
             }
           } catch (error) {
             throw error;
@@ -298,125 +329,91 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
         },
         {
           connection: this.redisClient,
-          concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "10"),
+          concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "20"),
           maxStalledCount: 0,
         }
       );
 
       worker.on("completed", (job: Job) => {
-        this.logger.info(
-          `Job ${job.id} has been completed for agent ${this.agentQueueName}`
-        );
+        this.logger.info(`Job ${job.id} has been completed for queue ${this.agentQueueName}`);
       });
-
       worker.on("failed", (job: Job | undefined, err: Error) => {
-        this.logger.error(
-          `Job ${job?.id || "unknown"} has failed for agent ${
-            this.agentQueueName
-          }`,
-          err
-        );
+        this.logger.error(`Job ${job?.id || "unknown"} failed for ${this.agentQueueName}`, err);
       });
-
       worker.on("error", (err: Error) => {
         this.logger.error(
-          `An error occurred in the worker for agent ${this.agentQueueName}`,
+          `An error occurred in the worker for ${this.agentQueueName}`,
           err
         );
-        this.updateAgentStatus("error", err.message);
+        // If needed, set status to error:
+        // this.updateAgentStatus(agentId, "error", err.message);
       });
-
       worker.on("active", (job: Job) => {
-        this.logger.info(
-          `Job ${job.id} has started processing for agent ${this.agentQueueName}`
-        );
+        this.logger.info(`Job ${job.id} started processing for ${this.agentQueueName}`);
       });
-
       worker.on("stalled", (jobId: string) => {
-        this.logger.warn(
-          `Job ${jobId} has been stalled for agent ${this.agentQueueName}`
-        );
+        this.logger.warn(`Job ${jobId} has been stalled for ${this.agentQueueName}`);
       });
 
-      // QueueEvents for global monitoring
+      // Optional: queueEvents for global monitoring
       const queueEvents = new QueueEvents(this.agentQueueName, {
         connection: {
-          host: this.redisClient.options.host,
-          port: this.redisClient.options.port,
+          host: (this.redisClient.options as any).host,
+          port: (this.redisClient.options as any).port,
         },
       });
-
       queueEvents.on("waiting", ({ jobId }) => {
-        this.logger.debug(
-          `Job ${jobId} is waiting in queue ${this.agentQueueName}`
-        );
+        this.logger.debug(`Job ${jobId} is waiting in queue ${this.agentQueueName}`);
       });
-
       queueEvents.on("progress", ({ jobId, data }) => {
-        this.logger.debug(
-          `Job ${jobId} reported progress in queue ${this.agentQueueName}:`,
-          data
-        );
+        this.logger.debug(`Job ${jobId} reported progress: ${data}`);
       });
-
       queueEvents.on("drained", () => {
         this.logger.debug(`Queue ${this.agentQueueName} was drained`);
       });
-
       queueEvents.on("removed", ({ jobId }) => {
-        this.logger.debug(
-          `Job ${jobId} was removed from queue ${this.agentQueueName}`
-        );
+        this.logger.debug(`Job ${jobId} was removed from queue ${this.agentQueueName}`);
       });
 
-      this.logger.info(
-        `Worker set up successfully for agent ${this.agentQueueName}`
-      );
+      this.logger.info(`Worker set up successfully for agentQueue ${this.agentQueueName}`);
     } else {
       this.logger.error("Top level agent queue name not set");
     }
   }
 
-  async startAgent() {
-    this.logger.info(
-      `Starting agent ${this.agent.id} ${JSON.stringify(this.memory)}`
-    );
-    try {
-      await this.updateAgentStatus("running");
-      await this.processAllAgents();
-    } catch (error) {
-      throw error;
-    }
+  // Below are the methods that change the status of an agent by agentId
+
+  async startAgent(agentId: number) {
+    this.logger.info(`Starting agent ${agentId}`);
+    await this.updateAgentStatus(agentId, "running");
+    // Optionally call processAllAgents if you have multiple steps:
+    await this.processAllAgents(agentId);
   }
 
-  async stopAgent() {
-    this.logger.info(`Stopping agent ${this.agent.id}`);
-    await this.updateAgentStatus("stopped");
+  async stopAgent(agentId: number) {
+    this.logger.info(`Stopping agent ${agentId}`);
+    await this.updateAgentStatus(agentId, "stopped");
   }
 
-  async pauseAgent() {
-    this.logger.info(`Pausing agent ${this.agent.id}`);
-    await this.updateAgentStatus("paused");
+  async pauseAgent(agentId: number) {
+    this.logger.info(`Pausing agent ${agentId}`);
+    await this.updateAgentStatus(agentId, "paused");
   }
 
   async updateAgentStatus(
+    agentId: number,
     state: "running" | "stopped" | "paused" | "error",
     message?: string
   ) {
-    this.logger.debug(
-      `Changing agent status to ${state} with message ${message}`
-    );
-    //TODO: Look into moving status into the agent db object so we can update with transactions
-    await this.loadStatusFromRedis();
-    if (this.agent && this.status) {
-      this.status.state = state;
-      this.status.messages.push(
-        message || `Agent ${this.agent.id} is now ${state}`
-      );
-      this.logger.info(`Agent ${this.agent.id} is now ${state}`);
-      await this.saveAgentStatusToRedis();
-    } else {
-      this.logger.error("Agent or agent memory not initialized");
+    const status = this.agentStatusMap.get(agentId);
+    if (!status) {
+      this.logger.error(`No status found for agentId=${agentId}`);
+      return;
     }
+    status.state = state;
+    status.messages.push(message || `Agent ${agentId} is now ${state}`);
+    status.lastUpdated = Date.now();
+    this.logger.info(`Agent ${agentId} is now ${state}`);
+    await this.saveAgentStatusToRedis(agentId);
   }
 }
