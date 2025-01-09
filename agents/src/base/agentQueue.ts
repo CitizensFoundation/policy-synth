@@ -19,7 +19,6 @@ export interface PsAgentStartJobData {
   structuredAnswersOverrides?: Array<any>;
 }
 
-
 /**
  * Abstract queue that can hold multiple agent implementations
  * This class has been refactored to store multiple Agents in maps
@@ -30,10 +29,6 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgent {
   protected agentInstancesMap: Map<number, PolicySynthAgent> = new Map();
   protected agentStatusMap: Map<number, PsAgentStatus> = new Map();
 
-  /**
-   * NEW: We also keep a memory map so each agentId can have its own memory,
-   * and we can inject structuredAnswersOverrides there.
-   */
   protected agentMemoryMap: Map<number, PsAgentMemoryData> = new Map();
 
   structuredAnswersOverrides?: Array<any>;

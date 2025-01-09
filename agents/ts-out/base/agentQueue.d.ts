@@ -14,10 +14,6 @@ export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
     protected agentsMap: Map<number, PsAgent>;
     protected agentInstancesMap: Map<number, PolicySynthAgent>;
     protected agentStatusMap: Map<number, PsAgentStatus>;
-    /**
-     * NEW: We also keep a memory map so each agentId can have its own memory,
-     * and we can inject structuredAnswersOverrides there.
-     */
     protected agentMemoryMap: Map<number, PsAgentMemoryData>;
     structuredAnswersOverrides?: Array<any>;
     skipCheckForProgress: boolean;

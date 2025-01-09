@@ -1,4 +1,9 @@
 import { BaseChatModel } from "./baseChatModel.js";
+interface PsAiModelConfig {
+    apiKey: string;
+    modelName?: string;
+    maxTokensOut?: number;
+}
 export declare class GoogleGeminiChat extends BaseChatModel {
     private client;
     private model;
@@ -10,5 +15,5 @@ export declare class GoogleGeminiChat extends BaseChatModel {
     }>;
     getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }
-export default GoogleGeminiChat;
+export {};
 //# sourceMappingURL=googleGeminiChat.d.ts.map

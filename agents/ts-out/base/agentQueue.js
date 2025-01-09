@@ -20,10 +20,6 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
     agentsMap = new Map();
     agentInstancesMap = new Map();
     agentStatusMap = new Map();
-    /**
-     * NEW: We also keep a memory map so each agentId can have its own memory,
-     * and we can inject structuredAnswersOverrides there.
-     */
     agentMemoryMap = new Map();
     structuredAnswersOverrides;
     skipCheckForProgress = true;
