@@ -6,14 +6,15 @@ import { PsAiModelSize } from "../aiModelTypes.js";
 export class FirecrawlScrapeAgent extends PolicySynthAgent {
     needsAiModel = false;
     app;
-    crawlPageLimit = 75;
-    constructor(agent, memory, startProgress, endProgress) {
+    crawlPageLimit = 50;
+    constructor(agent, memory, startProgress, endProgress, crawlPageLimit = 50) {
         super(agent, memory, startProgress, endProgress);
         const apiKey = process.env.FIRECRAWL_API_KEY;
         if (!apiKey) {
             throw new Error("Missing FIRECRAWL_API_KEY environment variable");
         }
         this.app = new FirecrawlApp({ apiKey });
+        this.crawlPageLimit = crawlPageLimit;
     }
     /**
      * Extracts the primary domain (e.g. "example.com") from a given URL.

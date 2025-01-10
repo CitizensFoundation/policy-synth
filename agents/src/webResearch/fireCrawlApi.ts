@@ -13,13 +13,14 @@ export class FirecrawlScrapeAgent extends PolicySynthAgent {
   needsAiModel = false;
   private app: FirecrawlApp;
 
-  crawlPageLimit = 75;
+  crawlPageLimit = 50;
 
   constructor(
     agent: PsAgent,
     memory: PsAgentMemoryData | undefined,
     startProgress: number,
-    endProgress: number
+    endProgress: number,
+    crawlPageLimit: number = 50
   ) {
     super(agent, memory, startProgress, endProgress);
     const apiKey = process.env.FIRECRAWL_API_KEY;
@@ -27,6 +28,7 @@ export class FirecrawlScrapeAgent extends PolicySynthAgent {
       throw new Error("Missing FIRECRAWL_API_KEY environment variable");
     }
     this.app = new FirecrawlApp({ apiKey });
+    this.crawlPageLimit = crawlPageLimit;
   }
 
   /**

@@ -259,6 +259,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     //TODO: Get Rate limit working again
                     //await this.checkRateLimits(modelType, estimatedTokensToAdd);
                     //await this.updateRateLimits(modelType, tokensIn);
+                    console.log(`Calling ${model.modelName}...`);
                     const results = await model.generate(messages, !!streamingCallbacks, streamingCallbacks);
                     if (results) {
                         const { tokensIn, tokensOut, content } = results;

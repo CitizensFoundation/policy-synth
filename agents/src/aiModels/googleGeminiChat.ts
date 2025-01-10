@@ -1,14 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import { BaseChatModel } from "./baseChatModel.js";
 
-// Extend your config to include systemInstruction if desired.
-interface PsAiModelConfig {
-  apiKey: string;
-  modelName?: string;
-  maxTokensOut?: number;
-  // ...
-}
-
 export class GoogleGeminiChat extends BaseChatModel {
   private client: GoogleGenerativeAI;
   private model!: GenerativeModel;
@@ -16,16 +8,12 @@ export class GoogleGeminiChat extends BaseChatModel {
   constructor(config: PsAiModelConfig) {
     super(config.modelName || "gemini-pro", config.maxTokensOut || 4096);
     this.client = new GoogleGenerativeAI(config.apiKey);
-
-    // We'll defer setting the system instruction (if any) until generate() is called.
-    // Because we want to parse the messages array first, see how many system messages there are, etc.
-    // Alternatively, you can handle it here if you prefer passing in config.systemInstruction explicitly.
   }
 
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,
-    streamingCallback?: Function
+    streamingCallback?: (chunk: string) => void
   ) {
     // 1. Extract system messages & combine them
     const systemContent = messages
@@ -42,39 +30,55 @@ export class GoogleGeminiChat extends BaseChatModel {
     // 3. Start the conversation
     const chat = this.model.startChat();
 
-    // 4. “Replay” user & assistant messages so that Gemini sees the context
-    //    There is no official `role` param in chat.sendMessage, so we have to simulate it.
-    for (const msg of messages) {
-      if (msg.role === "system") {
-        // already handled via systemInstruction
-        continue;
+    /**
+     * NEW LOGIC:
+     * - If we have exactly 2 messages total (1 system + 1 user),
+     *   then there's only one user message. Send that message directly.
+     * - Otherwise, build a textVar with all user/assistant messages
+     *   prefixed so that the model has full context, and then send it once.
+     */
+    let finalPrompt = "";
+
+    // Check if we have exactly one system + one user
+    if (
+      messages.length === 2 &&
+      messages[0].role === "system" &&
+      messages[1].role === "user"
+    ) {
+      // Only one user message -> send it directly, unchanged
+      finalPrompt = messages[1].message;
+    } else {
+      // More than two messages -> aggregate them all into a single text
+      let textVar = "";
+      for (const msg of messages) {
+        if (msg.role === "system") {
+          // Handled via systemInstruction; skip
+          continue;
+        }
+        if (msg.role === "assistant") {
+          // Let Gemini see assistant context
+          textVar += `[Assistant said]: ${msg.message}\n\n`;
+        } else if (msg.role === "user") {
+          // Let Gemini see user context
+          textVar += `[User said]: ${msg.message}\n\n`;
+        }
       }
-      // Option A: skip assistant messages entirely, since
-      // Gemini doesn't have a separate place to store them.
-      // Option B (shown here): Provide them anyway (prefixed) so the
-      // model “hears” the entire conversation.
-      if (msg.role === "assistant") {
-        await chat.sendMessage(`[Assistant said]: ${msg.message}`);
-      } else if (msg.role === "user") {
-        await chat.sendMessage(msg.message);
-      }
+      finalPrompt = textVar;
     }
 
-    // 5. Finally, get a brand new completion from the last user message
-    //    (or from an empty string if the last role is "assistant").
-    const lastMsg = messages[messages.length - 1];
-    const finalPrompt =
-      lastMsg.role === "user" ? lastMsg.message : "Give me your final answer.";
+    // 4. Make the final call
+    console.debug(`[Final prompt]: ${finalPrompt}`);
 
-    // Optionally handle streaming
     if (streaming) {
+      // Stream the response
       const stream = await chat.sendMessageStream(finalPrompt);
       let done = false;
       let aggregated = "";
+
       while (!done) {
         //@ts-ignore
         const { value: chunk, done: streamDone } = await stream.next();
-        done = streamDone;
+        done = streamDone || !chunk;
         if (chunk) {
           const text = chunk.text();
           aggregated += text;
@@ -89,8 +93,11 @@ export class GoogleGeminiChat extends BaseChatModel {
         content: aggregated,
       };
     } else {
+      // Single-shot response
+      console.log("Calling Gemini...");
       const result = await chat.sendMessage(finalPrompt);
       const content = result.response.text();
+      console.log(`RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
       return {
         tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
         tokensOut: result.response.usageMetadata?.candidatesTokenCount ?? 0,
@@ -103,8 +110,6 @@ export class GoogleGeminiChat extends BaseChatModel {
     messages: PsModelMessage[]
   ): Promise<number> {
     // This uses the library’s built-in countTokens feature.
-    // Just be aware that the “role” concept is not directly recognized,
-    // so we simply combine them in the correct structure:
     const contents = messages.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.message }],
