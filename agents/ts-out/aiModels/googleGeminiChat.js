@@ -20,42 +20,34 @@ export class GoogleGeminiChat extends BaseChatModel {
         });
         // 3. Start the conversation
         const chat = this.model.startChat();
-        /**
-         * NEW LOGIC:
-         * - If we have exactly 2 messages total (1 system + 1 user),
-         *   then there's only one user message. Send that message directly.
-         * - Otherwise, build a textVar with all user/assistant messages
-         *   prefixed so that the model has full context, and then send it once.
-         */
         let finalPrompt = "";
         // Check if we have exactly one system + one user
         if (messages.length === 2 &&
-            messages[0].role === "system" &&
+            (messages[0].role === "system" || messages[0].role === "developer") &&
             messages[1].role === "user") {
             // Only one user message -> send it directly, unchanged
             finalPrompt = messages[1].message;
         }
         else {
             // More than two messages -> aggregate them all into a single text
-            let textVar = "";
+            let promptChatlogText = "";
             for (const msg of messages) {
-                if (msg.role === "system") {
+                if (msg.role === "system" || msg.role === "developer") {
                     // Handled via systemInstruction; skip
                     continue;
                 }
                 if (msg.role === "assistant") {
                     // Let Gemini see assistant context
-                    textVar += `[Assistant said]: ${msg.message}\n\n`;
+                    promptChatlogText += `[Assistant said]: ${msg.message}\n\n`;
                 }
                 else if (msg.role === "user") {
                     // Let Gemini see user context
-                    textVar += `[User said]: ${msg.message}\n\n`;
+                    promptChatlogText += `[User said]: ${msg.message}\n\n`;
                 }
             }
-            finalPrompt = textVar;
+            finalPrompt = promptChatlogText;
         }
-        // 4. Make the final call
-        console.debug(`[Final prompt]: ${finalPrompt}`);
+        //console.debug(`[Final prompt]: ${finalPrompt}`);
         if (streaming) {
             // Stream the response
             const stream = await chat.sendMessageStream(finalPrompt);
@@ -84,7 +76,7 @@ export class GoogleGeminiChat extends BaseChatModel {
             console.log("Calling Gemini...");
             const result = await chat.sendMessage(finalPrompt);
             const content = result.response.text();
-            console.log(`RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
+            //console.log(`RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
             return {
                 tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
                 tokensOut: result.response.usageMetadata?.candidatesTokenCount ?? 0,

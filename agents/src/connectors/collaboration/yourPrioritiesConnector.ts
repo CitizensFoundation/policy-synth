@@ -7,7 +7,7 @@ import fs from "fs";
 import FormData from "form-data";
 
 const MAX_RETRIES = 7;
-const RETRY_DELAY = 1000; // 1 second
+const RETRY_DELAY = 15000; // 1 second
 const AI_IMAGE_GENERATION_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
